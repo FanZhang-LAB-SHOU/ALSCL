@@ -1,6 +1,6 @@
 # Speed-up of ALSCL model fitting: change and results report
 
-Report date: 12 October 2026 (revised after review). Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
+Report date: 12 October 2026 (revised after two reviews). Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
 
 ## 1. Summary
 
@@ -9,7 +9,7 @@ The aim was to make `run_acl()` and `run_alscl()` faster without changing their 
 1. **Standard errors on several cores** (`sd_cores`, default `"auto"`). The fixed-effect Hessian and the delta-method standard errors of the ADREPORT quantities are computed in forked processes. The result is identical (`identical()`) to the sequential `TMB::sdreport()`. `"auto"` uses up to four physical cores and keeps one free, and one core on Windows, in GUI or embedded front-ends and with Apple's Accelerate BLAS.
 2. **TMBad automatic differentiation** (`framework = "TMBad"`, an option). The default remains CppAD, the library used by ALSCL 2.0.0. TMBad is faster but its results are not identical.
 
-With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 322 tests pass (256 existing and 66 in the new `test-speed.R`).
+With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 353 tests pass (256 existing and 97 in the new `test-speed.R`).
 
 ## 2. Commits
 
@@ -18,22 +18,24 @@ With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.
 | [`4402f78`](https://github.com/Linbojun99/ALSCL/commit/4402f780cb35e8272f003cbfc1e699648261b4df) | First version of the code, tests and help page |
 | [`7bf2c5a`](https://github.com/Linbojun99/ALSCL/commit/7bf2c5a652e657d46a53280eb6a3d97d7918be91) | Documentation (`docs/SPEED.md`), benchmark script and results (`docs/results/speed/`), README and NEWS |
 | [`54f1350`](https://github.com/Linbojun99/ALSCL/commit/54f1350) | First version of this report (the version reviewed) |
-| [`243469b`](https://github.com/Linbojun99/ALSCL/commit/243469b2f8104b31075d30a771d157c74f50a56b) | Fixes after review (section 6), CppAD as the default, website and function reference |
+| [`243469b`](https://github.com/Linbojun99/ALSCL/commit/243469b2f8104b31075d30a771d157c74f50a56b) | Fixes after the first review (section 6), CppAD as the default, website and function reference |
+| [`2b7d418`](https://github.com/Linbojun99/ALSCL/commit/2b7d418) | Report revised after the first review (the version reviewed second) |
+| [`23d1cc2`](https://github.com/Linbojun99/ALSCL/commit/23d1cc27c5969c3d8743881c1c769b1ecfc9c857) | Test fixes after the second review (section 6) |
 
 The TMB templates (`inst/extdata/*.cpp`) are unchanged.
 
 ## 3. What changed, file by file
 
-Links point to commit `243469b`.
+Links point to commit `23d1cc2`.
 
 | File | Change |
 |---|---|
-| [`R/speed.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/R/speed.R) | New. `alscl_speed()` (L39); `.acl_check_cores()` (L53); `.acl_fork_safe()` (L64, whether `"auto"` may fork); `.acl_cores()` (L74); `.acl_tmb_checked` and `.acl_tmb_supported()` (L89-L90, TMB versions the parallel delta method was checked against); `.acl_mclapply()` (L100, turns a failure to fork or a worker failure into an error of class `acl_parallel_error`); `.acl_optimhess()` (L120, parallel `stats::optimHess()`); `.acl_delta_sd()` (L141, parallel delta method); `.acl_sdreport()` (L198, the replacement for the `TMB::sdreport()` call). |
-| [`R/model_fit.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/R/model_fit.R#L151) | One line: `TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE)` becomes `.acl_sdreport(obj, opt$par)`. |
-| [`R/compile_acl.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/R/compile_acl.R#L6-L30) | `.acl_compile()` gains `framework`, passes it to `TMB::compile()` and adds it to the cache key. |
-| [`R/retro_model.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/R/retro_model.R#L193-L195), [`R/sim_acl.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/R/sim_acl.R#L61-L63) | Socket workers receive the main process's AD library and `sd_cores = 1`. |
+| [`R/speed.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/speed.R) | New. `alscl_speed()` (L39); `.acl_check_cores()` (L53); `.acl_fork_safe()` (L64, whether `"auto"` may fork); `.acl_cores()` (L74); `.acl_tmb_checked` and `.acl_tmb_supported()` (L89-L90, TMB versions the parallel delta method was checked against); `.acl_mclapply()` (L100, turns a failure to fork or a worker failure into an error of class `acl_parallel_error`); `.acl_optimhess()` (L120, parallel `stats::optimHess()`); `.acl_delta_sd()` (L141, parallel delta method); `.acl_sdreport()` (L200, the replacement for the `TMB::sdreport()` call; `check_version` and `fallback` are for the tests). |
+| [`R/model_fit.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/model_fit.R#L151) | One line: `TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE)` becomes `.acl_sdreport(obj, opt$par)`. |
+| [`R/compile_acl.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/compile_acl.R#L6-L30) | `.acl_compile()` gains `framework`, passes it to `TMB::compile()` and adds it to the cache key. |
+| [`R/retro_model.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/retro_model.R#L193-L195), [`R/sim_acl.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/sim_acl.R#L61-L63) | Socket workers receive the main process's AD library and `sd_cores = 1`. |
 | `DESCRIPTION` | `TMB (>= 1.9.0)`; `Matrix` added to Imports (for `Matrix::solve`). |
-| [`tests/testthat/test-speed.R`](https://github.com/Linbojun99/ALSCL/blob/243469b2f8104b31075d30a771d157c74f50a56b/tests/testthat/test-speed.R) | Settings and input validation (including `Inf`, `NA`, `2^31`); fork-safety rules; TMB version list; `identical()` checks of the parallel Hessian and of the whole sdreport object against TMB for both models; a simulated failure to fork; one and two cores give identical `est_std`; TMBad and CppAD agree within 1e-8 on the test fixture. |
+| [`tests/testthat/test-speed.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/tests/testthat/test-speed.R) | Settings and input validation (including `Inf`, `NA`, `2^31`); fork-safety rules; TMB version list; `identical()` checks of the parallel Hessian and of the whole sdreport object against TMB for both models and both AD libraries, with fallback turned into an error; a deliberate failure of the parallel delta method gives an error; a simulated failure to fork; an unchecked TMB version computes standard errors without forking; one and two cores give identical `est_std`; TMBad and CppAD agree within 1e-8 on the test fixture. |
 | `docs/FUNCTION_REFERENCE.md`, `website/build.py`, `website/check.py`, `website/reference-notes.json`, `website/content/*/news.md`, `docs/BOOK.md`, `docs/wiki/14-Function-Reference.md`, `README.md` | `alscl_speed()` added to the function reference, the website groups, the bilingual notes and the changelog; 43 changed to 44 functions. `BOOK.md` and the wiki were regenerated with `scripts/build_wiki.py`. |
 
 ## 4. Why the parallel standard errors are identical
@@ -111,10 +113,17 @@ The first version (`54f1350`) was reviewed externally. Every finding was reprodu
 | A failure to start forked processes was not caught | With `mclapply()` replaced by a function that signals "unable to fork", the fit returned `est_std = NULL`, `vcov = NULL`, `pdHess = NA` | Any error from `mclapply()` now triggers the sequential `TMB::sdreport()` with a warning. Same simulation: `est_std` and `vcov` present, `pdHess = TRUE`; a new test checks that they are identical to the sequential result |
 | `sd_cores = Inf` accepted | Accepted; `as.integer(Inf)` later gave `NA` with a warning | The check requires a finite whole number between 1 and `.Machine$integer.max`; `Inf`, `NA`, `2^31`, vectors and strings are rejected (tested) |
 | Website does not build | `website/build.py` requires an entry for every exported function; `alscl_speed` had none (`KeyError`) | Entry, notes and group added; `website/build.py` builds 136 pages and `website/check.py` passes with 44 functions per language |
-| Test count "300 + 44" | The 300 already included the 44 new tests | Corrected; the suite now has 322 tests, 66 in `test-speed.R` |
+| Test count "300 + 44" | The 300 already included the 44 new tests | Corrected; the suite had 322 tests after `243469b` and has 353 after `23d1cc2` (97 in `test-speed.R`) |
 | TMBad differences larger with 10 fixed effects | Estimates 2.7e-8 (relative), standard errors 3.5e-8 | TMBad is no longer the default (Table 2) |
 | TMB version guard too wide | All TMB 1.9.x versions were allowed; only 1.9.21 was checked | Only the checked versions use the parallel delta method; the identity test runs the parallel code with any installed TMB (`check_version = FALSE`), so a new version can be added once it passes |
 | Forking in unsuitable environments | `?parallel::mclapply` discourages forking in GUI or embedded front-ends and with multithreaded libraries | `"auto"` uses one core in R.app, RGui, RStudio and Positron and with Apple's Accelerate BLAS; an explicit number of cores is used as given (tested) |
+
+The revised version (`2b7d418`) was reviewed a second time. The review confirmed the fixes above (322 tests and the website check passed, `Inf` was rejected, a failure to fork kept the standard errors) and found two problems in the tests, both reproduced and fixed in `23d1cc2`:
+
+| Finding | Reproduced on `2b7d418` | Fix and check on `23d1cc2` |
+|---|---|---|
+| The fork-failure test fails with a TMB version outside `.acl_tmb_checked` | With `.acl_tmb_supported()` returning `FALSE`, standard errors were computed sequentially without forking, no warning was given, and `expect_warning()` failed | The test treats the installed TMB as checked; a new test checks that an unchecked version computes standard errors sequentially without calling `mclapply()`. With the version list replaced by an unchecked version, every test passes except the one that checks the list itself |
+| The identity test can pass through the fallback | With the parallel delta method made to fail, all identity assertions for ACL and ALSCL still passed, because `suppressWarnings()` hid the fallback and the test compared `TMB::sdreport()` with itself | `.acl_sdreport(fallback = FALSE)` turns a parallel failure into an error; the test muffles only "NaNs produced" warnings and runs for CppAD and TMBad; a new test checks that a deliberate failure gives an error |
 
 ## 7. Open points
 
