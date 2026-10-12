@@ -37,35 +37,66 @@ test_that("auto cores fork only where forking is safe", {
 })
 
 test_that("only checked TMB versions use the parallel delta method", {
-  expect_true(ALSCL:::.acl_tmb_supported("1.9.21"))
-  expect_false(ALSCL:::.acl_tmb_supported("1.9.22"))
-  expect_false(ALSCL:::.acl_tmb_supported("1.10.0"))
+  expect_identical(ALSCL:::.acl_tmb_checked, "1.9.21")
+  expect_true(ALSCL:::.acl_tmb_supported(ALSCL:::.acl_tmb_checked[1]))
+  expect_false(ALSCL:::.acl_tmb_supported("0.0.1"))
+  expect_false(ALSCL:::.acl_tmb_supported("99.0.0"))
 })
+
+# Muffle only the "NaNs produced" warnings that negative variances give away
+# from the optimum; any other warning, such as a fallback, still reaches the test.
+quiet_nan <- function(expr) withCallingHandlers(expr, warning = function(w)
+  if (grepl("NaNs produced", conditionMessage(w), fixed = TRUE)) invokeRestart("muffleWarning"))
+
+# Each test uses the AD library given, restoring the previous setting.
+with_framework <- function(framework, code) {
+  old <- options(ALSCL.framework = framework); on.exit(options(old))
+  code
+}
 
 test_that("parallel optimHess is identical to stats::optimHess with random effects", {
   skip_on_os("windows")
-  for (model in c("ACL", "ALSCL")) {
-    obj <- random_fixture(model)
-    ref <- stats::optimHess(obj$par, obj$fn, obj$gr)
-    obj <- random_fixture(model)
-    expect_identical(ALSCL:::.acl_optimhess(obj, obj$par, 2L), ref)
-  }
+  for (framework in c("CppAD", "TMBad")) with_framework(framework, {
+    for (model in c("ACL", "ALSCL")) {
+      obj <- random_fixture(model)
+      ref <- stats::optimHess(obj$par, obj$fn, obj$gr)
+      obj <- random_fixture(model)
+      expect_identical(ALSCL:::.acl_optimhess(obj, obj$par, 2L), ref,
+                       label = paste(framework, model))
+    }
+  })
 })
 
 test_that("parallel standard errors are identical to TMB::sdreport", {
   skip_on_os("windows")
-  for (model in c("ACL", "ALSCL")) {
-    # Away from the optimum some variances are negative, so both give NaN.
-    obj <- random_fixture(model)
-    ref <- suppressWarnings(TMB::sdreport(obj, par.fixed = obj$par, getReportCovariance = FALSE))
-    obj <- random_fixture(model)
-    # check_version = FALSE runs the parallel code with any installed TMB, so
-    # this test shows whether a new TMB version can be added to .acl_tmb_checked.
-    new <- suppressWarnings(ALSCL:::.acl_sdreport(obj, obj$par, ncores = 2L, check_version = FALSE))
-    for (nm in setdiff(names(ref), "env")) expect_identical(new[[nm]], ref[[nm]], label = nm)
-    expect_identical(suppressWarnings(summary(new)), suppressWarnings(summary(ref)))
-    expect_identical(as.list(new$env), as.list(ref$env))
-  }
+  # check_version = FALSE runs the parallel code with any installed TMB and
+  # fallback = FALSE turns a parallel failure into an error, so a pass shows
+  # that this TMB version can be added to .acl_tmb_checked.
+  for (framework in c("CppAD", "TMBad")) with_framework(framework, {
+    for (model in c("ACL", "ALSCL")) {
+      label <- paste(framework, model)
+      obj <- random_fixture(model)
+      ref <- quiet_nan(TMB::sdreport(obj, par.fixed = obj$par, getReportCovariance = FALSE))
+      obj <- random_fixture(model)
+      new <- quiet_nan(ALSCL:::.acl_sdreport(obj, obj$par, ncores = 2L,
+                                             check_version = FALSE, fallback = FALSE))
+      for (nm in setdiff(names(ref), "env")) expect_identical(new[[nm]], ref[[nm]], label = paste(label, nm))
+      expect_identical(quiet_nan(summary(new)), quiet_nan(summary(ref)), label = label)
+      expect_identical(as.list(new$env), as.list(ref$env), label = label)
+    }
+  })
+})
+
+test_that("the identity test cannot pass through the fallback", {
+  skip_on_os("windows")
+  testthat::local_mocked_bindings(
+    .acl_delta_sd = function(...) stop(ALSCL:::.acl_parallel_error("deliberate failure")))
+  obj <- random_fixture("ACL")
+  expect_error(quiet_nan(ALSCL:::.acl_sdreport(obj, obj$par, ncores = 2L, check_version = FALSE,
+                                               fallback = FALSE)), "deliberate failure")
+  obj <- random_fixture("ACL")
+  expect_warning(quiet_nan(ALSCL:::.acl_sdreport(obj, obj$par, ncores = 2L, check_version = FALSE)),
+                 "computing them sequentially")
 })
 
 test_that("a failure to fork falls back to sequential standard errors", {
@@ -73,6 +104,8 @@ test_that("a failure to fork falls back to sequential standard errors", {
   old <- alscl_speed(sd_cores = 1); on.exit(options(old), add = TRUE)
   serial <- fit_fixture("ALSCL")$result
   alscl_speed(sd_cores = 2)
+  # Treat the installed TMB as checked, so that the parallel path is taken.
+  testthat::local_mocked_bindings(.acl_tmb_supported = function(...) TRUE)
   testthat::local_mocked_bindings(
     mclapply = function(...) stop("unable to fork, possible reason: Resource temporarily unavailable"),
     .package = "parallel")
@@ -82,12 +115,27 @@ test_that("a failure to fork falls back to sequential standard errors", {
   expect_identical(fallback$pdHess, serial$pdHess)
 })
 
+test_that("an unchecked TMB version computes standard errors sequentially without forking", {
+  skip_on_os("windows")
+  old <- alscl_speed(sd_cores = 1); on.exit(options(old), add = TRUE)
+  serial <- fit_fixture("ALSCL")$result
+  alscl_speed(sd_cores = 2)
+  testthat::local_mocked_bindings(.acl_tmb_supported = function(...) FALSE)
+  testthat::local_mocked_bindings(mclapply = function(...) stop("mclapply must not be called"),
+                                  .package = "parallel")
+  expect_no_warning(unchecked <- fit_fixture("ALSCL")$result)
+  expect_identical(unchecked$est_std, serial$est_std)
+  expect_identical(unchecked$vcov, serial$vcov)
+})
+
 test_that("fits give identical standard errors with one and two cores", {
   skip_on_os("windows")
   old <- alscl_speed(sd_cores = 1); on.exit(options(old), add = TRUE)
   serial <- fit_fixture("ALSCL")$result
   alscl_speed(sd_cores = 2)
-  parallel <- fit_fixture("ALSCL")$result
+  # Take the parallel path with any installed TMB, and fail on a fallback.
+  testthat::local_mocked_bindings(.acl_tmb_supported = function(...) TRUE)
+  expect_no_warning(parallel <- fit_fixture("ALSCL")$result)
   expect_identical(parallel$est_std, serial$est_std)
   expect_identical(parallel$vcov, serial$vcov)
   expect_identical(parallel$opt$par, serial$opt$par)

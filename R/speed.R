@@ -193,13 +193,16 @@ alscl_speed <- function(sd_cores = getOption("ALSCL.sd_cores", "auto"),
 # parallel; the returned object is identical to the sequential one. TMB
 # computes everything else (skip.delta.method = TRUE). Falls back to the
 # sequential TMB::sdreport() for one core, for TMB versions not in
-# .acl_tmb_checked (check_version = FALSE is for the tests only), or, with a
-# warning, if the parallel calculation fails.
-.acl_sdreport <- function(obj, par.fixed, ncores = .acl_cores(), check_version = TRUE) {
+# .acl_tmb_checked, or, with a warning, if the parallel calculation fails.
+# The tests use check_version = FALSE to run the parallel code with any TMB
+# version, and fallback = FALSE so that a parallel failure is an error rather
+# than a silent comparison of TMB with itself.
+.acl_sdreport <- function(obj, par.fixed, ncores = .acl_cores(), check_version = TRUE,
+                          fallback = TRUE) {
   sequential <- function() TMB::sdreport(obj, par.fixed = par.fixed, getReportCovariance = FALSE)
   if (ncores <= 1L || length(par.fixed) == 0L || (check_version && !.acl_tmb_supported()))
     return(sequential())
-  tryCatch({
+  in_parallel <- function() {
     hessian.fixed <- .acl_optimhess(obj, par.fixed, ncores)
     ans <- TMB::sdreport(obj, par.fixed = par.fixed, hessian.fixed = hessian.fixed,
                          getReportCovariance = FALSE, skip.delta.method = TRUE)
@@ -215,7 +218,9 @@ alscl_speed <- function(sd_cores = getOption("ALSCL.sd_cores", "auto"),
       stop(.acl_parallel_error("state differs from sdreport()"))
     ans$sd <- delta$sd
     ans
-  }, acl_parallel_error = function(e) {
+  }
+  if (!fallback) return(in_parallel())
+  tryCatch(in_parallel(), acl_parallel_error = function(e) {
     warning("Parallel standard errors failed (", conditionMessage(e),
             "); computing them sequentially.", call. = FALSE)
     sequential()

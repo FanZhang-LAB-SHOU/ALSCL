@@ -53,7 +53,7 @@ On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on 
 The sequential `TMB::sdreport()` is used in these cases:
 
 - one core, including `sd_cores = "auto"` where forked processes are unavailable or discouraged (`?parallel::mclapply`): on Windows, in GUI or embedded front-ends (R.app, RGui, RStudio, Positron) and with Apple's Accelerate BLAS, which is multithreaded. A number of cores given explicitly is used as given, except on Windows;
-- TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21). The test that compares the two with `identical()` runs the parallel code with any installed TMB, so a new version can be added after the tests pass with it;
+- TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21). The test that compares the two with `identical()` runs the parallel code with any installed TMB, for both AD libraries, and fails if the parallel code falls back to the sequential calculation, so a new version can be added after the tests pass with it;
 - any failure of the parallel calculation, including a failure to start the forked processes, with a warning.
 
 ### 3.2 TMBad automatic differentiation (`framework`)
@@ -125,3 +125,8 @@ Fixes after the external review of the first version (commit `54f1350`):
 - **Documentation website.** `website/build.py` requires every exported function to have an entry in `docs/FUNCTION_REFERENCE.md`, bilingual notes in `website/reference-notes.json` and a place in a function group. These were added for `alscl_speed()`; the site builds and `website/check.py` passes (136 pages, 44 functions per language).
 - **Default AD library.** TMBad was the default in the first version; it is now an option (section 3.2).
 - **TMB versions and environments.** The parallel delta method was allowed for all TMB 1.9.x versions; it is now limited to the versions it was checked against. `sd_cores = "auto"` no longer forks in GUI or embedded front-ends or with Apple's Accelerate BLAS (section 3.1).
+
+Fixes after a second review (commit `2b7d418`), both in the tests:
+
+- **Fork-failure test with an unchecked TMB version.** With a TMB version outside `.acl_tmb_checked`, standard errors are computed sequentially without forking, so the test that expected a fallback warning failed. The test now treats the installed TMB as checked, and a separate test checks that an unchecked version computes the standard errors sequentially without calling `mclapply()`.
+- **Identity test hid failures of the parallel code.** It muffled all warnings, so if the parallel code failed and fell back, it compared `TMB::sdreport()` with itself and passed. `.acl_sdreport()` has an argument `fallback = FALSE`, used only by the tests, that turns a parallel failure into an error; the test muffles only "NaNs produced" warnings and runs for both CppAD and TMBad. A further test makes the parallel delta method fail on purpose and checks that this gives an error.
