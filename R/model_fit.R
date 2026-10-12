@@ -148,7 +148,7 @@
   opt$objective <- obj$fn(opt$par)
   gradient <- as.numeric(obj$gr(opt$par)); names(gradient) <- names(opt$par)
   report <- obj$report()
-  sdresult <- tryCatch(TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE),
+  sdresult <- tryCatch(.acl_sdreport(obj, opt$par),
     error = function(e) {warning("Standard errors unavailable: ", conditionMessage(e)); NULL})
   est_std <- if (is.null(sdresult)) NULL else summary(sdresult)
   covariance <- if (is.null(sdresult)) NULL else sdresult$cov.fixed

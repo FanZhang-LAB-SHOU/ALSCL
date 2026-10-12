@@ -3,7 +3,7 @@
 #' @return Paths and DLL name for the compiled model.
 #' @keywords internal
 compile_and_load_acl <- function(openmp = FALSE) .acl_compile("ACL", openmp)
-.acl_compile <- function(model, openmp = FALSE) {
+.acl_compile <- function(model, openmp = FALSE, framework = .acl_framework()) {
   # Binary TMB installations do not necessarily install their LinkingTo headers.
   if (!requireNamespace("RcppEigen", quietly = TRUE)) stop("Install RcppEigen to compile model templates.")
   src <- system.file("extdata", paste0(model, ".cpp"), package = "ALSCL")
@@ -12,7 +12,8 @@ compile_and_load_acl <- function(openmp = FALSE) .acl_compile("ACL", openmp)
   key_file <- tempfile(); on.exit(unlink(key_file), add = TRUE)
   writeLines(c(unname(tools::md5sum(c(src, header))), R.version.string,
                as.character(utils::packageVersion("TMB")),
-               as.character(utils::packageVersion("RcppEigen")), as.character(openmp)), key_file)
+               as.character(utils::packageVersion("RcppEigen")), as.character(openmp),
+               framework), key_file)
   key <- substr(unname(tools::md5sum(key_file)), 1L, 12L); dll <- paste0(model, "_", key)
   cache <- file.path(getOption("ALSCL.tmb.cache", file.path(tempdir(), "ALSCL-tmb")), dll); dir.create(cache, recursive = TRUE, showWarnings = FALSE)
   cache <- normalizePath(cache, winslash = "/", mustWork = TRUE)
@@ -21,10 +22,12 @@ compile_and_load_acl <- function(openmp = FALSE) .acl_compile("ACL", openmp)
     file.copy(src, cpp, overwrite = TRUE); file.copy(header, file.path(cache, "model_math.hpp"), overwrite = TRUE)
     # Let make see a plain filename, avoiding Windows backslashes and spaces in paths.
     previous_dir <- setwd(cache); on.exit(setwd(previous_dir), add = TRUE)
+    build <- function(openmp) TMB::compile(basename(cpp), flags = "-O2", openmp = openmp,
+                                           framework = framework)
     if (openmp) {
-      ok <- tryCatch({TMB::compile(basename(cpp), flags = "-O2", openmp = TRUE); TRUE}, error = function(e) FALSE)
-      if (!ok) {unlink(c(lib, sub("\\.cpp$", ".o", cpp))); TMB::compile(basename(cpp), flags = "-O2", openmp = FALSE)}
-    } else TMB::compile(basename(cpp), flags = "-O2", openmp = FALSE)
+      ok <- tryCatch({build(TRUE); TRUE}, error = function(e) FALSE)
+      if (!ok) {unlink(c(lib, sub("\\.cpp$", ".o", cpp))); build(FALSE)}
+    } else build(FALSE)
   }
   loaded <- vapply(getLoadedDLLs(), function(x) x[["path"]], character(1))
   loaded <- loaded[file.exists(loaded)] # R's built-in "base" entry is not a file.
