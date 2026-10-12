@@ -89,6 +89,8 @@ Other users' jobs ran on the computer throughout (one-minute load average 12-27 
 | tuna | ACL | 439 | 1,360 | 14.3 s | 11.8 s (1.21) | 13.1 s (1.09) | 11.3 s (1.27) |
 | tuna | ALSCL | 499 | 4,361 | 217.4 s | 180.9 s (1.20) | 153.9 s (1.41) | 141.3 s (1.54) |
 
+![Fit time before and after the speed settings](figures/speed/timing.png)
+
 With CppAD, on one core or four, the estimates, the objective function and every row of `summary(sdreport)` were identical to those of the original code in all six combinations. With TMBad, the results differed by at most 2.3e-11 in these six combinations (Table 2), which estimate 5 fixed effects; with 10 fixed effects the differences were larger (section 3.2). The differences were the same with one and four cores, because the parallel standard errors are identical to the sequential ones. All 90 fits converged (`nlminb()` code 0) with a positive definite Hessian and a maximum absolute gradient below 2e-4.
 
 **Table 2.** Largest difference between TMBad and the original code. Estimates and standard errors: relative difference. Objective function: absolute difference in the negative log-likelihood. Reported values: difference in the estimates of the random effects and ADREPORT quantities, divided by the largest absolute value of the same quantity, so that values near zero (for example random effects) do not inflate the relative difference.
@@ -102,6 +104,10 @@ With CppAD, on one core or four, the estimates, the objective function and every
 | tuna | ACL | 6.1e-15 | 3.4e-13 | 6.1e-15 | 4.4e-13 |
 | tuna | ALSCL | 2.2e-11 | 1.5e-11 | 2.2e-11 | 2.3e-11 |
 
+The figure below compares every row of `summary(sdreport)` from one fit (ALSCL fitted to `YTF_example`) between the original code and the two settings: the default settings lie exactly on the line of equality, and TMBad differs only in the last digits. The values are in `docs/results/speed/agreement_YTF_ALSCL.csv`.
+
+![Estimates and standard errors before and after the speed settings](figures/speed/agreement.png)
+
 To repeat the benchmark (about 90 minutes), from the repository root:
 
 ```bash
@@ -109,7 +115,7 @@ git archive 4dc1fc3 | (mkdir -p /tmp/alscl-original && tar -x -C /tmp/alscl-orig
 Rscript scripts/benchmark_speed.R /tmp/alscl-original docs/results/speed 3
 ```
 
-The script writes every fit to `runs.csv` (elapsed and CPU time, load average, convergence) and the comparison with the original code to `summary.csv`, in which `n_report` counts all rows of `summary(sdreport)` (fixed effects, random effects and ADREPORT quantities).
+`Rscript scripts/plot_speed_benchmark.R` redraws both figures from the saved results without refitting. The benchmark script writes every fit to `runs.csv` (elapsed and CPU time, load average, convergence) and the comparison with the original code to `summary.csv`, in which `n_report` counts all rows of `summary(sdreport)` (fixed effects, random effects and ADREPORT quantities).
 
 ## 6. Implementation notes
 

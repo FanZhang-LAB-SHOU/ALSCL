@@ -511,6 +511,7 @@ str(e$sim.data)
 | `control` | 传给 `nlminb` 的控制项，如 `eval.max`、`iter.max` / Optimizer controls |
 | `ncores` | 最大 socket 并行进程数 / Maximum socket workers |
 | `nstarts` | 总起点数，默认等于 ncores；固定后可公平比较并行数 / Total starts, default ncores; hold fixed for timing comparisons |
+| `alscl_speed()` | Speed settings for all later fits: `sd_cores` (cores for standard errors) and `framework` (AD library); see 6.1 |
 | `output` | FALSE 不写文件，TRUE 在 output 目录导出诊断与图 / Export diagnostics and plots under output when TRUE |
 
 `initialize_params(species=...)` 建立模拟参数；`create_parameters(model_type=..., species=...)` 建立估计初值及边界。后者的物种预设不会自动替你更改 `run_*` 的 M、年龄、调查 q 或数据。
@@ -539,6 +540,26 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 `log_` 参数通常用 `log(自然尺度值)`，相关系数的变换必须以对应模板为准。尤其 ACL 的 `t0` 是原尺度，而 ALSCL 的 `log_t0` 经 exp 变换，因此本版 ALSCL 的该参数化不支持负 t0。不要将 ACL 参数表直接用于 ALSCL。全部 14/15 个估计参数的名称、变换及上下界查询方法见 [初值列表参考](https://github.com/Linbojun99/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#estimation_parameters)。
 
 Most `log_` parameters use log-transformed values; correlation transforms must match the template. ACL `t0` is untransformed, while ALSCL exponentiates `log_t0`, preventing negative t0 in this parameterization. Do not interchange their parameter lists.
+
+### 6.1 Speed settings
+
+`alscl_speed()` sets two options that apply to every later call of `run_acl()`, `run_alscl()`, `retro_model()` and `sim_acl()`:
+
+- `sd_cores` (default `"auto"`): the number of cores used within one fit to compute standard errors. The fixed-effect Hessian and the delta-method standard errors are computed in parallel, and the results are identical to the sequential calculation and to ALSCL 2.0.0. `"auto"` uses up to four cores, and one core on Windows, in GUI front-ends such as RStudio and R.app, and with Apple's Accelerate BLAS. This is separate from `ncores`, which sets the number of workers for multiple starts.
+- `framework` (default `"CppAD"`): the automatic-differentiation library that TMB compiles the model with. `"TMBad"` is faster, but its estimates differ slightly from CppAD (by up to 2.7e-8, relative, in the fits tested), so it is an option.
+
+```r
+alscl_speed()                      # defaults: identical results, parallel standard errors
+alscl_speed(framework = "TMBad")   # faster; results not identical to the default
+alscl_speed(sd_cores = 1)          # sequential standard errors, e.g. inside your own parallel loop
+b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+```
+
+In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases), the default settings made fits 1.13-1.24 times faster with every estimate and standard error identical to the original code, and `framework = "TMBad"` made them 1.25-1.68 times faster. The full record, including the checks and the figures below, is [docs/SPEED.md](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md).
+
+![Fit time before and after the speed settings](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
+
+![Estimates and standard errors before and after the speed settings](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 
 <a id="chapter-07"></a>
 ## 07 诊断与结果解读 · Diagnostics

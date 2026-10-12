@@ -112,3 +112,34 @@ The points show all three measurements; lines show medians and bars show ranges.
 The first four-worker trials recorded four different PIDs with overlapping execution intervals and real CPU usage. All 18 timed fits and 72 starts passed the benchmark checks. Starting vectors and per-start objectives agreed across worker counts; the selected fits passed optimizer, Hessian, gradient and boundary checks. The unchanged C++ likelihood is evaluated within each worker; a single start is still serial.
 
 See the [full bilingual report](https://github.com/Linbojun99/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md), [raw run timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/runs.csv), [per-start evidence](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/starts.csv) and [reproducible benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_parallel.R). The report also records the original-version test and distinguishes it from an equal-work speed comparison.
+
+## Speed settings for one fit
+
+`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. The default settings give results identical to ALSCL 2.0.0: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four, and one on Windows, in GUI front-ends such as RStudio and with Apple's Accelerate BLAS). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
+
+```r
+# Defaults: identical results, parallel standard errors
+alscl_speed()
+b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+# Faster option; results not identical to the default
+alscl_speed(framework = "TMBad")
+# Sequential standard errors, for example inside your own parallel loop
+alscl_speed(sd_cores = 1)
+```
+
+In a benchmark of 90 fits on 12 October 2026 (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases, three runs each, Apple M2 Pro shared with other jobs), the default settings made fits 1.13-1.24 times faster and `framework = "TMBad"` 1.25-1.68 times faster than the original code.
+
+| Model | Original (s) | Default (s) | TMBad (s) |
+|---|---:|---:|---:|
+| ACL, YTF_example | 8.6 | 7.7 (1.13×) | 6.6 (1.31×) |
+| ALSCL, YTF_example | 140.9 | 118.8 (1.19×) | 83.9 (1.68×) |
+| ALSCL, flatfish | 107.8 | 86.9 (1.24×) | 78.8 (1.37×) |
+| ALSCL, tuna (quarterly) | 217.4 | 180.9 (1.20×) | 141.3 (1.54×) |
+
+![Fit time before and after the speed settings](../../../docs/figures/speed/timing.png)
+
+With the default settings, every estimate, the objective function and every row of `summary(sdreport)` were identical to the original code in all six combinations, and `R CMD check` passed on Linux, macOS and Windows.
+
+![Estimates and standard errors before and after the speed settings](../../../docs/figures/speed/agreement.png)
+
+See the [speed report](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R).

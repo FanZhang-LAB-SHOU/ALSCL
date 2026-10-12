@@ -114,3 +114,34 @@ plot_SSB(saved)
 第一轮四进程测试记录了 4 个不同 PID，执行时间重叠且有实际 CPU 使用。全部 18 次计时拟合、72 个起点通过检查；不同并行数使用相同初值，逐起点目标函数一致，最终模型通过优化码、Hessian、梯度及边界检查。各工作进程调用同一 C++ 似然模型；单个起点内部仍是串行运算。
 
 参见[完整双语报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md)、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/runs.csv)、[逐起点证据](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/starts.csv)及[复现脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_parallel.R)。报告另外保留原版测试，并明确区分功能验证和相同工作量的速度比较。
+
+## 单次拟合的速度设置
+
+`alscl_speed()` 设置之后每次拟合如何计算标准误，以及 TMB 使用哪个自动微分库。默认设置下结果与 ALSCL 2.0.0 逐位相同：固定效应 Hessian 和 delta 方法标准误在多个核上计算（`sd_cores = "auto"`：最多 4 核；在 Windows、RStudio 等图形界面以及 Apple Accelerate BLAS 下只用 1 核）。`framework = "TMBad"` 改用 TMB 的 TMBad 库编译模型，速度更快，但估计值与默认设置略有差异（在已测试的拟合中相对差最大 2.7e-8）。
+
+```r
+# 默认：结果不变，并行计算标准误
+alscl_speed()
+b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+# 更快的选项；结果与默认设置不完全相同
+alscl_speed(framework = "TMBad")
+# 顺序计算标准误，例如在自己的并行循环中
+alscl_speed(sd_cores = 1)
+```
+
+2026 年 10 月 12 日的基准测试共 90 次拟合（ACL 与 ALSCL 分别拟合 `YTF_example`、flatfish 与 tuna 案例，各运行 3 次，Apple M2 Pro，测试期间有其他任务）。与原版相比，默认设置使拟合快 1.13-1.24 倍，`framework = "TMBad"` 快 1.25-1.68 倍。
+
+| 模型 | 原版（秒） | 默认（秒） | TMBad（秒） |
+|---|---:|---:|---:|
+| ACL，YTF_example | 8.6 | 7.7（1.13×） | 6.6（1.31×） |
+| ALSCL，YTF_example | 140.9 | 118.8（1.19×） | 83.9（1.68×） |
+| ALSCL，flatfish | 107.8 | 86.9（1.24×） | 78.8（1.37×） |
+| ALSCL，tuna（季度） | 217.4 | 180.9（1.20×） | 141.3（1.54×） |
+
+![速度设置前后的拟合耗时](../../../docs/figures/speed/timing.png)
+
+默认设置下，六个组合的全部估计值、目标函数及 `summary(sdreport)` 的每一行都与原版逐位相同；`R CMD check` 在 Linux、macOS 和 Windows 上均通过。
+
+![速度设置前后的估计值与标准误](../../../docs/figures/speed/agreement.png)
+
+参见[速度报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R)。

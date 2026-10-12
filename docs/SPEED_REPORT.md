@@ -76,6 +76,8 @@ Six combinations: ACL and ALSCL fitted to `YTF_example` (20 years), and the flat
 | tuna | ACL | 439 | 14.3 s | 11.8 s (1.21) | 13.1 s (1.09) | 11.3 s (1.27) |
 | tuna | ALSCL | 499 | 217.4 s | 180.9 s (1.20) | 153.9 s (1.41) | 141.3 s (1.54) |
 
+![Fit time before and after the speed settings](figures/speed/timing.png)
+
 CPU time, which other jobs affect less, gave the same picture: TMBad on one core reduced the CPU time of the ALSCL fits by a factor of 1.35-1.42 and of the ACL fits by 1.06-1.16. In separate runs, the standard errors of the 20-year ALSCL fit (CppAD) took 9.0 s on four cores instead of 23.4 s, and those of an ACL fit with 10 fixed effects 1.58 s instead of 3.70 s (2.54 s in a repeat under heavier load); the results were identical.
 
 **Table 2.** Largest difference between TMBad and the original code (identical with one and four cores). Reported values are the random effects and ADREPORT quantities, divided by the largest absolute value of the same quantity.
@@ -89,6 +91,10 @@ CPU time, which other jobs affect less, gave the same picture: TMBad on one core
 | tuna | ACL | 5 | 6.1e-15 | 3.4e-13 | 6.1e-15 | 4.4e-13 |
 | tuna | ALSCL | 5 | 2.2e-11 | 1.5e-11 | 2.2e-11 | 2.3e-11 |
 | YTF_example, 5 more parameters freed | ACL | 10 | 2.7e-8 | 1.7e-11 | not computed | 3.5e-8 |
+
+The figure below shows every row of `summary(sdreport)` for ALSCL fitted to `YTF_example` (original code against each setting; values in `docs/results/speed/agreement_YTF_ALSCL.csv`). With the default settings every point is identical; with TMBad the differences are in the last digits.
+
+![Estimates and standard errors before and after the speed settings](figures/speed/agreement.png)
 
 The last row was found in the review and reproduced: freeing `log_Linf`, `log_vbk`, `log_cv_len`, `log_std_log_N0` and `logit_log_R` in the bundled ACL configuration. The largest difference was in `logit_log_R` (4.1e-8 absolute); both fits converged with a positive definite Hessian, a maximum absolute gradient below 1e-4 and no parameter at a bound. The difference exceeds the parameter tolerance of `nlminb()` (1.5e-8), which is why TMBad is not the default.
 
