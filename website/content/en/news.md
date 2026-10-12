@@ -1,3 +1,7 @@
+## Speed settings
+
+The new `alscl_speed()` sets how fits compute standard errors. By default they are computed on several cores within one fit, with results identical to ALSCL 2.0.0; in the benchmark, fits were 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the models with TMB's TMBad library and made fits 1.25-1.68 times faster, but estimates differ slightly from the default. See the [`alscl_speed()` reference](../reference/alscl_speed.html).
+
 ## Parallel fitting update
 
 `run_acl()` and `run_alscl()` now accept `nstarts` separately from `ncores`, with the previous default behavior preserved. Returned diagnostics record actual worker PIDs and CPU time. See [measured parallel performance](../articles/reproducibility.html) for equal-work timings and reproducible evidence.

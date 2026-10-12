@@ -1,0 +1,12 @@
+UTC: 2026-10-12 18:45:47 UTC
+R: R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+TMB: 1.9.21
+RcppEigen: 0.3.4.0.2
+Matrix: 1.7.5
+Logical CPUs: 10
+Physical CPUs: 10
+Repeats: 3
+Each fit: train_times = 2, nstarts = 1, in a fresh R process;
+compilation excluded; timing covers run_acl()/run_alscl() including standard errors.
+Other user processes may share this computer.

@@ -39,6 +39,24 @@
       "model-theory"
     ]
   },
+  "alscl_speed": {
+    "description": {
+      "en": "Set how fits compute standard errors and which automatic-differentiation library TMB uses. The defaults give results identical to ALSCL 2.0.0.",
+      "zh": "设置拟合时计算标准误的方式以及 TMB 使用的自动微分库。默认设置下结果与 ALSCL 2.0.0 逐位相同。"
+    },
+    "value": {
+      "en": "The previous `ALSCL.sd_cores` and `ALSCL.framework` options, returned invisibly; `options(old)` restores them.",
+      "zh": "不可见地返回原 `ALSCL.sd_cores` 与 `ALSCL.framework` 选项，可用 `options(old)` 恢复。"
+    },
+    "details": {
+      "en": "`sd_cores` computes the fixed-effect Hessian and the delta-method standard errors in forked processes; the results are identical to the sequential calculation. Fits that already run on parallel workers, as in `retro_model()` and `sim_acl()`, use one core each. `framework = \"TMBad\"` speeds up each evaluation of the Laplace approximation, but results differ slightly from CppAD; see docs/SPEED.md for the benchmark and checks.",
+      "zh": "`sd_cores` 在分叉进程中计算固定效应 Hessian 和 delta 方法标准误，结果与顺序计算逐位相同。已在并行进程中运行的拟合（如 `retro_model()`、`sim_acl()`）每个只用 1 核。`framework = \"TMBad\"` 可加快拉普拉斯近似的每次计算，但结果与 CppAD 略有差异；基准测试与验证见 docs/SPEED.md。"
+    },
+    "articles": [
+      "reproducibility",
+      "fitting-controls"
+    ]
+  },
   "create_parameters": {
     "description": {
       "en": "Construct estimation starting values and lower/upper bounds, optionally using a species preset.",

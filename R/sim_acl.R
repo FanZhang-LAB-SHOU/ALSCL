@@ -58,9 +58,9 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   ncores <- min(ncores, length(iter_range))
   if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
     cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
-    parallel::clusterCall(cl, function(paths, cache) {
-      .libPaths(paths); loadNamespace("ALSCL"); options(ALSCL.tmb.cache = cache); NULL
-    }, .libPaths(), cache)
+    parallel::clusterCall(cl, function(paths, cache, settings) {
+      .libPaths(paths); loadNamespace("ALSCL"); options(ALSCL.tmb.cache = cache); options(settings); NULL
+    }, .libPaths(), cache, .acl_worker_options())
     results <- parallel::parLapply(cl, iter_range, fit_one)
   }
   names(results) <- paste0("result_rep_", iter_range)

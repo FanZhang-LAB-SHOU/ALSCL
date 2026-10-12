@@ -190,9 +190,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
       cl <- parallel::makeCluster(ncores_use)
       on.exit(parallel::stopCluster(cl), add = TRUE)
       cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
-      parallel::clusterCall(cl, function(paths, cache) {
-        .libPaths(paths); options(ALSCL.tmb.cache = cache); NULL
-      }, .libPaths(), cache)
+      parallel::clusterCall(cl, function(paths, cache, settings) {
+        .libPaths(paths); options(ALSCL.tmb.cache = cache); options(settings); NULL
+      }, .libPaths(), cache, .acl_worker_options())
       parallel::clusterExport(cl, varlist = c(
         "data.CatL", "data.wgt", "data.mat",
         "rec.age", "nage", "M", "sel_L50", "sel_L95",

@@ -511,6 +511,7 @@ str(e$sim.data)
 | `control` | 传给 `nlminb` 的控制项，如 `eval.max`、`iter.max` / Optimizer controls |
 | `ncores` | 最大 socket 并行进程数 / Maximum socket workers |
 | `nstarts` | 总起点数，默认等于 ncores；固定后可公平比较并行数 / Total starts, default ncores; hold fixed for timing comparisons |
+| `alscl_speed()` | Speed settings for all later fits: `sd_cores` (cores for standard errors) and `framework` (AD library); see 6.1 |
 | `output` | FALSE 不写文件，TRUE 在 output 目录导出诊断与图 / Export diagnostics and plots under output when TRUE |
 
 `initialize_params(species=...)` 建立模拟参数；`create_parameters(model_type=..., species=...)` 建立估计初值及边界。后者的物种预设不会自动替你更改 `run_*` 的 M、年龄、调查 q 或数据。
@@ -539,6 +540,26 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 `log_` 参数通常用 `log(自然尺度值)`，相关系数的变换必须以对应模板为准。尤其 ACL 的 `t0` 是原尺度，而 ALSCL 的 `log_t0` 经 exp 变换，因此本版 ALSCL 的该参数化不支持负 t0。不要将 ACL 参数表直接用于 ALSCL。全部 14/15 个估计参数的名称、变换及上下界查询方法见 [初值列表参考](https://github.com/Linbojun99/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#estimation_parameters)。
 
 Most `log_` parameters use log-transformed values; correlation transforms must match the template. ACL `t0` is untransformed, while ALSCL exponentiates `log_t0`, preventing negative t0 in this parameterization. Do not interchange their parameter lists.
+
+### 6.1 Speed settings
+
+`alscl_speed()` sets two options that apply to every later call of `run_acl()`, `run_alscl()`, `retro_model()` and `sim_acl()`:
+
+- `sd_cores` (default `"auto"`): the number of cores used within one fit to compute standard errors. The fixed-effect Hessian and the delta-method standard errors are computed in parallel, and the results are identical to the sequential calculation and to ALSCL 2.0.0. `"auto"` uses up to four cores, and one core on Windows, in GUI front-ends such as RStudio and R.app, and with Apple's Accelerate BLAS. This is separate from `ncores`, which sets the number of workers for multiple starts.
+- `framework` (default `"CppAD"`): the automatic-differentiation library that TMB compiles the model with. `"TMBad"` is faster, but its estimates differ slightly from CppAD (by up to 2.7e-8, relative, in the fits tested), so it is an option.
+
+```r
+alscl_speed()                      # defaults: identical results, parallel standard errors
+alscl_speed(framework = "TMBad")   # faster; results not identical to the default
+alscl_speed(sd_cores = 1)          # sequential standard errors, e.g. inside your own parallel loop
+b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+```
+
+In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases), the default settings made fits 1.13-1.24 times faster with every estimate and standard error identical to the original code, and `framework = "TMBad"` made them 1.25-1.68 times faster. The full record, including the checks and the figures below, is [docs/SPEED.md](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md).
+
+![Fit time before and after the speed settings](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
+
+![Estimates and standard errors before and after the speed settings](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 
 <a id="chapter-07"></a>
 ## 07 诊断与结果解读 · Diagnostics
@@ -1657,9 +1678,9 @@ Explicit colors override the theme; `NULL` color arguments inherit it. Changing 
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.0.0 的 **43 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 开发版的 **44 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **43 exported functions** in ALSCL 2.0.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **44 exported functions** in the ALSCL development version are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -1684,6 +1705,7 @@ dat <- x$data.CatL
 - [acl_theme](#acl_theme) — 读取全局主题 / Read global theme settings
 - [acl_theme_reset](#acl_theme_reset) — 恢复默认主题 / Reset theme settings
 - [acl_theme_set](#acl_theme_set) — 设置全局主题 / Set global theme settings
+- [alscl_speed](#alscl_speed) — 设置拟合速度选项 / Set speed options for model fitting
 - [compare_models](#compare_models) — 生成两个模型的数值比较表 / Compare fitted model summaries
 - [create_parameters](#create_parameters) — 建立模型初值及边界 / Construct estimation starts and bounds
 - [create_parameters_alscl](#create_parameters_alscl) — ALSCL 初值及边界便捷入口 / ALSCL parameter constructor
@@ -1829,6 +1851,32 @@ acl_theme_set(base_theme = NULL, font_family = NULL, title_size = NULL,
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
 acl_theme_set(base_theme = "bw", line_color = "navy")
+```
+
+<a id="alscl_speed"></a>
+## `alscl_speed()`
+
+设置拟合速度选项 / Set speed options for model fitting
+
+```r
+alscl_speed(sd_cores = getOption("ALSCL.sd_cores", "auto"),
+    framework = getOption("ALSCL.framework", "CppAD"))
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。"auto" 最多使用 4 个物理核并保留 1 个；在 Windows、图形界面或嵌入式前端（R.app、RGui、RStudio、Positron）以及 Apple Accelerate BLAS 下只用 1 核。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. "auto" uses up to four physical cores and keeps one free, and one core on Windows, in GUI or embedded front-ends and with Apple's Accelerate BLAS. |
+| `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD"（默认）的结果与 ALSCL 2.0.0 逐位相同；"TMBad" 更快，但结果不逐位相同。 | Character. Automatic-differentiation library: "CppAD" (default) gives results identical to ALSCL 2.0.0; "TMBad" is faster, but results are not identical. |
+
+**返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 Invisible previous settings; options() restores them.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+old <- alscl_speed(sd_cores = 1)
+alscl_speed(framework = "TMBad")
+options(old)
 ```
 
 <a id="compare_models"></a>
