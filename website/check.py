@@ -108,4 +108,4 @@ if (failed) quit(status=1)
         if result.stderr:errors.append(result.stderr)
 if errors:
     print('\n'.join(errors));raise SystemExit(f'{len(errors)} documentation check(s) failed')
-print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; 43 functions and all arguments per language; {len(blocks)} R code blocks parsed and direct named calls checked.')
+print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed and direct named calls checked.')

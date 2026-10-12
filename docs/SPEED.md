@@ -6,24 +6,26 @@ The work had four steps:
 
 1. Profile one ALSCL fit to find where the time goes (section 2).
 2. Implement each candidate change and compare its results with the original code (sections 3 and 4).
-3. Keep the changes that leave results identical, or that change them only by floating-point rounding; reject the rest (section 4).
-4. Benchmark the original code against the kept changes on six model and data combinations (section 5). With the default settings, fits were 1.25-1.68 times faster, and results differed from the original code by at most 2.3e-11 (relative).
+3. Make the default the change that leaves results identical; offer the change that alters them slightly as an option; reject the rest (section 4).
+4. Benchmark the original code against both changes on six model and data combinations (section 5), and check fits that estimate more fixed effects.
 
-Both kept changes are set with `alscl_speed()`:
+With the default settings (parallel standard errors, CppAD), results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in the benchmark. With `framework = "TMBad"` fits were 1.25-1.68 times faster, but results are not identical: estimates differed from the original code by up to 2.3e-11 (relative) when 5 fixed effects were estimated and by up to 2.7e-8 when 10 were estimated. Both changes are set with `alscl_speed()`:
 
 ```r
 library(ALSCL)
-alscl_speed()                      # defaults: sd_cores = "auto", framework = "TMBad"
-alscl_speed(framework = "CppAD")   # reproduce ALSCL 2.0.0 results bit for bit
+alscl_speed()                      # defaults: sd_cores = "auto", framework = "CppAD"
+alscl_speed(framework = "TMBad")   # faster; results not identical to ALSCL 2.0.0
 alscl_speed(sd_cores = 1)          # sequential standard errors
 ```
+
+An external review of the first version (12 October 2026) found four problems, all confirmed and fixed (section 6): a failure to start forked processes left fits without standard errors, `sd_cores = Inf` was accepted, the documentation website did not build, and TMBad, then the default, differed from CppAD by up to 2.7e-8 in a fit with 10 fixed effects.
 
 ## 1. When results count as unchanged
 
 The rule carried over from ALSCLtuna is that a speed change may alter how quantities are computed but not the results:
 
 - A change that can give identical results must give identical results, checked with `identical()` on the estimates, the objective function and every row of `summary(sdreport)`.
-- A change that alters the order of floating-point operations is accepted only if the differences in the estimates and the objective function are far below the convergence tolerances of `nlminb()` (relative tolerance 1e-10 for the objective function and 1.5e-8 for the parameters), and the standard errors differ by less than 1e-7 (relative). The standard errors use a Hessian from finite differences of the gradient, which magnifies rounding error. In ALSCLtuna, which has no random effects, such changes gave relative differences of about 1e-12; in ALSCL the rounding differences also pass through the inner Newton optimisation over the random effects.
+- A change that alters the order of floating-point operations can be the default only if the differences in the estimates and the objective function are far below the convergence tolerances of `nlminb()` (relative tolerance 1e-10 for the objective function and 1.5e-8 for the parameters) in every case tested, and the standard errors differ by less than 1e-7 (relative). The standard errors use a Hessian from finite differences of the gradient, which magnifies rounding error. In ALSCLtuna, which has no random effects, such changes gave relative differences of about 1e-12; in ALSCL the rounding differences also pass through the inner Newton optimisation over the random effects. TMBad met this condition in the six benchmark combinations but not in a fit with 10 fixed effects (section 3.2), so it is an option rather than the default.
 - Changes that alter the model or the optimisation (for example, fewer random effects or looser inner-optimisation tolerances) are not considered.
 
 ## 2. Where the time goes
@@ -46,13 +48,19 @@ Two details make the results identical rather than nearly equal:
 - `optimHess()` (R's C routine `optimhess`) reuses one parameter vector and, after each column j, resets coordinate j to ((p + 0.001) - 0.002) + 0.001, which can differ from p in the last bit. Later columns are evaluated at that value, so the parallel version reproduces it.
 - With random effects, each gradient call starts the inner Newton optimisation from `obj$env$last.par.best`. Only calls of the objective function update it, never gradient calls, so in the sequential `optimHess()` every column starts from the same point, and each forked process starts from that point too.
 
-On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on four cores instead of 23.4 s. On Windows, where R cannot fork processes, and for one core, the sequential `TMB::sdreport()` is used. If a forked process fails, the calculation is repeated sequentially with a warning. The parallel code reproduces the delta method of TMB 1.9.x; other TMB versions use the sequential `TMB::sdreport()`.
+On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on four cores instead of 23.4 s; on an ACL fit with 10 fixed effects, 1.58 s instead of 3.70 s.
+
+The sequential `TMB::sdreport()` is used in these cases:
+
+- one core, including `sd_cores = "auto"` where forked processes are unavailable or discouraged (`?parallel::mclapply`): on Windows, in GUI or embedded front-ends (R.app, RGui, RStudio, Positron) and with Apple's Accelerate BLAS, which is multithreaded. A number of cores given explicitly is used as given, except on Windows;
+- TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21). The test that compares the two with `identical()` runs the parallel code with any installed TMB, so a new version can be added after the tests pass with it;
+- any failure of the parallel calculation, including a failure to start the forked processes, with a warning.
 
 ### 3.2 TMBad automatic differentiation (`framework`)
 
-TMB can compile a model with one of two automatic-differentiation (AD) libraries: CppAD, its default, and TMBad, its newer library. ALSCL 2.0.0 used CppAD. The model code is the same for both; only the compiler setting (`TMB::compile(..., framework = "TMBad")`) changes. On the 20-year ALSCL fit at the optimum, TMBad evaluated the objective function in 0.010 s instead of 0.21 s, and the gradient in 0.20 s instead of 0.65 s. The whole fit became faster by a smaller factor (section 5).
+TMB can compile a model with one of two automatic-differentiation (AD) libraries: CppAD, its default, and TMBad, its newer library. ALSCL 2.0.0 used CppAD, and CppAD remains the default; `alscl_speed(framework = "TMBad")` selects TMBad. The model code is the same for both; only the compiler setting (`TMB::compile(..., framework = "TMBad")`) changes. On the 20-year ALSCL fit at the optimum, TMBad evaluated the objective function in 0.010 s instead of 0.21 s, and the gradient in 0.20 s instead of 0.65 s. The whole fit became faster by a smaller factor (section 5).
 
-TMBad computes the same derivatives with a different order of floating-point operations, so results differ from those under CppAD only by rounding (section 5). The AD library is part of the key of the compiled-model cache, so models compiled with each library are kept apart. `alscl_speed(framework = "CppAD")` compiles the original way and, together with any `sd_cores`, reproduces the results of ALSCL 2.0.0 bit for bit (checked in section 5).
+TMBad computes the same derivatives with a different order of floating-point operations. In the six benchmark combinations, which estimate 5 fixed effects, results differed from CppAD by at most 2.3e-11 (relative; section 5). In an ACL fit to `YTF_example` that estimates 10 fixed effects (`log_Linf`, `log_vbk`, `log_cv_len`, `log_std_log_N0` and `logit_log_R` freed from the bundled configuration), the estimates differed by up to 4.1e-8 (absolute; 2.7e-8 relative, for `logit_log_R`) and the standard errors by up to 3.5e-8 (relative), while the objective function differed by 1.7e-11. With more free parameters the likelihood surface is flatter, and the small differences between the libraries move the point at which `nlminb()` stops by an amount comparable to its parameter tolerance (1.5e-8). Both fits converged with a positive definite Hessian. The AD library is part of the key of the compiled-model cache, so models compiled with each library are kept apart. With CppAD, any `sd_cores` reproduces the results of ALSCL 2.0.0 bit for bit (checked in section 5).
 
 ## 4. Changes tested and not kept
 
@@ -72,7 +80,7 @@ Other users' jobs ran on the computer throughout (one-minute load average 12-27 
 
 **Table 1.** Median elapsed time of one fit, including standard errors, and speed-up relative to the original code (in parentheses).
 
-| Data | Model | Random effects | ADREPORT quantities | Original | CppAD, 4 cores | TMBad, 1 core | TMBad, 4 cores (default) |
+| Data | Model | Random effects | ADREPORT quantities | Original | CppAD, 4 cores (default) | TMBad, 1 core | TMBad, 4 cores |
 |---|---|---:|---:|---:|---:|---:|---:|
 | YTF_example | ACL | 334 | 1,160 | 8.6 s | 7.7 s (1.13) | 7.3 s (1.18) | 6.6 s (1.31) |
 | YTF_example | ALSCL | 494 | 3,866 | 140.9 s | 118.8 s (1.19) | 97.3 s (1.45) | 83.9 s (1.68) |
@@ -81,7 +89,7 @@ Other users' jobs ran on the computer throughout (one-minute load average 12-27 
 | tuna | ACL | 439 | 1,360 | 14.3 s | 11.8 s (1.21) | 13.1 s (1.09) | 11.3 s (1.27) |
 | tuna | ALSCL | 499 | 4,361 | 217.4 s | 180.9 s (1.20) | 153.9 s (1.41) | 141.3 s (1.54) |
 
-With CppAD, on one core or four, the estimates, the objective function and every row of `summary(sdreport)` were identical to those of the original code in all six combinations. With TMBad, the results differed only by rounding (Table 2), far below the tolerances of section 1. The differences were the same with one and four cores, because the parallel standard errors are identical to the sequential ones. All 90 fits converged (`nlminb()` code 0) with a positive definite Hessian and a maximum absolute gradient below 2e-4.
+With CppAD, on one core or four, the estimates, the objective function and every row of `summary(sdreport)` were identical to those of the original code in all six combinations. With TMBad, the results differed by at most 2.3e-11 in these six combinations (Table 2), which estimate 5 fixed effects; with 10 fixed effects the differences were larger (section 3.2). The differences were the same with one and four cores, because the parallel standard errors are identical to the sequential ones. All 90 fits converged (`nlminb()` code 0) with a positive definite Hessian and a maximum absolute gradient below 2e-4.
 
 **Table 2.** Largest difference between TMBad and the original code. Estimates and standard errors: relative difference. Objective function: absolute difference in the negative log-likelihood. Reported values: difference in the estimates of the random effects and ADREPORT quantities, divided by the largest absolute value of the same quantity, so that values near zero (for example random effects) do not inflate the relative difference.
 
@@ -109,3 +117,11 @@ The script writes every fit to `runs.csv` (elapsed and CPU time, load average, c
 - `TMB::sdreport(obj, hessian.fixed = optimHess(...))` evaluates the Hessian lazily inside `sdreport()`, after it has stored the random effects that maximise the joint likelihood at the estimates (the joint mode), and leaves `obj$env$last.par` at the last finite-difference point. `.acl_sdreport()` therefore computes the Hessian first, and checks that `obj$env$last.par` holds the estimates and the joint mode before the delta method starts.
 - Socket workers that fit models themselves (`retro_model()`, `sim_acl()`) receive the AD library of the main process and use one core for standard errors, so the number of processes does not multiply. Fits run in a user's own parallel loop should use `alscl_speed(sd_cores = 1)`.
 - Benchmarks were run on frozen copies of the code (`git archive`), because `pkgload::load_all()` reads the source when each process starts.
+
+Fixes after the external review of the first version (commit `54f1350`):
+
+- **Failure to fork.** `parallel::mclapply()` signals an ordinary error when it cannot start the forked processes. Only errors inside the workers were converted to the class that triggers the sequential fallback, so a failure to fork reached `run_acl()`/`run_alscl()`, which then returned `est_std = NULL`, `vcov = NULL` and `pdHess = NA` with a warning. Any error from `mclapply()` now triggers the sequential `TMB::sdreport()`; a test replaces `mclapply()` with a function that fails and checks that the standard errors are identical to the sequential ones.
+- **Core count.** `alscl_speed(sd_cores = Inf)` was accepted and later became `NA`. The check now requires a finite whole number between 1 and `.Machine$integer.max`.
+- **Documentation website.** `website/build.py` requires every exported function to have an entry in `docs/FUNCTION_REFERENCE.md`, bilingual notes in `website/reference-notes.json` and a place in a function group. These were added for `alscl_speed()`; the site builds and `website/check.py` passes (136 pages, 44 functions per language).
+- **Default AD library.** TMBad was the default in the first version; it is now an option (section 3.2).
+- **TMB versions and environments.** The parallel delta method was allowed for all TMB 1.9.x versions; it is now limited to the versions it was checked against. `sd_cores = "auto"` no longer forks in GUI or embedded front-ends or with Apple's Accelerate BLAS (section 3.1).

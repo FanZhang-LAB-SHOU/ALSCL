@@ -43,7 +43,7 @@ UI = {
                close='关闭', functions='函数参考', setup='示例准备')}
 
 GROUPS = [
-    ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
+    ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
     ('biology', 'Biology and simulation', '生物参数与模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data', 'sim_acl']),
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
     ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_recruitment', 'plot_SSB_Rec']),
@@ -287,7 +287,7 @@ def load_reference():
     return reference
 
 def example_setup(name, lang):
-    if name in ['VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data']: return 'library(ALSCL)'
+    if name in ['alscl_speed','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data']: return 'library(ALSCL)'
     base = 'library(ALSCL)\nlibrary(ggplot2)\nlibrary(patchwork)\ndata("YTF_example")\nx <- YTF_example\ninputs <- x[c("data.CatL", "data.wgt", "data.mat")]\ndat <- x$data.CatL'
     if name in ['sim_cal','sim_data','sim_acl']:
         base += '\npa <- initialize_params(species = "flatfish")\nbio <- sim_cal(pa)'
@@ -379,7 +379,7 @@ def build(out):
                 render_page(out,'articles/'+case['slug']+'.html',lang,case['title'][lang],body,
                             'website/content/'+lang+'/articles/'+case['slug']+'.md','case')
         render_page(out,'articles/index.html',lang,UI[lang]['articles'],case_index,kind='case')
-        reference_index=md('All 43 exported functions, grouped by task. Signatures and defaults are read directly from the R source when this website is built.' if lang=='en' else '按任务分类的全部 43 个公开函数。函数签名和默认值在建站时直接从 R 源代码读取。')
+        reference_index=md('All 44 exported functions, grouped by task. Signatures and defaults are read directly from the R source when this website is built.' if lang=='en' else '按任务分类的全部 44 个公开函数。函数签名和默认值在建站时直接从 R 源代码读取。')
         for key,en,zh,names in GROUPS:
             reference_index+=f'<h2 id="{key}">{en if lang=="en" else zh}</h2><table class="reference-index"><tbody>'
             for name in names:

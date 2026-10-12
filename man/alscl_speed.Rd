@@ -6,29 +6,33 @@
 \usage{
 alscl_speed(
   sd_cores = getOption("ALSCL.sd_cores", "auto"),
-  framework = getOption("ALSCL.framework", "TMBad")
+  framework = getOption("ALSCL.framework", "CppAD")
 )
 }
 \arguments{
 \item{sd_cores}{\code{"auto"} or a positive integer: the number of cores
 used within one fit to compute standard errors. The Hessian of the fixed
 effects (one column per task) and the delta-method variance of each
-ADREPORT quantity (independent of one another) are computed in parallel.
-The results are identical to those of the sequential calculation.
-\code{"auto"} uses up to four physical cores and keeps one free. This is
-separate from the \code{ncores} argument of \code{run_acl()} and
-\code{run_alscl()}, which sets the number of workers for multiple starts.
-Forked processes are used, so Windows computes standard errors
-sequentially. Fits that already run on parallel workers
+ADREPORT quantity (independent of one another) are computed in forked
+processes. The results are identical to those of the sequential
+calculation. \code{"auto"} uses up to four physical cores and keeps one
+free, but uses one core where forked processes are unavailable or
+discouraged (see \code{\link[parallel]{mclapply}}): on Windows, in GUI or
+embedded front-ends (R.app, RGui, RStudio, Positron) and with Apple's
+Accelerate BLAS. A number of cores is used as given, except on Windows.
+This setting is separate from the \code{ncores} argument of
+\code{run_acl()} and \code{run_alscl()}, which sets the number of workers
+for multiple starts. Fits that already run on parallel workers
 (\code{retro_model()}, \code{sim_acl()}) use one core each; set
 \code{sd_cores = 1} when you run fits in your own parallel loop.}
 
 \item{framework}{Automatic-differentiation library that TMB compiles the
-model with. \code{"TMBad"} (default) evaluates the Laplace approximation
-and its gradient several times faster. \code{"CppAD"} is TMB's default
-library, used by ALSCL 2.0.0 and earlier; it reproduces earlier results
-bit for bit. The two give the same estimates and standard errors up to
-floating-point rounding (see the benchmark in \file{docs/SPEED.md}).
+model with. \code{"CppAD"} (default) is TMB's default library, used by
+ALSCL 2.0.0 and earlier; results are identical to those of ALSCL 2.0.0.
+\code{"TMBad"} evaluates the Laplace approximation and its gradient
+several times faster, but results are not identical: in the tests in
+\file{docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
+5 fixed effects were estimated and by up to 3e-8 when 10 were estimated.
 A change takes effect at the next fit, which compiles the model once for
 each library.}
 }
@@ -39,11 +43,11 @@ restores them.
 \description{
 Sets how \code{\link{run_acl}}, \code{\link{run_alscl}} and the functions
 built on them (\code{\link{retro_model}}, \code{\link{sim_acl}}) evaluate
-the model and compute standard errors. Each setting changes only how the
-same quantities are computed. Arguments left out keep their current value.
+the model and compute standard errors. Arguments left out keep their
+current value.
 }
 \examples{
 old <- alscl_speed(sd_cores = 1)  # sequential standard errors
-alscl_speed(framework = "CppAD")  # results of ALSCL 2.0.0, bit for bit
+alscl_speed(framework = "TMBad")  # faster, results not identical
 options(old)
 }
