@@ -1,5 +1,6 @@
 # Development version
 
+- Faster fits, set with the new `alscl_speed()`. Standard errors are computed in parallel within one fit (the fixed-effect Hessian by column and the delta method by ADREPORT quantity); the result is identical to `TMB::sdreport()`. Models are compiled with TMB's TMBad automatic-differentiation library, which evaluates the Laplace approximation and its gradient several times faster; estimates and standard errors equal those of the CppAD library up to floating-point rounding, and `alscl_speed(framework = "CppAD")` reproduces earlier results bit for bit. In the benchmark in `docs/SPEED.md`, fits were 1.25-1.68 times faster and results differed by at most 2.3e-11 (relative).
 - Separate total optimization starts (`nstarts`) from socket workers (`ncores`), preserving `nstarts = ncores` by default. Record per-start PIDs, elapsed and CPU time, and optimizer diagnostics. / 分开控制总起点数与并行进程数，并返回逐起点执行证据。
 - Add reproducible equal-work ACL/ALSCL benchmarks and parallel regression tests. / 新增相同工作量的并行实测与回归测试。
 

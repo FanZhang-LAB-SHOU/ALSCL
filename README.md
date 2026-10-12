@@ -98,7 +98,7 @@ library(ALSCL)
 packageVersion("ALSCL")
 ```
 
-建议使用近期 R 版本。依赖由安装程序解析，包括 TMB、RcppEigen、ggplot2、ggsci、dplyr、tidyr、reshape2、ggridges、cowplot、RColorBrewer、patchwork、scales，以及 R 内置 stats/utils/parallel/tools。Excel 导入示例另需 `readxl`；重建图谱需 `jsonlite`。
+建议使用近期 R 版本。依赖由安装程序解析，包括 TMB、Matrix、RcppEigen、ggplot2、ggsci、dplyr、tidyr、reshape2、ggridges、cowplot、RColorBrewer、patchwork、scales，以及 R 内置 stats/utils/parallel/tools。Excel 导入示例另需 `readxl`；重建图谱需 `jsonlite`。
 
 Use a recent R release. Dependencies are resolved during installation; Excel import additionally uses readxl and atlas regeneration uses jsonlite.
 
@@ -403,6 +403,7 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | [`diagnose_model`](docs/FUNCTION_REFERENCE.md#diagnose_model), [`diagnostic_metrics`](docs/FUNCTION_REFERENCE.md#diagnostic_metrics), [`compare_models`](docs/FUNCTION_REFERENCE.md#compare_models) | 数值、拟合及比较 / Diagnostics and comparison |
 | [`retro_model`](docs/FUNCTION_REFERENCE.md#retro_model), [`retro_acl`](docs/FUNCTION_REFERENCE.md#retro_acl), [`retro_alscl`](docs/FUNCTION_REFERENCE.md#retro_alscl) | 统一及模型专用回溯 / Retrospective interfaces |
 | [`acl_theme`](docs/FUNCTION_REFERENCE.md#acl_theme), [`acl_theme_set`](docs/FUNCTION_REFERENCE.md#acl_theme_set), [`acl_theme_reset`](docs/FUNCTION_REFERENCE.md#acl_theme_reset) | 主题读取、设置及恢复 / Theme configuration |
+| [`alscl_speed`](docs/SPEED.md) | Speed settings: parallel standard errors and the automatic-differentiation library |
 
 | 设置 / Setting | flatfish / YTF 风格 | tuna / 金枪鱼风格 |
 |---|---|---|
@@ -632,6 +633,8 @@ Palette changes reset semantic colors, with explicit same-call colors taking pre
 Windows、macOS、Linux 使用 socket 工作进程。建议先 1，再按内存与任务数选择 2–4；避免内外层同时开满。OpenMP 编译选项不等于模板自动并行，不能据此承诺加速。
 
 Socket workers support all three platforms. Begin with one and choose worker counts based on memory and task size; avoid nested oversubscription. OpenMP compilation alone does not establish parallel execution of the template.
+
+`alscl_speed()` sets two options that act within one fit. Standard errors are computed on several cores (`sd_cores`, default up to four), with results identical to the sequential calculation. Models are compiled with TMB's TMBad automatic-differentiation library (`framework`), which evaluates the Laplace approximation and its gradient several times faster than the CppAD library used by ALSCL 2.0.0; estimates and standard errors differ only by floating-point rounding, and `alscl_speed(framework = "CppAD")` reproduces earlier results bit for bit. In the benchmark, fits with the default settings were 1.25-1.68 times faster. [Speed settings, checks and benchmark](docs/SPEED.md).
 
 [并行实测报告 / Measured parallel performance](docs/PARALLEL_BENCHMARK.md)：同样 4 个起点，在 1、2、4 个工作进程下的 ACL/ALSCL 耗时、CPU 证据和复现脚本。 / Equal-work ACL/ALSCL timings, worker evidence and reproducible scripts.
 
