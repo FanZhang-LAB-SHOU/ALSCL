@@ -125,10 +125,22 @@ The revised version (`2b7d418`) was reviewed a second time. The review confirmed
 | The fork-failure test fails with a TMB version outside `.acl_tmb_checked` | With `.acl_tmb_supported()` returning `FALSE`, standard errors were computed sequentially without forking, no warning was given, and `expect_warning()` failed | The test treats the installed TMB as checked; a new test checks that an unchecked version computes standard errors sequentially without calling `mclapply()`. With the version list replaced by an unchecked version, every test passes except the one that checks the list itself |
 | The identity test can pass through the fallback | With the parallel delta method made to fail, all identity assertions for ACL and ALSCL still passed, because `suppressWarnings()` hid the fallback and the test compared `TMB::sdreport()` with itself | `.acl_sdreport(fallback = FALSE)` turns a parallel failure into an error; the test muffles only "NaNs produced" warnings and runs for CppAD and TMBad; a new test checks that a deliberate failure gives an error |
 
+### Checks on Linux, macOS and Windows
+
+The repository's GitHub Actions workflow ran `R CMD check --no-manual` (warnings treated as errors, `NOT_CRAN = true`) on commit `07e0fb8` for [pull request #3](https://github.com/Linbojun99/ALSCL/pull/3), and the documentation workflow built the website. A local `R CMD check` on macOS gave 0 errors, 0 warnings and 0 notes.
+
+| System | `R CMD check` | Tests |
+|---|---|---|
+| ubuntu-latest | OK | 353 passed, 0 failed, 0 skipped |
+| macos-latest | OK | 353 passed, 0 failed, 0 skipped |
+| windows-latest | OK | 292 passed, 0 failed, 6 skipped |
+
+The six tests skipped on Windows are those that need forked processes; on Windows standard errors are computed sequentially. The comparison of TMBad and CppAD fits ran on all three systems, so the templates compile with TMBad on Windows as well.
+
 ## 7. Open points
 
-1. **TMBad as an option.** Whether TMBad could become the default after more checks (fits that estimate more fixed effects, real data, Linux and Windows).
-2. **Not yet tested:** Windows (sequential path) and Linux; a benchmark on an idle computer.
+1. **TMBad as an option.** Whether TMBad could become the default after more checks (fits that estimate more fixed effects, real data).
+2. **Not yet done:** a benchmark on an idle computer.
 3. **Dependence on TMB internals.** `.acl_sdreport()` and `.acl_delta_sd()` use `obj$env$spHess`, `obj$env$f` (with `rangeweight`, `doforward = 0` and `type = "ADGrad"`), `obj$env$L.created.by.newton` and the TMB 1.9.21 semantics of `last.par.best`. The version list and the identity checks in step 3 of section 4 are meant to catch changes in TMB.
 4. **Fits in a user's own parallel loop** should set `sd_cores = 1`; this is documented but not detected.
 
