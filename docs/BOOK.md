@@ -4,7 +4,7 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**
+**ALSCL 2.1.0 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
@@ -34,9 +34,9 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 <a id="chapter-01"></a>
 ## 01 开始使用 · Getting started
 
-安装 ALSCL 2.0.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.1.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.0.0 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.1.0 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -1678,9 +1678,9 @@ Explicit colors override the theme; `NULL` color arguments inherit it. Changing 
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 开发版的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.1.0 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in the ALSCL development version are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.1.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 

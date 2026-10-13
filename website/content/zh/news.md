@@ -1,12 +1,14 @@
-## 各系统上的速度设置
+## ALSCL 2.1.0
+
+### 各系统上的速度设置
 
 标准误现在在 Windows 以及 RStudio、R.app、Positron 中也能使用多个核：当 delta 方法预计超过约 3 秒时，由 socket 进程计算，结果逐位相同。每次拟合在 `fit$sd_info` 中记录标准误的计算方式，`alscl_speed_info()` 显示设置在本机上的实际效果。新增的[速度设置](../articles/speed.html)一文详细说明每项设置。
 
-## 速度设置
+### 速度设置
 
 新增 `alscl_speed()`，用于设置拟合时标准误的计算方式。默认在单次拟合内用多个核计算标准误，结果与 ALSCL 2.0.0 逐位相同；基准测试中拟合快 1.13-1.24 倍。`alscl_speed(framework = "TMBad")` 改用 TMB 的 TMBad 库编译模型，拟合快 1.25-1.68 倍，但估计值与默认设置略有差异。参见 [`alscl_speed()` 函数参考](../reference/alscl_speed.html)。
 
-## 并行拟合更新
+### 并行拟合更新
 
 `run_acl()` 与 `run_alscl()` 新增 `nstarts`，可以将总起点数与 `ncores` 并行进程数分开设置，保留原有默认行为。返回诊断包含实际 PID 与 CPU 时间。参见[并行性能实测](../articles/reproducibility.html)中的相同工作量计时和可复现证据。
 

@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/05-Simulation) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/07-Diagnostics)
 
-**ALSCL 2.0.0 · 简体中文 / English**
+**ALSCL 2.1.0 · 简体中文 / English**
 
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|

@@ -16,7 +16,7 @@
 
 <h2 id="installation">安装</h2>
 
-从 GitHub 安装当前开发版本：
+从 GitHub 安装当前版本（2.1.0）：
 
 ```r
 install.packages("remotes")

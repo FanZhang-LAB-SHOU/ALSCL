@@ -1,6 +1,6 @@
 # Speed-up of ALSCL model fitting: change and results report
 
-Report date: 12 October 2026 (revised after two reviews). Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
+Report date: 12 October 2026 (revised after two reviews). These changes are released as ALSCL 2.1.0. Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
 
 ## 1. Summary
 
