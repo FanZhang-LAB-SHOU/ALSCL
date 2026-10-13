@@ -29,12 +29,31 @@
   list(lower = lower, upper = upper, start = pmax(lower, pmin(upper, par)))
 }
 .acl_optimize <- function(obj, start, lower, upper, train_times, control) {
+  history <- vector("list", train_times)
+  best <- NULL; selected <- NA_integer_
   for (i in seq_len(train_times)) {
-    opt <- stats::nlminb(start, obj$fn, obj$gr, lower = lower, upper = upper, control = control)
-    start <- opt$par
+    candidate <- tryCatch(stats::nlminb(start, obj$fn, obj$gr,
+      lower = lower, upper = upper, control = control),
+      error = function(e) list(par = start, objective = Inf,
+        convergence = 1L, message = conditionMessage(e)))
+    history[[i]] <- candidate
+    if (is.finite(candidate$objective)) {
+      # An unchanged failed restart must not replace an earlier successful pass.
+      unchanged <- !is.null(best) && identical(candidate$par, best$par) &&
+        abs(candidate$objective - best$objective) <= 1e-8
+      if (is.null(best) || (!unchanged && candidate$objective < best$objective) ||
+          (unchanged && !isTRUE(best$convergence == 0L) && isTRUE(candidate$convergence == 0L))) {
+        best <- candidate; selected <- i
+      }
+      start <- candidate$par
+    }
   }
-  opt
+  if (is.null(best)) best <- history[[1L]]
+  best$optimizer_history <- history
+  best$selected_pass <- selected
+  best
 }
+
 .acl_fit_start <- function(i, data, params, mapping, random, dll, bounds,
                            train_times, control, obj = NULL) {
   started_at <- as.numeric(Sys.time())
@@ -74,7 +93,11 @@
   opt
 }
 .acl_fit <- function(model, prepared, parameters, parameters.L, parameters.U, map,
-                     train_times, ncores, silent, output, control, nstarts = ncores) {
+                     train_times, ncores, silent, output, control, nstarts = ncores,
+                     F_structure = c("group_year", "year"), polish = TRUE) {
+  F_structure <- match.arg(F_structure)
+  if (!is.logical(polish) || length(polish) != 1L || is.na(polish))
+    stop("polish must be TRUE or FALSE.")
   train_times <- .acl_positive_integer(train_times, "train_times")
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
@@ -102,9 +125,13 @@
   config$parameters.U[[t0_name]] <- min(config$parameters.U[[t0_name]], t0_upper)
   if ((if (model == "ACL") p$t0 else exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.")
   p$dev_log_R <- rep(0, d$Y)
-  p$dev_log_F <- array(0, c(if (model == "ACL") d$A else d$L, d$Y))
+  p$dev_log_F <- array(0, c(if (F_structure == "year") 1L else if (model == "ACL") d$A else d$L, d$Y))
   p$dev_log_N0 <- rep(0, d$A-1L)
   mapping <- .acl_map(p, map, model)
+  if (F_structure == "year") {
+    group_parameter <- if (model == "ACL") "logit_log_F_a" else "logit_log_F_l"
+    mapping[[group_parameter]] <- factor(NA)
+  }
   random <- c("dev_log_R", "dev_log_F", "dev_log_N0")
   # Clamp all starting values to the valid named bounds before building the tape.
   for (nm in names(config$parameters)) {
@@ -144,10 +171,15 @@
     elapsed = s$elapsed, cpu_seconds = s$cpu_seconds, objective = s$objective,
     convergence = s$convergence)))
   if (!is.finite(opt$objective)) stop("Optimization produced a non-finite objective.")
+  raw_opt <- opt
+  refined <- .acl_polish(obj, opt$par, bounds$lower, bounds$upper, enabled = polish)
+  opt$par <- refined$par
   # Re-evaluate in this process to synchronize random effects, reports and gradients.
   opt$objective <- obj$fn(opt$par)
   gradient <- as.numeric(obj$gr(opt$par)); names(gradient) <- names(opt$par)
   report <- obj$report()
+  if (F_structure == "year")
+    report[[if (model == "ACL") "phi_log_F_a" else "phi_log_F_l"]] <- NULL
   sdresult <- tryCatch(.acl_sdreport(obj, opt$par),
     error = function(e) {warning("Standard errors unavailable: ", conditionMessage(e)); NULL})
   sd_info <- if (is.null(sdresult)) NULL else attr(sdresult, "acl_sd_info")
@@ -168,7 +200,12 @@
     len_border = prepared$bins$border, len_lower = prepared$bins$lower, len_upper = prepared$bins$upper,
     growth_step = prepared$growth_step, elapsed = proc.time()[["elapsed"]]-started,
     starts = starts, start_diagnostics = start_diagnostics,
-    nstarts = nstarts, workers = workers, observations = prepared$observations)
+    nstarts = nstarts, workers = workers, observations = prepared$observations,
+    F_structure = F_structure, optimizer_history = raw_opt$optimizer_history,
+    raw_opt = raw_opt, refinement = refined[setdiff(names(refined), "par")])
+  result$diagnostics <- .acl_fit_diagnostics(result)
+  if (!silent && length(result$diagnostics$issues))
+    message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "))
   if (output) .acl_save_output(result, prepared$data.CatL)
   result
 }

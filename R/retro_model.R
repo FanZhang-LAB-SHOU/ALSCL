@@ -51,6 +51,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param rho_digits Integer. Decimal places for Mohn's rho display. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
+#' @inheritParams run_acl
 #' @return A list containing `results`, `rho_text`, `last_points`, `model_type`,
 #'   and optionally `plot`.
 #' @export
@@ -77,7 +78,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         axis_title_size = NULL, axis_text_size = NULL,
                         strip_text_size = NULL, legend_text_size = NULL,
                         x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
-                        rho_digits = 4, rho_position = "top_right", rho_size = 3.5) {
+                        rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
+                        F_structure = c("group_year", "year"), polish = TRUE) {
+  F_structure <- match.arg(F_structure)
 
   model_type <- match.arg(model_type)
   nyear <- .acl_positive_integer(nyear, "nyear")
@@ -97,7 +100,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
               parameters = parameters, parameters.L = parameters.L,
               parameters.U = parameters.U, map = map,
               len_mid = len_mid, len_border = len_border,
-              train_times = train_times, growth_step = growth_step, silent = TRUE)
+              train_times = train_times, growth_step = growth_step, silent = TRUE,
+              F_structure = F_structure, polish = polish)
     } else {
       run_alscl(data.CatL = CatL_sub, data.wgt = wgt_sub, data.mat = mat_sub,
                 rec.age = rec.age, nage = nage, M = M,
@@ -107,7 +111,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                 parameters.U = parameters.U, map = map,
                 len_mid = len_mid, len_border = len_border,
                 len_lower = len_lower, len_upper = len_upper,
-                train_times = train_times, silent = TRUE)
+                train_times = train_times, silent = TRUE,
+                F_structure = F_structure, polish = polish)
     }
   }
 

@@ -2,7 +2,7 @@
 
 ## The input bundle
 
-ALSCL 2.2.1 includes a complete [executable example](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
+ALSCL 2.2.2 includes a complete [executable example](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
 
 |Field in x|Contents|
 |---|---|
@@ -136,7 +136,7 @@ Check the optimizer code, gradient, Hessian, boundary hits, uncertainty and resi
 
 ## Run the complete example
 
-Install ALSCL 2.2.1 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
+Install ALSCL 2.2.2 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
 
 ```r
 library(ALSCL)
@@ -147,23 +147,19 @@ source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 This creates `x`, `a` (ACL) and `b` (ALSCL), and writes inputs, portable result summaries, two PNG figures and session information to `output/own-data-example`. Change that output directory when setting up your assessment. The complete code follows; copy it into an R script or edit the supplied file.
 
 ```r
-# ALSCL 2.2.1: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
-# Run from the repository root:
+# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.1")
+stopifnot(packageVersion("ALSCL") >= "2.2.2")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
-# Read the three aligned tables -------------------------------
 # data.CatL.csv, data.wgt.csv, data.mat.csv.
 data_dir <- "docs/data"
 inputs <- read_survey_csv(data_dir)
-# Excel alternative (requires readxl):
 # inputs <- read_survey_excel("my_survey.xlsx")
 
-# Shared biology -----------------------------------------
 # M_annual and vbk are annual; lengths are cm; weights in the example are kg.
 bio <- list(rec.age = 1, nage = 15, M_annual = 0.2,
             growth_step = 1, sel_L50 = 15, sel_L95 = 20,
@@ -179,7 +175,6 @@ stopifnot(max(abs(diff(len_mid) - diff(len_mid)[1])) < 1e-8)
 len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
 validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
 
-# Model-specific settings ------------------------------
 # Growth and most process values below are starts, not automatic fixes.
 # Review starts, bounds and the documented default fixed values for your stock.
 p_acl <- list(
@@ -205,7 +200,6 @@ map_alscl <- list()
 # map_acl["t0"] <- list(NULL)
 # map_alscl["log_t0"] <- list(NULL)
 
-# Assemble the input bundle -----------------------------------
 x <- list(
   data.CatL = inputs$data.CatL,
   data.wgt = inputs$data.wgt,
@@ -222,31 +216,30 @@ x <- list(
     acl = list(parameters = p_acl, map = map_acl),
     alscl = list(parameters = p_alscl, map = map_alscl)))
 
-# Fit directly ----------------------------------------------
 alscl_speed_info()
 a <- run_acl(x)
 b <- run_alscl(x)
 # a <- run_acl(x, nstarts = 4, ncores = 2)
 # b <- run_alscl(x, nstarts = 4, ncores = 2)
 
-# Inspect, plot and save ------------------------------
 checks <- list(ACL = diagnose_model(x$data.CatL, a),
                ALSCL = diagnose_model(x$data.CatL, b))
 print(checks)
 print(a$sd_info)
 print(b$sd_info)
 for (fit in list(a, b)) {
-  print(fit$par_low_up) # Actual free scalars and bounds
+  print(fit$par_low_up)
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+  print(fit$refinement)
+  print(fit$diagnostics)
   if (!isTRUE(fit$convergence_code == 0L) || !isTRUE(fit$pdHess) ||
-      !isTRUE(fit$max_abs_gradient < 0.001) || !identical(fit$bound_hit, FALSE))
+      !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
 residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
-# Omit SE intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)
@@ -261,7 +254,6 @@ saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
         file.path(output_dir, "assessment_summary.rds"))
 writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt"))
-# Refit in a new session:
 # x <- readRDS("output/own-data-example/inputs_x.rds")
 # b <- run_alscl(x)
 ```
@@ -301,10 +293,10 @@ The updated script was rerun with the model-default maps and two successive opti
 
 |Model|Free scalars|Convergence code|Maximum gradient|Positive-definite Hessian|Boundary hit|
 |---|---|---|---|---|---|
-|ACL|10|0|9.75e-5|Yes|No|
-|ALSCL|13|0|4.97e-4|Yes|No|
+|ACL|10|0|2.62e-9|Yes|No|
+|ALSCL|13|0|2.59e-9|Yes|No|
 
-Both runs used four cores for standard errors; actual execution depends on the environment. These are numerical checks of the synthetic example, not validation of an unseen stock assessment. In a separate run on the same data with only t0 fixed, ACL had code 1, maximum gradient 0.00668 and a non-positive-definite Hessian, even with two optimization passes. The t0-only ALSCL fit also returned code 1 (false convergence), despite a positive-definite Hessian and maximum gradient 0.000934. These options are therefore shown as configurations to evaluate, not successfully validated replacements for the baseline.
+The 2.2.2 run used four cores for standard errors and the default safeguarded refinement. These are numerical checks of synthetic data, not validation of an unseen stock assessment. Before refinement was added (2.2.1), the t0-only ALSCL fit could return false convergence at an unchanged optimum. Version 2.2.2 retains the successful earlier pass and refines its gradient to about 5.37e-9. The t0-only ACL with the original F structure still has an age-correlation boundary and fails the numerical screen; choosing shared F is a separate biological model decision, described below.
 
 The following plots were generated by this script using the synthetic CSV inputs.
 
@@ -326,3 +318,46 @@ b <- run_alscl(x)
 ```
 
 Keep the original data, configuration, provenance and package version together. The older `fit_survey_tables()` helper, separate-argument calls and `do.call()` remain supported.
+
+## Refinement and shared F in 2.2.2
+
+`run_acl(x)` and `run_alscl(x)` now finish the selected fit with up to five safeguarded Newton steps (`polish = TRUE`). Each step requires a positive-definite numerical Hessian, parameters strictly inside their bounds, a smaller maximum absolute gradient, and an objective increase no greater than `1e-8` for floating-point roundoff. Refinement stops if a condition fails; it cannot repair insufficient information or an inappropriate model. Set `polish = FALSE` to skip it. This can change estimates at numerical precision, so 2.2.2 does not promise bitwise equality with older fits.
+
+Repeated optimizer passes retain their raw parameters, objective, code and message in `fit$optimizer_history`. An unchanged failed restart no longer overwrites an earlier successful pass. `fit$raw_opt` records the selected result before refinement; `fit$refinement` records accepted steps and before/after gradients. `convergence_code` remains the selected raw optimizer code, not an invented success code after refinement. Multistart selection still uses the lowest finite objective before refinement; `starts` and `start_diagnostics` describe those unrefined starts.
+
+`fit$diagnostics` adds a separate numerical screen: maximum gradient below `1e-3`, positive-definite Hessian and covariance, no optimizer boundary and no natural-scale boundary. Free correlations within `1e-4` of 0 or 1 and free process/observation SDs at or below `1e-4` are flagged. These are screening thresholds, not statistical tests. `high_correlations` lists parameter pairs with absolute correlation at least 0.95; this warrants investigation but does not alone prove non-identifiability. The covariance condition number depends on parameter scaling. `diagnose_model()` prints the raw optimizer status and numerical screen separately; inspect residuals, alternative starts, profiles and sensitivity as well.
+
+### Choose the F structure explicitly
+
+The default `F_structure = "group_year"` preserves the original age × time (ACL) or length × time (ALSCL) separable AR(1) field. The optional `F_structure = "year"` assumes **the same instantaneous F for all ages or lengths within each time step**. For quarterly data, this is one F per quarter, not one per calendar year. This biological assumption is appropriate only when supported by the fishery; it is not an automatic cure for non-convergence.
+
+In the shared structure, `log(F[y]) = mean_log_F + u[y]`, with a stationary one-dimensional AR(1): `u[1]` has SD `sigma_F`, and later innovations have SD `sigma_F * sqrt(1 - rho_y^2)`. There are Y random F effects instead of A × Y or L × Y. The C++ likelihood includes exactly one normalized AR(1) density. It does not tie together cells of a two-dimensional density. The unused age/length correlation is automatically fixed, excluded from free parameters and omitted from the fitted report, even if its map entry is NULL. Other map defaults remain unchanged. `report$dev_log_F` is 1 × Y; `report$F` (ACL) or `report$FL` (ALSCL) retains its full group × Y shape, and F-deviation plots show one shared series.
+
+The following example assumes `x` contains your validated input tables, biology and starting values from the complete survey example. It fixes only t0 among the **active** scalar parameters; the unused group correlation is structurally absent:
+
+```r
+map_acl_t0 <- list(t0 = factor(NA), log_std_log_F = NULL,
+                   logit_log_F_y = NULL, logit_log_F_a = NULL)
+map_alscl_t0 <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
+a_year <- run_acl(x, map = map_acl_t0, F_structure = "year")
+b_year <- run_alscl(x, map = map_alscl_t0, F_structure = "year")
+a_year$optimizer_history
+a_year$refinement
+b_year$diagnostics
+b_year$sd_info
+diagnose_model(x$data.CatL, b_year)
+plot_deviance(a_year, type = "F", se = TRUE)
+plot_fishing_mortality(b_year, se = TRUE)
+# Store the choice to continue using the shortest syntax:
+x$fit_config$acl$map <- map_acl_t0
+x$fit_config$alscl$map <- map_alscl_t0
+x$fit_args$F_structure <- "year"
+a_year <- run_acl(x)
+b_year <- run_alscl(x)
+```
+
+Original separate-argument and `do.call()` calls remain valid. `retro_model()` (including its wrappers) and `sim_acl()` also accept `F_structure` and `polish`; pass the same structure to all retrospective peels. Parallel standard errors and multistart workers continue to use the existing speed settings. In `sim_data()`, F innovation SD is not the same as the marginal SD in the fitting AR(1); for one-dimensional stationary AR(1), marginal SD equals innovation SD divided by `sqrt(1 - rho_y^2)`.
+
+The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/Linbojun99/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
+
+![2.2.2 convergence checks](../assets/manual/figures/convergence-2.2.2.png)

@@ -1,3 +1,3 @@
 "model","free_scalars","convergence","max_gradient","pdHess","bound_hit","sd_method","sd_cores"
-"ACL",10,0,9.75341165379007e-05,TRUE,FALSE,"forked processes",4
-"ALSCL",13,0,0.000497421734195314,TRUE,FALSE,"forked processes",4
+"ACL",10,0,2.62474486589781e-09,TRUE,FALSE,"forked processes",4
+"ALSCL",13,0,2.58938825936639e-09,TRUE,FALSE,"forked processes",4

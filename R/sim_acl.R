@@ -15,13 +15,16 @@
 #'   Uses socket workers on all platforms.
 #'   Use \code{parallel::detectCores()} to see available cores.
 #'
+#' @inheritParams run_acl
 #' @return A list containing the results of the stock assessment model.
 #' @export
 #' @param train_times Number of optimization passes per replicate.
 #' @param control Named nlminb control settings.
 sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
-                    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list()) {
+                    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
+                    F_structure = c("group_year", "year"), polish = TRUE) {
+  F_structure <- match.arg(F_structure)
   ncores <- .acl_positive_integer(ncores, "ncores")
   if (!length(iter_range)) stop("iter_range must not be empty.")
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -50,7 +53,8 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
         rec.age = s$ages[1], nage = s$nage, M = M, sel_L50 = unname(L50), sel_L95 = unname(L95),
         parameters = parameters, parameters.L = parameters.L, parameters.U = parameters.U,
         map = map, len_mid = s$len_mid, len_border = s$len_border,
-        growth_step = step, train_times = train_times, control = control, silent = TRUE)
+        growth_step = step, train_times = train_times, control = control, silent = TRUE,
+        F_structure = F_structure, polish = polish)
       save(result, file = file.path(output_dir, paste0("result_rep_", iter)))
       result
     }, error = function(e) list(converge = "FAILED", error = conditionMessage(e), iter = iter))

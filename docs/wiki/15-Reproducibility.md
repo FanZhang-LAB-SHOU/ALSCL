@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki)
 
-**ALSCL 2.2.1 · 简体中文 / English**
+**ALSCL 2.2.2 · 简体中文 / English**
 
 ## 固定参数敏感性 · Sensitivity to fixed assumptions
 

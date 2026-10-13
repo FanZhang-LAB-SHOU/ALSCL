@@ -1,3 +1,10 @@
+## ALSCL 2.2.2
+
+- Add safeguarded Newton refinement (`polish = TRUE`) and preserve every raw optimizer pass. An unchanged failed restart no longer replaces an earlier successful result. Raw convergence codes remain available.
+- Add `F_structure = "year"` to both fitting functions, retrospectives and simulation fitting: one shared F per time step with a correctly normalized 1D AR(1) likelihood. The default remains the original group-by-time field; legacy calls and speed settings remain supported.
+- Add natural-scale boundaries, covariance conditioning, high parameter correlations and an independent numerical screen. Shared-F deviation plots use one series. See the [complete survey example](../articles/case-fit-survey.html).
+- Update English and Simplified Chinese documentation, website and Wiki. Refinement can change estimates at numerical precision; the old speed benchmark is not a promise of cross-version identity.
+
 ## ALSCL 2.2.1
 
 - Clarify required inputs versus estimable parameters and all map rules. The own-data script uses model-default maps (10 ACL / 13 ALSCL free scalars), with fresh diagnostics and plots; a more flexible t0-only map is documented separately.

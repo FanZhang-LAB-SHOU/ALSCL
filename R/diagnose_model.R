@@ -19,6 +19,15 @@ diagnose_model <- function(data.CatL, model_result) {
   gradient <- .acl_max_gradient(model_result)
   cat("Optimizer convergence code:",code,"\nMaximum absolute gradient:",gradient,
       "\nPositive-definite Hessian:",hessian,"\nParameter boundary hit:",bound,"\n")
-  rbind(metrics, data.frame(Metric=c("Boundary Hit","Model Converged","Final Outer mgc","Positive Definite Hessian"),
+  result <- rbind(metrics, data.frame(Metric=c("Boundary Hit","Model Converged","Final Outer mgc","Positive Definite Hessian"),
                             Value=c(bound,if(is.na(code)) NA else code==0L,gradient,hessian)))
+  if (!is.null(model_result$diagnostics)) {
+    d <- model_result$diagnostics
+    cat("Numerical screen:", d$numerical_ok, "\nNatural-scale boundary:",
+        d$natural_boundary, "\nRefinement:", model_result$refinement$status, "\n")
+    result <- rbind(result, data.frame(Metric = c("Numerical Screen Passed",
+      "Natural Scale Boundary", "Covariance Condition", "Highly Correlated Pairs"),
+      Value = c(d$numerical_ok, d$natural_boundary, d$covariance_condition, nrow(d$high_correlations))))
+  }
+  result
 }

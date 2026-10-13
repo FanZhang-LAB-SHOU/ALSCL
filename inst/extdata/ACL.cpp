@@ -93,7 +93,7 @@ Type objective_function<Type>::operator() ()
   //compute Z,F and M
   for(int i = 0;i < A;++i){
     for(int j = 0;j < Y;++j){
-        F(i,j) = exp(mean_log_F + dev_log_F(i,j));
+        F(i,j) = exp(mean_log_F + dev_log_F(dev_log_F.dim[0] == 1 ? 0 : i,j));
         Z(i,j)=F(i,j)+M;
      }
   }
@@ -183,7 +183,15 @@ Type objective_function<Type>::operator() ()
   }
 
   // logF
-  nll += SCALE(SEPARABLE(AR1(phi_log_F_y),AR1(phi_log_F_a)),std_log_F)(dev_log_F);
+  // A single row is the optional shared F process: Y random effects and
+  // one AR(1) normalization, not tied cells of the two-dimensional field.
+  if (dev_log_F.dim[0] == 1) {
+    vector<Type> yearly_F(Y);
+    for (int y=0; y<Y; ++y) yearly_F(y) = dev_log_F(0,y);
+    nll += SCALE(AR1(phi_log_F_y),std_log_F)(yearly_F);
+  } else {
+    nll += SCALE(SEPARABLE(AR1(phi_log_F_y),AR1(phi_log_F_a)),std_log_F)(dev_log_F);
+  }
 
   //recruitment estimates
   nll += SCALE(AR1(phi_log_R),std_log_R)(dev_log_R); // AR1 evaluation to generate nll for logR

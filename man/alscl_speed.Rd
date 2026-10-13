@@ -30,7 +30,9 @@ each; set \code{sd_cores = 1} when you run fits in your own parallel loop.}
 
 \item{framework}{Automatic-differentiation library that TMB compiles the
 model with. \code{"CppAD"} (default) is TMB's default library, used by
-ALSCL 2.0.0 and earlier; results are identical to those of ALSCL 2.0.0.
+ALSCL 2.0.0 and earlier. Since 2.2.2, optimizer refinement can change
+estimates; parallel standard errors still match sequential calculations
+at the same parameters. This is not a cross-version identity guarantee.
 \code{"TMBad"} evaluates the Laplace approximation and its gradient
 several times faster, but results are not identical: in the tests in
 \file{docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when

@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/02-Theory) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/04-Built-in-YTF)
 
-**ALSCL 2.2.1 · 简体中文 / English**
+**ALSCL 2.2.2 · 简体中文 / English**
 
 下载 [ALSCL_Data_Entry_Example.xlsx](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)。工作簿的 `Instructions` 是双语说明页；其余三张表已填入与 `YTF_example` 相同的数值。请另存副本再替换数据。
 
@@ -303,9 +303,9 @@ Check the optimizer code, gradient, Hessian, boundary hits, uncertainty and resi
 
 ### 5.3 完整 CSV → x → 双模型示例 / Complete CSV-to-both-models example
 
-2.2.1 新增完整脚本 [fit_own_data_example.R](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R)。先从仓库根目录运行下面的教学流程，再修改数据路径、生物参数、体长边界、初值及固定参数。内附数据是模拟数据，不能只换观测文件便沿用其固定假设。
+2.2.2 新增完整脚本 [fit_own_data_example.R](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R)。先从仓库根目录运行下面的教学流程，再修改数据路径、生物参数、体长边界、初值及固定参数。内附数据是模拟数据，不能只换观测文件便沿用其固定假设。
 
-Version 2.2.1 adds a complete executable script. Run the teaching workflow from the repository root, then replace the data, biology, bin definitions, initial values and fixed assumptions for your stock. The bundled observations are synthetic; changing only the input file does not justify retaining their conditional settings.
+Version 2.2.2 adds a complete executable script. Run the teaching workflow from the repository root, then replace the data, biology, bin definitions, initial values and fixed assumptions for your stock. The bundled observations are synthetic; changing only the input file does not justify retaining their conditional settings.
 
 `x` 包含三表、共用 `fit_args`，以及 `fit_config$acl` 和 `fit_config$alscl`。两个模型共用观测，自动选择自己的配置；显式传参优先，内置加速继续生效。
 
@@ -318,14 +318,14 @@ source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 以下为完整脚本 / Complete script:
 
 ```r
-# ALSCL 2.2.1: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.1")
+stopifnot(packageVersion("ALSCL") >= "2.2.2")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
@@ -423,8 +423,10 @@ for (fit in list(a, b)) {
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+  print(fit$refinement)
+  print(fit$diagnostics)
   if (!isTRUE(fit$convergence_code == 0L) || !isTRUE(fit$pdHess) ||
-      !isTRUE(fit$max_abs_gradient < 0.001) || !identical(fit$bound_hit, FALSE))
+      !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
 residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
@@ -458,19 +460,19 @@ Both models completed the synthetic CSV workflow with convergence code 0, a posi
 
 |模型|自由标量参数|收敛码|最大梯度|Hessian 正定|命中边界|
 |---|---|---|---|---|---|
-|ACL|10|0|9.75e-5|是|否|
-|ALSCL|13|0|4.97e-4|是|否|
+|ACL|10|0|2.62e-9|是|否|
+|ALSCL|13|0|2.59e-9|是|否|
 
-两次运行均使用 4 核计算标准误，实际执行方式取决于环境。这是模拟示例的数值检查，不是对尚未提供的正式评估的验证。另在相同数据上测试只固定 t0 的 ACL，即使连续优化两轮，仍得到收敛码 1、最大梯度 0.00668 和非正定 Hessian。只固定 t0 的 ALSCL 也返回收敛码 1（false convergence），尽管 Hessian 正定且最大梯度为 0.000934。因此这些配置作为待评估选项展示，不作为已经验证成功的基线替代方案。
+2.2.2 此次运行使用 4 核计算标准误，并启用默认受保护的收尾。这是模拟数据的数值检查，不是对尚未提供的正式评估的验证。加入收尾前（2.2.1），只固定 t0 的 ALSCL 可能在相同最优点误报 false convergence；2.2.2 保留先前成功轮次，并将梯度修正至约 5.37e-9。原 F 结构下只固定 t0 的 ACL 仍存在年龄相关边界，不能通过数值筛查；改用共用 F 是另一项生物学模型选择，下文说明。
 
 The updated script was rerun with the model-default maps and two successive optimization passes. The recorded [diagnostics](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv) are:
 
 |Model|Free scalars|Convergence code|Maximum gradient|Positive-definite Hessian|Boundary hit|
 |---|---|---|---|---|---|
-|ACL|10|0|9.75e-5|Yes|No|
-|ALSCL|13|0|4.97e-4|Yes|No|
+|ACL|10|0|2.62e-9|Yes|No|
+|ALSCL|13|0|2.59e-9|Yes|No|
 
-Both runs used four cores for standard errors; actual execution depends on the environment. These are numerical checks of the synthetic example, not validation of an unseen stock assessment. In a separate run on the same data with only t0 fixed, ACL had code 1, maximum gradient 0.00668 and a non-positive-definite Hessian, even with two optimization passes. The t0-only ALSCL fit also returned code 1 (false convergence), despite a positive-definite Hessian and maximum gradient 0.000934. These options are therefore shown as configurations to evaluate, not successfully validated replacements for the baseline.
+The 2.2.2 run used four cores for standard errors and the default safeguarded refinement. These are numerical checks of synthetic data, not validation of an unseen stock assessment. Before refinement was added (2.2.1), the t0-only ALSCL fit could return false convergence at an unchanged optimum. Version 2.2.2 retains the successful earlier pass and refines its gradient to about 5.37e-9. The t0-only ACL with the original F structure still has an age-correlation boundary and fails the numerical screen; choosing shared F is a separate biological model decision, described below.
 
 ![CSV 示例残差 / CSV example residuals](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true)
 

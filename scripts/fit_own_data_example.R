@@ -1,11 +1,11 @@
-# ALSCL 2.2.1: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.1")
+stopifnot(packageVersion("ALSCL") >= "2.2.2")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
@@ -103,8 +103,10 @@ for (fit in list(a, b)) {
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+  print(fit$refinement)
+  print(fit$diagnostics)
   if (!isTRUE(fit$convergence_code == 0L) || !isTRUE(fit$pdHess) ||
-      !isTRUE(fit$max_abs_gradient < 0.001) || !identical(fit$bound_hit, FALSE))
+      !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
 residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,

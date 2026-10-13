@@ -21,7 +21,10 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.1 · 简体中文 / English**
+**Version 2.2.2 · 简体中文 / English**
+
+**2.2.2:** 默认增加受保护的优化收尾及自然尺度边界诊断；可选 `run_acl(x, F_structure = "year")` 和 `run_alscl(x, F_structure = "year")`，同一时间步共用 F。默认保留原来的二维 F 结构，旧写法和加速设置继续可用。 / Adds safeguarded refinement and natural-scale diagnostics, with optional shared F per step. Original model structure, calling forms and acceleration remain supported. [Details and validation](docs/RELEASE_2.2.2.md).
+
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/Linbojun99/ALSCL/wiki)，理论基础见以下论文。
 
@@ -295,7 +298,7 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
-**自己的正式数据 / Your own observations:** 2.2.1 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html).
+**自己的正式数据 / Your own observations:** 2.2.2 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 
@@ -638,7 +641,7 @@ Windows、macOS、Linux 使用 socket 工作进程。建议先 1，再按内存�
 
 Socket workers support all three platforms. Begin with one and choose worker counts based on memory and task size; avoid nested oversubscription. OpenMP compilation alone does not establish parallel execution of the template.
 
-`alscl_speed()` sets two options that act within one fit. By default, standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in RStudio) and results are identical to those of ALSCL 2.0.0; in the benchmark this made fits 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the model with TMB's TMBad automatic-differentiation library instead of CppAD and made fits 1.25-1.68 times faster, but results are not identical (estimates differed by up to 2.7e-8, relative). `alscl_speed_info()` shows what the settings mean on your computer. [Speed guide](docs/SPEED_GUIDE.md) · [Checks and benchmark](docs/SPEED.md).
+`alscl_speed()` sets two options that act within one fit. By default, standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in RStudio) and match sequential standard errors at the same fitted parameters; the pre-2.2.2 benchmark made fits 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the model with TMB's TMBad automatic-differentiation library instead of CppAD and made fits 1.25-1.68 times faster, but results are not identical (estimates differed by up to 2.7e-8, relative). `alscl_speed_info()` shows what the settings mean on your computer. [Speed guide](docs/SPEED_GUIDE.md) · [Checks and benchmark](docs/SPEED.md).
 
 ![Fit time before and after the speed settings](docs/figures/speed/timing.png)
 

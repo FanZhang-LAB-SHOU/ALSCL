@@ -13,7 +13,7 @@ A data frame with columns \code{item} and \code{value}, of class
 \description{
 Reports the speed settings of \code{\link{alscl_speed}} and what they mean
 in this R session: how many cores the standard errors use, how the work is
-shared out and why, and whether results are identical to ALSCL 2.0.0. Use
+shared out and why, and which automatic-differentiation library is used. Use
 it to check that a session gets the expected speed-up, and to record the
 settings together with results. After a fit, \code{fit$sd_info} records
 what was actually done.
