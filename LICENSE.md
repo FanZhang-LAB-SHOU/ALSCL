@@ -1,8 +1,8 @@
 # License · 许可
 
-ALSCL 2.1.0 is distributed under the [GNU General Public License, version 3](LICENSE).
+ALSCL 2.2.0 is distributed under the [GNU General Public License, version 3](LICENSE).
 
-ALSCL 2.1.0 按 GNU GPL 第 3 版分发。以下保留此前代码的 MIT 版权及许可声明。
+ALSCL 2.2.0 按 GNU GPL 第 3 版分发。以下保留此前代码的 MIT 版权及许可声明。
 
 The following MIT copyright and permission notice is retained for previously distributed code.
 

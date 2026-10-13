@@ -4,7 +4,7 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.1.0 · 简体中文与英文 · 15 章 / chapters**
+**ALSCL 2.2.0 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
@@ -34,9 +34,9 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 <a id="chapter-01"></a>
 ## 01 开始使用 · Getting started
 
-安装 ALSCL 2.1.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.2.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.1.0 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.2.0 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -399,12 +399,14 @@ inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 str(inputs)
 x$provenance
 # 两模型使用相同观测及条件设置 / Same observations and conditional settings
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ![模型比较 / Model comparison](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
@@ -552,7 +554,7 @@ Most `log_` parameters use log-transformed values; correlation transforms must m
 alscl_speed()                      # defaults: identical results, parallel standard errors
 alscl_speed(framework = "TMBad")   # faster; results not identical to the default
 alscl_speed(sd_cores = 1)          # sequential standard errors, e.g. inside your own parallel loop
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+b <- run_alscl(x, silent = TRUE)
 ```
 
 In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases), the default settings made fits 1.13-1.24 times faster with every estimate and standard error identical to the original code, and `framework = "TMBad"` made them 1.25-1.68 times faster. `alscl_speed_info()` shows what the settings mean on your computer, and `fit$sd_info` records how the standard errors of a fit were computed. The [speed guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED_GUIDE.md) explains every setting, how to check and record them, and when to use TMBad; the full record of the checks is [docs/SPEED.md](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md).
@@ -1678,9 +1680,9 @@ Explicit colors override the theme; `NULL` color arguments inherit it. Changing 
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.1.0 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.2.0 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in ALSCL 2.1.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.2.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -3266,6 +3268,10 @@ rb <- do.call(retro_model, c(inputs, x$fit_args, x$fit_config$alscl,
 
 拟合年龄型 ACL / Fit age-based ACL
 
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+
 ```r
 run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
     sel_L95, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
@@ -3276,7 +3282,7 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `data.CatL` | `必填 / required` | 调查数量指数表：首列体长标签，其余列为时间。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. |
+| `data.CatL` | `必填 / required` | 调查数量指数表，或包含三表及拟合设置的命名列表（如 YTF_example）。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. Alternatively, a named input bundle such as YTF_example. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | Weight-at-length, with identical labels, columns and dimensions. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
@@ -3305,13 +3311,17 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl))
+a <- run_acl(x)
 ```
 
 <a id="run_alscl"></a>
 ## `run_alscl()`
 
 拟合年龄与长度联合 ALSCL / Fit joint age-length ALSCL
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
 run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
@@ -3324,7 +3334,7 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `data.CatL` | `必填 / required` | 调查数量指数表：首列体长标签，其余列为时间。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. |
+| `data.CatL` | `必填 / required` | 调查数量指数表，或包含三表及拟合设置的命名列表（如 YTF_example）。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. Alternatively, a named input bundle such as YTF_example. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | Weight-at-length, with identical labels, columns and dimensions. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
@@ -3355,7 +3365,7 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl))
+b <- run_alscl(x)
 ```
 
 <a id="sim_acl"></a>

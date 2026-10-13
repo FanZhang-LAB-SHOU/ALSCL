@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/03-Data-and-Excel) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/05-Simulation)
 
-**ALSCL 2.1.0 · 简体中文 / English**
+**ALSCL 2.2.0 · 简体中文 / English**
 
 ```r
 install.packages("remotes")
@@ -15,12 +15,14 @@ inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 str(inputs)
 x$provenance
 # 两模型使用相同观测及条件设置 / Same observations and conditional settings
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ![模型比较 / Model comparison](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 

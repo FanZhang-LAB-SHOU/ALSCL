@@ -19,8 +19,7 @@ You do not need to change anything. With the default settings, fits compute stan
 library(ALSCL)
 alscl_speed_info()   # what the current settings mean on this computer
 x <- YTF_example
-fit <- do.call(run_alscl, c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args,
-                            x$fit_config$alscl, list(silent = FALSE)))
+fit <- run_alscl(x, silent = FALSE)
 fit$sd_info          # how the standard errors were computed and how long they took
 ```
 
@@ -105,8 +104,9 @@ TMBad computes the same derivatives in a different order, so results differ in t
 Use TMBad for exploratory fits, many fits (simulation studies, sensitivity runs) and anywhere differences of this size do not matter. Use CppAD to reproduce published or earlier results exactly. To check on your own data, fit both and compare:
 
 ```r
-alscl_speed(framework = "CppAD"); a <- do.call(run_alscl, args)
-alscl_speed(framework = "TMBad"); b <- do.call(run_alscl, args)
+args <- x  # YTF_example
+alscl_speed(framework = "CppAD"); a <- run_alscl(args)
+alscl_speed(framework = "TMBad"); b <- run_alscl(args)
 max(abs(b$opt$par - a$opt$par) / abs(a$opt$par))   # largest relative difference in estimates
 max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # standard errors
 ```

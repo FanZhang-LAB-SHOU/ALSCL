@@ -10,10 +10,7 @@ Changing M, q or fixed CV can alter abundance and SSB. Vary justified assumption
 ```r
 # Use inputs and x defined in the guide
 sensitivity <- lapply(c(.15, .20, .25), function(M_value) {
-  biology <- x$fit_args
-  biology$M <- M_value
-  fit <- do.call(run_alscl, c(inputs, biology, x$fit_config$alscl,
-                             list(train_times=2, silent=TRUE)))
+  fit <- run_alscl(x, M = M_value, train_times = 2, silent = TRUE)
   list(M=M_value, diagnostics=diagnose_model(x$data.CatL, fit), fit=fit)
 })
 # Inspect each diagnostic before comparison
@@ -32,8 +29,7 @@ Review bounds and maps before releasing parameters. ACL and ALSCL use different 
 cores <- parallel::detectCores()
 workers <- if (is.na(cores)) 1L else max(1L, min(4L, cores - 1L))
 # Supply ncores once
-multi <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                           list(ncores=workers, nstarts=4, train_times=2, silent=TRUE)))
+multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
 ```
 
 |Entry| ncores=1 | ncores>1 |
@@ -120,7 +116,7 @@ See the [full bilingual report](https://github.com/Linbojun99/ALSCL/blob/main/do
 ```r
 # Defaults: identical results, parallel standard errors
 alscl_speed()
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+b <- run_alscl(x, silent = TRUE)
 # Faster option; results not identical to the default
 alscl_speed(framework = "TMBad")
 # Sequential standard errors, for example inside your own parallel loop

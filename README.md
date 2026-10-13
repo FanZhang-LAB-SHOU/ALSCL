@@ -21,7 +21,7 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.1.0 · 简体中文 / English**
+**Version 2.2.0 · 简体中文 / English**
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/Linbojun99/ALSCL/wiki)，理论基础见以下论文。
 
@@ -280,10 +280,8 @@ data("YTF_example")
 x <- YTF_example
 inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 # 条件教学拟合，固定已知生物参数 / Conditional fit with known biology fixed
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times=2, silent=TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times=2, silent=TRUE)))
+a <- run_acl(x, train_times=2, silent=TRUE)
+b <- run_alscl(x, train_times=2, silent=TRUE)
 # 先诊断，再画图 / Diagnose before interpreting plots
 diagnose_model(x$data.CatL, b)
 plot_recruitment(b, se=TRUE)
@@ -292,6 +290,10 @@ plot_fishing_mortality(b, type="year", se=TRUE)
 plot_CatL(b, type="year", exp_transform=TRUE, facet_ncol=4)
 plot_compare_ts(a, b, se=TRUE)
 ```
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 

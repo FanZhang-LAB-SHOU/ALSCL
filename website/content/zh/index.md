@@ -16,7 +16,7 @@
 
 <h2 id="installation">安装</h2>
 
-从 GitHub 安装当前版本（2.1.0）：
+从 GitHub 安装当前版本（2.2.0）：
 
 ```r
 install.packages("remotes")
@@ -47,13 +47,13 @@ x <- YTF_example
 inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 
 # 使用相同观测与生物设置拟合两个模型
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
 
 ![模拟 YTF 示例中 ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](assets/manual/figures/ytf/compare_ts.png)
 

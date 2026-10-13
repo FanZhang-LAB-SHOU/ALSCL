@@ -15,11 +15,23 @@ inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 str(inputs)
 x$provenance
 # 两模型使用相同观测及条件设置
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+```
+
+## 输入列表与参数覆盖
+
+从 2.2.0 起，`run_acl(x)` 和 `run_alscl(x)` 都接受完整的命名输入列表。对于 `YTF_example`，函数依次读取三张数据表、`x$fit_args`，以及对应的 `x$fit_config$acl` 或 `x$fit_config$alscl`。调用时显式传入的参数优先级最高，例如 `run_acl(x, M = 0.25, nstarts = 4, ncores = 2)`。列表参数（`parameters`、`map`、`control`）会整体替换已有列表，显式 `NULL` 也会保留。`x$parameters` 中的模拟设置和 `x$truth` 中的生成真值不会被当作拟合参数。
+
+使用自己的数据时，`x` 也可以是扁平命名列表，包含 `data.CatL`、`data.wgt`、`data.mat`、`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95` 以及可选拟合参数。结构化输入可省略 `fit_config`，使用模型默认设置；若包含 `fit_config`，则必须包含所选模型的配置。重名、未命名、未知参数或缺少必需参数都会在拟合前报错。所有写法共用原有拟合核心和 `alscl_speed()` 设置；`fit$sd_info` 记录实际使用的标准误计算方式。`ncores` 控制独立优化起点的并行数，`alscl_speed()` 的 `sd_cores` 控制标准误计算。
+
+原来的逐项传参和 `do.call()` 写法继续支持。下面的旧写法与 `run_acl(x, silent = TRUE)` 使用相同拟合设置：
+
+```r
+old_args <- c(x[c("data.CatL", "data.wgt", "data.mat")],
+              x$fit_args, x$fit_config$acl, list(silent = TRUE))
+legacy_fit <- do.call(run_acl, old_args)
 ```
 
 ![模型比较](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)

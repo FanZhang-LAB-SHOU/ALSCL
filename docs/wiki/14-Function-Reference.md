@@ -2,11 +2,11 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/15-Reproducibility)
 
-**ALSCL 2.1.0 · 简体中文 / English**
+**ALSCL 2.2.0 · 简体中文 / English**
 
-对应 ALSCL 2.1.0 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.2.0 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in ALSCL 2.1.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.2.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -1592,6 +1592,10 @@ rb <- do.call(retro_model, c(inputs, x$fit_args, x$fit_config$alscl,
 
 拟合年龄型 ACL / Fit age-based ACL
 
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+
 ```r
 run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
     sel_L95, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
@@ -1602,7 +1606,7 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `data.CatL` | `必填 / required` | 调查数量指数表：首列体长标签，其余列为时间。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. |
+| `data.CatL` | `必填 / required` | 调查数量指数表，或包含三表及拟合设置的命名列表（如 YTF_example）。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. Alternatively, a named input bundle such as YTF_example. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | Weight-at-length, with identical labels, columns and dimensions. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
@@ -1631,13 +1635,17 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl))
+a <- run_acl(x)
 ```
 
 <a id="run_alscl"></a>
 ## `run_alscl()`
 
 拟合年龄与长度联合 ALSCL / Fit joint age-length ALSCL
+
+ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
 run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
@@ -1650,7 +1658,7 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `data.CatL` | `必填 / required` | 调查数量指数表：首列体长标签，其余列为时间。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. |
+| `data.CatL` | `必填 / required` | 调查数量指数表，或包含三表及拟合设置的命名列表（如 YTF_example）。 | Data frame or matrix with length labels in its first column, followed by at least two numerically labelled time columns. Alternatively, a named input bundle such as YTF_example. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | Weight-at-length, with identical labels, columns and dimensions. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
@@ -1681,7 +1689,7 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl))
+b <- run_alscl(x)
 ```
 
 <a id="sim_acl"></a>

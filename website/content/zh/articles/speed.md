@@ -19,8 +19,7 @@
 library(ALSCL)
 alscl_speed_info()   # 当前设置在本机上的实际效果
 x <- YTF_example
-fit <- do.call(run_alscl, c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args,
-                            x$fit_config$alscl, list(silent = FALSE)))
+fit <- run_alscl(x, silent = FALSE)
 fit$sd_info          # 标准误的计算方式与耗时
 ```
 
@@ -105,8 +104,9 @@ TMBad 以不同的顺序计算同样的导数，因此结果的最后几位不�
 TMBad 适合探索性拟合、大量拟合（模拟研究、敏感性分析）等这种量级差异无关紧要的场合。要精确复现已发表或以前的结果，请用 CppAD。要在自己的数据上核对，可以两种都拟合后比较：
 
 ```r
-alscl_speed(framework = "CppAD"); a <- do.call(run_alscl, args)
-alscl_speed(framework = "TMBad"); b <- do.call(run_alscl, args)
+args <- x  # YTF_example
+alscl_speed(framework = "CppAD"); a <- run_alscl(args)
+alscl_speed(framework = "TMBad"); b <- run_alscl(args)
 max(abs(b$opt$par - a$opt$par) / abs(a$opt$par))   # 估计值的最大相对差
 max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标准误
 ```
