@@ -1,3 +1,7 @@
+## Speed settings on every system
+
+Standard errors now also use several cores on Windows and in RStudio, R.app and Positron: socket workers compute the delta method when it would take more than about 3 seconds, with identical results. Each fit records how its standard errors were computed in `fit$sd_info`, and `alscl_speed_info()` shows what the settings mean on your computer. The new [speed settings](../articles/speed.html) article explains every setting.
+
 ## Speed settings
 
 The new `alscl_speed()` sets how fits compute standard errors. By default they are computed on several cores within one fit, with results identical to ALSCL 2.0.0; in the benchmark, fits were 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the models with TMB's TMBad library and made fits 1.25-1.68 times faster, but estimates differ slightly from the default. See the [`alscl_speed()` reference](../reference/alscl_speed.html).

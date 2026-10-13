@@ -72,6 +72,18 @@
     }
   },
   {
+    "slug": "speed",
+    "title": {
+      "en": "Speed settings",
+      "zh": "速度设置"
+    },
+    "source": "docs/SPEED_GUIDE.md",
+    "description": {
+      "en": "How fits use several cores for standard errors, how much faster they become, how to check and record the settings, and when to use the TMBad option.",
+      "zh": "拟合如何用多个核计算标准误、能快多少、怎样检查和记录设置，以及何时使用 TMBad 选项。"
+    }
+  },
+  {
     "slug": "diagnostics",
     "title": {
       "en": "Diagnostics",

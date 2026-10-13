@@ -16,7 +16,10 @@ library(ALSCL)
 alscl_speed()                      # defaults: sd_cores = "auto", framework = "CppAD"
 alscl_speed(framework = "TMBad")   # faster; results not identical to ALSCL 2.0.0
 alscl_speed(sd_cores = 1)          # sequential standard errors
+alscl_speed_info()                 # what the settings mean on this computer
 ```
+
+The [speed guide](SPEED_GUIDE.md) explains the settings for users; this page records how they were developed and checked.
 
 An external review of the first version (12 October 2026) found four problems, all confirmed and fixed (section 6): a failure to start forked processes left fits without standard errors, `sd_cores = Inf` was accepted, the documentation website did not build, and TMBad, then the default, differed from CppAD by up to 2.7e-8 in a fit with 10 fixed effects.
 
@@ -50,17 +53,33 @@ Two details make the results identical rather than nearly equal:
 
 On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on four cores instead of 23.4 s; on an ACL fit with 10 fixed effects, 1.58 s instead of 3.70 s.
 
-The sequential `TMB::sdreport()` is used in these cases:
+Forked processes are used only where they are safe (macOS and Linux outside GUI front-ends); elsewhere socket workers share out the delta method (section 3.3). The sequential `TMB::sdreport()` is used in these cases:
 
-- one core, including `sd_cores = "auto"` where forked processes are unavailable or discouraged (`?parallel::mclapply`): on Windows, in GUI or embedded front-ends (R.app, RGui, RStudio, Positron) and with Apple's Accelerate BLAS, which is multithreaded. A number of cores given explicitly is used as given, except on Windows;
+- one core (`sd_cores = 1`, or fits inside `retro_model()` and `sim_acl()` workers);
 - TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21). The test that compares the two with `identical()` runs the parallel code with any installed TMB, for both AD libraries, and fails if the parallel code falls back to the sequential calculation, so a new version can be added after the tests pass with it;
-- any failure of the parallel calculation, including a failure to start the forked processes, with a warning.
+- any failure of the parallel calculation, including a failure to start forked processes or socket workers, with a warning.
 
 ### 3.2 TMBad automatic differentiation (`framework`)
 
 TMB can compile a model with one of two automatic-differentiation (AD) libraries: CppAD, its default, and TMBad, its newer library. ALSCL 2.0.0 used CppAD, and CppAD remains the default; `alscl_speed(framework = "TMBad")` selects TMBad. The model code is the same for both; only the compiler setting (`TMB::compile(..., framework = "TMBad")`) changes. On the 20-year ALSCL fit at the optimum, TMBad evaluated the objective function in 0.010 s instead of 0.21 s, and the gradient in 0.20 s instead of 0.65 s. The whole fit became faster by a smaller factor (section 5).
 
 TMBad computes the same derivatives with a different order of floating-point operations. In the six benchmark combinations, which estimate 5 fixed effects, results differed from CppAD by at most 2.3e-11 (relative; section 5). In an ACL fit to `YTF_example` that estimates 10 fixed effects (`log_Linf`, `log_vbk`, `log_cv_len`, `log_std_log_N0` and `logit_log_R` freed from the bundled configuration), the estimates differed by up to 4.1e-8 (absolute; 2.7e-8 relative, for `logit_log_R`) and the standard errors by up to 3.5e-8 (relative), while the objective function differed by 1.7e-11. With more free parameters the likelihood surface is flatter, and the small differences between the libraries move the point at which `nlminb()` stops by an amount comparable to its parameter tolerance (1.5e-8). Both fits converged with a positive definite Hessian. The AD library is part of the key of the compiled-model cache, so models compiled with each library are kept apart. With CppAD, any `sd_cores` reproduces the results of ALSCL 2.0.0 bit for bit (checked in section 5).
+
+### 3.3 Socket workers for Windows and GUI front-ends
+
+Forking is unavailable on Windows, and `?parallel::mclapply` discourages it in GUI or embedded front-ends (R.app, RGui, RStudio, Positron) and with multithreaded libraries such as Apple's Accelerate BLAS. The first version therefore computed standard errors on one core in these sessions. They now use socket workers (new R processes started with `parallel::makePSOCKcluster()`), which rebuild the model from the same data and parameters with `TMB::MakeADFun()`.
+
+A prototype that computed the Hessian columns on socket workers gave identical results but was slower than the sequential calculation: a newly built TMB object spends a long time on its first gradient, building the sparse Hessian tape of the random effects (for the 20-year ALSCL example, 13.7 s with CppAD and 42 s with TMBad, against 1.0 s and 0.4 s for later gradients). Each worker would pay this cost before computing its first column. So with socket workers:
+
+- the Hessian is computed in the main session, as in `stats::optimHess()`;
+- the delta method runs on the workers. They need only the gradient tape of the objective (`type = "ADGrad"`, built by `MakeADFun()` in about 0.1 s) and the ADREPORT object, and they receive the joint mode, the fixed-effect covariance and the random-effect Hessian (with the Cholesky factor that `TMB::sdreport()` attaches) from the main session, so they build no sparse Hessian tape. Each worker checks that its ADREPORT values are identical to those of the main session;
+- the main session first computes ADREPORT quantities itself for about 0.5 s (at least 5, at most 200) to measure the time per quantity, and starts workers only if the remaining quantities would take more than 3 s (`options(ALSCL.sd_socket_min_seconds)`). Small models, such as most ACL fits, never start workers.
+
+The worker functions use only base R, TMB and Matrix, so the workers do not need ALSCL itself, and they keep their state in `options()`. For the 20-year ALSCL example the delta method took 6.5 s on four socket workers instead of 13.9 s (0.3 s to start the workers and 0.9 s to rebuild the model), with standard errors identical to `TMB::sdreport()`. In a simulated RStudio session (`RSTUDIO=1`), the standard errors of the whole fit took 25.4 s instead of 28.3 s and the fit 114.9 s instead of 120.4 s, with identical results; the Hessian, computed in the main session, takes about half of the standard-error time. On macOS and Linux, `options(ALSCL.sd_backend = "fork")` selects forked processes in a GUI front-end at the user's own risk.
+
+### 3.4 Reporting how standard errors were computed
+
+Each fit records in `fit$sd_info` how its standard errors were computed: `method` (`"forked processes"`, `"socket workers (delta method)"` or `"sequential"`), `cores`, elapsed `seconds` and a `note` explaining a sequential calculation (one core, an unchecked TMB version, too little work for socket workers, or a failure of the parallel calculation). With `silent = FALSE` a fit prints this as one line, for example `Standard errors: forked processes on 4 cores, 9.0 s.` `alscl_speed_info()` reports before a fit what the settings mean in the current session: the cores, the method and the reason, the AD library and whether results are identical to ALSCL 2.0.0. The user guide [SPEED_GUIDE.md](SPEED_GUIDE.md) explains every setting.
 
 ## 4. Changes tested and not kept
 
