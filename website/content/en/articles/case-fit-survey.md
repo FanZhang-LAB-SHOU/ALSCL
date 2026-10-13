@@ -1,158 +1,202 @@
-# How do I fit my own survey data?
+# How do I organize my own data into x?
 
-## The problem
+## The input bundle
 
-You have observed survey numbers by length and time, with mean weight and maturity information, and want to fit ALSCL. The goal is a traceable assessment workflow. No empirical dataset or biological assumptions for your stock are supplied by this case.
+ALSCL 2.2.1 includes a complete [executable example](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
+
+|Field in x|Contents|
+|---|---|
+|`data.CatL`|Survey numbers or a consistently standardized number index by length and time|
+|`data.wgt`|Mean individual weight, not total catch weight|
+|`data.mat`|Mature proportion, between zero and one|
+|`fit_args`|Shared biology, time step, length bins and fitting controls|
+|`fit_config$acl`|ACL initial parameters, optional bounds and map|
+|`fit_config$alscl`|ALSCL initial parameters, optional bounds and map|
+
+Both functions read the same tables and shared settings, then select their own model configuration. Explicit call arguments have highest priority. List-valued overrides replace the whole stored list; see [input lists and overrides](first-model.html).
 
 ## Prepare the three tables
 
-Copy the [Excel template](../assets/manual/data/ALSCL_Data_Entry_Example.xlsx) and replace its synthetic observations. Keep exactly three sheets: `data.CatL`, `data.wgt`, and `data.mat`. Each uses `LengthBin` in its first column and increasing numeric times in the remaining headers. Bins, times and ordering must match.
+Put `data.CatL.csv`, `data.wgt.csv` and `data.mat.csv` in one folder. Each needs the same `LengthBin` first column, numeric time headers, dimensions and ordering. The example uses numeric length midpoints as labels. Keep all periods in a regular annual or quarterly sequence. Missing survey values are `NA`; weights and maturity must be complete. Do not substitute zeros for missing observations.
 
-Record species, survey design, index standardization, length and weight units, bin boundaries and the meaning of zeros. Weight is mean individual weight; maturity is a proportion in [0,1]. See [data preparation](data-preparation.html) for missing periods and unequal bins.
+Alternatively, use the [Excel template](../assets/manual/data/ALSCL_Data_Entry_Example.xlsx) with sheets named `data.CatL`, `data.wgt` and `data.mat`. Record species, index standardization, units, bin definitions and the meaning of zeros separately.
 
-## What the workbook should look like
+![Survey numbers: synthetic workbook layout](../assets/manual/figures/excel_CatL.png)
 
-The following screenshots show the supplied **synthetic YTF workbook**, illustrating layout only. Replace its values with your observations and retain a separate copy of the original template.
+![Mean individual weight: synthetic workbook layout](../assets/manual/figures/excel_wgt.png)
 
-![Survey-number input sheet](../assets/manual/figures/excel_CatL.png)
+![Maturity proportions: synthetic workbook layout](../assets/manual/figures/excel_mat.png)
 
-Enter a consistently standardized number index. Blank/NA means missing; do not recode missing observations as zero.
+These images illustrate the bundled synthetic data, not empirical observations from your stock. Length and weight units must be consistent throughout the analysis.
 
-![Mean individual weight input sheet](../assets/manual/figures/excel_wgt.png)
+## Run the complete example
 
-Enter mean individual weight for each cell, not total catch weight. Document the weight unit and any length–weight relationship used.
-
-![Maturity-proportion input sheet](../assets/manual/figures/excel_mat.png)
-
-Enter proportions between zero and one. All three sheets must use exactly the same bins, periods and order.
-
-## Import and validate
-
-Install `readxl` once, and run from the downloaded repository root so the guide helpers can be sourced. Replace the workbook path with your own file.
+Install ALSCL 2.2.1 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
 
 ```r
 library(ALSCL)
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
-my_inputs <- read_survey_excel("my_survey.xlsx")
-step_years <- 1
-validate_survey_tables(my_inputs, growth_step = step_years, zero_action = "error")
+packageVersion("ALSCL")
+source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 ```
 
-Use `step_years <- 0.25` only for a regular quarterly series and consistent biological units. Validation stops on zeros by default. The package default of excluding zero observations is not automatically appropriate for genuine zero catches; a zero-inflated observation model is not implemented.
+This creates `x`, `a` (ACL) and `b` (ALSCL), and writes inputs, portable result summaries, two PNG figures and session information to `output/own-data-example`. Change that output directory when setting up your assessment. The complete code follows; copy it into an R script or edit the supplied file.
 
-## First run the supplied workbook end to end
+```r
+# ALSCL 2.2.1: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# Run from the repository root:
+# source("scripts/fit_own_data_example.R", encoding = "UTF-8")
+# The supplied numbers describe the synthetic YTF example, not your stock.
 
-This optional practice run is fully specified. It uses the template's synthetic YTF data and **its matching biology**, so it is useful for checking installation, import and compilation before replacing any observations. It does not estimate your stock.
+library(ALSCL)
+stopifnot(packageVersion("ALSCL") >= "2.2.1")
+source("scripts/real_data_workflow.R", encoding = "UTF-8")
+
+# Read the three aligned tables -------------------------------
+# data.CatL.csv, data.wgt.csv, data.mat.csv.
+data_dir <- "docs/data"
+inputs <- read_survey_csv(data_dir)
+# Excel alternative (requires readxl):
+# inputs <- read_survey_excel("my_survey.xlsx")
+
+# Shared biology -----------------------------------------
+# M_annual and vbk are annual; lengths are cm; weights in the example are kg.
+bio <- list(rec.age = 1, nage = 15, M_annual = 0.2,
+            growth_step = 1, sel_L50 = 15, sel_L95 = 20,
+            Linf = 60, vbk = 0.2, t0 = 1 / 60,
+            cv_len = 0.2, cv_grow = 0.2)
+stopifnot(bio$t0 > 0, bio$t0 < bio$rec.age)
+
+# For labels such as "5-7", supply the actual midpoints explicitly instead.
+len_mid <- as.numeric(inputs$data.CatL[[1]])
+stopifnot(all(is.finite(len_mid)), all(diff(len_mid) > 0))
+# This midpoint formula is only used for the equal-width demonstration bins.
+stopifnot(max(abs(diff(len_mid) - diff(len_mid)[1])) < 1e-8)
+len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
+validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
+
+# Model-specific settings ------------------------------
+# For observations, review starts, bounds and every fixed parameter independently.
+# Other parameters use the package's default starts, bounds and maps.
+p_acl <- list(
+  log_Linf = log(bio$Linf), log_vbk = log(bio$vbk), t0 = bio$t0,
+  log_cv_len = log(bio$cv_len),
+  log_std_log_F = log(0.2), log_std_log_N0 = log(0.2),
+  logit_log_R = qlogis(0.1))
+p_alscl <- list(
+  log_Linf = log(bio$Linf), log_vbk = log(bio$vbk), log_t0 = log(bio$t0),
+  log_cv_len = log(bio$cv_len), log_cv_grow = log(bio$cv_grow),
+  log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.2),
+  logit_log_R = qlogis(0.1))
+map_acl <- lapply(p_acl, function(z) factor(NA))
+map_alscl <- lapply(p_alscl, function(z) factor(NA))
+map_alscl$logit_log_F_l <- map_alscl$logit_log_F_y <- factor(NA)
+# map_acl["log_Linf"] <- list(NULL)
+# map_alscl["log_Linf"] <- list(NULL)
+
+# Assemble the input bundle -----------------------------------
+x <- list(
+  data.CatL = inputs$data.CatL,
+  data.wgt = inputs$data.wgt,
+  data.mat = inputs$data.mat,
+  fit_args = list(
+    rec.age = bio$rec.age, nage = bio$nage,
+    M = bio$M_annual * bio$growth_step,
+    sel_L50 = bio$sel_L50, sel_L95 = bio$sel_L95,
+    growth_step = bio$growth_step,
+    len_mid = len_mid, len_border = len_border,
+    zero_action = "error", train_times = 1,
+    nstarts = 1, ncores = 1, silent = FALSE),
+  fit_config = list(
+    acl = list(parameters = p_acl, map = map_acl),
+    alscl = list(parameters = p_alscl, map = map_alscl)))
+
+# Fit directly ----------------------------------------------
+alscl_speed_info()
+a <- run_acl(x)
+b <- run_alscl(x)
+# a <- run_acl(x, nstarts = 4, ncores = 2)
+# b <- run_alscl(x, nstarts = 4, ncores = 2)
+
+# Inspect, plot and save ------------------------------
+checks <- list(ACL = diagnose_model(x$data.CatL, a),
+               ALSCL = diagnose_model(x$data.CatL, b))
+print(checks)
+print(a$sd_info)
+print(b$sd_info)
+for (fit in list(a, b)) {
+  print(list(convergence = fit$convergence_code,
+             max_gradient = fit$max_abs_gradient,
+             pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+}
+residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
+                                x_breaks = pretty(len_mid, n = 4))
+ssb_plot <- plot_SSB(b, se = TRUE)
+print(residual_plot)
+print(ssb_plot)
+portable <- function(fit) fit[setdiff(names(fit), "obj")]
+output_dir <- "output/own-data-example"
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+ggplot2::ggsave(file.path(output_dir, "residuals.png"), residual_plot,
+                width = 10, height = 8, dpi = 150)
+ggplot2::ggsave(file.path(output_dir, "SSB.png"), ssb_plot,
+                width = 8, height = 5, dpi = 150)
+saveRDS(x, file.path(output_dir, "inputs_x.rds"))
+saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
+        file.path(output_dir, "assessment_summary.rds"))
+writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt"))
+# Refit in a new session:
+# x <- readRDS("output/own-data-example/inputs_x.rds")
+# b <- run_alscl(x)
+```
+
+## Replace the demonstration with your observations
+
+1. **Files:** change `data_dir` to your CSV folder, such as `"my_data"`. For Excel, replace the reader with `read_survey_excel("my_survey.xlsx")`. Preserve original numeric time headers; the helpers avoid R's automatic `X2000` renaming.
+2. **Biology and units:** replace `bio`. `rec.age` is in years; `nage` is the number of age classes including the plus group. Annual time labels use `growth_step = 1`; regular quarterly labels such as `2020`, `2020.25`, `2020.5`, `2020.75` use `0.25`. The script converts annual instantaneous natural mortality to per-step `M` by multiplication. Growth `vbk` remains annual. `sel_L50` and `sel_L95` set survey catchability, not estimated fishery selectivity.
+3. **Length groups:** replace `len_mid` and `len_border` with the actual definitions. The example's midpoint-based boundary calculation is only for its contiguous equal-width bins. There must be one fewer internal boundary than bins; the model handles the outer tails. Interval labels such as `"5-7"` need an explicit midpoint vector in this script.
+4. **Model assumptions:** review `p_acl`, `p_alscl` and both maps. The teaching example fixes known growth and selected process parameters with `factor(NA)`; this is a conditional fit and omits uncertainty in those fixed values. Supplying an initial value alone does not fix a parameter. Use a named `NULL` map entry to release a parameter, including one fixed by model defaults; `map["name"] <- list(NULL)` preserves the entry. Unspecified parameters, bounds and maps follow package defaults. Add `parameters.L` and `parameters.U` inside the corresponding `fit_config` entry if needed.
+5. **Zeros and missing data:** this script uses `zero_action = "error"`, so it stops on zero survey indices. Decide what zeros mean before selecting another treatment; `"missing"` excludes them from the likelihood. Do not add arbitrary small constants. See [data preparation](data-preparation.html).
+
+ACL uses raw `t0`; ALSCL uses `log_t0` and currently requires a positive `t0` below `rec.age`. Do not take the logarithm or absolute value of a negative external estimate to force compatibility. ACL and ALSCL also use different names for several variance parameters; do not interchange their complete parameter lists.
+
+## Fit directly and check acceleration
+
+After building your own `x`, the calls remain short:
+
+```r
+a <- run_acl(x)
+b <- run_alscl(x)
+# Same total work, up to two workers for four independent starts:
+a_multi <- run_acl(x, nstarts = 4, ncores = 2)
+b_multi <- run_alscl(x, nstarts = 4, ncores = 2)
+# The actual standard-error method and core count:
+a$sd_info
+b$sd_info
+```
+
+The existing `alscl_speed()` settings apply automatically. `ncores` controls independent optimization starts; `sd_cores` controls standard-error computation within a fit. The default AD framework remains CppAD. More workers do not guarantee a faster small job. See [speed settings](speed.html).
+
+## Inspect the results
+
+Check convergence code, maximum gradient, Hessian status, boundary hits and residual patterns separately. A completed fit is not sufficient evidence of identifiability or suitable assumptions. The full synthetic CSV workflow was run for both models: convergence code 0, positive-definite Hessian, no boundary hits and maximum gradients below 0.001. These checks validate the example workflow, not an unseen empirical assessment.
+
+The following plots were generated by this script using the synthetic CSV inputs.
+
+![ALSCL residuals by year from the complete CSV example](../assets/manual/figures/own-data-example/residuals.png)
+
+![ALSCL spawning biomass from the complete CSV example](../assets/manual/figures/own-data-example/SSB.png)
+
+The spawning-biomass intervals are conditional on the fixed model assumptions. Inspect your own figures and assess sensitivity to supported alternative values of M, catchability and fixed biological parameters.
+
+## Save and reuse x
+
+The script saves `inputs_x.rds`, `assessment_summary.rds`, `residuals.png`, `SSB.png` and `sessionInfo.txt`. The portable summary excludes `obj`, whose TMB pointers belong to the current R session. To refit in a new session:
 
 ```r
 library(ALSCL)
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
-data("YTF_example")
-demo_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
-demo_config <- c(YTF_example$fit_args, YTF_example$fit_config$alscl,
-                 list(zero_action = "error", train_times = 2, silent = TRUE))
-demo_x <- c(demo_inputs, demo_config)
-demo_fit <- run_alscl(demo_x)
-diagnose_model(demo_inputs$data.CatL, demo_fit)
-plot_CatL(demo_fit, type = "year", exp_transform = FALSE, facet_ncol = 4)
+x <- readRDS("output/own-data-example/inputs_x.rds")
+a <- run_acl(x)
+b <- run_alscl(x)
 ```
 
-![Synthetic YTF illustration: observed and fitted survey index by period](../assets/manual/figures/ytf/CatL_year_FALSE.png)
-
-Compare fitted patterns with observations on the displayed log scale. Systematic under- or overprediction within a range of lengths suggests a structural issue worth investigating. This bundled figure illustrates the template run; it is not a result for your workbook.
-
-## Specify the assessment assumptions
-
-The following is an editable configuration template. Replace every `NA` using evidence for your stock before running the fit. The guard deliberately stops incomplete configurations.
-
-```r
-config <- list(
-  rec.age = NA_real_, nage = NA_integer_, M = NA_real_,
-  sel_L50 = NA_real_, sel_L95 = NA_real_,
-  growth_step = step_years, zero_action = "error",
-  train_times = 2, silent = TRUE)
-required_biology <- c("rec.age", "nage", "M", "sel_L50", "sel_L95")
-stopifnot(all(is.finite(unlist(config[required_biology]))))
-```
-
-This list is a starting template, not a complete biological specification. Also review actual length boundaries, growth assumptions, initial values, bounds and fixed parameters. Add the corresponding named fit arguments to `config`; see [fitting controls](fitting-controls.html), [estimation parameters](estimation-parameters.html), and [run_alscl()](../reference/run_alscl.html). Do not copy YTF growth or catchability settings solely because your tables have similar dimensions. Mortality must match the model time step.
-
-### Review these inputs before fitting observations
-
-|Input|What must be justified|
-|---|---|
-|`rec.age`, `nage`|Recruitment age and number of modeled age classes|
-|`M`|Natural mortality per model step, with its source and uncertainty|
-|`sel_L50`, `sel_L95`|Fixed survey catchability locations; these are not estimated fishery selectivity|
-|`growth_step`|Years per step: e.g. 1 or 0.25, matching the time headers|
-|`len_mid`, `len_border`|Actual midpoints and internal boundaries; unequal bins need explicit interpretation|
-|`parameters`, `parameters.L`, `parameters.U`|Starting values and bounds on the optimizer's scale|
-|`map`|Which parameters are fixed, and why; intervals are conditional on fixed settings|
-
-For ALSCL, growth starts use `log_Linf`, `log_vbk` and `log_t0`. This parameterization restricts `t0` to positive values; do not take a logarithm of a negative external estimate. Review model suitability rather than silently changing its sign. An initial value does not fix a parameter: fixing requires a corresponding map entry such as `factor(NA)`.
-
-`train_times` counts successive optimization passes, not independent random starts. Different starting values should be assessed separately; see the [fitting guide](fitting-controls.html).
-
-## Fit and inspect
-
-After completing and reviewing `config`, fit the model and check numerical diagnostics before interpreting population estimates.
-
-```r
-my_x <- c(my_inputs, config)
-my_fit <- run_alscl(my_x)
-checks <- diagnose_model(my_inputs$data.CatL, my_fit)
-checks
-plot_residuals(my_fit, type = "year")
-plot_biomass(my_fit)
-```
-
-Inspect optimizer status, gradient, Hessian, parameter boundaries and residual patterns separately. A completed fit is not evidence that all parameters are identifiable. Reconsider assumptions when diagnostics or sensitivity checks are poor; [diagnostics](diagnostics.html) explains the tools.
-
-## Read the diagnostic and population plots
-
-These two figures use the bundled YTF fit to explain the display. Run the commands on `my_fit` to obtain the corresponding figures for your own observations.
-
-![Synthetic YTF illustration: residual patterns by year](../assets/manual/figures/ytf/residuals_year.png)
-
-Look for sustained positive or negative residuals and changes in spread. These are raw log residuals; visible structure should lead to checks of input standardization, catchability assumptions and process structure, not automatic deletion of observations.
-
-![Synthetic YTF illustration: biomass trajectory and conditional uncertainty](../assets/manual/figures/ytf/plot_biomass_B.png)
-
-Interpret the trajectory with the supplied weight units and fixed assumptions. The plotted interval does not include uncertainty in every external biological input. Apparent precision cannot replace sensitivity analysis.
-
-### Export your own results
-
-```r
-dir.create("my_assessment", showWarnings = FALSE)
-write.csv(checks, "my_assessment/diagnostics.csv", row.names = FALSE)
-p_index <- plot_CatL(my_fit, type = "year", facet_ncol = 4)
-p_residual <- plot_residuals(my_fit, type = "year")
-p_biomass <- plot_biomass(my_fit)
-ggplot2::ggsave("my_assessment/survey_fit.png", p_index, width = 10, height = 7, dpi = 300)
-ggplot2::ggsave("my_assessment/residuals.png", p_residual, width = 10, height = 6, dpi = 300)
-ggplot2::ggsave("my_assessment/biomass.png", p_biomass, width = 8, height = 5, dpi = 300)
-```
-
-### If something fails
-
-|Symptom|Next action|
-|---|---|
-|Workbook sheet or header error|Restore exact sheet names, `LengthBin`, and numeric time headers|
-|Tables differ|Align bins and time columns in all three sheets|
-|Zero observations rejected|Establish whether zeros are genuine; do not replace them with an arbitrary small constant|
-|Compiler error|Follow the platform-specific installation guide and check the writable TMB cache|
-|Non-positive-definite Hessian or large gradient|Inspect starts, bounds, fixed assumptions and identifiability before interpreting uncertainty|
-|Large changes under different M or q|Report sensitivity to supported external values rather than selecting the most convenient result|
-
-## Preserve the assessment record
-
-```r
-saveRDS(list(inputs = my_inputs, config = config,
-             diagnostics = checks, report = my_fit$report),
-        "my_assessment_summary.rds")
-writeLines(capture.output(sessionInfo()), "my_assessment_session.txt")
-```
-
-Retain input provenance and the package revision as well. Saved summaries are suitable for reporting; operations requiring a live TMB objective need a fit in the current R session. For a fully specified practice run before using observations, use the [synthetic YTF example](first-model.html).
-
-The flat input list `my_x` can also be passed to `run_acl(my_x)` after replacing any ALSCL-specific `parameters`, bounds and `map` with ACL settings. The data validation above is still required. The existing `fit_survey_tables()` helper and separate-argument calls remain available.
+Keep the original data, configuration, provenance and package version together. The older `fit_survey_tables()` helper, separate-argument calls and `do.call()` remain supported.

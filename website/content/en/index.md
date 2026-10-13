@@ -16,7 +16,7 @@ Start with a [worked example](articles/first-model.html), browse the [basic func
 
 <h2 id="installation">Installation</h2>
 
-Install the current version (2.2.0) from GitHub:
+Install the current version (2.2.1) from GitHub:
 
 ```r
 install.packages("remotes")
@@ -53,7 +53,7 @@ b <- run_alscl(x, train_times = 2, silent = TRUE)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+ALSCL 2.2.1 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ![ACL and ALSCL biomass, spawning biomass and recruitment estimates from the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
 
