@@ -42,3 +42,5 @@ fixed_index <- list(log_sigma_index = factor(NA))
 
 
 Fits construct random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` from data dimensions. These are not ordinary scalar entries above. Generator names such as `std_logR` and `F_mean` are not estimator keys.
+
+**Starting values are not fixed values.** See [required inputs and map examples](case-fit-survey.html) for default fixes, explicit named NULL releases and a complete CSV-to-assessment script.

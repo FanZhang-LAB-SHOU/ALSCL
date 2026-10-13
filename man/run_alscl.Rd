@@ -57,7 +57,8 @@ ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
 with free parameters after applying map. Initial free values are clamped to bounds.}
 
 \item{map}{Named TMB factor mappings. factor(NA) fixes a parameter at its supplied
-value; NULL releases a default fixed parameter. Other defaults remain in force.}
+value; a named NULL entry releases that parameter. A whole map = NULL or
+list() applies model defaults. Other unspecified defaults remain in force.}
 
 \item{len_mid}{Finite length-bin midpoints; overrides automatic parsing.}
 
@@ -106,6 +107,15 @@ M and F are per model time step; vbk is per year. The first and last
 length bins absorb the distribution tails. Compilation uses a writable session
 cache. Optimizer success, gradient size, Hessian status and boundary hits should
 be assessed separately before interpreting estimates or uncertainty.
+
+Starting values are estimated unless mapped as fixed. ALSCL defaults fix
+log_sigma_log_F and log_t0, leaving 13 free scalar parameters. To release
+one, pass map = list(log_sigma_log_F = NULL) directly.
+Single-bracket assignment such as \code{map["name"] <- list(NULL)} preserves a
+release; \code{map$name <- NULL} deletes it and can restore a default fix.
+M, survey catchability, weights, maturity and age/bin settings are supplied
+inputs, not estimable parameters. Random deviations are constructed
+internally and are not listed in the outer optimizer's opt$par.
 
 Since 2.2.0, \code{run_alscl(x)} accepts a named list of fitting
 arguments or a structured bundle such as \link{YTF_example}. A structured bundle

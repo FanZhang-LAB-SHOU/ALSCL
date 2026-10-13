@@ -29,6 +29,111 @@ ALSCL 2.2.1 提供了[完整可执行脚本](https://github.com/Linbojun99/ALSCL
 
 这些图片展示内附模拟数据，不是你的研究种群的实测结果。体长和重量单位必须在整个分析中保持一致。
 
+## 哪些输入需要自己提供
+
+`parameters` 提供初值，或由 `map` 固定的参数取值。**填写一个数值本身不等于固定参数。** 以下数据和生物设置不会由任一拟合函数估计。
+
+|输入|需要提供的内容|
+|---|---|
+|`data.CatL`|按体长和时间排列的调查数量或口径一致的标准化数量指数，不是总捕获重量|
+|`data.wgt`, `data.mat`|与调查表对齐的平均单尾重量和成熟比例；作为已提供的值使用|
+|`M`|有外部依据的每模型步长自然死亡率；年度瞬时率乘以 `growth_step`|
+|`rec.age`, `nage`, `growth_step`|补充年龄（年）、包含加组的年龄组数、每步多少年|
+|`sel_L50`, `sel_L95`|固定调查可捕性曲线的位置，L95 大于 L50；不是待估的捕捞选择性|
+|`len_mid`, `len_border`|实际体长组中点和内部边界；核对任何从标签推导的值|
+
+`map` 不能让 `M`、调查可捕性或年龄与分组定义变成待估参数：它们是当前模型的输入，不属于参数向量。模型不会自动传播这些输入的不确定性。请记录来源、单位和敏感性情景；脚本中的生物数值是演示设置，不是你研究种群的估计结果。
+
+## 哪些参数可以由模型估计
+
+只要 map 允许，下表中的每个标量参数都可以参与估计。未提供的初值和边界使用套件默认值，部分初值会根据数据调整；仍需核对是否适合你的物种。`log_` 参数填写 `log(原尺度值)`，相关系数初值填写 `qlogis(rho)`，其中 `0 < rho < 1`；当前模型的这些相关系数限于正值。
+
+|含义|ACL 名称|ALSCL 名称|
+|---|---|---|
+|用于初始年龄结构的总死亡率|`log_init_Z`|`log_init_Z`|
+|初始对数数量偏差标准差|`log_std_log_N0`|`log_sigma_log_N0`|
+|对数补充量的位置参数|`mean_log_R`|`mean_log_R`|
+|补充过程标准差尺度|`log_std_log_R`|`log_sigma_log_R`|
+|补充量时间相关性|`logit_log_R`|`logit_log_R`|
+|对数捕捞死亡率的位置参数|`mean_log_F`|`mean_log_F`|
+|捕捞死亡率过程标准差尺度|`log_std_log_F`|`log_sigma_log_F`|
+|捕捞死亡率时间相关性|`logit_log_F_y`|`logit_log_F_y`|
+|捕捞死亡率年龄／体长相关性|`logit_log_F_a`|`logit_log_F_l`|
+|渐近体长和年度 VB 生长 k|`log_Linf`, `log_vbk`|`log_Linf`, `log_vbk`|
+|VB t0|`t0`（原尺度）|`log_t0`（对数尺度）|
+|年龄对应体长的 CV|`log_cv_len`|`log_cv_len`|
+|生长增量 CV|无此参数|`log_cv_grow`|
+|对数调查观测标准差|`log_std_index`|`log_sigma_index`|
+
+`log_init_Z` 与输入的自然死亡率 `M` 不同。对数过程位置参数取指数不等于无条件算术均值。ACL 允许负的 `t0`；ALSCL 当前要求 `0 < t0 < rec.age`，不能把外部负 t0 取绝对值后使用。初值和 `parameters.L` / `parameters.U` 均采用优化器尺度；相等上下界会报错，固定参数请使用 map。
+
+模型还会推断随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0`。它们的维度根据数据构建，不要加入标量初值列表。ACL 的 F 随年龄和年份变化，ALSCL 的 F 随体长和年份变化。这些随机效应不列在 `fit$opt$par` 中。
+
+## 如何设置 map 而不把参数都固定住
+
+|设置|效果|
+|---|---|
+|`parameters = list(log_Linf = log(60))`|自由参数的初值；只有 map 固定它时才成为固定值|
+|`map = list(log_Linf = factor(NA))`|将 Linf 固定在提供的值，未提供时使用其模型默认值|
+|`map = list(log_std_log_F = NULL)`|解除 ACL 这一默认固定项，其他项仍按模型默认规则|
+|`map = NULL` 或 `map = list()`|使用模型默认规则，不是全部开放估计|
+|`run_acl(x)` / `run_alscl(x)` 不写 `map`|使用对应 `x$fit_config` 中保存的 map（如果存在）|
+
+|模型|默认固定的标量参数|其余自由标量参数数目|
+|---|---|---|
+|ACL|`log_std_log_F`, `logit_log_F_y`, `logit_log_F_a`, `t0`|10|
+|ALSCL|`log_sigma_log_F`, `log_t0`|13|
+
+下方完整脚本使用 `map_acl <- list()` 和 `map_alscl <- list()`：**取消旧教学例子对生长、初始数量变异和补充量相关性等参数的额外固定**，保留上表列明的模型默认固定项。所有固定值仍需审查。默认设置是可复现的对照配置，不代表每个数据集都能识别全部自由参数。
+
+本脚本仍固定的标量取值为：两个模型的 F 过程标准差 0.2、t0 = 1/60，以及 ACL 跨年份和跨年龄的 F 相关系数 0.75（这两个固定相关参数的套件初值）。这些数值也必须按你的种群审查。脚本使用两轮连续优化（`train_times = 2`），不是两个独立起点。
+
+不修改旧 x，也可以直接取消其中额外的教学固定设置：
+
+```r
+fit_acl <- run_acl(x, map = NULL)
+fit_alscl <- run_alscl(x, map = NULL)
+```
+
+如果只固定 t0、估计其余标量参数，需要显式解除其他默认固定项。将 map 保存回 x 后仍可直接调用：
+
+```r
+x$fit_config$acl$map <- list(
+  t0 = factor(NA), log_std_log_F = NULL,
+  logit_log_F_y = NULL, logit_log_F_a = NULL)
+x$fit_config$alscl$map <- list(
+  log_t0 = factor(NA), log_sigma_log_F = NULL)
+# 先审查 parameters 中保存的 t0 / log_t0 取值。
+fit_acl <- run_acl(x)
+fit_alscl <- run_alscl(x)
+# ACL 有 13 个自由标量参数，ALSCL 有 14 个。
+```
+
+这组更灵活的设置是可选方案，不是下方配图使用的基线。若 t0 也需要估计，应保留具名 NULL 项：
+
+```r
+x$fit_config$acl$map["t0"] <- list(NULL)
+x$fit_config$alscl$map["log_t0"] <- list(NULL)
+# 下次拟合时，全部 14 / 15 个标量参数均自由。
+```
+
+不要用 `map$t0 <- NULL` 解除默认固定的 t0：它会删除条目，随后默认规则会再次固定 t0。解除列表应直接传给 `run_*()` 或保存在 x 中。`generate_map()` 仅使用 ACL 默认规则，而且返回值会移除 NULL 项；将其结果再交给 `run_acl()` 会重新补入缺失的默认项，可能撤销原本的解除设置。
+
+显式传入的 `map` 会整体替换 x 中原有 map，然后应用模型默认规则。若只修改保存的一个项目并保留其他设置，例如使用 `x$fit_config$acl$map["log_Linf"] <- list(NULL)`。正式分析不要对每个初值自动应用 `factor(NA)` 来生成 map。
+
+拟合后检查实际自由参数和诊断：
+
+```r
+names(fit_acl$opt$par)
+fit_acl$par_low_up
+names(fit_alscl$opt$par)
+fit_alscl$par_low_up
+diagnose_model(x$data.CatL, fit_acl)
+diagnose_model(x$data.CatL, fit_alscl)
+```
+
+同时检查优化码、梯度、Hessian、边界、估计不确定性和残差。将逐组解除的配置分别保存并比较诊断；增加优化次数或起点数不能让缺乏信息的参数变得可识别。较少固定项的拟合可能暴露旧教学设置掩盖的问题，应报告这些问题，不能为了得到好看的诊断而悄悄增加固定项。
+
 ## 运行完整示例
 
 安装 ALSCL 2.2.1 并下载仓库，从仓库根目录运行。导入辅助函数属于仓库脚本，不是安装包的导出函数。读取 CSV 不需要额外读取器；读取 Excel 时先安装一次 `readxl`。
@@ -81,9 +186,9 @@ len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
 validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
 
 # 3. 各模型拟合设置 / Model-specific settings ------------------------------
-# 下面是模拟示例中已知的条件设置；不要直接当作正式数据的固定值。
-# For observations, review starts, bounds and every fixed parameter independently.
-# Other parameters use the package's default starts, bounds and maps.
+# 生长和多数过程参数作为初值，不再自动固定每个提供的参数。
+# Growth and most process values below are starts, not automatic fixes.
+# Review starts, bounds and the documented default fixed values for your stock.
 p_acl <- list(
   log_Linf = log(bio$Linf), log_vbk = log(bio$vbk), t0 = bio$t0,
   log_cv_len = log(bio$cv_len),
@@ -94,14 +199,21 @@ p_alscl <- list(
   log_cv_len = log(bio$cv_len), log_cv_grow = log(bio$cv_grow),
   log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.2),
   logit_log_R = qlogis(0.1))
-# factor(NA) 固定在给定值；这些固定假设不贡献估计不确定性。
-map_acl <- lapply(p_acl, function(z) factor(NA))
-map_alscl <- lapply(p_alscl, function(z) factor(NA))
-map_alscl$logit_log_F_l <- map_alscl$logit_log_F_y <- factor(NA)
-# 显式 NULL 可释放某一项，包括模型默认固定的项：
-# map_acl["log_Linf"] <- list(NULL)
-# map_alscl["log_Linf"] <- list(NULL)
-# 注意：map_acl$log_Linf <- NULL 是删除条目，含义不同。
+# 使用模型默认 map：ACL 固定 4 项、估计 10 项；ALSCL 固定 2 项、估计 13 项。
+# Default maps: ACL fixes 4 and estimates 10 scalars; ALSCL fixes 2 and estimates 13.
+# ACL fixes log_std_log_F, logit_log_F_y, logit_log_F_a and t0.
+# ALSCL fixes log_sigma_log_F and log_t0. These values still need justification.
+map_acl <- list()
+map_alscl <- list()
+# 可选：只固定 t0；更灵活的设置必须另做诊断，不保证可识别。
+# Optional: fix only t0; diagnose this more flexible configuration separately.
+# map_acl <- list(t0 = factor(NA), log_std_log_F = NULL,
+#                 logit_log_F_y = NULL, logit_log_F_a = NULL)
+# map_alscl <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
+# 解除默认固定项需保留具名 NULL；$t0 <- NULL 仅删除条目。
+# Preserve a named NULL to release a default fix; $t0 <- NULL deletes the entry.
+# map_acl["t0"] <- list(NULL)
+# map_alscl["log_t0"] <- list(NULL)
 
 # 4. 组装 x / Assemble the input bundle -----------------------------------
 x <- list(
@@ -114,7 +226,7 @@ x <- list(
     sel_L50 = bio$sel_L50, sel_L95 = bio$sel_L95,
     growth_step = bio$growth_step,
     len_mid = len_mid, len_border = len_border,
-    zero_action = "error", train_times = 1,
+    zero_action = "error", train_times = 2,
     nstarts = 1, ncores = 1, silent = FALSE),
   fit_config = list(
     acl = list(parameters = p_acl, map = map_acl),
@@ -136,13 +248,18 @@ print(checks)
 print(a$sd_info)
 print(b$sd_info)
 for (fit in list(a, b)) {
+  print(fit$par_low_up) # 实际自由参数及边界 / Actual free scalars and bounds
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+  if (!isTRUE(fit$convergence_code == 0L) || !isTRUE(fit$pdHess) ||
+      !isTRUE(fit$max_abs_gradient < 0.001) || !identical(fit$bound_hit, FALSE))
+    warning("Review fit diagnostics before interpreting this assessment.")
 }
 residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
-ssb_plot <- plot_SSB(b, se = TRUE)
+# 非正定 Hessian 时不展示标准误区间 / Omit SE intervals if Hessian is not positive definite.
+ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)
 # obj 是当前会话的 TMB 指针，不包含在可移植结果中。
@@ -160,7 +277,6 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 # 新会话可读取 x 并重新拟合 / Refit in a new session:
 # x <- readRDS("output/own-data-example/inputs_x.rds")
 # b <- run_alscl(x)
-
 ```
 
 ## 替换成自己的正式数据
@@ -168,7 +284,7 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 1. **文件：**把 `data_dir` 改为自己的 CSV 文件夹，例如 `"my_data"`。读取 Excel 则改用 `read_survey_excel("my_survey.xlsx")`。保留数值时间表头，辅助函数会避免 R 自动将 `2000` 改名为 `X2000`。
 2. **生物参数与单位：**修改 `bio`。`rec.age` 以年为单位，`nage` 是含加组的年龄组数量。年度序列使用 `growth_step = 1`；规则季度表头如 `2020`、`2020.25`、`2020.5`、`2020.75`，使用 `0.25`。脚本将年瞬时自然死亡率乘以时间步长度，得到每步 `M`；生长参数 `vbk` 仍以年为单位。`sel_L50`、`sel_L95` 表示调查可捕性，不是待估的渔业选择性。
 3. **体长组：**填写真实的 `len_mid` 和 `len_border`。示例按中点计算边界，仅适用于其中连续等宽的体长组。内部边界数应比体长组数少一，首尾尾部由模型处理。若标签为 `"5-7"` 这类区间，本脚本需要另外填写数值中点向量。
-4. **模型假设：**检查 `p_acl`、`p_alscl` 和两个 map。教学例子用 `factor(NA)` 固定已知的生长及部分过程参数，因此属于条件拟合，区间不包含这些固定值的不确定性。只给初值不等于固定参数。显式命名的 `NULL` 可释放参数，包括模型默认固定项；写法是 `map["参数名"] <- list(NULL)`。未指定的参数、边界及映射采用包默认设置。如需自定上下界，在对应 `fit_config` 中加入 `parameters.L` 和 `parameters.U`。
+4. **模型假设：**审查 `p_acl`、`p_alscl`、边界和 map。新版例子使用模型默认 map，ACL 估计 10 个、ALSCL 估计 13 个标量参数，不再额外固定生长等参数。默认仍固定的值需要外部依据和敏感性检查。具名 NULL 可解除默认固定项，详见上文。可在对应 `fit_config` 中添加 `parameters.L` 和 `parameters.U`。
 5. **零值与缺失：**脚本设置 `zero_action = "error"`，遇到调查零值先停止。确认含义后再决定处理方式；`"missing"` 会把零值从似然中排除。不要随意添加极小常数。参见[数据准备](data-preparation.html)。
 
 ACL 使用原尺度 `t0`，ALSCL 使用 `log_t0`，当前要求 `0 < t0 < rec.age`。不要对负的外部 t0 估计取对数或绝对值以强行兼容。两个模型的若干方差参数名称也不同，不能直接互换整套参数列表。
@@ -195,6 +311,15 @@ b$sd_info
 分别检查收敛码、最大梯度、Hessian、参数边界及残差模式。运行结束不代表所有参数都可识别或模型假设成立。完整模拟 CSV 流程已对两个模型实际运行：收敛码均为 0，Hessian 正定，没有命中参数边界，最大梯度低于 0.001。这验证的是示例流程，不是尚未提供的正式数据评估。
 
 下面两张图由该脚本用模拟 CSV 输入实际生成。
+
+更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
+
+|模型|自由标量参数|收敛码|最大梯度|Hessian 正定|命中边界|
+|---|---|---|---|---|---|
+|ACL|10|0|9.75e-5|是|否|
+|ALSCL|13|0|4.97e-4|是|否|
+
+两次运行均使用 4 核计算标准误，实际执行方式取决于环境。这是模拟示例的数值检查，不是对尚未提供的正式评估的验证。另在相同数据上测试只固定 t0 的 ACL，即使连续优化两轮，仍得到收敛码 1、最大梯度 0.00668 和非正定 Hessian。只固定 t0 的 ALSCL 也返回收敛码 1（false convergence），尽管 Hessian 正定且最大梯度为 0.000934。因此这些配置作为待评估选项展示，不作为已经验证成功的基线替代方案。
 
 ![完整 CSV 示例的 ALSCL 年度残差](../assets/manual/figures/own-data-example/residuals.png)
 

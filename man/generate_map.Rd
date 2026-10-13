@@ -23,3 +23,9 @@ A list representing the generated map with custom or default values.
 This function generates a map for the stock assessment model with either custom or default values.
 Users can provide custom values for specific map elements, and the function will use the default values for the others.
 }
+\details{
+This helper uses ACL defaults and drops named NULL entries from its
+result. When releasing default fixes through run_acl(), pass the named NULL
+list directly as map rather than wrapping it in generate_map(): the fitter
+would otherwise reapply defaults for the removed entries.
+}

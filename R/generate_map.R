@@ -10,6 +10,11 @@
 #'   - t0: Custom value for t0 (default is NA).
 #'   Growth parameters log_vbk and log_Linf are free unless explicitly mapped.
 #'
+#' @details This helper uses ACL defaults and drops named NULL entries from its
+#'   result. When releasing default fixes through run_acl(), pass the named NULL
+#'   list directly as map rather than wrapping it in generate_map(): the fitter
+#'   would otherwise reapply defaults for the removed entries.
+#'
 #' @return A list representing the generated map with custom or default values.
 #' @export
 generate_map <- function(map = NULL) {
