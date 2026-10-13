@@ -60,8 +60,9 @@ peel_checks <- lapply(0:3, function(k) {
   keep <- seq_len(ncol(inputs$data.CatL) - k)
   peeled <- lapply(inputs, function(d) d[, keep, drop = FALSE])
   tryCatch({
-    fit <- do.call(run_alscl, c(peeled, x$fit_args, x$fit_config$alscl,
-                               list(train_times = 2, silent = TRUE)))
+    peel_x <- x
+    peel_x[names(peeled)] <- peeled
+    fit <- run_alscl(peel_x, train_times = 2, silent = TRUE)
     data.frame(Peel = k, Terminal = max(fit$year),
       Code = fit$convergence_code, Gradient = fit$max_abs_gradient,
       pdHess = fit$pdHess, Boundary = fit$bound_hit, Error = "")

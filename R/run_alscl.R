@@ -1,6 +1,7 @@
 #' Fit the ALSCL survey catch-at-length model
 #' @param data.CatL Data frame or matrix with length labels in its first column,
-#'   followed by at least two numerically labelled time columns.
+#'   followed by at least two numerically labelled time columns. Alternatively, a
+#'   named input bundle such as YTF_example; see Details.
 #' @param data.wgt Weight-at-length, with identical labels, columns and dimensions.
 #' @param data.mat Maturity-at-length between 0 and 1, with the same layout.
 #' @param rec.age Recruitment age in years, greater than t0.
@@ -32,6 +33,22 @@
 #'   length bins absorb the distribution tails. Compilation uses a writable session
 #'   cache. Optimizer success, gradient size, Hessian status and boundary hits should
 #'   be assessed separately before interpreting estimates or uncertainty.
+#' @details Since 2.2.0, `run_alscl(x)` accepts a named list of fitting
+#'   arguments or a structured bundle such as [YTF_example]. A structured bundle
+#'   contains data.CatL, data.wgt and data.mat, shared settings in fit_args, and
+#'   optional model settings in fit_config$alscl. Settings are resolved in this
+#'   order: data tables, fit_args, selected fit_config, explicit call arguments
+#'   (highest priority). Explicit parameters, map and control replace the entire
+#'   corresponding list; NULL is preserved. Other top-level fields in a structured
+#'   bundle, including simulation parameters and truth, are not fitting settings.
+#'   The original separate-argument and do.call interfaces remain supported.
+#'   Both interfaces use the same fitting and standard-error acceleration.
+#' @examples
+#' \dontrun{
+#' x <- YTF_example
+#' fit <- run_alscl(x)
+#' fit <- run_alscl(x, nstarts = 4, ncores = 2, silent = TRUE)
+#' }
 #' @return A list with report, opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 #'   year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
@@ -53,6 +70,8 @@ run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
                       map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,
                       output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
                       zero_action = c("missing", "error"), control = list(), nstarts = ncores) {
+  if (is.list(data.CatL) && !is.data.frame(data.CatL))
+    return(.acl_fit_bundle(data.CatL, "alscl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action)
   .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,

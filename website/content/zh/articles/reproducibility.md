@@ -10,10 +10,7 @@
 ```r
 # 使用指南中的 inputs、x
 sensitivity <- lapply(c(.15, .20, .25), function(M_value) {
-  biology <- x$fit_args
-  biology$M <- M_value
-  fit <- do.call(run_alscl, c(inputs, biology, x$fit_config$alscl,
-                             list(train_times=2, silent=TRUE)))
+  fit <- run_alscl(x, M = M_value, train_times = 2, silent = TRUE)
   list(M=M_value, diagnostics=diagnose_model(x$data.CatL, fit), fit=fit)
 })
 # 确认每个诊断后比较
@@ -32,8 +29,7 @@ plot_compare_ts(sensitivity[[1]]$fit, sensitivity[[3]]$fit,
 cores <- parallel::detectCores()
 workers <- if (is.na(cores)) 1L else max(1L, min(4L, cores - 1L))
 # 在原拟合中替换 ncores，不重复传参
-multi <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                           list(ncores=workers, nstarts=4, train_times=2, silent=TRUE)))
+multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
 ```
 
 |入口| ncores=1 | ncores>1 |
@@ -122,7 +118,7 @@ plot_SSB(saved)
 ```r
 # 默认：结果不变，并行计算标准误
 alscl_speed()
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+b <- run_alscl(x, silent = TRUE)
 # 更快的选项；结果与默认设置不完全相同
 alscl_speed(framework = "TMBad")
 # 顺序计算标准误，例如在自己的并行循环中

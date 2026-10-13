@@ -2,11 +2,11 @@
 
 [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.1.0 · 简体中文 / English**
+**ALSCL 2.2.0 · 简体中文 / English**
 
-安装 ALSCL 2.1.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.2.0 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.1.0 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.2.0 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL

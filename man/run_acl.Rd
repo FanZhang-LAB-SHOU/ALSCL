@@ -31,7 +31,8 @@ run_acl(
 }
 \arguments{
 \item{data.CatL}{Data frame or matrix with length labels in its first column,
-followed by at least two numerically labelled time columns.}
+followed by at least two numerically labelled time columns. Alternatively, a
+named input bundle such as YTF_example; see Details.}
 
 \item{data.wgt}{Weight-at-length, with identical labels, columns and dimensions.}
 
@@ -100,4 +101,22 @@ M and F are per model time step; vbk is per year. The first and last
 length bins absorb the distribution tails. Compilation uses a writable session
 cache. Optimizer success, gradient size, Hessian status and boundary hits should
 be assessed separately before interpreting estimates or uncertainty.
+
+Since 2.2.0, \code{run_acl(x)} accepts a named list of fitting
+arguments or a structured bundle such as \link{YTF_example}. A structured bundle
+contains data.CatL, data.wgt and data.mat, shared settings in fit_args, and
+optional model settings in fit_config$acl. Settings are resolved in this
+order: data tables, fit_args, selected fit_config, explicit call arguments
+(highest priority). Explicit parameters, map and control replace the entire
+corresponding list; NULL is preserved. Other top-level fields in a structured
+bundle, including simulation parameters and truth, are not fitting settings.
+The original separate-argument and do.call interfaces remain supported.
+Both interfaces use the same fitting and standard-error acceleration.
+}
+\examples{
+\dontrun{
+x <- YTF_example
+fit <- run_acl(x)
+fit <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+}
 }

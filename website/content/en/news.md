@@ -1,3 +1,12 @@
+## ALSCL 2.2.0
+
+- Both `run_acl(x)` and `run_alscl(x)` accept input bundles or flat named argument lists. Explicit arguments override stored values; model-specific fit settings are selected automatically from `YTF_example`.
+- Existing positional calls, named arguments and `do.call()` remain supported. The new interface uses the same optimization and standard-error acceleration, with CppAD still the default.
+- Validate bundle names, required inputs and model configurations before fitting. Preserve explicit `NULL` overrides and keep simulation parameters separate from fitting settings.
+- Update English and Simplified Chinese examples, R help, reference pages and workflow scripts. See [input lists and overrides](../articles/first-model.html).
+
+- Compute a single remaining delta-method quantity sequentially, avoiding an unnecessary socket worker and a one-chunk splitting error.
+
 ## ALSCL 2.1.0
 
 ### Speed settings on every system

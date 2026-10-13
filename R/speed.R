@@ -296,7 +296,7 @@ print.alscl_speed_info <- function(x, ...) {
   }
   rest <- if (k < m) seq.int(k + 1L, m) else integer(0)
   per_quantity <- if (k > 0L) (proc.time()[["elapsed"]] - started) / k else Inf
-  if (!length(rest) || ncores <= 1L || per_quantity * length(rest) < min_seconds) {
+  if (length(rest) <= 1L || ncores <= 1L || per_quantity * length(rest) < min_seconds) {
     out[rest] <- lapply(rest, .acl_delta_one, s = s)
     return(list(variances = out, method = "sequential", cores = 1L))
   }

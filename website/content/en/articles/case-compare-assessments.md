@@ -13,10 +13,8 @@ library(ALSCL)
 data("YTF_example")
 x <- YTF_example
 inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 ```
 
 ## Check whether the fits are interpretable

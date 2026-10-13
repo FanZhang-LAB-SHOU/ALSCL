@@ -51,7 +51,8 @@ data("YTF_example")
 demo_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
 demo_config <- c(YTF_example$fit_args, YTF_example$fit_config$alscl,
                  list(zero_action = "error", train_times = 2, silent = TRUE))
-demo_fit <- fit_survey_tables(demo_inputs, demo_config, model_type = "alscl")
+demo_x <- c(demo_inputs, demo_config)
+demo_fit <- run_alscl(demo_x)
 diagnose_model(demo_inputs$data.CatL, demo_fit)
 plot_CatL(demo_fit, type = "year", exp_transform = FALSE, facet_ncol = 4)
 ```
@@ -97,7 +98,8 @@ ALSCL 的生长初值使用 `log_Linf`、`log_vbk` 与 `log_t0`。此参数化�
 补全并审查 `config` 后进行拟合，在解释种群估计之前检查数值诊断。
 
 ```r
-my_fit <- fit_survey_tables(my_inputs, config, model_type = "alscl")
+my_x <- c(my_inputs, config)
+my_fit <- run_alscl(my_x)
 checks <- diagnose_model(my_inputs$data.CatL, my_fit)
 checks
 plot_residuals(my_fit, type = "year")
@@ -152,3 +154,5 @@ writeLines(capture.output(sessionInfo()), "my_assessment_session.txt")
 ```
 
 同时保留输入来源与软件包提交版本。保存的汇总结果可用于报告；需要当前 TMB 目标函数的操作，必须在当前 R 会话中重新拟合。处理实测数据前，可先运行配置完整的 [模拟 YTF 示例](first-model.html)。
+
+将 ALSCL 专用的 `parameters`、参数边界和 `map` 换成 ACL 设置后，同一个扁平输入列表也可用 `run_acl(my_x)` 拟合。前面的数据验证仍然需要执行。原来的 `fit_survey_tables()` 辅助函数和逐项传参方式继续支持。

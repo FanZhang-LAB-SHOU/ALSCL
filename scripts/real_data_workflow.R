@@ -78,5 +78,5 @@ fit_survey_tables <- function(inputs, config, model_type=c("acl","alscl")) {
   validate_survey_tables(inputs,config$growth_step,config$zero_action)
   if (any(names(config) %in% names(inputs))) stop("Keep input tables out of config.")
   fun <- if (model_type=="acl") ALSCL::run_acl else ALSCL::run_alscl
-  do.call(fun,c(inputs,config))
+  fun(c(inputs, config))
 }

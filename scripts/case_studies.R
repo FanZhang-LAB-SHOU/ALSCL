@@ -31,8 +31,8 @@ run_case_studies <- function(out='docs') {
       sel_L50=pa$q_surv_L50,sel_L95=pa$q_surv_L95,len_mid=pa$len_mid,
       len_border=pa$len_border[-c(1,length(pa$len_border))],growth_step=pa$growth_step,
       train_times=2,ncores=1,silent=TRUE))
-    a <- do.call(run_acl,c(common,list(parameters=pA,map=mA)))
-    b <- do.call(run_alscl,c(common,list(parameters=pB,map=mB)))
+    a <- run_acl(common,parameters=pA,map=mA)
+    b <- run_alscl(common,parameters=pB,map=mB)
     status <- function(f,model) data.frame(Case=sp,Model=model,Code=f$convergence_code,
       MaxGradient=f$max_abs_gradient,pdHess=f$pdHess,Boundary=f$bound_hit)
     statuses[[sp]] <- rbind(status(a,'ACL'),status(b,'ALSCL'))

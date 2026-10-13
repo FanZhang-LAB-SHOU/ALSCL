@@ -51,7 +51,8 @@ data("YTF_example")
 demo_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
 demo_config <- c(YTF_example$fit_args, YTF_example$fit_config$alscl,
                  list(zero_action = "error", train_times = 2, silent = TRUE))
-demo_fit <- fit_survey_tables(demo_inputs, demo_config, model_type = "alscl")
+demo_x <- c(demo_inputs, demo_config)
+demo_fit <- run_alscl(demo_x)
 diagnose_model(demo_inputs$data.CatL, demo_fit)
 plot_CatL(demo_fit, type = "year", exp_transform = FALSE, facet_ncol = 4)
 ```
@@ -97,7 +98,8 @@ For ALSCL, growth starts use `log_Linf`, `log_vbk` and `log_t0`. This parameteri
 After completing and reviewing `config`, fit the model and check numerical diagnostics before interpreting population estimates.
 
 ```r
-my_fit <- fit_survey_tables(my_inputs, config, model_type = "alscl")
+my_x <- c(my_inputs, config)
+my_fit <- run_alscl(my_x)
 checks <- diagnose_model(my_inputs$data.CatL, my_fit)
 checks
 plot_residuals(my_fit, type = "year")
@@ -152,3 +154,5 @@ writeLines(capture.output(sessionInfo()), "my_assessment_session.txt")
 ```
 
 Retain input provenance and the package revision as well. Saved summaries are suitable for reporting; operations requiring a live TMB objective need a fit in the current R session. For a fully specified practice run before using observations, use the [synthetic YTF example](first-model.html).
+
+The flat input list `my_x` can also be passed to `run_acl(my_x)` after replacing any ALSCL-specific `parameters`, bounds and `map` with ACL settings. The data validation above is still required. The existing `fit_survey_tables()` helper and separate-argument calls remain available.

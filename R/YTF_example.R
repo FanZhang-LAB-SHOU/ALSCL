@@ -41,8 +41,7 @@
 #' \dontrun{
 #' x <- YTF_example
 #' inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-#' fit <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-#'                          list(train_times = 2, silent = TRUE)))
+#' fit <- run_acl(x, train_times = 2, silent = TRUE)
 #' plot_recruitment(fit, se = TRUE)
 #' }
 "YTF_example"

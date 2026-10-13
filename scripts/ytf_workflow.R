@@ -13,12 +13,11 @@ run_ytf_guide <- function(out = "docs", npeels = 3L) {
   data("YTF_example", package="ALSCL")
   x <- YTF_example
   inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-  common <- c(inputs, x$fit_args, list(train_times=2, ncores=1, silent=TRUE))
   # 固定生物参数的教学拟合 / Conditional teaching fits with known biology.
   message("Fitting YTF ACL")
-  a <- do.call(run_acl, c(common, x$fit_config$acl))
+  a <- run_acl(x, train_times = 2, ncores = 1, silent = TRUE)
   message("Fitting YTF ALSCL")
-  b <- do.call(run_alscl, c(common, x$fit_config$alscl))
+  b <- run_alscl(x, train_times = 2, ncores = 1, silent = TRUE)
   dat <- inputs$data.CatL
   status <- function(f, name) data.frame(Model=name, Code=f$convergence_code,
     MaxGradient=f$max_abs_gradient, pdHess=f$pdHess, Boundary=f$bound_hit)

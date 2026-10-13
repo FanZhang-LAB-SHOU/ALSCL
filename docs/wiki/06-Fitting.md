@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/05-Simulation) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/07-Diagnostics)
 
-**ALSCL 2.1.0 · 简体中文 / English**
+**ALSCL 2.2.0 · 简体中文 / English**
 
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|
@@ -58,7 +58,7 @@ Most `log_` parameters use log-transformed values; correlation transforms must m
 alscl_speed()                      # defaults: identical results, parallel standard errors
 alscl_speed(framework = "TMBad")   # faster; results not identical to the default
 alscl_speed(sd_cores = 1)          # sequential standard errors, e.g. inside your own parallel loop
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(silent = TRUE)))
+b <- run_alscl(x, silent = TRUE)
 ```
 
 In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases), the default settings made fits 1.13-1.24 times faster with every estimate and standard error identical to the original code, and `framework = "TMBad"` made them 1.25-1.68 times faster. `alscl_speed_info()` shows what the settings mean on your computer, and `fit$sd_info` records how the standard errors of a fit were computed. The [speed guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED_GUIDE.md) explains every setting, how to check and record them, and when to use TMBad; the full record of the checks is [docs/SPEED.md](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md).

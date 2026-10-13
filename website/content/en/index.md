@@ -16,7 +16,7 @@ Start with a [worked example](articles/first-model.html), browse the [basic func
 
 <h2 id="installation">Installation</h2>
 
-Install the current version (2.1.0) from GitHub:
+Install the current version (2.2.0) from GitHub:
 
 ```r
 install.packages("remotes")
@@ -47,13 +47,13 @@ x <- YTF_example
 inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 
 # Fit both models to the same observations and biological settings
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
+
+ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ![ACL and ALSCL biomass, spawning biomass and recruitment estimates from the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
 

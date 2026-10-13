@@ -15,11 +15,23 @@ inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 str(inputs)
 x$provenance
 # Same observations and conditional settings
-a <- do.call(run_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                       list(train_times = 2, silent = TRUE)))
-b <- do.call(run_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                         list(train_times = 2, silent = TRUE)))
+a <- run_acl(x, train_times = 2, silent = TRUE)
+b <- run_alscl(x, train_times = 2, silent = TRUE)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+```
+
+## Input lists and overrides
+
+Since 2.2.0, both `run_acl(x)` and `run_alscl(x)` accept a complete named input list. For `YTF_example`, they read the three tables and `x$fit_args`, then the matching `x$fit_config$acl` or `x$fit_config$alscl`. Explicit call arguments have highest priority, for example `run_acl(x, M = 0.25, nstarts = 4, ncores = 2)`. List-valued overrides (`parameters`, `map`, `control`) replace the whole stored list, and explicit `NULL` is retained. The simulation settings in `x$parameters` and the generating `x$truth` are not fitting arguments.
+
+For your own data, `x` can instead be a flat named list containing `data.CatL`, `data.wgt`, `data.mat`, `rec.age`, `nage`, `M`, `sel_L50`, `sel_L95` and any optional fitting arguments. A structured bundle may omit `fit_config` to use the model defaults; if it includes `fit_config`, that list must contain the selected model. Duplicate, unnamed, unknown or missing required arguments produce an error before fitting. All calls use the existing fitting core and `alscl_speed()` settings; inspect `fit$sd_info` to see the actual standard-error method. `ncores` controls independent optimization starts, while `sd_cores` in `alscl_speed()` controls standard errors.
+
+The original separate-argument interface and `do.call()` remain supported. This older expression has the same fitting settings as `run_acl(x, silent = TRUE)`:
+
+```r
+old_args <- c(x[c("data.CatL", "data.wgt", "data.mat")],
+              x$fit_args, x$fit_config$acl, list(silent = TRUE))
+legacy_fit <- do.call(run_acl, old_args)
 ```
 
 ![Model comparison](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
