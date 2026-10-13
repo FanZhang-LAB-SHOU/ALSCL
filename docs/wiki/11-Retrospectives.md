@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/12-Case-Studies)
 
-**ALSCL 2.2.0 · 简体中文 / English**
+**ALSCL 2.2.1 · 简体中文 / English**
 
 ```r
 # 删除最后 1、2、3 个时间步后分别重拟合 / Refit after peeling 1, 2 and 3 steps

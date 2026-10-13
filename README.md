@@ -21,7 +21,7 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.0 · 简体中文 / English**
+**Version 2.2.1 · 简体中文 / English**
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/Linbojun99/ALSCL/wiki)，理论基础见以下论文。
 
@@ -294,6 +294,8 @@ plot_compare_ts(a, b, se=TRUE)
 ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+
+**自己的正式数据 / Your own observations:** 2.2.1 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 

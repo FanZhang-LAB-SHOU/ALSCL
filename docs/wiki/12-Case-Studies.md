@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/11-Retrospectives) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export)
 
-**ALSCL 2.2.0 · 简体中文 / English**
+**ALSCL 2.2.1 · 简体中文 / English**
 
 两案例重新使用当前包拟合。它们用于学习年度/季度工作流，不能替代原论文数据复现；单个随机重复也不能给两个模型排名。所有拟合图的通用操作仍以 `YTF_example` 为主线。
 
