@@ -26,7 +26,7 @@ names(p) # Inspect start and bound components
 # Explicit fixed parameters, model-specific names
 fixed <- list(log_Linf = factor(NA), log_vbk = factor(NA))
 # NULL releases a default fixed item
-released <- generate_map(list(logit_log_F_y = NULL))
+released <- list(logit_log_F_y = NULL)
 VB_func(Linf = 60, k = 0.2, t0 = 1/60, age = 1:15)
 mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 ```
@@ -41,3 +41,5 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 
 
 Most `log_` parameters use log-transformed values; correlation transforms must match the template. ACL `t0` is untransformed, while ALSCL exponentiates `log_t0`, preventing negative t0 in this parameterization. Do not interchange their parameter lists.
+
+For the required-input checklist, all estimable parameters, exact default maps and complete examples, see [your own survey assessment](case-fit-survey.html). Pass release lists directly as `map`; `generate_map()` removes NULL entries, so passing its output back to the fitter can reapply default fixes.

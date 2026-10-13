@@ -37,9 +37,9 @@ len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
 validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
 
 # 3. 各模型拟合设置 / Model-specific settings ------------------------------
-# 下面是模拟示例中已知的条件设置；不要直接当作正式数据的固定值。
-# For observations, review starts, bounds and every fixed parameter independently.
-# Other parameters use the package's default starts, bounds and maps.
+# 生长和多数过程参数作为初值，不再自动固定每个提供的参数。
+# Growth and most process values below are starts, not automatic fixes.
+# Review starts, bounds and the documented default fixed values for your stock.
 p_acl <- list(
   log_Linf = log(bio$Linf), log_vbk = log(bio$vbk), t0 = bio$t0,
   log_cv_len = log(bio$cv_len),
@@ -50,14 +50,21 @@ p_alscl <- list(
   log_cv_len = log(bio$cv_len), log_cv_grow = log(bio$cv_grow),
   log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.2),
   logit_log_R = qlogis(0.1))
-# factor(NA) 固定在给定值；这些固定假设不贡献估计不确定性。
-map_acl <- lapply(p_acl, function(z) factor(NA))
-map_alscl <- lapply(p_alscl, function(z) factor(NA))
-map_alscl$logit_log_F_l <- map_alscl$logit_log_F_y <- factor(NA)
-# 显式 NULL 可释放某一项，包括模型默认固定的项：
-# map_acl["log_Linf"] <- list(NULL)
-# map_alscl["log_Linf"] <- list(NULL)
-# 注意：map_acl$log_Linf <- NULL 是删除条目，含义不同。
+# 使用模型默认 map：ACL 固定 4 项、估计 10 项；ALSCL 固定 2 项、估计 13 项。
+# Default maps: ACL fixes 4 and estimates 10 scalars; ALSCL fixes 2 and estimates 13.
+# ACL fixes log_std_log_F, logit_log_F_y, logit_log_F_a and t0.
+# ALSCL fixes log_sigma_log_F and log_t0. These values still need justification.
+map_acl <- list()
+map_alscl <- list()
+# 可选：只固定 t0；更灵活的设置必须另做诊断，不保证可识别。
+# Optional: fix only t0; diagnose this more flexible configuration separately.
+# map_acl <- list(t0 = factor(NA), log_std_log_F = NULL,
+#                 logit_log_F_y = NULL, logit_log_F_a = NULL)
+# map_alscl <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
+# 解除默认固定项需保留具名 NULL；$t0 <- NULL 仅删除条目。
+# Preserve a named NULL to release a default fix; $t0 <- NULL deletes the entry.
+# map_acl["t0"] <- list(NULL)
+# map_alscl["log_t0"] <- list(NULL)
 
 # 4. 组装 x / Assemble the input bundle -----------------------------------
 x <- list(
@@ -70,7 +77,7 @@ x <- list(
     sel_L50 = bio$sel_L50, sel_L95 = bio$sel_L95,
     growth_step = bio$growth_step,
     len_mid = len_mid, len_border = len_border,
-    zero_action = "error", train_times = 1,
+    zero_action = "error", train_times = 2,
     nstarts = 1, ncores = 1, silent = FALSE),
   fit_config = list(
     acl = list(parameters = p_acl, map = map_acl),
@@ -92,13 +99,18 @@ print(checks)
 print(a$sd_info)
 print(b$sd_info)
 for (fit in list(a, b)) {
+  print(fit$par_low_up) # 实际自由参数及边界 / Actual free scalars and bounds
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
+  if (!isTRUE(fit$convergence_code == 0L) || !isTRUE(fit$pdHess) ||
+      !isTRUE(fit$max_abs_gradient < 0.001) || !identical(fit$bound_hit, FALSE))
+    warning("Review fit diagnostics before interpreting this assessment.")
 }
 residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
-ssb_plot <- plot_SSB(b, se = TRUE)
+# 非正定 Hessian 时不展示标准误区间 / Omit SE intervals if Hessian is not positive definite.
+ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)
 # obj 是当前会话的 TMB 指针，不包含在可移植结果中。

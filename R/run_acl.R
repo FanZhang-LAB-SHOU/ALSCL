@@ -12,7 +12,8 @@
 #' @param parameters.L,parameters.U Named lower and upper bounds. Bounds are aligned
 #'   with free parameters after applying map. Initial free values are clamped to bounds.
 #' @param map Named TMB factor mappings. factor(NA) fixes a parameter at its supplied
-#'   value; NULL releases a default fixed parameter. Other defaults remain in force.
+#'   value; a named NULL entry releases that parameter. A whole map = NULL or
+#'   list() applies model defaults. Other unspecified defaults remain in force.
 #' @param len_mid Finite length-bin midpoints; overrides automatic parsing.
 #' @param len_border Interior boundaries, one fewer than the number of length bins.
 #' @param output Save diagnostic tables and plots below output/ when TRUE.
@@ -33,6 +34,14 @@
 #'   length bins absorb the distribution tails. Compilation uses a writable session
 #'   cache. Optimizer success, gradient size, Hessian status and boundary hits should
 #'   be assessed separately before interpreting estimates or uncertainty.
+#' @details Starting values are estimated unless mapped as fixed. ACL defaults fix
+#'   log_std_log_F, logit_log_F_y, logit_log_F_a and t0, leaving 10 free scalar
+#'   parameters. To release one, pass map = list(log_std_log_F = NULL) directly.
+#'   Single-bracket assignment such as `map["name"] <- list(NULL)` preserves a
+#'   release; `map$name <- NULL` deletes it and can restore a default fix.
+#'   M, survey catchability, weights, maturity and age/bin settings are supplied
+#'   inputs, not estimable parameters. Random deviations are constructed
+#'   internally and are not listed in the outer optimizer's opt$par.
 #' @details Since 2.2.0, `run_acl(x)` accepts a named list of fitting
 #'   arguments or a structured bundle such as [YTF_example]. A structured bundle
 #'   contains data.CatL, data.wgt and data.mat, shared settings in fit_args, and

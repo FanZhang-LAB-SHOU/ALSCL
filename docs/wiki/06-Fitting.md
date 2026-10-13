@@ -30,7 +30,7 @@ names(p) # 查看初值及上下界列表 / Inspect start and bound components
 # 明确固定参数；不同模型参数名不同 / Explicit fixed parameters, model-specific names
 fixed <- list(log_Linf = factor(NA), log_vbk = factor(NA))
 # factor(NA) 固定；映射中的 NULL 可释放默认固定项 / NULL releases a default fixed item
-released <- generate_map(list(logit_log_F_y = NULL))
+released <- list(logit_log_F_y = NULL) # 直接传给 run_acl 的 map / Pass directly as map
 VB_func(Linf = 60, k = 0.2, t0 = 1/60, age = 1:15)
 mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 ```

@@ -26,7 +26,7 @@ names(p) # 查看初值及上下界列表
 # 明确固定参数；不同模型参数名不同
 fixed <- list(log_Linf = factor(NA), log_vbk = factor(NA))
 # factor(NA) 固定；映射中的 NULL 可释放默认固定项
-released <- generate_map(list(logit_log_F_y = NULL))
+released <- list(logit_log_F_y = NULL)
 VB_func(Linf = 60, k = 0.2, t0 = 1/60, age = 1:15)
 mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 ```
@@ -40,3 +40,5 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 |补充相关| `logit_log_R` | `logit_log_R` |
 
 `log_` 参数通常用 `log(自然尺度值)`，相关系数的变换必须以对应模板为准。尤其 ACL 的 `t0` 是原尺度，而 ALSCL 的 `log_t0` 经 exp 变换，因此本版 ALSCL 的该参数化不支持负 t0。不要将 ACL 参数表直接用于 ALSCL。全部 14/15 个估计参数的名称、变换及上下界查询方法见 [初值列表参考](https://github.com/Linbojun99/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#estimation_parameters)。
+
+必需输入、全部可估计参数、准确的默认 map 和完整示例见[正式调查数据拟合](case-fit-survey.html)。解除列表应直接作为 `map` 传入；`generate_map()` 会移除 NULL 项，将其返回值再传给拟合函数可能恢复默认固定项。
