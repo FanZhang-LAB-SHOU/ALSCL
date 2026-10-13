@@ -189,7 +189,7 @@ alscl_speed(sd_cores = getOption("ALSCL.sd_cores", "auto"),
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。"auto" 最多使用 4 个物理核并保留 1 个；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. "auto" uses up to four physical cores and keeps one free; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. |
-| `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD"（默认）的结果与 ALSCL 2.0.0 逐位相同；"TMBad" 更快，但结果不逐位相同。 | Character. Automatic-differentiation library: "CppAD" (default) gives results identical to ALSCL 2.0.0; "TMBad" is faster, but results are not identical. |
+| `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD" 为默认库；"TMBad" 更快但结果略有不同。2.2.2 收尾可能微调最优点，不保证与旧版逐位一致。 | Character. Automatic-differentiation library: "CppAD" is the default; "TMBad" is faster but results differ slightly. Refinement in 2.2.2 can change the optimum; cross-version identity is not guaranteed. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 Invisible previous settings; options() restores them.
 
@@ -214,7 +214,7 @@ alscl_speed_info()
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 
-**返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame with columns item and value: the sd_cores setting, the cores used for standard errors, how they are computed and why, the framework, whether results are identical to ALSCL 2.0.0, and the TMB version.
+**返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame with columns item and value: the sd_cores setting, the cores used for standard errors, how they are computed and why, the framework, a notice that cross-version numerical identity is not guaranteed, and the TMB version.
 
 **示例 / Example:**
 

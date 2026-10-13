@@ -93,7 +93,7 @@ Windows 不支持分叉；R 的文档（`?parallel::mclapply`）也不建议在�
 
 ## 6. TMBad 选项
 
-TMB 可以用两种自动微分库之一编译模型。默认的 CppAD 给出与 ALSCL 2.0.0 使用相同 AD 库的结果；TMBad 计算拉普拉斯近似及其梯度要快几倍：
+TMB 可以用两种自动微分库之一编译模型。默认库 CppAD 与 ALSCL 2.0.0 相同，但新版收尾和模型选项可能改变拟合结果；TMBad 计算拉普拉斯近似及其梯度要快几倍：
 
 ```r
 alscl_speed(framework = "TMBad")   # 下一次拟合会用 TMBad 编译一次模型
@@ -115,7 +115,7 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 
 ## 7. 检查与记录设置
 
-- 拟合前，`alscl_speed_info()` 显示设置值、将使用的核数与方式、原因、自动微分库，以及结果是否与 ALSCL 2.0.0 使用相同 AD 库。
+- 拟合前，`alscl_speed_info()` 显示设置值、将使用的核数与方式、原因、自动微分库，以及不保证跨版本逐位一致的提醒。
 - 拟合后，`fit$sd_info` 给出 `method`（`"forked processes"`、`"socket workers (delta method)"` 或 `"sequential"`）、`cores`、`seconds`，以及说明为何顺序计算的 `note`。`silent = FALSE` 时也会打印这些信息。
 - 报告结果时，请与 `sessionInfo()` 一起记录 `alscl_speed_info()`。默认设置下，结果不随核数或计算方式改变；使用 `framework = "TMBad"` 时结果与 CppAD 略有不同，请注明所用的库。
 
