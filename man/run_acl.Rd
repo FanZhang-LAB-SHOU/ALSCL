@@ -87,6 +87,9 @@ start_diagnostics records each start's PID, Unix start/end times, elapsed
 and CPU seconds, objective and convergence code; workers and nstarts record
 the actual worker count and total starts. The lowest finite objective is
 selected; inspect convergence diagnostics separately.
+sd_info records how the standard errors were computed: method (forked
+processes, socket workers for the delta method, or sequential), cores, elapsed
+seconds and a note; see \code{\link{alscl_speed}}.
 The DLL remains loaded so the returned obj can be evaluated in the same session.
 }
 \description{
