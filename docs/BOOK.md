@@ -353,12 +353,10 @@ my_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
 validate_survey_tables(my_inputs, growth_step = 1, zero_action = "error")
 # CSV 也可以，目录内需有三张同名 CSV / Three named CSV files also work
 csv_inputs <- read_survey_csv("docs/data")
-# 教学工作簿使用其对应的生物设定 / Use the workbook's matching biology
-config <- c(YTF_example$fit_args, YTF_example$fit_config$alscl,
-            list(zero_action = "error", train_times = 2, silent = TRUE))
-# 真正重新拟合；需要编译环境 / This refits and requires a compiler
-my_fit <- fit_survey_tables(my_inputs, config, model_type = "alscl")
+str(csv_inputs)
 ```
+
+导入步骤只检查三表，不自动套用内置 YTF 的固定参数。完整的 x、参数分类、map 和双模型拟合见本节下方 5.2–5.3。 / Importing checks the three tables without applying the bundled YTF fixed-parameter configuration. Sections 5.2–5.3 below provide the complete x, parameter classification, maps and both fits.
 
 换成自己的文件时，替换路径，并依据自己的物种设置 `rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、边界及拟合初值/固定参数。不能因为输入表尺寸相同，就沿用 YTF 的生物参数或固定参数表。生长、长度重量关系、成熟信息和调查可捕性应有独立依据。
 

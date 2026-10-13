@@ -44,7 +44,6 @@ These are guide helpers, sourced from the repository, not package exports. The E
 
 ```r
 library(ALSCL)
-data("YTF_example")
 install.packages("readxl") # Install once
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 # Start with the supplied workbook
@@ -52,13 +51,11 @@ my_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
 validate_survey_tables(my_inputs, growth_step = 1, zero_action = "error")
 # Three named CSV files also work
 csv_inputs <- read_survey_csv("docs/data")
-# Use the workbook's matching biology
-config <- c(YTF_example$fit_args, YTF_example$fit_config$alscl,
-            list(zero_action = "error", train_times = 2, silent = TRUE))
-# This refits and requires a compiler
-my_fit <- fit_survey_tables(my_inputs, config, model_type = "alscl")
+str(csv_inputs)
 ```
 
+
+This import example does not apply the bundled YTF fixed-parameter configuration. Continue with the [complete own-data example](case-fit-survey.html) to build x, choose model-specific maps and fit both models.
 
 For your own workbook, replace the path and supply species-specific biology, boundaries, starts and fixed parameters. Equal table dimensions do not justify reusing YTF biology. Growth, weight, maturity and survey catchability need independent support.
 
