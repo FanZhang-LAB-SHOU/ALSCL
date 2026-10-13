@@ -16,7 +16,7 @@ Start with a [worked example](articles/first-model.html), browse the [basic func
 
 <h2 id="installation">Installation</h2>
 
-Install the current development version from GitHub:
+Install the current version (2.1.0) from GitHub:
 
 ```r
 install.packages("remotes")

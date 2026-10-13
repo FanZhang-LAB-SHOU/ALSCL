@@ -9,9 +9,9 @@
 
 **[Visit the ALSCL documentation website →](https://linbojun99.github.io/ALSCL/)**
 
-ALSCL has a dedicated documentation website with installation instructions, all 15 basic-function topics, a reference for all 44 public functions, and worked cases for simulation, fitting your own survey data, model comparison and retrospective analysis. English is the default; use the language switch on any page to read the Simplified Chinese version.
+ALSCL has a dedicated documentation website with installation instructions, all 15 basic-function topics, a reference for all 45 public functions, and worked cases for simulation, fitting your own survey data, model comparison and retrospective analysis. English is the default; use the language switch on any page to read the Simplified Chinese version.
 
-ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功能、全部 44 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较和回溯分析的操作案例。网站默认英文，每页均可切换为简体中文。
+ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功能、全部 45 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较和回溯分析的操作案例。网站默认英文，每页均可切换为简体中文。
 
 - [English documentation](https://linbojun99.github.io/ALSCL/) · [简体中文文档](https://linbojun99.github.io/ALSCL/zh/)
 - [Worked case studies / 专题案例](https://linbojun99.github.io/ALSCL/articles/)
@@ -21,7 +21,7 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.0.0 · 简体中文 / English**
+**Version 2.1.0 · 简体中文 / English**
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/Linbojun99/ALSCL/wiki)，理论基础见以下论文。
 
@@ -82,7 +82,7 @@ Estimation is performed via maximum likelihood with the objective function calcu
 | **[Wiki 双语书籍 / Wiki book](https://github.com/Linbojun99/ALSCL/wiki)** | 15 章、目录、前后页导航 / 15 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
-| [44 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
+| [45 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
 | [45 张 YTF 图谱 / YTF gallery](docs/PLOT_GALLERY.md) | 22 个绘图函数及主要类型 / All plotting families |
 | [两个完整案例 / Case studies](docs/CASE_STUDIES.md) | 年度 flatfish、季度 tuna 和 7 张图 / Annual and quarterly examples |
 | [Excel 填表示例 / Workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) | 三表及行列示意 / Three input sheets and instructions |
@@ -415,7 +415,7 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | `Linf`, `vbk` | 60, 0.2/年 / year | 152, 0.38/年 / year |
 | `M`, `F_mean` | 0.2, 0.3 每年 / per step | 0.2, 0.2 每季度 / per step |
 
-全部参数签名、默认值与返回结构见 [44 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
+全部参数签名、默认值与返回结构见 [45 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
 
 The full reference documents every public argument and the inner estimation parameter lists.
 
@@ -634,7 +634,7 @@ Windows、macOS、Linux 使用 socket 工作进程。建议先 1，再按内存�
 
 Socket workers support all three platforms. Begin with one and choose worker counts based on memory and task size; avoid nested oversubscription. OpenMP compilation alone does not establish parallel execution of the template.
 
-`alscl_speed()` sets two options that act within one fit. By default, standard errors are computed on several cores (`sd_cores = "auto"`: up to four, or one in GUI front-ends such as RStudio) and results are identical to those of ALSCL 2.0.0; in the benchmark this made fits 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the model with TMB's TMBad automatic-differentiation library instead of CppAD and made fits 1.25-1.68 times faster, but results are not identical (estimates differed by up to 2.7e-8, relative). [Speed settings, checks and benchmark](docs/SPEED.md).
+`alscl_speed()` sets two options that act within one fit. By default, standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in RStudio) and results are identical to those of ALSCL 2.0.0; in the benchmark this made fits 1.13-1.24 times faster. `alscl_speed(framework = "TMBad")` compiles the model with TMB's TMBad automatic-differentiation library instead of CppAD and made fits 1.25-1.68 times faster, but results are not identical (estimates differed by up to 2.7e-8, relative). `alscl_speed_info()` shows what the settings mean on your computer. [Speed guide](docs/SPEED_GUIDE.md) · [Checks and benchmark](docs/SPEED.md).
 
 ![Fit time before and after the speed settings](docs/figures/speed/timing.png)
 

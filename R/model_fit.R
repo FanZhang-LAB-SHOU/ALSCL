@@ -150,6 +150,8 @@
   report <- obj$report()
   sdresult <- tryCatch(.acl_sdreport(obj, opt$par),
     error = function(e) {warning("Standard errors unavailable: ", conditionMessage(e)); NULL})
+  sd_info <- if (is.null(sdresult)) NULL else attr(sdresult, "acl_sd_info")
+  if (!silent && !is.null(sd_info)) message(.acl_sd_message(sd_info))
   est_std <- if (is.null(sdresult)) NULL else summary(sdresult)
   covariance <- if (is.null(sdresult)) NULL else sdresult$cov.fixed
   if (!is.null(covariance)) dimnames(covariance) <- list(names(opt$par), names(opt$par))
@@ -157,7 +159,7 @@
   mgc <- max(abs(gradient))
   result <- list(obj = obj, opt = opt, report = report, est_std = est_std,
     vcov = covariance, pdHess = if (is.null(sdresult)) NA else isTRUE(sdresult$pdHess),
-    gradient = gradient, max_abs_gradient = mgc, final_outer_mgc = mgc,
+    sd_info = sd_info, gradient = gradient, max_abs_gradient = mgc, final_outer_mgc = mgc,
     bound_hit = any(distances <= 1e-7), bound_check = distances,
     converge = opt$message, convergence_code = opt$convergence,
     par_low_up = cbind(estimate = opt$par, lower = bounds$lower, upper = bounds$upper),

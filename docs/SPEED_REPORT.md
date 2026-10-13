@@ -1,6 +1,6 @@
 # Speed-up of ALSCL model fitting: change and results report
 
-Report date: 12 October 2026 (revised after two reviews). Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
+Report date: 12 October 2026 (revised after two reviews). These changes are released as ALSCL 2.1.0. Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
 
 ## 1. Summary
 
@@ -9,7 +9,7 @@ The aim was to make `run_acl()` and `run_alscl()` faster without changing their 
 1. **Standard errors on several cores** (`sd_cores`, default `"auto"`). The fixed-effect Hessian and the delta-method standard errors of the ADREPORT quantities are computed in forked processes. The result is identical (`identical()`) to the sequential `TMB::sdreport()`. `"auto"` uses up to four physical cores and keeps one free, and one core on Windows, in GUI or embedded front-ends and with Apple's Accelerate BLAS.
 2. **TMBad automatic differentiation** (`framework = "TMBad"`, an option). The default remains CppAD, the library used by ALSCL 2.0.0. TMBad is faster but its results are not identical.
 
-With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 353 tests pass (256 existing and 97 in the new `test-speed.R`).
+With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 457 tests pass (256 existing and 201 in `test-speed.R`). After the first merge (pull request #3), standard errors also run in parallel on Windows and in GUI front-ends such as RStudio, using socket workers for the delta method (section 7).
 
 ## 2. Commits
 
@@ -143,14 +143,27 @@ The repository's GitHub Actions workflow ran `R CMD check --no-manual` (warnings
 
 The six tests skipped on Windows are those that need forked processes; on Windows standard errors are computed sequentially. The comparison of TMBad and CppAD fits ran on all three systems, so the templates compile with TMBad on Windows as well.
 
-## 7. Open points
+## 7. Socket workers, run reports and the user guide (after pull request #3)
+
+The first version computed standard errors on one core wherever forking is unavailable or discouraged: Windows, R.app, RGui, RStudio, Positron and Apple's Accelerate BLAS. Most R users work in one of these environments. Three additions address this and make the settings visible:
+
+| Addition | What it does | Checks |
+|---|---|---|
+| Socket workers (`.acl_delta_socket()` in `R/speed.R`) | In those sessions, socket workers compute the delta method when it would take more than about 3 seconds; the Hessian stays in the main session, because each new process would first spend 14 s (CppAD) to 42 s (TMBad) building the sparse Hessian tape for the 20-year ALSCL example. Workers receive the joint mode, the fixed-effect covariance and the random-effect Hessian, rebuild only the gradient tape and the ADREPORT object, and check that their ADREPORT values are identical to the main session's. | Identical to `TMB::sdreport()` for ACL and ALSCL with CppAD and TMBad, on every system including Windows (tests force all quantities onto the workers); fallback when workers cannot start; no workers when the work is small |
+| `fit$sd_info` and fit messages | Records the method, cores, seconds and the reason for a sequential calculation; printed when `silent = FALSE` | Tests for every method and for the message text |
+| `alscl_speed_info()` | Reports before a fit the cores, method, reason, AD library and whether results are identical to ALSCL 2.0.0 | Tests for the environment rules (Windows, GUI front-ends, Accelerate BLAS) |
+| User guide `docs/SPEED_GUIDE.md` and website article "Speed settings" (English and Chinese) | Explains every setting, how to check and record them, choosing the number of cores, the TMBad option, measured speed-up and troubleshooting | Website builds (140 pages, 45 functions); `website/check.py` passes |
+
+Measured on the 20-year ALSCL example: the delta method took 6.5 s on four socket workers instead of 13.9 s; in a simulated RStudio session (`RSTUDIO=1`) the standard errors took 25.4 s instead of 28.3 s and the fit 114.9 s instead of 120.4 s, with identical results. The gain is smaller than with forked processes because the Hessian, about half of the standard-error time, stays in the main session; `options(ALSCL.sd_backend = "fork")` gives forked processes in RStudio on macOS and Linux at the user's own risk.
+
+## 8. Open points
 
 1. **TMBad as an option.** Whether TMBad could become the default after more checks (fits that estimate more fixed effects, real data).
 2. **Not yet done:** a benchmark on an idle computer.
 3. **Dependence on TMB internals.** `.acl_sdreport()` and `.acl_delta_sd()` use `obj$env$spHess`, `obj$env$f` (with `rangeweight`, `doforward = 0` and `type = "ADGrad"`), `obj$env$L.created.by.newton` and the TMB 1.9.21 semantics of `last.par.best`. The version list and the identity checks in step 3 of section 4 are meant to catch changes in TMB.
 4. **Fits in a user's own parallel loop** should set `sd_cores = 1`; this is documented but not detected.
 
-## 8. How to reproduce
+## 9. How to reproduce
 
 ```bash
 git clone https://github.com/Linbojun99/ALSCL.git && cd ALSCL && git checkout dev

@@ -1,6 +1,6 @@
 # Getting started
 
-Install ALSCL 2.0.0 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.1.0 to use the bundled data, fit models and create plots. Run the following in R.
 
 ## Install from GitHub
 

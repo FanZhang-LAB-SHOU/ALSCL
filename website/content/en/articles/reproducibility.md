@@ -115,7 +115,7 @@ See the [full bilingual report](https://github.com/Linbojun99/ALSCL/blob/main/do
 
 ## Speed settings for one fit
 
-`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. The default settings give results identical to ALSCL 2.0.0: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four, and one on Windows, in GUI front-ends such as RStudio and with Apple's Accelerate BLAS). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
+`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. The default settings give results identical to ALSCL 2.0.0: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in GUI front-ends such as RStudio). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
 
 ```r
 # Defaults: identical results, parallel standard errors
@@ -142,4 +142,4 @@ With the default settings, every estimate, the objective function and every row 
 
 ![Estimates and standard errors before and after the speed settings](../../../docs/figures/speed/agreement.png)
 
-See the [speed report](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R).
+The [speed settings](speed.html) article explains every setting, how to check what your session does and how socket workers are used on Windows and in RStudio. See also the [speed report](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R).

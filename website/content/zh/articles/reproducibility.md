@@ -117,7 +117,7 @@ plot_SSB(saved)
 
 ## 单次拟合的速度设置
 
-`alscl_speed()` 设置之后每次拟合如何计算标准误，以及 TMB 使用哪个自动微分库。默认设置下结果与 ALSCL 2.0.0 逐位相同：固定效应 Hessian 和 delta 方法标准误在多个核上计算（`sd_cores = "auto"`：最多 4 核；在 Windows、RStudio 等图形界面以及 Apple Accelerate BLAS 下只用 1 核）。`framework = "TMBad"` 改用 TMB 的 TMBad 库编译模型，速度更快，但估计值与默认设置略有差异（在已测试的拟合中相对差最大 2.7e-8）。
+`alscl_speed()` 设置之后每次拟合如何计算标准误，以及 TMB 使用哪个自动微分库。默认设置下结果与 ALSCL 2.0.0 逐位相同：固定效应 Hessian 和 delta 方法标准误在多个核上计算（`sd_cores = "auto"`：最多 4 核；macOS 与 Linux 用分叉进程，Windows 与 RStudio 等图形界面用 socket 进程计算 delta 方法）。`framework = "TMBad"` 改用 TMB 的 TMBad 库编译模型，速度更快，但估计值与默认设置略有差异（在已测试的拟合中相对差最大 2.7e-8）。
 
 ```r
 # 默认：结果不变，并行计算标准误
@@ -144,4 +144,4 @@ alscl_speed(sd_cores = 1)
 
 ![速度设置前后的估计值与标准误](../../../docs/figures/speed/agreement.png)
 
-参见[速度报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R)。
+[速度设置](speed.html)一文详细说明每项设置、怎样检查本会话的实际情况，以及在 Windows 和 RStudio 中如何使用 socket 进程。另见[速度报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R)。
