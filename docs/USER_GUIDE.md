@@ -762,7 +762,7 @@ Both models completed the synthetic CSV workflow with convergence code 0, a posi
 |ACL|10|0|9.75e-5|是|否|
 |ALSCL|13|0|4.97e-4|是|否|
 
-两次运行均使用 4 核计算标准误，实际执行方式取决于环境。这是模拟示例的数值检查，不是对尚未提供的正式评估的验证。另在相同数据上测试只固定 t0 的 ACL，即使连续优化两轮，仍得到收敛码 1、最大梯度 0.00668 和非正定 Hessian。因此该配置作为待评估选项展示，不作为已经验证成功的基线替代方案。
+两次运行均使用 4 核计算标准误，实际执行方式取决于环境。这是模拟示例的数值检查，不是对尚未提供的正式评估的验证。另在相同数据上测试只固定 t0 的 ACL，即使连续优化两轮，仍得到收敛码 1、最大梯度 0.00668 和非正定 Hessian。只固定 t0 的 ALSCL 也返回收敛码 1（false convergence），尽管 Hessian 正定且最大梯度为 0.000934。因此这些配置作为待评估选项展示，不作为已经验证成功的基线替代方案。
 
 The updated script was rerun with the model-default maps and two successive optimization passes. The recorded [diagnostics](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv) are:
 
@@ -771,7 +771,7 @@ The updated script was rerun with the model-default maps and two successive opti
 |ACL|10|0|9.75e-5|Yes|No|
 |ALSCL|13|0|4.97e-4|Yes|No|
 
-Both runs used four cores for standard errors; actual execution depends on the environment. These are numerical checks of the synthetic example, not validation of an unseen stock assessment. In a separate run on the same data with only t0 fixed, ACL had code 1, maximum gradient 0.00668 and a non-positive-definite Hessian, even with two optimization passes. That option is therefore shown as a configuration to evaluate, not a successfully validated replacement for the baseline.
+Both runs used four cores for standard errors; actual execution depends on the environment. These are numerical checks of the synthetic example, not validation of an unseen stock assessment. In a separate run on the same data with only t0 fixed, ACL had code 1, maximum gradient 0.00668 and a non-positive-definite Hessian, even with two optimization passes. The t0-only ALSCL fit also returned code 1 (false convergence), despite a positive-definite Hessian and maximum gradient 0.000934. These options are therefore shown as configurations to evaluate, not successfully validated replacements for the baseline.
 
 ![CSV 示例残差 / CSV example residuals](figures/own-data-example/residuals.png)
 
