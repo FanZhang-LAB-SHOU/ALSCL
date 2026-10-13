@@ -25,7 +25,9 @@
 #'   each; set \code{sd_cores = 1} when you run fits in your own parallel loop.
 #' @param framework Automatic-differentiation library that TMB compiles the
 #'   model with. \code{"CppAD"} (default) is TMB's default library, used by
-#'   ALSCL 2.0.0 and earlier; results are identical to those of ALSCL 2.0.0.
+#'   ALSCL 2.0.0 and earlier. Since 2.2.2, optimizer refinement can change
+#'   estimates; parallel standard errors still match sequential calculations
+#'   at the same parameters. This is not a cross-version identity guarantee.
 #'   \code{"TMBad"} evaluates the Laplace approximation and its gradient
 #'   several times faster, but results are not identical: in the tests in
 #'   \file{docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
@@ -52,7 +54,7 @@ alscl_speed <- function(sd_cores = getOption("ALSCL.sd_cores", "auto"),
 #'
 #' Reports the speed settings of \code{\link{alscl_speed}} and what they mean
 #' in this R session: how many cores the standard errors use, how the work is
-#' shared out and why, and whether results are identical to ALSCL 2.0.0. Use
+#' shared out and why, and which automatic-differentiation library is used. Use
 #' it to check that a session gets the expected speed-up, and to record the
 #' settings together with results. After a fit, \code{fit$sd_info} records
 #' what was actually done.
@@ -75,9 +77,9 @@ alscl_speed_info <- function() {
   framework <- .acl_framework()
   info <- data.frame(stringsAsFactors = FALSE,
     item = c("sd_cores setting", "cores for standard errors", "standard errors computed by",
-             "reason", "framework", "results identical to ALSCL 2.0.0", "TMB version"),
+             "reason", "framework", "cross-version numerical identity", "TMB version"),
     value = c(format(setting), cores, method, .acl_fork_reason(), framework,
-              if (framework == "CppAD") "yes" else "no (TMBad: differences of order 1e-11 to 1e-8)",
+              "not guaranteed (2.2.2 adds optimizer refinement)",
               paste0(utils::packageVersion("TMB"),
                      if (.acl_tmb_supported()) " (checked)" else " (not checked: sequential standard errors)")))
   class(info) <- c("alscl_speed_info", class(info))

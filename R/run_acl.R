@@ -58,6 +58,18 @@
 #' fit <- run_acl(x)
 #' fit <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
 #' }
+#' @param F_structure Fishing-mortality structure. `"group_year"` (default)
+#'   retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
+#'   `"year"` uses one shared F per time step with a one-dimensional AR(1)
+#'   density; the unused group correlation is automatically fixed and omitted
+#'   from reports. Other default map rules still apply. Subannual data share F
+#'   per model step, not per calendar year.
+#' @param polish Logical. By default, apply up to five safeguarded Newton steps
+#'   to the selected fit, requiring a positive-definite Hessian, in-bounds
+#'   parameters, a smaller maximum gradient and objective increase at most
+#'   `1e-8` (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+#'   remain unchanged; inspect `optimizer_history`, `refinement`, and
+#'   `diagnostics` separately. This may change estimates at numerical precision.
 #' @return A list with report, opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 #'   year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
@@ -74,11 +86,12 @@ run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, se
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
                     train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
-                    zero_action = c("missing", "error"), control = list(), nstarts = ncores) {
+                    zero_action = c("missing", "error"), control = list(), nstarts = ncores,
+                      F_structure = c("group_year", "year"), polish = TRUE) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "acl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, zero_action = zero_action)
   .acl_fit("ACL", prepared, parameters, parameters.L, parameters.U, map,
-           train_times, ncores, silent, output, control, nstarts)
+           train_times, ncores, silent, output, control, nstarts, F_structure, polish)
 }

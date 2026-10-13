@@ -6,7 +6,9 @@ test_that("both public fitting APIs return finite usable results and consistent 
     expect_true(isTRUE(m$pdHess));expect_true(all(is.finite(m$est_std)))
     expect_equal(m$obj$fn(m$opt$par),m$opt$objective,tolerance=1e-8)
     expect_identical(rownames(m$par_low_up),names(m$opt$par))
-    expect_equal(nrow(diagnose_model(x$input$data.CatL,m)),16L)
+    expect_true(all(c("Boundary Hit", "Model Converged", "Final Outer mgc",
+      "Positive Definite Hessian", "Numerical Screen Passed", "Natural Scale Boundary") %in%
+      diagnose_model(x$input$data.CatL,m)$Metric))
     for(fun in list(plot_CatL,plot_recruitment,plot_SSB,plot_biomass,plot_abundance,
                     plot_catch,plot_fishing_mortality,plot_residuals,plot_VB,plot_pla)) {
       expect_s3_class(ggplot2::ggplot_build(fun(m)),"ggplot_built")

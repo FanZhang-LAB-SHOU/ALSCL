@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/04-Built-in-YTF) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/06-Fitting)
 
-**ALSCL 2.2.1 · 简体中文 / English**
+**ALSCL 2.2.2 · 简体中文 / English**
 
 ### 3.1 快速生成三张表 / Quick input-table simulator
 

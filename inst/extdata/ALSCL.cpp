@@ -94,7 +94,7 @@ Type objective_function<Type>::operator()()
 	matrix<Type> log_FL(L,Y);
 	for(int i=0; i<L; ++i){
 		for(int j=0; j<Y; ++j){
-			log_FL(i,j) = mean_log_F + dev_log_F(i,j);
+			log_FL(i,j) = mean_log_F + dev_log_F(dev_log_F.dim[0] == 1 ? 0 : i,j);
 			FL(i,j) = exp(log_FL(i,j));
 			ZL(i,j) = FL(i,j) + M;
 		}
@@ -291,7 +291,15 @@ Type objective_function<Type>::operator()()
 	}
 
 	// Process: F deviations — 2D AR1 (year x length)
-	nll += SCALE(SEPARABLE(AR1(phi_log_F_y),AR1(phi_log_F_l)),sigma_log_F)(dev_log_F);
+	// A single row is the optional shared F process: Y random effects and
+  // one AR(1) normalization, not tied cells of the two-dimensional field.
+  if (dev_log_F.dim[0] == 1) {
+    vector<Type> yearly_F(Y);
+    for (int y=0; y<Y; ++y) yearly_F(y) = dev_log_F(0,y);
+    nll += SCALE(AR1(phi_log_F_y),sigma_log_F)(yearly_F);
+  } else {
+    nll += SCALE(SEPARABLE(AR1(phi_log_F_y),AR1(phi_log_F_l)),sigma_log_F)(dev_log_F);
+  }
 
 	// Process: Recruitment deviations — AR1
 	nll += SCALE(AR1(phi_log_R),sigma_log_R)(dev_log_R);

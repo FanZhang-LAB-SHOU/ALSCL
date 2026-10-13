@@ -28,7 +28,9 @@ run_alscl(
   silent = FALSE,
   zero_action = c("missing", "error"),
   control = list(),
-  nstarts = ncores
+  nstarts = ncores,
+  F_structure = c("group_year", "year"),
+  polish = TRUE
 )
 }
 \arguments{
@@ -85,6 +87,20 @@ or reject them with "error". NA is always missing; negative/infinite values fail
 ncores for backward compatibility. Set explicitly to compare worker counts
 at equal work. Start 1 uses supplied values; later starts deterministically
 jitter free parameters only, identically for sequential and parallel fits.}
+
+\item{F_structure}{Fishing-mortality structure. \code{"group_year"} (default)
+retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
+\code{"year"} uses one shared F per time step with a one-dimensional AR(1)
+density; the unused group correlation is automatically fixed and omitted
+from reports. Other default map rules still apply. Subannual data share F
+per model step, not per calendar year.}
+
+\item{polish}{Logical. By default, apply up to five safeguarded Newton steps
+to the selected fit, requiring a positive-definite Hessian, in-bounds
+parameters, a smaller maximum gradient and objective increase at most
+\code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
+\code{diagnostics} separately. This may change estimates at numerical precision.}
 }
 \value{
 A list with report, opt, obj, est_std, vcov, pdHess, gradient,

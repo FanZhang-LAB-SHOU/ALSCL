@@ -40,7 +40,7 @@ test_that("bundles reject malformed or incomplete settings before fitting", {
 
 test_that("call overrides reach the core and defaults follow the final ncores", {
   local_mocked_bindings(.acl_fit = function(model, prepared, parameters, parameters.L,
-      parameters.U, map, train_times, ncores, silent, output, control, nstarts) {
+      parameters.U, map, train_times, ncores, silent, output, control, nstarts, F_structure, polish) {
     list(model = model, ncores = ncores, nstarts = nstarts, parameters = parameters,
          map = map, control = control, prepared = prepared)
   })

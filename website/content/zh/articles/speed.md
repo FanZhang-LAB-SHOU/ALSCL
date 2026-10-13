@@ -4,12 +4,12 @@
 
 ## 1. 概要
 
-不需要修改任何设置。默认设置下，拟合会用多个核计算标准误，全部结果（估计值、目标函数、`summary(sdreport)` 的每一行）都与 ALSCL 2.0.0 逐位相同。这由两项设置控制，均通过 `alscl_speed()` 设定：
+不需要修改任何设置。支持的环境下默认用多个核计算标准误，相同拟合参数处的并行标准误与顺序计算一致。2.2.2 默认新增优化收尾，因此完整拟合不承诺与旧版逐位相同。以下基准记录旧优化流程；`polish = FALSE` 可跳过新收尾。这由两项设置控制，均通过 `alscl_speed()` 设定：
 
 | 设置 | 默认值 | 结果 | 速度 | 何时修改 |
 |---|---|---|---|---|
 | `sd_cores` | `"auto"`：最多 4 核 | 与顺序计算逐位相同 | 基准测试中拟合快 1.13-1.24 倍（macOS 终端） | 在自己的并行循环中设为 `1`；需要固定核数时设为一个数 |
-| `framework` | `"CppAD"` | 与 ALSCL 2.0.0 逐位相同 | 基准 | `"TMBad"` 使拟合快 1.25-1.68 倍，但结果略有差异（第 6 节） |
+| `framework` | `"CppAD"` | 与 ALSCL 2.0.0 使用相同 AD 库 | 基准 | `"TMBad"` 使拟合快 1.25-1.68 倍，但结果略有差异（第 6 节） |
 
 `alscl_speed_info()` 显示这些设置在本机上的实际效果；每次拟合都在 `fit$sd_info` 中记录实际的计算方式。
 
@@ -34,7 +34,7 @@ alscl_speed_info()
 #>   standard errors computed by:       forked processes on 4 cores: Hessian and delta method
 #>   reason:                            forked processes are safe here (macOS or Linux outside a GUI front-end)
 #>   framework:                         CppAD
-#>   results identical to ALSCL 2.0.0:  yes
+#>   cross-version numerical identity:  not guaranteed (2.2.2 adds optimizer refinement)
 #>   TMB version:                       1.9.21 (checked)
 ```
 
@@ -93,7 +93,7 @@ Windows 不支持分叉；R 的文档（`?parallel::mclapply`）也不建议在�
 
 ## 6. TMBad 选项
 
-TMB 可以用两种自动微分库之一编译模型。默认的 CppAD 给出与 ALSCL 2.0.0 逐位相同的结果；TMBad 计算拉普拉斯近似及其梯度要快几倍：
+TMB 可以用两种自动微分库之一编译模型。默认库 CppAD 与 ALSCL 2.0.0 相同，但新版收尾和模型选项可能改变拟合结果；TMBad 计算拉普拉斯近似及其梯度要快几倍：
 
 ```r
 alscl_speed(framework = "TMBad")   # 下一次拟合会用 TMBad 编译一次模型
@@ -115,7 +115,7 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 
 ## 7. 检查与记录设置
 
-- 拟合前，`alscl_speed_info()` 显示设置值、将使用的核数与方式、原因、自动微分库，以及结果是否与 ALSCL 2.0.0 逐位相同。
+- 拟合前，`alscl_speed_info()` 显示设置值、将使用的核数与方式、原因、自动微分库，以及不保证跨版本逐位一致的提醒。
 - 拟合后，`fit$sd_info` 给出 `method`（`"forked processes"`、`"socket workers (delta method)"` 或 `"sequential"`）、`cores`、`seconds`，以及说明为何顺序计算的 `note`。`silent = FALSE` 时也会打印这些信息。
 - 报告结果时，请与 `sessionInfo()` 一起记录 `alscl_speed_info()`。默认设置下，结果不随核数或计算方式改变；使用 `framework = "TMBad"` 时结果与 CppAD 略有不同，请注明所用的库。
 
@@ -132,7 +132,7 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 
 ![速度设置前后的拟合耗时](../../../docs/figures/speed/timing.png)
 
-默认设置下所有结果都与原版逐位相同；下图显示 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。
+旧版加速基准中所有结果都与当时的原版逐位相同；下图显示 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。
 
 ![速度设置前后的估计值与标准误](../../../docs/figures/speed/agreement.png)
 

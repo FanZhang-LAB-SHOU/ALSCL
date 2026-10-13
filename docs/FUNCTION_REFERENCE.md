@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.2.1 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.2.2 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in ALSCL 2.2.1 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.2.2 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -189,7 +189,7 @@ alscl_speed(sd_cores = getOption("ALSCL.sd_cores", "auto"),
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。"auto" 最多使用 4 个物理核并保留 1 个；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. "auto" uses up to four physical cores and keeps one free; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. |
-| `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD"（默认）的结果与 ALSCL 2.0.0 逐位相同；"TMBad" 更快，但结果不逐位相同。 | Character. Automatic-differentiation library: "CppAD" (default) gives results identical to ALSCL 2.0.0; "TMBad" is faster, but results are not identical. |
+| `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD" 为默认库；"TMBad" 更快但结果略有不同。2.2.2 收尾可能微调最优点，不保证与旧版逐位一致。 | Character. Automatic-differentiation library: "CppAD" is the default; "TMBad" is faster but results differ slightly. Refinement in 2.2.2 can change the optimum; cross-version identity is not guaranteed. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 Invisible previous settings; options() restores them.
 
@@ -214,7 +214,7 @@ alscl_speed_info()
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 
-**返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame with columns item and value: the sd_cores setting, the cores used for standard errors, how they are computed and why, the framework, whether results are identical to ALSCL 2.0.0, and the TMB version.
+**返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame with columns item and value: the sd_cores setting, the cores used for standard errors, how they are computed and why, the framework, a notice that cross-version numerical identity is not guaranteed, and the TMB version.
 
 **示例 / Example:**
 
@@ -1527,7 +1527,8 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
     font_family = NULL, title_size = NULL, axis_title_size = NULL,
     axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
     x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4,
-    rho_position = "top_right", rho_size = 3.5)
+    rho_position = "top_right", rho_size = 3.5,
+    F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1577,6 +1578,9 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `rho_position` | `"top_right"` | Mohn rho 标注位置。 | Character. Position of rho text. Default is "top_right". |
 | `rho_size` | `3.5` | Mohn rho 标注字号。 | Numeric. Font size of rho text. Default is 3.5. |
 
+| `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list containing results, rho_text, last_points, model_type, and optionally plot.
 
 **示例 / Example:**
@@ -1601,7 +1605,8 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
     sel_L95, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
     map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
     train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
-    zero_action = c("missing", "error"), control = list(), nstarts = ncores)
+    zero_action = c("missing", "error"), control = list(), nstarts = ncores,
+    F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1628,6 +1633,9 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `growth_step` | `NULL` | 每个时间步包含的年数；季度为 0.25。 | Years per model step. ACL NULL uses rec.age when below 1, otherwise 1; ALSCL defaults to 1. Supply explicitly for quarterly data. |
 | `zero_action` | `c("missing", "error")` | missing 排除调查零值；error 报错。NA 始终为缺失。 | Exclude zero observations as missing (historical behavior), or reject them with "error". NA is always missing; negative/infinite values fail. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | A named list of nlminb control settings. |
+
+| `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list with report, opt, obj, est_std, vcov, pdHess, gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit, year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics. start_diagnostics contains each start's PID, start/end timestamps, elapsed and CPU seconds, objective and convergence code. nstarts and workers record work and concurrency. The lowest finite objective is selected; check convergence separately. The DLL remains loaded so the returned obj can be evaluated in the same session.
 
@@ -1657,7 +1665,8 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
     parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
     len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1,
     ncores = 1, silent = FALSE, zero_action = c("missing", "error"),
-    control = list(), nstarts = ncores)
+    control = list(), nstarts = ncores,
+    F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1687,6 +1696,9 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `zero_action` | `c("missing", "error")` | missing 排除调查零值；error 报错。NA 始终为缺失。 | Exclude zero observations as missing (historical behavior), or reject them with "error". NA is always missing; negative/infinite values fail. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | A named list of nlminb control settings. |
 
+| `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list with report, opt, obj, est_std, vcov, pdHess, gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit, year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics. start_diagnostics contains each start's PID, start/end timestamps, elapsed and CPU seconds, objective and convergence code. nstarts and workers record work and concurrency. The lowest finite objective is selected; check convergence separately. The DLL remains loaded so the returned obj can be evaluated in the same session.
 
 **示例 / Example:**
@@ -1708,7 +1720,8 @@ Parameters are estimated from their starting values unless fixed by the map. A w
 ```r
 sim_acl(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
-    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list())
+    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
+    F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1724,6 +1737,9 @@ sim_acl(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
 | `ncores` | `1` | 并行数量；具体含义依函数而异，见英文说明。 | Integer. Number of CPU cores to use. 1 = sequential (default). Uses socket workers on all platforms. Use parallel::detectCores() to see available cores. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | Named nlminb control settings. |
+
+| `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list containing the results of the stock assessment model.
 

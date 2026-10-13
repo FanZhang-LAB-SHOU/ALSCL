@@ -48,7 +48,9 @@ retro_model(
   title_hjust = NULL,
   rho_digits = 4,
   rho_position = "top_right",
-  rho_size = 3.5
+  rho_size = 3.5,
+  F_structure = c("group_year", "year"),
+  polish = TRUE
 )
 }
 \arguments{
@@ -139,6 +141,20 @@ retro_model(
 \item{rho_position}{Character. Position of rho text. Default is "top_right".}
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
+
+\item{F_structure}{Fishing-mortality structure. \code{"group_year"} (default)
+retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
+\code{"year"} uses one shared F per time step with a one-dimensional AR(1)
+density; the unused group correlation is automatically fixed and omitted
+from reports. Other default map rules still apply. Subannual data share F
+per model step, not per calendar year.}
+
+\item{polish}{Logical. By default, apply up to five safeguarded Newton steps
+to the selected fit, requiring a positive-definite Hessian, in-bounds
+parameters, a smaller maximum gradient and objective increase at most
+\code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
+\code{diagnostics} separately. This may change estimates at numerical precision.}
 }
 \value{
 A list containing \code{results}, \code{rho_text}, \code{last_points}, \code{model_type},

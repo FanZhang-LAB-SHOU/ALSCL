@@ -4,12 +4,12 @@ This guide explains how `run_acl()` and `run_alscl()` use several cores, how muc
 
 ## 1. Summary
 
-You do not need to change anything. With the default settings, fits compute standard errors on several cores and every result (estimates, objective function, every row of `summary(sdreport)`) is identical to ALSCL 2.0.0. Two settings, both set with `alscl_speed()`, control this:
+You do not need to change anything. Default fits use several cores for standard errors when supported. Parallel standard errors match the sequential calculation at the same fitted parameters. Version 2.2.2 also refines the optimum by default, so complete fits need not be bitwise identical to older releases. Benchmarks below measured the earlier optimization path; `polish = FALSE` skips the new refinement. Two settings, both set with `alscl_speed()`, control this:
 
 | Setting | Default | Results | Speed | When to change it |
 |---|---|---|---|---|
 | `sd_cores` | `"auto"`: up to four cores | Identical to the sequential calculation | Fits 1.13-1.24 times faster in the benchmark (macOS, terminal) | Set `1` inside your own parallel loops; set a number to use a fixed number of cores |
-| `framework` | `"CppAD"` | Identical to ALSCL 2.0.0 | Baseline | `"TMBad"` makes fits 1.25-1.68 times faster, but results differ slightly (section 6) |
+| `framework` | `"CppAD"` | Same AD library as ALSCL 2.0.0 | Baseline | `"TMBad"` makes fits 1.25-1.68 times faster, but results differ slightly (section 6) |
 
 `alscl_speed_info()` shows what the settings mean on your computer, and each fit records what was done in `fit$sd_info`.
 
@@ -34,7 +34,7 @@ alscl_speed_info()
 #>   standard errors computed by:       forked processes on 4 cores: Hessian and delta method
 #>   reason:                            forked processes are safe here (macOS or Linux outside a GUI front-end)
 #>   framework:                         CppAD
-#>   results identical to ALSCL 2.0.0:  yes
+#>   cross-version numerical identity:  not guaranteed (2.2.2 adds optimizer refinement)
 #>   TMB version:                       1.9.21 (checked)
 ```
 
@@ -93,7 +93,7 @@ The parallel code performs exactly the same arithmetic as `TMB::sdreport()`, in 
 
 ## 6. The TMBad option
 
-TMB can compile a model with one of two automatic-differentiation libraries. CppAD, the default, gives results identical to ALSCL 2.0.0. TMBad evaluates the Laplace approximation and its gradient several times faster:
+TMB can compile a model with one of two automatic-differentiation libraries. CppAD, the default, is also the AD library used in ALSCL 2.0.0; refinement and model changes can alter results. TMBad evaluates the Laplace approximation and its gradient several times faster:
 
 ```r
 alscl_speed(framework = "TMBad")   # the next fit compiles the model with TMBad once
@@ -115,7 +115,7 @@ Here `args` is the list of arguments you pass to `run_alscl()`.
 
 ## 7. Checking and recording the settings
 
-- Before fitting, `alscl_speed_info()` shows the setting, the cores and method that will be used, the reason, the AD library and whether results are identical to ALSCL 2.0.0.
+- Before fitting, `alscl_speed_info()` shows the setting, the cores and method that will be used, the reason, the AD library and a reminder that cross-version identity is not guaranteed.
 - After fitting, `fit$sd_info` gives `method` (`"forked processes"`, `"socket workers (delta method)"` or `"sequential"`), `cores`, `seconds` and a `note` explaining a sequential calculation. With `silent = FALSE` the same information is printed.
 - When you report results, record `alscl_speed_info()` with `sessionInfo()`. With the default settings, results do not depend on the number of cores or the method; with `framework = "TMBad"` they differ slightly from CppAD, so state which library was used.
 

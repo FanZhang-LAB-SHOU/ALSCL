@@ -77,7 +77,11 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
     dev_log_F <- model_result[["est_std"]][grep("^dev_log_F", rownames(model_result[["est_std"]])), ]
     dev_log_F <- as.data.frame(dev_log_F)
 
-    if (is_alscl) {
+    if (identical(model_result$F_structure, "year")) {
+      dev_log_F$Group <- "Shared F"
+      dev_log_F$Year <- model_result$year
+      facet_title <- "Shared F Deviance Over Time"
+    } else if (is_alscl) {
       # ALSCL: dev_log_F is (L x Y), faceted by length bin
       FL <- model_result[["report"]][["FL"]]
       len_label <- model_result[["len_label"]]
