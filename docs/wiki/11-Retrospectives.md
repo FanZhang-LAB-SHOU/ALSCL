@@ -1,6 +1,6 @@
 # 11 回溯分析 · Retrospectives
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/12-Case-Studies)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -18,7 +18,7 @@ rb$rho_text
 
 Here `nyear` counts terminal **steps**: four quarterly steps equal one year. Retain at least two observations and keep assumptions consistent across peels. Mohn's rho measures retrospective revision, not forecast accuracy; inspect each fit's numerical status.
 
-![ALSCL 回溯 / ALSCL retrospective](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
+![ALSCL 回溯 / ALSCL retrospective](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
 ```r
 # 从仓库根目录重建图、结果 CSV 和会话记录 / Rebuild figures, CSV and session record
@@ -51,13 +51,13 @@ Positive rho means shorter fits tend to be higher at their terminal periods; sig
 plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
-[![ACL 回溯分析 / ACL retrospective analysis](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
+[![ACL 回溯分析 / ACL retrospective analysis](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
 
 
 逐步删除末端观测并重拟合；各颜色代表不同截止期。 / Successively peel terminal observations and refit; colors indicate different terminal periods.
 
-[参数及默认值 / Arguments and defaults](https://github.com/Linbojun99/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
 
 
 
@@ -68,16 +68,16 @@ plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
-[![ALSCL 回溯分析 / ALSCL retrospective analysis](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
+[![ALSCL 回溯分析 / ALSCL retrospective analysis](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
 
 
 逐步删除末端观测并重拟合；各颜色代表不同截止期。 / Successively peel terminal observations and refit; colors indicate different terminal periods.
 
-[参数及默认值 / Arguments and defaults](https://github.com/Linbojun99/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
 
 
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/12-Case-Studies)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)

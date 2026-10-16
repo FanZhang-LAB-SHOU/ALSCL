@@ -1,6 +1,6 @@
 # 13 ggsci 配色与导出 · Colors and export
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -84,4 +84,4 @@ Explicit colors override the theme; `NULL` color arguments inherit it. Changing 
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)

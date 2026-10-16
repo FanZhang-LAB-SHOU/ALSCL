@@ -2,7 +2,7 @@
 
 ## 输入列表的结构
 
-ALSCL 2.2.2 提供了[完整可执行脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/fit_own_data_example.R)：读取 CSV 或 Excel 三表、组装 `x`、直接调用 `run_acl(x)` 和 `run_alscl(x)`、检查诊断、绘图并保存结果。演示使用内附的模拟 YTF 数据。**换成正式数据时，必须修改第 1–3 步的数据、生物参数、参数边界和固定假设，不能只换文件路径。**
+ALSCL 2.2.2 提供了[完整可执行脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R)：读取 CSV 或 Excel 三表、组装 `x`、直接调用 `run_acl(x)` 和 `run_alscl(x)`、检查诊断、绘图并保存结果。演示使用内附的模拟 YTF 数据。**换成正式数据时，必须修改第 1–3 步的数据、生物参数、参数边界和固定假设，不能只换文件路径。**
 
 |x 中的字段|内容|
 |---|---|
@@ -314,7 +314,7 @@ b$sd_info
 
 下面两张图由该脚本用模拟 CSV 输入实际生成。
 
-更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
+更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
 
 |模型|自由标量参数|收敛码|最大梯度|Hessian 正定|命中边界|
 |---|---|---|---|---|---|
@@ -381,6 +381,6 @@ b_year <- run_alscl(x)
 
 原来的逐项传参和 `do.call()` 写法保留。`retro_model()`（含其包装函数）和 `sim_acl()` 也支持 `F_structure` 与 `polish`；回溯每轮应使用相同结构。并行标准误和多起点继续沿用现有加速设置。注意 `sim_data()` 的 F 创新标准差不等于拟合 AR(1) 的边际标准差；一维平稳 AR(1) 的边际标准差为创新标准差除以 `sqrt(1 - rho_y^2)`。
 
-此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/Linbojun99/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
+此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
 
 ![2.2.2 convergence checks](../assets/manual/figures/convergence-2.2.2.png)

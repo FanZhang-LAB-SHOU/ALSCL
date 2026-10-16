@@ -20,7 +20,7 @@
 
 ```r
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 ```
 
@@ -76,7 +76,7 @@ comparison$summary
 
 <h2 id="help">获取帮助</h2>
 
-通过 [GitHub Issues](https://github.com/Linbojun99/ALSCL/issues) 报告问题或提出功能需求。建议附上最小可复现示例、包版本、输入维度及 `sessionInfo()` 输出。常见数据和编译问题见 [故障处理](articles/reproducibility.html)。
+通过 [GitHub Issues](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues) 报告问题或提出功能需求。建议附上最小可复现示例、包版本、输入维度及 `sessionInfo()` 输出。常见数据和编译问题见 [故障处理](articles/reproducibility.html)。
 
 <h2 id="citation">引用</h2>
 

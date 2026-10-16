@@ -1,6 +1,6 @@
 # Speed settings and how the results were checked
 
-This page records the changes that make `run_acl()` and `run_alscl()` faster, how each change was checked against the original code (ALSCL 2.0.0, commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3)), and which candidate changes were rejected. The changes come from the speed-up scheme developed for the tuna version of the model (ALSCLtuna). ALSCL estimates three sets of random effects with the Laplace approximation, which ALSCLtuna does not, so each part of the scheme was tested again here; the parts that were not kept are listed in section 4.
+This page records the changes that make `run_acl()` and `run_alscl()` faster, how each change was checked against the original code (ALSCL 2.0.0, commit [`4dc1fc3`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4dc1fc3)), and which candidate changes were rejected. The changes come from the speed-up scheme developed for the tuna version of the model (ALSCLtuna). ALSCL estimates three sets of random effects with the Laplace approximation, which ALSCLtuna does not, so each part of the scheme was tested again here; the parts that were not kept are listed in section 4.
 
 The work had four steps:
 

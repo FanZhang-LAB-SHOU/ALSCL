@@ -44,8 +44,8 @@ Imports:
     patchwork,
     parallel,
     tools
-URL: https://github.com/Linbojun99/ALSCL
-BugReports: https://github.com/Linbojun99/ALSCL/issues
+URL: https://github.com/FanZhang-LAB-SHOU/ALSCL
+BugReports: https://github.com/FanZhang-LAB-SHOU/ALSCL/issues
 Suggests:
     testthat (>= 3.0.0),
     roxygen2,

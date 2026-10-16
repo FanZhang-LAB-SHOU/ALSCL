@@ -8,7 +8,7 @@
 ```r
 # 安装 ALSCL
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 packageVersion("ALSCL")
 data("YTF_example")
@@ -18,7 +18,7 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 首次拟合需要与 R 匹配的 C++ 工具链。安装程序自动处理依赖；读取 Excel 示例另需 `readxl`。包含 `source("scripts/...")` 的示例请从下载的仓库根目录执行。
 
 
-[仓库主页](https://github.com/Linbojun99/ALSCL/blob/main/README.md) · [Excel 示例](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
+[仓库主页](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md) · [Excel 示例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
 ## 准备编译工具
 

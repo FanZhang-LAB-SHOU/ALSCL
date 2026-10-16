@@ -20,7 +20,7 @@ Install the current version (2.2.1) from GitHub:
 
 ```r
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 ```
 
@@ -76,7 +76,7 @@ Check the optimizer status, maximum absolute gradient, Hessian and parameter bou
 
 <h2 id="help">Getting help</h2>
 
-Use the [GitHub issue tracker](https://github.com/Linbojun99/ALSCL/issues) for bugs and feature requests. Include a small reproducible example, the package version, input dimensions and the output of `sessionInfo()`. Check [troubleshooting](articles/reproducibility.html) for common data and compilation problems.
+Use the [GitHub issue tracker](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues) for bugs and feature requests. Include a small reproducible example, the package version, input dimensions and the output of `sessionInfo()`. Check [troubleshooting](articles/reproducibility.html) for common data and compilation problems.
 
 <h2 id="citation">Citation</h2>
 

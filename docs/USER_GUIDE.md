@@ -190,7 +190,7 @@ TMB uses automatic differentiation and a Laplace approximation for random effect
 
 ```r
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
@@ -755,7 +755,7 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 
 Both models completed the synthetic CSV workflow with convergence code 0, a positive-definite Hessian, no boundary hits and maximum gradients below 0.001. These figures come from that run; empirical assessments require their own diagnostics and sensitivity checks.
 
-更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
+更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
 
 |模型|自由标量参数|收敛码|最大梯度|Hessian 正定|命中边界|
 |---|---|---|---|---|---|
@@ -764,7 +764,7 @@ Both models completed the synthetic CSV workflow with convergence code 0, a posi
 
 2.2.2 此次运行使用 4 核计算标准误，并启用默认受保护的收尾。这是模拟数据的数值检查，不是对尚未提供的正式评估的验证。加入收尾前（2.2.1），只固定 t0 的 ALSCL 可能在相同最优点误报 false convergence；2.2.2 保留先前成功轮次，并将梯度修正至约 5.37e-9。原 F 结构下只固定 t0 的 ACL 仍存在年龄相关边界，不能通过数值筛查；改用共用 F 是另一项生物学模型选择，下文说明。
 
-The updated script was rerun with the model-default maps and two successive optimization passes. The recorded [diagnostics](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/own-data-example-checks.csv) are:
+The updated script was rerun with the model-default maps and two successive optimization passes. The recorded [diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv) are:
 
 |Model|Free scalars|Convergence code|Maximum gradient|Positive-definite Hessian|Boundary hit|
 |---|---|---|---|---|---|
@@ -777,7 +777,7 @@ The 2.2.2 run used four cores for standard errors and the default safeguarded re
 
 ![CSV 示例亲体生物量 / CSV example spawning biomass](figures/own-data-example/SSB.png)
 
-详细的修改步骤 / Detailed adaptation instructions: [简体中文](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html).
+详细的修改步骤 / Detailed adaptation instructions: [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 
 <a id="fitting"></a>
 ## 6. 可以调节哪些拟合设置 / Adjustable fitting settings
@@ -884,7 +884,7 @@ b_year <- run_alscl(x)
 
 原来的逐项传参和 `do.call()` 写法保留。`retro_model()`（含其包装函数）和 `sim_acl()` 也支持 `F_structure` 与 `polish`；回溯每轮应使用相同结构。并行标准误和多起点继续沿用现有加速设置。注意 `sim_data()` 的 F 创新标准差不等于拟合 AR(1) 的边际标准差；一维平稳 AR(1) 的边际标准差为创新标准差除以 `sqrt(1 - rho_y^2)`。
 
-此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/Linbojun99/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
+此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
 
 ## Refinement and shared F in 2.2.2
 
@@ -925,7 +925,7 @@ b_year <- run_alscl(x)
 
 Original separate-argument and `do.call()` calls remain valid. `retro_model()` (including its wrappers) and `sim_acl()` also accept `F_structure` and `polish`; pass the same structure to all retrospective peels. Parallel standard errors and multistart workers continue to use the existing speed settings. In `sim_data()`, F innovation SD is not the same as the marginal SD in the fitting AR(1); for one-dimensional stationary AR(1), marginal SD equals innovation SD divided by `sqrt(1 - rho_y^2)`.
 
-The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/Linbojun99/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
+The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
 
 ![2.2.2 convergence checks](figures/convergence-2.2.2.png)
 

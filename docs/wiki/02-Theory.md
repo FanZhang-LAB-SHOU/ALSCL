@@ -1,6 +1,6 @@
 # 02 模型原理与时间尺度 · Model principles
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/01-Start) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/03-Data-and-Excel)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -197,7 +197,7 @@ Survey numbers constrain latent population states; weights, maturity and surviva
 
 `plot_pla()` shows age-length probabilities. The tuna ALSCL growth matrix below instead shows the probabilities of staying in a bin or advancing to larger bins.
 
-![tuna 增长转移矩阵 / Growth transition](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
+![tuna 增长转移矩阵 / Growth transition](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
 
 ```r
 # b 为 ALSCL 拟合对象 / b is an ALSCL fit
@@ -242,4 +242,4 @@ F_annual <- sum(F_quarter)
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/01-Start) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/03-Data-and-Excel)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel)

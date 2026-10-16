@@ -1,6 +1,6 @@
 # 14 全部函数与参数 · Complete function reference
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/15-Reproducibility)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -8,7 +8,7 @@
 
 All **45 exported functions** in ALSCL 2.2.2 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
-[使用指南 / Guide](https://github.com/Linbojun99/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md)
+[使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
 ## 示例环境 / Example context
 
@@ -503,7 +503,7 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_abundance)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_abundance)。
 
 <a id="plot_biomass"></a>
 ## `plot_biomass()`
@@ -541,7 +541,7 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_biomass)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_biomass)。
 
 <a id="plot_catch"></a>
 ## `plot_catch()`
@@ -578,7 +578,7 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_catch)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_catch)。
 
 <a id="plot_CatL"></a>
 ## `plot_CatL()`
@@ -645,7 +645,7 @@ plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_CatL)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_CatL)。
 
 <a id="plot_compare_annual_F"></a>
 ## `plot_compare_annual_F()`
@@ -679,7 +679,7 @@ plot_compare_annual_F(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_annual_F)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_annual_F)。
 
 <a id="plot_compare_CatL"></a>
 ## `plot_compare_CatL()`
@@ -721,7 +721,7 @@ plot_compare_CatL(model1, model2, data.CatL, years = NULL, model1_name = NULL,
 plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_CatL)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_CatL)。
 
 <a id="plot_compare_F"></a>
 ## `plot_compare_F()`
@@ -750,7 +750,7 @@ plot_compare_F(model1, model2, model1_name = NULL, model2_name = NULL,
 plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F)。
 
 <a id="plot_compare_growth"></a>
 ## `plot_compare_growth()`
@@ -794,7 +794,7 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
 
 如使用 `ref_data`，请先执行图谱中的模拟参考数据代码；示例的 `growth_display` 是脚本排版辅助函数，不属于 API。 / Define the synthetic reference data and layout helper from the gallery before using them.
 
@@ -834,7 +834,7 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
     0.3)))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_metrics)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_metrics)。
 
 <a id="plot_compare_residuals"></a>
 ## `plot_compare_residuals()`
@@ -872,7 +872,7 @@ plot_compare_residuals(model1, model2, data.CatL, model1_name = NULL, model2_nam
 plot_compare_residuals(a, b, dat)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_residuals)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_residuals)。
 
 <a id="plot_compare_selectivity"></a>
 ## `plot_compare_selectivity()`
@@ -903,7 +903,7 @@ plot_compare_selectivity(model1, model2, model1_name = NULL, model2_name = NULL,
 plot_compare_selectivity(a, b)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_selectivity)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_selectivity)。
 
 <a id="plot_compare_ts"></a>
 ## `plot_compare_ts()`
@@ -941,7 +941,7 @@ plot_compare_ts(model1, model2, quantities = c("SSB", "R", "B", "N",
 plot_compare_ts(a, b, se = TRUE, ncol = 2)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_ts)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_ts)。
 
 <a id="plot_deviance"></a>
 ## `plot_deviance()`
@@ -983,7 +983,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_deviance)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_deviance)。
 
 <a id="plot_fishing_mortality"></a>
 ## `plot_fishing_mortality()`
@@ -1031,7 +1031,7 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_fishing_mortality)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_fishing_mortality)。
 
 ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长度别 F。 / For ACL, length remains an age-plot compatibility alias.
 
@@ -1075,7 +1075,7 @@ plot_pla(model_result, low_col = NULL, high_col = NULL, title = NULL,
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_pla)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_pla)。
 
 <a id="plot_recruitment"></a>
 ## `plot_recruitment()`
@@ -1124,7 +1124,7 @@ plot_recruitment(model_result, line_size = 1.5, line_color = NULL, line_type = "
 plot_recruitment(b, se = TRUE)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_recruitment)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_recruitment)。
 
 <a id="plot_residuals"></a>
 ## `plot_residuals()`
@@ -1177,7 +1177,7 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_residuals)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_residuals)。
 
 <a id="plot_retro"></a>
 ## `plot_retro()`
@@ -1230,7 +1230,7 @@ plot_retro(retro_result, rho_digits = 4, rho_position = "top_right",
 plot_retro(rb, facet_col = 2, rho_digits = 3)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_retro)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_retro)。
 
 <a id="plot_ridges"></a>
 ## `plot_ridges()`
@@ -1273,7 +1273,7 @@ plot_ridges(model_result, ridges_alpha = 0.8, ridges_scale = NULL,
 plot_ridges(b)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_ridges)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_ridges)。
 
 <a id="plot_SSB"></a>
 ## `plot_SSB()`
@@ -1311,7 +1311,7 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB)。
 
 <a id="plot_SSB_Rec"></a>
 ## `plot_SSB_Rec()`
@@ -1357,7 +1357,7 @@ plot_SSB_Rec(model_result, age_at_recruitment = 1, point_size = 2,
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
 
 <a id="plot_VB"></a>
 ## `plot_VB()`
@@ -1409,7 +1409,7 @@ plot_VB(model_result, age_range = c(1, 25), line_size = 1.2,
 plot_VB(b, age_range = c(1, 15), se = TRUE)
 ```
 
-[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/Linbojun99/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_VB)。
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_VB)。
 
 <a id="retro_acl"></a>
 ## `retro_acl()`
@@ -1652,7 +1652,7 @@ a <- run_acl(x)
 
 **初值与固定 / Starts and fixes:** `parameters` 中的值仅为初值，除非 map 将该项固定。`map = NULL` / `list()` 恢复模型默认规则。ACL 默认固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a`、`t0`；ALSCL 默认固定 `log_sigma_log_F`、`log_t0`。具名 NULL 项（如 `list(log_sigma_log_F = NULL)`，仅 ALSCL）解除对应固定。`map["name"] <- list(NULL)` 保留解除指令，`map$name <- NULL` 则删除条目。
 
-Parameters are estimated from their starting values unless fixed by the map. A whole NULL/empty map restores model defaults: four scalar fixes for ACL, two for ALSCL, as listed above. A named NULL entry releases that parameter. Keep it with single-bracket assignment; deleting the entry re-applies a default fix. See the complete [English](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html) / [简体中文](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) input checklist, parameter table and executable example.
+Parameters are estimated from their starting values unless fixed by the map. A whole NULL/empty map restores model defaults: four scalar fixes for ACL, two for ALSCL, as listed above. A named NULL entry releases that parameter. Keep it with single-bracket assignment; deleting the entry re-applies a default fix. See the complete [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html) / [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) input checklist, parameter table and executable example.
 
 <a id="run_alscl"></a>
 ## `run_alscl()`
@@ -1714,7 +1714,7 @@ b <- run_alscl(x)
 
 **初值与固定 / Starts and fixes:** `parameters` 中的值仅为初值，除非 map 将该项固定。`map = NULL` / `list()` 恢复模型默认规则。ACL 默认固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a`、`t0`；ALSCL 默认固定 `log_sigma_log_F`、`log_t0`。具名 NULL 项（如 `list(log_sigma_log_F = NULL)`，仅 ALSCL）解除对应固定。`map["name"] <- list(NULL)` 保留解除指令，`map$name <- NULL` 则删除条目。
 
-Parameters are estimated from their starting values unless fixed by the map. A whole NULL/empty map restores model defaults: four scalar fixes for ACL, two for ALSCL, as listed above. A named NULL entry releases that parameter. Keep it with single-bracket assignment; deleting the entry re-applies a default fix. See the complete [English](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html) / [简体中文](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) input checklist, parameter table and executable example.
+Parameters are estimated from their starting values unless fixed by the map. A whole NULL/empty map restores model defaults: four scalar fixes for ACL, two for ALSCL, as listed above. A named NULL entry releases that parameter. Keep it with single-bracket assignment; deleting the entry re-applies a default fix. See the complete [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html) / [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) input checklist, parameter table and executable example.
 
 <a id="sim_acl"></a>
 ## `sim_acl()`
@@ -1929,4 +1929,4 @@ Fits construct random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` from dat
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/15-Reproducibility)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)

@@ -6,7 +6,7 @@ Run this code in one R session after [installation](getting-started.html). Both 
 
 ```r
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
@@ -34,7 +34,7 @@ old_args <- c(x[c("data.CatL", "data.wgt", "data.mat")],
 legacy_fit <- do.call(run_acl, old_args)
 ```
 
-![Model comparison](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
+![Model comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
 |Object|Contents and use|
 |---|---|

@@ -1,6 +1,6 @@
 # ALSCL documentation website
 
-English is the default at `https://linbojun99.github.io/ALSCL/`; Simplified Chinese uses `/zh/`. Every page links to its translated counterpart. Section IDs are stable across languages. The visual layout follows the familiar pkgdown documentation pattern used by the sdmTMB website; this is a small static generator, not a pkgdown build.
+English is the default at `https://fanzhang-lab-shou.github.io/ALSCL/`; Simplified Chinese uses `/zh/`. Every page links to its translated counterpart. Section IDs are stable across languages. The visual layout follows the familiar pkgdown documentation pattern used by the sdmTMB website; this is a small static generator, not a pkgdown build.
 
 ## Build and preview
 

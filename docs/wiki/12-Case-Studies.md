@@ -1,6 +1,6 @@
 # 12 年度与季度案例 · Annual and quarterly cases
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/11-Retrospectives) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -46,25 +46,25 @@ source("scripts/case_studies.R", encoding="UTF-8")
 case_status <- run_case_studies(out="docs")
 ```
 
-最后一行读取 `out/data/cases` 的已保存真值并将输出写入同一目录下。要换目录，先复制案例输入及真值。完整拟合初值、map 和生物参数构造均在 [case_studies.R](https://github.com/Linbojun99/ALSCL/blob/main/scripts/case_studies.R)，数据下载见 [两个案例目录](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/cases/README.md)。
+最后一行读取 `out/data/cases` 的已保存真值并将输出写入同一目录下。要换目录，先复制案例输入及真值。完整拟合初值、map 和生物参数构造均在 [case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R)，数据下载见 [两个案例目录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/cases/README.md)。
 
 The final call reads saved truth from `out/data/cases` and writes results under `out`. Copy these inputs first when choosing another directory. The linked R script defines every starting value, map and biological argument.
 
 ## 年度黄尾鲽 · Annual flatfish
 
-![模拟调查 / Synthetic survey](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/flatfish_data.png?raw=true)
+![模拟调查 / Synthetic survey](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_data.png?raw=true)
 
 颜色为 log10 调查数量指数。沿时间和体长延伸的条带可反映队列结构；它们仍同时受调查可捕性和观测误差影响。
 
 Colors encode log10 survey numbers. Cohort patterns are modified by catchability and observation noise.
 
-![生物设定 / Biology](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/flatfish_biology.png?raw=true)
+![生物设定 / Biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_biology.png?raw=true)
 
 生长曲线决定年龄与平均长度的联系；成熟概率和调查 q 有不同的 L50/L95，不可相互替代。
 
 The growth curve links age to mean length. Maturity and survey q use different L50/L95 values and are not interchangeable.
 
-![模拟真值与条件估计 / Truth and estimates](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/flatfish_truth.png?raw=true)
+![模拟真值与条件估计 / Truth and estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_truth.png?raw=true)
 
 黑虚线为生成真值，彩色线是固定部分生物参数的条件估计。比较每种量的趋势和偏移；同一时期曲线接近并不证明所有参数可识别。
 
@@ -72,15 +72,15 @@ Black dashed curves are generating truth; colored curves are conditional estimat
 
 ## 季度大眼金枪鱼 · Quarterly tuna
 
-![模拟调查 / Synthetic survey](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
+![模拟调查 / Synthetic survey](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
 
 20 个保留步长覆盖 5 年，非 20 年。物种预设同时改变生成动力学、长度组、年龄网格及生物参数。
 
 Twenty retained quarters span five years, not twenty. The preset changes dynamics, bins, ages and biological parameters together.
 
-![生物设定 / Biology](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_biology.png?raw=true)
+![生物设定 / Biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_biology.png?raw=true)
 
-![模拟真值与条件估计 / Truth and estimates](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
+![模拟真值与条件估计 / Truth and estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
 tuna 由长度型过程生成；拟合仍要明确 `growth_step=.25`。案例固定了真实生长、CV、部分过程离散及相关参数，估计的区间不能覆盖这些假设本身的误差。
 
@@ -92,8 +92,8 @@ Tuna is generated with length-based dynamics and fitted with an explicit quarter
 
 Use multiple seeds and vary observation noise, M, q, binning or series length systematically. Retain failed fits before summarizing bias, RMSE, coverage and retrospectives; averaging only successful fits introduces selection bias.
 
-[本次四个拟合的数值状态 / Four-fit convergence record](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/case_convergence.csv)。
+[本次四个拟合的数值状态 / Four-fit convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv)。
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/11-Retrospectives) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki) · [下一章 · Next →](https://github.com/Linbojun99/ALSCL/wiki/13-Colors-and-Export)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export)

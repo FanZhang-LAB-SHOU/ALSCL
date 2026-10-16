@@ -4,7 +4,7 @@
 from pathlib import Path
 import re,json,posixpath
 root=Path(__file__).resolve().parents[1]; docs=root/'docs'; out=docs/'wiki';out.mkdir(exist_ok=True)
-base='https://github.com/Linbojun99/ALSCL'
+base='https://github.com/FanZhang-LAB-SHOU/ALSCL'
 read=lambda name:(docs/name).read_text()
 g=read('USER_GUIDE.md')
 sections={}
@@ -46,7 +46,7 @@ Install ALSCL 2.2.2 to use the bundled data, fit models and create plots. Run th
 ```r
 # 安装 ALSCL / Install ALSCL
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 packageVersion("ALSCL")
 data("YTF_example")

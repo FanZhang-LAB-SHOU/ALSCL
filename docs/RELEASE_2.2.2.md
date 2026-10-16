@@ -60,4 +60,4 @@ The numerical method follows [R's nlminb interface](https://www.stat.ethz.ch/R-m
 
 本次将优化收尾与诊断接入核心，默认 F 结构不变。`F_structure = "year"` 是每时间步所有年龄／体长共用 F 的可选模型，一维 AR(1) 密度已进入 C++，不只是外层参数开关。`polish = FALSE` 可关闭收尾，原始优化代码与每轮结果仍保留。
 
-只固定 t0 的 ALSCL 原结构及两个共用 F 拟合通过数值筛查；原二维 ACL 仍被正确标记为边界问题。这里验证的是仓库模拟数据，不代表正式数据一定能识别全部参数。正式分析仍应检查多起点、残差、似然剖面与生物假设。详见[中文正式数据案例](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html)。
+只固定 t0 的 ALSCL 原结构及两个共用 F 拟合通过数值筛查；原二维 ACL 仍被正确标记为边界问题。这里验证的是仓库模拟数据，不代表正式数据一定能识别全部参数。正式分析仍应检查多起点、残差、似然剖面与生物假设。详见[中文正式数据案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html)。

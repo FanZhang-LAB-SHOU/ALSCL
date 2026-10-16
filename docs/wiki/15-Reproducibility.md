@@ -1,6 +1,6 @@
 # 15 进阶、复现与故障处理 · Reproducibility
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)
 
 **ALSCL 2.2.2 · 简体中文 / English**
 
@@ -102,4 +102,4 @@ Executable scripts and numerical results accompany the guide. Interpret figures 
 
 ---
 
-[← 上一章 · Previous](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/Linbojun99/ALSCL/wiki)
+[← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)

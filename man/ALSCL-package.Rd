@@ -11,8 +11,8 @@ Provides two integrated statistical models for survey-based catch-at-length stoc
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/Linbojun99/ALSCL}
-  \item Report bugs at \url{https://github.com/Linbojun99/ALSCL/issues}
+  \item \url{https://github.com/FanZhang-LAB-SHOU/ALSCL}
+  \item Report bugs at \url{https://github.com/FanZhang-LAB-SHOU/ALSCL/issues}
 }
 
 }

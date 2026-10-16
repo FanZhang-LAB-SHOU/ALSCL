@@ -1,6 +1,6 @@
 # 速度设置
 
-本文说明 `run_acl()` 与 `run_alscl()` 如何使用多个核、拟合能快多少、怎样确认本机的实际情况，以及什么时候需要修改设置。每项改动的测试方法见[技术记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md)（英文），各项检查见[审查报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED_REPORT.md)（英文）。
+本文说明 `run_acl()` 与 `run_alscl()` 如何使用多个核、拟合能快多少、怎样确认本机的实际情况，以及什么时候需要修改设置。每项改动的测试方法见[技术记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文），各项检查见[审查报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_REPORT.md)（英文）。
 
 ## 1. 概要
 

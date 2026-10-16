@@ -107,7 +107,7 @@ The points show all three measurements; lines show medians and bars show ranges.
 
 The first four-worker trials recorded four different PIDs with overlapping execution intervals and real CPU usage. All 18 timed fits and 72 starts passed the benchmark checks. Starting vectors and per-start objectives agreed across worker counts; the selected fits passed optimizer, Hessian, gradient and boundary checks. The unchanged C++ likelihood is evaluated within each worker; a single start is still serial.
 
-See the [full bilingual report](https://github.com/Linbojun99/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md), [raw run timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/runs.csv), [per-start evidence](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/starts.csv) and [reproducible benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_parallel.R). The report also records the original-version test and distinguishes it from an equal-work speed comparison.
+See the [full bilingual report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md), [raw run timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv), [per-start evidence](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/starts.csv) and [reproducible benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R). The report also records the original-version test and distinguishes it from an equal-work speed comparison.
 
 ## Speed settings for one fit
 
@@ -138,4 +138,4 @@ With the default settings, every estimate, the objective function and every row 
 
 ![Estimates and standard errors before and after the speed settings](../../../docs/figures/speed/agreement.png)
 
-The [speed settings](speed.html) article explains every setting, how to check what your session does and how socket workers are used on Windows and in RStudio. See also the [speed report](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R).
+The [speed settings](speed.html) article explains every setting, how to check what your session does and how socket workers are used on Windows and in RStudio. See also the [speed report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_speed.R).

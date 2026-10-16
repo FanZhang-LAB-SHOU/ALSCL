@@ -25,7 +25,7 @@ Use consecutive annual `years`. Changing labels does not create quarterly dynami
 
 ### Full simulator and two cases
 
-The seed-4 data, input CSV files and complete truth objects are included in the repository. See [download and reading instructions](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/cases/README.md).
+The seed-4 data, input CSV files and complete truth objects are included in the repository. See [download and reading instructions](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/cases/README.md).
 
 ```r
 # Parameters → biological arrays → simulation

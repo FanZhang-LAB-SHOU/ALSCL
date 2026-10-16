@@ -164,7 +164,7 @@ TMB 用自动微分计算目标函数及导数，对随机效应采用 Laplace �
 `plot_pla()` 画的是年龄长度关系。下面是 tuna 条件 ALSCL 拟合的增长矩阵，可看出“停留原组”及“进入较大组”的概率。
 
 
-![tuna 增长转移矩阵](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
+![tuna 增长转移矩阵](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
 
 ```r
 # b 为 ALSCL 拟合对象

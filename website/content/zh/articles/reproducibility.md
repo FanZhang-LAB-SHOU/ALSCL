@@ -109,7 +109,7 @@ plot_SSB(saved)
 
 第一轮四进程测试记录了 4 个不同 PID，执行时间重叠且有实际 CPU 使用。全部 18 次计时拟合、72 个起点通过检查；不同并行数使用相同初值，逐起点目标函数一致，最终模型通过优化码、Hessian、梯度及边界检查。各工作进程调用同一 C++ 似然模型；单个起点内部仍是串行运算。
 
-参见[完整双语报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md)、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/runs.csv)、[逐起点证据](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/parallel/starts.csv)及[复现脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_parallel.R)。报告另外保留原版测试，并明确区分功能验证和相同工作量的速度比较。
+参见[完整双语报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md)、[全部耗时记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv)、[逐起点证据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/starts.csv)及[复现脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R)。报告另外保留原版测试，并明确区分功能验证和相同工作量的速度比较。
 
 ## 单次拟合的速度设置
 
@@ -140,4 +140,4 @@ alscl_speed(sd_cores = 1)
 
 ![速度设置前后的估计值与标准误](../../../docs/figures/speed/agreement.png)
 
-[速度设置](speed.html)一文详细说明每项设置、怎样检查本会话的实际情况，以及在 Windows 和 RStudio 中如何使用 socket 进程。另见[速度报告](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/Linbojun99/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/Linbojun99/ALSCL/blob/main/scripts/benchmark_speed.R)。
+[速度设置](speed.html)一文详细说明每项设置、怎样检查本会话的实际情况，以及在 Windows 和 RStudio 中如何使用 socket 进程。另见[速度报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_speed.R)。

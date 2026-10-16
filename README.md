@@ -1,21 +1,21 @@
 # ALSCL <img src="ALSCLlogo.png" align="right" height="140" />
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Linbojun99/ALSCL/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/Linbojun99/ALSCL/actions)
+[![R-CMD-check](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions)
 [![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
 ## Documentation website / 在线文档
 
-**[Visit the ALSCL documentation website →](https://linbojun99.github.io/ALSCL/)**
+**[Visit the ALSCL documentation website →](https://fanzhang-lab-shou.github.io/ALSCL/)**
 
 ALSCL has a dedicated documentation website with installation instructions, all 15 basic-function topics, a reference for all 45 public functions, and worked cases for simulation, fitting your own survey data, model comparison and retrospective analysis. English is the default; use the language switch on any page to read the Simplified Chinese version.
 
 ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功能、全部 45 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较和回溯分析的操作案例。网站默认英文，每页均可切换为简体中文。
 
-- [English documentation](https://linbojun99.github.io/ALSCL/) · [简体中文文档](https://linbojun99.github.io/ALSCL/zh/)
-- [Worked case studies / 专题案例](https://linbojun99.github.io/ALSCL/articles/)
-- [Function reference / 函数参考](https://linbojun99.github.io/ALSCL/reference/)
+- [English documentation](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文文档](https://fanzhang-lab-shou.github.io/ALSCL/zh/)
+- [Worked case studies / 专题案例](https://fanzhang-lab-shou.github.io/ALSCL/articles/)
+- [Function reference / 函数参考](https://fanzhang-lab-shou.github.io/ALSCL/reference/)
 
 **基于年龄及体长结构的统计调查体长种群评估模型**
 
@@ -26,9 +26,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 **2.2.2:** 默认增加受保护的优化收尾及自然尺度边界诊断；可选 `run_acl(x, F_structure = "year")` 和 `run_alscl(x, F_structure = "year")`，同一时间步共用 F。默认保留原来的二维 F 结构，旧写法和加速设置继续可用。 / Adds safeguarded refinement and natural-scale diagnostics, with optional shared F per step. Original model structure, calling forms and acceleration remain supported. [Details and validation](docs/RELEASE_2.2.2.md).
 
 
-ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/Linbojun99/ALSCL/wiki)，理论基础见以下论文。
+ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。
 
-ALSCL is an R package for fitting statistical catch-at-length models to fishery-independent survey data using [TMB](https://github.com/kaskr/adcomp) (Template Model Builder). See the [User Guide](https://github.com/Linbojun99/ALSCL/wiki) and the paper:
+ALSCL is an R package for fitting statistical catch-at-length models to fishery-independent survey data using [TMB](https://github.com/kaskr/adcomp) (Template Model Builder). See the [User Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) and the paper:
 
 > Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, 23, 1121–1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)
 
@@ -63,9 +63,9 @@ Estimation is performed via maximum likelihood with the objective function calcu
 
 ## 获取帮助 / Getting help
 
-- 使用与结果解读：[讨论区 / Discussions](https://github.com/Linbojun99/ALSCL/discussions)。
-- 错误与功能建议：[问题反馈 / Issues](https://github.com/Linbojun99/ALSCL/issues)。
-- 完整教程：[双语 Wiki / Bilingual manual](https://github.com/Linbojun99/ALSCL/wiki)。
+- 使用与结果解读：[讨论区 / Discussions](https://github.com/FanZhang-LAB-SHOU/ALSCL/discussions)。
+- 错误与功能建议：[问题反馈 / Issues](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues)。
+- 完整教程：[双语 Wiki / Bilingual manual](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)。
 
 ## 目录 / Table of contents
 
@@ -81,8 +81,8 @@ Estimation is performed via maximum likelihood with the objective function calcu
 
 | 完整学习资源 / Learning resource | 内容 / Contents |
 |---|---|
-| **[在线文档网站 / Documentation website](https://linbojun99.github.io/ALSCL/)** | 基本功能、专题案例和函数参考；支持英文与简体中文 / Basic functions, worked cases and function reference in English and Simplified Chinese |
-| **[Wiki 双语书籍 / Wiki book](https://github.com/Linbojun99/ALSCL/wiki)** | 15 章、目录、前后页导航 / 15 chapters with navigation |
+| **[在线文档网站 / Documentation website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 基本功能、专题案例和函数参考；支持英文与简体中文 / Basic functions, worked cases and function reference in English and Simplified Chinese |
+| **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 15 章、目录、前后页导航 / 15 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
 | [45 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
@@ -96,7 +96,7 @@ Estimation is performed via maximum likelihood with the objective function calcu
 ```r
 # 安装 ALSCL / Install ALSCL
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 packageVersion("ALSCL")
 ```
@@ -298,7 +298,7 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
-**自己的正式数据 / Your own observations:** 2.2.2 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://linbojun99.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://linbojun99.github.io/ALSCL/articles/case-fit-survey.html).
+**自己的正式数据 / Your own observations:** 2.2.2 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 
@@ -692,4 +692,4 @@ ORCID: [Hongyu Lin — 0000-0001-6226-179X](https://orcid.org/0000-0001-6226-179
 
 ## 许可 / License
 
-[GPL-3 License](LICENSE.md)。问题反馈：[Issues](https://github.com/Linbojun99/ALSCL/issues)。
+[GPL-3 License](LICENSE.md)。问题反馈：[Issues](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues)。

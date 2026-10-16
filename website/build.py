@@ -18,8 +18,8 @@ from vendor import prepare_katex
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'website'
-REPO = 'https://github.com/Linbojun99/ALSCL'
-BASE = 'https://linbojun99.github.io/ALSCL/'
+REPO = 'https://github.com/FanZhang-LAB-SHOU/ALSCL'
+BASE = 'https://fanzhang-lab-shou.github.io/ALSCL/'
 LOGO_VERSION = hashlib.sha256((ROOT / 'ALSCLlogo.png').read_bytes()).hexdigest()[:12]
 VERSION = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(), re.M)[1]
 ARTICLES = json.loads((WEB / 'articles.json').read_text())
@@ -150,7 +150,7 @@ def rewrite_links(soup, route, lang):
             target = lang_route(lang, 'articles/' + section_routes[parsed.fragment] + '.html')
         elif path.rsplit('/',1)[-1] in known_docs:
             target = lang_route(lang, known_docs[path.rsplit('/',1)[-1]])
-        elif path in ('../README.md', '/Linbojun99/ALSCL/blob/main/README.md'):
+        elif path in ('../README.md', '/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md'):
             target = lang_route(lang, 'index.html')
         if target: tag[attr] = rel(route, target)
         elif not parsed.scheme and not url.startswith('#') and path and not path.endswith('.html'):

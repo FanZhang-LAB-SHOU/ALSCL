@@ -1,6 +1,6 @@
 # Speed-up of ALSCL model fitting: change and results report
 
-Report date: 12 October 2026 (revised after two reviews). These changes are released as ALSCL 2.1.0. Branch: [`dev`](https://github.com/Linbojun99/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/Linbojun99/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/Linbojun99/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/Linbojun99/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
+Report date: 12 October 2026 (revised after two reviews). These changes are released as ALSCL 2.1.0. Branch: [`dev`](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/FanZhang-LAB-SHOU/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/FanZhang-LAB-SHOU/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
 
 ## 1. Summary
 
@@ -15,12 +15,12 @@ With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.
 
 | Commit | Content |
 |---|---|
-| [`4402f78`](https://github.com/Linbojun99/ALSCL/commit/4402f780cb35e8272f003cbfc1e699648261b4df) | First version of the code, tests and help page |
-| [`7bf2c5a`](https://github.com/Linbojun99/ALSCL/commit/7bf2c5a652e657d46a53280eb6a3d97d7918be91) | Documentation (`docs/SPEED.md`), benchmark script and results (`docs/results/speed/`), README and NEWS |
-| [`54f1350`](https://github.com/Linbojun99/ALSCL/commit/54f1350) | First version of this report (the version reviewed) |
-| [`243469b`](https://github.com/Linbojun99/ALSCL/commit/243469b2f8104b31075d30a771d157c74f50a56b) | Fixes after the first review (section 6), CppAD as the default, website and function reference |
-| [`2b7d418`](https://github.com/Linbojun99/ALSCL/commit/2b7d418) | Report revised after the first review (the version reviewed second) |
-| [`23d1cc2`](https://github.com/Linbojun99/ALSCL/commit/23d1cc27c5969c3d8743881c1c769b1ecfc9c857) | Test fixes after the second review (section 6) |
+| [`4402f78`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4402f780cb35e8272f003cbfc1e699648261b4df) | First version of the code, tests and help page |
+| [`7bf2c5a`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/7bf2c5a652e657d46a53280eb6a3d97d7918be91) | Documentation (`docs/SPEED.md`), benchmark script and results (`docs/results/speed/`), README and NEWS |
+| [`54f1350`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/54f1350) | First version of this report (the version reviewed) |
+| [`243469b`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/243469b2f8104b31075d30a771d157c74f50a56b) | Fixes after the first review (section 6), CppAD as the default, website and function reference |
+| [`2b7d418`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/2b7d418) | Report revised after the first review (the version reviewed second) |
+| [`23d1cc2`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/23d1cc27c5969c3d8743881c1c769b1ecfc9c857) | Test fixes after the second review (section 6) |
 
 The TMB templates (`inst/extdata/*.cpp`) are unchanged.
 
@@ -30,12 +30,12 @@ Links point to commit `23d1cc2`.
 
 | File | Change |
 |---|---|
-| [`R/speed.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/speed.R) | New. `alscl_speed()` (L39); `.acl_check_cores()` (L53); `.acl_fork_safe()` (L64, whether `"auto"` may fork); `.acl_cores()` (L74); `.acl_tmb_checked` and `.acl_tmb_supported()` (L89-L90, TMB versions the parallel delta method was checked against); `.acl_mclapply()` (L100, turns a failure to fork or a worker failure into an error of class `acl_parallel_error`); `.acl_optimhess()` (L120, parallel `stats::optimHess()`); `.acl_delta_sd()` (L141, parallel delta method); `.acl_sdreport()` (L200, the replacement for the `TMB::sdreport()` call; `check_version` and `fallback` are for the tests). |
-| [`R/model_fit.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/model_fit.R#L151) | One line: `TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE)` becomes `.acl_sdreport(obj, opt$par)`. |
-| [`R/compile_acl.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/compile_acl.R#L6-L30) | `.acl_compile()` gains `framework`, passes it to `TMB::compile()` and adds it to the cache key. |
-| [`R/retro_model.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/retro_model.R#L193-L195), [`R/sim_acl.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/sim_acl.R#L61-L63) | Socket workers receive the main process's AD library and `sd_cores = 1`. |
+| [`R/speed.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/speed.R) | New. `alscl_speed()` (L39); `.acl_check_cores()` (L53); `.acl_fork_safe()` (L64, whether `"auto"` may fork); `.acl_cores()` (L74); `.acl_tmb_checked` and `.acl_tmb_supported()` (L89-L90, TMB versions the parallel delta method was checked against); `.acl_mclapply()` (L100, turns a failure to fork or a worker failure into an error of class `acl_parallel_error`); `.acl_optimhess()` (L120, parallel `stats::optimHess()`); `.acl_delta_sd()` (L141, parallel delta method); `.acl_sdreport()` (L200, the replacement for the `TMB::sdreport()` call; `check_version` and `fallback` are for the tests). |
+| [`R/model_fit.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/model_fit.R#L151) | One line: `TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE)` becomes `.acl_sdreport(obj, opt$par)`. |
+| [`R/compile_acl.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/compile_acl.R#L6-L30) | `.acl_compile()` gains `framework`, passes it to `TMB::compile()` and adds it to the cache key. |
+| [`R/retro_model.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/retro_model.R#L193-L195), [`R/sim_acl.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/sim_acl.R#L61-L63) | Socket workers receive the main process's AD library and `sd_cores = 1`. |
 | `DESCRIPTION` | `TMB (>= 1.9.0)`; `Matrix` added to Imports (for `Matrix::solve`). |
-| [`tests/testthat/test-speed.R`](https://github.com/Linbojun99/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/tests/testthat/test-speed.R) | Settings and input validation (including `Inf`, `NA`, `2^31`); fork-safety rules; TMB version list; `identical()` checks of the parallel Hessian and of the whole sdreport object against TMB for both models and both AD libraries, with fallback turned into an error; a deliberate failure of the parallel delta method gives an error; a simulated failure to fork; an unchecked TMB version computes standard errors without forking; one and two cores give identical `est_std`; TMBad and CppAD agree within 1e-8 on the test fixture. |
+| [`tests/testthat/test-speed.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/tests/testthat/test-speed.R) | Settings and input validation (including `Inf`, `NA`, `2^31`); fork-safety rules; TMB version list; `identical()` checks of the parallel Hessian and of the whole sdreport object against TMB for both models and both AD libraries, with fallback turned into an error; a deliberate failure of the parallel delta method gives an error; a simulated failure to fork; an unchecked TMB version computes standard errors without forking; one and two cores give identical `est_std`; TMBad and CppAD agree within 1e-8 on the test fixture. |
 | `docs/FUNCTION_REFERENCE.md`, `website/build.py`, `website/check.py`, `website/reference-notes.json`, `website/content/*/news.md`, `docs/BOOK.md`, `docs/wiki/14-Function-Reference.md`, `README.md` | `alscl_speed()` added to the function reference, the website groups, the bilingual notes and the changelog; 43 changed to 44 functions. `BOOK.md` and the wiki were regenerated with `scripts/build_wiki.py`. |
 
 ## 4. Why the parallel standard errors are identical
@@ -133,7 +133,7 @@ The revised version (`2b7d418`) was reviewed a second time. The review confirmed
 
 ### Checks on Linux, macOS and Windows
 
-The repository's GitHub Actions workflow ran `R CMD check --no-manual` (warnings treated as errors, `NOT_CRAN = true`) on commit `07e0fb8` for [pull request #3](https://github.com/Linbojun99/ALSCL/pull/3), and the documentation workflow built the website. A local `R CMD check` on macOS gave 0 errors, 0 warnings and 0 notes.
+The repository's GitHub Actions workflow ran `R CMD check --no-manual` (warnings treated as errors, `NOT_CRAN = true`) on commit `07e0fb8` for [pull request #3](https://github.com/FanZhang-LAB-SHOU/ALSCL/pull/3), and the documentation workflow built the website. A local `R CMD check` on macOS gave 0 errors, 0 warnings and 0 notes.
 
 | System | `R CMD check` | Tests |
 |---|---|---|
@@ -166,7 +166,7 @@ Measured on the 20-year ALSCL example: the delta method took 6.5 s on four socke
 ## 9. How to reproduce
 
 ```bash
-git clone https://github.com/Linbojun99/ALSCL.git && cd ALSCL && git checkout dev
+git clone https://github.com/FanZhang-LAB-SHOU/ALSCL.git && cd ALSCL && git checkout dev
 Rscript -e 'devtools::test()'
 git archive 4dc1fc3 | (mkdir -p /tmp/alscl-original && tar -x -C /tmp/alscl-original)
 Rscript scripts/benchmark_speed.R /tmp/alscl-original docs/results/speed 3

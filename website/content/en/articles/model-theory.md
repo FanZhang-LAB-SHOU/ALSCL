@@ -163,7 +163,7 @@ Survey numbers constrain latent population states; weights, maturity and surviva
 
 `plot_pla()` shows age-length probabilities. The tuna ALSCL growth matrix below instead shows the probabilities of staying in a bin or advancing to larger bins.
 
-![Growth transition](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
+![Growth transition](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_growth_transition.png?raw=true)
 
 ```r
 # b is an ALSCL fit

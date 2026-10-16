@@ -7,7 +7,7 @@ Install ALSCL 2.2.1 to use the bundled data, fit models and create plots. Run th
 ```r
 # Install ALSCL
 install.packages("remotes")
-remotes::install_github("Linbojun99/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 packageVersion("ALSCL")
 data("YTF_example")
@@ -17,7 +17,7 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 The first fit needs an R-compatible C++ toolchain. Dependencies are installed automatically; Excel examples additionally use readxl. Run examples containing `source("scripts/...")` from the downloaded repository root.
 
-[Repository](https://github.com/Linbojun99/ALSCL/blob/main/README.md) · [Workbook](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
+[Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md) · [Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
 ## Prepare the compiler
 

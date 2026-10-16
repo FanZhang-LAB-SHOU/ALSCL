@@ -1,6 +1,6 @@
 # Data and observations
 
-Download the [Excel example workbook](https://github.com/Linbojun99/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx). `Instructions` contains bilingual directions, and the other three sheets contain the exact YTF example. Save a copy before replacing values.
+Download the [Excel example workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx). `Instructions` contains bilingual directions, and the other three sheets contain the exact YTF example. Save a copy before replacing values.
 
 |Location|Entry rule|
 |---|---|
@@ -13,21 +13,21 @@ Download the [Excel example workbook](https://github.com/Linbojun99/ALSCL/blob/m
 
 ### Survey number index: `data.CatL`
 
-![Survey data worksheet](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
+![Survey data worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
 
 
 Enter counts or a consistently standardized number index. For CPUE, maintain comparable effort, units and standardization. Decimals are valid. Use blank/`NA` for unknown observations; do not use zero, dashes, `<1` or text labels as missing-value substitutes.
 
 ### Mean individual weight: `data.wgt`
 
-![Mean-weight worksheet](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
+![Mean-weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
 
 
 Enter mean weight per fish, not the total weight in the bin. Use one unit and document it separately. Repeating a defensible length-weight relationship across periods is possible but must be reported. Missing weights are not accepted.
 
 ### Maturity proportion: `data.mat`
 
-![Maturity worksheet](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true)
+![Maturity worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true)
 
 
 Enter proportions in [0,1], e.g. `0.6` for 60%. Both 0 and 1 are valid maturity values. Do not insert units, totals, merged cells or prose inside the three data grids.

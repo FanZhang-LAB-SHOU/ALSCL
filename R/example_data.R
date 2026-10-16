@@ -1,6 +1,6 @@
 #' Legacy anonymous survey example from the ALSCL repository
 #'
-#' Three unchanged tables from Linbojun99/ALSCL. The original documentation
+#' Three unchanged tables from FanZhang-LAB-SHOU/ALSCL. The original documentation
 #' describes them as anonymized survey observations. Species, units, sampling
 #' design and original source are not recorded, so empirical provenance remains
 #' unverified. These data must not be described as the observations of Zhang and
@@ -19,7 +19,7 @@
 #' convention before converting labels; do not silently close the gaps.
 #' This example is useful for learning data inspection and validation.
 #' \code{YTF_example} is the reproducible fitting and plotting example.
-#' @source \url{https://github.com/Linbojun99/ALSCL/blob/main/data/example_data.rda}
+#' @source \url{https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data/example_data.rda}
 #' (Git blob b64858b21cb9a1009688a48f039ac48816b1ad81).
 #' @examples
 #' data(example_data)

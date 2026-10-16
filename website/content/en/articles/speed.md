@@ -1,6 +1,6 @@
 # Speed settings
 
-This guide explains how `run_acl()` and `run_alscl()` use several cores, how much faster fits become, how to check what your session does, and when to change the settings. The [technical record](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested, and the [review report](https://github.com/Linbojun99/ALSCL/blob/main/docs/SPEED_REPORT.md) lists the checks.
+This guide explains how `run_acl()` and `run_alscl()` use several cores, how much faster fits become, how to check what your session does, and when to change the settings. The [technical record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested, and the [review report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_REPORT.md) lists the checks.
 
 ## 1. Summary
 
