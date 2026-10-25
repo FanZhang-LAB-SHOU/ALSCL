@@ -10,6 +10,8 @@ test_that("midpoints preserve unequal widths and decimals", {
 })
 test_that("quarterly ages agree with simulation and missing cells are safe", {
   f<-fixture_frames();f$rec.age<-.25;f$nage<-20L;f$growth_step<-.25
+  for (nm in c("data.CatL", "data.wgt", "data.mat"))
+    names(f[[nm]])[-1L] <- as.character(2000 + (0:4)/4)
   f$data.CatL[1,2]<-NA_real_;f$data.CatL[2,2]<-0
   x<-do.call(ALSCL:::.acl_prepare_data,f)
   expect_equal(x$data$age,initialize_params(species="tuna")$ages)
@@ -17,6 +19,26 @@ test_that("quarterly ages agree with simulation and missing cells are safe", {
   expect_error(do.call(ALSCL:::.acl_prepare_data,c(f,list(zero_action="error"))),"Zero")
   f$data.CatL[1,2]<- -1;expect_error(do.call(ALSCL:::.acl_prepare_data,f),"nonnegative")
   f<-fixture_frames();f$data.wgt<-f$data.wgt[9:1,];expect_error(do.call(ALSCL:::.acl_prepare_data,f),"match")
+})
+test_that("core calls reject gaps and mismatched model steps before fitting", {
+  f <- fixture_frames()
+  for (nm in c("data.CatL", "data.wgt", "data.mat"))
+    names(f[[nm]])[-1L] <- as.character(c(2000, 2001, 2003, 2004, 2005))
+  for (fun in list(run_acl, run_alscl))
+    expect_error(fun(f), "spacing must equal growth_step")
+  f <- fixture_frames()
+  f$growth_step <- .25
+  expect_error(run_acl(f), "complete time grid")
+  for (nm in c("data.CatL", "data.wgt", "data.mat"))
+    names(f[[nm]])[-1L] <- as.character(2000 + (0:4)/4)
+  f$data.CatL[[3L]] <- NA_real_
+  prepared <- do.call(.acl_prepare_data, f)
+  expect_equal(prepared$year, 2000 + (0:4)/4)
+  expect_true(all(prepared$data$na_matrix[, 2L] == 0))
+  # Decimal representation roundoff is harmless.
+  for (nm in c("data.CatL", "data.wgt", "data.mat"))
+    names(f[[nm]])[-1L] <- format(2000 + (0:4)/4 + c(0, 1e-10, 0, 0, 0), digits = 16)
+  expect_no_error(do.call(.acl_prepare_data, f))
 })
 test_that("legacy parameter calls, named bounds and maps are aligned", {
   p<-create_parameters(NULL,list(log_vbk=log(.15)),list(log_vbk=log(.3)))

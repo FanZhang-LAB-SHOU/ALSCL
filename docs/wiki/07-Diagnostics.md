@@ -25,6 +25,14 @@ Both example fits returned code 0, positive-definite Hessians and no detected bo
 
 Also assess residual structure, sensitivity to starts and fixed assumptions, terminal stability and biological plausibility. Plotted residuals are raw log residuals, and process-deviation plots are not likelihood deviance. Information criteria require comparable observations and likelihoods; one age-generated sample cannot establish general model superiority.
 
+2.2.3 起，`compare_models()` 会核对时间、体长标签、实际用于拟合的正观测及缺失掩码；已知不一致会报错。返回的 `fit_diagnostics` 和 `comparison` 说明数值状态和可比较性。若任一拟合不合格，或旧结果缺少核验数据的元信息，仍显示原始 AIC，但警告并取消自动偏好结论。保留的非零原始优化代码不单独决定失败，需结合收尾后的梯度、Hessian 和边界。
+
+Since 2.2.3, compare_models checks periods, length labels, fitted positive observations and the missing-data mask. Known mismatches are errors. Its fit_diagnostics and comparison outputs record numerical status and comparability. Failed numerical screens or old objects with insufficient metadata retain raw AIC but produce a warning and no automatic preference. A nonzero raw optimizer code alone does not imply failure after refinement; examine the final gradient, Hessian and boundaries together.
+
+`plot_compare_metrics()` 与 `diagnostic_metrics()` 使用同一套正观测筛选，NA 和零观测不会污染整组指标。`plot_fishing_mortality(b, type = "length", se = TRUE)` 对 ALSCL 以真实体长中点为横轴，按年份分面；year 模式保持以时间为横轴。ACL 没有独立的长度别 F，旧 length 别名仍画年龄别 F，但会警告，建议改用 age。
+
+plot_compare_metrics uses the same positive-observation mask as diagnostic_metrics, excluding NA and zeros consistently. For ALSCL, plot_fishing_mortality(b, type = "length", se = TRUE) uses actual length midpoints on the horizontal axis and facets by year; year mode retains time on the horizontal axis. ACL has no independent F-at-length: its legacy length alias still plots F-at-age with a warning; use age explicitly.
+
 ---
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots)

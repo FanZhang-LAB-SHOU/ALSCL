@@ -22,8 +22,7 @@ diagnostic_metrics <- function(data.CatL, model_result) {
     differences <- abs(observed[, -1L, drop=FALSE] - observed[, -ncol(observed), drop=FALSE])
     if (any(pairs)) scale <- mean(differences[pairs])
   }
-  npar <- length(model_result$opt$par)
-  if (!npar) npar <- length(model_result$obj$par)
+  npar <- .acl_npar(model_result)
   nll <- model_result$opt$objective
   values <- c(MSE=mse, MAE=mae, MAD=mean(abs(obs-mean(obs))),
     MASE=if(is.finite(scale) && scale>0) mae/scale else NA_real_, RMSE=sqrt(mse),

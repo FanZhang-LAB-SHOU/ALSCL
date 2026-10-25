@@ -10,6 +10,8 @@ diagnose_model(x$data.CatL, b)
 diagnostic_metrics(x$data.CatL, b)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$fit_metrics
+comparison$fit_diagnostics
+comparison$comparison
 comparison$correlation # Includes Ratio_Mean
 plot_residuals(b, type = "length", facet_ncol = 4)
 plot_compare_residuals(a, b, x$data.CatL)
@@ -20,6 +22,8 @@ In the bundled example results, both fits returned code 0, positive-definite Hes
 
 
 Also assess residual structure, sensitivity to starts and fixed assumptions, terminal stability and biological plausibility. Plotted residuals are raw log residuals, and process-deviation plots are not likelihood deviance. Information criteria require comparable observations and likelihoods; one age-generated sample cannot establish general model superiority.
+
+In 2.2.3, `compare_models()` checks both fits against the supplied survey table: time labels, length-bin labels and order, positive observed values and their observation mask must agree. A known mismatch is an error. Older saved results without enough metadata remain readable, but automatic preference is withheld. If either fit fails the numerical screen, the function warns and retains raw AIC/BIC and fit statistics for inspection without declaring a preferred model. Read `comparison$fit_diagnostics` and `comparison$comparison` (`data_verified`, `eligible`, `preferred`, `issues`). A passed screen permits a conditional comparison; you must still assess likelihood comparability and biological assumptions.
 
 ## Refinement and shared F in 2.2.2
 

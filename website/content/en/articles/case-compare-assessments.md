@@ -24,6 +24,8 @@ diagnose_model(x$data.CatL, a)
 diagnose_model(x$data.CatL, b)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
+comparison$fit_diagnostics
+comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
@@ -32,6 +34,8 @@ Inspect numerical status and residual patterns before comparing fitted trajector
 ![Synthetic YTF: residual comparison for ACL and ALSCL](../assets/manual/figures/ytf/compare_residuals.png)
 
 The panels compare residual distributions and patterns by time and length. Annual error bars describe dispersion, not confidence intervals. A model can follow biomass trends while retaining systematic observation residuals.
+
+In 2.2.3, `compare_models()` checks both fits against the supplied survey table: time labels, length-bin labels and order, positive observed values and their observation mask must agree. A known mismatch is an error. Older saved results without enough metadata remain readable, but automatic preference is withheld. If either fit fails the numerical screen, the function warns and retains raw AIC/BIC and fit statistics for inspection without declaring a preferred model. Read `comparison$fit_diagnostics` and `comparison$comparison` (`data_verified`, `eligible`, `preferred`, `issues`). A passed screen permits a conditional comparison; you must still assess likelihood comparability and biological assumptions.
 
 ## Compare the fitted survey observations
 
@@ -74,6 +78,7 @@ Compare time patterns while accounting for the different state variables. If usi
 dir.create("my_model_comparison", showWarnings = FALSE)
 write.csv(comparison$summary, "my_model_comparison/summary.csv", row.names = FALSE)
 write.csv(comparison$fit_metrics, "my_model_comparison/fit_metrics.csv", row.names = FALSE)
+write.csv(comparison$fit_diagnostics, "my_model_comparison/fit_diagnostics.csv", row.names = FALSE)
 p_population <- plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ggplot2::ggsave("my_model_comparison/population.png", p_population,
                width = 10, height = 7, dpi = 300)

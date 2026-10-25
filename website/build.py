@@ -294,7 +294,7 @@ def example_setup(name, lang):
         if name == 'sim_acl': base += '\nsm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,\n               output_dir = "simulation_examples/flatfish")'
     elif name not in ('run_acl','run_alscl'):
         base += '\na <- run_acl(x, silent = TRUE)\nb <- run_alscl(x, silent = TRUE)'
-        if name=='plot_retro': base += '\nra <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl,\n                          list(nyear = 3, silent = TRUE)))\nrb <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl,\n                            list(nyear = 3, silent = TRUE)))'
+        if name=='plot_retro': base += '\nra <- retro_acl(x, nyear = 3, silent = TRUE)\nrb <- retro_alscl(x, nyear = 3, silent = TRUE)'
     return base
 
 def reference_body(name, entry, lang, supplements):

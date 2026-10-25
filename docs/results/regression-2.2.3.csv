@@ -1,0 +1,83 @@
+file,test,failed,skipped,error,warning,passed
+test-assessment-regression.R,ACL group_year fits with the default assessment map,0,FALSE,FALSE,0,23
+test-assessment-regression.R,ACL year fits with the default assessment map,0,FALSE,FALSE,0,24
+test-assessment-regression.R,"ACL group_year fits with only t0 fixed, quarterly steps and missing observations",0,FALSE,FALSE,0,24
+test-assessment-regression.R,"ACL year fits with only t0 fixed, quarterly steps and missing observations",0,FALSE,FALSE,0,25
+test-assessment-regression.R,ALSCL group_year fits with the default assessment map,0,FALSE,FALSE,0,23
+test-assessment-regression.R,ALSCL year fits with the default assessment map,0,FALSE,FALSE,0,24
+test-assessment-regression.R,"ALSCL group_year fits with only t0 fixed, quarterly steps and missing observations",0,FALSE,FALSE,0,25
+test-assessment-regression.R,"ALSCL year fits with only t0 fixed, quarterly steps and missing observations",0,FALSE,FALSE,0,25
+test-catchability-plot.R,catchability plots connect inputs without smoothing overshoot,0,FALSE,FALSE,0,3
+test-comparison-screen.R,comparison preference requires numerical screens and matching observations,0,FALSE,FALSE,0,12
+test-comparison-screen.R,"comparisons reject data, period, bin and mask mismatches",0,FALSE,FALSE,0,6
+test-comparison-screen.R,legacy fits retain raw comparison tables without claiming verified comparability,0,FALSE,FALSE,0,8
+test-comparison-screen.R,comparison accepts core-normalized labels and matrices with distinct default names,0,FALSE,FALSE,0,4
+test-comparison-screen.R,a missing parameter count cannot win a comparison as a zero-parameter model,0,FALSE,FALSE,0,6
+test-diagnostics.R,Mohn rho averages terminal-year differences over all peels,0,FALSE,FALSE,0,2
+test-diagnostics.R,diagnostics use maximum absolute gradients and valid observation pairs,0,FALSE,FALSE,0,6
+test-diagnostics.R,growth confidence intervals include Linf and parameter covariances,0,FALSE,FALSE,0,2
+test-fit-bundle.R,structured bundles select the correct model and preserve explicit overrides,0,FALSE,FALSE,0,12
+test-fit-bundle.R,bundles reject malformed or incomplete settings before fitting,0,FALSE,FALSE,0,10
+test-fit-bundle.R,call overrides reach the core and defaults follow the final ncores,0,FALSE,FALSE,0,14
+test-fit-bundle.R,both bundle forms produce the same fitted results as the legacy interface,0,FALSE,FALSE,0,24
+test-fit.R,both public fitting APIs return finite usable results and consistent diagnostics,0,FALSE,FALSE,0,36
+test-fit.R,parallel starts agree with serial fits without jittering fixed effects,0,FALSE,FALSE,0,4
+test-fit.R,retrospective wrappers preserve positional parameters and socket results,0,FALSE,FALSE,0,2
+test-fit.R,sim_acl reads saved simulations and honors bounds-only calls,0,FALSE,FALSE,0,5
+test-input.R,midpoints preserve unequal widths and decimals,0,FALSE,FALSE,0,7
+test-input.R,quarterly ages agree with simulation and missing cells are safe,0,FALSE,FALSE,0,6
+test-input.R,core calls reject gaps and mismatched model steps before fitting,0,FALSE,FALSE,0,6
+test-input.R,"legacy parameter calls, named bounds and maps are aligned",0,FALSE,FALSE,0,9
+test-input.R,one requested optimization pass performs one call,0,FALSE,FALSE,0,2
+test-input.R,empty overrides preserve defaults and unnamed ALSCL maps are rejected,0,FALSE,FALSE,0,3
+test-model-core.R,age-length probabilities match the normal distribution throughout the CV range,0,FALSE,FALSE,0,18
+test-model-core.R,ACL plus group retains the previous oldest fish,0,FALSE,FALSE,0,1
+test-model-core.R,ALSCL conserves survivors and recovers constant F including the plus group entry,0,FALSE,FALSE,0,13
+test-model-core.R,double evaluation never depends on uninitialized Eigen storage,0,FALSE,FALSE,0,6
+test-palettes.R,ggsci settings propagate and explicit overrides survive,0,FALSE,FALSE,0,9
+test-palettes.R,retrospective colors follow terminal periods and allow overrides,0,FALSE,FALSE,0,9
+test-palettes.R,continuous and ridge palettes retain legacy options,0,FALSE,FALSE,0,13
+test-palettes.R,ridges keep ordered gradient colors independently of categorical themes,0,FALSE,FALSE,0,9
+test-parallel.R,fixed multistart work is reproducible across socket worker counts,0,FALSE,FALSE,0,28
+test-parallel.R,worker cap and original ncores-only calls remain valid,0,FALSE,FALSE,0,6
+test-parallel.R,sequential jitter preserves the caller's RNG state and RNG kind,0,FALSE,FALSE,0,3
+test-parallel.R,a failed start retains useful diagnostics,0,FALSE,FALSE,0,4
+test-parallel.R,"both retrospective models agree with 1, 2 and 4 requested workers",0,FALSE,FALSE,0,8
+test-parallel.R,sim_acl fits actual replicates on the requested socket workers,0,FALSE,FALSE,0,11
+test-plot-workflow.R,comparison plots use the diagnostic observation mask and metrics,0,FALSE,FALSE,0,20
+test-plot-workflow.R,length fishing-mortality plots use actual midpoints and facet by year,0,FALSE,FALSE,0,23
+test-plot-workflow.R,year fishing-mortality plots preserve time axes and length facets,0,FALSE,FALSE,0,8
+test-plot-workflow.R,length plots reject incomplete outputs and identify the legacy ACL alias,0,FALSE,FALSE,0,5
+test-refinement.R,an unchanged failed pass preserves earlier success and all pass records,0,FALSE,FALSE,0,5
+test-refinement.R,refinement improves a quadratic and respects safety guards,0,FALSE,FALSE,0,12
+test-refinement.R,natural-scale diagnostics detect boundaries beyond optimizer bounds,0,FALSE,FALSE,0,6
+test-refinement.R,shared F uses a one-dimensional normalized AR1 density in both templates,0,FALSE,FALSE,0,6
+test-refinement.R,"shared F fits, plots, direct calls and socket starts work for both models",0,FALSE,FALSE,0,26
+test-retro-workflow.R,retrospective bundles retain model settings and explicit NULL overrides,0,FALSE,FALSE,0,25
+test-retro-workflow.R,flat bundles and legacy positional retrospective calls agree,0,FALSE,FALSE,0,7
+test-retro-workflow.R,one invalid peel suppresses aggregate rho without discarding raw estimates,0,FALSE,FALSE,0,10
+test-retro-workflow.R,full-fit failure retains every peel diagnostic and records errors,0,FALSE,FALSE,0,8
+test-retro-workflow.R,a failed peel is not omitted from Mohn's rho or diagnostic rows,0,FALSE,FALSE,0,7
+test-retro-workflow.R,missing diagnostics and nonfinite terminal values cannot pass the screen,0,FALSE,FALSE,0,7
+test-retro-workflow.R,nonzero raw optimizer codes remain usable after successful refinement,0,FALSE,FALSE,0,3
+test-retro-workflow.R,all failed fits return diagnostics and plot errors clearly,0,FALSE,FALSE,0,4
+test-retro-workflow.R,retrospectives reject unnamed time columns before building fit records,0,FALSE,FALSE,0,1
+test-simulation.R,simulation uses consistent age units and independent survey errors by default,0,FALSE,FALSE,0,9
+test-simulation.R,example observations are survey abundance rather than Baranov catch,0,FALSE,FALSE,0,1
+test-simulation.R,manual quarterly age simulations retain quarterly observation labels,0,FALSE,FALSE,0,5
+test-speed-single-quantity.R,a single remaining delta quantity is computed without starting a worker,0,FALSE,FALSE,0,3
+test-speed.R,alscl_speed validates and restores settings,0,FALSE,FALSE,0,14
+test-speed.R,standard errors fork where it is safe and use socket workers elsewhere,0,FALSE,FALSE,0,19
+test-speed.R,only checked TMB versions use the parallel delta method,0,FALSE,FALSE,0,4
+test-speed.R,parallel optimHess is identical to stats::optimHess with random effects,0,FALSE,FALSE,0,8
+test-speed.R,forked processes give standard errors identical to TMB::sdreport,0,FALSE,FALSE,0,48
+test-speed.R,socket workers give standard errors identical to TMB::sdreport,0,FALSE,FALSE,0,52
+test-speed.R,with little work the socket path computes standard errors in the main process,0,FALSE,FALSE,0,12
+test-speed.R,the identity test cannot pass through the fallback,0,FALSE,FALSE,0,2
+test-speed.R,a failure to fork falls back to sequential standard errors,0,FALSE,FALSE,0,6
+test-speed.R,a failure to start socket workers falls back to sequential standard errors,0,FALSE,FALSE,0,3
+test-speed.R,an unchecked TMB version computes standard errors sequentially without workers,0,FALSE,FALSE,0,5
+test-speed.R,"fits give identical standard errors with one and two cores, by either method",0,FALSE,FALSE,0,16
+test-speed.R,fit messages say how standard errors were computed,0,FALSE,FALSE,0,4
+test-speed.R,TMBad and CppAD fits agree to rounding,0,FALSE,FALSE,0,8
+test-ytf-example.R,the bundled YTF example has aligned positive survey input and provenance,0,FALSE,FALSE,0,16

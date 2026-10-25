@@ -48,9 +48,10 @@ retro_acl(
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of years to peel. Default is 5.}
+\item{nyear}{Integer. Number of time columns to peel. Default is 5.}
 
-\item{data.CatL}{The Catch-at-Length data.}
+\item{data.CatL}{The Catch-at-Length data or a named input bundle, as in
+\code{retro_acl(x, nyear = 3)}.}
 
 \item{data.wgt}{The weight data.}
 
@@ -124,7 +125,10 @@ retro_acl(
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
-\item{ncores}{Integer. Number of CPU cores for parallel peel computation. Default is 1.}
+\item{ncores}{Integer. Number of CPU cores for parallel peel computation.
+Default is 1. A bundle's fitting ncores is ignored: specify this argument
+explicitly for peel workers. Each fit runs its nstarts sequentially with
+ncores = 1, avoiding nested fitting workers.}
 
 \item{...}{Additional arguments passed to \code{\link[=retro_model]{retro_model()}}.}
 }

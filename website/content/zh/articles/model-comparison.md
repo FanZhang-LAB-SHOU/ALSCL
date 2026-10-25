@@ -118,6 +118,8 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
 当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。
 
 
+指标柱图现在与 `diagnostic_metrics()` 共用计算方法，只纳入有限正观测；缺失值和零值不会再令全部误差指标变成 `NA`。观测单元中的非有限预测及维度不一致会报错；常数观测的 R² 等无定义指标仍保留为 `NA`。图形用于描述比较，解读差异前应使用 `compare_models()` 核对数据可比性和数值状态。
+
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_metrics)
 
 

@@ -13,8 +13,7 @@ library(ALSCL)
 data("YTF_example")
 x <- YTF_example
 inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-rb <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                            list(nyear = 3, train_times = 2, silent = TRUE)))
+rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
 plot_retro(rb, facet_col = 2, rho_digits = 3)
 rb$rho_text
 ```
@@ -30,8 +29,7 @@ rb$rho_text
 使用相同观测与截短次数，同时保留 ACL 自己的参数名与 map。
 
 ```r
-ra <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                          list(nyear = 3, train_times = 2, silent = TRUE)))
+ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
 plot_retro(ra, facet_col = 2, rho_digits = 3)
 ra$rho_text
 ```
@@ -49,33 +47,19 @@ rb$rho_text
 names(rb)
 ```
 
-`results` 保存轨迹，`last_points` 标出末端估计，`rho_text` 保存各指标的平均相对修订。包装函数 **不会** 返回每次截短的底层拟合对象或完整数值诊断表。
+`fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
 
-### 可选：逐次审查 ALSCL 截短拟合
-
-以下循环额外拟合完整序列及三次截短，以保存数值状态和失败记录。它会重复上文的拟合工作，只在需要诊断审查时运行。保留标签列，并从三张表中移除相同的末端时间列。
+### 直接检查每次拟合，无须重复计算
 
 ```r
-peel_checks <- lapply(0:3, function(k) {
-  keep <- seq_len(ncol(inputs$data.CatL) - k)
-  peeled <- lapply(inputs, function(d) d[, keep, drop = FALSE])
-  tryCatch({
-    peel_x <- x
-    peel_x[names(peeled)] <- peeled
-    fit <- run_alscl(peel_x, train_times = 2, silent = TRUE)
-    data.frame(Peel = k, Terminal = max(fit$year),
-      Code = fit$convergence_code, Gradient = fit$max_abs_gradient,
-      pdHess = fit$pdHess, Boundary = fit$bound_hit, Error = "")
-  }, error = function(e) data.frame(Peel = k,
-    Terminal = as.numeric(tail(names(peeled$data.CatL), 1)),
-    Code = NA_integer_, Gradient = NA_real_, pdHess = NA,
-    Boundary = NA, Error = conditionMessage(e)))
-})
-peel_checks <- do.call(rbind, peel_checks)
-peel_checks
+rb$fit_diagnostics
+rb$rho_by_peel
+rb$rho_text
+rb$raw_rho_text
+rb$errors
 ```
 
-不能因为返回了曲线，就把不可靠拟合直接纳入科学解释。应报告失败并重新审查拟合假设。不存在能保证评估有效的通用梯度或 rho 阈值。
+2.2.3 可直接使用与拟合函数相同的输入：`retro_acl(x, nyear = 3)` 和 `retro_alscl(x, nyear = 3)`。通用写法为 `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`。各次拟合依次使用共用设置、模型专用设置及调用时显式覆盖值；显式 `map`、`parameters` 和 `control` 会整体替换对应列表。`zero_action`、`control`、`nstarts`、`F_structure` 和 `polish` 都传给每次拟合。`x` 内用于拟合的 `ncores` 不用于回溯：请在回溯调用中显式设置 `ncores`，控制同时运行的截短拟合数。每个截短拟合内部依序运行 `nstarts` 个起点。
 
 ## 应用于自己的评估
 
@@ -87,6 +71,8 @@ peel_checks
 dir.create("my_retrospective", showWarnings = FALSE)
 write.csv(rb$results, "my_retrospective/alscl_trajectories.csv", row.names = FALSE)
 write.csv(rb$rho_text, "my_retrospective/alscl_rho.csv", row.names = FALSE)
+write.csv(rb$fit_diagnostics, "my_retrospective/fit_diagnostics.csv", row.names = FALSE)
+write.csv(rb$rho_by_peel, "my_retrospective/rho_by_peel.csv", row.names = FALSE)
 write.csv(ra$rho_text, "my_retrospective/acl_rho.csv", row.names = FALSE)
 p_retro <- plot_retro(rb, facet_col = 2, rho_digits = 3)
 ggplot2::ggsave("my_retrospective/alscl.png", p_retro,
@@ -101,7 +87,7 @@ writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 |截短后时间步太少|减少截短次数，每次拟合至少保留两个时间步|
 |末端偏差正负交替|查看各次截短，平均 rho 可能掩盖抵消|
 |将季度分析理解为年度分析|用 `growth_step` 将移除步数转换为时长|
-|需要自定义 `zero_action`|回溯包装函数不提供该参数；使用拟合函数的显式循环，保持观测处理一致|
+|需要自定义 `zero_action`|在 `x$fit_args` 中设置，或显式传给 `retro_alscl(x, ...)`；各次拟合使用同一设置|
 |短序列拟合不稳定|先检查诊断，再解释末端修订|
 
 ## 决定下一步检查什么

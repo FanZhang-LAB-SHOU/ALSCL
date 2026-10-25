@@ -44,6 +44,8 @@ Most `log_` parameters use log-transformed values; correlation transforms must m
 
 For the required-input checklist, all estimable parameters, exact default maps and complete examples, see [your own survey assessment](case-fit-survey.html). Pass release lists directly as `map`; `generate_map()` removes NULL entries, so passing its output back to the fitter can reapply default fixes.
 
+Starting in 2.2.3, both fitting functions check the time grid directly: consecutive numeric column labels must differ by `growth_step`. For annual data, `2000, 2001, 2003` is rejected because 2002 is absent. Keep 2002 as an all-`NA` survey column, and provide complete weight and maturity columns for that period. Quarterly labels such as `2000, 2000.25, 2000.5` require `growth_step = 0.25`. The model does not interpolate missing periods or reinterpret irregular intervals.
+
 ## Refinement and shared F in 2.2.2
 
 `run_acl(x)` and `run_alscl(x)` now finish the selected fit with up to five safeguarded Newton steps (`polish = TRUE`). Each step requires a positive-definite numerical Hessian, parameters strictly inside their bounds, a smaller maximum absolute gradient, and an objective increase no greater than `1e-8` for floating-point roundoff. Refinement stops if a condition fails; it cannot repair insufficient information or an inappropriate model. Set `polish = FALSE` to skip it. This can change estimates at numerical precision, so 2.2.2 does not promise bitwise equality with older fits.

@@ -19,9 +19,10 @@ retro_alscl(
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of years to peel. Default is 5.}
+\item{nyear}{Integer. Number of time columns to peel. Default is 5.}
 
-\item{data.CatL}{The Catch-at-Length data.}
+\item{data.CatL}{The Catch-at-Length data or a named input bundle, as in
+\code{retro_alscl(x, nyear = 3)}.}
 
 \item{data.wgt}{The weight data.}
 
@@ -37,7 +38,9 @@ retro_alscl(
 
 \item{sel_L95}{Length at 95 percent selectivity.}
 
-\item{growth_step}{Numeric. Growth transition time step. Default is 1.}
+\item{growth_step}{Numeric. Growth transition time step. Defaults to 1 for
+separate arguments; bundled calls retain the bundle's setting or infer it
+as in \code{\link[=run_alscl]{run_alscl()}}.}
 
 \item{...}{Additional arguments passed to \code{\link[=retro_model]{retro_model()}}.}
 }

@@ -75,7 +75,7 @@ render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,age_ra
 render('pla','年龄长度转换','Age length conversion',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。',note_en='Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.')
 for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
  fit<-if(model=='ACL')a else b
- render(paste('F',model,typ,sep='_'),paste(model,'捕捞死亡率',typ),paste(model,'fishing mortality',typ),plot_fishing_mortality(fit,type=typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
+ render(paste('F',model,typ,sep='_'),paste(model,'捕捞死亡率',typ),paste(model,'fishing mortality',typ),plot_fishing_mortality(fit,type=if(model=="ACL" && typ=="length")"age" else typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
  note_zh=if(model=='ACL' && typ=='length')'当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。' else '年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。',
  note_en=if(model=='ACL' && typ=='length')'In this version, ACL length is an alias of age; the output is still age-specific F.' else 'F is an instantaneous rate per model step. Native F dimensions differ between the models.')
 }
@@ -101,14 +101,14 @@ render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compa
 render('compare_selectivity','固定调查可捕性','Fixed survey catchability',plot_compare_selectivity(a,b),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
 for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_annual_F(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。函数名称含 annual，但不会自动把季度率年化。',note_en='Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.')
 # 回溯逐次删除末端时间步 / Peel successive terminal time steps.
-retro_a <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl,
-  list(nyear=npeels, train_times=2, ncores=1, silent=TRUE)))
-retro_b <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-  list(nyear=npeels, train_times=2, ncores=1, silent=TRUE)))
+retro_a <- retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE)
+retro_b <- retro_alscl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE)
 render('retro_ACL','ACL 回溯分析','ACL retrospective analysis',
   plot_retro(retro_a,facet_col=2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
 render('retro_ALSCL','ALSCL 回溯分析','ALSCL retrospective analysis',
   plot_retro(retro_b,facet_col=2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
+write.csv(retro_a$fit_diagnostics,file.path(out,'results','retro_diagnostics_ACL.csv'),row.names=FALSE)
+write.csv(retro_b$fit_diagnostics,file.path(out,'results','retro_diagnostics_ALSCL.csv'),row.names=FALSE)
 write.csv(retro_a$rho_text,file.path(out,'results','rho_ACL.csv'),row.names=FALSE)
 write.csv(retro_b$rho_text,file.path(out,'results','rho_ALSCL.csv'),row.names=FALSE)
 

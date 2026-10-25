@@ -32,10 +32,22 @@ A list with:
 \item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
 the ratio of means (model2/model1), for common population quantities.}
 \item{model1_name,model2_name}{Labels used in the comparison.}
+\item{fit_diagnostics}{Numerical status of each fit, including the raw code,
+gradient, Hessian and natural-scale boundaries.}
+\item{comparison}{Whether data comparability was verified and both numerical
+screens passed; preferred is NULL when an automatic preference is withheld.}
 }
 }
 \description{
 Computes a comprehensive set of comparison metrics between two model results,
 including convergence diagnostics, parameter estimates, goodness-of-fit statistics,
 time-series correlations, and information criteria.
+}
+\details{
+Both fits must use the same positive observations, missing-data mask,
+length labels and time grid as data.CatL. Known mismatches are errors.
+Older results lacking this metadata can still display raw statistics, but
+receive no automatic model preference. The same applies to failed numerical
+screens. Passing the screen does not establish model adequacy; AIC expresses
+relative support among these candidates, not biological validation.
 }

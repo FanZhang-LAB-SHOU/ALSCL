@@ -37,6 +37,8 @@ Scientific notation avoids displaying tiny positive values as zero; it does not 
 
 The example uses midpoints 6:50 by 2 and 22 explicit internal boundaries 7:49. Supply the actual boundaries for unequal bins. Interval labels must be contiguous and non-overlapping; do not silently close gaps in legacy labels. Retain an entirely missing period as an NA survey column while supplying weight and maturity, so the temporal grid remains regular.
 
+Starting in 2.2.3, both fitting functions check the time grid directly: consecutive numeric column labels must differ by `growth_step`. For annual data, `2000, 2001, 2003` is rejected because 2002 is absent. Keep 2002 as an all-`NA` survey column, and provide complete weight and maturity columns for that period. Quarterly labels such as `2000, 2000.25, 2000.5` require `growth_step = 0.25`. The model does not interpolate missing periods or reinterpret irregular intervals.
+
 ## Importing your observations
 
 

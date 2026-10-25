@@ -26,9 +26,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.2 · 简体中文 / English**
+**Version 2.2.3 · 简体中文 / English**
 
-**2.2.2:** 默认增加受保护的优化收尾及自然尺度边界诊断；可选 `run_acl(x, F_structure = "year")` 和 `run_alscl(x, F_structure = "year")`，同一时间步共用 F。默认保留原来的二维 F 结构，旧写法和加速设置继续可用。 / Adds safeguarded refinement and natural-scale diagnostics, with optional shared F per step. Original model structure, calling forms and acceleration remain supported. [Details and validation](docs/RELEASE_2.2.2.md).
+**2.2.3:** 核心检查时间步与数据一致性；模型比较和回溯保留数值诊断，不再为不可靠拟合自动给出模型偏好或有效 rho。支持 `retro_acl(x)` / `retro_alscl(x)`，修正缺失值指标图和 ALSCL 体长别 F 图；原调用方式、F 结构和加速设置保留。 / Validates time grids and comparison data, reports numerical eligibility for comparisons and retrospectives, accepts retrospective input bundles, and fixes missing-data metrics and length-specific F plots. Existing fitting calls, F structures and acceleration remain supported. [Changes](NEWS.md).
 
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。
@@ -303,7 +303,7 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
-**自己的正式数据 / Your own observations:** 2.2.2 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
+**自己的正式数据 / Your own observations:** 2.2.3 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 
@@ -348,7 +348,7 @@ validate_survey_tables(your_inputs, growth_step=1)
 
 ### 2. 编译与拟合 / Compile and fit
 
-快速开始已演示两个拟合入口。`train_times` 为同一起点的连续优化次数，`ncores` 为独立初始点数。不要把优化器的文字消息当作唯一成功标准。
+快速开始已演示两个拟合入口。`train_times` 为同一起点的连续优化次数，`nstarts` 为总起点数，`ncores` 限制同时运行的起点进程数。不要把优化器的文字消息当作唯一成功标准。
 
 The quick start demonstrates both fitters. Optimization passes and independent starts are separate; optimizer messages alone do not establish a usable fit.
 
@@ -360,6 +360,8 @@ c(code=b$convergence_code, gradient=b$max_abs_gradient,
 diagnostic_metrics(x$data.CatL, b)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$fit_metrics
+comparison$fit_diagnostics
+comparison$comparison
 plot_residuals(b, type="length")
 ```
 
@@ -388,11 +390,11 @@ Tuna uses quarterly length-based dynamics. Simulation years and retrospective pe
 ### 5. 回溯分析 / Retrospective analysis
 
 ```r
-ra <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                          list(nyear=3, train_times=2, silent=TRUE)))
-rb <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                            list(nyear=3, train_times=2, silent=TRUE)))
+ra <- retro_acl(x, nyear=3, train_times=2, silent=TRUE)
+rb <- retro_alscl(x, nyear=3, train_times=2, silent=TRUE)
 plot_retro(rb, palette="npg", facet_col=2, rho_digits=3)
+rb$fit_diagnostics
+rb$rho_by_peel
 rb$rho_text
 ```
 
@@ -400,7 +402,9 @@ rb$rho_text
 
 `nyear=3` 删除 1、2、3 个末端观测步后重拟合；Mohn rho 衡量末端修订，不是预测准确率。季度数据删除 4 步才是一年。
 
-Three peels refit after successively removing terminal observations. Mohn's rho describes revision, not predictive accuracy.
+Three peels refit after successively removing terminal observations. Mohn's rho describes revision, not predictive accuracy. `rho_text$Rho` is `NA` when any required fit or endpoint fails the numerical checks; inspect `fit_diagnostics`, `rho_by_peel` and `errors`. `raw_rho_text` is for diagnosis only.
+
+`rho_text$Rho` 在任一必要拟合或末端比较未通过检查时为 `NA`；检查 `fit_diagnostics`、`rho_by_peel` 与 `errors`，`raw_rho_text` 仅用于诊断。
 
 <a id="functions"></a>
 ## 核心函数与可调参数 / Core functions and controls

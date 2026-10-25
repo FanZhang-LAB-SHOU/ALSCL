@@ -246,6 +246,8 @@ compare_models(model1, model2, data.CatL, model1_name = NULL, model2_name = NULL
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list with: summaryData frame with convergence, objective, AIC, BIC, number of parameters. growthData frame comparing VB growth parameters. fit_metricsData frame with MSE, RMSE, R-squared, MAPE, etc. for each model. correlationData frame with Pearson correlations and Ratio_Mean, the ratio of means (model2/model1), for common population quantities. model1_name,model2_nameLabels used in the comparison.
 
+**检查 / Checks:** 要求相同时间、体长标签、正观测及缺失掩码；不匹配报错。返回 fit_diagnostics 和 comparison；不合格拟合或无法核验的旧结果保留原始 AIC，但不自动推荐模型。 / Requires matching periods, length labels, positive observations and masks. Returns fit_diagnostics and comparison; failed or unverifiable fits retain raw AIC without an automatic preference.
+
 **示例 / Example:**
 
 ```r
@@ -1011,7 +1013,7 @@ plot_fishing_mortality(model_result, line_size = 1, line_color = NULL, line_type
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
 | `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. The transparency of the ribbon. Default is 0.2. |
 | `se_type` | `"ribbon"` | 区间样式：ribbon 或 errorbar。 | Character. "ribbon" or "errorbar". Default is "ribbon". |
-| `type` | `c("year", "age", "length")` | 选择输出类型；可选值列于签名和英文说明。 | Character. "year" (faceted by group), "age" (faceted by year), or "length" (ALSCL: faceted by year showing F vs length). Default is "year". |
+| `type` | `c("year", "age", "length")` | year 为时间横轴；age 按年绘年龄别 F；ALSCL length 按年绘实际体长别 F。ACL 旧 length 别名仍画年龄并警告。 | year uses a time axis; age facets F-at-age by year; ALSCL length uses actual midpoints and year facets. The legacy ACL length alias still draws age and warns. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return data alongside the plot. Default is FALSE. |
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector. Custom x-axis breaks. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character. Custom plot title. |
@@ -1474,11 +1476,15 @@ retro_acl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list. See retro_model().
 
+**诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
+
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-ra <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl, list(nyear = 3)))
+ra <- retro_acl(x, nyear = 3)
+ra$fit_diagnostics
+ra$rho_text
 ```
 
 <a id="retro_alscl"></a>
@@ -1507,11 +1513,15 @@ retro_alscl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list. See retro_model().
 
+**诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
+
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-rb <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl, list(nyear = 3)))
+rb <- retro_alscl(x, nyear = 3)
+rb$fit_diagnostics
+rb$rho_text
 ```
 
 <a id="retro_model"></a>
@@ -1532,7 +1542,8 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
     axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
     x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4,
     rho_position = "top_right", rho_size = 3.5,
-    F_structure = c("group_year", "year"), polish = TRUE)
+    F_structure = c("group_year", "year"), polish = TRUE,
+    zero_action = c("missing", "error"), control = list(), nstarts = 1)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1557,7 +1568,7 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `len_lower` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of lower bin boundaries (ALSCL only). |
 | `len_upper` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of upper bin boundaries (ALSCL only). |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
-| `ncores` | `1` | 并行数量；具体含义依函数而异，见英文说明。 | Integer. Number of CPU cores for parallel peel computation. Default is 1. |
+| `ncores` | `1` | 显式指定并行回溯轮数；不沿用 x 内拟合用的 ncores，各轮拟合单进程。 | Explicit peel workers; stored fitting ncores is ignored, and each fit uses one fitting worker. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Logical. If TRUE, suppress all progress messages. Default is FALSE. |
 | `plot` | `FALSE` | TRUE 在回溯返回对象中附带图。 | Logical. If TRUE, include plot in return value. Default is FALSE. |
 | `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
@@ -1585,14 +1596,22 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
 
+| `zero_action` | `c("missing", "error")` | 各轮对零观测的处理；NA 始终缺失。 | Zero handling forwarded to every fit; NA is always missing. |
+| `control` | `list()` | 各轮 nlminb 优化控制；显式列表整体覆盖。 | nlminb controls forwarded to each fit; explicit lists replace stored lists. |
+| `nstarts` | `1` | 每轮独立起点数，在该轮内部依次计算；可沿用 x 设置。 | Starts per fit, run sequentially within a peel; may inherit the bundle value. |
+
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list containing results, rho_text, last_points, model_type, and optionally plot.
+
+**诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-rb <- do.call(retro_model, c(inputs, x$fit_args, x$fit_config$alscl,
-                            list(model_type = "alscl", nyear = 3)))
+rb <- retro_model(data.CatL = x, model_type = "alscl", nyear = 3)
+rb$fit_diagnostics
+rb$rho_by_peel
+rb$rho_text
 ```
 
 <a id="run_acl"></a>
@@ -1634,7 +1653,7 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `ncores` | `1` | 独立初始点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。 | Maximum socket workers across independent starts, capped at nstarts; not threads within one start. |
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Suppress fitting progress messages when TRUE. |
-| `growth_step` | `NULL` | 每个时间步包含的年数；季度为 0.25。 | Years per model step. ACL NULL uses rec.age when below 1, otherwise 1; ALSCL defaults to 1. Supply explicitly for quarterly data. |
+| `growth_step` | `NULL` | 每个时间步包含的年数；季度为 0.25，时间标签间隔必须相同。 | Time-column spacing must match the years per model step. ACL NULL uses rec.age when below 1, otherwise 1; ALSCL defaults to 1. Supply explicitly for quarterly data. |
 | `zero_action` | `c("missing", "error")` | missing 排除调查零值；error 报错。NA 始终为缺失。 | Exclude zero observations as missing (historical behavior), or reject them with "error". NA is always missing; negative/infinite values fail. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | A named list of nlminb control settings. |
 
@@ -1683,7 +1702,7 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | Nonnegative natural mortality per model time step. |
 | `sel_L50` | `必填 / required` | 调查可捕性达到 50% 的体长。 | Lengths at 50 and 95 percent survey catchability. |
 | `sel_L95` | `必填 / required` | 调查可捕性达到 95% 的体长，必须大于 L50。 | Lengths at 50 and 95 percent survey catchability. |
-| `growth_step` | `1` | 每个时间步包含的年数；季度为 0.25。 | Years per model step. ACL NULL uses rec.age when below 1, otherwise 1; ALSCL defaults to 1. Supply explicitly for quarterly data. |
+| `growth_step` | `1` | 每个时间步包含的年数；季度为 0.25，时间标签间隔必须相同。 | Time-column spacing must match the years per model step. ACL NULL uses rec.age when below 1, otherwise 1; ALSCL defaults to 1. Supply explicitly for quarterly data. |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | Named list of initial fixed-effect values. |
 | `parameters.L` | `NULL` | 命名下界列表，采用优化器尺度。 | Named lower and upper bounds. Bounds are aligned with free parameters after applying map. Initial free values are clamped to bounds. |
 | `parameters.U` | `NULL` | 命名上界列表，采用优化器尺度。 | Named lower and upper bounds. Bounds are aligned with free parameters after applying map. Initial free values are clamped to bounds. |

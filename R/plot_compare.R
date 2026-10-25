@@ -641,15 +641,14 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
                                m1 = model1_name, m2 = model2_name)
 
   calc_fit <- function(model, d) {
-    obs <- as.matrix(d[, 2:ncol(d)]); pred <- exp(model$report$Elog_index)
-    idx <- obs != 0; o <- obs[idx]; p <- pred[idx]; err <- o - p
-    n_par <- length(model$opt$par); n_obs <- sum(idx)
+    measured <- diagnostic_metrics(d, model)
+    metric_names <- c("RMSE", "MAE", "Rsquared", "MAPE", "AIC", "BIC")
+    values <- measured$Value[match(metric_names, measured$Metric)]
+    names(values) <- c("RMSE", "MAE", "R2", "MAPE", "AIC", "BIC")
+    n_par <- length(model$opt$par)
+    if (!n_par) n_par <- length(model$obj$par)
     nll <- as.numeric(model$opt$objective)[1]
-    c(RMSE = sqrt(mean(err^2)), MAE = mean(abs(err)),
-      R2 = 1 - sum(err^2) / sum((o - mean(o))^2),
-      MAPE = mean(abs(err / o)) * 100,
-      AIC = 2 * n_par + 2 * nll, BIC = n_par * log(n_obs) + 2 * nll,
-      "Neg. Log-Likelihood" = nll, "N. Parameters" = n_par)
+    c(values, "Neg. Log-Likelihood" = nll, "N. Parameters" = n_par)
   }
   f1 <- calc_fit(model1, data.CatL); f2 <- calc_fit(model2, data.CatL)
   df <- data.frame(Metric_Name = rep(names(f1), 2), Metric_Value = c(f1, f2),

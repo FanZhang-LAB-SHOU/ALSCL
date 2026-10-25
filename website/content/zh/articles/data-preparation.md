@@ -38,6 +38,8 @@ Excel 使用科学记数显示小数，例如 `5.1361E-02` 等于 `0.051361`；�
 **体长边界与缺测期 / Bin boundaries and missing periods.** 本示例中心值是 6:50，每隔 2 cm；拟合时显式传入 22 个内部边界 7:49，首尾尾部按模型约定处理。自己的不等宽组应提供真实边界。区间标签如 `0-20`、`20-25` 要连续且不重叠；原标签若为 `0-20`、`21-25`，不能未经核实就消除间隙。缺整个年度时保留对应列并在调查表填 NA，重量和成熟表仍需完整；不要删掉这一列而假装时间间隔没变。
 
 
+从 2.2.3 起，两个核心拟合函数直接检查时间网格：相邻数值表头之差必须等于 `growth_step`。年度数据 `2000, 2001, 2003` 会因缺少 2002 而报错；应保留 2002 列，调查值填 `NA`，并提供该期完整的重量和成熟数据。季度表头如 `2000, 2000.25, 2000.5` 必须设置 `growth_step = 0.25`。模型不会自动插补缺失时间步，也不会把不规则间隔重新解释为等间隔。
+
 ## 导入自己的实测数据
 
 [real_data_workflow.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) 提供指南辅助函数，需 `source()`，不属于包的导出 API。Excel 读取采用 [readxl::read_excel](https://readxl.tidyverse.org/reference/read_excel.html)，保留原始年份表头并显式转换数值。

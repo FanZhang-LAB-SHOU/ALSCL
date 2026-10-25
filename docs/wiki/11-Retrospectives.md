@@ -6,17 +6,26 @@
 
 ```r
 # 删除最后 1、2、3 个时间步后分别重拟合 / Refit after peeling 1, 2 and 3 steps
-ra <- do.call(retro_acl, c(inputs, x$fit_args, x$fit_config$acl,
-                          list(nyear = 3, train_times = 2, silent = TRUE)))
-rb <- do.call(retro_alscl, c(inputs, x$fit_args, x$fit_config$alscl,
-                            list(nyear = 3, train_times = 2, silent = TRUE)))
+ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
+rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
 plot_retro(rb, facet_col = 2, rho_digits = 3)
+rb$fit_diagnostics
+rb$rho_by_peel
 rb$rho_text
 ```
 
 这里 `nyear` 是删除的**末端时间步数**，季度数据中 4 步才是一年。保留至少两个观测期，各次回溯使用一致的生物假设与固定参数。Mohn's rho 衡量末端修订方向和幅度，不是未来预测准确率，也不能替代检查每次拟合的数值状态。
 
 Here `nyear` counts terminal **steps**: four quarterly steps equal one year. Retain at least two observations and keep assumptions consistent across peels. Mohn's rho measures retrospective revision, not forecast accuracy; inspect each fit's numerical status.
+
+2.2.3 起，同一份正式数据 `x` 可直接传给 `retro_acl()`、`retro_alscl()`；也可用 `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`。显式参数覆盖 x 中的设置，`map = NULL` 等覆盖仍被保留。`zero_action`、`control` 和 `nstarts` 会传到各次拟合。`ncores` 在这里表示并行回溯轮数，默认 1；x 中用于多起点拟合的 ncores 不会自动变成回溯并行数，每轮内部依次运行 nstarts 个起点。
+
+Since 2.2.3, the same own-data bundle works with both retrospective wrappers or `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`. Explicit arguments override stored settings, including `map = NULL`. Each fit receives zero_action, control and nstarts. Here ncores explicitly selects peel workers (default 1); stored fitting ncores is not reused. Starts within each fit run sequentially.
+
+`fit_diagnostics` 保留完整拟合（Peel = 0）和各轮的优化代码、最大梯度、Hessian、边界及错误。只要完整拟合或任一要求的回溯不合格，或末端相对差无定义，对应的 `rho_text$Rho` 就是 NA，并发出警告，不会悄悄删除失败轮次。`rho_by_peel` 的 RawRho 和 `raw_rho_text` 仅供追查原始数值，不是可靠结论；`plot_retro()` 也会标明不可用的 rho。数值筛查通过仍不等于模型适合数据。
+
+`fit_diagnostics` retains the full fit (Peel = 0) and every peel's raw code, maximum gradient, Hessian, boundaries and error. If the full fit or any requested peel fails its numerical screen, or a terminal relative difference is undefined, the corresponding rho_text$Rho is NA with a warning. Failed peels are not silently dropped. RawRho in rho_by_peel and raw_rho_text are exploratory records only; plots label unavailable rho. Passing a numerical screen does not establish model adequacy.
+
 
 ![ALSCL 回溯 / ALSCL retrospective](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 

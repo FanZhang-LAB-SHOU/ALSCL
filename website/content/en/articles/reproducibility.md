@@ -38,6 +38,8 @@ multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
 | `sim_acl` |Sequential replicates|Parallel replicates|
 | `retro_model`, `retro_acl`, `retro_alscl` |Sequential peels|Parallel peels|
 
+For `retro_acl(x)` and `retro_alscl(x)`, a stored fitting `ncores` is ignored; set `ncores` explicitly on the retrospective call to control peel workers. `nstarts` still controls the number of starts in each fit, executed sequentially. Inspect `fit_diagnostics` before interpreting `rho_text`; an invalid required fit makes the screened rho unavailable.
+
 
 Set `nstarts` to the same value when comparing worker counts. Its default is `ncores` for compatibility, so changing only `ncores` also changes the amount of work. Later starts use the same deterministic perturbations in serial and parallel runs. `multi$start_diagnostics` records each start’s PID, elapsed and CPU seconds, objective and convergence. More starts can help explore local optima but do not establish convergence; the selected result has the lowest finite objective. Runtime includes serial preparation, reporting and standard errors as well as the slowest worker and startup overhead. Avoid oversubscribing nested parallel jobs. Socket workers support Windows, macOS and Linux.
 

@@ -118,6 +118,8 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
 
 The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.
 
+The metric bars now use the same calculation as `diagnostic_metrics()`: only finite positive observations contribute, so missing and zero observations do not turn every error metric into `NA`. Nonfinite predictions at observed cells and mismatched dimensions are errors. Undefined measures, such as R-squared for constant observations, remain `NA`. The figure is descriptive; use `compare_models()` to check comparability and numerical eligibility before interpreting differences.
+
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_metrics)
 
 
