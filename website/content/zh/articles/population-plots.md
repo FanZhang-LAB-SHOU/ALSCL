@@ -313,7 +313,29 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [![亲体与补充关系](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
 
-横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。
+本年度示例按 1 年（1 个观测步）对齐 SSB 与后续补充量；季度数据会自动换算为 4 步。这里只画散点，不拟合资源补充函数。
 
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
+
+## 2.2.4 的缺测与保存结果绘图
+
+`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
+
+```r
+portable <- b
+portable$obj <- NULL
+plot_residuals(portable)
+plot_ridges(portable)
+```
+
+## 季度网格上的补充滞后
+
+`age_at_recruitment` 的单位是年。`plot_SSB_Rec()` 除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
+
+```r
+q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
+          report = list(SSB = 1:8, Rec = 101:108))
+paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
+stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
+```

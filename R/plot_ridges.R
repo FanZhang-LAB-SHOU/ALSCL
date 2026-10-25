@@ -2,7 +2,11 @@
 #'
 #' @description This function takes the model result as an input and creates two ridgeline plots to
 #' visualize the density distribution of observed and estimated log catch at length over different years.
-#' The density distribution is calculated by transforming the abundance data with the exponential function.
+#' Each time period is normalized to a length composition. Only positive observed
+#' values contribute to the observed composition; missing and zero observations
+#' remain missing, and a wholly unobserved period has no observed ridge. Predicted
+#' compositions use all length bins. Stored observations support saved fits without
+#' a live TMB object; older fits use the observation mask in the TMB data.
 #'
 #' @param model_result A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year.
 #' @param ridges_alpha Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.
@@ -68,9 +72,14 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
   # Define the data
   Elog_index <- model_result[["report"]][["Elog_index"]]
-  logN_at_len <- model_result[["obj"]][["env"]][[".data"]][["logN_at_len"]]
+  logN_at_len <- .acl_observed_log(model_result)
   len_mid <- model_result[["len_mid"]]
   year <- model_result[["year"]]
+  if (!is.numeric(Elog_index) || length(dim(Elog_index)) != 2L ||
+      !identical(dim(logN_at_len), dim(Elog_index)))
+    stop("Observed and predicted log abundance must be numeric matrices with matching dimensions.", call. = FALSE)
+  if (length(len_mid) != nrow(Elog_index) || length(year) != ncol(Elog_index))
+    stop("Length and time metadata must match the abundance matrix dimensions.", call. = FALSE)
   # 两侧按输入时间顺序使用同一渐变 / Share ordered time colors across panels.
   year_levels <- as.character(year)
   n_years <- length(year)
@@ -80,7 +89,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
   # Transform the matrices into data frames and add column names
   df_observed <- as.data.frame(exp(logN_at_len))
-  Total1 <- as.vector(colSums(df_observed))
+  Total1 <- as.vector(colSums(df_observed, na.rm = TRUE))
+  Total1[Total1 == 0] <- NA_real_
   df_observed <- as.data.frame(sweep(x = df_observed, MARGIN = 2, STATS = Total1, FUN = "/"))
   colnames(df_observed) <- year
   df_observed$len_mid <- len_mid
@@ -95,8 +105,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   # When many length bins exist (e.g. tuna: 22 bins), proportions are small (~0.04)
   # and ridges become invisible without scaling
   if (is.null(ridges_scale)) {
-    max_prop <- max(c(max(df_observed[, -ncol(df_observed)]),
-                      max(df_estimated[, -ncol(df_estimated)])))
+    proportions <- c(as.matrix(df_observed[, -ncol(df_observed), drop = FALSE]),
+                     as.matrix(df_estimated[, -ncol(df_estimated), drop = FALSE]))
+    finite_proportions <- proportions[is.finite(proportions)]
+    max_prop <- if (length(finite_proportions)) max(finite_proportions) else 0
     # Target: peak height = ~0.8 of inter-year spacing (1 unit)
     ridges_scale <- if (max_prop > 0) 0.8 / max_prop else 1
   }
@@ -114,14 +126,16 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
   # Plot the data using ggplot2 with ggridges
   p_observed <- ggplot2::ggplot(df_observed_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
-    ggridges::geom_ridgeline(alpha = ridges_alpha) +
+    ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
+    ggplot2::scale_y_discrete(drop = FALSE) +
     fill_scale +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_obs_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
   p_estimated <- ggplot2::ggplot(df_estimated_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
-    ggridges::geom_ridgeline(alpha = ridges_alpha) +
+    ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
+    ggplot2::scale_y_discrete(drop = FALSE) +
     fill_scale +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_est_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +

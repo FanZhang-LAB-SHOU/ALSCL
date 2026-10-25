@@ -23,7 +23,9 @@ sim_acl(
 \arguments{
 \item{iter_range}{A numeric vector specifying the range of iterations to run the stock assessment model for (default is 4:100).}
 
-\item{sim_data_path}{A character string specifying the path to the folder containing the simulation data files (default is the current working directory).}
+\item{sim_data_path}{A character string specifying the path to the folder containing the simulation data files (default is the current working directory).
+Recorded observation years are retained. Older files without time metadata
+use a first observation year of 2000.}
 
 \item{output_dir}{Character, the directory where simulation results will be saved.(default is the current working directory).}
 

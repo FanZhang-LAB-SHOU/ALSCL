@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/09-Growth-and-Mortality)
 
-**ALSCL 2.2.2 · 简体中文 / English**
+**ALSCL 2.2.4 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -328,6 +328,10 @@ Recruitment enters the youngest age class; its interpretation depends on recruit
 
 ## 18. 亲体与补充关系 / Spawning biomass and recruitment
 
+`age_at_recruitment` 的单位是年。`plot_SSB_Rec()` 除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
+
+`age_at_recruitment` is in years. `plot_SSB_Rec()` divides it by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_SSB_Rec(b, age_at_recruitment = 1)
@@ -335,9 +339,9 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [![亲体与补充关系 / Spawning biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
 
-横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。
+本年度示例按 1 年（1 个观测步）对齐 SSB 与后续补充量；季度数据会自动换算为 4 步。这里只画散点，不拟合资源补充函数。
 
-Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.
+This annual example aligns SSB with recruitment one year (one step) later; quarterly data use four steps for the same age. This is a scatter plot, not a fitted stock recruitment curve.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
 

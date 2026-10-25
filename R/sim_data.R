@@ -21,6 +21,9 @@
 #'
 #' @return A list containing simulated fishery data for the observation window
 #'   (post-burn-in), including SN_at_len, N_at_len, N_at_age, SSB, etc.
+#'   Matrix dimensions are retained for a one-period observation window.
+#'   The \code{years} vector starts at \code{params$first.year} and advances by
+#'   \code{growth_step}; burn-in must be an exact number of time steps.
 #'
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
@@ -28,12 +31,20 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
   if (is.null(sim_year)) sim_year <- params$nyear
   sim_year <- .acl_positive_integer(sim_year, "sim_year", 2L)
-  if (!is.numeric(iter_range) || !length(iter_range) || anyNA(iter_range) ||
-      any(iter_range < 0 | iter_range != floor(iter_range))) stop("iter_range must contain nonnegative integer seeds.")
-  if (params$burn_in < 0 || params$burn_in >= sim_year) stop("burn_in must be nonnegative and smaller than sim_year.")
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  # Determine model type from bio_vars (set by sim_cal)
+  if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||
+      any(iter_range < 0 | iter_range > .Machine$integer.max | iter_range != floor(iter_range)))
+    stop("iter_range must contain finite nonnegative integer seeds.")
+  # Determine model type from bio_vars (set by sim_cal).
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
+  grid <- .acl_simulation_grid(params, sim_year, model_type)
+  params$growth_step <- grid$step
+  params$burn_in <- grid$burn_in
+  params$first.year <- grid$first.year
+  if (is.null(return_iter)) return_iter <- max(iter_range)
+  if (length(return_iter) != 1L || !is.numeric(return_iter) ||
+      !is.finite(return_iter) || !(return_iter %in% iter_range))
+    stop("return_iter must identify one seed in iter_range.")
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
   if (model_type == "length_based") {
     .sim_data_length_based(bio_vars, params, sim_year, output_dir, iter_range, return_iter)
@@ -72,17 +83,13 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_ar    <- if (!is.null(params$F_ar))   params$F_ar   else 0.75
   F_sd    <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar    <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
-  burn_in <- if (!is.null(params$burn_in)) params$burn_in else 80
 
-  step <- if (is.null(params$growth_step)) 1 else params$growth_step
-  steps_per_year <- round(1/step)
-  if (steps_per_year < 1L || abs(steps_per_year*step-1)>1e-8) stop("The simulator requires a time step that divides one year.")
-  sim_year <- sim_year*steps_per_year
-  burn_in <- burn_in*steps_per_year
-  # Observation window indices
-  obs_start <- burn_in + 1
+  grid <- .acl_simulation_grid(params, sim_year, "age_based")
+  sim_year <- grid$nstep
+  # Observation window indices use integer steps, never fractional subscripts.
+  obs_start <- grid$burn_steps + 1L
   obs_end   <- sim_year
-  nyear_obs <- obs_end - obs_start + 1
+  nyear_obs <- length(grid$years)
 
   # Determine return iteration
   if (is.null(return_iter)) return_iter <- max(iter_range)
@@ -186,11 +193,12 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     idx <- obs_start:obs_end
 
     sim.data <- list(
-      SN_at_len  = RVN_at_len[idx, ],
+      SN_at_len  = RVN_at_len[idx, , drop = FALSE],
       q_surv     = q_surv,
       len_mid    = len_mid,
       len_border = params$len_border[-c(1L, length(params$len_border))],
-      rec.age = params$rec.age, growth_step = params$growth_step,
+      rec.age = params$rec.age, growth_step = grid$step,
+      first.year = grid$first.year, years = grid$years, burn_in = grid$burn_in,
       q_surv_L50 = params$q_surv_L50, q_surv_L95 = params$q_surv_L95,
       nyear      = nyear_obs,
       nage       = nage,
@@ -199,17 +207,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       weight     = matrix(rep(W_at_len, nyear_obs), nrow = nlen, ncol = nyear_obs),
       mat        = matrix(rep(mat, nyear_obs), nrow = nlen, ncol = nyear_obs),
       sel        = sel,
-      F_at_age   = F_at_age[idx, ],
-      M_at_age   = M_at_age[idx, ],
-      N_at_len   = N_at_len[idx, ],
-      N_at_age   = N_at_age[idx, ],
-      B_at_len   = B_at_len[idx, ],
-      SB_at_len  = SB_at_len[idx, ],
-      CN_at_len  = CN_at_len[idx, ],
-      CN_at_age  = CN_at_age[idx, ],
-      CB_at_len  = CB_at_len[idx, ],
-      RVN_at_len = RVN_at_len[idx, ],
-      RVB_at_len = RVB_at_len[idx, ],
+      F_at_age   = F_at_age[idx, , drop = FALSE],
+      M_at_age   = M_at_age[idx, , drop = FALSE],
+      N_at_len   = N_at_len[idx, , drop = FALSE],
+      N_at_age   = N_at_age[idx, , drop = FALSE],
+      B_at_len   = B_at_len[idx, , drop = FALSE],
+      SB_at_len  = SB_at_len[idx, , drop = FALSE],
+      CN_at_len  = CN_at_len[idx, , drop = FALSE],
+      CN_at_age  = CN_at_age[idx, , drop = FALSE],
+      CB_at_len  = CB_at_len[idx, , drop = FALSE],
+      RVN_at_len = RVN_at_len[idx, , drop = FALSE],
+      RVB_at_len = RVB_at_len[idx, , drop = FALSE],
       Rec        = N_at_age[idx, 1],
       TN         = TN[idx],
       TB         = TB[idx],
@@ -266,19 +274,14 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_ar      <- if (!is.null(params$F_ar))   params$F_ar   else 0.75
   F_sd      <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar      <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
-  burn_in   <- if (!is.null(params$burn_in)) params$burn_in else 95
-  growth_step <- if (!is.null(params$growth_step)) params$growth_step else 0.25
 
-  # Quarterly time steps: total number of steps
-  steps_per_year <- round(1 / growth_step)
-  if (steps_per_year < 1L || abs(steps_per_year * growth_step - 1) > 1e-8)
-    stop("The length-based simulator requires a time step that divides one year.")
-  nstep <- sim_year * steps_per_year
+  grid <- .acl_simulation_grid(params, sim_year, "length_based")
+  nstep <- grid$nstep
 
-  # Observation window (in quarterly steps)
-  obs_start <- burn_in * steps_per_year + 1
+  # Observation window in integer time steps.
+  obs_start <- grid$burn_steps + 1L
   obs_end   <- nstep
-  nstep_obs <- obs_end - obs_start + 1
+  nstep_obs <- length(grid$years)
 
   # Determine return iteration
   if (is.null(return_iter)) return_iter <- max(iter_range)
@@ -427,11 +430,12 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     idx <- obs_start:obs_end
 
     sim.data <- list(
-      SN_at_len  = RVN_at_len[idx, ],
+      SN_at_len  = RVN_at_len[idx, , drop = FALSE],
       q_surv     = q_surv,
       len_mid    = len_mid,
       len_border = params$len_border[-c(1L, length(params$len_border))],
-      rec.age = params$rec.age, growth_step = params$growth_step,
+      rec.age = params$rec.age, growth_step = grid$step,
+      first.year = grid$first.year, years = grid$years, burn_in = grid$burn_in,
       q_surv_L50 = params$q_surv_L50, q_surv_L95 = params$q_surv_L95,
       nyear      = nstep_obs,              # number of time steps in obs window
       nage       = nage,
@@ -440,17 +444,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       weight     = matrix(rep(W_at_len, nstep_obs), nrow = nlen, ncol = nstep_obs),
       mat        = matrix(rep(mat, nstep_obs), nrow = nlen, ncol = nstep_obs),
       sel        = sel,
-      F_at_len   = F_at_len[idx, ],
-      M_at_len   = M_at_len[idx, ],
-      N_at_len   = N_at_len[idx, ],
-      N_at_age   = N_at_age[idx, ],
-      B_at_len   = B_at_len[idx, ],
-      SB_at_len  = SB_at_len[idx, ],
-      CN_at_len  = CN_at_len[idx, ],
-      CN_at_age  = CN_at_age[idx, ],
-      CB_at_len  = CB_at_len[idx, ],
-      RVN_at_len = RVN_at_len[idx, ],
-      RVB_at_len = RVB_at_len[idx, ],
+      F_at_len   = F_at_len[idx, , drop = FALSE],
+      M_at_len   = M_at_len[idx, , drop = FALSE],
+      N_at_len   = N_at_len[idx, , drop = FALSE],
+      N_at_age   = N_at_age[idx, , drop = FALSE],
+      B_at_len   = B_at_len[idx, , drop = FALSE],
+      SB_at_len  = SB_at_len[idx, , drop = FALSE],
+      CN_at_len  = CN_at_len[idx, , drop = FALSE],
+      CN_at_age  = CN_at_age[idx, , drop = FALSE],
+      CB_at_len  = CB_at_len[idx, , drop = FALSE],
+      RVN_at_len = RVN_at_len[idx, , drop = FALSE],
+      RVB_at_len = RVB_at_len[idx, , drop = FALSE],
       Rec        = N_at_age[idx, 1],
       TN         = TN[idx],
       TB         = TB[idx],
@@ -470,4 +474,47 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       "(", length(iter_range), "replicates )\n")
   cat("Returned iteration:", return_iter, "\n")
   return(return_data)
+}
+
+# Validate simulator timing centrally so both operating models use the same grid.
+.acl_simulation_grid <- function(params, sim_year, model_type) {
+  step <- params$growth_step
+  if (is.null(step)) step <- if (model_type == "length_based") 0.25 else 1
+  step <- .acl_scalar(step, "growth_step", 0, TRUE)
+  steps_per_year <- round(1 / step)
+  if (!is.finite(steps_per_year) || steps_per_year < 1L ||
+      steps_per_year > .Machine$integer.max || abs(steps_per_year * step - 1) > 1e-8)
+    stop("The simulator requires a growth_step that divides one year.", call. = FALSE)
+  burn <- params$burn_in
+  if (is.null(burn)) burn <- if (model_type == "length_based") 95 else 80
+  burn <- .acl_scalar(burn, "burn_in", 0)
+  if (burn >= sim_year)
+    stop("burn_in must be smaller than sim_year.", call. = FALSE)
+  burn_steps <- burn / step
+  if (abs(burn_steps - round(burn_steps)) > 1e-8)
+    stop("burn_in must be an exact multiple of growth_step.", call. = FALSE)
+  nstep <- .acl_positive_integer(sim_year * steps_per_year, "total simulation steps", 2L)
+  first <- params$first.year
+  if (is.null(first)) first <- 2000
+  first <- .acl_scalar(first, "first.year")
+  burn_steps <- as.integer(round(burn_steps))
+  list(step = step, burn_in = burn, burn_steps = burn_steps, nstep = nstep,
+    first.year = first, years = first + (seq_len(nstep - burn_steps) - 1L) * step)
+}
+
+# Files predating time metadata keep the former 2000-based convention.
+.acl_simulation_years <- function(simulation, step) {
+  n <- .acl_positive_integer(simulation$nyear, "simulation nyear")
+  .acl_scalar(step, "simulation growth_step", 0, TRUE)
+  years <- simulation$years
+  if (is.null(years)) {
+    first <- simulation$first.year
+    if (is.null(first)) first <- 2000
+    first <- .acl_scalar(first, "simulation first.year")
+    years <- first + (seq_len(n) - 1L) * step
+  }
+  if (!is.numeric(years) || length(years) != n || any(!is.finite(years)) ||
+      any(abs(diff(years) - step) > 1e-8 * max(1, step)))
+    stop("Simulation years must match nyear and growth_step.", call. = FALSE)
+  years
 }

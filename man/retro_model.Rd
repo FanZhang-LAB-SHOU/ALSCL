@@ -107,7 +107,9 @@ ncores = 1, avoiding nested fitting workers.}
 \item{silent}{Logical. Suppress progress messages when TRUE. Numerical-screen
 warnings are still reported. Default is FALSE.}
 
-\item{plot}{Logical. If TRUE, include plot in return value. Default is FALSE.}
+\item{plot}{Logical. If TRUE, include plot in return value. Default is FALSE.
+When no finite estimates are available, return plot = NULL with a warning;
+fit_diagnostics and errors remain available.}
 
 \item{line_size}{Numeric. Line thickness. Default is 1.2.}
 

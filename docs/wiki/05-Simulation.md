@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting)
 
-**ALSCL 2.2.2 · 简体中文 / English**
+**ALSCL 2.2.4 · 简体中文 / English**
 
 ### 3.1 快速生成三张表 / Quick input-table simulator
 
@@ -28,12 +28,13 @@ Use consecutive annual `years`. Changing labels does not create quarterly dynami
 
 ```r
 # 参数 → 生物量表 → 随机模拟 / Parameters → biological arrays → simulation
-pa <- initialize_params(species = "flatfish", observation_error = "independent")
+pa <- initialize_params(species = "flatfish", first.year = 2000,
+                        observation_error = "independent")
 bio <- sim_cal(pa)
 sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
                output_dir = "simulation_examples/flatfish")
 # 长度型季度案例 / Length-based quarterly case
-tuna_pa <- initialize_params(species = "tuna")
+tuna_pa <- initialize_params(species = "tuna", first.year = 2000)
 tuna <- sim_data(sim_cal(tuna_pa), tuna_pa, iter_range = 4:5,
                  return_iter = 4, output_dir = "simulation_examples/tuna")
 # 将模拟矩阵变成模型输入 / Convert simulated matrices to input tables
@@ -73,6 +74,34 @@ str(e$sim.data)
 批量入口 `sim_acl()` 仅拟合 ACL；ALSCL 可对各重复转表后循环调用 `run_alscl()`。生成器与拟合器的参数名不完全一致，不要直接把 `pa` 整表传入 `parameters`。两个重复只用于确认流程；正式性能实验应增加重复、保存真值并报告偏差、RMSE、区间覆盖率以及拟合失败率，不能只分析成功的重复。
 
 `sim_acl()` fits ACL only. For ALSCL, convert each replicate then call `run_alscl()` in a loop. Generator and estimator parameter names differ. Two replicates only verify the workflow; performance studies need more replicates, retained truth, bias, RMSE, coverage and failure rates.
+
+### 2.2.4 的模拟设置与年份标签 / Simulation settings and time labels in 2.2.4
+
+从 2.2.4 起，快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。修正后的轨迹会改变重新生成的观测，即使使用旧种子也是如此。仓库已保存的数据和配图仍对应各自原始生成真值。
+
+完整模拟器的 `nyear`、`burn_in` 都以年为单位，且分别必须对应整数个 `growth_step`。因此季度模式允许半年预热，年度模式不允许。返回的 `sm$nyear` 是保留时间步数；`first.year` 是第一期保留观测的年份，`sm$years` 保存完整观测时间轴。`simulation_to_tables()` 和 `sim_acl()` 保留这条时间轴；完全没有年份元数据的旧文件仍可使用从 2000 开始的后备规则。只保留一期时仍返回矩阵，但拟合至少需要两期。
+
+`sim_acl()` 在发送 socket 任务前求值路径与参数变量，因此一般控制台或脚本中的变量传参也支持多核。保留失败重复并检查逐次拟合诊断；工作进程运行成功并不单独证明评估结果可用。
+
+Since 2.2.4, `mean_F` in the quick annual simulator is the arithmetic mean of the generated F trajectory; `mean_F = 0` generates zero F. The corrected trajectory changes newly simulated observations even with an old seed. Previously bundled datasets and figures retain their original generating truth.
+
+For the full simulator, `nyear` and `burn_in` are durations in years and must each contain a whole number of `growth_step` intervals. Thus a half-year burn-in is valid with quarterly steps, but not annual steps. Returned `sm$nyear` counts retained steps. `first.year` labels the first retained observation, and `sm$years` records the complete retained calendar. `simulation_to_tables()` and `sim_acl()` preserve this calendar; old files lacking year metadata still have a documented 2000-based fallback. A single retained period stays a matrix, although fitting requires at least two periods.
+
+`sim_acl()` resolves path and parameter variables before sending tasks to socket workers, so ordinary console/script calls work with multiple cores. Retain failed replicates and inspect each fit's diagnostics; successful worker execution alone does not establish a usable assessment.
+
+```r
+quick <- simulate_example_data(years = 2000:2019, mean_F = 0.3, seed = 42)
+stopifnot(isTRUE(all.equal(mean(quick$true_params$F_trend), 0.3)))
+zero_F <- simulate_example_data(years = 2000:2019, mean_F = 0, seed = 42)
+stopifnot(all(zero_F$true_params$F_trend == 0))
+pa <- initialize_params(species = "flatfish", nyear = 5, burn_in = 2,
+                        first.year = 2024)
+sm <- sim_data(sim_cal(pa), pa, iter_range = 4:5, return_iter = 4,
+               output_dir = "simulation_224")
+stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
+source("scripts/simulation_workflow.R", encoding = "UTF-8")
+inputs <- simulation_to_tables(sm, pa)
+```
 
 ---
 

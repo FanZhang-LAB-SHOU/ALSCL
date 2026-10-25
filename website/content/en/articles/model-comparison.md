@@ -200,3 +200,15 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 
 
 Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.
+
+## Comparing two configurations in 2.2.4
+
+Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
+
+```r
+a_group <- run_acl(x, F_structure = "group_year", silent = TRUE)
+a_shared <- run_acl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(a_group, a_shared, quantities = "SSB")
+plot_compare_annual_F(a_group, a_shared)
+plot_compare_F(a_group, a_shared)
+```

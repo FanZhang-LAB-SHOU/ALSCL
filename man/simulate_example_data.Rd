@@ -27,7 +27,8 @@ simulate_example_data(
 )
 }
 \arguments{
-\item{years}{Numeric vector of years. Default 2000:2025.}
+\item{years}{Numeric vector of consecutive annual observation years.
+Default 2000:2025. Use \code{sim_data()} for subannual simulations.}
 
 \item{bin_breaks}{Numeric vector of bin boundary points. Defines n+1
 boundaries for n bins. Default \code{c(0, 20, 25, 30, 35, 40, 45, 50, 55, 60)}
@@ -56,7 +57,9 @@ giving 9 bins: 0-20, 20-25, 25-30, ..., 55-60. Works with any bin width
 
 \item{wgt_b}{Numeric. Weight-length parameter b in W = a * L^b. Default 3.2.}
 
-\item{mean_F}{Numeric. Mean fishing mortality. Default 0.3.}
+\item{mean_F}{Nonnegative numeric. Arithmetic mean fishing mortality across
+the returned years (default 0.3). Zero gives zero fishing mortality in every
+year. The time-varying trajectory is rescaled to this realized mean.}
 
 \item{cv_catch}{Numeric. CV of observation noise on catches. Default 0.3.}
 

@@ -11,7 +11,8 @@
 #'   presets. NULL (default) uses generic defaults equivalent to flatfish.
 #' @param nyear Integer. Total simulation years including burn-in (default 100).
 #' @param rec.age Numeric. Age of recruitment (default 1; use 0.25 for quarterly).
-#' @param first.year Integer. First year of the observation window (default 2020).
+#' @param first.year Numeric. First year of the observation window (default 2020).
+#'   Fractional years are allowed for subannual observations.
 #' @param nage Integer. Number of age classes including plus-group (default 15).
 #' @param M Numeric. Natural mortality rate (default 0.2).
 #' @param init_Z Numeric. Initial total mortality for equilibrium (default 0.5).
@@ -40,7 +41,8 @@
 #' @param R_ar Numeric. AR1 coefficient for recruitment deviations (default 0.1).
 #'
 #' @param growth_step Time step in years; defaults to the species preset.
-#' @param burn_in Simulation years discarded before returning observations.
+#' @param burn_in Simulation years discarded before returning observations;
+#'   must be an exact multiple of \code{growth_step} and smaller than \code{nyear}.
 #' @param observation_error Independent lognormal errors per length and time cell,
 #'   or shared_time for an explicitly misspecified, perfectly correlated scenario.
 #' @return A list containing all initialized parameters and derived variables
@@ -310,9 +312,12 @@ initialize_params <- function(nyear      = NULL,
   sp$len_border[1] <- -Inf
   sp$len_border[length(sp$len_border)] <- Inf
 
-  # Generate age and year vectors
+  # Generate age and year vectors. years retains the full-duration vector;
+  # observation_years is the post-burn-in grid returned by sim_data().
+  grid <- .acl_simulation_grid(sp, sp$nyear, sp$model_type)
+  sp$observation_years <- grid$years
   sp$ages <- sp$rec.age + seq.int(0L, sp$nage-1L) * sp$growth_step
-  sp$years <- sp$first.year + seq.int(0L, round(sp$nyear/sp$growth_step)-1L) * sp$growth_step
+  sp$years <- sp$first.year + seq.int(0L, grid$nstep-1L) * sp$growth_step
 
   return(sp)
 }

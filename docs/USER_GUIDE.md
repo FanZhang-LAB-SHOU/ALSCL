@@ -2,9 +2,9 @@
 
 **从模拟案例到自己的调查体长数据。From simulation examples to your own survey length data.**
 
-适用版本：ALSCL 2.2.3。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
+适用版本：ALSCL 2.2.4。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
 
-For ALSCL 2.2.3. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
+For ALSCL 2.2.4. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
 
 [首页 / Home](../README.md) · [45 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -253,12 +253,13 @@ Use consecutive annual `years`. Changing labels does not create quarterly dynami
 
 ```r
 # 参数 → 生物量表 → 随机模拟 / Parameters → biological arrays → simulation
-pa <- initialize_params(species = "flatfish", observation_error = "independent")
+pa <- initialize_params(species = "flatfish", first.year = 2000,
+                        observation_error = "independent")
 bio <- sim_cal(pa)
 sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
                output_dir = "simulation_examples/flatfish")
 # 长度型季度案例 / Length-based quarterly case
-tuna_pa <- initialize_params(species = "tuna")
+tuna_pa <- initialize_params(species = "tuna", first.year = 2000)
 tuna <- sim_data(sim_cal(tuna_pa), tuna_pa, iter_range = 4:5,
                  return_iter = 4, output_dir = "simulation_examples/tuna")
 # 将模拟矩阵变成模型输入 / Convert simulated matrices to input tables
@@ -298,6 +299,34 @@ str(e$sim.data)
 批量入口 `sim_acl()` 仅拟合 ACL；ALSCL 可对各重复转表后循环调用 `run_alscl()`。生成器与拟合器的参数名不完全一致，不要直接把 `pa` 整表传入 `parameters`。两个重复只用于确认流程；正式性能实验应增加重复、保存真值并报告偏差、RMSE、区间覆盖率以及拟合失败率，不能只分析成功的重复。
 
 `sim_acl()` fits ACL only. For ALSCL, convert each replicate then call `run_alscl()` in a loop. Generator and estimator parameter names differ. Two replicates only verify the workflow; performance studies need more replicates, retained truth, bias, RMSE, coverage and failure rates.
+
+### 2.2.4 的模拟设置与年份标签 / Simulation settings and time labels in 2.2.4
+
+从 2.2.4 起，快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。修正后的轨迹会改变重新生成的观测，即使使用旧种子也是如此。仓库已保存的数据和配图仍对应各自原始生成真值。
+
+完整模拟器的 `nyear`、`burn_in` 都以年为单位，且分别必须对应整数个 `growth_step`。因此季度模式允许半年预热，年度模式不允许。返回的 `sm$nyear` 是保留时间步数；`first.year` 是第一期保留观测的年份，`sm$years` 保存完整观测时间轴。`simulation_to_tables()` 和 `sim_acl()` 保留这条时间轴；完全没有年份元数据的旧文件仍可使用从 2000 开始的后备规则。只保留一期时仍返回矩阵，但拟合至少需要两期。
+
+`sim_acl()` 在发送 socket 任务前求值路径与参数变量，因此一般控制台或脚本中的变量传参也支持多核。保留失败重复并检查逐次拟合诊断；工作进程运行成功并不单独证明评估结果可用。
+
+Since 2.2.4, `mean_F` in the quick annual simulator is the arithmetic mean of the generated F trajectory; `mean_F = 0` generates zero F. The corrected trajectory changes newly simulated observations even with an old seed. Previously bundled datasets and figures retain their original generating truth.
+
+For the full simulator, `nyear` and `burn_in` are durations in years and must each contain a whole number of `growth_step` intervals. Thus a half-year burn-in is valid with quarterly steps, but not annual steps. Returned `sm$nyear` counts retained steps. `first.year` labels the first retained observation, and `sm$years` records the complete retained calendar. `simulation_to_tables()` and `sim_acl()` preserve this calendar; old files lacking year metadata still have a documented 2000-based fallback. A single retained period stays a matrix, although fitting requires at least two periods.
+
+`sim_acl()` resolves path and parameter variables before sending tasks to socket workers, so ordinary console/script calls work with multiple cores. Retain failed replicates and inspect each fit's diagnostics; successful worker execution alone does not establish a usable assessment.
+
+```r
+quick <- simulate_example_data(years = 2000:2019, mean_F = 0.3, seed = 42)
+stopifnot(isTRUE(all.equal(mean(quick$true_params$F_trend), 0.3)))
+zero_F <- simulate_example_data(years = 2000:2019, mean_F = 0, seed = 42)
+stopifnot(all(zero_F$true_params$F_trend == 0))
+pa <- initialize_params(species = "flatfish", nyear = 5, burn_in = 2,
+                        first.year = 2024)
+sm <- sim_data(sim_cal(pa), pa, iter_range = 4:5, return_iter = 4,
+               output_dir = "simulation_224")
+stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
+source("scripts/simulation_workflow.R", encoding = "UTF-8")
+inputs <- simulation_to_tables(sm, pa)
+```
 
 <a id="excel"></a>
 ## 4. Excel 每行每列填什么 / What to enter in Excel
@@ -965,6 +994,20 @@ Since 2.2.3, compare_models checks periods, length labels, fitted positive obser
 
 plot_compare_metrics uses the same positive-observation mask as diagnostic_metrics, excluding NA and zeros consistently. For ALSCL, plot_fishing_mortality(b, type = "length", se = TRUE) uses actual length midpoints on the horizontal axis and facets by year; year mode retains time on the horizontal axis. ACL has no independent F-at-length: its legacy length alias still plots F-at-age with a warning; use age explicitly.
 
+### 2.2.4 中比较同模型的两套配置 / Comparing two configurations in 2.2.4
+
+同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
+
+Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
+
+```r
+a_group <- run_acl(x, F_structure = "group_year", silent = TRUE)
+a_shared <- run_acl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(a_group, a_shared, quantities = "SSB")
+plot_compare_annual_F(a_group, a_shared)
+plot_compare_F(a_group, a_shared)
+```
+
 <a id="plotting"></a>
 ## 8. 绘图模块与样式 / Plotting modules and styling
 
@@ -1003,6 +1046,32 @@ acl_theme_reset()
 
 Style arguments differ among functions: e.g. `line_size` versus `linewidth`, and `facet_ncol` versus `ncol`. Consult the per-function tables. `plot_CatL(return_data=TRUE)` returns `plot/data1/data2`, unlike the usual `plot/data` pair.
 
+### 2.2.4 的缺测与保存结果绘图 / Missing observations and saved results in 2.2.4
+
+`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
+
+`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.
+
+```r
+portable <- b
+portable$obj <- NULL
+plot_residuals(portable)
+plot_ridges(portable)
+```
+
+### 季度网格上的补充滞后 / Recruitment lag on a quarterly grid
+
+`age_at_recruitment` 的单位是年。`plot_SSB_Rec()` 除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
+
+`age_at_recruitment` is in years. `plot_SSB_Rec()` divides it by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
+
+```r
+q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
+          report = list(SSB = 1:8, Rec = 101:108))
+paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
+stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
+```
+
 <a id="retrospective"></a>
 ## 9. 回溯分析和复现整套教程 / Retrospectives and reproduction
 
@@ -1035,13 +1104,19 @@ Since 2.2.3, the same own-data bundle works with both retrospective wrappers or 
 # 从仓库根目录重建图、结果 CSV 和会话记录 / Rebuild figures, CSV and session record
 source("scripts/ytf_workflow.R", encoding = "UTF-8")
 result <- run_ytf_guide(out = "my_ytf_guide", npeels = 3)
-# 保留活跃结果用于需要 TMB 对象的图 / Keep live fits for TMB-dependent plots
+# 使用保存的观测绘图 / Plot using the stored observations
 plot_ridges(result$alscl)
 ```
 
 默认输出目录为 `docs`，会覆盖同名图和结果文件；使用自己的目录可保留仓库版本。工作流依赖 `ggplot2`、`patchwork`、`jsonlite`。首次 TMB 编译需要编译器，回溯要执行多次优化。可设置 `options(ALSCL.tmb.cache="可写路径")`；保存 `.rds` 不能保证其中 TMB 外部指针跨会话有效，重新打开 R 后应重拟合依赖活跃 `obj` 的操作。
 
 The default output is `docs` and overwrites matching outputs; choose another folder to preserve bundled files. The workflow requires ggplot2, patchwork and jsonlite. Initial compilation needs a compiler, and retrospectives involve multiple fits. A writable TMB cache can be configured. Saved R objects do not preserve usable TMB external pointers across sessions; refit for operations requiring a live `obj`.
+
+### 全部拟合失败时保留诊断 / Retaining diagnostics when every fit fails
+
+当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
+
+When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 
 ## 10. 常见问题 / Troubleshooting
 

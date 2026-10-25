@@ -93,3 +93,7 @@ writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ## 决定下一步检查什么
 
 持续同向的修订提示需要检查输入变化、模型假设和参数敏感性。rho 本身不能确定成因，也不能直接作为修正系数。作出结论前，应记录完整拟合、各次截短的诊断及末端时间。
+
+## 全部拟合失败时保留诊断
+
+当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。

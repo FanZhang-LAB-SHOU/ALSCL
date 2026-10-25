@@ -4,7 +4,8 @@
 #' data for a generic short-lived species (e.g., krill-like). Supports unequal
 #' length bin widths. Useful for package documentation, testing, and tutorials.
 #'
-#' @param years Numeric vector of years. Default 2000:2025.
+#' @param years Numeric vector of consecutive annual observation years.
+#'   Default 2000:2025. Use \code{sim_data()} for subannual simulations.
 #' @param bin_breaks Numeric vector of bin boundary points. Defines n+1
 #'   boundaries for n bins. Default \code{c(0, 20, 25, 30, 35, 40, 45, 50, 55, 60)}
 #'   giving 9 bins: 0-20, 20-25, 25-30, ..., 55-60. Works with any bin width
@@ -20,7 +21,9 @@
 #' @param L95_mat Numeric. Length at 95 percent maturity. Default 40.
 #' @param wgt_a Numeric. Weight-length parameter a in W = a * L^b. Default 2.2e-6.
 #' @param wgt_b Numeric. Weight-length parameter b in W = a * L^b. Default 3.2.
-#' @param mean_F Numeric. Mean fishing mortality. Default 0.3.
+#' @param mean_F Nonnegative numeric. Arithmetic mean fishing mortality across
+#'   the returned years (default 0.3). Zero gives zero fishing mortality in every
+#'   year. The time-varying trajectory is rescaled to this realized mean.
 #' @param cv_catch Numeric. CV of observation noise on catches. Default 0.3.
 #' @param rec_sigma Numeric. SD of log-recruitment variation. Default 0.5.
 #' @param seed Integer or NULL. Random seed for reproducibility. Default NULL
@@ -86,9 +89,12 @@ simulate_example_data <- function(years      = 2000:2025,
 
   if (!is.null(seed)) set.seed(seed)
 
-  if (length(years) < 2L || any(!is.finite(years)) || any(diff(years) <= 0)) stop("Provide at least two increasing observation years.")
+  if (!is.numeric(years) || length(years) < 2L || any(!is.finite(years)) ||
+      any(abs(diff(years) - 1) > 1e-8))
+    stop("Provide at least two consecutive annual observation years; use sim_data() for subannual simulations.")
   nage <- .acl_positive_integer(nage, "nage", 2L)
   .acl_scalar(cv_catch, "cv_catch", 0)
+  .acl_scalar(mean_F, "mean_F", 0)
   if (t0 >= 1) stop("t0 must be below the recruitment age of 1.")
   nY  <- length(years)
   bin_breaks <- sort(unique(bin_breaks))
@@ -140,8 +146,8 @@ simulate_example_data <- function(years      = 2000:2025,
   }
 
   # --- Time-varying fishing mortality ---
-  F_trend <- mean_F * (0.5 + 0.5 * sin(seq(-pi/2, 3*pi/2, length.out = nY)))
-  F_trend <- pmax(F_trend, 0.05)
+  F_shape <- 1 + 0.5 * sin(seq(-pi/2, 3*pi/2, length.out = nY))
+  F_trend <- mean_F * F_shape / mean(F_shape)
 
   # --- Simulate population dynamics ---
   N <- matrix(0, nrow = nage, ncol = nY)

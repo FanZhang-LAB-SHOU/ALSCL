@@ -107,7 +107,29 @@
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl)
 }
 .acl_observed_log <- function(model_result) {
-  d <- model_result$obj$env$.data; z <- d$logN_at_len
-  if (!is.null(d$na_matrix)) z[d$na_matrix == 0] <- NA_real_
+  observed <- model_result$observations
+  if (!is.null(observed)) {
+    observed <- as.matrix(observed)
+    if (!is.numeric(observed) || length(dim(observed)) != 2L ||
+        any(is.infinite(observed)) || any(observed < 0, na.rm = TRUE))
+      stop("Stored observations must be a numeric matrix of nonnegative values or NA.", call. = FALSE)
+    z <- matrix(NA_real_, nrow(observed), ncol(observed), dimnames = dimnames(observed))
+    valid <- is.finite(observed) & observed > 0
+    z[valid] <- log(observed[valid])
+    return(z)
+  }
+  # Older fitted objects store observations and their mask in the TMB data.
+  d <- model_result$obj$env$.data
+  z <- d$logN_at_len
+  if (is.null(z))
+    stop("Observed data are unavailable; retain model_result$observations when saving a fit.", call. = FALSE)
+  if (!is.numeric(z) || length(dim(z)) != 2L)
+    stop("Stored log observations must be a numeric matrix.", call. = FALSE)
+  if (!is.null(d$na_matrix)) {
+    if (!identical(dim(d$na_matrix), dim(z)))
+      stop("The observation mask dimensions differ from the stored observations.", call. = FALSE)
+    z[!is.finite(d$na_matrix) | d$na_matrix == 0] <- NA_real_
+  }
+  z[!is.finite(z)] <- NA_real_
   z
 }

@@ -79,7 +79,9 @@ retro_acl(
 
 \item{len_border}{Optional numeric vector of length bin borders.}
 
-\item{plot}{Logical. If TRUE, include plot in return value. Default is FALSE.}
+\item{plot}{Logical. If TRUE, include plot in return value. Default is FALSE.
+When no finite estimates are available, return plot = NULL with a warning;
+fit_diagnostics and errors remain available.}
 
 \item{line_size}{Numeric. Line thickness. Default is 1.2.}
 

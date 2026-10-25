@@ -5,7 +5,9 @@
 #' assessment model commonly used in fishery science. The function can handle two types of residuals:
 #' 1) "length", where residuals are calculated over length groups for each year, and
 #' 2) "year", where residuals are calculated over years for each length group.
-#' Each index is represented in a separate facet.
+#' Each index is represented in a separate facet. Missing and zero observations
+#' are excluded using the fit's stored observations, including saved fits without
+#' a live TMB object. Older fits use the observation mask in the TMB data.
 #'
 #' @param model_result A list obtained from the `run_acl` function. This list should contain a "report" component that includes
 #' a "resid_index" component, representing the residuals for each index.
@@ -78,8 +80,11 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       span = max(f, min(1, 5/min(counts))), se = FALSE, na.rm = TRUE,
       color = smooth_color, linetype = 2, linewidth = line_size)
   }
-  mask <- model_result$obj$env$.data$na_matrix
-  if (!is.null(mask)) model_result$report$resid_index[mask == 0] <- NA_real_
+  observed_log <- .acl_observed_log(model_result)
+  residuals <- model_result$report$resid_index
+  if (!is.numeric(residuals) || !identical(dim(residuals), dim(observed_log)))
+    stop("Residual and observation matrix dimensions differ.", call. = FALSE)
+  model_result$report$resid_index[!is.finite(observed_log)] <- NA_real_
   len_label=model_result[["len_label"]]
 
   if(type=="length"){

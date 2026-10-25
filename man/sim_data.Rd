@@ -29,6 +29,9 @@ sim_data(
 \value{
 A list containing simulated fishery data for the observation window
 (post-burn-in), including SN_at_len, N_at_len, N_at_age, SSB, etc.
+Matrix dimensions are retained for a one-period observation window.
+The \code{years} vector starts at \code{params$first.year} and advances by
+\code{growth_step}; burn-in must be an exact number of time steps.
 }
 \description{
 This function simulates fish population dynamics using either an age-based

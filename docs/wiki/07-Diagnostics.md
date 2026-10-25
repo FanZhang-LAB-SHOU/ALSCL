@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots)
 
-**ALSCL 2.2.2 · 简体中文 / English**
+**ALSCL 2.2.4 · 简体中文 / English**
 
 ```r
 # 数值检查 / Numerical checks
@@ -32,6 +32,20 @@ Since 2.2.3, compare_models checks periods, length labels, fitted positive obser
 `plot_compare_metrics()` 与 `diagnostic_metrics()` 使用同一套正观测筛选，NA 和零观测不会污染整组指标。`plot_fishing_mortality(b, type = "length", se = TRUE)` 对 ALSCL 以真实体长中点为横轴，按年份分面；year 模式保持以时间为横轴。ACL 没有独立的长度别 F，旧 length 别名仍画年龄别 F，但会警告，建议改用 age。
 
 plot_compare_metrics uses the same positive-observation mask as diagnostic_metrics, excluding NA and zeros consistently. For ALSCL, plot_fishing_mortality(b, type = "length", se = TRUE) uses actual length midpoints on the horizontal axis and facets by year; year mode retains time on the horizontal axis. ACL has no independent F-at-length: its legacy length alias still plots F-at-age with a warning; use age explicitly.
+
+### 2.2.4 中比较同模型的两套配置 / Comparing two configurations in 2.2.4
+
+同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
+
+Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
+
+```r
+a_group <- run_acl(x, F_structure = "group_year", silent = TRUE)
+a_shared <- run_acl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(a_group, a_shared, quantities = "SSB")
+plot_compare_annual_F(a_group, a_shared)
+plot_compare_F(a_group, a_shared)
+```
 
 ---
 

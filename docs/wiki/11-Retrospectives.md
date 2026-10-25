@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)
 
-**ALSCL 2.2.2 · 简体中文 / English**
+**ALSCL 2.2.4 · 简体中文 / English**
 
 ```r
 # 删除最后 1、2、3 个时间步后分别重拟合 / Refit after peeling 1, 2 and 3 steps
@@ -33,13 +33,19 @@ Since 2.2.3, the same own-data bundle works with both retrospective wrappers or 
 # 从仓库根目录重建图、结果 CSV 和会话记录 / Rebuild figures, CSV and session record
 source("scripts/ytf_workflow.R", encoding = "UTF-8")
 result <- run_ytf_guide(out = "my_ytf_guide", npeels = 3)
-# 保留活跃结果用于需要 TMB 对象的图 / Keep live fits for TMB-dependent plots
+# 使用保存的观测绘图 / Plot using the stored observations
 plot_ridges(result$alscl)
 ```
 
 默认输出目录为 `docs`，会覆盖同名图和结果文件；使用自己的目录可保留仓库版本。工作流依赖 `ggplot2`、`patchwork`、`jsonlite`。首次 TMB 编译需要编译器，回溯要执行多次优化。可设置 `options(ALSCL.tmb.cache="可写路径")`；保存 `.rds` 不能保证其中 TMB 外部指针跨会话有效，重新打开 R 后应重拟合依赖活跃 `obj` 的操作。
 
 The default output is `docs` and overwrites matching outputs; choose another folder to preserve bundled files. The workflow requires ggplot2, patchwork and jsonlite. Initial compilation needs a compiler, and retrospectives involve multiple fits. A writable TMB cache can be configured. Saved R objects do not preserve usable TMB external pointers across sessions; refit for operations requiring a live `obj`.
+
+### 全部拟合失败时保留诊断 / Retaining diagnostics when every fit fails
+
+当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
+
+When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 ## Mohn rho 的含义 · Meaning of Mohn's rho
 
 对每个删除末端数据的拟合，在其最后保留期与完整拟合同期的估计比较，再取相对差的平均：

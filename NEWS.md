@@ -1,3 +1,21 @@
+# ALSCL 2.2.4
+
+- Resolve path and parameter variables before socket batch fitting; retain diagnostics when all retrospective fits fail, including with plotting requested.
+- Give same-model configurations distinct comparison labels, preserve each trajectory's calendar and validate metadata for observation-paired plots.
+- Preserve missing/zero observation masks in ridges and residual plots, including portable saved results; convert recruitment ages in years to the correct model-step lag.
+- Make quick-simulator mean_F match the actual trajectory mean and allow zero F. Newly generated examples change; previously bundled data retain their original truth.
+- Validate burn-in and simulation durations against the time step, preserve one-period matrix dimensions and carry first.year through simulation, tables and batch fitting.
+- Update English and Simplified Chinese documentation, reference pages, book and Wiki.
+
+### 简体中文
+
+- 在 socket 批次拟合前求值路径及参数变量；全部回溯拟合失败时仍返回诊断，包括请求绘图的情况。
+- 同模型不同配置使用独立图例，轨迹保留各自年份，与观测配对的图核对元数据。
+- 山脊图、残差图及保存结果保留缺测和零值掩码；补充年龄按年换算成正确时间步滞后。
+- 快速模拟器的 mean_F 等于实际轨迹平均值，并支持零 F；新生成示例会改变，原内附数据保留原始真值。
+- 核对预热与模拟时长是否对齐时间步，单期输出保持矩阵，并在模拟、转表及批次拟合中保留 first.year。
+- 同步中英文文档、函数参考、书稿与 Wiki。
+
 # ALSCL 2.2.3
 
 - Check time-column spacing against growth_step in both fitting functions; missing periods must remain on the time grid.

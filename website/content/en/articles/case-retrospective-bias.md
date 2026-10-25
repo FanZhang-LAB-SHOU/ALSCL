@@ -93,3 +93,7 @@ writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ## Decide what to investigate next
 
 A repeated directional revision motivates checks of input changes, model assumptions and parameter sensitivity. Rho alone does not identify a cause or supply a correction factor. Record the full fit, each peel’s diagnostics and its terminal period before drawing conclusions.
+
+## Retaining diagnostics when every fit fails
+
+When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.

@@ -5,6 +5,8 @@
 #'
 #' @param iter_range A numeric vector specifying the range of iterations to run the stock assessment model for (default is 4:100).
 #' @param sim_data_path A character string specifying the path to the folder containing the simulation data files (default is the current working directory).
+#'   Recorded observation years are retained. Older files without time metadata
+#'   use a first observation year of 2000.
 #' @param output_dir Character, the directory where simulation results will be saved.(default is the current working directory).
 #' @param parameters A list containing the custom initial values for the parameters (default is NULL).
 #' @param parameters.L A list containing the custom lower bounds for the parameters (default is NULL).
@@ -30,6 +32,13 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   info <- .acl_compile("ACL")
   cache <- dirname(dirname(info$cpp_path))
+  # Force caller expressions before serializing the closure to socket workers.
+  # Global variables referenced by promises are not exported by parLapply().
+  force(sim_data_path)
+  force(output_dir)
+  fit_args <- list(parameters = parameters, parameters.L = parameters.L,
+    parameters.U = parameters.U, map = map, M = M, train_times = train_times,
+    control = control, silent = TRUE, F_structure = F_structure, polish = polish)
   fit_one <- function(iter) {
     tryCatch({
       e <- new.env(parent = emptyenv())
@@ -37,9 +46,10 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
       s <- e$sim.data
       if (is.null(s)) stop("Simulation file does not contain sim.data.")
       step <- if (!is.null(s$growth_step)) s$growth_step else if(length(s$ages)>1) diff(s$ages)[1] else 1
+      years <- .acl_simulation_years(s, step)
       to_frame <- function(x) {
         out <- data.frame(LengthBin = as.character(s$len_mid), x, check.names = FALSE)
-        names(out) <- c("LengthBin", as.character(seq.int(0L,s$nyear-1L)*step+2000))
+        names(out) <- c("LengthBin", as.character(years))
         out
       }
       L50 <- s$q_surv_L50; L95 <- s$q_surv_L95
@@ -49,12 +59,10 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
         coefficients <- stats::coef(stats::lm(stats::qlogis(s$q_surv[valid]) ~ s$len_mid[valid]))
         L50 <- -coefficients[1]/coefficients[2]; L95 <- L50+log(19)/coefficients[2]
       }
-      result <- run_acl(to_frame(t(s$SN_at_len)), to_frame(s$weight), to_frame(s$mat),
-        rec.age = s$ages[1], nage = s$nage, M = M, sel_L50 = unname(L50), sel_L95 = unname(L95),
-        parameters = parameters, parameters.L = parameters.L, parameters.U = parameters.U,
-        map = map, len_mid = s$len_mid, len_border = s$len_border,
-        growth_step = step, train_times = train_times, control = control, silent = TRUE,
-        F_structure = F_structure, polish = polish)
+      result <- do.call(run_acl, c(list(data.CatL = to_frame(t(s$SN_at_len)),
+        data.wgt = to_frame(s$weight), data.mat = to_frame(s$mat),
+        rec.age = s$ages[1], nage = s$nage, sel_L50 = unname(L50), sel_L95 = unname(L95),
+        len_mid = s$len_mid, len_border = s$len_border, growth_step = step), fit_args))
       save(result, file = file.path(output_dir, paste0("result_rep_", iter)))
       result
     }, error = function(e) list(converge = "FAILED", error = conditionMessage(e), iter = iter))
@@ -62,9 +70,12 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   ncores <- min(ncores, length(iter_range))
   if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
     cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
-    parallel::clusterCall(cl, function(paths, cache, settings) {
+    initialize_worker <- function(paths, cache, settings) {
       .libPaths(paths); loadNamespace("ALSCL"); options(ALSCL.tmb.cache = cache); options(settings); NULL
-    }, .libPaths(), cache, .acl_worker_options())
+    }
+    # Set library paths before deserialization can load an older ALSCL namespace.
+    environment(initialize_worker) <- baseenv()
+    parallel::clusterCall(cl, initialize_worker, .libPaths(), cache, .acl_worker_options())
     results <- parallel::parLapply(cl, iter_range, fit_one)
   }
   names(results) <- paste0("result_rep_", iter_range)

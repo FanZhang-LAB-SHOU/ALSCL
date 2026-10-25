@@ -86,6 +86,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param silent Logical. Suppress progress messages when TRUE. Numerical-screen
 #'   warnings are still reported. Default is FALSE.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
+#'   When no finite estimates are available, return plot = NULL with a warning;
+#'   fit_diagnostics and errors remain available.
 #' @param line_size Numeric. Line thickness. Default is 1.2.
 #' @param point_size Numeric. Point size for endpoints. Default is 3.
 #' @param point_shape Numeric. Point shape for endpoints. Default is 21.
@@ -286,7 +288,12 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                                           c("Peel", "RetrospectiveYear", "error"), drop = FALSE],
                  workers = ncores_use, nstarts = fit_args$nstarts)
   if (plot) {
-    p <- plot_retro(output,
+    if (!nrow(results) || !any(is.finite(results$Value))) {
+      output["plot"] <- list(NULL)
+      warning("Retrospective plot skipped: no finite estimates are available. Inspect the returned fit_diagnostics and errors.",
+              call. = FALSE)
+    } else {
+      p <- plot_retro(output,
                     rho_digits = rho_digits, rho_position = rho_position, rho_size = rho_size,
                     line_size = line_size, point_size = point_size,
                     point_shape = point_shape, facet_scales = facet_scales,
@@ -296,7 +303,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                     axis_text_size = axis_text_size, strip_text_size = strip_text_size,
                     legend_text_size = legend_text_size, x_breaks = x_breaks,
                     base_theme = base_theme, title_hjust = title_hjust)
-    output$plot <- p
+      output$plot <- p
+    }
   }
 
   return(output)

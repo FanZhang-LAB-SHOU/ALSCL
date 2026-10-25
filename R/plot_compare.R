@@ -18,6 +18,73 @@ utils::globalVariables(c(
 }
 
 
+# Keep two fits in separate groups even when their model types are identical.
+.acl_plot_compare_names <- function(model1, model2, name1 = NULL, name2 = NULL) {
+  supplied <- c(!is.null(name1), !is.null(name2))
+  labels <- list(name1 %||% .detect_model_name(model1, "Model 1"),
+                 name2 %||% .detect_model_name(model2, "Model 2"))
+  valid <- vapply(labels, function(x)
+    is.character(x) && length(x) == 1L && !is.na(x) && nzchar(trimws(x)), logical(1))
+  if (!all(valid)) stop("Model names must be nonempty character strings.", call. = FALSE)
+  labels <- unlist(labels, use.names = FALSE)
+  if (labels[1L] == labels[2L]) {
+    if (all(supplied))
+      stop("model1_name and model2_name must be distinct.", call. = FALSE)
+    structures <- c(model1$F_structure, model2$F_structure)
+    distinct_structures <- length(structures) == 2L && !anyNA(structures) &&
+      all(nzchar(structures)) && !anyDuplicated(structures)
+    suffix <- if (!any(supplied) && distinct_structures) structures else c("1", "2")
+    auto <- which(!supplied)
+    labels[auto] <- paste0(labels[auto], " (", suffix[auto], ")")
+  }
+  labels
+}
+
+.acl_plot_year <- function(model, n = NULL, name = "Model") {
+  years <- model$year
+  if (!is.numeric(years) || !length(years) || any(!is.finite(years)) ||
+      any(diff(years) <= 0))
+    stop(name, " must contain finite, increasing year metadata.", call. = FALSE)
+  if (!is.null(n) && length(years) != n)
+    stop(name, " report dimensions do not match its year metadata.", call. = FALSE)
+  years
+}
+
+# Plots sharing one observed table must use its order. Legacy metric-only
+# results can lack metadata, but known mismatches must never be relabeled.
+.acl_plot_comparison_grid <- function(models, data.CatL, midpoints = FALSE) {
+  if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)
+    stop("data.CatL must contain length labels and time columns.", call. = FALSE)
+  original <- as.matrix(data.CatL[, -1L, drop = FALSE])
+  observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
+  if (any(is.na(observed) & !is.na(original)) || any(is.infinite(observed)) ||
+      any(observed < 0, na.rm = TRUE))
+    stop("Comparison observations must be numeric, nonnegative and finite, or NA.", call. = FALSE)
+  years <- suppressWarnings(as.numeric(sub("^X", "", colnames(data.CatL)[-1L])))
+  labels <- trimws(as.character(data.CatL[, 1L]))
+  for (i in seq_along(models)) {
+    model <- models[[i]]
+    fail <- function(part) stop("Model ", i, " does not match data.CatL: ", part, ".",
+                                call. = FALSE)
+    if (!is.null(model$year)) {
+      fit_years <- .acl_plot_year(model, ncol(observed), paste("Model", i))
+      if (length(years) != length(fit_years) || any(!is.finite(years)) ||
+          any(abs(fit_years - years) > 1e-8)) fail("time columns")
+    }
+    if (!is.null(model$len_label) &&
+        !identical(trimws(as.character(model$len_label)), labels)) fail("length labels/order")
+    if (midpoints && (!is.numeric(model$len_mid) ||
+        length(model$len_mid) != nrow(observed) || any(!is.finite(model$len_mid)) ||
+        any(diff(model$len_mid) <= 0))) fail("length midpoints")
+  }
+  if (midpoints && !isTRUE(all.equal(as.numeric(models[[1L]]$len_mid),
+                                     as.numeric(models[[2L]]$len_mid), tolerance = 1e-8)))
+    stop("Models have different length midpoints; a paired catch-at-length plot requires the same grid.",
+         call. = FALSE)
+  list(observed = observed, year = years, len_label = labels)
+}
+
+
 # ==========================================================================
 # plot_compare_ts: Time-series comparison
 # ==========================================================================
@@ -74,13 +141,14 @@ plot_compare_ts <- function(model1, model2,
                             ncol = NULL, scales = NULL,
                             return_data = FALSE) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
 
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, ncol = ncol, scales = scales,
                                m1 = model1_name, m2 = model2_name)
-  year <- model1$year
+  year1 <- .acl_plot_year(model1, name = model1_name)
+  year2 <- .acl_plot_year(model2, name = model2_name)
 
   # Aliases: user-friendly names -> report field names
   qty_aliases <- c(R = "Rec", Rec = "Rec", rec = "Rec",
@@ -108,12 +176,11 @@ plot_compare_ts <- function(model1, model2,
     # Handle matrix quantities: take column/row means or first row/col
     v1 <- as.numeric(v1); v2 <- as.numeric(v2)
     # Ensure length matches year
-    n <- length(year)
-    if (length(v1) != n || length(v2) != n) next
+    if (length(v1) != length(year1) || length(v2) != length(year2)) next
     label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
     df_list[[length(df_list) + 1]] <- data.frame(
-      Year = rep(year, 2), Value = c(as.numeric(v1), as.numeric(v2)),
-      Model = rep(c(model1_name, model2_name), each = length(year)),
+      Year = c(year1, year2), Value = c(as.numeric(v1), as.numeric(v2)),
+      Model = rep(c(model1_name, model2_name), c(length(year1), length(year2))),
       Quantity = label, stringsAsFactors = FALSE)
   }
   df <- do.call(rbind, df_list)
@@ -143,12 +210,13 @@ plot_compare_ts <- function(model1, model2,
     for (q in resolved) {
       for (info in list(list(m = model1, name = model1_name),
                         list(m = model2, name = model2_name))) {
-        rows <- grep(paste0("^", q, "$"), rownames(info$m$est_std))
-        if (length(rows) == length(year)) {
-          ss <- info$m$est_std[rows, ]
+        years <- info$m$year
+        rows <- which(rownames(info$m$est_std) == q)
+        if (length(rows) == length(years)) {
+          ss <- info$m$est_std[rows, , drop = FALSE]
           label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
           ribbon_list[[length(ribbon_list) + 1]] <- data.frame(
-            Year = year, estimate = ss[, "Estimate"],
+            Year = years, estimate = ss[, "Estimate"],
             lower = ss[, "Estimate"] - 1.96 * ss[, "Std. Error"],
             upper = ss[, "Estimate"] + 1.96 * ss[, "Std. Error"],
             Model = info$name, Quantity = label, stringsAsFactors = FALSE)
@@ -184,24 +252,27 @@ plot_compare_F <- function(model1, model2,
                            model1_name = NULL, model2_name = NULL,
                            palette = NULL) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
 
   extract_F <- function(model, mname) {
     is_alscl <- is.null(model$report$F) && !is.null(model$report$FL)
+    Fmat <- if (is_alscl) model$report$FL else model$report$F
+    if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat))
+      stop(mname, " must contain a numeric F or FL matrix.", call. = FALSE)
     if (is_alscl) {
-      Fmat <- model$report$FL
       labels <- if (!is.null(model$len_label)) model$len_label else paste0("L", seq_len(nrow(Fmat)))
       dim_type <- "length"
     } else {
-      Fmat <- model$report$F
       labels <- paste("Age", seq_len(nrow(Fmat)))
       dim_type <- "age"
     }
-    df <- reshape2::melt(Fmat)
-    colnames(df) <- c("Group", "YearIdx", "F_value")
-    df$Year  <- model$year[df$YearIdx]
-    df$Label <- factor(labels[df$Group], levels = rev(labels))
+    years <- .acl_plot_year(model, ncol(Fmat), mname)
+    if (length(labels) != nrow(Fmat) || anyNA(labels) || anyDuplicated(labels))
+      stop(mname, " length labels must match the F matrix rows and be distinct.", call. = FALSE)
+    df <- data.frame(Year = rep(years, each = nrow(Fmat)),
+                     F_value = as.numeric(Fmat),
+                     Label = factor(rep(labels, ncol(Fmat)), levels = rev(labels)))
     df$Model <- mname
     attr(df, "dim_type") <- dim_type
     return(df)
@@ -259,23 +330,30 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
                                    legend_pos = NULL, bins = 35,
                                    qq_alpha = 0.6, errorbar_width = 0.3) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, point_size = point_size,
                                legend_pos = legend_pos,
                                m1 = model1_name, m2 = model2_name)
 
-  observed  <- as.matrix(data.CatL[, 2:ncol(data.CatL)])
-  len_label <- data.CatL[, 1]
-  year <- model1$year
+  grid <- .acl_plot_comparison_grid(list(model1, model2), data.CatL)
+  observed <- grid$observed; len_label <- grid$len_label; year <- grid$year
+  if (length(year) != ncol(observed) || any(!is.finite(year)) || any(diff(year) <= 0))
+    stop("data.CatL must have finite, increasing numeric time columns.", call. = FALSE)
+  valid <- is.finite(observed) & observed > 0
+  if (!any(valid)) stop("No positive finite observations are available.", call. = FALSE)
 
   make_resid_df <- function(model, mname) {
-    df <- reshape2::melt(model$report$resid_index)
-    colnames(df) <- c("LenIdx", "YearIdx", "Residual")
-    df$Year <- year[df$YearIdx]; df$LenBin <- len_label[df$LenIdx]
-    df$Model <- mname; df$obs <- as.vector(observed)
-    df[df$obs != 0, ]
+    residuals <- model$report$resid_index
+    if (!identical(dim(residuals), dim(observed)))
+      stop(mname, " residual dimensions do not match data.CatL.", call. = FALSE)
+    if (any(!is.finite(residuals[valid])))
+      stop(mname, " residuals are non-finite for observed cells.", call. = FALSE)
+    df <- data.frame(Residual = as.numeric(residuals),
+                     Year = rep(year, each = nrow(observed)),
+                     LenBin = rep(len_label, ncol(observed)), Model = mname)
+    df[as.vector(valid), , drop = FALSE]
   }
 
   df <- rbind(make_resid_df(model1, model1_name), make_resid_df(model2, model2_name))
@@ -300,7 +378,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     base_layers + no_legend
 
   # P3: Mean residual by year
-  resid_by_year <- do.call(rbind, lapply(split(df, list(df$Year, df$Model)), function(x) {
+  resid_by_year <- do.call(rbind, lapply(split(df, list(df$Year, df$Model), drop = TRUE), function(x) {
     data.frame(Year = x$Year[1], Model = x$Model[1],
                mean_r = mean(x$Residual), sd_r = stats::sd(x$Residual),
                stringsAsFactors = FALSE)
@@ -392,8 +470,8 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
                                 show_points = TRUE, point_size = NULL,
                                 point_alpha = 0.4, nls_start = NULL) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
@@ -559,16 +637,26 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
                               obs_alpha = 0.6, obs_shape = 16,
                               legend_pos = NULL) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, legend_pos = legend_pos,
                                m1 = model1_name, m2 = model2_name)
 
-  year <- model1$year; len_mid <- model1$len_mid
+  grid <- .acl_plot_comparison_grid(list(model1, model2), data.CatL, midpoints = TRUE)
+  year <- grid$year; len_mid <- model1$len_mid; observed <- grid$observed
+  if (length(year) != ncol(observed) || any(!is.finite(year)) || any(diff(year) <= 0))
+    stop("data.CatL must have finite, increasing numeric time columns.", call. = FALSE)
+  if ("Observed" %in% model_names)
+    stop("Model names must differ from the observed-series label 'Observed'.", call. = FALSE)
   if (is.null(years)) years <- year
-  observed <- as.matrix(data.CatL[, 2:ncol(data.CatL)])
+  if (!is.numeric(years) || !length(years) || any(!is.finite(years)))
+    stop("years must contain finite numeric values.", call. = FALSE)
+  years <- unique(years[years %in% year])
+  if (!length(years)) stop("No requested years occur in data.CatL.", call. = FALSE)
   pred1 <- exp(model1$report$Elog_index); pred2 <- exp(model2$report$Elog_index)
+  if (!identical(dim(pred1), dim(observed)) || !identical(dim(pred2), dim(observed)))
+    stop("Prediction dimensions do not match data.CatL.", call. = FALSE)
 
   df_list <- list()
   for (y in years) {
@@ -635,8 +723,8 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
                                  label_size = 3.2, bar_width = 0.6,
                                  bar_alpha = 0.85) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, legend_pos = legend_pos,
                                m1 = model1_name, m2 = model2_name)
 
@@ -645,12 +733,12 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
     metric_names <- c("RMSE", "MAE", "Rsquared", "MAPE", "AIC", "BIC")
     values <- measured$Value[match(metric_names, measured$Metric)]
     names(values) <- c("RMSE", "MAE", "R2", "MAPE", "AIC", "BIC")
-    n_par <- length(model$opt$par)
-    if (!n_par) n_par <- length(model$obj$par)
+    n_par <- .acl_npar(model)
     nll <- as.numeric(model$opt$objective)[1]
     c(values, "Neg. Log-Likelihood" = nll, "N. Parameters" = n_par)
   }
   f1 <- calc_fit(model1, data.CatL); f2 <- calc_fit(model2, data.CatL)
+  .acl_plot_comparison_grid(list(model1, model2), data.CatL)
   df <- data.frame(Metric_Name = rep(names(f1), 2), Metric_Value = c(f1, f2),
                    Model = rep(c(model1_name, model2_name), each = length(f1)))
   base_layers <- .acl_base_theme()
@@ -725,8 +813,8 @@ plot_compare_selectivity <- function(model1, model2,
                                      model1_name = NULL, model2_name = NULL,
                                      colors = NULL, linetypes = NULL, linewidth = NULL) {
 
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, m1 = model1_name, m2 = model2_name)
 
@@ -750,10 +838,11 @@ plot_compare_selectivity <- function(model1, model2,
 # plot_compare_annual_F
 # ==========================================================================
 
-#' Compare Mean Annual Fishing Mortality
+#' Compare Fishing Mortality by Time Step
 #'
 #' @inheritParams plot_compare_ts
-#' @param method Character. How to summarize F across age/length groups each year.
+#' @param method Character. How to summarize F across age/length groups each model
+#'   time step. Quarterly fits remain quarterly; no annual aggregation is performed.
 #'   \code{"apical"} (default): maximum F across groups -- comparable across
 #'   age-based and length-based models.
 #'   \code{"mean"}: arithmetic mean across all groups -- can be misleading when
@@ -766,18 +855,20 @@ plot_compare_annual_F <- function(model1, model2,
                                   colors = NULL, linetypes = NULL, linewidth = NULL) {
 
   method <- match.arg(method)
-  if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
-  if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
+  model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
+  model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, m1 = model1_name, m2 = model2_name)
 
-  year <- model1$year
-  get_F <- function(m) {
+  get_F <- function(m, mname) {
     Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report$F
-    if (method == "apical") apply(Fmat, 2, max) else colMeans(Fmat)
+    if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat))
+      stop(mname, " must contain a numeric F or FL matrix.", call. = FALSE)
+    years <- .acl_plot_year(m, ncol(Fmat), mname)
+    values <- if (method == "apical") apply(Fmat, 2, max) else colMeans(Fmat)
+    data.frame(Year = years, MeanF = values, Model = mname)
   }
-  df <- data.frame(Year = rep(year, 2), MeanF = c(get_F(model1), get_F(model2)),
-                   Model = rep(c(model1_name, model2_name), each = length(year)))
+  df <- rbind(get_F(model1, model1_name), get_F(model2, model2_name))
 
   ylab <- if (method == "apical") "Apical F (max across groups)" else "Mean F"
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = MeanF, color = Model, linetype = Model)) +
