@@ -4,7 +4,12 @@
 #' Spawning Stock Biomass (SSB) and Recruitment (Rec). These metrics are fundamental in the context of fishery stock assessment.
 #'
 #' @param model_result A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec".
-#' @param age_at_recruitment Numeric. The age at which individuals are recruited. Used to align SSB with Rec. Default is 1.
+#' @param age_at_recruitment Numeric. Recruitment age in years, used to pair SSB
+#'   with later recruitment. Must be nonnegative and an exact multiple of the
+#'   model's \code{growth_step}. Default is 1 year (four periods for quarterly
+#'   fits). A value of 0 pairs SSB and recruitment in the same period. For older
+#'   fits without \code{growth_step}, the time step is inferred from \code{year},
+#'   or defaults to 1 year when no time metadata are available.
 #' @param point_color Character or NULL. NULL inherits the global point_color setting.
 #' @param point_size Numeric. The size of the points in the scatter plot. Default is 2.
 #' @param point_shape Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle).
@@ -49,15 +54,36 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
   SSB_data <- model_result[["report"]][["SSB"]]
   Rec_data <- model_result[["report"]][["Rec"]]
 
-  # Ensure age_at_recruitment does not exceed data length
-  if (age_at_recruitment >= length(SSB_data)) {
-    stop("age_at_recruitment is too large compared to data length.")
-  }
-  
-  # Adjust SSB to align with Rec based on recruitment age
-  SSB_adjusted <- SSB_data[1:(length(SSB_data) - age_at_recruitment)]
-  Rec_adjusted <- Rec_data[(age_at_recruitment + 1):length(Rec_data)]
-  
+  if (!is.numeric(age_at_recruitment) || length(age_at_recruitment) != 1L ||
+      !is.finite(age_at_recruitment) || age_at_recruitment < 0)
+    stop("age_at_recruitment must be one finite, nonnegative number of years.", call. = FALSE)
+  if (!is.numeric(SSB_data) || !is.numeric(Rec_data) || !length(SSB_data) ||
+      length(SSB_data) != length(Rec_data))
+    stop("SSB and recruitment must be numeric vectors of equal, nonzero length.", call. = FALSE)
+  years <- model_result$year
+  if (!is.null(years) && (!is.numeric(years) || length(years) != length(SSB_data) ||
+                        any(!is.finite(years)) || any(diff(years) <= 0)))
+    stop("Time metadata must contain one increasing, finite year per model period.", call. = FALSE)
+  growth_step <- model_result$growth_step
+  if (is.null(growth_step))
+    growth_step <- if (length(years) > 1L) diff(years)[1L] else 1
+  if (!is.numeric(growth_step) || length(growth_step) != 1L ||
+      !is.finite(growth_step) || growth_step <= 0)
+    stop("growth_step must be one finite, positive number of years.", call. = FALSE)
+  if (length(years) > 1L && any(abs(diff(years) - growth_step) > 1e-8 * max(1, growth_step)))
+    stop("Time column spacing must equal growth_step to align SSB and recruitment.", call. = FALSE)
+  lag <- age_at_recruitment / growth_step
+  if (!is.finite(lag) || abs(lag - round(lag)) > 1e-8 * max(1, abs(lag)))
+    stop("age_at_recruitment must be an exact multiple of growth_step.", call. = FALSE)
+  lag <- round(lag)
+  if (lag >= length(SSB_data))
+    stop("age_at_recruitment is too large compared to the time span of the data.", call. = FALSE)
+
+  # Align calendar ages with model periods before indexing the two time series.
+  source_periods <- seq_len(length(SSB_data) - lag)
+  SSB_adjusted <- SSB_data[source_periods]
+  Rec_adjusted <- Rec_data[source_periods + lag]
+
   # Create a data frame for ggplot
   plot_data <- data.frame(SSB = SSB_adjusted, Rec = Rec_adjusted)
 

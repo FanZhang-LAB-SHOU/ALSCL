@@ -131,6 +131,31 @@ test_that("full-fit failure retains every peel diagnostic and records errors", {
   expect_equal(sort(unique(out$results$Peel)), 1:2)
 })
 
+test_that("requested plotting preserves diagnostics when every fit fails", {
+  f <- fixture_frames()
+  handler <- function(args) stop("deliberate fit failure")
+  local_mocked_bindings(run_acl = retro_test_mock("acl", handler),
+                        run_alscl = retro_test_mock("alscl", handler), .package = "ALSCL")
+  for (fun in list(retro_acl, retro_alscl)) {
+    warnings <- character()
+    out <- withCallingHandlers(fun(f, nyear = 2, plot = TRUE, silent = TRUE),
+      warning = function(w) {
+        warnings <<- c(warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      })
+    expect_length(warnings, 2L)
+    expect_match(warnings[1], "Mohn's rho is unavailable")
+    expect_match(warnings[2], "plot skipped")
+    expect_true("plot" %in% names(out))
+    expect_null(out$plot)
+    expect_equal(nrow(out$results), 0L)
+    expect_equal(out$fit_diagnostics$Peel, 0:2)
+    expect_equal(out$errors$Peel, 0:2)
+    expect_true(all(out$errors$error == "deliberate fit failure"))
+    expect_true(all(is.na(out$rho_text$Rho)))
+  }
+})
+
 test_that("a failed peel is not omitted from Mohn's rho or diagnostic rows", {
   f <- fixture_frames()
   handler <- function(args) {

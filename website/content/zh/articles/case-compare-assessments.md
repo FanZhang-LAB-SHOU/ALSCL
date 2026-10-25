@@ -100,3 +100,15 @@ writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 ## 继续追查差异
 
 审查固定的生物假设、残差结构以及对初值的敏感性。[模型比较绘图](model-comparison.html) 提供调查拟合、死亡率与生长的对照；[回溯分析案例](case-retrospective-bias.html) 检查移除末端观测后估计如何修订。
+
+## 2.2.4 中比较同模型的两套配置
+
+同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
+
+```r
+a_group <- run_acl(x, F_structure = "group_year", silent = TRUE)
+a_shared <- run_acl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(a_group, a_shared, quantities = "SSB")
+plot_compare_annual_F(a_group, a_shared)
+plot_compare_F(a_group, a_shared)
+```

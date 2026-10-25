@@ -73,3 +73,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 逐步删除末端观测并重拟合；各颜色代表不同截止期。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
+
+## 全部拟合失败时保留诊断
+
+当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。

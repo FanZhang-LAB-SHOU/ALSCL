@@ -45,7 +45,8 @@ initialize_params(
 
 \item{rec.age}{Numeric. Age of recruitment (default 1; use 0.25 for quarterly).}
 
-\item{first.year}{Integer. First year of the observation window (default 2020).}
+\item{first.year}{Numeric. First year of the observation window (default 2020).
+Fractional years are allowed for subannual observations.}
 
 \item{nage}{Integer. Number of age classes including plus-group (default 15).}
 
@@ -105,7 +106,8 @@ presets. NULL (default) uses generic defaults equivalent to flatfish.}
 
 \item{growth_step}{Time step in years; defaults to the species preset.}
 
-\item{burn_in}{Simulation years discarded before returning observations.}
+\item{burn_in}{Simulation years discarded before returning observations;
+must be an exact multiple of \code{growth_step} and smaller than \code{nyear}.}
 
 \item{observation_error}{Independent lognormal errors per length and time cell,
 or shared_time for an explicitly misspecified, perfectly correlated scenario.}

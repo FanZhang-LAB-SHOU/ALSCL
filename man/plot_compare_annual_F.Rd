@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_annual_F}
 \alias{plot_compare_annual_F}
-\title{Compare Mean Annual Fishing Mortality}
+\title{Compare Fishing Mortality by Time Step}
 \usage{
 plot_compare_annual_F(
   model1,
@@ -22,7 +22,8 @@ plot_compare_annual_F(
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{method}{Character. How to summarize F across age/length groups each year.
+\item{method}{Character. How to summarize F across age/length groups each model
+time step. Quarterly fits remain quarterly; no annual aggregation is performed.
 \code{"apical"} (default): maximum F across groups -- comparable across
 age-based and length-based models.
 \code{"mean"}: arithmetic mean across all groups -- can be misleading when
@@ -38,5 +39,5 @@ models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).
 A ggplot object.
 }
 \description{
-Compare Mean Annual Fishing Mortality
+Compare Fishing Mortality by Time Step
 }

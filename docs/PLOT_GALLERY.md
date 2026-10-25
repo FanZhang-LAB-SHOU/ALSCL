@@ -378,6 +378,10 @@ Recruitment enters the youngest age class; its interpretation depends on recruit
 <a id="SSB_Rec"></a>
 ## 18. 亲体与补充关系 / Spawning biomass and recruitment
 
+`age_at_recruitment` 的单位是年。`plot_SSB_Rec()` 除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
+
+`age_at_recruitment` is in years. `plot_SSB_Rec()` divides it by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_SSB_Rec(b, age_at_recruitment = 1)
@@ -385,9 +389,9 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [![亲体与补充关系 / Spawning biomass and recruitment](figures/ytf/SSB_Rec.png)](figures/ytf/SSB_Rec.png)
 
-横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。
+本年度示例按 1 年（1 个观测步）对齐 SSB 与后续补充量；季度数据会自动换算为 4 步。这里只画散点，不拟合资源补充函数。
 
-Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.
+This annual example aligns SSB with recruitment one year (one step) later; quarterly data use four steps for the same age. This is a scatter plot, not a fitted stock recruitment curve.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -536,6 +540,10 @@ Since 2.2.3, the horizontal axis uses actual length midpoints, with one panel pe
 <a id="residuals_length"></a>
 ## 27. 对数残差 length / Log residuals length
 
+`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
+
+`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
@@ -646,6 +654,10 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 <a id="ridges"></a>
 ## 33. 长度组成山脊图 / Length composition ridges
 
+`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
+
+`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
@@ -653,9 +665,9 @@ plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
 
 [![长度组成山脊图 / Length composition ridges](figures/ytf/ridges.png)](figures/ytf/ridges.png)
 
-每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。需当前会话中的 obj。
+每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。保留 observations 的保存结果无需活跃 obj。
 
-Each period is normalized separately: observations left, fit right. This does not show total abundance trends. A live obj is required.
+Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results retaining observations do not require a live obj.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_ridges)
 
@@ -663,6 +675,10 @@ Each period is normalized separately: observations left, fit right. This does no
 
 <a id="compare_ts"></a>
 ## 34. 种群时间序列比较 / Population time series comparison
+
+同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
+
+Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
 
 ```r
 # 绘制本图 / Draw this figure

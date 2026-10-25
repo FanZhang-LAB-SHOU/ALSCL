@@ -45,7 +45,8 @@ Inspect the returned tables and exported CSV files. This simplified annual simul
 Use this path when the question concerns bias, uncertainty or differences between an operating model and an estimator.
 
 ```r
-pa <- initialize_params(species = "flatfish", observation_error = "independent")
+pa <- initialize_params(species = "flatfish", first.year = 2000,
+                        observation_error = "independent")
 bio <- sim_cal(pa)
 sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
                output_dir = "my_full_simulation")
@@ -155,3 +156,25 @@ For quarters, start with `initialize_params(species = "tuna")` and regenerate bi
 Confirm table alignment, time units, retained duration, generating biology and observation error before fitting. Two replicates demonstrate file handling; they do not establish performance. For a simulation study, vary the target assumption deliberately and retain failed fits alongside bias, RMSE and interval coverage.
 
 Continue with the [simulation function guide](simulation.html), [annual and quarterly settings](case-studies.html), or [fitting tables and specifying biology](case-fit-survey.html).
+
+## Simulation settings and time labels in 2.2.4
+
+Since 2.2.4, `mean_F` in the quick annual simulator is the arithmetic mean of the generated F trajectory; `mean_F = 0` generates zero F. The corrected trajectory changes newly simulated observations even with an old seed. Previously bundled datasets and figures retain their original generating truth.
+
+For the full simulator, `nyear` and `burn_in` are durations in years and must each contain a whole number of `growth_step` intervals. Thus a half-year burn-in is valid with quarterly steps, but not annual steps. Returned `sm$nyear` counts retained steps. `first.year` labels the first retained observation, and `sm$years` records the complete retained calendar. `simulation_to_tables()` and `sim_acl()` preserve this calendar; old files lacking year metadata still have a documented 2000-based fallback. A single retained period stays a matrix, although fitting requires at least two periods.
+
+`sim_acl()` resolves path and parameter variables before sending tasks to socket workers, so ordinary console/script calls work with multiple cores. Retain failed replicates and inspect each fit's diagnostics; successful worker execution alone does not establish a usable assessment.
+
+```r
+quick <- simulate_example_data(years = 2000:2019, mean_F = 0.3, seed = 42)
+stopifnot(isTRUE(all.equal(mean(quick$true_params$F_trend), 0.3)))
+zero_F <- simulate_example_data(years = 2000:2019, mean_F = 0, seed = 42)
+stopifnot(all(zero_F$true_params$F_trend == 0))
+pa <- initialize_params(species = "flatfish", nyear = 5, burn_in = 2,
+                        first.year = 2024)
+sm <- sim_data(sim_cal(pa), pa, iter_range = 4:5, return_iter = 4,
+               output_dir = "simulation_224")
+stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
+source("scripts/simulation_workflow.R", encoding = "UTF-8")
+inputs <- simulation_to_tables(sm, pa)
+```

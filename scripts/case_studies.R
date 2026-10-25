@@ -17,7 +17,9 @@ run_case_studies <- function(out='docs') {
     message('CASE ',sp)
     folder <- file.path(out,'data','cases',sp)
     z <- readRDS(file.path(folder,'truth.rds')); pa<-z$parameters; sm<-z$truth
-    inp <- simulation_to_tables(sm,pa); bio <- sim_cal(pa)
+    # 历史内附案例使用 2000 年起始 / Historical bundled cases start in 2000.
+    inp <- simulation_to_tables(sm,pa,first_year=if(is.null(sm$years)) 2000 else NULL)
+    bio <- sim_cal(pa)
     # 固定已知生物参数，保留条件估计 / Conditional estimation with known biology.
     pA <- list(log_Linf=log(pa$Linf),log_vbk=log(pa$vbk),t0=pa$t0,
       log_cv_len=log(pa$cv_L),log_std_log_F=log(pa$F_sd),

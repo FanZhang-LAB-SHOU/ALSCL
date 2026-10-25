@@ -204,7 +204,7 @@ NULL
     compare_CatL    = "Observed vs Predicted Catch-at-Length",
     compare_metrics = "Model Fit Comparison: {m1} vs {m2}",
     compare_sel     = "Survey Selectivity at Length",
-    compare_annualF = "Mean Annual Fishing Mortality"
+    compare_annualF = "Fishing Mortality by Time Step"
   ),
 
   # --- Axis labels ---------------------------------------------------------

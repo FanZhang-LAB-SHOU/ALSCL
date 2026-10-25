@@ -93,7 +93,9 @@ assessment model commonly used in fishery science. The function can handle two t
 \enumerate{
 \item "length", where residuals are calculated over length groups for each year, and
 \item "year", where residuals are calculated over years for each length group.
-Each index is represented in a separate facet.
+Each index is represented in a separate facet. Missing and zero observations
+are excluded using the fit's stored observations, including saved fits without
+a live TMB object. Older fits use the observation mask in the TMB data.
 }
 }
 \examples{

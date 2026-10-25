@@ -1,0 +1,100 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-assessment-regression.R","assessment-regression","ACL group_year fits with the default assessment map",23,0,FALSE,FALSE,0,0.979,0.02,1.012,23
+"test-assessment-regression.R","assessment-regression","ACL year fits with the default assessment map",24,0,FALSE,FALSE,0,0.44,0.014,0.461,24
+"test-assessment-regression.R","assessment-regression","ACL group_year fits with only t0 fixed, quarterly steps and missing observations",24,0,FALSE,FALSE,0,0.858,0.016,0.88,24
+"test-assessment-regression.R","assessment-regression","ACL year fits with only t0 fixed, quarterly steps and missing observations",25,0,FALSE,FALSE,0,0.393,0.012,0.407,25
+"test-assessment-regression.R","assessment-regression","ALSCL group_year fits with the default assessment map",23,0,FALSE,FALSE,0,3.136,0.039,3.206,23
+"test-assessment-regression.R","assessment-regression","ALSCL year fits with the default assessment map",24,0,FALSE,FALSE,0,1.487,0.016,1.517,24
+"test-assessment-regression.R","assessment-regression","ALSCL group_year fits with only t0 fixed, quarterly steps and missing observations",25,0,FALSE,FALSE,0,3.473,0.092,3.875,25
+"test-assessment-regression.R","assessment-regression","ALSCL year fits with only t0 fixed, quarterly steps and missing observations",25,0,FALSE,FALSE,0,1.28,0.062,1.501,25
+"test-catchability-plot.R","catchability-plot","catchability plots connect inputs without smoothing overshoot",3,0,FALSE,FALSE,0,0.182,0.005,0.189,3
+"test-comparison-plots-224.R","comparison-plots-224","all comparison plots keep same-model fits in distinct groups",38,0,FALSE,FALSE,0,1.372,0.036,1.449,38
+"test-comparison-plots-224.R","comparison-plots-224","time-series and F plots preserve each fit's calendar and dimensions",19,0,FALSE,FALSE,0,0.222,0.012,0.253,19
+"test-comparison-plots-224.R","comparison-plots-224","plots paired to one observed table reject calendar and length mismatches",11,0,FALSE,FALSE,0,0.0539999999999985,0.005,0.0689999999999991,11
+"test-comparison-plots-224.R","comparison-plots-224","paired residual plots omit missing cells and entirely missing periods",17,0,FALSE,FALSE,0,0.0789999999999988,0.006,0.0960000000000001,17
+"test-comparison-plots-224.R","comparison-plots-224","metric plots do not label unavailable parameter counts as zero",7,0,FALSE,FALSE,0,0.0690000000000008,0.004,0.0739999999999998,7
+"test-comparison-screen.R","comparison-screen","comparison preference requires numerical screens and matching observations",12,0,FALSE,FALSE,0,0.0269999999999992,0.004,0.032,12
+"test-comparison-screen.R","comparison-screen","comparisons reject data, period, bin and mask mismatches",6,0,FALSE,FALSE,0,0.0190000000000001,0.001,0.0209999999999972,6
+"test-comparison-screen.R","comparison-screen","legacy fits retain raw comparison tables without claiming verified comparability",8,0,FALSE,FALSE,0,0.016,0.003,0.0189999999999984,8
+"test-comparison-screen.R","comparison-screen","comparison accepts core-normalized labels and matrices with distinct default names",4,0,FALSE,FALSE,0,0.00900000000000034,0.000999999999999945,0.0110000000000028,4
+"test-comparison-screen.R","comparison-screen","a missing parameter count cannot win a comparison as a zero-parameter model",6,0,FALSE,FALSE,0,0.0129999999999999,0.001,0.0150000000000006,6
+"test-diagnostics.R","diagnostics","Mohn rho averages terminal-year differences over all peels",2,0,FALSE,FALSE,0,0.0220000000000002,0.001,0.0240000000000009,2
+"test-diagnostics.R","diagnostics","diagnostics use maximum absolute gradients and valid observation pairs",6,0,FALSE,FALSE,0,0.0080000000000009,0.002,0.00899999999999679,6
+"test-diagnostics.R","diagnostics","growth confidence intervals include Linf and parameter covariances",2,0,FALSE,FALSE,0,0.00799999999999912,0.001,0.00900000000000034,2
+"test-fit-bundle.R","fit-bundle","structured bundles select the correct model and preserve explicit overrides",12,0,FALSE,FALSE,0,0.0120000000000005,0.003,0.0150000000000006,12
+"test-fit-bundle.R","fit-bundle","bundles reject malformed or incomplete settings before fitting",10,0,FALSE,FALSE,0,0.0240000000000009,0.001,0.0250000000000021,10
+"test-fit-bundle.R","fit-bundle","call overrides reach the core and defaults follow the final ncores",14,0,FALSE,FALSE,0,0.0280000000000005,0.004,0.032,14
+"test-fit-bundle.R","fit-bundle","both bundle forms produce the same fitted results as the legacy interface",24,0,FALSE,FALSE,0,0.372999999999999,0.027,0.405000000000001,24
+"test-fit.R","fit","both public fitting APIs return finite usable results and consistent diagnostics",36,0,FALSE,FALSE,0,1.087,0.106,1.248,36
+"test-fit.R","fit","parallel starts agree with serial fits without jittering fixed effects",4,0,FALSE,FALSE,0,0.161999999999999,0.119,2.373,4
+"test-fit.R","fit","retrospective wrappers preserve positional parameters and socket results",2,0,FALSE,FALSE,0,0.215000000000003,0.213,1.686,2
+"test-fit.R","fit","sim_acl reads saved simulations and honors bounds-only calls",5,0,FALSE,FALSE,0,0.0719999999999992,0.059,0.164999999999999,5
+"test-input.R","input","midpoints preserve unequal widths and decimals",7,0,FALSE,FALSE,0,0.0110000000000028,0.004,0.0150000000000006,7
+"test-input.R","input","quarterly ages agree with simulation and missing cells are safe",6,0,FALSE,FALSE,0,0.0160000000000018,0.005,0.0199999999999996,6
+"test-input.R","input","core calls reject gaps and mismatched model steps before fitting",6,0,FALSE,FALSE,0,0.0189999999999984,0.003,0.0219999999999985,6
+"test-input.R","input","legacy parameter calls, named bounds and maps are aligned",9,0,FALSE,FALSE,0,0.0109999999999992,0.003,0.0139999999999993,9
+"test-input.R","input","one requested optimization pass performs one call",2,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00400000000000134,2
+"test-input.R","input","empty overrides preserve defaults and unnamed ALSCL maps are rejected",3,0,FALSE,FALSE,0,0.00900000000000034,0.003,0.0120000000000005,3
+"test-missing-lag-224.R","missing-lag-224","ridge observations exclude missing periods and zero observations in portable fits",8,0,FALSE,FALSE,0,0.163999999999998,0.00800000000000001,0.174000000000003,8
+"test-missing-lag-224.R","missing-lag-224","ridge auto scaling and rendering tolerate an entirely missing period",3,0,FALSE,FALSE,0,0.343,0.005,0.352,3
+"test-missing-lag-224.R","missing-lag-224","residual plots apply the same missing mask after removing the live object",9,0,FALSE,FALSE,0,0.134999999999998,0.004,0.140000000000001,9
+"test-missing-lag-224.R","missing-lag-224","observation extraction preserves genuine log-zero observations and rejects mismatches",6,0,FALSE,FALSE,0,0.0569999999999986,0.002,0.0600000000000023,6
+"test-missing-lag-224.R","missing-lag-224","SSB recruitment alignment converts recruitment years to model periods",9,0,FALSE,FALSE,0,0.132999999999999,0.004,0.138999999999999,9
+"test-missing-lag-224.R","missing-lag-224","SSB recruitment alignment validates age, resolution, and metadata",11,0,FALSE,FALSE,0,0.0219999999999985,0,0.0230000000000032,11
+"test-model-core.R","model-core","age-length probabilities match the normal distribution throughout the CV range",18,0,FALSE,FALSE,0,0.0549999999999997,0.012,0.0670000000000002,18
+"test-model-core.R","model-core","ACL plus group retains the previous oldest fish",1,0,FALSE,FALSE,0,0.00400000000000134,0.00099999999999989,0.004999999999999,1
+"test-model-core.R","model-core","ALSCL conserves survivors and recovers constant F including the plus group entry",13,0,FALSE,FALSE,0,0.0289999999999999,0.004,0.0339999999999989,13
+"test-model-core.R","model-core","double evaluation never depends on uninitialized Eigen storage",6,0,FALSE,FALSE,0,0.0889999999999986,0.0170000000000001,5.869,6
+"test-palettes.R","palettes","ggsci settings propagate and explicit overrides survive",9,0,FALSE,FALSE,0,0.0869999999999997,0.0209999999999999,0.111999999999998,9
+"test-palettes.R","palettes","retrospective colors follow terminal periods and allow overrides",9,0,FALSE,FALSE,0,0.225999999999999,0.00500000000000012,0.239000000000001,9
+"test-palettes.R","palettes","continuous and ridge palettes retain legacy options",13,0,FALSE,FALSE,0,0.0120000000000005,0.00099999999999989,0.0139999999999993,13
+"test-palettes.R","palettes","ridges keep ordered gradient colors independently of categorical themes",9,0,FALSE,FALSE,0,0.358000000000001,0.006,0.366,9
+"test-parallel.R","parallel","fixed multistart work is reproducible across socket worker counts",28,0,FALSE,FALSE,0,0.338000000000001,0.144,2.948,28
+"test-parallel.R","parallel","worker cap and original ncores-only calls remain valid",6,0,FALSE,FALSE,0,0.119,0.114,1.35,6
+"test-parallel.R","parallel","sequential jitter preserves the caller's RNG state and RNG kind",3,0,FALSE,FALSE,0,0.0799999999999983,0.065,1.226,3
+"test-parallel.R","parallel","a failed start retains useful diagnostics",4,0,FALSE,FALSE,0,0.00600000000000023,0.00299999999999989,0.00999999999999801,4
+"test-parallel.R","parallel","both retrospective models agree with 1, 2 and 4 requested workers",8,0,FALSE,FALSE,0,0.573,0.494,6.237,8
+"test-parallel.R","parallel","sim_acl fits actual replicates on the requested socket workers",11,0,FALSE,FALSE,0,0.215,0.146,3.625,11
+"test-plot-workflow.R","plot-workflow","comparison plots use the diagnostic observation mask and metrics",20,0,FALSE,FALSE,0,0.217000000000002,0.0179999999999998,0.258000000000003,20
+"test-plot-workflow.R","plot-workflow","length fishing-mortality plots use actual midpoints and facet by year",23,0,FALSE,FALSE,0,0.184000000000001,0.012,0.204999999999998,23
+"test-plot-workflow.R","plot-workflow","year fishing-mortality plots preserve time axes and length facets",8,0,FALSE,FALSE,0,0.117000000000001,0.004,0.122,8
+"test-plot-workflow.R","plot-workflow","length plots reject incomplete outputs and identify the legacy ACL alias",5,0,FALSE,FALSE,0,0.0879999999999974,0.00200000000000022,0.0910000000000011,5
+"test-refinement.R","refinement","an unchanged failed pass preserves earlier success and all pass records",5,0,FALSE,FALSE,0,0.00400000000000134,0.00099999999999989,0.00600000000000023,5
+"test-refinement.R","refinement","refinement improves a quadratic and respects safety guards",12,0,FALSE,FALSE,0,0.0199999999999996,0.004,0.0240000000000009,12
+"test-refinement.R","refinement","natural-scale diagnostics detect boundaries beyond optimizer bounds",6,0,FALSE,FALSE,0,0.0110000000000028,0.00300000000000011,0.0129999999999981,6
+"test-refinement.R","refinement","shared F uses a one-dimensional normalized AR1 density in both templates",6,0,FALSE,FALSE,0,0.032,0.00499999999999989,0.0379999999999967,6
+"test-refinement.R","refinement","shared F fits, plots, direct calls and socket starts work for both models",26,0,FALSE,FALSE,0,0.498000000000001,0.321,3.40300000000001,26
+"test-retro-workflow.R","retro-workflow","retrospective bundles retain model settings and explicit NULL overrides",25,0,FALSE,FALSE,0,0.0739999999999981,0.0209999999999999,0.102999999999994,25
+"test-retro-workflow.R","retro-workflow","flat bundles and legacy positional retrospective calls agree",7,0,FALSE,FALSE,0,0.140000000000001,0.0100000000000002,0.157000000000004,7
+"test-retro-workflow.R","retro-workflow","one invalid peel suppresses aggregate rho without discarding raw estimates",10,0,FALSE,FALSE,0,0.125,0.00499999999999989,0.136000000000003,10
+"test-retro-workflow.R","retro-workflow","full-fit failure retains every peel diagnostic and records errors",8,0,FALSE,FALSE,0,0.0219999999999985,0.00300000000000011,0.0260000000000034,8
+"test-retro-workflow.R","retro-workflow","requested plotting preserves diagnostics when every fit fails",20,0,FALSE,FALSE,0,0.0279999999999987,0.00499999999999989,0.0330000000000013,20
+"test-retro-workflow.R","retro-workflow","a failed peel is not omitted from Mohn's rho or diagnostic rows",7,0,FALSE,FALSE,0,0.0259999999999998,0.00300000000000011,0.029999999999994,7
+"test-retro-workflow.R","retro-workflow","missing diagnostics and nonfinite terminal values cannot pass the screen",7,0,FALSE,FALSE,0,0.0390000000000015,0.00200000000000022,0.0419999999999945,7
+"test-retro-workflow.R","retro-workflow","nonzero raw optimizer codes remain usable after successful refinement",3,0,FALSE,FALSE,0,0.0150000000000006,0.00099999999999989,0.0169999999999959,3
+"test-retro-workflow.R","retro-workflow","all failed fits return diagnostics and plot errors clearly",4,0,FALSE,FALSE,0,0.0139999999999993,0.00099999999999989,0.0150000000000006,4
+"test-retro-workflow.R","retro-workflow","retrospectives reject unnamed time columns before building fit records",1,0,FALSE,FALSE,0,0.004999999999999,0,0.00500000000000256,1
+"test-simulation-224.R","simulation-224","quick simulations realize the requested arithmetic mean F including zero",40,0,FALSE,FALSE,0,0.065999999999999,0.0110000000000001,0.0769999999999982,40
+"test-simulation-224.R","simulation-224","annual and quarterly simulators retain calendar years and one-period matrices",72,0,FALSE,FALSE,0,0.0899999999999999,0.0249999999999999,0.116,72
+"test-simulation-224.R","simulation-224","simulation timing rejects fractional subscripts and invalid seeds",17,0,FALSE,FALSE,0,0.0389999999999979,0.00099999999999989,0.0399999999999991,17
+"test-simulation-224.R","simulation-224","simulation time metadata has a defined legacy fallback and is validated",6,0,FALSE,FALSE,0,0.0100000000000016,0.00199999999999978,0.0120000000000005,6
+"test-simulation-224.R","simulation-224","global-script batch arguments work on actual socket workers",18,0,FALSE,FALSE,0,0.0629999999999988,0.052,2.412,18
+"test-simulation.R","simulation","simulation uses consistent age units and independent survey errors by default",9,0,FALSE,FALSE,0,0.0269999999999975,0.00700000000000012,0.034000000000006,9
+"test-simulation.R","simulation","example observations are survey abundance rather than Baranov catch",1,0,FALSE,FALSE,0,0.00300000000000011,0.00099999999999989,0.00399999999999778,1
+"test-simulation.R","simulation","manual quarterly age simulations retain quarterly observation labels",5,0,FALSE,FALSE,0,0.00799999999999912,0.00300000000000011,0.0110000000000028,5
+"test-speed-single-quantity.R","speed-single-quantity","a single remaining delta quantity is computed without starting a worker",3,0,FALSE,FALSE,0,0.004999999999999,0.00099999999999989,0.00600000000000023,3
+"test-speed.R","speed","alscl_speed validates and restores settings",14,0,FALSE,FALSE,0,0.0230000000000032,0.00199999999999978,0.0260000000000034,14
+"test-speed.R","speed","standard errors fork where it is safe and use socket workers elsewhere",19,0,FALSE,FALSE,0,0.0180000000000007,0.00700000000000012,0.036999999999999,19
+"test-speed.R","speed","only checked TMB versions use the parallel delta method",4,0,FALSE,FALSE,0,0.00799999999999912,0.00200000000000022,0.00900000000000034,4
+"test-speed.R","speed","parallel optimHess is identical to stats::optimHess with random effects",8,0,FALSE,FALSE,0,2.406,0.243,3.22,8
+"test-speed.R","speed","forked processes give standard errors identical to TMB::sdreport",48,0,FALSE,FALSE,0,2.042,0.315,3.204,48
+"test-speed.R","speed","socket workers give standard errors identical to TMB::sdreport",52,0,FALSE,FALSE,0,2.626,0.108,5.532,52
+"test-speed.R","speed","with little work the socket path computes standard errors in the main process",12,0,FALSE,FALSE,0,0.219999999999999,0.00800000000000001,0.227999999999994,12
+"test-speed.R","speed","the identity test cannot pass through the fallback",2,0,FALSE,FALSE,0,0.146999999999998,0.0659999999999998,0.316999999999993,2
+"test-speed.R","speed","a failure to fork falls back to sequential standard errors",6,0,FALSE,FALSE,0,0.201,0.02,0.22999999999999,6
+"test-speed.R","speed","a failure to start socket workers falls back to sequential standard errors",3,0,FALSE,FALSE,0,0.207999999999998,0.0129999999999999,0.227000000000004,3
+"test-speed.R","speed","an unchecked TMB version computes standard errors sequentially without workers",5,0,FALSE,FALSE,0,0.192,0.0089999999999999,0.206999999999994,5
+"test-speed.R","speed","fits give identical standard errors with one and two cores, by either method",16,0,FALSE,FALSE,0,0.209999999999997,0.0470000000000002,1.002,16
+"test-speed.R","speed","fit messages say how standard errors were computed",4,0,FALSE,FALSE,0,0.00500000000000256,0.00200000000000022,0.00699999999999079,4
+"test-speed.R","speed","TMBad and CppAD fits agree to rounding",8,0,FALSE,FALSE,0,0.299000000000003,0.0419999999999998,0.403000000000006,8
+"test-ytf-example.R","ytf-example","the bundled YTF example has aligned positive survey input and provenance",16,0,FALSE,FALSE,0,0.0219999999999985,0.00800000000000001,0.0400000000000063,16

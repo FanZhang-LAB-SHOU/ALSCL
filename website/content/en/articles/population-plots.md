@@ -314,6 +314,28 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 [![Spawning biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
 
 
-Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.
+This annual example aligns SSB with recruitment one year (one step) later; quarterly data use four steps for the same age. This is a scatter plot, not a fitted stock recruitment curve.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
+
+## Missing observations and saved results in 2.2.4
+
+`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.
+
+```r
+portable <- b
+portable$obj <- NULL
+plot_residuals(portable)
+plot_ridges(portable)
+```
+
+## Recruitment lag on a quarterly grid
+
+`age_at_recruitment` is in years. `plot_SSB_Rec()` divides it by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
+
+```r
+q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
+          report = list(SSB = 1:8, Rec = 101:108))
+paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
+stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
+```

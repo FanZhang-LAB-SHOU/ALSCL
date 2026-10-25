@@ -28,7 +28,12 @@ plot_SSB_Rec(
 \arguments{
 \item{model_result}{A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec".}
 
-\item{age_at_recruitment}{Numeric. The age at which individuals are recruited. Used to align SSB with Rec. Default is 1.}
+\item{age_at_recruitment}{Numeric. Recruitment age in years, used to pair SSB
+with later recruitment. Must be nonnegative and an exact multiple of the
+model's \code{growth_step}. Default is 1 year (four periods for quarterly
+fits). A value of 0 pairs SSB and recruitment in the same period. For older
+fits without \code{growth_step}, the time step is inferred from \code{year},
+or defaults to 1 year when no time metadata are available.}
 
 \item{point_size}{Numeric. The size of the points in the scatter plot. Default is 2.}
 
