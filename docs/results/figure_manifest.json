@@ -223,7 +223,7 @@
     "id": "F_ACL_length",
     "zh": "ACL 捕捞死亡率 length",
     "en": "ACL fishing mortality length",
-    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "code": "plot_fishing_mortality(a, type = \"age\", se = TRUE, facet_ncol = 4, line_size = 0.6)",
     "note_zh": "当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。",
     "note_en": "In this version, ACL length is an alias of age; the output is still age-specific F.",
     "warnings": [],
@@ -253,11 +253,12 @@
     "id": "F_ALSCL_length",
     "zh": "ALSCL 捕捞死亡率 length",
     "en": "ALSCL fishing mortality length",
-    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
-    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
-    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "code": "plot_fishing_mortality(b, type = \"length\", se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "2.2.3 重绘：真实体长横轴、年份分面和近似 95% 区间。内置 YTF_example 的条件教学拟合。",
+    "note_en": "Redrawn with 2.2.3: actual length axis, year facets and approximate 95% intervals. Conditional teaching fit of YTF_example.",
     "warnings": [],
-    "status": "PASS"
+    "status": "PASS",
+    "package_version": "2.2.3"
   },
   "residuals_length": {
     "id": "residuals_length",

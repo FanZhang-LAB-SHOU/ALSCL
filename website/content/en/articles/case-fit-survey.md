@@ -2,7 +2,7 @@
 
 ## The input bundle
 
-ALSCL 2.2.2 includes a complete [executable example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
+ALSCL 2.2.3 includes a complete [executable example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
 
 |Field in x|Contents|
 |---|---|
@@ -136,7 +136,7 @@ Check the optimizer code, gradient, Hessian, boundary hits, uncertainty and resi
 
 ## Run the complete example
 
-Install ALSCL 2.2.2 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
+Install ALSCL 2.2.3 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
 
 ```r
 library(ALSCL)
@@ -147,12 +147,12 @@ source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 This creates `x`, `a` (ACL) and `b` (ALSCL), and writes inputs, portable result summaries, two PNG figures and session information to `output/own-data-example`. Change that output directory when setting up your assessment. The complete code follows; copy it into an R script or edit the supplied file.
 
 ```r
-# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.3: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.2")
+stopifnot(packageVersion("ALSCL") >= "2.2.3")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
 # data.CatL.csv, data.wgt.csv, data.mat.csv.
@@ -318,6 +318,26 @@ b <- run_alscl(x)
 ```
 
 Keep the original data, configuration, provenance and package version together. The older `fit_survey_tables()` helper, separate-argument calls and `do.call()` remain supported.
+
+## Continue with comparison and retrospectives in 2.2.3
+
+Starting in 2.2.3, both fitting functions check the time grid directly: consecutive numeric column labels must differ by `growth_step`. For annual data, `2000, 2001, 2003` is rejected because 2002 is absent. Keep 2002 as an all-`NA` survey column, and provide complete weight and maturity columns for that period. Quarterly labels such as `2000, 2000.25, 2000.5` require `growth_step = 0.25`. The model does not interpolate missing periods or reinterpret irregular intervals.
+
+```r
+comparison <- compare_models(a, b, x$data.CatL)
+comparison$fit_diagnostics
+comparison$comparison
+ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
+rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
+rb$fit_diagnostics
+rb$rho_by_peel
+rb$rho_text
+plot_fishing_mortality(b, type = "length", se = TRUE)
+```
+
+In 2.2.3, `compare_models()` checks both fits against the supplied survey table: time labels, length-bin labels and order, positive observed values and their observation mask must agree. A known mismatch is an error. Older saved results without enough metadata remain readable, but automatic preference is withheld. If either fit fails the numerical screen, the function warns and retains raw AIC/BIC and fit statistics for inspection without declaring a preferred model. Read `comparison$fit_diagnostics` and `comparison$comparison` (`data_verified`, `eligible`, `preferred`, `issues`). A passed screen permits a conditional comparison; you must still assess likelihood comparability and biological assumptions.
+
+`fit_diagnostics` includes the full fit (`Peel = 0`) and every requested peel, with elapsed time, raw optimizer status, gradient, Hessian, boundaries and errors. `rho_by_peel` contains screened `Rho`, diagnostic `RawRho` and `Valid`. A quantity receives a reported value in `rho_text$Rho` only if the full fit and all requested peels pass the numerical screen and all terminal comparisons are finite with a nonzero reference. Otherwise it is `NA`, with a warning; failed peels are never silently dropped. `raw_rho_text` is an unscreened diagnostic summary, not a replacement for the screened result. It remains `NA` when a terminal comparison is missing. Available trajectories remain in `results` for inspection.
 
 ## Refinement and shared F in 2.2.2
 

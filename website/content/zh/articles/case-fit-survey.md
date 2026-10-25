@@ -2,7 +2,7 @@
 
 ## 输入列表的结构
 
-ALSCL 2.2.2 提供了[完整可执行脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R)：读取 CSV 或 Excel 三表、组装 `x`、直接调用 `run_acl(x)` 和 `run_alscl(x)`、检查诊断、绘图并保存结果。演示使用内附的模拟 YTF 数据。**换成正式数据时，必须修改第 1–3 步的数据、生物参数、参数边界和固定假设，不能只换文件路径。**
+ALSCL 2.2.3 提供了[完整可执行脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R)：读取 CSV 或 Excel 三表、组装 `x`、直接调用 `run_acl(x)` 和 `run_alscl(x)`、检查诊断、绘图并保存结果。演示使用内附的模拟 YTF 数据。**换成正式数据时，必须修改第 1–3 步的数据、生物参数、参数边界和固定假设，不能只换文件路径。**
 
 |x 中的字段|内容|
 |---|---|
@@ -136,7 +136,7 @@ diagnose_model(x$data.CatL, fit_alscl)
 
 ## 运行完整示例
 
-安装 ALSCL 2.2.2 并下载仓库，从仓库根目录运行。导入辅助函数属于仓库脚本，不是安装包的导出函数。读取 CSV 不需要额外读取器；读取 Excel 时先安装一次 `readxl`。
+安装 ALSCL 2.2.3 并下载仓库，从仓库根目录运行。导入辅助函数属于仓库脚本，不是安装包的导出函数。读取 CSV 不需要额外读取器；读取 Excel 时先安装一次 `readxl`。
 
 ```r
 library(ALSCL)
@@ -147,14 +147,14 @@ source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 脚本创建 `x`、`a`（ACL）和 `b`（ALSCL），并在 `output/own-data-example` 保存输入、可移植结果摘要、两张 PNG 图和会话信息。正式分析时也应修改输出目录。下面是完整代码，可复制为 R 脚本，也可直接修改配套文件。
 
 ```r
-# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.3: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.2")
+stopifnot(packageVersion("ALSCL") >= "2.2.3")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
@@ -341,6 +341,26 @@ b <- run_alscl(x)
 ```
 
 将原始数据、配置、来源和包版本一起保留。旧的 `fit_survey_tables()` 辅助函数、逐项传参和 `do.call()` 写法继续支持。
+
+## 在 2.2.3 中继续比较和回溯
+
+从 2.2.3 起，两个核心拟合函数直接检查时间网格：相邻数值表头之差必须等于 `growth_step`。年度数据 `2000, 2001, 2003` 会因缺少 2002 而报错；应保留 2002 列，调查值填 `NA`，并提供该期完整的重量和成熟数据。季度表头如 `2000, 2000.25, 2000.5` 必须设置 `growth_step = 0.25`。模型不会自动插补缺失时间步，也不会把不规则间隔重新解释为等间隔。
+
+```r
+comparison <- compare_models(a, b, x$data.CatL)
+comparison$fit_diagnostics
+comparison$comparison
+ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
+rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
+rb$fit_diagnostics
+rb$rho_by_peel
+rb$rho_text
+plot_fishing_mortality(b, type = "length", se = TRUE)
+```
+
+2.2.3 的 `compare_models()` 会核对两个拟合与传入调查表的时间标签、体长标签及顺序、正观测值和观测掩码；确认不一致时直接报错。旧保存结果若缺少核对所需元数据，仍可读取原始统计量，但不自动给出模型偏好。任一拟合未通过数值筛查时，函数发出警告，保留原始 AIC/BIC 和拟合指标供检查，不宣布哪个模型更优。查看 `comparison$fit_diagnostics` 与 `comparison$comparison`（`data_verified`、`eligible`、`preferred`、`issues`）。通过筛查只表示可以开展条件比较，仍需审查似然可比性和生物假设。
+
+`fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
 
 ## 2.2.2 的优化收尾与年度共用 F
 

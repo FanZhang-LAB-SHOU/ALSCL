@@ -1,3 +1,11 @@
+## ALSCL 2.2.3
+
+- Check regular time labels against `growth_step` in both fitting functions; preserve wholly missing survey periods as `NA` columns with complete weight and maturity inputs.
+- Verify observations and metadata before model comparison. Return numerical diagnostics and comparison eligibility; withhold automatic preferences when a fit fails screening or an older result lacks verifiable data metadata.
+- Accept `retro_acl(x)` and `retro_alscl(x)` with explicit overrides. Return full-fit and peel diagnostics, errors and screened/unscreened rho tables; do not report a screened rho when a required fit fails.
+- Use consistent missing-data calculations for metric plots. Plot ALSCL F against numeric length-bin midpoints with aligned intervals; retain the ACL length alias with a warning.
+- Update the English and Simplified Chinese workflows while retaining existing separate-argument calls, optional F structures and acceleration settings.
+
 ## ALSCL 2.2.2
 
 - Add safeguarded Newton refinement (`polish = TRUE`) and preserve every raw optimizer pass. An unchanged failed restart no longer replaces an earlier successful result. Raw convergence codes remain available.

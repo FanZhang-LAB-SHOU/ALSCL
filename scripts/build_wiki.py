@@ -39,9 +39,9 @@ for i,m in enumerate(marks):
  blocks[int(m[1])]=block
 intro='''# 开始使用 · Getting started
 
-安装 ALSCL 2.2.2 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.2.3 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.2.2 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.2.3 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL

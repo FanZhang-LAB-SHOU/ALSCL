@@ -3,7 +3,10 @@ test_that("Mohn rho averages terminal-year differences over all peels", {
   local_mocked_bindings(run_acl=function(data.CatL,...) {
     n<-ncol(data.CatL)-1L;v<-rep(100,n)
     if(n<5) v[n]<-if(n==4)120 else 140
-    list(year=2000+seq_len(n)-1L,report=list(B=v,Rec=v,SSB=v,N=v))
+    list(year=2000+seq_len(n)-1L,report=list(B=v,Rec=v,SSB=v,N=v),
+      opt=list(objective=1,par=c(mean_log_R=1)),convergence_code=0L,
+      pdHess=TRUE,bound_hit=FALSE,max_abs_gradient=1e-7,
+      diagnostics=list(numerical_ok=TRUE,natural_boundary=FALSE,issues=character()))
   },.package="ALSCL")
   x<-do.call(retro_model,c(list(nyear=2),f))
   expect_equal(x$rho_text$Rho,rep(.3,4))

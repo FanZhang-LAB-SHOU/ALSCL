@@ -20,7 +20,17 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   \item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
 #'     the ratio of means (model2/model1), for common population quantities.}
 #'   \item{model1_name,model2_name}{Labels used in the comparison.}
+#'   \item{fit_diagnostics}{Numerical status of each fit, including the raw code,
+#'     gradient, Hessian and natural-scale boundaries.}
+#'   \item{comparison}{Whether data comparability was verified and both numerical
+#'     screens passed; preferred is NULL when an automatic preference is withheld.}
 #' }
+#' @details Both fits must use the same positive observations, missing-data mask,
+#'   length labels and time grid as data.CatL. Known mismatches are errors.
+#'   Older results lacking this metadata can still display raw statistics, but
+#'   receive no automatic model preference. The same applies to failed numerical
+#'   screens. Passing the screen does not establish model adequacy; AIC expresses
+#'   relative support among these candidates, not biological validation.
 #'
 #' @export
 compare_models <- function(model1, model2, data.CatL,
@@ -34,19 +44,39 @@ compare_models <- function(model1, model2, data.CatL,
     if (!is.null(m$report$F))  return("ACL")
     return(fallback)
   }
+  auto_names <- is.null(model1_name) && is.null(model2_name)
   if (is.null(model1_name)) model1_name <- detect_type(model1, "Model 1")
   if (is.null(model2_name)) model2_name <- detect_type(model2, "Model 2")
+  if (identical(model1_name, model2_name)) {
+    structures <- c(model1$F_structure, model2$F_structure)
+    suffix <- if (auto_names && length(structures) == 2L && !anyDuplicated(structures))
+      structures else c("1", "2")
+    model1_name <- paste0(model1_name, " (", suffix[1L], ")")
+    model2_name <- paste0(model2_name, " (", suffix[2L], ")")
+  }
+  data_check <- .acl_comparison_data(list(model1, model2), data.CatL)
+  # Normalize legal character matrices exactly once after validating the cells.
+  data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
+  data.CatL[-1L] <- lapply(data.CatL[-1L], as.numeric)
+  fit_diagnostics <- rbind(.acl_fit_status(model1), .acl_fit_status(model2))
+  fit_diagnostics <- cbind(Model = c(model1_name, model2_name), fit_diagnostics)
+  eligible <- data_check$verified && all(fit_diagnostics$numerical_ok)
+  reasons <- data_check$issues
+  if (any(!fit_diagnostics$numerical_ok))
+    reasons <- c(reasons, paste("numerical screen failed:",
+      paste(fit_diagnostics$Model[!fit_diagnostics$numerical_ok], collapse = ", ")))
+  if (!eligible) warning("Automatic model preference withheld: ",
+    paste(reasons, collapse = "; "), ". Inspect fit_diagnostics and raw statistics.", call. = FALSE)
 
   # ===== 1. Convergence & model summary =====
-  get_npar <- function(m) length(m$opt$par)
   get_nobs <- function(m, d) sum(is.finite(as.matrix(d[, -1L, drop=FALSE])) & as.matrix(d[, -1L, drop=FALSE]) > 0)
 
   n_obs <- get_nobs(model1, data.CatL)
 
   obj1 <- as.numeric(model1$opt$objective)[1]
   obj2 <- as.numeric(model2$opt$objective)[1]
-  npar1 <- length(model1$opt$par)
-  npar2 <- length(model2$opt$par)
+  npar1 <- .acl_npar(model1)
+  npar2 <- .acl_npar(model2)
 
   aic1 <- 2 * npar1 + 2 * obj1
   aic2 <- 2 * npar2 + 2 * obj2
@@ -197,15 +227,23 @@ compare_models <- function(model1, model2, data.CatL,
   cat("\n--- Time-Series Agreement ---\n")
   print(corr_df, row.names = FALSE)
 
-  # AIC interpretation
+  cat("\n--- Numerical status ---\n")
+  print(fit_diagnostics, row.names = FALSE)
+  # Report raw information criteria even when a fit is unsuitable for inference,
+  # but never present an automatic winner for unverified or failed fits.
   delta_aic <- aic2 - aic1
+  preferred <- NULL
   cat(sprintf("\nDelta AIC = %.2f ", delta_aic))
-  if (abs(delta_aic) < 2) {
-    cat("(models essentially equivalent)\n")
+  if (!eligible || !is.finite(delta_aic)) {
+    cat("(automatic preference withheld; inspect diagnostics)\n")
+  } else if (abs(delta_aic) < 2) {
+    cat("(little separation in AIC; this does not establish model equivalence)\n")
   } else if (delta_aic < 0) {
-    cat(sprintf("(%s preferred)\n", model2_name))
+    preferred <- model2_name
+    cat(sprintf("(%s has lower AIC among these candidates)\n", model2_name))
   } else {
-    cat(sprintf("(%s preferred)\n", model1_name))
+    preferred <- model1_name
+    cat(sprintf("(%s has lower AIC among these candidates)\n", model1_name))
   }
 
   invisible(list(
@@ -213,6 +251,9 @@ compare_models <- function(model1, model2, data.CatL,
     growth      = growth_df,
     fit_metrics = fit_df,
     correlation = corr_df,
+    fit_diagnostics = fit_diagnostics,
+    comparison = list(data_verified = data_check$verified, eligible = eligible,
+                      preferred = preferred, issues = reasons),
     model1_name = model1_name,
     model2_name = model2_name
   ))

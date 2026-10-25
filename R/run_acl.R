@@ -27,6 +27,8 @@
 #' @param silent Suppress fitting progress messages when TRUE.
 #' @param growth_step Time between consecutive ages, in years. Use 0.25 for quarters.
 #'   ACL infers rec.age when below one, otherwise one, if this argument is NULL.
+#'   Numeric time-column labels must have this spacing. Keep missing periods as
+#'   NA survey columns, with weights and maturity supplied for every period.
 #' @param zero_action Exclude zero observations as missing (historical behavior),
 #'   or reject them with "error". NA is always missing; negative/infinite values fail.
 #' @param control A named list of nlminb control settings.

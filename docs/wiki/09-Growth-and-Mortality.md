@@ -87,15 +87,15 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 ```r
 # 绘制本图 / Draw this figure
-plot_fishing_mortality(a, type = "length",
+plot_fishing_mortality(a, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
 [![ACL 捕捞死亡率 length / ACL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)
 
-当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。
+ACL 没有独立长度别 F；示例明确使用 age。旧 length 别名保留并警告，仍表示年龄别 F。
 
-In this version, ACL length is an alias of age; the output is still age-specific F.
+ACL has no independent F-at-length. Use age explicitly; the legacy length alias warns and still returns this age-specific plot.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -147,9 +147,9 @@ plot_fishing_mortality(b, type = "length",
 
 [![ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true)
 
-年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
+2.2.3 起，横轴为真实体长中点，按年份分面，阴影为近似 95% 区间。F 的单位为每模型时间步瞬时率。
 
-F is an instantaneous rate per model step. Native F dimensions differ between the models.
+Since 2.2.3, the horizontal axis uses actual length midpoints, with one panel per year and approximate 95% intervals. F is an instantaneous rate per model step.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 

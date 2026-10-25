@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_fishing_mortality.R
 \name{plot_fishing_mortality}
 \alias{plot_fishing_mortality}
-\title{Plot Fishing Mortality Over Years from ACL or ALSCL Model}
+\title{Plot Fishing Mortality from ACL or ALSCL Model}
 \usage{
 plot_fishing_mortality(
   model_result,
@@ -48,7 +48,9 @@ plot_fishing_mortality(
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
 \item{type}{Character. "year" (faceted by group), "age" (faceted by year),
-or "length" (ALSCL: faceted by year showing F vs length). Default is "year".}
+or "length" (ALSCL: faceted by year showing F vs numeric length-bin
+midpoints in \code{model_result$len_mid}; ACL: legacy alias for "age", with
+a warning). Default is "year".}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
@@ -71,7 +73,7 @@ A ggplot object, or a list with plot and data if return_data = TRUE.
 }
 \description{
 This function takes the output from \code{run_acl} or \code{run_alscl}
-and plots fishing mortality over the years using ggplot2.
+and plots fishing mortality over years, ages, or length-bin midpoints using ggplot2.
 For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
 F-at-age (FA: (A-1) x (Y-1)) is an emergent property.

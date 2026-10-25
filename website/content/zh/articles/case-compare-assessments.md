@@ -24,6 +24,8 @@ diagnose_model(x$data.CatL, a)
 diagnose_model(x$data.CatL, b)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
+comparison$fit_diagnostics
+comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
@@ -32,6 +34,8 @@ plot_compare_residuals(a, b, x$data.CatL)
 ![模拟 YTF：ACL 与 ALSCL 的残差比较](../assets/manual/figures/ytf/compare_residuals.png)
 
 各面板对比残差分布以及随时间、体长的变化。年度误差线表示离散程度，不是置信区间。模型即使拟合出相似生物量趋势，也可能保留系统性观测残差。
+
+2.2.3 的 `compare_models()` 会核对两个拟合与传入调查表的时间标签、体长标签及顺序、正观测值和观测掩码；确认不一致时直接报错。旧保存结果若缺少核对所需元数据，仍可读取原始统计量，但不自动给出模型偏好。任一拟合未通过数值筛查时，函数发出警告，保留原始 AIC/BIC 和拟合指标供检查，不宣布哪个模型更优。查看 `comparison$fit_diagnostics` 与 `comparison$comparison`（`data_verified`、`eligible`、`preferred`、`issues`）。通过筛查只表示可以开展条件比较，仍需审查似然可比性和生物假设。
 
 ## 比较调查观测的拟合
 
@@ -74,6 +78,7 @@ plot_compare_F(a, b)
 dir.create("my_model_comparison", showWarnings = FALSE)
 write.csv(comparison$summary, "my_model_comparison/summary.csv", row.names = FALSE)
 write.csv(comparison$fit_metrics, "my_model_comparison/fit_metrics.csv", row.names = FALSE)
+write.csv(comparison$fit_diagnostics, "my_model_comparison/fit_diagnostics.csv", row.names = FALSE)
 p_population <- plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ggplot2::ggsave("my_model_comparison/population.png", p_population,
                width = 10, height = 7, dpi = 300)

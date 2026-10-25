@@ -38,6 +38,8 @@ multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
 | `sim_acl` |依序拟合重复|按重复分工|
 | `retro_model`, `retro_acl`, `retro_alscl` |依序删除末期|按回溯拟合分工|
 
+对 `retro_acl(x)` 和 `retro_alscl(x)`，输入中原拟合的 `ncores` 不会自动用于回溯；请在回溯调用中显式指定 `ncores`，控制截短拟合的并行数。`nstarts` 仍控制每次拟合的起点总数，内部依序执行。解读 `rho_text` 前查看 `fit_diagnostics`；必要拟合未通过检查时，不报告通过筛查的 rho。
+
 多起点的目标是稳健性，墙钟时间仍受最慢起点及进程开销影响。避免外层重复与内层多起点同时占满 CPU。Windows、macOS、Linux 均使用可移植 socket 路径。
 
 

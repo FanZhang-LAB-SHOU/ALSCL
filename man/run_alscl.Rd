@@ -51,6 +51,8 @@ named input bundle such as YTF_example; see Details.}
 \item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
 
 \item{growth_step}{Time between consecutive ages, in years. Use 0.25 for quarters.
+Numeric time-column labels must have this spacing. Keep missing periods as
+NA survey columns, with weights and maturity supplied for every period.
 ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
 
 \item{parameters}{Named list of initial fixed-effect values.}

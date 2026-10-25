@@ -1,3 +1,21 @@
+# ALSCL 2.2.3
+
+- Check time-column spacing against growth_step in both fitting functions; missing periods must remain on the time grid.
+- Validate matching observations, masks, bins and periods before comparing models. Retain raw AIC but withhold automatic preferences for failed numerical screens or unverifiable older results.
+- Accept the same input bundle in retro_acl(x, nyear = 3) and retro_alscl(x, nyear = 3), preserving legacy calls and explicit overrides. Forward zero handling, optimizer controls and starts; keep peel workers separate from fitting workers.
+- Retain full-fit and per-peel diagnostics and errors. Mark authoritative Mohn's rho unavailable if any required fit or endpoint is invalid, while retaining explicitly labelled raw estimates for inspection.
+- Share diagnostic calculations with comparison plots so NA observations are handled consistently. Plot ALSCL F against actual length midpoints in length mode; preserve the ACL legacy length alias with a warning.
+- Add multiple-parameter regression fits for both F structures, annual and quarterly inputs, missing observations and boundary diagnostics. Update the bilingual manual, website and Wiki sources.
+
+### 简体中文
+
+- 两个拟合入口核对时间列间隔与 growth_step；缺失时段必须保留在完整时间轴中。
+- 模型比较核对观测、缺失掩码、体长组及时间。不合格拟合或无法核验的旧结果保留原始 AIC，但不自动给出模型偏好。
+- 回溯支持同一份 x，保留旧写法及显式覆盖，并转送零值处理、优化控制和起点数；回溯并行与单轮拟合并行分开。
+- 保留完整拟合和逐轮诊断、错误。任一必要拟合或末端比较不合格时，正式 Mohn rho 为 NA，并保留明确标记的原始结果供排查。
+- 比较图共用诊断指标计算，正确排除 NA。ALSCL 的 length 模式以实际体长为横轴；ACL 旧 length 别名保留并警告。
+- 新增两个模型、两种 F 结构、年度及季度、缺失值和边界的多参数回归测试，同步双语文档、网站及 Wiki 来源。
+
 # ALSCL 2.2.2
 
 - Add safeguarded Newton refinement (`polish = TRUE`) and preserve every raw optimizer pass. An unchanged failed restart no longer replaces an earlier successful result. Raw convergence codes remain available.

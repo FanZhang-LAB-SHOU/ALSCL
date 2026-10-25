@@ -1,14 +1,64 @@
 utils::globalVariables(c("Variable", "RetrospectiveYear"))
 
+# Retain compact results rather than serializing a live TMB objective between
+# processes. A failed fit still contributes a diagnostic row and a missing rho.
+.acl_retro_fit <- function(peel, fit_args, model_type, silent) {
+  started <- proc.time()
+  end_col <- ncol(fit_args$data.CatL) - peel
+  years <- suppressWarnings(as.numeric(sub("^X", "",
+    colnames(fit_args$data.CatL)[seq.int(2L, end_col)])))
+  error <- NULL
+  fit <- tryCatch({
+    for (name in c("data.CatL", "data.wgt", "data.mat"))
+      fit_args[[name]] <- fit_args[[name]][, seq_len(end_col), drop = FALSE]
+    do.call(if (model_type == "acl") run_acl else run_alscl, fit_args)
+  }, error = function(e) {
+    error <<- conditionMessage(e)
+    NULL
+  })
+  if (!is.null(fit$year)) years <- fit$year
+  elapsed <- (proc.time() - started)[["elapsed"]]
+  diagnostics <- cbind(data.frame(Peel = peel,
+    RetrospectiveYear = tail(years, 1L), elapsed = elapsed,
+    error = if (is.null(error)) "" else error), .acl_fit_status(fit, error))
+  if (!silent) cat(sprintf("  %s: %.1f sec%s\n",
+    if (peel == 0L) "Full model" else paste("Peel", peel), elapsed,
+    if (is.null(error)) "" else paste0(" (failed: ", error, ")")))
+  list(peel = peel, year = years, diagnostics = diagnostics,
+       variables = list(B = fit$report$B, Rec = fit$report$R %||% fit$report$Rec,
+                        SSB = fit$report$SSB, N = fit$report$N))
+}
+
+.acl_retro_wrapper <- function(call, frame, model) {
+  explicit <- setdiff(names(as.list(call)[-1L]), "...")
+  args <- mget(explicit, envir = frame, inherits = FALSE)
+  extra <- eval(quote(list(...)), envir = frame)
+  extra_names <- names(extra) %||% rep("", length(extra))
+  named <- nzchar(extra_names)
+  if (anyNA(extra_names) || anyDuplicated(extra_names[named]))
+    stop("Named additional retrospective arguments must be unique.", call. = FALSE)
+  args[extra_names[named]] <- extra[named]
+  bundled <- (is.list(args$nyear) && !is.data.frame(args$nyear)) ||
+    (is.list(args$data.CatL) && !is.data.frame(args$data.CatL))
+  # Preserve the historical ALSCL wrapper default for separate arguments;
+  # a bundle supplies its own growth step and must not be overwritten.
+  if (model == "alscl" && !bundled && !"growth_step" %in% names(args))
+    args$growth_step <- 1
+  args$model_type <- model
+  do.call(retro_model, c(args, unname(extra[!named])))
+}
+
 #' Retrospective Analysis for ACL or ALSCL Models
 #'
 #' Conduct a retrospective analysis by sequentially removing the most recent
-#' years of data and re-fitting the model. Computes Mohn's rho for SSB,
+#' time steps of data and re-fitting the model. Computes Mohn's rho for SSB,
 #' Recruitment, Biomass, and Abundance to quantify retrospective bias.
 #' Supports both ACL and ALSCL model types via the `model_type` argument.
 #'
-#' @param nyear Integer. Number of years to peel (remove) sequentially. Default is 5.
-#' @param data.CatL The Catch-at-Length data.
+#' @param nyear Integer. Number of time columns to peel sequentially. Default is
+#'   5. One peel removes one model time step (one quarter for quarterly data).
+#' @param data.CatL The Catch-at-Length data or the same named input bundle used
+#'   by [run_acl()] or [run_alscl()]. For example, `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
@@ -27,8 +77,14 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param len_lower Optional numeric vector of lower bin boundaries (ALSCL only).
 #' @param len_upper Optional numeric vector of upper bin boundaries (ALSCL only).
 #' @param train_times Numeric. Number of optimization restarts. Default is 1.
-#' @param ncores Integer. Number of CPU cores for parallel peel computation. Default is 1.
-#' @param silent Logical. If TRUE, suppress all progress messages. Default is FALSE.
+#' @param nstarts Positive integer. Number of independent starts per full/peel
+#'   fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.
+#' @param ncores Integer. Number of CPU cores for parallel peel computation.
+#'   Default is 1. A bundle's fitting ncores is ignored: specify this argument
+#'   explicitly for peel workers. Each fit runs its nstarts sequentially with
+#'   ncores = 1, avoiding nested fitting workers.
+#' @param silent Logical. Suppress progress messages when TRUE. Numerical-screen
+#'   warnings are still reported. Default is FALSE.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #' @param line_size Numeric. Line thickness. Default is 1.2.
 #' @param point_size Numeric. Point size for endpoints. Default is 3.
@@ -52,8 +108,21 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
 #' @inheritParams run_acl
+#' @details Bundle settings use the same precedence as [run_acl()]: shared
+#'   fit_args, selected fit_config, then explicit call arguments. Explicit map,
+#'   parameters and control replace the complete corresponding list, including
+#'   NULL. zero_action, control and nstarts are forwarded to every full/peel fit.
+#'   The full fit and every requested peel must pass the numerical screen, and
+#'   have finite terminal estimates with a nonzero reference, before a quantity's
+#'   Mohn's rho is reported. Invalid or failed fits are not silently dropped.
 #' @return A list containing `results`, `rho_text`, `last_points`, `model_type`,
-#'   and optionally `plot`.
+#'   and optionally `plot`. `fit_diagnostics` records the full fit (Peel = 0)
+#'   and every requested peel, including errors and numerical status.
+#'   `rho_by_peel` contains screened Rho, diagnostic RawRho and Valid for each
+#'   quantity and peel. `rho_text$Rho` is NA when any required fit or endpoint
+#'   is invalid. `raw_rho_text` retains an unscreened mean for diagnosis only;
+#'   it is NA if any terminal comparison is missing. `errors` lists fit errors.
+#'   `results` retains available estimates, with NumericalOK and RawRho flags.
 #' @export
 #' @examples
 #' \dontrun{
@@ -61,6 +130,9 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #'                      rec.age = 1, nage = 7, M = 0.8,
 #'                      sel_L50 = 28, sel_L95 = 36, model_type = "acl")
 #' plot_retro(retro)
+#' retro <- retro_alscl(YTF_example, nyear = 3, F_structure = "year")
+#' retro$fit_diagnostics
+#' retro$rho_by_peel
 #' }
 retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
@@ -79,200 +151,140 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         strip_text_size = NULL, legend_text_size = NULL,
                         x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
-                        F_structure = c("group_year", "year"), polish = TRUE) {
-  F_structure <- match.arg(F_structure)
-
+                        F_structure = c("group_year", "year"), polish = TRUE,
+                        zero_action = c("missing", "error"), control = list(), nstarts = 1) {
   model_type <- match.arg(model_type)
+  supplied <- names(as.list(match.call())[-1L])
+  if (is.list(nyear) && !is.data.frame(nyear)) {
+    if (!missing(data.CatL))
+      stop("Supply the input bundle only once.", call. = FALSE)
+    data.CatL <- nyear
+    nyear <- 5L
+    supplied <- union(setdiff(supplied, "nyear"), "data.CatL")
+  }
   nyear <- .acl_positive_integer(nyear, "nyear")
   ncores <- .acl_positive_integer(ncores, "ncores")
-  if (nyear > ncol(data.CatL)-3L) stop("Every retrospective peel must retain at least two time steps.")
-
-  if (silent) {
-    sink(tempfile())
-    on.exit(sink(), add = TRUE)
-  }
-
-  .fit_model <- function(CatL_sub, wgt_sub, mat_sub) {
-    if (model_type == "acl") {
-      run_acl(data.CatL = CatL_sub, data.wgt = wgt_sub, data.mat = mat_sub,
-              rec.age = rec.age, nage = nage, M = M,
-              sel_L50 = sel_L50, sel_L95 = sel_L95,
-              parameters = parameters, parameters.L = parameters.L,
-              parameters.U = parameters.U, map = map,
-              len_mid = len_mid, len_border = len_border,
-              train_times = train_times, growth_step = growth_step, silent = TRUE,
-              F_structure = F_structure, polish = polish)
-    } else {
-      run_alscl(data.CatL = CatL_sub, data.wgt = wgt_sub, data.mat = mat_sub,
-                rec.age = rec.age, nage = nage, M = M,
-                sel_L50 = sel_L50, sel_L95 = sel_L95,
-                growth_step = growth_step,
-                parameters = parameters, parameters.L = parameters.L,
-                parameters.U = parameters.U, map = map,
-                len_mid = len_mid, len_border = len_border,
-                len_lower = len_lower, len_upper = len_upper,
-                train_times = train_times, silent = TRUE,
-                F_structure = F_structure, polish = polish)
-    }
-  }
-
-  results  <- data.frame(Year = integer(), Variable = character(),
-                         Value = numeric(), RetrospectiveYear = integer(),
-                         Rho = numeric())
-  results1 <- data.frame(Year = integer(), Variable = character(),
-                         Value = numeric(), RetrospectiveYear = integer(),
-                         Rho = numeric())
-
-  t_grand <- proc.time()
-
-  cat(sprintf("Fitting full %s model...\n", toupper(model_type)))
-  t_full <- proc.time()
-  model_result <- .fit_model(data.CatL, data.wgt, data.mat)
-  t_full_elapsed <- (proc.time() - t_full)[["elapsed"]]
-  cat(sprintf("  Full model done: %.1f sec\n", t_full_elapsed))
-
-  year <- model_result[["year"]]
-
-  rec_val <- model_result[["report"]][["R"]]
-  if (is.null(rec_val)) rec_val <- model_result[["report"]][["Rec"]]
-
-  variables <- list(
-    B   = model_result[["report"]][["B"]],
-    Rec = rec_val,
-    SSB = model_result[["report"]][["SSB"]],
-    N   = model_result[["report"]][["N"]]
-  )
-
-  for (variable_name in names(variables)) {
-    v <- variables[[variable_name]]
-    if (is.null(v) || length(v) != length(year)) next
-    temp_full <- data.frame(
-      Year              = year,
-      Variable          = rep(variable_name, length(year)),
-      Value             = as.numeric(v),
-      RetrospectiveYear = rep(tail(year, 1), length(year)),
-      Rho               = rep(NA, length(year)))
-    results1 <- rbind(results1, temp_full)
-  }
-
-  .fit_one_peel <- function(i) {
-    t_peel <- proc.time()
-    year1 <- ncol(data.CatL) - i
-
-    peel_result <- .fit_model(data.CatL[, 1:year1],
-                              data.wgt[, 1:year1],
-                              data.mat[, 1:year1])
-
-    t_peel_elapsed <- (proc.time() - t_peel)[["elapsed"]]
-    cat(sprintf("  Peel %d/%d done: %.1f sec\n", i, nyear, t_peel_elapsed))
-
-    year2 <- peel_result[["year"]]
-    peel_rec <- peel_result[["report"]][["R"]]
-    if (is.null(peel_rec)) peel_rec <- peel_result[["report"]][["Rec"]]
-
-    peel_vars <- list(
-      B   = peel_result[["report"]][["B"]],
-      Rec = peel_rec,
-      SSB = peel_result[["report"]][["SSB"]],
-      N   = peel_result[["report"]][["N"]]
-    )
-
-    retrospectiveYear <- tail(year2, 1)
-    list(year2 = year2, variables = peel_vars,
-         retrospectiveYear = retrospectiveYear, peel = i)
-  }
-
-  ncores_use <- min(ncores, nyear)
-  t_peels <- proc.time()
-
-  if (ncores_use <= 1) {
-    cat(sprintf("Running %d retrospective peels sequentially...\n", nyear))
-    peel_results <- lapply(1:nyear, .fit_one_peel)
+  fit_fun <- if (model_type == "acl") run_acl else run_alscl
+  fit_names <- intersect(names(formals(fit_fun)), names(formals(retro_model)))
+  # Peel workers and within-fit starts are separate controls. Only explicit
+  # settings override a bundle, and single-bracket assignment preserves NULL.
+  fit_names <- setdiff(fit_names, c("ncores", "silent", "output"))
+  if (is.list(data.CatL) && !is.data.frame(data.CatL)) {
+    explicit <- intersect(setdiff(supplied, "data.CatL"), fit_names)
+    fit_args <- .acl_bundle_args(data.CatL, model_type,
+                                mget(explicit, envir = environment()))
   } else {
-    cat(sprintf("Running %d retrospective peels on %d cores", nyear, ncores_use))
-    {
-      cat(" [socket: parLapply]...\n")
-      cl <- parallel::makeCluster(ncores_use)
-      on.exit(parallel::stopCluster(cl), add = TRUE)
-      cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
-      parallel::clusterCall(cl, function(paths, cache, settings) {
-        .libPaths(paths); options(ALSCL.tmb.cache = cache); options(settings); NULL
-      }, .libPaths(), cache, .acl_worker_options())
-      parallel::clusterExport(cl, varlist = c(
-        "data.CatL", "data.wgt", "data.mat",
-        "rec.age", "nage", "M", "sel_L50", "sel_L95",
-        "growth_step", "model_type",
-        "parameters", "parameters.L", "parameters.U",
-        "map", "len_mid", "len_border",
-        "len_lower", "len_upper", "train_times",
-        ".fit_model", ".fit_one_peel"
-      ), envir = environment())
-      parallel::clusterEvalQ(cl, {
-        library(TMB)
-        library(ALSCL)
-      })
-      peel_results <- parallel::parLapply(cl, 1:nyear, .fit_one_peel)
-    }
+    fit_args <- mget(fit_names, envir = environment())
   }
+  fit_args[c("ncores", "silent", "output")] <- list(1L, TRUE, FALSE)
+  if (!"nstarts" %in% names(fit_args)) fit_args$nstarts <- 1L
+  if (!is.data.frame(fit_args$data.CatL) && !is.matrix(fit_args$data.CatL))
+    stop("data.CatL must be a data frame, matrix or input bundle.", call. = FALSE)
+  labels <- colnames(fit_args$data.CatL)
+  years <- suppressWarnings(as.numeric(sub("^X", "", labels[-1L])))
+  if (length(labels) != ncol(fit_args$data.CatL) || any(!is.finite(years)) ||
+      any(diff(years) <= 0))
+    stop("Time columns must have increasing numeric labels before retrospective fitting.", call. = FALSE)
+  if (nyear > ncol(fit_args$data.CatL) - 3L)
+    stop("Every retrospective peel must retain at least two time steps.", call. = FALSE)
 
-  for (pr in peel_results) {
-    year2 <- pr$year2
-    peel_vars <- pr$variables
-    retrospectiveYear <- pr$retrospectiveYear
-
-    for (variable_name in names(peel_vars)) {
-      v <- peel_vars[[variable_name]]
-      if (is.null(v)) next
-      original_values <- results1[results1$Year %in% year2 &
-                                    results1$Variable == variable_name, "Value"]
-      if (length(v) != length(original_values)) {
-        warning(sprintf("Peel %d: length mismatch for %s, skipping.",
-                        pr$peel, variable_name))
-        next
-      }
-      terminal <- length(v)
-      rho <- if (is.finite(original_values[terminal]) && original_values[terminal] != 0)
-        (as.numeric(v)[terminal] - original_values[terminal]) / original_values[terminal] else NA_real_
-      temp <- data.frame(
-        Year              = year2,
-        Variable          = rep(variable_name, length(year2)),
-        Value             = as.numeric(v),
-        RetrospectiveYear = rep(retrospectiveYear, length(year2)),
-        Rho               = rep(rho, length(year2)))
-      results <- rbind(results, temp)
-    }
+  progress <- function(...) if (!silent) cat(...)
+  t_grand <- proc.time()
+  progress(sprintf("Fitting full %s model...\n", toupper(model_type)))
+  full <- .acl_retro_fit(0L, fit_args, model_type, silent)
+  ncores_use <- min(ncores, nyear)
+  if (ncores_use == 1L) {
+    progress(sprintf("Running %d retrospective peels sequentially...\n", nyear))
+    peels <- lapply(seq_len(nyear), .acl_retro_fit, fit_args = fit_args,
+                    model_type = model_type, silent = silent)
+  } else {
+    progress(sprintf("Running %d retrospective peels on %d socket workers...\n",
+                     nyear, ncores_use))
+    cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
+    cl <- parallel::makeCluster(ncores_use)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterCall(cl, function(paths, cache, settings) {
+      .libPaths(paths)
+      options(ALSCL.tmb.cache = cache)
+      options(settings)
+      library(ALSCL)
+      NULL
+    }, .libPaths(), cache, .acl_worker_options())
+    peels <- parallel::parLapply(cl, seq_len(nyear), .acl_retro_fit,
+                                 fit_args = fit_args, model_type = model_type,
+                                 silent = silent)
   }
-
-  t_peels_elapsed <- (proc.time() - t_peels)[["elapsed"]]
-  t_grand_elapsed <- (proc.time() - t_grand)[["elapsed"]]
-
-  cat(sprintf("\n=== retro_model (%s) complete ===\n", toupper(model_type)))
-  cat(sprintf("  Full model:  %.1f sec\n", t_full_elapsed))
-  cat(sprintf("  %d peels:     %.1f sec\n", nyear, t_peels_elapsed))
-  cat(sprintf("  Total:       %.1f sec (%.1f min)\n", t_grand_elapsed, t_grand_elapsed / 60))
-
-  results <- rbind(results1, results)
-  results$RetrospectiveYear <- factor(
-    results$RetrospectiveYear,
+  fits <- c(list(full), peels)
+  fit_diagnostics <- do.call(rbind, lapply(fits, `[[`, "diagnostics"))
+  rownames(fit_diagnostics) <- NULL
+  variables <- c("B", "Rec", "SSB", "N")
+  rho_by_peel <- do.call(rbind, lapply(peels, function(peel) {
+    do.call(rbind, lapply(variables, function(variable) {
+      values <- peel$variables[[variable]]
+      full_values <- full$variables[[variable]]
+      full_index <- match(tail(peel$year, 1L), full$year)
+      reference <- if (length(full_values) == length(full$year) &&
+                       !is.na(full_index)) full_values[full_index] else NA_real_
+      endpoint <- if (length(values) == length(peel$year)) tail(values, 1L) else NA_real_
+      raw_rho <- if (length(endpoint) == 1L && is.finite(endpoint) &&
+                    length(reference) == 1L && is.finite(reference) && reference != 0)
+        (endpoint - reference) / reference else NA_real_
+      valid <- isTRUE(full$diagnostics$numerical_ok) &&
+        isTRUE(peel$diagnostics$numerical_ok) && is.finite(raw_rho)
+      data.frame(Peel = peel$peel, RetrospectiveYear = tail(peel$year, 1L),
+                 Variable = variable, RawRho = raw_rho,
+                 Rho = if (valid) raw_rho else NA_real_, Valid = valid)
+    }))
+  }))
+  results <- do.call(rbind, lapply(fits, function(fit) {
+    do.call(rbind, lapply(variables, function(variable) {
+      values <- fit$variables[[variable]]
+      if (is.null(values) || length(values) != length(fit$year)) return(NULL)
+      rho_row <- rho_by_peel[rho_by_peel$Peel == fit$peel &
+                              rho_by_peel$Variable == variable, , drop = FALSE]
+      data.frame(Year = fit$year, Variable = variable, Value = as.numeric(values),
+                 RetrospectiveYear = tail(fit$year, 1L),
+                 Rho = if (nrow(rho_row)) rho_row$Rho else NA_real_,
+                 RawRho = if (nrow(rho_row)) rho_row$RawRho else NA_real_,
+                 Peel = fit$peel, NumericalOK = isTRUE(fit$diagnostics$numerical_ok))
+    }))
+  }))
+  if (is.null(results))
+    results <- data.frame(Year = numeric(), Variable = character(), Value = numeric(),
+      RetrospectiveYear = numeric(), Rho = numeric(), RawRho = numeric(),
+      Peel = integer(), NumericalOK = logical())
+  results$RetrospectiveYear <- factor(results$RetrospectiveYear,
     levels = sort(unique(results$RetrospectiveYear), decreasing = TRUE))
-
-  xpos <- min(results$Year) + (max(results$Year) - min(results$Year)) / 5
-
-  # One terminal-year relative difference per peel, with equal peel weights.
-  rho_text <- results %>%
-    dplyr::filter(!is.na(Rho)) %>%
-    dplyr::distinct(Variable, RetrospectiveYear, Rho) %>%
-    dplyr::group_by(Variable) %>%
-    dplyr::summarise(Rho = mean(Rho), Year = xpos, .groups = "drop")
-
-  last_points <- results %>%
+  xpos <- min(full$year) + diff(range(full$year)) / 5
+  rho_text <- do.call(rbind, lapply(variables, function(variable) {
+    rows <- rho_by_peel[rho_by_peel$Variable == variable, , drop = FALSE]
+    valid <- nrow(rows) == nyear && all(rows$Valid)
+    data.frame(Variable = variable, Rho = if (valid) mean(rows$Rho) else NA_real_,
+               Year = xpos, Valid = valid, ValidPeels = sum(rows$Valid),
+               RequestedPeels = nyear)
+  }))
+  raw_rho_text <- do.call(rbind, lapply(variables, function(variable) {
+    rows <- rho_by_peel[rho_by_peel$Variable == variable, , drop = FALSE]
+    # Retain the diagnostic raw mean, but never silently drop missing peels.
+    data.frame(Variable = variable,
+               Rho = if (all(is.finite(rows$RawRho))) mean(rows$RawRho) else NA_real_,
+               Year = xpos)
+  }))
+  last_points <- if (nrow(results)) results %>%
     dplyr::group_by(Variable, RetrospectiveYear) %>%
     dplyr::filter(Year == max(Year)) %>%
-    dplyr::ungroup()
-
-  output <- list(results = results, rho_text = rho_text,
-                 last_points = last_points, model_type = model_type)
-
+    dplyr::ungroup() else results
+  if (any(!rho_text$Valid))
+    warning("Mohn's rho is unavailable for one or more quantities: a full/peel fit failed the numerical screen or a terminal estimate is missing. Inspect fit_diagnostics, errors and rho_by_peel; raw_rho_text is descriptive only.",
+            call. = FALSE)
+  progress(sprintf("Retrospective analysis complete: %.1f sec.\n",
+                   (proc.time() - t_grand)[["elapsed"]]))
+  output <- list(results = results, rho_text = rho_text, last_points = last_points,
+                 model_type = model_type, fit_diagnostics = fit_diagnostics,
+                 rho_by_peel = rho_by_peel, raw_rho_text = raw_rho_text,
+                 errors = fit_diagnostics[nzchar(fit_diagnostics$error),
+                                          c("Peel", "RetrospectiveYear", "error"), drop = FALSE],
+                 workers = ncores_use, nstarts = fit_args$nstarts)
   if (plot) {
     p <- plot_retro(output,
                     rho_digits = rho_digits, rho_position = rho_position, rho_size = rho_size,
@@ -296,8 +308,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' Convenience wrapper that calls `retro_model(..., model_type = "acl")`.
 #' See [retro_model()] for full documentation of all parameters.
 #'
-#' @param nyear Integer. Number of years to peel. Default is 5.
-#' @param data.CatL The Catch-at-Length data.
+#' @param nyear Integer. Number of time columns to peel. Default is 5.
+#' @param data.CatL The Catch-at-Length data or a named input bundle, as in
+#'   `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
@@ -314,8 +327,7 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
                       parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, plot = FALSE,
                       line_size = 1.2, point_size=3,point_shape=21,facet_scales = "free", facet_col = NULL, facet_row = NULL,train_times=1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
-  args <- mget(setdiff(names(formals(retro_acl)), "..."), envir = environment())
-  do.call(retro_model, c(args, list(model_type = "acl"), list(...)))
+  .acl_retro_wrapper(match.call(expand.dots = FALSE), environment(), "acl")
 }
 
 
@@ -324,8 +336,9 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' Convenience wrapper that calls `retro_model(..., model_type = "alscl")`.
 #' See [retro_model()] for full documentation of all parameters.
 #'
-#' @param nyear Integer. Number of years to peel. Default is 5.
-#' @param data.CatL The Catch-at-Length data.
+#' @param nyear Integer. Number of time columns to peel. Default is 5.
+#' @param data.CatL The Catch-at-Length data or a named input bundle, as in
+#'   `retro_alscl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
@@ -333,7 +346,9 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' @param M The natural mortality rate.
 #' @param sel_L50 Length at 50 percent selectivity.
 #' @param sel_L95 Length at 95 percent selectivity.
-#' @param growth_step Numeric. Growth transition time step. Default is 1.
+#' @param growth_step Numeric. Growth transition time step. Defaults to 1 for
+#'   separate arguments; bundled calls retain the bundle's setting or infer it
+#'   as in [run_alscl()].
 #' @param ... Additional arguments passed to [retro_model()].
 #' @return A list. See [retro_model()].
 #' @seealso [retro_model()], [retro_acl()], [plot_retro()]
@@ -341,10 +356,7 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
                         growth_step = 1, ...) {
-  retro_model(nyear = nyear, data.CatL = data.CatL, data.wgt = data.wgt,
-              data.mat = data.mat, rec.age = rec.age, nage = nage, M = M,
-              sel_L50 = sel_L50, sel_L95 = sel_L95,
-              model_type = "alscl", growth_step = growth_step, ...)
+  .acl_retro_wrapper(match.call(expand.dots = FALSE), environment(), "alscl")
 }
 
 
@@ -403,6 +415,9 @@ plot_retro <- function(retro_result,
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points
+  if (!nrow(results) || !any(is.finite(results$Year)))
+    stop("No retrospective estimates are available to plot; inspect fit_diagnostics and errors.",
+         call. = FALSE)
 
   # 截止期排序固定颜色映射 / Stable color mapping by terminal period.
   periods <- sort(unique(as.character(results$RetrospectiveYear)), decreasing = TRUE)
@@ -467,11 +482,16 @@ plot_retro <- function(retro_result,
   p <- p + ggplot2::geom_text(
     data = rho_text,
     ggplot2::aes(x = Year,
-                 label = paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), Rho))),
+                 label = ifelse(is.finite(Rho),
+                   paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), Rho)),
+                   "rho unavailable: check diagnostics")),
     y = rho_y, hjust = rho_hjust, vjust = rho_vjust,
     size = rho_size,
     inherit.aes = FALSE
   )
+  if (any(!is.finite(rho_text$Rho)))
+    p <- p + ggplot2::labs(subtitle =
+      "Available estimates shown; numerical checks or terminal estimates are incomplete.")
 
   return(p)
 }

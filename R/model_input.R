@@ -96,6 +96,10 @@
   bins <- .acl_length_bins(catl[[1L]], len_mid, len_border, len_lower, len_upper)
   years <- suppressWarnings(as.numeric(sub("^X", "", names(catl)[-1L])))
   if (any(!is.finite(years)) || any(diff(years) <= 0)) stop("Time columns must have increasing numeric labels (decimal years are supported).")
+  if (any(abs(diff(years) - growth_step) > 1e-8 * max(1, growth_step)))
+    stop("Time column spacing must equal growth_step (", growth_step,
+         " years). Include every model period; use NA survey observations for missing periods,",
+         " and provide weights and maturity for the complete time grid.", call. = FALSE)
   log_q <- stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE)
   list(data = list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
                   len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,

@@ -10,6 +10,8 @@ diagnose_model(x$data.CatL, b)
 diagnostic_metrics(x$data.CatL, b)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$fit_metrics
+comparison$fit_diagnostics
+comparison$comparison
 comparison$correlation # 包括 Ratio_Mean
 plot_residuals(b, type = "length", facet_ncol = 4)
 plot_compare_residuals(a, b, x$data.CatL)
@@ -19,6 +21,8 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 
 还需查看残差结构、不同初值和固定参数假设的敏感性、时间末端稳定性以及生物合理性。图中残差是“观测对数 − 预测对数”，没有除以观测 SD；`plot_deviance` 展示的是过程偏差，不是似然 deviance。AIC/BIC 比较需使用相同观测与可比似然口径；当前由年龄模型生成的一个样本不能证明 ACL 或 ALSCL 普遍更好。
+
+2.2.3 的 `compare_models()` 会核对两个拟合与传入调查表的时间标签、体长标签及顺序、正观测值和观测掩码；确认不一致时直接报错。旧保存结果若缺少核对所需元数据，仍可读取原始统计量，但不自动给出模型偏好。任一拟合未通过数值筛查时，函数发出警告，保留原始 AIC/BIC 和拟合指标供检查，不宣布哪个模型更优。查看 `comparison$fit_diagnostics` 与 `comparison$comparison`（`data_verified`、`eligible`、`preferred`、`issues`）。通过筛查只表示可以开展条件比较，仍需审查似然可比性和生物假设。
 
 ## 2.2.2 的优化收尾与年度共用 F
 
