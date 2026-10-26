@@ -30,6 +30,8 @@ jobs:
           # https://pak.r-lib.org/reference/faq.html
           extra-packages: ${{ runner.os == 'macOS' && 'any::rcmdcheck, knitr=?source, xfun=?source' || 'any::rcmdcheck' }}
           needs: check
+      - name: Check manual plot export guards
+        run: Rscript scripts/test_plot_exports.R
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual")'

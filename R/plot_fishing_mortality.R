@@ -59,7 +59,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
   current_theme <- if (!is.null(base_theme)) {
     base_theme
   } else {
-    tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
+    .acl_plot_theme()
   }
 
   # ===================================================================

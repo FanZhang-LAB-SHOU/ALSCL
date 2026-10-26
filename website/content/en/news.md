@@ -1,3 +1,7 @@
+## ALSCL 2.2.6
+
+- Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
+
 ## ALSCL 2.2.5
 
 - Refresh all manual figures, including legacy help assets, case studies, own-data and benchmark plots. Figure URLs now track image content to avoid stale cached images.

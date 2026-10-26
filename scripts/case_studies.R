@@ -1,6 +1,7 @@
 # 两个完整模拟案例，重新拟合并绘图 / Refit and plot both simulation cases.
 # 从仓库根目录运行 / Run from the repository root: Rscript scripts/case_studies.R
 library(ALSCL)
+source('scripts/plot_helpers.R')
 library(ggplot2)
 library(patchwork)
 source('scripts/simulation_workflow.R', encoding='UTF-8')
@@ -11,7 +12,7 @@ run_case_studies <- function(out='docs') {
   acl_theme_set(palette='npg',base_theme='theme_bw')
   cols <- setNames(acl_theme('compare_colors'),c('ACL','ALSCL'))
   fig <- file.path(out,'figures','cases'); dir.create(fig,recursive=TRUE,showWarnings=FALSE)
-  save_plot <- function(id,p,height=5) ggsave(file.path(fig,paste0(id,'.png')),p,width=10,height=height,dpi=160,bg='white')
+  save_plot <- function(id,p,height=5) save_grid_free_plot(file.path(fig,paste0(id,'.png')),p,width=10,height=height,dpi=160,bg='white')
   statuses <- list()
   for(sp in c('flatfish','tuna')) {
     message('CASE ',sp)

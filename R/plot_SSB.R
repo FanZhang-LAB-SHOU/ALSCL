@@ -38,7 +38,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
   quantity <- .acl_plot_population_data(model_result, type, c("SSB", "SBL", "SBA"), se)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
-  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
+  current_theme <- .acl_plot_theme()
 
   # ==========================
   # Type = "SSB": Total SSB

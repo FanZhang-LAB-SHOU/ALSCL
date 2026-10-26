@@ -570,3 +570,12 @@ acl_theme_reset <- function() {
 acl_get_theme <- function() {
   .acl_base_theme()
 }
+
+# Keep error recovery consistent with the normal grid-free plot defaults.
+.acl_plot_theme <- function() {
+  tryCatch(acl_get_theme(), error = function(e) {
+    ggplot2::theme_bw() + ggplot2::theme(
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank())
+  })
+}

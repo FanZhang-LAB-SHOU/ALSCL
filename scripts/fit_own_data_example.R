@@ -1,10 +1,11 @@
-# ALSCL 2.2.5: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.6: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
+source('scripts/plot_helpers.R')
 stopifnot(packageVersion("ALSCL") >= "2.2.2")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
@@ -119,9 +120,9 @@ print(ssb_plot)
 portable <- function(fit) fit[setdiff(names(fit), "obj")]
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-ggplot2::ggsave(file.path(output_dir, "residuals.png"), residual_plot,
+save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot,
                 width = 10, height = 8, dpi = 150)
-ggplot2::ggsave(file.path(output_dir, "SSB.png"), ssb_plot,
+save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot,
                 width = 8, height = 5, dpi = 150)
 saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),

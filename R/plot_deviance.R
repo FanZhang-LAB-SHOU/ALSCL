@@ -37,7 +37,7 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
   is_alscl <- is.null(model_result[["report"]][["F"]]) && !is.null(model_result[["report"]][["FL"]])
 
   # Get theme
-  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
+  current_theme <- .acl_plot_theme()
 
   # ==============================================================
   # Type = "R": Recruitment deviations (same for ACL and ALSCL)

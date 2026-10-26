@@ -13,8 +13,7 @@ acl_theme_set(base_theme='bw',font_family='sans',title_size=12,
               axis_title_size=10,axis_text_size=9,strip_text_size=9,palette='npg')
 source('scripts/plot_helpers.R')
 save_plot <- function(path,p,width=11,height=8.5) {
-  assert_grid_free_plot(p)
-  ggsave(path,p,width=width,height=height,dpi=160,bg='white')
+  save_grid_free_plot(path,p,width=width,height=height,dpi=160,bg='white')
   message('REFRESH ',path)
 }
 # These old filenames are retained for bookmarks and previously written help.

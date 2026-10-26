@@ -38,7 +38,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
   quantity <- .acl_plot_population_data(model_result, type, c("CN", "CNA", "CNL"), se)
   Year <- model_result[["year"]]
   len_label <- model_result[["len_label"]]
-  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
+  current_theme <- .acl_plot_theme()
 
   # ==========================
   # Type = "CN": Total catch

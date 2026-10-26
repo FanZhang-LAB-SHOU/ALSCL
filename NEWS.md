@@ -1,3 +1,11 @@
+# ALSCL 2.2.6
+
+- Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
+
+### 简体中文
+
+- 2.2.6 进一步保证 SSB、丰度、生物量、捕获量、偏差和捕捞死亡率图在主题加载失败后的回退路径也不显示网格。显式指定的主题仍优先。说明书的 ggplot 导出统一检查各子图的主、次网格；发现网格时停止导出并保留原文件。正式 2.2.6 下载包包含更新后的帮助图片。
+
 # ALSCL 2.2.5
 
 - Refresh every documentation plot, including legacy help assets, simulation cases, own-data examples and benchmark PNG/SVG files. Check gallery panel themes before export and version website/Wiki image URLs by content to avoid stale cached figures. / 补齐所有文档绘图，含旧帮助图、模拟案例、正式数据示例及基准图的 PNG/SVG；导出前检查图库主题，网站及 Wiki 图片按内容添加版本标记，避免旧图缓存。

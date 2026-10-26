@@ -49,8 +49,7 @@ run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
     p <- withCallingHandlers(eval(call,parent.frame()), warning=function(w) {
       warnings <<- c(warnings,conditionMessage(w));invokeRestart("muffleWarning")
     })
-    assert_grid_free_plot(p)
-    withCallingHandlers(ggsave(file.path(out,"figures","ytf",paste0(id,".png")),
+    withCallingHandlers(save_grid_free_plot(file.path(out,"figures","ytf",paste0(id,".png")),
       p,width=11,height=height,dpi=160,bg="white"),warning=function(w){
         warnings <<- c(warnings,conditionMessage(w));invokeRestart("muffleWarning")
       })

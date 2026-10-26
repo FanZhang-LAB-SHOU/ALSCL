@@ -4,7 +4,7 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.2.5 · 简体中文与英文 · 15 章 / chapters**
+**ALSCL 2.2.6 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
@@ -34,9 +34,9 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 <a id="chapter-01"></a>
 ## 01 开始使用 · Getting started
 
-安装 ALSCL 2.2.5 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.2.6 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.2.5 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.2.6 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -2347,6 +2347,10 @@ p <- plot_SSB(b, se = TRUE)
 p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank())
 ```
+
+2.2.6 进一步保证 SSB、丰度、生物量、捕获量、偏差和捕捞死亡率图在主题加载失败后的回退路径也不显示网格。显式指定的主题仍优先。说明书的 ggplot 导出统一检查各子图的主、次网格；发现网格时停止导出并保留原文件。正式 2.2.6 下载包包含更新后的帮助图片。
+
+Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
 
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
