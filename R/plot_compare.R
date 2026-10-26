@@ -737,8 +737,8 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
     nll <- as.numeric(model$opt$objective)[1]
     c(values, "Neg. Log-Likelihood" = nll, "N. Parameters" = n_par)
   }
-  f1 <- calc_fit(model1, data.CatL); f2 <- calc_fit(model2, data.CatL)
   .acl_plot_comparison_grid(list(model1, model2), data.CatL)
+  f1 <- calc_fit(model1, data.CatL); f2 <- calc_fit(model2, data.CatL)
   df <- data.frame(Metric_Name = rep(names(f1), 2), Metric_Value = c(f1, f2),
                    Model = rep(c(model1_name, model2_name), each = length(f1)))
   base_layers <- .acl_base_theme()

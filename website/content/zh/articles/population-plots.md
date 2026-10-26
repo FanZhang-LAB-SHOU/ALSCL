@@ -339,3 +339,35 @@ q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
 paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
 stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
+
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### 2.2.5 默认无网格线
+
+所有包内绘图默认去掉主、次面板网格线，包括模型比较和回溯图；配色、置信区间及坐标轴保留原设置。升级后需重新创建旧图，才会应用新默认值。以下使用完整拟合示例中的 `b`，为某张图明确添加网格线：
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```

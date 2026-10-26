@@ -2,9 +2,9 @@
 
 **从模拟案例到自己的调查体长数据。From simulation examples to your own survey length data.**
 
-适用版本：ALSCL 2.2.4。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
+适用版本：ALSCL 2.2.5。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
 
-For ALSCL 2.2.4. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
+For ALSCL 2.2.5. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
 
 [首页 / Home](../README.md) · [45 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -326,6 +326,32 @@ sm <- sim_data(sim_cal(pa), pa, iter_range = 4:5, return_iter = 4,
 stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
 source("scripts/simulation_workflow.R", encoding = "UTF-8")
 inputs <- simulation_to_tables(sm, pa)
+```
+
+### 2.2.5 的模拟数值边界
+
+`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零，不再返回未定义数值；丰度和补充量仍按选定模拟模型演变。
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
+
+### Stable simulation boundaries in 2.2.5
+
+`mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
 ```
 
 <a id="excel"></a>
@@ -962,6 +988,14 @@ The earlier t0-only ACL failure on the synthetic YTF data was associated with ag
 
 The fitting entry points require time-column spacing equal to growth_step. An annual table cannot skip directly from 2001 to 2003: include 2002 with NA survey observations and supply its weights and maturity. Quarterly labels are 2000, 2000.25, 2000.5, 2000.75, and so on. Relabelling is not a substitute for converting time units correctly.
 
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装，包括安装时启用 `R_KEEP_PKG_SOURCE` 的情况。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
 <a id="diagnostics"></a>
 ## 7. 怎样判断结果可用 / Assessing results
 
@@ -1008,6 +1042,18 @@ plot_compare_annual_F(a_group, a_shared)
 plot_compare_F(a_group, a_shared)
 ```
 
+### 2.2.5 的拟合数据匹配检查
+
+`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
+
+比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
+
 <a id="plotting"></a>
 ## 8. 绘图模块与样式 / Plotting modules and styling
 
@@ -1045,6 +1091,70 @@ acl_theme_reset()
 各函数的可调样式参数并不完全相同：单模型常用 `line_size`，比较图常用 `linewidth`；分面可能叫 `facet_ncol` 或 `ncol`。请用[逐函数参数表](FUNCTION_REFERENCE.md)核对，不要把一组参数传给所有图。`plot_CatL(return_data=TRUE)` 返回 `plot/data1/data2`，与普通 `plot/data` 接口不同。
 
 Style arguments differ among functions: e.g. `line_size` versus `linewidth`, and `facet_ncol` versus `ncol`. Consult the per-function tables. `plot_CatL(return_data=TRUE)` returns `plot/data1/data2`, unlike the usual `plot/data` pair.
+
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### 2.2.5 默认无网格线
+
+所有包内绘图默认去掉主、次面板网格线，包括模型比较和回溯图；配色、置信区间及坐标轴保留原设置。升级后需重新创建旧图，才会应用新默认值。以下使用完整拟合示例中的 `b`，为某张图明确添加网格线：
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```
+
+### Grid-free defaults in 2.2.5
+
+All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, add a grid to a particular figure explicitly:
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```
 
 ### 2.2.4 的缺测与保存结果绘图 / Missing observations and saved results in 2.2.4
 

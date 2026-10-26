@@ -1,3 +1,12 @@
+# ALSCL 2.2.5
+
+- All package plots now omit major and minor panel gridlines by default. Explicit ggplot2 theme overrides remain available. / 所有包内绘图默认无主、次网格线，仍可显式使用 ggplot2 主题添加。
+- Use the same package installation on socket workers, validate fitted-data alignment in diagnostics, share robust comparison metrics, stabilize steep logistic curves and zero-mortality simulations, honor available biomass intervals and explain unsupported plots. Synchronize bilingual guides and executable help examples; homepage installation versions follow DESCRIPTION.
+
+### 简体中文
+
+- 统一 socket 进程安装库，诊断核对拟合数据，共用稳健比较指标，修正陡峭 logistic 与零死亡率模拟，绘制可用生物量区间并明确不支持的绘图；同步双语指南及可运行帮助例子，网站安装版本由 DESCRIPTION 生成。
+
 # ALSCL 2.2.4
 
 - Resolve path and parameter variables before socket batch fitting; retain diagnostics when all retrospective fits fail, including with plotting requested.

@@ -154,9 +154,7 @@
   } else {
     cl <- parallel::makeCluster(workers)
     on.exit(if (!is.null(cl)) parallel::stopCluster(cl), add = TRUE)
-    parallel::clusterCall(cl, function(lib, path) {
-      .libPaths(lib); loadNamespace("TMB"); loadNamespace("ALSCL"); dyn.load(path); NULL
-    }, .libPaths(), info$dll_path)
+    .acl_initialize_workers(cl, dll_path = info$dll_path)
     starts <- parallel::parLapply(cl, seq_len(nstarts), .acl_fit_start,
        data = d, params = p, mapping = mapping, random = random, dll = info$dll_name,
        bounds = bounds, train_times = train_times, control = control)

@@ -93,3 +93,16 @@ stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
 source("scripts/simulation_workflow.R", encoding = "UTF-8")
 inputs <- simulation_to_tables(sm, pa)
 ```
+
+### 2.2.5 的模拟数值边界
+
+`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零，不再返回未定义数值；丰度和补充量仍按选定模拟模型演变。
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```

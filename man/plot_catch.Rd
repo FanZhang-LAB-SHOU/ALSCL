@@ -48,3 +48,11 @@ A ggplot object or a list with plot and data.
 Visualizes catch data from ACL or ALSCL model outputs.
 Supports total catch ("CN"), catch at age ("CNA"), and catch at length ("CNL").
 }
+\details{
+ALSCL reports CN, CNA and CNL with standard errors. ACL reports CN
+with standard errors and CNA estimates only; CNL is unavailable. A missing
+quantity or requested standard error produces an explicit error. With
+\code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
+on the reported scale. They are not truncated at zero. Inspect fit
+diagnostics before using uncertainty intervals.
+}

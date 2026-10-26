@@ -46,4 +46,9 @@ of \code{N_at_age} with age-length transition matrix (pla). F is age-dependent.
 \strong{Length-based pathway} (M6 tuna): Three-dimensional tracking of
 \code{nla[length, age]} with growth transition matrix (Gij). F is
 length-dependent. Supports quarterly (sub-annual) time steps.
+
+Natural and mean fishing mortality must be finite and nonnegative.
+Zero total mortality produces zero catch through the continuous Baranov
+limit. Invalid biological arrays are rejected before simulation; a replicate
+with nonfinite output is rejected before its file is written.
 }

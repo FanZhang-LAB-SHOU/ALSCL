@@ -16,6 +16,13 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' @param type Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN".
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
 #'
+#' @details ALSCL reports CN, CNA and CNL with standard errors. ACL reports CN
+#'   with standard errors and CNA estimates only; CNL is unavailable. A missing
+#'   quantity or requested standard error produces an explicit error. With
+#'   \code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
+#'   on the reported scale. They are not truncated at zero. Inspect fit
+#'   diagnostics before using uncertainty intervals.
+#'
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
@@ -28,6 +35,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
 
 
   type <- match.arg(type)
+  quantity <- .acl_plot_population_data(model_result, type, c("CN", "CNA", "CNL"), se)
   Year <- model_result[["year"]]
   len_label <- model_result[["len_label"]]
   current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
@@ -36,7 +44,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
   # Type = "CN": Total catch
   # ==========================
   if (type == "CN") {
-    CN <- model_result[["report"]][["CN"]]
+    CN <- quantity$value
     if (!is.data.frame(CN)) CN <- as.data.frame(CN)
     CN$Year <- Year
 
@@ -48,7 +56,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
       data_out <- CN
     } else {
       # Use exact match ^CN$ to avoid matching CNA, CNL
-      ss_CN <- model_result[["est_std"]][grep("^CN$", rownames(model_result[["est_std"]])), ]
+      ss_CN <- quantity$se
       ci <- data.frame(
         Year     = Year,
         estimate = ss_CN[, "Estimate"],
@@ -68,7 +76,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
   # Type = "CNA": Catch at age
   # ==========================
   if (type == "CNA") {
-    CNA <- model_result[["report"]][["CNA"]]
+    CNA <- quantity$value
 
     AgeLabels <- factor(paste("Age bin", seq_len(nrow(CNA))),
                         levels = paste("Age bin", seq_len(nrow(CNA))))
@@ -86,7 +94,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
         current_theme
       data_out <- CNA_long
     } else {
-      ss_cna <- model_result[["est_std"]][grep("^CNA$", rownames(model_result[["est_std"]])), ]
+      ss_cna <- quantity$se
       ss_cna <- as.data.frame(ss_cna)
       ci <- data.frame(
         AgeGroup = rep(levels(AgeLabels), times = ncol(CNA)),
@@ -109,7 +117,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
   # Type = "CNL": Catch at length
   # ==========================
   if (type == "CNL") {
-    CNL <- model_result[["report"]][["CNL"]]
+    CNL <- quantity$value
     if (!is.matrix(CNL)) CNL <- as.matrix(CNL)
 
     LengthLabels <- .acl_fix_len_labels(len_label)
@@ -128,7 +136,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
         current_theme
       data_out <- CNL_long
     } else {
-      ss_cnl <- model_result[["est_std"]][grep("^CNL$", rownames(model_result[["est_std"]])), ]
+      ss_cnl <- quantity$se
       ss_cnl <- as.data.frame(ss_cnl)
       ci <- data.frame(
         LengthGroup = factor(rep(LengthLabels, times = ncol(CNL)), levels = LengthLabels),

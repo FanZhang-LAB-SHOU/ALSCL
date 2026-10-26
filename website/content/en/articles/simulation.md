@@ -94,3 +94,16 @@ stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
 source("scripts/simulation_workflow.R", encoding = "UTF-8")
 inputs <- simulation_to_tables(sm, pa)
 ```
+
+### Stable simulation boundaries in 2.2.5
+
+`mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```

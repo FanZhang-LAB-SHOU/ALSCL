@@ -22,4 +22,9 @@ Only finite positive observations are included. MASE divides MAE by
 the pooled absolute one-step differences within each length-bin time series;
 pairs containing missing or zero observations are excluded. MAD is the mean
 absolute deviation of observations about their mean.
+These are in-sample diagnostics: known time labels, length-bin order,
+positive-observation masks and values must match the fitted result. Older
+results without this metadata remain usable, but their alignment cannot be
+fully verified. Nonfinite predictions at observed cells are rejected,
+including overflow when converting log predictions to the response scale.
 }

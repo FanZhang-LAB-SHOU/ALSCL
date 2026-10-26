@@ -48,3 +48,11 @@ A ggplot object or a list with plot and data.
 Plots biomass over years. Supports total biomass ("B"),
 biomass at length ("BL"), and biomass at age ("BA").
 }
+\details{
+ALSCL reports B, BL and BA with standard errors. ACL reports B with
+standard errors and BL estimates only; BA is unavailable. A missing quantity
+or requested standard error produces an explicit error. With \code{se = TRUE},
+intervals are the estimate plus or minus 1.96 standard errors on the reported
+scale. They are not truncated at zero. Inspect fit diagnostics before using
+uncertainty intervals.
+}

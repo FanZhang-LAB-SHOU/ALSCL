@@ -2,6 +2,8 @@
 
 **45 张图，覆盖 22 个公开绘图函数及主要类型。45 figures covering all 22 public plotting functions and major variants.**
 
+2.2.5 已重新拟合内置教学数据并生成全部 45 张图，使用无网格默认样式；BL/SBL 图包含实际可用的标准误区间。 / All 45 figures were regenerated from the bundled teaching fits for 2.2.5 with grid-free defaults, including the available BL/SBL intervals.
+
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
 先运行指南第 2 节，定义 `a`、`b`、`x`、`inputs`、`dat <- x$data.CatL`，并加载 `ggplot2`、`patchwork`。回溯图使用指南第 9 节的 `ra` 和 `rb`。全部图来自同一个模拟 YTF 数据和固定部分生物参数的条件拟合。
@@ -197,6 +199,50 @@ ALSCL example: A denotes age, L length. Approximate 95% intervals appear where s
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_abundance)
 
 <a id="plot_biomass"></a>
+
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
 
 <a id="plot_biomass_B"></a>
 ## 8. 生物量 B / Biomass B
@@ -909,7 +955,7 @@ estimates <- rbind(
 # 绘制本图 / Draw this figure
 ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_manual(values = setNames(acl_theme("compare_colors"),
     c("ACL", "ALSCL"))) + geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
-    facet_wrap(~Quantity, scales = "free_y", ncol = 1) + theme_bw() + labs(y = NULL)
+    facet_wrap(~Quantity, scales = "free_y", ncol = 1) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + labs(y = NULL)
 ```
 
 [![模拟真值与条件估计 / Simulation truth and conditional estimates](figures/ytf/truth.png)](figures/ytf/truth.png)

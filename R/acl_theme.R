@@ -447,6 +447,10 @@ acl_theme_reset <- function() {
   list(
     theme_fn(),
     ggplot2::theme(
+      # All plot families share these defaults, including helpers that call
+      # acl_get_theme(). Later user-supplied theme layers can restore grids.
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
       text             = ggplot2::element_text(family = ff),
       plot.title       = ggplot2::element_text(size = ts, hjust = th),
       axis.title       = ggplot2::element_text(size = ats),

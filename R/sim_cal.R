@@ -164,7 +164,7 @@ sim_cal <- function(params) {
   # =========================================================================
   # Return all calculated variables
   # =========================================================================
-  list(
+  result <- list(
     model_type = model_type,
     LatA       = LatA,
     W_at_len   = W_at_len,
@@ -177,4 +177,6 @@ sim_cal <- function(params) {
     len_upper  = len_upper,
     nlen       = nlen
   )
+  .acl_simulation_biology(result, params, model_type)
+  result
 }

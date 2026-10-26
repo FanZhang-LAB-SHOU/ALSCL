@@ -16,6 +16,13 @@ utils::globalVariables(c("LengthGroup", "Count"))
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
 #'
+#' @details ALSCL reports SSB, SBL and SBA with standard errors. ACL reports SSB
+#'   with standard errors and SBL estimates only; SBA is unavailable. A missing
+#'   quantity or requested standard error produces an explicit error. With
+#'   \code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
+#'   on the reported scale. They are not truncated at zero. Inspect fit
+#'   diagnostics before using uncertainty intervals.
+#'
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
@@ -28,6 +35,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
 
 
   type <- match.arg(type)
+  quantity <- .acl_plot_population_data(model_result, type, c("SSB", "SBL", "SBA"), se)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
   current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
@@ -36,7 +44,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
   # Type = "SSB": Total SSB
   # ==========================
   if (type == "SSB") {
-    SSB <- model_result[["report"]][["SSB"]]
+    SSB <- quantity$value
     if (!is.data.frame(SSB)) SSB <- as.data.frame(SSB)
     SSB$Year <- Year
 
@@ -47,7 +55,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
         current_theme
       data_out <- SSB
     } else {
-      ss_ssb <- model_result[["est_std"]][grep("^SSB$", rownames(model_result[["est_std"]])), ]
+      ss_ssb <- quantity$se
       ci <- data.frame(
         Year     = Year,
         estimate = ss_ssb[, "Estimate"],
@@ -67,10 +75,9 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
   # Type = "SBL": SSB at length
   # ==========================
   if (type == "SBL") {
-    SBL <- model_result[["report"]][["SBL"]]
+    SBL <- quantity$value
     if (!is.matrix(SBL)) SBL <- as.matrix(SBL)
 
-    # Fix: original code had undefined 'LengthGroup' variable
     LengthLabels <- .acl_fix_len_labels(len_label)
 
     SBL_long <- reshape2::melt(SBL)
@@ -79,19 +86,34 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
     SBL_long$LengthGroup <- factor(LengthLabels[as.numeric(SBL_long$LengthGroup)],
                                    levels = LengthLabels)
 
-    p <- ggplot2::ggplot(SBL_long, ggplot2::aes(x = Year, y = Count)) +
-      ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-      ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
+    if (!se) {
+      p <- ggplot2::ggplot(SBL_long, ggplot2::aes(x = Year, y = Count)) +
+        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
+      data_out <- SBL_long
+    } else {
+      ss_sbl <- quantity$se
+      ci <- data.frame(
+        LengthGroup = SBL_long$LengthGroup,
+        Year = SBL_long$Year,
+        estimate = ss_sbl[, "Estimate"],
+        lower = ss_sbl[, "Estimate"] - 1.96 * ss_sbl[, "Std. Error"],
+        upper = ss_sbl[, "Estimate"] + 1.96 * ss_sbl[, "Std. Error"]
+      )
+      p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
+        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
+      data_out <- ci
+    }
+    p <- p + ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
       ggplot2::labs(x = "Year", y = "Relative biomass", title = "Spawning Biomass at Length Over Years") +
       current_theme
-    data_out <- SBL_long
   }
 
   # ==========================
   # Type = "SBA": SSB at age
   # ==========================
   if (type == "SBA") {
-    SBA <- model_result[["report"]][["SBA"]]
+    SBA <- quantity$value
     if (!is.matrix(SBA)) SBA <- as.matrix(SBA)
 
     AgeLabels <- factor(paste("Age bin", seq_len(nrow(SBA))),
@@ -110,7 +132,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
         current_theme
       data_out <- SBA_long
     } else {
-      ss_sba <- model_result[["est_std"]][grep("^SBA$", rownames(model_result[["est_std"]])), ]
+      ss_sba <- quantity$se
       ss_sba <- as.data.frame(ss_sba)
       ci <- data.frame(
         AgeGroup = rep(levels(AgeLabels), times = ncol(SBA)),

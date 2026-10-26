@@ -31,6 +31,9 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   receive no automatic model preference. The same applies to failed numerical
 #'   screens. Passing the screen does not establish model adequacy; AIC expresses
 #'   relative support among these candidates, not biological validation.
+#'   Goodness-of-fit measures use the same calculation as
+#'   \code{diagnostic_metrics()}. Undefined R-squared for constant observations
+#'   is NA; nonfinite response-scale predictions at observed cells are errors.
 #'
 #' @export
 compare_models <- function(model1, model2, data.CatL,
@@ -150,28 +153,11 @@ compare_models <- function(model1, model2, data.CatL,
 
   # ===== 3. Goodness-of-fit metrics =====
   calc_fit <- function(model, data.CatL) {
-    observed  <- as.matrix(data.CatL[, 2:ncol(data.CatL)])
-    predicted <- exp(model$report$Elog_index)
-    idx <- is.finite(observed) & observed > 0
-    obs <- observed[idx]
-    pred <- predicted[idx]
-    errors <- obs - pred
-
-    MSE    <- mean(errors^2)
-    RMSE   <- sqrt(MSE)
-    MAE    <- mean(abs(errors))
-    sse    <- sum(errors^2)
-    sst    <- sum((obs - mean(obs))^2)
-    R2     <- 1 - sse / sst
-    MAPE   <- mean(abs(errors / obs)) * 100
-    SMAPE  <- mean(abs(errors) / ((abs(obs) + abs(pred)) / 2)) * 100
-
-    # Log-scale residuals
-    log_resid <- log(obs) - log(pred)
-    SDLR   <- stats::sd(log_resid)
-
-    c(MSE = MSE, RMSE = RMSE, MAE = MAE, R2 = R2,
-      MAPE = MAPE, SMAPE = SMAPE, SD_log_resid = SDLR)
+    values <- .acl_survey_metrics(data.CatL, model)
+    keys <- c("MSE", "RMSE", "MAE", "Rsquared", "MAPE", "SMAPE", "SD_log_resid")
+    out <- values[keys]
+    names(out)[names(out) == "Rsquared"] <- "R2"
+    out
   }
 
   fit1 <- calc_fit(model1, data.CatL)

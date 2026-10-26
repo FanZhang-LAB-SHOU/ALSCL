@@ -48,3 +48,11 @@ A ggplot object or a list with plot and data.
 Plots SSB, spawning biomass at length (SBL), or spawning biomass
 at age (SBA) from ACL or ALSCL model results.
 }
+\details{
+ALSCL reports SSB, SBL and SBA with standard errors. ACL reports SSB
+with standard errors and SBL estimates only; SBA is unavailable. A missing
+quantity or requested standard error produces an explicit error. With
+\code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
+on the reported scale. They are not truncated at zero. Inspect fit
+diagnostics before using uncertainty intervals.
+}

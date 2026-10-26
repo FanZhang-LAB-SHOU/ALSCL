@@ -205,13 +205,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
     cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
     cl <- parallel::makeCluster(ncores_use)
     on.exit(parallel::stopCluster(cl), add = TRUE)
-    parallel::clusterCall(cl, function(paths, cache, settings) {
-      .libPaths(paths)
-      options(ALSCL.tmb.cache = cache)
-      options(settings)
-      library(ALSCL)
-      NULL
-    }, .libPaths(), cache, .acl_worker_options())
+    .acl_initialize_workers(cl, cache = cache, settings = .acl_worker_options())
     peels <- parallel::parLapply(cl, seq_len(nyear), .acl_retro_fit,
                                  fit_args = fit_args, model_type = model_type,
                                  silent = silent)

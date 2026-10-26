@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics)
 
-**ALSCL 2.2.4 · 简体中文 / English**
+**ALSCL 2.2.5 · 简体中文 / English**
 
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|
@@ -154,6 +154,14 @@ The earlier t0-only ACL failure on the synthetic YTF data was associated with ag
 2.2.3 的拟合入口会检查数值时间标签的间隔等于 `growth_step`。例如年度表不能直接从 2001 跳到 2003；应补齐 2002 的调查列并用 NA 表示未观测，同时提供该期体重及成熟度。季度表用 2000、2000.25、2000.5、2000.75 等标签。修改标签不能替代正确的时间单位转换。
 
 The fitting entry points require time-column spacing equal to growth_step. An annual table cannot skip directly from 2001 to 2003: include 2002 with NA survey observations and supply its weights and maturity. Quarterly labels are 2000, 2000.25, 2000.5, 2000.75, and so on. Relabelling is not a substitute for converting time units correctly.
+
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装，包括安装时启用 `R_KEEP_PKG_SOURCE` 的情况。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
 
 ---
 

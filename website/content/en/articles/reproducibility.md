@@ -141,3 +141,7 @@ With the default settings, every estimate, the objective function and every row 
 ![Estimates and standard errors before and after the speed settings](../../../docs/figures/speed/agreement.png)
 
 The [speed settings](speed.html) article explains every setting, how to check what your session does and how socket workers are used on Windows and in RStudio. See also the [speed report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_speed.R).
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.

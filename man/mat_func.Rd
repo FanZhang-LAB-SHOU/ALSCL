@@ -19,3 +19,8 @@ Maturation probability.
 \description{
 Calculate maturation probability based on the length of the fish.
 }
+\details{
+L50 and L95 must be distinct finite scalars. A decreasing curve
+(L95 below L50) is supported for descending selectivity limbs. Stable
+logistic evaluation retains probabilities of zero or one in extreme tails.
+}

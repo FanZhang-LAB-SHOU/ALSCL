@@ -52,7 +52,8 @@
 #' plot_CatL(model_result, type = "year")
 #'
 #' # With exp_transform set to TRUE
-#' plot_CatL(model_result, type = "...", exp_transform = TRUE)
+#' model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
+#' plot_CatL(model_result, type = "year", exp_transform = TRUE)
 #' }
 #'
 #' @export

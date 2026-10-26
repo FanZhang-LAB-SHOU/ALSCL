@@ -11,11 +11,17 @@ from bs4 import BeautifulSoup
 ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'_site'
 errors=[]
+version=re.search(r'^Version: (.+)$',(ROOT/'DESCRIPTION').read_text(),re.M)[1]
 pages={p:BeautifulSoup(p.read_text(),'html.parser') for p in SITE.rglob('*.html')}
 functions=json.loads((ROOT/'website/.build/api/functions.json').read_text())
 blocks=[]
 for path,soup in pages.items():
     name=path.relative_to(SITE).as_posix()
+    if name in ('index.html','zh/index.html'):
+        current=soup.select_one('.current-version')
+        if current is None or current.get_text(strip=True)!=version:
+            errors.append(f'{name}: installation version must match DESCRIPTION ({version})')
+        if '{{VERSION}}' in soup.get_text():errors.append(f'{name}: unresolved version placeholder')
     if not soup.find('h1') or len(soup.find_all('h1'))!=1:errors.append(f'{name}: expected one h1')
     ids=[n['id'] for n in soup.select('[id]')]
     if len(ids)!=len(set(ids)):errors.append(f'{name}: duplicate anchor IDs')

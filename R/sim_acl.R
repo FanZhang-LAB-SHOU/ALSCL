@@ -70,12 +70,7 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   ncores <- min(ncores, length(iter_range))
   if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
     cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
-    initialize_worker <- function(paths, cache, settings) {
-      .libPaths(paths); loadNamespace("ALSCL"); options(ALSCL.tmb.cache = cache); options(settings); NULL
-    }
-    # Set library paths before deserialization can load an older ALSCL namespace.
-    environment(initialize_worker) <- baseenv()
-    parallel::clusterCall(cl, initialize_worker, .libPaths(), cache, .acl_worker_options())
+    .acl_initialize_workers(cl, cache = cache, settings = .acl_worker_options())
     results <- parallel::parLapply(cl, iter_range, fit_one)
   }
   names(results) <- paste0("result_rep_", iter_range)

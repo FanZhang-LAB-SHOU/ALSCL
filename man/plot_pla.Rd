@@ -57,7 +57,8 @@ plot_pla(
 A ggplot object showing the heatmap of the probability length at age.
 }
 \description{
-This function plays an essential part in the process of Annual Catch Limit (ACL) in Fisheries Stock Assessment.
+Display the age-length key reported by an age-structured catch-at-length
+(ACL) or age-and-length-structured catch-at-length (ALSCL) fit.
 It generates a heatmap to visualize the Probability Length at Age (PLA) derived from a given model result.
 The PLA matrix is an essential output from fish stock assessment models which shows the probability that a fish of a certain age is within a certain length group.
 This visualization is beneficial to understand the size structure of the fish population over age, which is crucial for setting appropriate catch limits.
@@ -65,8 +66,7 @@ The function also allows customization of the color gradient used in the heatmap
 }
 \examples{
 \dontrun{
-# Assume we have a model_result list from a fishery stock assessment model
-model_result <- run_model()
+model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
 
 # Generate a heatmap with the default color gradient
 plot_pla(model_result)
