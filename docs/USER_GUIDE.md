@@ -990,11 +990,11 @@ The fitting entry points require time-column spacing equal to growth_step. An an
 
 ### 2.2.5 的并行安装库一致性
 
-多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装，包括安装时启用 `R_KEEP_PKG_SOURCE` 的情况。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
 
 ### Consistent package libraries in 2.2.5
 
-Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
 
 <a id="diagnostics"></a>
 ## 7. 怎样判断结果可用 / Assessing results

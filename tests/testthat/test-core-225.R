@@ -97,12 +97,25 @@ test_that("actual multistart and retrospective workers use the loaded installati
     ".libPaths(c(cfg$custom, cfg$paths))",
     "library(ALSCL)",
     "options(ALSCL.tmb.cache = cfg$cache, ALSCL.sd_cores = 1L)",
+    # Source-file environments can refer to their package namespace. Inject
+    # retained references explicitly so ordinary installs also exercise the
+    # R_KEEP_PKG_SOURCE path used by package-check builds.
+    "retain_source <- function(name) {",
+    "  ns <- asNamespace('ALSCL')",
+    "  lines <- deparse(utils::removeSource(get(name, ns)))",
+    "  source <- srcfilecopy(paste0(name, '.R'), lines)",
+    "  source$namespace <- ns",
+    "  fun <- eval(parse(text=lines, srcfile=source, keep.source=TRUE), envir=ns)",
+    "  stopifnot(!is.null(attr(fun, 'srcref')))",
+    "  unlockBinding(name, ns); assign(name, fun, ns); lockBinding(name, ns)",
+    "}",
+    "for (name in c('.acl_initialize_workers', '.acl_delta_socket', '.acl_delta_one')) retain_source(name)",
     "expected <- normalizePath(file.path(cfg$custom, 'ALSCL'), winslash='/')",
     "stopifnot(identical(normalizePath(getNamespaceInfo(asNamespace('ALSCL'),'path'), winslash='/'), expected))",
     "probes <- list()",
     "trace('clusterCall', where=asNamespace('parallel'), print=FALSE, exit=quote({",
     "  if (is.function(fun) && any(grepl('.libPaths', deparse(body(fun)), fixed=TRUE))) {",
-    "    probe <- function() c(path=normalizePath(getNamespaceInfo(asNamespace('ALSCL'),'path'), winslash='/'), pid=Sys.getpid())",
+    "    probe <- function() c(path=if ('ALSCL' %in% loadedNamespaces()) normalizePath(getNamespaceInfo(asNamespace('ALSCL'),'path'), winslash='/') else NA_character_, pid=Sys.getpid())",
     "    environment(probe) <- baseenv()",
     "    .GlobalEnv$probes <- c(.GlobalEnv$probes, list(parallel::clusterCall(cl, probe)))",
     "  }",
@@ -111,12 +124,16 @@ test_that("actual multistart and retrospective workers use the loaded installati
     "fit <- run_acl(cfg$args, nstarts=2, ncores=2)",
     "serial_retro <- retro_acl(cfg$args, nyear=2, ncores=1)",
     "retro <- retro_acl(cfg$args, nyear=2, ncores=2)",
+    "options(ALSCL.sd_socket_min_seconds=0)",
+    "socket_sd <- ALSCL:::.acl_sdreport(fit$obj, fit$opt$par, ncores=2, check_version=FALSE, fallback=FALSE, backend='socket')",
+    "reference_sd <- TMB::sdreport(fit$obj, par.fixed=fit$opt$par, getReportCovariance=FALSE)",
     "untrace('clusterCall', where=asNamespace('parallel'))",
     "saveRDS(list(probes=probes, expected=expected,",
     "  fit=list(objective=fit$opt$objective, serial_objective=serial$opt$objective,",
     "    par=fit$opt$par, serial_par=serial$opt$par, workers=fit$workers),",
     "  retro=retro$results, serial_retro=serial_retro$results,",
-    "  retro_errors=retro$fit_diagnostics$error), file.path(cfg$folder,'results.rds'))"
+    "  retro_errors=retro$fit_diagnostics$error, sd=summary(socket_sd), reference_sd=summary(reference_sd),",
+    "  sd_info=attr(socket_sd,'acl_sd_info')), file.path(cfg$folder,'results.rds'))"
   ), script)
   log <- file.path(folder, "workers.log")
   status <- system2(file.path(R.home("bin"), "Rscript"),
@@ -125,8 +142,8 @@ test_that("actual multistart and retrospective workers use the loaded installati
   result_file <- file.path(folder, "results.rds")
   if (status != 0L || !file.exists(result_file)) return(invisible(NULL))
   result <- readRDS(result_file)
-  expect_length(result$probes, 2L)
-  for (probe in result$probes) {
+  expect_length(result$probes, 3L)
+  for (probe in result$probes[1:2]) {
     expect_length(probe, 2L)
     expect_identical(unname(vapply(probe, `[[`, character(1), "path")),
                      rep(result$expected, 2L))
@@ -137,4 +154,11 @@ test_that("actual multistart and retrospective workers use the loaded installati
   expect_equal(result$fit$par, result$fit$serial_par, tolerance = 1e-10)
   expect_equal(result$retro, result$serial_retro, tolerance = 1e-10)
   expect_true(all(result$retro_errors == ""))
+  # Delta-method workers need TMB/Matrix only. Source attributes must not load
+  # an unintended ALSCL installation as a side effect of deserialization.
+  expect_length(result$probes[[3L]], 2L)
+  expect_true(all(is.na(vapply(result$probes[[3L]], `[[`, character(1), "path"))))
+  expect_identical(result$sd_info$method, "socket workers (delta method)")
+  expect_equal(result$sd_info$cores, 2L)
+  expect_equal(result$sd, result$reference_sd, tolerance = 1e-10)
 })

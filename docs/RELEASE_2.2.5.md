@@ -2,7 +2,7 @@
 
 ## Changes
 
-- Multistart fits, retrospective peels and simulation batches share a socket-worker initializer. It sets the parent session's library paths before loading ALSCL and verifies the loaded package path. Custom library installations no longer silently mix with a default installation on workers.
+- Multistart fits, retrospective peels and simulation batches share a socket-worker initializer. It sets the parent session's library paths before loading ALSCL and verifies the loaded package path. Custom library installations no longer silently mix with a default installation on workers. Source references are removed from worker callbacks before serialization, including standard-error callbacks, so installations built with R_KEEP_PKG_SOURCE cannot preload another namespace.
 - In-sample diagnostics validate known time labels, length-bin order, positive-observation masks and stored observations. Old objects without metadata retain raw metrics; model comparisons continue to withhold automatic preference when comparability cannot be verified.
 - Comparison tables and diagnostic functions share metric arithmetic. Undefined R-squared for constant observations is NA. Nonfinite response-scale predictions at observed cells are errors; log residuals retain finite stored log predictions even when exponentiation underflows.
 - Logistic maturity/selectivity remains finite for steep increasing and descending curves. Both simulators use a stable Baranov limit: F = M = 0 gives exactly zero catch. Invalid biological arrays or nonfinite simulated outputs fail before saving a replicate.
@@ -14,10 +14,10 @@ The model likelihoods, fitted parameterizations, direct run_acl(x)/run_alscl(x) 
 
 ## Validation
 
-Validated locally with R 4.6.0 and TMB 1.9.21 on macOS:
+Validated locally with R 4.6.0 and TMB 1.9.21 on macOS, with R_KEEP_PKG_SOURCE=yes:
 
-- **1,566 passing assertions in 116 test blocks**, with no failures, errors, warnings or skips. This includes 317 added assertions. See [per-block results](results/regression-2.2.5.csv).
-- Real socket integration tests load ALSCL from a separate installation path, run two multistart and two retrospective workers, verify distinct process IDs and loaded package paths, and compare with sequential results within 1e-10.
+- **1,571 passing assertions in 116 test blocks**, with no failures, errors, warnings or skips. This includes 322 added assertions. See [per-block results](results/regression-2.2.5.csv).
+- Real socket integration tests load ALSCL from a separate installation path, run two multistart and two retrospective workers, verify distinct process IDs and loaded package paths, and compare with sequential results within 1e-10. Explicit retained-source references reproduce the CI serialization boundary; forced socket standard errors match native TMB and their workers do not load ALSCL.
 - Plot tests exercise the 36 model/type/interval combinations, check interval values and matrix order, and verify grid-free panels across all 22 public plotting functions and nine base themes. Explicit grid overrides are also tested.
 - Simulation checks cover three presets, steep/descending logistic curves, zero and tiny mortality, invalid biological arrays and output overflow. Separate normal-input comparisons retain the existing simulated biology at floating-point precision.
 - A second independent review checks the final changes with actual stored fits: data-order rejection, missing observations, legacy diagnostics, uncertainty extraction, unsupported plotting combinations, grid defaults and documentation contracts.
@@ -49,4 +49,4 @@ Install website/requirements.txt in a Python virtual environment first. Fitting 
 
 2.2.5 统一并行进程的安装库，核对诊断输入与原始拟合数据，共用比较指标，修正陡峭 logistic 和零死亡率模拟，补上体长别生物量及 SSB 的可用区间，并明确不支持的绘图组合。所有 22 个绘图函数默认没有主、次网格线；用户仍可显式恢复。中英文网站、函数参考、书稿与 Wiki 同步更新，首页安装版本由 DESCRIPTION 自动生成。
 
-本地完整测试为 1,566 项断言、116 个测试块，包含 317 项新增断言，零失败、错误、警告或跳过。真实多进程测试核对安装路径、独立 PID 和顺序结果；完成修订后又独立复核了一遍。模型似然、旧写法、run_acl(x)/run_alscl(x) 和加速设置保留。
+本地完整测试为 1,571 项断言、116 个测试块，包含 322 项新增断言，零失败、错误、警告或跳过。真实多进程测试核对安装路径、独立 PID 和顺序结果；完成修订后又独立复核了一遍。模型似然、旧写法、run_acl(x)/run_alscl(x) 和加速设置保留。

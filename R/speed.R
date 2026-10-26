@@ -305,7 +305,7 @@ print.alscl_speed_info <- function(x, ...) {
   env <- obj$env
   workers <- min(ncores, length(rest))
   path <- getLoadedDLLs()[[env$DLL]][["path"]]
-  one <- .acl_delta_one; environment(one) <- globalenv()
+  one <- utils::removeSource(.acl_delta_one); environment(one) <- globalenv()
   setup <- function(paths, path, dll, data, parameters, random, par, Vtheta, hessian.random, one) {
     .libPaths(paths)
     loadNamespace("TMB"); loadNamespace("Matrix")
@@ -323,6 +323,9 @@ print.alscl_speed_info <- function(x, ...) {
     state <- getOption("ALSCL.delta_state")
     lapply(chunk, state$one, s = state$s)
   }
+  # Retained source references can otherwise preload an unrelated ALSCL/TMB
+  # installation while the callbacks are being deserialized on the workers.
+  setup <- utils::removeSource(setup); task <- utils::removeSource(task)
   environment(setup) <- globalenv(); environment(task) <- globalenv()
   cl <- tryCatch(parallel::makePSOCKcluster(workers),
                  error = function(e) stop(.acl_parallel_error(conditionMessage(e))))

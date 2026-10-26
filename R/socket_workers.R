@@ -18,6 +18,9 @@
     if (!is.null(dll_path)) dyn.load(dll_path)
     invisible(NULL)
   }
+  # Installations with R_KEEP_PKG_SOURCE retain source-file environments that
+  # also refer to the package namespace. Strip those before serialization.
+  initialize <- utils::removeSource(initialize)
   environment(initialize) <- baseenv()
   parallel::clusterCall(cl, initialize, .libPaths(), package_path,
                         cache, dll_path, settings)
