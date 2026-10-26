@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/09-Growth-and-Mortality)
 
-**ALSCL 2.2.4 · 简体中文 / English**
+**ALSCL 2.2.5 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -144,6 +144,50 @@ ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显�
 ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_abundance)
+
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
 
 
 

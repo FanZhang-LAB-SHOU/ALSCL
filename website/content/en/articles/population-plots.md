@@ -339,3 +339,35 @@ q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
 paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
 stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Grid-free defaults in 2.2.5
+
+All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, add a grid to a particular figure explicitly:
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```

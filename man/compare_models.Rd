@@ -50,4 +50,7 @@ Older results lacking this metadata can still display raw statistics, but
 receive no automatic model preference. The same applies to failed numerical
 screens. Passing the screen does not establish model adequacy; AIC expresses
 relative support among these candidates, not biological validation.
+Goodness-of-fit measures use the same calculation as
+\code{diagnostic_metrics()}. Undefined R-squared for constant observations
+is NA; nonfinite response-scale predictions at observed cells are errors.
 }

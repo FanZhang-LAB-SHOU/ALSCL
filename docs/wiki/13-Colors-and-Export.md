@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 
-**ALSCL 2.2.4 · 简体中文 / English**
+**ALSCL 2.2.5 · 简体中文 / English**
 
 默认使用 **ggsci NPG**。单模型估计用深蓝，观测用朱红；两模型比较按模型顺序使用深蓝、朱红；回溯按截止期从新到旧分配 NPG 原生颜色。设置在创建图时生效，已有图对象不会自动重绘。
 
@@ -81,6 +81,26 @@ acl_theme_reset()
 Explicit colors override the theme; `NULL` color arguments inherit it. Changing `line_color` alone does not change `se_color`; specify both to match custom ribbons. Explicit colors win when supplied together with a palette.
 
 色板来源：[ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html)。
+
+### 2.2.5 默认无网格线
+
+所有包内绘图默认去掉主、次面板网格线，包括模型比较和回溯图；配色、置信区间及坐标轴保留原设置。升级后需重新创建旧图，才会应用新默认值。以下使用完整拟合示例中的 `b`，为某张图明确添加网格线：
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```
+
+### Grid-free defaults in 2.2.5
+
+All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, add a grid to a particular figure explicitly:
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```
 
 ---
 

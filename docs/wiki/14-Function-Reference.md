@@ -2,11 +2,11 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 
-**ALSCL 2.2.4 · 简体中文 / English**
+**ALSCL 2.2.5 · 简体中文 / English**
 
-对应 ALSCL 2.2.2 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.2.5 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in ALSCL 2.2.2 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.2.5 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -248,6 +248,18 @@ compare_models(model1, model2, data.CatL, model1_name = NULL, model2_name = NULL
 
 **检查 / Checks:** 要求相同时间、体长标签、正观测及缺失掩码；不匹配报错。返回 fit_diagnostics 和 comparison；不合格拟合或无法核验的旧结果保留原始 AIC，但不自动推荐模型。 / Requires matching periods, length labels, positive observations and masks. Returns fit_diagnostics and comparison; failed or unverifiable fits retain raw AIC without an automatic preference.
 
+### 2.2.5 的拟合数据匹配检查
+
+`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
+
+比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
+
 **示例 / Example:**
 
 ```r
@@ -324,6 +336,18 @@ diagnose_model(data.CatL, model_result)
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame of fit metrics and convergence diagnostics.
 
+### 2.2.5 的拟合数据匹配检查
+
+`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
+
+比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
+
 **示例 / Example:**
 
 ```r
@@ -346,6 +370,18 @@ diagnostic_metrics(data.CatL, model_result)
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A fitted ACL or ALSCL result. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A data frame with Metric and Value. Undefined metrics are NA.
+
+### 2.2.5 的拟合数据匹配检查
+
+`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
+
+比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
 
 **示例 / Example:**
 
@@ -414,7 +450,7 @@ initialize_params(nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
 | `a` | `NULL` | 长度重量关系 W=a*L^b 的系数，需匹配单位。 | Numeric. Length-weight coefficient (default exp(-12)). |
 | `b` | `NULL` | 长度重量关系 W=a*L^b 的指数。 | Numeric. Length-weight exponent (default 3). |
 | `mat_L50` | `NULL` | 成熟比例为 0.5 的体长。 | Numeric. Length at 50 pct maturity (default 35). |
-| `mat_L95` | `NULL` | 成熟比例为 0.95 的体长，须大于 L50。 | Numeric. Length at 95 pct maturity (default 40). |
+| `mat_L95` | `NULL` | 比例为 0.95 的体长，必须不同于 L50；下降选择性可小于 L50。 | Numeric. Length at 95 pct maturity (default 40). |
 | `cv_L` | `NULL` | 给定年龄时体长的变异系数。 | Numeric. CV of length-at-age (default 0.2). |
 | `cv_inc` | `NULL` | 生长增量的变异系数。 | Numeric. CV of growth increment (default 0.2). |
 | `std_logR` | `NULL` | 模拟对数补充偏差的 SD 缩放。 | Numeric. SD of log-recruitment deviations (default 0.3). |
@@ -469,10 +505,36 @@ mat_func(L50, L95, length)
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `L50` | `必填 / required` | 成熟比例为 0.5 的体长。 | Length at which 50% of individuals are mature. |
-| `L95` | `必填 / required` | 成熟比例为 0.95 的体长，须大于 L50。 | Length at which 95% of individuals are mature. |
+| `L95` | `必填 / required` | 比例为 0.95 的体长，必须不同于 L50；下降选择性可小于 L50。 | Length at which 95% of individuals are mature. |
 | `length` | `必填 / required` | 计算成熟比例的体长向量。 | Length of the fish. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 Maturation probability.
+
+### 2.2.5 的模拟数值边界
+
+`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零，不再返回未定义数值；丰度和补充量仍按选定模拟模型演变。
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
+
+### Stable simulation boundaries in 2.2.5
+
+`mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
 
 **示例 / Example:**
 
@@ -547,6 +609,50 @@ plot_biomass(model_result, line_size = 1.2, line_color = NULL, line_type = "soli
 
 **返回 / Returns:** 图对象；如支持 return_data，可同时取回整理数据。 A ggplot; return_data=TRUE returns a list with plot and data.
 
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
 **示例 / Example:**
 
 ```r
@@ -583,6 +689,50 @@ plot_catch(model_result, line_size = 1.2, line_color = NULL, line_type = "solid"
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return processed data. Default is FALSE. |
 
 **返回 / Returns:** 图对象；如支持 return_data，可同时取回整理数据。 A ggplot; return_data=TRUE returns a list with plot and data.
+
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
 
 **示例 / Example:**
 
@@ -859,6 +1009,18 @@ plot_compare_metrics(model1, model2, data.CatL, model1_name = NULL, model2_name 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
 Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
+
+### 2.2.5 的拟合数据匹配检查
+
+`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
+
+比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
 
 **示例 / Example:**
 
@@ -1357,6 +1519,50 @@ plot_SSB(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
 
 **返回 / Returns:** 图对象；如支持 return_data，可同时取回整理数据。 A ggplot; return_data=TRUE returns a list with plot and data.
 
+### 2.2.5 的模型、输出与区间支持范围
+
+`se = TRUE` 请求逐点近似 95% 区间（`估计值 ± 1.96 × 标准误`）。体长别生物量和产卵生物量现在会绘制可用区间。数量或标准误不可用时会明确报错；确实只需要估计线时才使用 `se = FALSE`。解释区间前仍须检查收敛与 Hessian。
+
+| 函数 | 类型 | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | 估计 + 区间 | 估计 + 区间 |
+| `plot_biomass()` | `BL` | 仅估计 | 估计 + 区间 |
+| `plot_biomass()` | `BA` | 不可用 | 估计 + 区间 |
+| `plot_SSB()` | `SSB` | 估计 + 区间 | 估计 + 区间 |
+| `plot_SSB()` | `SBL` | 仅估计 | 估计 + 区间 |
+| `plot_SSB()` | `SBA` | 不可用 | 估计 + 区间 |
+| `plot_catch()` | `CN` | 估计 + 区间 | 估计 + 区间 |
+| `plot_catch()` | `CNA` | 仅估计 | 估计 + 区间 |
+| `plot_catch()` | `CNL` | 不可用 | 估计 + 区间 |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
+### Model, output and interval support in 2.2.5
+
+`se = TRUE` requests pointwise approximate 95% intervals (`estimate ± 1.96 × SE`). Length-specific biomass and spawning biomass now draw these intervals when available. Unavailable quantities or standard errors produce a clear error; use `se = FALSE` only when an estimate-only plot is intended. Inspect convergence and Hessian diagnostics before interpreting intervals.
+
+| Function | Type | ACL | ALSCL |
+|---|---|---|---|
+| `plot_biomass()` | `B` | Estimate + interval | Estimate + interval |
+| `plot_biomass()` | `BL` | Estimate only | Estimate + interval |
+| `plot_biomass()` | `BA` | Unavailable | Estimate + interval |
+| `plot_SSB()` | `SSB` | Estimate + interval | Estimate + interval |
+| `plot_SSB()` | `SBL` | Estimate only | Estimate + interval |
+| `plot_SSB()` | `SBA` | Unavailable | Estimate + interval |
+| `plot_catch()` | `CN` | Estimate + interval | Estimate + interval |
+| `plot_catch()` | `CNA` | Estimate only | Estimate + interval |
+| `plot_catch()` | `CNL` | Unavailable | Estimate + interval |
+
+```r
+plot_biomass(b, type = "BL", se = TRUE)
+plot_SSB(b, type = "SBL", se = TRUE)
+plot_catch(a, type = "CNA", se = FALSE)
+```
+
 **示例 / Example:**
 
 ```r
@@ -1538,6 +1744,14 @@ retro_acl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
 **示例 / Example:**
 
 ```r
@@ -1578,6 +1792,14 @@ retro_alscl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
+
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
 
 **示例 / Example:**
 
@@ -1672,6 +1894,14 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
 **示例 / Example:**
 
 ```r
@@ -1729,6 +1959,14 @@ run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list with report, opt, obj, est_std, vcov, pdHess, gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit, year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics. start_diagnostics contains each start's PID, start/end timestamps, elapsed and CPU seconds, objective and convergence code. nstarts and workers record work and concurrency. The lowest finite objective is selected; check convergence separately. The DLL remains loaded so the returned obj can be evaluated in the same session.
+
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
 
 **示例 / Example:**
 
@@ -1792,6 +2030,14 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list with report, opt, obj, est_std, vcov, pdHess, gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit, year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics. start_diagnostics contains each start's PID, start/end timestamps, elapsed and CPU seconds, objective and convergence code. nstarts and workers record work and concurrency. The lowest finite objective is selected; check convergence separately. The DLL remains loaded so the returned obj can be evaluated in the same session.
 
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
 **示例 / Example:**
 
 ```r
@@ -1846,6 +2092,14 @@ For the full simulator, `nyear` and `burn_in` are durations in years and must ea
 
 `sim_acl()` resolves path and parameter variables before sending tasks to socket workers, so ordinary console/script calls work with multiple cores. Retain failed replicates and inspect each fit's diagnostics; successful worker execution alone does not establish a usable assessment.
 
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
 **示例 / Example:**
 
 ```r
@@ -1869,6 +2123,32 @@ sim_cal(params)
 | `params` | `必填 / required` | initialize_params() 返回的完整模拟参数列表。 | A list of parameters from initialize_params(). Must contain model_type ("age_based" or "length_based") to determine which transition matrix to build. |
 
 **返回 / Returns:** 返回结构及字段如下；可用 str() 检查。 A list containing: model_typeCharacter: "age_based" or "length_based" LatALength-at-age vector W_at_lenWeight-at-length vector matMaturity-at-length vector q_survSurvey catchability-at-length vector selSelectivity vector (at-age for age_based, at-length for length_based) plaAge-length transition matrix (always built for initial conditions) GijGrowth transition matrix (length_based only) nlen, len_lower, len_upperLength bin dimensions
+
+### 2.2.5 的模拟数值边界
+
+`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零，不再返回未定义数值；丰度和补充量仍按选定模拟模型演变。
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
+
+### Stable simulation boundaries in 2.2.5
+
+`mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
 
 **示例 / Example:**
 
@@ -1910,6 +2190,32 @@ For the full simulator, `nyear` and `burn_in` are durations in years and must ea
 
 `sim_acl()` resolves path and parameter variables before sending tasks to socket workers, so ordinary console/script calls work with multiple cores. Retain failed replicates and inspect each fit's diagnostics; successful worker execution alone does not establish a usable assessment.
 
+### 2.2.5 的模拟数值边界
+
+`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零，不再返回未定义数值；丰度和补充量仍按选定模拟模型演变。
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
+
+### Stable simulation boundaries in 2.2.5
+
+`mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
+
+```r
+stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
+pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
+                         M = 0, F_mean = 0)
+sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
+                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
+stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+```
+
 **示例 / Example:**
 
 ```r
@@ -1943,7 +2249,7 @@ simulate_example_data(years = 2000:2025, bin_breaks = c(0, 20, 25, 30, 35,
 | `L50_sel` | `28` | 调查可捕性达到 50% 的体长。 | Numeric. Length at 50 percent selectivity. Default 28. |
 | `L95_sel` | `36` | 调查可捕性达到 95% 的体长，必须大于 L50。 | Numeric. Length at 95 percent selectivity. Default 36. |
 | `L50_mat` | `33` | 成熟比例为 0.5 的体长。 | Numeric. Length at 50 percent maturity. Default 33. |
-| `L95_mat` | `40` | 成熟比例为 0.95 的体长，须大于 L50。 | Numeric. Length at 95 percent maturity. Default 40. |
+| `L95_mat` | `40` | 比例为 0.95 的体长，必须不同于 L50；下降选择性可小于 L50。 | Numeric. Length at 95 percent maturity. Default 40. |
 | `wgt_a` | `2.2e-06` | 长度重量关系 W=a*L^b 的系数，需匹配单位。 | Numeric. Weight-length parameter a in W = a * L^b. Default 2.2e-6. |
 | `wgt_b` | `3.2` | 长度重量关系 W=a*L^b 的指数。 | Numeric. Weight-length parameter b in W = a * L^b. Default 3.2. |
 | `mean_F` | `0.3` | 生成 F 轨迹的算术平均值，必须非负，零表示无捕捞。 | Nonnegative arithmetic mean of the generated F trajectory; zero gives zero fishing mortality. |

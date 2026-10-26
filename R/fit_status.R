@@ -45,42 +45,66 @@
     stringsAsFactors = FALSE)
 }
 
-# Refuse known data mismatches; with old objects lacking metadata, retain raw
-# statistics but withhold an automatic preference because comparability is unknown.
-.acl_comparison_data <- function(models, data.CatL) {
+# Normalize survey observations once before validating or computing diagnostics.
+.acl_survey_data <- function(data.CatL) {
   if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)
     stop("data.CatL must contain length labels and time columns.", call. = FALSE)
   original <- as.matrix(data.CatL[, -1L, drop = FALSE])
   observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
   if (any(is.na(observed) & !is.na(original)) ||
       any(is.infinite(observed)) || any(observed < 0, na.rm = TRUE))
-    stop("Comparison observations must be numeric, nonnegative and finite, or NA.", call. = FALSE)
+    stop("Survey observations must be numeric, nonnegative and finite, or NA.", call. = FALSE)
   mask <- is.finite(observed) & observed > 0
   if (!any(mask)) stop("No positive finite observations are available.", call. = FALSE)
   years <- suppressWarnings(as.numeric(sub("^X", "", colnames(data.CatL)[-1L])))
   labels <- trimws(as.character(data.CatL[, 1L]))
-  unknown <- character()
-  for (i in seq_along(models)) {
-    m <- models[[i]]
-    fail <- function(part) stop("Model ", i, " does not match data.CatL: ", part, ".",
-                                call. = FALSE)
-    if (!identical(dim(m$report$Elog_index), dim(observed))) fail("prediction dimensions")
-    if (any(!is.finite(m$report$Elog_index[mask]))) fail("nonfinite predictions")
-    if (is.null(m$year)) unknown <- c(unknown, paste("model", i, "time metadata unavailable"))
-    else if (length(m$year) != length(years) || any(!is.finite(m$year)) || any(!is.finite(years)) ||
-             any(abs(m$year - years) > 1e-8)) fail("time columns")
-    if (is.null(m$len_label)) unknown <- c(unknown, paste("model", i, "length labels unavailable"))
-    else if (!identical(trimws(as.character(m$len_label)), labels)) fail("length labels/order")
-    if (is.null(m$observations)) {
-      unknown <- c(unknown, paste("model", i, "original observations unavailable"))
-    } else {
-      stored <- m$observations
-      if (!identical(dim(stored), dim(observed))) fail("observation dimensions")
-      stored_mask <- is.finite(stored) & stored > 0
-      if (!identical(unname(stored_mask), unname(mask))) fail("observation mask")
-      if (!isTRUE(all.equal(as.numeric(stored[mask]), as.numeric(observed[mask]),
-                            tolerance = 1e-12))) fail("observation values")
-    }
+  list(observed = observed, mask = mask, years = years, labels = labels)
+}
+
+# Diagnostics describe the fitted observations. Reject known mismatches rather
+# than treating a reordered or changed table as a worse fit. Legacy objects may
+# omit metadata, so return the missing evidence separately from actual errors.
+.acl_validate_survey_fit <- function(m, survey, label = "Model") {
+  observed <- survey$observed; mask <- survey$mask
+  fail <- function(part, detail = NULL) {
+    if (!is.null(detail) && identical(label, "Model")) stop(detail, call. = FALSE)
+    stop(label, " does not match data.CatL: ", part, ".", call. = FALSE)
   }
+  log_predicted <- m$report$Elog_index
+  if (!identical(dim(log_predicted), dim(observed)))
+    fail("prediction dimensions", "Observed and predicted dimensions differ.")
+  if (!is.numeric(log_predicted) || any(!is.finite(log_predicted[mask])) ||
+      any(!is.finite(exp(log_predicted[mask]))))
+    fail("nonfinite predictions", "Predictions are non-finite at observed cells.")
+  unknown <- character()
+  missing <- function(part) paste(tolower(label), part, "unavailable")
+  if (is.null(m$year)) unknown <- c(unknown, missing("time metadata"))
+  else if (!is.numeric(m$year) || length(m$year) != length(survey$years) ||
+           any(!is.finite(m$year)) || any(!is.finite(survey$years)) ||
+           any(abs(m$year - survey$years) > 1e-8)) fail("time columns")
+  if (is.null(m$len_label)) unknown <- c(unknown, missing("length labels"))
+  else if (!identical(trimws(as.character(m$len_label)), survey$labels))
+    fail("length labels/order")
+  if (is.null(m$observations)) {
+    unknown <- c(unknown, missing("original observations"))
+  } else {
+    stored <- m$observations
+    if (!identical(dim(stored), dim(observed))) fail("observation dimensions")
+    if (!is.numeric(stored) || any(is.infinite(stored)) || any(stored < 0, na.rm = TRUE))
+      fail("invalid stored observations")
+    stored_mask <- is.finite(stored) & stored > 0
+    if (!identical(unname(stored_mask), unname(mask))) fail("observation mask")
+    if (!isTRUE(all.equal(as.numeric(stored[mask]), as.numeric(observed[mask]),
+                         tolerance = 1e-12))) fail("observation values")
+  }
+  unknown
+}
+
+# With old objects lacking metadata, retain raw statistics but withhold an
+# automatic preference because comparability is unknown.
+.acl_comparison_data <- function(models, data.CatL) {
+  survey <- .acl_survey_data(data.CatL)
+  unknown <- as.character(unlist(lapply(seq_along(models), function(i)
+    .acl_validate_survey_fit(models[[i]], survey, paste("Model", i))), use.names = FALSE))
   list(verified = !length(unknown), issues = unknown)
 }

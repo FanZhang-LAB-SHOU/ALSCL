@@ -1,3 +1,8 @@
+## ALSCL 2.2.5
+
+- All package plots now omit major and minor gridlines by default; explicit theme overrides remain available.
+- Use the same package installation on socket workers, validate fitted-data alignment in diagnostics, share robust comparison metrics, stabilize steep logistic curves and zero-mortality simulations, honor available biomass intervals and explain unsupported plots. Synchronize bilingual guides and executable help examples; homepage installation versions follow DESCRIPTION.
+
 ## ALSCL 2.2.4
 
 - Resolve path and parameter variables before socket batch fitting; retain diagnostics when all retrospective fits fail, including with plotting requested.

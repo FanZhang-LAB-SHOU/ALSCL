@@ -1,0 +1,5 @@
+"Peel","RetrospectiveYear","elapsed","error","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues"
+0,2019,7.84700000000001,"",0,2.80095946436631e-10,TRUE,FALSE,FALSE,TRUE,""
+1,2018,6.99100000000001,"",0,4.97119671816204e-10,TRUE,FALSE,FALSE,TRUE,""
+2,2017,6.44400000000002,"",0,2.94101275451208e-10,TRUE,FALSE,FALSE,TRUE,""
+3,2016,5.09,"",0,4.58314254603298e-11,TRUE,FALSE,FALSE,TRUE,""

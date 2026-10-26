@@ -163,3 +163,7 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 | `options(ALSCL.tmb.cache = path)` | 存放已编译模型的文件夹 |
 
 恢复默认，例如 `options(ALSCL.sd_backend = NULL)`。
+
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。

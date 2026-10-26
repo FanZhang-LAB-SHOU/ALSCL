@@ -272,7 +272,10 @@ def load_reference():
         name = entry['name']; block = blocks[name]
         entry['summary'] = re.search(r'## `[^`]+`\s*\n\n([^\n]+)', block)[1]
         rows = []
-        for line in block.splitlines():
+        # Later sections can contain model/type support tables. Only the
+        # argument section before the return value defines function arguments.
+        argument_block = block.split('**返回 / Returns:**', 1)[0]
+        for line in argument_block.splitlines():
             if line.startswith('| `'):
                 cols = [c.strip() for c in re.split(r'(?<!\\)\|',line)[1:-1]]
                 if len(cols)==4: rows.append(cols)
@@ -350,7 +353,7 @@ def build(out):
         shutil.copytree(ROOT/'docs'/folder,out/'assets/manual'/folder,dirs_exist_ok=True)
     (out/'assets/syntax.css').write_text(HtmlFormatter(style='friendly').get_style_defs('.highlight'))
     for lang in ['en','zh']:
-        home=(WEB/'content'/lang/'index.md').read_text()
+        home=(WEB/'content'/lang/'index.md').read_text().replace('{{VERSION}}', VERSION)
         category_contents = ''
         for group in ARTICLE_GROUPS:
             category_contents += '- [' + group['title'][lang] + '](#guide-' + group['id'] + ')\n'

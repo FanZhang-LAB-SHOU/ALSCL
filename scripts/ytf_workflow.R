@@ -124,7 +124,7 @@ write.csv(retro_b$rho_text,file.path(out,'results','rho_ALSCL.csv'),row.names=FA
     ggplot(estimates,aes(Year,Value,color=Model))+geom_line()+
       scale_color_manual(values=setNames(acl_theme("compare_colors"),c("ACL","ALSCL")))+
       geom_line(data=truth,aes(Year,Truth),inherit.aes=FALSE,linetype=2)+
-      facet_wrap(~Quantity,scales="free_y",ncol=1)+theme_bw()+labs(y=NULL),height=6,
+      facet_wrap(~Quantity,scales="free_y",ncol=1)+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+labs(y=NULL),height=6,
     note_zh="黑虚线为生成真值；固定生物参数，且模拟与拟合的补充过程不同。",
     note_en="Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.")
   write.csv(truth,file.path(out,"results","truth.csv"),row.names=FALSE)

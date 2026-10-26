@@ -4,11 +4,15 @@
 #' @param L95 Length at which 95% of individuals are mature.
 #' @param length Length of the fish.
 #' @return Maturation probability.
+#' @details L50 and L95 must be distinct finite scalars. A decreasing curve
+#'   (L95 below L50) is supported for descending selectivity limbs. Stable
+#'   logistic evaluation retains probabilities of zero or one in extreme tails.
 #' @export
 mat_func <- function(L50, L95, length) {
-  b1 <- log(0.95 / 0.05) / (L95 - L50)
-  bo <- -L50 * b1
-  logit_pt <- bo + b1 * length
-  matp <- exp(logit_pt) / (1 + exp(logit_pt))
-  return(matp)
+  .acl_scalar(L50, "L50")
+  .acl_scalar(L95, "L95")
+  if (L50 == L95) stop("L50 and L95 must be distinct.", call. = FALSE)
+  if (!is.numeric(length) || any(!is.finite(length)))
+    stop("length must contain finite numeric values.", call. = FALSE)
+  stats::plogis(log(19) * (length - L50) / (L95 - L50))
 }

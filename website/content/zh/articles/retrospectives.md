@@ -77,3 +77,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 ## 全部拟合失败时保留诊断
 
 当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
+
+### 2.2.5 的并行安装库一致性
+
+多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。

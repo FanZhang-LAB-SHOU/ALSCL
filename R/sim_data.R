@@ -24,6 +24,10 @@
 #'   Matrix dimensions are retained for a one-period observation window.
 #'   The \code{years} vector starts at \code{params$first.year} and advances by
 #'   \code{growth_step}; burn-in must be an exact number of time steps.
+#' @details Natural and mean fishing mortality must be finite and nonnegative.
+#'   Zero total mortality produces zero catch through the continuous Baranov
+#'   limit. Invalid biological arrays are rejected before simulation; a replicate
+#'   with nonfinite output is rejected before its file is written.
 #'
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
@@ -36,6 +40,9 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("iter_range must contain finite nonnegative integer seeds.")
   # Determine model type from bio_vars (set by sim_cal).
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
+  .acl_simulation_biology(bio_vars, params, model_type)
+  .acl_scalar(params$M, "M", 0)
+  if (!is.null(params$F_mean)) .acl_scalar(params$F_mean, "F_mean", 0)
   grid <- .acl_simulation_grid(params, sim_year, model_type)
   params$growth_step <- grid$step
   params$burn_in <- grid$burn_in
@@ -166,8 +173,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     # --- Derived quantities ---
     for (i in 1:sim_year) {
       for (j in 1:nage) {
-        CN_at_age[i, j] <- N_at_age[i, j] * (1 - exp(-Z_at_age[i, j])) *
-          (F_at_age[i, j] / Z_at_age[i, j])
+        CN_at_age[i, j] <- .acl_baranov_catch(N_at_age[i, j],
+          F_at_age[i, j], Z_at_age[i, j])
       }
       CN_at_len[i, ] <- CN_at_age[i, ] %*% pla
       CB_at_len[i, ] <- CN_at_len[i, ] * W_at_len
@@ -226,6 +233,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
+    .acl_validate_simulated_result(sim.data, iter)
     save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
     if (iter == return_iter) {
       return_data <- sim.data
@@ -336,7 +344,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       nla[, a]  <- N0_at_age[a] * pla[, a]
       bla[, a]  <- nla[, a] * W_at_len
       sbla[, a] <- bla[, a] * mat
-      cnla[, a] <- nla[, a] * (1 - exp(-Z_at_len[1, ])) * (F_at_len[1, ] / Z_at_len[1, ])
+      cnla[, a] <- .acl_baranov_catch(nla[, a], F_at_len[1, ], Z_at_len[1, ])
       cbla[, a] <- cnla[, a] * W_at_len
     }
     nla_list[[1]]  <- nla
@@ -358,7 +366,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       nla[, 1]  <- Rec[i] * pla[, 1]
       bla[, 1]  <- nla[, 1] * W_at_len
       sbla[, 1] <- bla[, 1] * mat
-      cnla[, 1] <- nla[, 1] * (1 - exp(-Z_at_len[i, ])) * (F_at_len[i, ] / Z_at_len[i, ])
+      cnla[, 1] <- .acl_baranov_catch(nla[, 1], F_at_len[i, ], Z_at_len[i, ])
       cbla[, 1] <- cnla[, 1] * W_at_len
 
       # Ages 2 to nage-1: survive + grow via Gij
@@ -367,7 +375,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
         nla[, j]  <- Gij %*% nla_survival
         bla[, j]  <- nla[, j] * W_at_len
         sbla[, j] <- bla[, j] * mat
-        cnla[, j] <- nla[, j] * (1 - exp(-Z_at_len[i, ])) * (F_at_len[i, ] / Z_at_len[i, ])
+        cnla[, j] <- .acl_baranov_catch(nla[, j], F_at_len[i, ], Z_at_len[i, ])
         cbla[, j] <- cnla[, j] * W_at_len
       }
 
@@ -377,7 +385,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       nla[, nage]  <- Gij %*% nla_survival
       bla[, nage]  <- nla[, nage] * W_at_len
       sbla[, nage] <- bla[, nage] * mat
-      cnla[, nage] <- nla[, nage] * (1 - exp(-Z_at_len[i, ])) * (F_at_len[i, ] / Z_at_len[i, ])
+      cnla[, nage] <- .acl_baranov_catch(nla[, nage], F_at_len[i, ], Z_at_len[i, ])
       cbla[, nage] <- cnla[, nage] * W_at_len
 
       nla_list[[i]]  <- nla
@@ -463,6 +471,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
+    .acl_validate_simulated_result(sim.data, iter)
     save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
     if (iter == return_iter) {
       return_data <- sim.data
@@ -474,6 +483,55 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       "(", length(iter_range), "replicates )\n")
   cat("Returned iteration:", return_iter, "\n")
   return(return_data)
+}
+
+# The Baranov factor has a continuous limit of one at zero total mortality.
+# expm1 also preserves precision when mortality is positive but very small.
+.acl_baranov_catch <- function(number, F, Z) {
+  factor <- rep(1, length(Z))
+  positive <- Z > 0
+  factor[positive] <- -expm1(-Z[positive]) / Z[positive]
+  number * F * factor
+}
+
+# Reject corrupted biological arrays before random draws or output writes.
+.acl_simulation_biology <- function(bio, params, model_type) {
+  if (!is.character(model_type) || length(model_type) != 1L ||
+      !model_type %in% c("age_based", "length_based"))
+    stop("Unknown simulation model_type.", call. = FALSE)
+  nage <- .acl_positive_integer(params$nage, "nage", 2L)
+  nlen <- .acl_positive_integer(bio$nlen, "nlen", 2L)
+  check <- function(value, name, size, upper = Inf) {
+    if (!is.numeric(value) || length(value) != size ||
+        any(!is.finite(value)) || any(value < 0 | value > upper))
+      stop(name, " must contain ", size,
+           " finite nonnegative values", if (is.finite(upper)) " in [0, 1]" else "",
+           ".", call. = FALSE)
+  }
+  check(bio$W_at_len, "W_at_len", nlen)
+  check(bio$mat, "mat", nlen, 1)
+  check(bio$q_surv, "q_surv", nlen, 1)
+  check(bio$sel, "sel", if (model_type == "age_based") nage else nlen, 1)
+  dimensions <- if (model_type == "age_based") c(nage, nlen) else c(nlen, nage)
+  if (!is.matrix(bio$pla) || !identical(dim(bio$pla), dimensions))
+    stop("pla dimensions do not match the simulation model_type, nage and nlen.", call. = FALSE)
+  check(bio$pla, "pla", nage * nlen, 1)
+  if (model_type == "length_based") {
+    if (!is.matrix(bio$Gij) || !identical(dim(bio$Gij), c(nlen, nlen)))
+      stop("Gij must be an nlen by nlen matrix.", call. = FALSE)
+    check(bio$Gij, "Gij", nlen * nlen, 1)
+  }
+  invisible(NULL)
+}
+
+.acl_validate_simulated_result <- function(simulation, iter) {
+  bad <- names(simulation)[vapply(simulation, function(x)
+    is.numeric(x) && any(!is.finite(x)), logical(1))]
+  if (length(bad))
+    stop("Simulation replicate ", iter, " produced nonfinite values in ",
+         paste(bad, collapse = ", "), "; no file was saved for this replicate.",
+         call. = FALSE)
+  invisible(NULL)
 }
 
 # Validate simulator timing centrally so both operating models use the same grid.

@@ -381,3 +381,9 @@ Original separate-argument and `do.call()` calls remain valid. `retro_model()` (
 The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
 
 ![2.2.2 convergence checks](../assets/manual/figures/convergence-2.2.2.png)
+
+### Matching fitted data in 2.2.5
+
+`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
+
+Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.

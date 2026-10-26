@@ -163,3 +163,7 @@ These options are for testing and special cases; the defaults suit normal use.
 | `options(ALSCL.tmb.cache = path)` | Folder for compiled models |
 
 Reset an option with, for example, `options(ALSCL.sd_backend = NULL)`.
+
+### Consistent package libraries in 2.2.5
+
+Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.

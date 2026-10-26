@@ -71,3 +71,13 @@ acl_theme_reset()
 
 
 Explicit colors override the theme; `NULL` color arguments inherit it. Changing `line_color` alone does not change `se_color`; specify both to match custom ribbons. Explicit colors win when supplied together with a palette.
+
+### Grid-free defaults in 2.2.5
+
+All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, add a grid to a particular figure explicitly:
+
+```r
+p <- plot_SSB(b, se = TRUE)
+p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
+                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+```

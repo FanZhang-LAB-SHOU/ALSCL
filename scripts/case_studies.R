@@ -43,7 +43,7 @@ run_case_studies <- function(out='docs') {
       Length=rep(pa$len_mid,length(years)),Value=as.vector(t(sm$SN_at_len)))
     save_plot(paste0(sp,'_data'),ggplot(obs,aes(Year,Length,fill=log10(Value)))+
       geom_tile()+scale_fill_gradient(low=acl_theme('low_col'),high=acl_theme('high_col'))+
-      labs(title=paste(sp,'synthetic survey'),fill='log10 index')+theme_bw(),4)
+      labs(title=paste(sp,'synthetic survey'),fill='log10 index')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),4)
     truth <- data.frame(Year=rep(years,3),Quantity=rep(c('B','SSB','Rec'),each=length(years)),
       Truth=c(sm$TB,sm$SSB,sm$Rec))
     estimates <- rbind(data.frame(Year=rep(years,3),Quantity=truth$Quantity,
@@ -55,21 +55,21 @@ run_case_studies <- function(out='docs') {
     save_plot(paste0(sp,'_truth'),ggplot(estimates,aes(Year,Value,color=Model))+
       geom_line()+scale_color_manual(values=cols)+
       geom_line(data=truth,aes(Year,Truth),inherit.aes=FALSE,linetype=2)+
-      facet_wrap(~Quantity,scales='free_y',ncol=1)+labs(y=NULL,subtitle='Dashed: generating truth; solid: conditional estimates')+theme_bw(),6)
+      facet_wrap(~Quantity,scales='free_y',ncol=1)+labs(y=NULL,subtitle='Dashed: generating truth; solid: conditional estimates')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),6)
     growth <- data.frame(Age=pa$ages,Length=VB_func(pa$Linf,pa$vbk,pa$t0,pa$ages))
     prob <- rbind(data.frame(Length=pa$len_mid,Value=mat_func(pa$mat_L50,pa$mat_L95,pa$len_mid),Type='Maturity'),
       data.frame(Length=pa$len_mid,Value=bio$q_surv,Type='Survey q'))
-    save_plot(paste0(sp,'_biology'),(ggplot(growth,aes(Age,Length))+geom_line(color=cols[1])+theme_bw())/
+    save_plot(paste0(sp,'_biology'),(ggplot(growth,aes(Age,Length))+geom_line(color=cols[1])+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))/
       (ggplot(prob,aes(Length,Value,color=Type))+geom_line()+
        scale_color_manual(values=setNames(unname(cols),c('Maturity','Survey q')))+
-       labs(y='Probability')+theme_bw()),6)
+       labs(y='Probability')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())),6)
     if(sp=='tuna') {
       G <- b$report$G
       stopifnot(max(abs(colSums(G)-1))<1e-10,all(is.finite(G)),all(G>=0))
       g <- expand.grid(Destination=pa$len_mid,Source=pa$len_mid);g$Probability<-as.vector(G)
       save_plot('tuna_growth_transition',ggplot(g,aes(Source,Destination,fill=Probability))+
         geom_tile()+coord_equal()+scale_fill_gradient(low=acl_theme('low_col'),high=acl_theme('high_col'))+
-        labs(title='ALSCL growth transition G',subtitle='Columns sum to one; no shrinkage')+theme_bw(),6)
+        labs(title='ALSCL growth transition G',subtitle='Columns sum to one; no shrinkage')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),6)
     }
   }
   checks <- do.call(rbind,statuses);print(checks)
