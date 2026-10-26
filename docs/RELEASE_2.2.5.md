@@ -30,6 +30,12 @@ Validated locally with R 4.6.0 and TMB 1.9.21 on macOS, with R_KEEP_PKG_SOURCE=y
 
 These checks establish behavior in the tested configurations; they do not establish biological adequacy or parameter identifiability for an unseen stock assessment. Historical simulation datasets retain their original generating truth.
 
+## Documentation figure follow-up
+
+The complete asset inventory covers 105 plot files (including PNG/SVG variants and retained help-image filenames), three worksheet illustrations and one logo. Refresh legacy help figures, both simulation cases, the own-data figures and benchmark graphics as well as the YTF gallery. Gallery exports check every ggplot panel for blank major/minor grids. Worksheet cell borders and meaningful diagnostic/reference lines are retained. Website and Wiki figure URLs contain content hashes to prevent old cached images from appearing after an update; the website checker validates those hashes and inventory coverage.
+
+图形补充修订覆盖 105 个绘图文件（含 PNG/SVG 和旧帮助图片文件名）、3 张表格示意图及 1 个标识。旧帮助图、模拟案例、正式数据示例、基准图与 YTF 图库均已补齐无网格样式；保留表格单元格边界及有意义的诊断参考线。网站及 Wiki 图片链接使用内容校验值，并由网站检查核对图片版本和清单，避免旧图缓存。
+
 ## Reproduce
 
 ```sh

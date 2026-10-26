@@ -25,7 +25,7 @@ render('timing', function() {
     plot(z$ncores, z$median_seconds, type = 'n', xlim = c(.6,4.4),
          ylim = c(0,max(z$max_seconds)*1.20), xaxt = 'n',
          xlab = 'Socket workers (ncores)', ylab = 'Total fit time (seconds)', main = model)
-    axis(1, at = c(1,2,4)); abline(h = axTicks(2), col = '#E8ECF0')
+    axis(1, at = c(1,2,4))
     points(raw$ncores, raw$elapsed_seconds, pch = 1, col = adjustcolor(cols[model],.55))
     arrows(z$ncores,z$min_seconds,z$ncores,z$max_seconds, angle = 90,code = 3,
            length = .04,col = cols[model])
@@ -48,7 +48,6 @@ render('worker-timeline', function() {
     plot(NA, xlim = c(0,max(hi)*1.1), ylim = c(.5,4.5), yaxt = 'n',
          xlab = 'Seconds since first worker started', ylab = '', main = model)
     axis(2, at = 1:4,labels = paste('Start',z$start_id))
-    abline(v = axTicks(1),col = '#E8ECF0')
     segments(lo,1:4,hi,1:4,lwd = 15,col = adjustcolor(cols[model],.8),lend = 1)
     text((lo+hi)/2,1:4,labels = paste('PID',z$pid),col = 'white',cex = .8)
     mtext(sprintf('Worker CPU: %.2f s | interval: %.2f s',sum(z$cpu_seconds),max(hi)),

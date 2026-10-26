@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Check generated links, bilingual coverage, argument coverage and R syntax."""
 from pathlib import Path
-from urllib.parse import urlsplit, unquote
+from urllib.parse import urlsplit, unquote, parse_qs
+import hashlib
 import json
+import csv
 import re
 import subprocess
 import tempfile
@@ -14,6 +16,17 @@ errors=[]
 version=re.search(r'^Version: (.+)$',(ROOT/'DESCRIPTION').read_text(),re.M)[1]
 pages={p:BeautifulSoup(p.read_text(),'html.parser') for p in SITE.rglob('*.html')}
 functions=json.loads((ROOT/'website/.build/api/functions.json').read_text())
+# Cover legacy package-help images as well as the website's bundled figures.
+with (ROOT/'docs/results/manual-figure-inventory.csv').open() as handle:
+    inventory=list(csv.DictReader(handle))
+actual={p.relative_to(ROOT).as_posix() for directory in ['docs/figures','man/figures']
+        for p in (ROOT/directory).rglob('*') if p.suffix.lower() in ('.png','.svg')}
+if actual != {row['path'] for row in inventory}:
+    errors.append('Manual figure inventory does not cover all image assets')
+for row in inventory:
+    asset=ROOT/row['path']
+    if not asset.exists() or hashlib.sha256(asset.read_bytes()).hexdigest()!=row['sha256']:
+        errors.append('Manual figure inventory is stale: '+row['path'])
 blocks=[]
 for path,soup in pages.items():
     name=path.relative_to(SITE).as_posix()
@@ -34,6 +47,10 @@ for path,soup in pages.items():
         elif u.fragment and target.suffix=='.html' and target in pages:
             if not pages[target].find(id=unquote(u.fragment)):errors.append(f'{name}: missing anchor {value}')
         if node.name=='img' and not node.get('alt'):errors.append(f'{name}: image without alt')
+        if node.name=='img' and target.is_file() and '/assets/manual/figures/' in target.as_posix():
+            digest=hashlib.sha256(target.read_bytes()).hexdigest()[:12]
+            if parse_qs(u.query).get('v') != [digest]:
+                errors.append(f'{name}: stale or missing figure content version: {value}')
     for pre in soup.select('main .highlight pre'):
         blocks.append((name,pre.get_text()))
     switch=soup.select_one('#language-switch')

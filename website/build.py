@@ -152,7 +152,11 @@ def rewrite_links(soup, route, lang):
             target = lang_route(lang, known_docs[path.rsplit('/',1)[-1]])
         elif path in ('../README.md', '/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md'):
             target = lang_route(lang, 'index.html')
-        if target: tag[attr] = rel(route, target)
+        if target:
+            tag[attr] = rel(route, target)
+            if target.startswith('assets/manual/figures/'):
+                asset = ROOT / 'docs' / target.removeprefix('assets/manual/')
+                tag[attr] += '?v=' + hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
         elif not parsed.scheme and not url.startswith('#') and path and not path.endswith('.html'):
             # Remaining source-file links refer to versioned repository content.
             source = posixpath.normpath(posixpath.join('docs', path))

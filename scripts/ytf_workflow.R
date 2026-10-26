@@ -4,8 +4,9 @@
 library(ALSCL)
 library(ggplot2)
 library(patchwork)
+source("scripts/plot_helpers.R")
 
-run_ytf_guide <- function(out = "docs", npeels = 3L) {
+run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
   cache <- Sys.getenv("ALSCL_MANUAL_CACHE")
   if (nzchar(cache)) options(ALSCL.tmb.cache = cache)
   for (d in c("figures/ytf", "results", "data"))
@@ -15,9 +16,9 @@ run_ytf_guide <- function(out = "docs", npeels = 3L) {
   inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
   # 固定生物参数的教学拟合 / Conditional teaching fits with known biology.
   message("Fitting YTF ACL")
-  a <- run_acl(x, train_times = 2, ncores = 1, silent = TRUE)
+  a <- if (is.null(fits)) run_acl(x, train_times = 2, ncores = 1, silent = TRUE) else fits$acl
   message("Fitting YTF ALSCL")
-  b <- run_alscl(x, train_times = 2, ncores = 1, silent = TRUE)
+  b <- if (is.null(fits)) run_alscl(x, train_times = 2, ncores = 1, silent = TRUE) else fits$alscl
   dat <- inputs$data.CatL
   status <- function(f, name) data.frame(Model=name, Code=f$convergence_code,
     MaxGradient=f$max_abs_gradient, pdHess=f$pdHess, Boundary=f$bound_hit)
@@ -48,6 +49,7 @@ run_ytf_guide <- function(out = "docs", npeels = 3L) {
     p <- withCallingHandlers(eval(call,parent.frame()), warning=function(w) {
       warnings <<- c(warnings,conditionMessage(w));invokeRestart("muffleWarning")
     })
+    assert_grid_free_plot(p)
     withCallingHandlers(ggsave(file.path(out,"figures","ytf",paste0(id,".png")),
       p,width=11,height=height,dpi=160,bg="white"),warning=function(w){
         warnings <<- c(warnings,conditionMessage(w));invokeRestart("muffleWarning")
@@ -98,11 +100,26 @@ write.csv(ref,file.path(out,'data','synthetic_growth_reference.csv'),row.names=F
 render('compare_growth','生长与外部参照接口','Growth and reference-data interface',growth_display(plot_compare_growth(a,b,age_range=c(1,15),ref_data=ref,ref_name='Synthetic reference',nls_start=list(Linf=60,k=.2,t0=1/60))),height=8.5,note_zh='灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。',note_en='The reference curve uses synthetic Age and Length data, not empirical measurements from the paper.')
 render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),ncol=2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians.')
 render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,ncol=2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
-render('compare_selectivity','固定调查可捕性','Fixed survey catchability',plot_compare_selectivity(a,b),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
+# Portable fits omit the TMB objective. Survey q is a fixed input in this
+# teaching example, so reconstruct this plotting data from the original bundle.
+survey_q_plot <- function() {
+  if (is.null(fits)) return(plot_compare_selectivity(a,b))
+  q <- exp(plogis(log(19)*(a$len_mid-x$fit_args$sel_L50)/
+                    (x$fit_args$sel_L95-x$fit_args$sel_L50),log.p=TRUE))
+  d <- data.frame(Length=rep(a$len_mid,2),Selectivity=rep(q,2),
+                  Model=rep(c('ACL','ALSCL'),each=length(q)))
+  ggplot(d,aes(Length,Selectivity,color=Model,linetype=Model))+
+    geom_line(linewidth=.8)+geom_point(size=2)+
+    scale_color_manual(values=setNames(acl_theme('compare_colors'),c('ACL','ALSCL')))+
+    scale_linetype_manual(values=c(ACL='solid',ALSCL='dashed'))+
+    labs(title='Survey catchability: ACL vs ALSCL',x='Length',y='Survey catchability (q)')+
+    ALSCL:::acl_get_theme()+theme(legend.position='bottom')
+}
+render('compare_selectivity','固定调查可捕性','Fixed survey catchability',survey_q_plot(),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
 for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_annual_F(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。函数名称含 annual，但不会自动把季度率年化。',note_en='Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.')
 # 回溯逐次删除末端时间步 / Peel successive terminal time steps.
-retro_a <- retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE)
-retro_b <- retro_alscl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE)
+retro_a <- if (is.null(fits)) retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_acl
+retro_b <- if (is.null(fits)) retro_alscl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_alscl
 render('retro_ACL','ACL 回溯分析','ACL retrospective analysis',
   plot_retro(retro_a,facet_col=2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
 render('retro_ALSCL','ALSCL 回溯分析','ALSCL retrospective analysis',

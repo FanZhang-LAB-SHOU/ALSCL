@@ -80,20 +80,20 @@ Explicit colors override the theme; `NULL` color arguments inherit it. Changing 
 
 ### 2.2.5 默认无网格线
 
-所有包内绘图默认去掉主、次面板网格线，包括模型比较和回溯图；配色、置信区间及坐标轴保留原设置。升级后需重新创建旧图，才会应用新默认值。以下使用完整拟合示例中的 `b`，为某张图明确添加网格线：
+所有包内绘图默认去掉主、次面板网格线，包括模型比较和回溯图；配色、置信区间及坐标轴保留原设置。升级后需重新创建旧图，才会应用新默认值。以下使用完整拟合示例中的 `b`，对旧图或手写 ggplot 图明确应用无网格样式：
 
 ```r
 p <- plot_SSB(b, se = TRUE)
-p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
-                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
+                   panel.grid.minor = ggplot2::element_blank())
 ```
 
 ### Grid-free defaults in 2.2.5
 
-All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, add a grid to a particular figure explicitly:
+All package plotting functions omit major and minor panel gridlines by default, including comparison panels and retrospectives. Colours, confidence intervals and axes retain their existing settings. Recreate an old plot after upgrading to apply the new defaults. Using `b` from the worked fitting example, explicitly apply the grid-free style to an older plot or a hand-written ggplot:
 
 ```r
 p <- plot_SSB(b, se = TRUE)
-p + ggplot2::theme(panel.grid.major = ggplot2::element_line(colour = "grey90"),
-                   panel.grid.minor = ggplot2::element_line(colour = "grey95"))
+p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
+                   panel.grid.minor = ggplot2::element_blank())
 ```

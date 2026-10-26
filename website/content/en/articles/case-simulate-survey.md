@@ -73,7 +73,8 @@ observations <- data.frame(
   Index = as.vector(as.matrix(inputs$data.CatL[-1])))
 p_data <- ggplot(observations, aes(Year, Length, fill = log10(Index))) +
   geom_tile() + scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(fill = "log10 index") + theme_bw()
+  labs(fill = "log10 index") + theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 p_data
 ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 160)
 ```
@@ -127,7 +128,8 @@ estimates <- rbind(
     Value = c(b$report$B, b$report$SSB, b$report$Rec), Model = "ALSCL"))
 p_truth <- ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() +
   geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
-  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) + theme_bw()
+  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) + theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 p_truth
 ggsave("my_full_simulation/truth_comparison.png", p_truth,
        width = 10, height = 6, dpi = 160)

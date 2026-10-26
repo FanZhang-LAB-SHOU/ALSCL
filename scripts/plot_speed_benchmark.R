@@ -15,7 +15,7 @@ settings <- c(original = 'Original code (ALSCL 2.0.0)',
               tmbad_par = 'Option: framework = "TMBad"')
 cols <- c(original = '#8a8984', cppad_par = '#2a78d6', tmbad_par = '#eb6834')
 pchs <- c(original = 21, cppad_par = 22, tmbad_par = 24)
-ink <- '#0b0b0b'; muted <- '#52514e'; grid <- '#e6e5e1'
+ink <- '#0b0b0b'; muted <- '#52514e'; reference <- '#e6e5e1'
 render <- function(name, draw, width = 10, height = 5) {
   svg(file.path(figures, paste0(name, '.svg')), width = width, height = height,
       family = 'sans', bg = 'white'); draw(); dev.off()
@@ -35,7 +35,6 @@ render('timing', function() {
     xmax <- max(r$elapsed) * 1.32
     plot(NA, xlim = c(0, xmax), ylim = c(.5, 3.5), yaxt = 'n', xaxs = 'i',
          xlab = 'Elapsed time per fit (s)', ylab = '', main = model, col.main = ink)
-    abline(v = axTicks(1), col = grid)
     axis(2, at = 1:3, labels = labels[cases], tick = FALSE, cex.axis = .85)
     for (k in seq_along(cases)) for (j in seq_along(settings)) {
       cfg <- names(settings)[j]; y <- k + (2 - j) * .25
@@ -79,7 +78,7 @@ if (file.exists(agreement)) {
       plot(NA, xlim = lim, ylim = lim, log = 'xy', main = p[2], col.main = ink,
            xlab = paste(p[2], 'with the original code'), ylab = '')
       title(ylab = paste(p[2], 'with the speed setting'), line = 5)
-      abline(0, 1, col = grid, lwd = 2)
+      abline(0, 1, col = reference, lwd = 2)
       for (cfg in c('tmbad_par', 'cppad_par')) {
         y <- x + diff(cfg)
         points(x[keep], y[keep], pch = pchs[cfg], cex = .55, col = cols[cfg],

@@ -2,7 +2,7 @@
 从仓库根目录运行 / Run from repo root: python3 scripts/build_wiki.py
 """
 from pathlib import Path
-import re,json,posixpath
+import re,json,posixpath,hashlib
 root=Path(__file__).resolve().parents[1]; docs=root/'docs'; out=docs/'wiki';out.mkdir(exist_ok=True)
 base='https://github.com/FanZhang-LAB-SHOU/ALSCL'
 version=re.search(r'^Version: (.+)$', (root/'DESCRIPTION').read_text(), re.M)[1]
@@ -21,7 +21,7 @@ def linkify(s,source='docs/USER_GUIDE.md'):
   path,sep,anchor=url.partition('#'); path=posixpath.normpath(posixpath.join(posixpath.dirname(source),path))
   resolved=root/path
   dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
-  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true'
+  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
   return ']('+dest+('#'+anchor if sep else '')+')'
  return re.sub(r']\(([^\s()]*(?:\([^)]*\))?[^\s()]*)\)',lambda m: fix_url(m.group(1),source),s)
 def fix_url(url,source):
@@ -29,7 +29,7 @@ def fix_url(url,source):
  path,sep,anchor=url.partition('#'); path=posixpath.normpath(posixpath.join(posixpath.dirname(source),path))
  resolved=root/path
  dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
- if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true'
+ if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
  return ']('+dest+('#'+anchor if sep else '')+')'
 # Map the gallery's 45 numbered sections, keeping function anchors and executable code.
 gallery=read('PLOT_GALLERY.md'); marks=list(re.finditer(r'(?m)^## (\d+)\. ',gallery));blocks={}

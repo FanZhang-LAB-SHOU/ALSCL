@@ -1,5 +1,7 @@
 # ALSCL 2.2.5
 
+- Refresh every documentation plot, including legacy help assets, simulation cases, own-data examples and benchmark PNG/SVG files. Check gallery panel themes before export and version website/Wiki image URLs by content to avoid stale cached figures. / 补齐所有文档绘图，含旧帮助图、模拟案例、正式数据示例及基准图的 PNG/SVG；导出前检查图库主题，网站及 Wiki 图片按内容添加版本标记，避免旧图缓存。
+
 - All package plots now omit major and minor panel gridlines by default. Explicit ggplot2 theme overrides remain available. / 所有包内绘图默认无主、次网格线，仍可显式使用 ggplot2 主题添加。
 - Use the same package installation on socket workers, validate fitted-data alignment in diagnostics, share robust comparison metrics, stabilize steep logistic curves and zero-mortality simulations, honor available biomass intervals and explain unsupported plots. Synchronize bilingual guides and executable help examples; homepage installation versions follow DESCRIPTION.
 

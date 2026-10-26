@@ -1,5 +1,7 @@
 ## ALSCL 2.2.5
 
+- Refresh all manual figures, including legacy help assets, case studies, own-data and benchmark plots. Figure URLs now track image content to avoid stale cached images.
+
 - All package plots now omit major and minor gridlines by default; explicit theme overrides remain available.
 - Use the same package installation on socket workers, validate fitted-data alignment in diagnostics, share robust comparison metrics, stabilize steep logistic curves and zero-mortality simulations, honor available biomass intervals and explain unsupported plots. Synchronize bilingual guides and executable help examples; homepage installation versions follow DESCRIPTION.
 
