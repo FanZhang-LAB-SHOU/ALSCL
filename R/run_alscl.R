@@ -85,7 +85,11 @@
 #'   The DLL remains loaded so the returned obj can be evaluated in the same session.
 #' @export
 #' @param len_lower,len_upper Optional bounds consistent with len_border and len_mid.
-#'   Infinite outer boundaries are allowed; the model treats the outer bins as tails.
+#'   The first lower boundary must be -Inf and the last upper boundary must be
+#'   Inf: outer bins absorb the distribution tails. Finite outer bounds are
+#'   rejected because finite truncation is not supported. Leave both as NULL
+#'   to construct open-ended bounds from len_border. Numeric interval labels
+#'   describe bin centers and interior boundaries; they do not truncate the tails.
 #' @details ALSCL tracks joint length-age abundance and F at length; FA summarizes
 #'   effective cohort survival. log_t0 represents a positive t0 below rec.age.
 run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,

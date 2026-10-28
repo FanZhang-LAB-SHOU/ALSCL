@@ -58,3 +58,11 @@ This function calculates the deviations of R and F in the ACL or ALSCL model res
 For ACL, F deviations are at the age level (A x Y).
 For ALSCL, F deviations are at the length level (L x Y).
 }
+\details{
+With se = FALSE, estimates come from report$dev_log_R or
+report$dev_log_F without requiring a standard-error table. Older saved
+objects without these reported quantities may use the finite Estimate
+column in est_std. With se = TRUE, a complete table of finite estimates
+and finite nonnegative standard errors is required. Groups and periods
+must match the model metadata, including the single group for shared F.
+}

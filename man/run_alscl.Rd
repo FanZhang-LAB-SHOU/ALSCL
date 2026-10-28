@@ -69,7 +69,11 @@ list() applies model defaults. Other unspecified defaults remain in force.}
 \item{len_border}{Interior boundaries, one fewer than the number of length bins.}
 
 \item{len_lower, len_upper}{Optional bounds consistent with len_border and len_mid.
-Infinite outer boundaries are allowed; the model treats the outer bins as tails.}
+The first lower boundary must be -Inf and the last upper boundary must be
+Inf: outer bins absorb the distribution tails. Finite outer bounds are
+rejected because finite truncation is not supported. Leave both as NULL
+to construct open-ended bounds from len_border. Numeric interval labels
+describe bin centers and interior boundaries; they do not truncate the tails.}
 
 \item{output}{Save diagnostic tables and plots below output/ when TRUE.}
 

@@ -48,3 +48,11 @@ A ggplot object or a list with plot and data.
 This function visualizes fish abundance data from ACL or ALSCL assessments.
 It handles three types: total number ("N"), number at age ("NA"), and number at length ("NL").
 }
+\details{
+Group-by-time matrices are read by position. Matrix row and column
+names are display metadata; model_result$year and model_result$len_label
+supply the plotted coordinates. With se = TRUE, the standard-error table
+must have one finite estimate and finite nonnegative standard error per
+plotted value. Missing or invalid uncertainty produces an explicit error;
+use se = FALSE to plot reported estimates alone.
+}

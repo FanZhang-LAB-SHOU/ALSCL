@@ -387,3 +387,16 @@ The earlier t0-only ACL failure on the synthetic YTF data was associated with ag
 `diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
 
 Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
+
+### Length-bin limits in 2.2.7
+
+The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
+
+```r
+# x is the aligned input bundle from the survey example.
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```

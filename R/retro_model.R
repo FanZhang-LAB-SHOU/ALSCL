@@ -74,8 +74,10 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param map Optional TMB map argument for fixing parameters.
 #' @param len_mid Optional numeric vector of length bin midpoints.
 #' @param len_border Optional numeric vector of length bin borders.
-#' @param len_lower Optional numeric vector of lower bin boundaries (ALSCL only).
-#' @param len_upper Optional numeric vector of upper bin boundaries (ALSCL only).
+#' @param len_lower Optional lower bin boundaries (ALSCL only). The first entry must be
+#'   -Inf and the remaining entries must match len_border.
+#' @param len_upper Optional upper bin boundaries (ALSCL only). The final entry must be
+#'   Inf and the preceding entries must match len_border.
 #' @param train_times Numeric. Number of optimization restarts. Default is 1.
 #' @param nstarts Positive integer. Number of independent starts per full/peel
 #'   fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.

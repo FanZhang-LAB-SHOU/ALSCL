@@ -24,6 +24,9 @@
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
+#' @details If the growth covariance is unavailable or unusable, a request for
+#'   confidence intervals warns and draws the estimate only, preserving all
+#'   supplied labels, axis settings, text styles and theme options.
 #' @return A ggplot object representing the plot.
 #' @export
 #' @examples
@@ -50,16 +53,20 @@ plot_VB <- function(model_result, age_range = c(1, 25), line_size = 1.2, line_co
   data <- data %>%
     mutate(length = VB_func(Linf, k, t0, age))
 
-
-
-
+  # Resolve uncertainty before choosing the layers so that an estimate-only
+  # fallback uses the same supplied styling arguments as a direct plain plot.
+  interval <- if (se) .acl_growth_interval(model_result, data$age) else NULL
+  if (se && is.null(interval)) {
+    warning("Growth confidence interval requires a finite full parameter covariance matrix; drawing the estimate only.")
+    se <- FALSE
+  }
 
   if (!se)
   {
     # Plot the VB function using ggplot2
     p <- ggplot2::ggplot(data, aes(x = age, y = length)) +
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = "Length", title = if (!is.null(title)) title else .acl_title("VB")) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (is.null(ylab)) "Length" else ylab, title = if (!is.null(title)) title else .acl_title("VB")) +
       ggplot2::annotate("text", x = -Inf, y = Inf,
                         label = paste("Linf =", round(Linf, 2), "\nk =", round(k, 2)),
                         hjust = -0.1, vjust = 1.5, size = text_size, color = text_color) +
@@ -68,13 +75,6 @@ plot_VB <- function(model_result, age_range = c(1, 25), line_size = 1.2, line_co
 
   }
   else {
-    interval <- .acl_growth_interval(model_result, data$age)
-    if (is.null(interval)) {
-      warning("Growth confidence interval requires a finite full parameter covariance matrix; drawing the estimate only.")
-      return(plot_VB(model_result, age_range = age_range, line_size = line_size,
-                     line_color = line_color, line_type = line_type, se = FALSE,
-                     title = title, xlab = xlab, ylab = ylab, font_family = font_family))
-    }
     data$lower <- interval$lower; data$upper <- interval$upper
     p <- ggplot2::ggplot(data, ggplot2::aes(x = age, y = length)) +
       {if (se_type[1] == "ribbon")

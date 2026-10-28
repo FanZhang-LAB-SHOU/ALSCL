@@ -410,3 +410,16 @@ b_year <- run_alscl(x)
 `diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
 
 比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
+
+### 2.2.7 的体长组边界
+
+模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
+
+```r
+# x 是调查数据示例中已对齐的输入组合。
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```

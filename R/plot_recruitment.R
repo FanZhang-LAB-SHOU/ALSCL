@@ -27,6 +27,10 @@
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
+#' @details With se = TRUE, the standard-error table must have one finite
+#'   estimate and finite nonnegative standard error per model time step.
+#'   Missing or invalid uncertainty produces an explicit error; use se = FALSE
+#'   to plot reported estimates alone.
 #' @return A ggplot object representing the plot.
 #'
 #' @examples
@@ -48,8 +52,10 @@ plot_recruitment <- function(model_result, line_size = 1.5, line_color = NULL, l
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
 
-  # Extract the recruitment data
-  recruitment <- model_result[["report"]][["Rec"]]
+  quantity <- .acl_plot_population_data(model_result, "Rec", "Rec", se)
+  se_type <- match.arg(se_type)
+  # Extract the validated recruitment data.
+  recruitment <- quantity$value
 
   # Make sure it's a data frame
   if(!is.data.frame(recruitment)){
@@ -72,7 +78,7 @@ plot_recruitment <- function(model_result, line_size = 1.5, line_color = NULL, l
   } else {
 
      # Filter rows that contain "Rec"
-    ss_rec <- model_result[["est_std"]][grep("^Rec$", rownames(model_result[["est_std"]])),]
+    ss_rec <- quantity$se
 
     # Calculate confidence intervals
     confidence_intervals_rec <- data.frame(

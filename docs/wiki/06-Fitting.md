@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics)
 
-**ALSCL 2.2.6 · 简体中文 / English**
+**ALSCL 2.2.7 · 简体中文 / English**
 
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|
@@ -10,7 +10,7 @@
 | `growth_step` | 每步多少年；ACL 的 NULL 按 rec.age<1 时取 rec.age、否则取 1，ALSCL 默认 1，季度应显式设 0.25 / Years per step; specify 0.25 for quarterly ALSCL |
 | `M` | 每模型步长自然死亡瞬时率；年率转季度需相应换算 / Instantaneous natural mortality per model step |
 | `sel_L50`, `sel_L95` | 固定调查 q 的位置和斜率，L95 必须大于 L50 / Fixed survey catchability locations |
-| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 还提供 `len_lower/len_upper` / Midpoints and internal boundaries; ALSCL also offers outer bounds |
+| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 外端点必须为 −∞/+∞ / Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞ |
 | `parameters`, `.L`, `.U` | 命名初值、下界、上界；在程序参数化尺度上提供 / Named starting values and bounds on the optimizer scale |
 | `map` | 固定或释放参数；固定值来自 `parameters` / Fix or release parameters at their supplied values |
 | `train_times` | 从优化结果继续优化的次数，并非随机多起点 / Successive optimization passes, not independent random starts |
@@ -162,6 +162,32 @@ The fitting entry points require time-column spacing equal to growth_step. An an
 ### Consistent package libraries in 2.2.5
 
 Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
+### 2.2.7 的体长组边界
+
+模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
+
+```r
+# x 是调查数据示例中已对齐的输入组合。
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
+
+### Length-bin limits in 2.2.7
+
+The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
+
+```r
+# x is the aligned input bundle from the survey example.
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
 
 ---
 

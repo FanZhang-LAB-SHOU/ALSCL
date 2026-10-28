@@ -57,6 +57,12 @@
       any(!is.finite(lower[-1L])) || any(!is.finite(upper[-n])) ||
       any(abs(lower[-1L] - edges) > 1e-8) || any(abs(upper[-n] - edges) > 1e-8))
     stop("Length bounds must contain the midpoints and agree with len_border.")
+  # The likelihood and growth transition absorb both distribution tails. Do
+  # not silently reinterpret an explicit finite truncation as an open bin.
+  if (is.finite(lower[1L]) || is.finite(upper[n]))
+    stop("Finite outer length bounds are not supported: the first and last bins absorb the distribution tails. ",
+         "Use len_lower[1] = -Inf and len_upper[length(len_upper)] = Inf, ",
+         "or leave len_lower and len_upper as NULL for the default open-ended bins.", call. = FALSE)
   list(mid = as.numeric(mid), border = as.numeric(edges), lower = c(-Inf, edges),
        upper = c(edges, Inf), labels = labels)
 }

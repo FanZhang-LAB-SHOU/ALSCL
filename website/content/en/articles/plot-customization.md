@@ -83,3 +83,13 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 ```
 
 Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
+
+### Growth-plot settings in 2.2.7
+
+`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```

@@ -274,3 +274,13 @@ portable$obj <- NULL
 plot_residuals(portable)
 plot_ridges(portable)
 ```
+
+### Growth-plot settings in 2.2.7
+
+`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```

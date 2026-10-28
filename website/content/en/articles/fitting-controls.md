@@ -8,7 +8,7 @@ Complete the [worked YTF example](first-model.html) first. The examples below us
 | `growth_step` |Years per step. ACL NULL uses rec.age if below 1, otherwise 1; ALSCL defaults to 1. Set 0.25 explicitly for quarterly data.|
 | `M` |Instantaneous natural mortality per model step|
 | `sel_L50`, `sel_L95` |Fixed survey catchability locations|
-| `len_mid`, `len_border` |Midpoints and internal boundaries; ALSCL also offers outer bounds|
+| `len_mid`, `len_border` |Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞|
 | `parameters`, `.L`, `.U` |Named starting values and bounds on the optimizer scale|
 | `map` |Fix or release parameters at their supplied values|
 | `train_times` |Successive optimization passes, not independent random starts|
@@ -86,3 +86,16 @@ b_year <- run_alscl(x)
 Original separate-argument and `do.call()` calls remain valid. `retro_model()` (including its wrappers) and `sim_acl()` also accept `F_structure` and `polish`; pass the same structure to all retrospective peels. Parallel standard errors and multistart workers continue to use the existing speed settings. In `sim_data()`, F innovation SD is not the same as the marginal SD in the fitting AR(1); for one-dimensional stationary AR(1), marginal SD equals innovation SD divided by `sqrt(1 - rho_y^2)`.
 
 The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
+
+### Length-bin limits in 2.2.7
+
+The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
+
+```r
+# x is the aligned input bundle from the survey example.
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```

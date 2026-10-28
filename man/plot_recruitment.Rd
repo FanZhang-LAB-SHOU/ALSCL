@@ -80,6 +80,12 @@ Recruitment is a key parameter in population dynamics, representing the amount o
 either by birth or immigration, over a specific time frame. The resulting plot is a line graph, with the option to add a
 ribbon that illustrates the standard error, if the \code{se} argument is set to TRUE.
 }
+\details{
+With se = TRUE, the standard-error table must have one finite
+estimate and finite nonnegative standard error per model time step.
+Missing or invalid uncertainty produces an explicit error; use se = FALSE
+to plot reported estimates alone.
+}
 \examples{
 \dontrun{
 # Use 'run_acl' to obtain 'model_result'

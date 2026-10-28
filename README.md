@@ -26,9 +26,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.6 · 简体中文 / English**
+**Version 2.2.7 · 简体中文 / English**
 
-**2.2.6:** 修正异常回退主题，统一说明书出图检查，并在正式下载包中更新全部帮助图片。 / Keep fallback themes grid-free, validate manual plot exports and ship the refreshed help images in the release archive. [Changes](NEWS.md) · [2.2.6 validation](docs/RELEASE_2.2.6.md).
+**2.2.7:** 明确首尾体长组边界限制，修正具名丰度矩阵的坐标，统一不确定性检查，并保留生长图的自定义样式。 / Enforce open tail-bin limits, align named abundance matrices, validate plotting uncertainty and preserve growth-plot styling. [Changes](NEWS.md) · [2.2.7 validation](docs/RELEASE_2.2.7.md).
 
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。

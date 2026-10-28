@@ -2,9 +2,9 @@
 
 **从模拟案例到自己的调查体长数据。From simulation examples to your own survey length data.**
 
-适用版本：ALSCL 2.2.6。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
+适用版本：ALSCL 2.2.7。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
 
-For ALSCL 2.2.6. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
+For ALSCL 2.2.7. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
 
 [首页 / Home](../README.md) · [45 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -843,7 +843,7 @@ The 2.2.2 run used four cores for standard errors and the default safeguarded re
 | `growth_step` | 每步多少年；ACL 的 NULL 按 rec.age<1 时取 rec.age、否则取 1，ALSCL 默认 1，季度应显式设 0.25 / Years per step; specify 0.25 for quarterly ALSCL |
 | `M` | 每模型步长自然死亡瞬时率；年率转季度需相应换算 / Instantaneous natural mortality per model step |
 | `sel_L50`, `sel_L95` | 固定调查 q 的位置和斜率，L95 必须大于 L50 / Fixed survey catchability locations |
-| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 还提供 `len_lower/len_upper` / Midpoints and internal boundaries; ALSCL also offers outer bounds |
+| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 外端点必须为 −∞/+∞ / Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞ |
 | `parameters`, `.L`, `.U` | 命名初值、下界、上界；在程序参数化尺度上提供 / Named starting values and bounds on the optimizer scale |
 | `map` | 固定或释放参数；固定值来自 `parameters` / Fix or release parameters at their supplied values |
 | `train_times` | 从优化结果继续优化的次数，并非随机多起点 / Successive optimization passes, not independent random starts |
@@ -995,6 +995,32 @@ The fitting entry points require time-column spacing equal to growth_step. An an
 ### Consistent package libraries in 2.2.5
 
 Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
+### 2.2.7 的体长组边界
+
+模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
+
+```r
+# x 是调查数据示例中已对齐的输入组合。
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
+
+### Length-bin limits in 2.2.7
+
+The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
+
+```r
+# x is the aligned input bundle from the survey example.
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
 
 <a id="diagnostics"></a>
 ## 7. 怎样判断结果可用 / Assessing results
@@ -1184,6 +1210,56 @@ q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
           report = list(SSB = 1:8, Rec = 101:108))
 paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
 stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
+```
+
+### 2.2.7 的保存结果与不确定性
+
+丰度图按矩阵位置和拟合结果中的 `year`、`len_label` 对齐。给 `report$NA` 或 `report$NL` 添加行列名称，不会改变年份或组别对应关系。保存结果时应一起保留矩阵原有顺序和拟合元数据。
+
+丰度、补充量和过程偏差的区间需要完整的有限估计值，以及有限、非负的标准误。标准误缺失、非法或不完整时会明确报错。只需绘制估计值时使用 `se = FALSE`；过程偏差图此时读取 `report$dev_log_R` 或 `report$dev_log_F`，没有 `est_std` 也可绘制，旧结果可使用有效摘要表中的估计值。解释区间前仍须查看拟合诊断。
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### Saved results and uncertainty in 2.2.7
+
+Abundance plots use matrix positions with the fitted `year` and `len_label` metadata. Adding row or column names to `report$NA` or `report$NL` does not change time or group alignment. Keep the original matrix order and the fitted metadata together when saving results.
+
+Abundance, recruitment and process-deviation intervals require a complete table of finite estimates and finite, nonnegative standard errors. Missing, invalid or incomplete uncertainty produces an explicit error. Use `se = FALSE` when only estimates are intended. Process-deviation plots then read `report$dev_log_R` or `report$dev_log_F`, so they work without `est_std`; older results can use the estimates in a valid summary table. Review the fit diagnostics before interpreting any interval.
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### 2.2.7 的生长图设置
+
+`plot_VB()` 在仅绘制曲线和绘制区间时均遵守 `ylab`。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```
+
+### Growth-plot settings in 2.2.7
+
+`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
 ```
 
 <a id="retrospective"></a>

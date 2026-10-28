@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 
-**ALSCL 2.2.6 · 简体中文 / English**
+**ALSCL 2.2.7 · 简体中文 / English**
 
 默认使用 **ggsci NPG**。单模型估计用深蓝，观测用朱红；两模型比较按模型顺序使用深蓝、朱红；回溯按截止期从新到旧分配 NPG 原生颜色。设置在创建图时生效，已有图对象不会自动重绘。
 
@@ -105,6 +105,56 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 2.2.6 进一步保证 SSB、丰度、生物量、捕获量、偏差和捕捞死亡率图在主题加载失败后的回退路径也不显示网格。显式指定的主题仍优先。说明书的 ggplot 导出统一检查各子图的主、次网格；发现网格时停止导出并保留原文件。正式 2.2.6 下载包包含更新后的帮助图片。
 
 Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
+
+### 2.2.7 的保存结果与不确定性
+
+丰度图按矩阵位置和拟合结果中的 `year`、`len_label` 对齐。给 `report$NA` 或 `report$NL` 添加行列名称，不会改变年份或组别对应关系。保存结果时应一起保留矩阵原有顺序和拟合元数据。
+
+丰度、补充量和过程偏差的区间需要完整的有限估计值，以及有限、非负的标准误。标准误缺失、非法或不完整时会明确报错。只需绘制估计值时使用 `se = FALSE`；过程偏差图此时读取 `report$dev_log_R` 或 `report$dev_log_F`，没有 `est_std` 也可绘制，旧结果可使用有效摘要表中的估计值。解释区间前仍须查看拟合诊断。
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### Saved results and uncertainty in 2.2.7
+
+Abundance plots use matrix positions with the fitted `year` and `len_label` metadata. Adding row or column names to `report$NA` or `report$NL` does not change time or group alignment. Keep the original matrix order and the fitted metadata together when saving results.
+
+Abundance, recruitment and process-deviation intervals require a complete table of finite estimates and finite, nonnegative standard errors. Missing, invalid or incomplete uncertainty produces an explicit error. Use `se = FALSE` when only estimates are intended. Process-deviation plots then read `report$dev_log_R` or `report$dev_log_F`, so they work without `est_std`; older results can use the estimates in a valid summary table. Review the fit diagnostics before interpreting any interval.
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### 2.2.7 的生长图设置
+
+`plot_VB()` 在仅绘制曲线和绘制区间时均遵守 `ylab`。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```
+
+### Growth-plot settings in 2.2.7
+
+`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```
 
 ---
 

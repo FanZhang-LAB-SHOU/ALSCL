@@ -373,3 +373,18 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 ```
 
 Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
+
+### Saved results and uncertainty in 2.2.7
+
+Abundance plots use matrix positions with the fitted `year` and `len_label` metadata. Adding row or column names to `report$NA` or `report$NL` does not change time or group alignment. Keep the original matrix order and the fitted metadata together when saving results.
+
+Abundance, recruitment and process-deviation intervals require a complete table of finite estimates and finite, nonnegative standard errors. Missing, invalid or incomplete uncertainty produces an explicit error. Use `se = FALSE` when only estimates are intended. Process-deviation plots then read `report$dev_log_R` or `report$dev_log_F`, so they work without `est_std`; older results can use the estimates in a valid summary table. Review the fit diagnostics before interpreting any interval.
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```

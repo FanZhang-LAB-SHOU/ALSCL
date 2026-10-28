@@ -83,6 +83,11 @@ A ggplot object representing the plot.
 \description{
 This function takes Linf, k, and t0 as input, creates a sequence of ages, applies the VB function to each age, and then plots the result using ggplot2.
 }
+\details{
+If the growth covariance is unavailable or unusable, a request for
+confidence intervals warns and draws the estimate only, preserving all
+supplied labels, axis settings, text styles and theme options.
+}
 \examples{
 \dontrun{
 plot_VB(model_result, age_range = c(1, 25))

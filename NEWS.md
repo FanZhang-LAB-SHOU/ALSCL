@@ -1,3 +1,17 @@
+# ALSCL 2.2.7
+
+- Reject explicitly finite outer length bounds with an actionable message; the model retains tail-absorbing first/last bins, existing interval labels and default inputs.
+- Align abundance plots by matrix positions and fitted time/length metadata, independent of matrix dimnames.
+- Validate complete, finite, nonnegative standard errors for abundance, recruitment and deviation intervals. Estimate-only deviation plots use reported estimates without requiring a standard-error table.
+- Honor ylab in every growth-plot mode and retain text sizes, breaks, themes and annotations when covariance is unavailable. Synchronize bilingual documentation, website, Wiki and help pages; retain grid-free defaults.
+
+### 简体中文
+
+- 显式有限外体长边界会明确报错；模型继续以首尾组吸收分布尾部，原有区间标签及默认输入保持兼容。
+- 丰度图按矩阵位置与拟合年份、体长标签对齐，行列名称不会造成坐标丢失或组别错配。
+- 丰度、补充量和偏差区间检查标准误的完整性、有限性及非负性；偏差图在 se = FALSE 时可直接使用报告估计，不依赖标准误表。
+- 生长曲线在所有模式遵守 ylab；没有可用协方差时，保留字号、刻度、主题和标注设置。同步中英文文档、网站、Wiki 与帮助页，保留默认无网格样式。
+
 # ALSCL 2.2.6
 
 - Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.

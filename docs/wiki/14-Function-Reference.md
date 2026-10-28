@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 
-**ALSCL 2.2.6 · 简体中文 / English**
+**ALSCL 2.2.7 · 简体中文 / English**
 
 对应 ALSCL 2.2.5 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
@@ -547,6 +547,8 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 ## `plot_abundance()`
 
 丰度 N / Abundance N
+
+矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。 Matrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.
 
 ```r
 plot_abundance(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
@@ -1156,6 +1158,8 @@ plot_compare_ts(a, b, se = TRUE, ncol = 2)
 
 过程偏差 R TRUE / Process deviations R TRUE
 
+`se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。 `se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.
+
 ```r
 plot_deviance(model_result, se = TRUE, point_size = 3, point_color = "white",
     point_shape = 21, line_size = 1, line_color = NULL, line_type = "solid",
@@ -1289,6 +1293,8 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ## `plot_recruitment()`
 
 补充量 / Recruitment
+
+标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。 Standard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.
 
 ```r
 plot_recruitment(model_result, line_size = 1.5, line_color = NULL, line_type = "solid",
@@ -1628,6 +1634,8 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 生长曲线与区间 / Growth curve and interval
 
+`ylab` 在所有模式生效；协方差不可用时提示并仅绘制曲线，保留全部自定义样式。 `ylab` is honored in every mode; unavailable covariance triggers a warning and an estimate-only curve that retains all custom styling.
+
 ```r
 plot_VB(model_result, age_range = c(1, 25), line_size = 1.2,
     line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL,
@@ -1851,8 +1859,8 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Optional TMB map argument for fixing parameters. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Optional numeric vector of length bin midpoints. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Optional numeric vector of length bin borders. |
-| `len_lower` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of lower bin boundaries (ALSCL only). |
-| `len_upper` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of upper bin boundaries (ALSCL only). |
+| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
+| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 显式指定并行回溯轮数；不沿用 x 内拟合用的 ncores，各轮拟合单进程。 | Explicit peel workers; stored fitting ncores is ignored, and each fit uses one fitting worker. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Logical. If TRUE, suppress all progress messages. Default is FALSE. |
@@ -2015,8 +2023,8 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Named TMB factor mappings. factor(NA) fixes a parameter at its supplied value; a named NULL entry releases that parameter. A whole map = NULL or list() applies model defaults. Other unspecified defaults remain in force. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Finite length-bin midpoints; overrides automatic parsing. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Interior boundaries, one fewer than the number of length bins. |
-| `len_lower` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional bounds consistent with len_border and len_mid. Infinite outer boundaries are allowed; the model treats the outer bins as tails. |
-| `len_upper` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional bounds consistent with len_border and len_mid. Infinite outer boundaries are allowed; the model treats the outer bins as tails. |
+| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
+| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
 | `output` | `FALSE` | 是否导出拟合诊断与图；TRUE 使用 output 目录。 | Save diagnostic tables and plots below output/ when TRUE. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 独立初始点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。 | Maximum socket workers across independent starts, capped at nstarts; not threads within one start. |

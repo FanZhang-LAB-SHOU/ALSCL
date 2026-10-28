@@ -86,3 +86,13 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 ```
 
 2.2.6 进一步保证 SSB、丰度、生物量、捕获量、偏差和捕捞死亡率图在主题加载失败后的回退路径也不显示网格。显式指定的主题仍优先。说明书的 ggplot 导出统一检查各子图的主、次网格；发现网格时停止导出并保留原文件。正式 2.2.6 下载包包含更新后的帮助图片。
+
+### 2.2.7 的生长图设置
+
+`plot_VB()` 在仅绘制曲线和绘制区间时均遵守 `ylab`。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```

@@ -4,7 +4,7 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.2.6 · 简体中文与英文 · 15 章 / chapters**
+**ALSCL 2.2.7 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
@@ -34,9 +34,9 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 <a id="chapter-01"></a>
 ## 01 开始使用 · Getting started
 
-安装 ALSCL 2.2.6 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL 2.2.7 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
 
-Install ALSCL 2.2.6 to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL 2.2.7 to use the bundled data, fit models and create plots. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -952,7 +952,7 @@ stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
 | `growth_step` | 每步多少年；ACL 的 NULL 按 rec.age<1 时取 rec.age、否则取 1，ALSCL 默认 1，季度应显式设 0.25 / Years per step; specify 0.25 for quarterly ALSCL |
 | `M` | 每模型步长自然死亡瞬时率；年率转季度需相应换算 / Instantaneous natural mortality per model step |
 | `sel_L50`, `sel_L95` | 固定调查 q 的位置和斜率，L95 必须大于 L50 / Fixed survey catchability locations |
-| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 还提供 `len_lower/len_upper` / Midpoints and internal boundaries; ALSCL also offers outer bounds |
+| `len_mid`, `len_border` | 组中心及内部边界；ALSCL 外端点必须为 −∞/+∞ / Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞ |
 | `parameters`, `.L`, `.U` | 命名初值、下界、上界；在程序参数化尺度上提供 / Named starting values and bounds on the optimizer scale |
 | `map` | 固定或释放参数；固定值来自 `parameters` / Fix or release parameters at their supplied values |
 | `train_times` | 从优化结果继续优化的次数，并非随机多起点 / Successive optimization passes, not independent random starts |
@@ -1104,6 +1104,32 @@ The fitting entry points require time-column spacing equal to growth_step. An an
 ### Consistent package libraries in 2.2.5
 
 Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent, including installations retaining source references with `R_KEEP_PKG_SOURCE`. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
+### 2.2.7 的体长组边界
+
+模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
+
+```r
+# x 是调查数据示例中已对齐的输入组合。
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
+
+### Length-bin limits in 2.2.7
+
+The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
+
+```r
+# x is the aligned input bundle from the survey example.
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
 
 <a id="chapter-07"></a>
 ## 07 诊断与结果解读 · Diagnostics
@@ -1281,7 +1307,7 @@ plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![丰度 NA / Abundance NA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=7cbaa41dbda1)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=7cbaa41dbda1)
+[![丰度 NA / Abundance NA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=c0aae02fd995)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=c0aae02fd995)
 
 ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。
 
@@ -2352,6 +2378,56 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 
 Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
 
+### 2.2.7 的保存结果与不确定性
+
+丰度图按矩阵位置和拟合结果中的 `year`、`len_label` 对齐。给 `report$NA` 或 `report$NL` 添加行列名称，不会改变年份或组别对应关系。保存结果时应一起保留矩阵原有顺序和拟合元数据。
+
+丰度、补充量和过程偏差的区间需要完整的有限估计值，以及有限、非负的标准误。标准误缺失、非法或不完整时会明确报错。只需绘制估计值时使用 `se = FALSE`；过程偏差图此时读取 `report$dev_log_R` 或 `report$dev_log_F`，没有 `est_std` 也可绘制，旧结果可使用有效摘要表中的估计值。解释区间前仍须查看拟合诊断。
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### Saved results and uncertainty in 2.2.7
+
+Abundance plots use matrix positions with the fitted `year` and `len_label` metadata. Adding row or column names to `report$NA` or `report$NL` does not change time or group alignment. Keep the original matrix order and the fitted metadata together when saving results.
+
+Abundance, recruitment and process-deviation intervals require a complete table of finite estimates and finite, nonnegative standard errors. Missing, invalid or incomplete uncertainty produces an explicit error. Use `se = FALSE` when only estimates are intended. Process-deviation plots then read `report$dev_log_R` or `report$dev_log_F`, so they work without `est_std`; older results can use the estimates in a valid summary table. Review the fit diagnostics before interpreting any interval.
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```
+
+### 2.2.7 的生长图设置
+
+`plot_VB()` 在仅绘制曲线和绘制区间时均遵守 `ylab`。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```
+
+### Growth-plot settings in 2.2.7
+
+`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+
+```r
+plot_VB(b, se = FALSE, ylab = "Length (cm)",
+        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
+        age_range = c(1, 15), text_size = 4)
+```
+
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
@@ -2898,6 +2974,8 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 ## `plot_abundance()`
 
 丰度 N / Abundance N
+
+矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。 Matrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.
 
 ```r
 plot_abundance(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
@@ -3507,6 +3585,8 @@ plot_compare_ts(a, b, se = TRUE, ncol = 2)
 
 过程偏差 R TRUE / Process deviations R TRUE
 
+`se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。 `se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.
+
 ```r
 plot_deviance(model_result, se = TRUE, point_size = 3, point_color = "white",
     point_shape = 21, line_size = 1, line_color = NULL, line_type = "solid",
@@ -3640,6 +3720,8 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ## `plot_recruitment()`
 
 补充量 / Recruitment
+
+标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。 Standard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.
 
 ```r
 plot_recruitment(model_result, line_size = 1.5, line_color = NULL, line_type = "solid",
@@ -3979,6 +4061,8 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 生长曲线与区间 / Growth curve and interval
 
+`ylab` 在所有模式生效；协方差不可用时提示并仅绘制曲线，保留全部自定义样式。 `ylab` is honored in every mode; unavailable covariance triggers a warning and an estimate-only curve that retains all custom styling.
+
 ```r
 plot_VB(model_result, age_range = c(1, 25), line_size = 1.2,
     line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL,
@@ -4202,8 +4286,8 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Optional TMB map argument for fixing parameters. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Optional numeric vector of length bin midpoints. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Optional numeric vector of length bin borders. |
-| `len_lower` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of lower bin boundaries (ALSCL only). |
-| `len_upper` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional numeric vector of upper bin boundaries (ALSCL only). |
+| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
+| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 显式指定并行回溯轮数；不沿用 x 内拟合用的 ncores，各轮拟合单进程。 | Explicit peel workers; stored fitting ncores is ignored, and each fit uses one fitting worker. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Logical. If TRUE, suppress all progress messages. Default is FALSE. |
@@ -4366,8 +4450,8 @@ run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Named TMB factor mappings. factor(NA) fixes a parameter at its supplied value; a named NULL entry releases that parameter. A whole map = NULL or list() applies model defaults. Other unspecified defaults remain in force. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Finite length-bin midpoints; overrides automatic parsing. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Interior boundaries, one fewer than the number of length bins. |
-| `len_lower` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional bounds consistent with len_border and len_mid. Infinite outer boundaries are allowed; the model treats the outer bins as tails. |
-| `len_upper` | `NULL` | ALSCL 每组下界/上界向量，须与分组一致。 | Optional bounds consistent with len_border and len_mid. Infinite outer boundaries are allowed; the model treats the outer bins as tails. |
+| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
+| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
 | `output` | `FALSE` | 是否导出拟合诊断与图；TRUE 使用 output 目录。 | Save diagnostic tables and plots below output/ when TRUE. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 独立初始点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。 | Maximum socket workers across independent starts, capped at nstarts; not threads within one start. |

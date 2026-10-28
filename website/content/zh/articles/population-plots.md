@@ -373,3 +373,18 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 ```
 
 2.2.6 进一步保证 SSB、丰度、生物量、捕获量、偏差和捕捞死亡率图在主题加载失败后的回退路径也不显示网格。显式指定的主题仍优先。说明书的 ggplot 导出统一检查各子图的主、次网格；发现网格时停止导出并保留原文件。正式 2.2.6 下载包包含更新后的帮助图片。
+
+### 2.2.7 的保存结果与不确定性
+
+丰度图按矩阵位置和拟合结果中的 `year`、`len_label` 对齐。给 `report$NA` 或 `report$NL` 添加行列名称，不会改变年份或组别对应关系。保存结果时应一起保留矩阵原有顺序和拟合元数据。
+
+丰度、补充量和过程偏差的区间需要完整的有限估计值，以及有限、非负的标准误。标准误缺失、非法或不完整时会明确报错。只需绘制估计值时使用 `se = FALSE`；过程偏差图此时读取 `report$dev_log_R` 或 `report$dev_log_F`，没有 `est_std` 也可绘制，旧结果可使用有效摘要表中的估计值。解释区间前仍须查看拟合诊断。
+
+```r
+saved <- b
+saved$obj <- NULL
+saved$est_std <- NULL
+plot_abundance(saved, type = "NL", se = FALSE)
+plot_recruitment(saved, se = FALSE)
+plot_deviance(saved, type = "F", se = FALSE)
+```

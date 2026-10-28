@@ -93,9 +93,11 @@ by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. F
 
 \item{len_border}{Optional numeric vector of length bin borders.}
 
-\item{len_lower}{Optional numeric vector of lower bin boundaries (ALSCL only).}
+\item{len_lower}{Optional lower bin boundaries (ALSCL only). The first entry must be
+-Inf and the remaining entries must match len_border.}
 
-\item{len_upper}{Optional numeric vector of upper bin boundaries (ALSCL only).}
+\item{len_upper}{Optional upper bin boundaries (ALSCL only). The final entry must be
+Inf and the preceding entries must match len_border.}
 
 \item{train_times}{Numeric. Number of optimization restarts. Default is 1.}
 

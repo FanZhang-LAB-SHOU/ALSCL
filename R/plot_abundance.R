@@ -15,6 +15,12 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
 #' @param facet_scales Scales for facet wrap. Default is "free".
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
+#' @details Group-by-time matrices are read by position. Matrix row and column
+#'   names are display metadata; model_result$year and model_result$len_label
+#'   supply the plotted coordinates. With se = TRUE, the standard-error table
+#'   must have one finite estimate and finite nonnegative standard error per
+#'   plotted value. Missing or invalid uncertainty produces an explicit error;
+#'   use se = FALSE to plot reported estimates alone.
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
@@ -27,6 +33,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
 
 
   type <- match.arg(type)
+  quantity <- .acl_plot_population_data(model_result, type, c("N", "NA", "NL"), se)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
   current_theme <- .acl_plot_theme()
@@ -35,7 +42,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
   # Type = "N": Total abundance
   # ==========================
   if (type == "N") {
-    number <- model_result[["report"]][["N"]]
+    number <- quantity$value
     if (!is.data.frame(number)) number <- as.data.frame(number)
     number$Year <- Year
 
@@ -47,7 +54,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
       data_out <- number
     } else {
       # Use exact match ^N$ to avoid matching NA, NL, NLA
-      ss_n <- model_result[["est_std"]][grepl("^N$", rownames(model_result[["est_std"]])), ]
+      ss_n <- quantity$se
       ci <- data.frame(
         Year     = Year,
         estimate = ss_n[, "Estimate"],
@@ -67,7 +74,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
   # Type = "NA": Abundance at age
   # ==========================
   if (type == "NA") {
-    na <- model_result[["report"]][["NA"]]
+    na <- quantity$value
 
     AgeGroup <- factor(paste("Age bin", seq_len(nrow(na))),
                        levels = paste("Age bin", seq_len(nrow(na))))
@@ -86,11 +93,12 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
       data_out <- na_long
     } else {
       # Use exact match ^NA$ to avoid matching NLA
-      ss_na <- model_result[["est_std"]][grep("^NA$", rownames(model_result[["est_std"]])), ]
+      ss_na <- quantity$se
       ss_na <- as.data.frame(ss_na)
 
       ci <- data.frame(
-        AgeGroup = rep(levels(AgeGroup), times = ncol(na)),
+        AgeGroup = factor(rep(levels(AgeGroup), times = ncol(na)),
+                          levels = levels(AgeGroup)),
         Year     = rep(Year, each = nrow(na)),
         estimate = ss_na[, "Estimate"],
         lower    = ss_na[, "Estimate"] - 1.96 * ss_na[, "Std. Error"],
@@ -111,7 +119,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
   # Type = "NL": Abundance at length
   # ==========================
   if (type == "NL") {
-    NL <- model_result[["report"]][["NL"]]
+    NL <- quantity$value
     if (!is.matrix(NL)) NL <- as.matrix(NL)
 
     LengthLabels <- .acl_fix_len_labels(len_label)
@@ -131,7 +139,7 @@ plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, lin
       data_out <- NL_long
     } else {
       # Use exact match ^NL$ to avoid matching NLA
-      ss_NL <- model_result[["est_std"]][grep("^NL$", rownames(model_result[["est_std"]])), ]
+      ss_NL <- quantity$se
       ss_NL <- as.data.frame(ss_NL)
 
       ci <- data.frame(

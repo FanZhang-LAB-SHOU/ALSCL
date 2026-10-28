@@ -8,7 +8,7 @@
 | `growth_step` |每步多少年；ACL 的 NULL 按 rec.age<1 时取 rec.age、否则取 1，ALSCL 默认 1，季度应显式设 0.25|
 | `M` |每模型步长自然死亡瞬时率；年率转季度需相应换算|
 | `sel_L50`, `sel_L95` |固定调查 q 的位置和斜率，L95 必须大于 L50|
-| `len_mid`, `len_border` |组中心及内部边界；ALSCL 还提供 `len_lower/len_upper`|
+| `len_mid`, `len_border` |组中心及内部边界；ALSCL 外端点必须为 −∞/+∞|
 | `parameters`, `.L`, `.U` |命名初值、下界、上界；在程序参数化尺度上提供|
 | `map` |固定或释放参数；固定值来自 `parameters`|
 | `train_times` |从优化结果继续优化的次数，并非随机多起点|
@@ -85,3 +85,16 @@ b_year <- run_alscl(x)
 原来的逐项传参和 `do.call()` 写法保留。`retro_model()`（含其包装函数）和 `sim_acl()` 也支持 `F_structure` 与 `polish`；回溯每轮应使用相同结构。并行标准误和多起点继续沿用现有加速设置。注意 `sim_data()` 的 F 创新标准差不等于拟合 AR(1) 的边际标准差；一维平稳 AR(1) 的边际标准差为创新标准差除以 `sqrt(1 - rho_y^2)`。
 
 此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
+
+### 2.2.7 的体长组边界
+
+模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
+
+```r
+# x 是调查数据示例中已对齐的输入组合。
+borders <- x$fit_args$len_border
+if (!is.null(borders)) {
+  fit <- run_alscl(x, len_lower = c(-Inf, borders),
+                  len_upper = c(borders, Inf))
+}
+```
