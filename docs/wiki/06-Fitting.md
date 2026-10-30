@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics)
 
-**ALSCL 2.2.7 · 简体中文 / English**
+**ALSCL 2.2.8 · 简体中文 / English**
 
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|
@@ -188,6 +188,13 @@ if (!is.null(borders)) {
                   len_upper = c(borders, Inf))
 }
 ```
+
+
+### 一致性修正 / Consistency fixes
+
+安装模式的 socket 工作进程继续加载与主进程相同的包安装。在 `pkgload::load_all()` 或 `testthat::test_local()` 下，工作进程改为用 pkgload 加载同一源码目录；该开发流程需要可选依赖 pkgload。CI 同时运行源码模式并行测试和完整安装包检查。
+
+Installed socket workers load the same package installation as the parent. During `pkgload::load_all()` or `testthat::test_local()`, workers instead load the same source checkout with pkgload. Install the optional development dependency pkgload for this workflow. CI exercises both source-mode parallel tests and the complete installed-package checks.
 
 ---
 

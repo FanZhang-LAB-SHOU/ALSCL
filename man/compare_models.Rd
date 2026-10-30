@@ -53,4 +53,7 @@ relative support among these candidates, not biological validation.
 Goodness-of-fit measures use the same calculation as
 \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 is NA; nonfinite response-scale predictions at observed cells are errors.
+Data frames, tibbles and matrices follow the same input conversion as
+fitting. Numeric text and factor labels are read as observations, never
+as internal factor-level codes.
 }

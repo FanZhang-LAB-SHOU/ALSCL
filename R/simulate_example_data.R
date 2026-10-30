@@ -9,16 +9,21 @@
 #' @param bin_breaks Numeric vector of bin boundary points. Defines n+1
 #'   boundaries for n bins. Default \code{c(0, 20, 25, 30, 35, 40, 45, 50, 55, 60)}
 #'   giving 9 bins: 0-20, 20-25, 25-30, ..., 55-60. Works with any bin width
-#'   (1mm, 2mm, 3mm, 5mm, etc.) and unequal widths.
+#'   (1mm, 2mm, 3mm, 5mm, etc.) and unequal widths. Values must be finite
+#'   and produce positive midpoints; they are sorted and deduplicated before use. The exterior
+#'   values define the first/last midpoints and labels, while the first and last
+#'   probability bins absorb the distribution tails, as in the fitting models.
 #' @param Linf Numeric. VB asymptotic length. Default 55.
 #' @param vbk Numeric. VB growth coefficient. Default 0.45.
 #' @param t0 Numeric. VB theoretical age at length 0. Default -0.1.
-#' @param M Numeric. Natural mortality. Default 0.8.
+#' @param M Finite nonnegative numeric. Natural mortality. Default 0.8.
 #' @param nage Integer. Maximum age (plus group). Default 7.
 #' @param L50_sel Numeric. Length at 50 percent selectivity. Default 28.
-#' @param L95_sel Numeric. Length at 95 percent selectivity. Default 36.
+#' @param L95_sel Numeric. Length at 95 percent selectivity, greater than
+#'   L50_sel. Default 36.
 #' @param L50_mat Numeric. Length at 50 percent maturity. Default 33.
-#' @param L95_mat Numeric. Length at 95 percent maturity. Default 40.
+#' @param L95_mat Numeric. Length at 95 percent maturity, greater than
+#'   L50_mat. Default 40.
 #' @param wgt_a Numeric. Weight-length parameter a in W = a * L^b. Default 2.2e-6.
 #' @param wgt_b Numeric. Weight-length parameter b in W = a * L^b. Default 3.2.
 #' @param mean_F Nonnegative numeric. Arithmetic mean fishing mortality across
@@ -39,6 +44,12 @@
 #'     \item{true_params}{List of true parameter values used in simulation}
 #'   }
 #'
+#' @details Biological inputs must be finite scalars, Linf and vbk must be
+#'   positive, t0 must be below recruitment age 1, and variation parameters and
+#'   the weight coefficient must be nonnegative. Invalid inputs and nonfinite
+#'   simulated values are rejected before any CSV files are created or replaced.
+#'   The age-length key uses the same open-tail probabilities as the ACL core;
+#'   this does not make the quick recruitment process identical to a fitted model.
 #' @export
 #'
 #' @examples
@@ -87,14 +98,34 @@ simulate_example_data <- function(years      = 2000:2025,
                                   save_csv   = FALSE,
                                   output_dir = ".") {
 
-  if (!is.null(seed)) set.seed(seed)
-
   if (!is.numeric(years) || length(years) < 2L || any(!is.finite(years)) ||
       any(abs(diff(years) - 1) > 1e-8))
     stop("Provide at least two consecutive annual observation years; use sim_data() for subannual simulations.")
   nage <- .acl_positive_integer(nage, "nage", 2L)
   .acl_scalar(cv_catch, "cv_catch", 0)
   .acl_scalar(mean_F, "mean_F", 0)
+  .acl_scalar(Linf, "Linf", 0, TRUE)
+  .acl_scalar(vbk, "vbk", 0, TRUE)
+  .acl_scalar(t0, "t0")
+  .acl_scalar(M, "M", 0)
+  .acl_scalar(rec_sigma, "rec_sigma", 0)
+  .acl_scalar(wgt_a, "wgt_a", 0)
+  .acl_scalar(wgt_b, "wgt_b")
+  .acl_scalar(L50_sel, "L50_sel")
+  .acl_scalar(L95_sel, "L95_sel")
+  .acl_scalar(L50_mat, "L50_mat")
+  .acl_scalar(L95_mat, "L95_mat")
+  if (L95_sel <= L50_sel) stop("L95_sel must be greater than L50_sel.", call. = FALSE)
+  if (L95_mat <= L50_mat) stop("L95_mat must be greater than L50_mat.", call. = FALSE)
+  if (!is.numeric(bin_breaks) || length(bin_breaks) < 3L ||
+      any(!is.finite(bin_breaks)))
+    stop("bin_breaks must contain at least three finite boundaries.", call. = FALSE)
+  if (!is.logical(save_csv) || length(save_csv) != 1L || is.na(save_csv))
+    stop("save_csv must be TRUE or FALSE.", call. = FALSE)
+  if (save_csv && (!is.character(output_dir) || length(output_dir) != 1L ||
+                   is.na(output_dir) || !nzchar(output_dir)))
+    stop("output_dir must be one nonempty path.", call. = FALSE)
+  if (!is.null(seed)) seed <- .acl_positive_integer(seed, "seed", 0L)
   if (t0 >= 1) stop("t0 must be below the recruitment age of 1.")
   nY  <- length(years)
   bin_breaks <- sort(unique(bin_breaks))
@@ -107,7 +138,9 @@ simulate_example_data <- function(years      = 2000:2025,
   # --- Bin boundaries and midpoints ---
   bin_lower <- bin_breaks[1:nL]
   bin_upper <- bin_breaks[2:(nL + 1)]
-  len_mid   <- (bin_lower + bin_upper) / 2
+  len_mid   <- bin_lower / 2 + bin_upper / 2
+  if (any(!is.finite(len_mid)) || any(len_mid <= 0) || any(diff(len_mid) <= 0))
+    stop("bin_breaks must define finite positive increasing midpoints.", call. = FALSE)
 
   # --- Build length bin labels ---
   # Always use raw break values: "0-20", "20-25", "25-30", etc.
@@ -115,35 +148,39 @@ simulate_example_data <- function(years      = 2000:2025,
   # and ensures run_acl/run_alscl parsers compute correct midpoints.
   len_labels <- paste0(bin_lower, "-", bin_upper)
 
-  # For pnorm integration, last bin upper is effectively Inf
-  bin_upper_eff <- bin_upper
-  bin_upper_eff[nL] <- bin_upper[nL] + 50  # large enough to capture tail
-
   # --- VB: mean length-at-age ---
   mean_La <- Linf * (1 - exp(-vbk * (ages - t0)))
-
-  # --- Selectivity at length (logistic) ---
-  sel_L <- 1 / (1 + exp(-log(19) * (len_mid - L50_sel) / (L95_sel - L50_sel)))
-
-  # --- Maturity at length (logistic) ---
-  mat_L <- 1 / (1 + exp(-log(19) * (len_mid - L50_mat) / (L95_mat - L50_mat)))
-
-  # --- Weight at length (power law: W = a * L^b) ---
-  wgt_L <- wgt_a * len_mid^wgt_b
-
-  # --- Age-length key (proportion of age a in length bin l) ---
   cv_len <- 0.1
+  sd_La <- cv_len * mean_La
+  if (any(!is.finite(mean_La) | mean_La <= 0) ||
+      any(!is.finite(sd_La) | sd_La <= 0))
+    stop("Growth inputs must produce finite positive length means and standard deviations.", call. = FALSE)
+
+  # Stable logistic probabilities share validation with the other simulators.
+  sel_L <- mat_func(L50_sel, L95_sel, len_mid)
+  mat_L <- mat_func(L50_mat, L95_mat, len_mid)
+  wgt_L <- wgt_a * len_mid^wgt_b
+  observation_log_sd <- sqrt(log1p(cv_catch^2))
+  if (any(!is.finite(wgt_L)) || !is.finite(observation_log_sd))
+    stop("Simulation inputs produce nonfinite weights or observation variation; no CSV files were saved.", call. = FALSE)
+
+  # Match length_age_key() in model_math.hpp: open tails, stable right-tail
+  # differences and the same tiny probability floor before normalization.
+  borders <- bin_breaks[-c(1L, nL + 1L)]
   pla <- matrix(0, nrow = nL, ncol = nage)
   for (a in seq_along(ages)) {
-    mu_a <- mean_La[a]
-    sd_a <- cv_len * mu_a
-    for (l in seq_len(nL)) {
-      pla[l, a] <- stats::pnorm(bin_upper_eff[l], mu_a, sd_a) -
-        stats::pnorm(bin_lower[l], mu_a, sd_a)
+    z <- (borders - mean_La[a]) / sd_La[a]
+    pla[1L, a] <- stats::pnorm(z[1L])
+    if (nL > 2L) for (l in 2:(nL - 1L)) {
+      pla[l, a] <- if (z[l - 1L] > 0)
+        stats::pnorm(-z[l - 1L]) - stats::pnorm(-z[l]) else
+        stats::pnorm(z[l]) - stats::pnorm(z[l - 1L])
     }
-    col_sum <- sum(pla[, a])
-    if (col_sum > 0) pla[, a] <- pla[, a] / col_sum
+    pla[nL, a] <- stats::pnorm(-z[nL - 1L])
+    pla[, a] <- pmax(pla[, a], 1e-300)
+    pla[, a] <- pla[, a] / sum(pla[, a])
   }
+  if (!is.null(seed)) set.seed(seed)
 
   # --- Time-varying fishing mortality ---
   F_shape <- 1 + 0.5 * sin(seq(-pi/2, 3*pi/2, length.out = nY))
@@ -168,14 +205,22 @@ simulate_example_data <- function(years      = 2000:2025,
   # --- Convert to catch-at-length ---
   CatL_mat <- matrix(0, nrow = nL, ncol = nY)
   for (y in seq_len(nY)) {
-    Fy <- F_trend[y]
-    Z  <- M + Fy
     # Survey index observes abundance, not fishery removals.
     C_L <- as.numeric(pla %*% N[, y]) * sel_L
-    noise <- exp(stats::rnorm(nL, 0, sqrt(log1p(cv_catch^2))))
+    noise <- exp(stats::rnorm(nL, 0, observation_log_sd))
     C_L <- C_L * noise
     CatL_mat[, y] <- pmax(round(C_L, 2), 0)
   }
+
+  # Validate all derived values before creating an output directory or files.
+  N_at_len <- pla %*% N
+  derived <- list(F_trend = F_trend, log_rec = log_rec, N_at_age = N,
+                  N_at_len = N_at_len, CatL = CatL_mat, weight = wgt_L,
+                  maturity = mat_L, selectivity = sel_L, pla = pla)
+  bad <- names(derived)[vapply(derived, function(x) any(!is.finite(x)), logical(1))]
+  if (length(bad))
+    stop("Simulation produced nonfinite values in ", paste(bad, collapse = ", "),
+         "; no CSV files were saved.", call. = FALSE)
 
   # --- Assemble data.frames ---
   year_char <- as.character(years)
@@ -210,8 +255,8 @@ simulate_example_data <- function(years      = 2000:2025,
     mean_F = mean_F, F_trend = F_trend,
     log_rec = log_rec, cv_catch = cv_catch,
     rec_sigma = rec_sigma, seed = seed,
-    bin_breaks = bin_breaks, N_at_age = N, N_at_len = pla %*% N,
-    cv_len = cv_len, observation_log_sd = sqrt(log1p(cv_catch^2))
+    bin_breaks = bin_breaks, N_at_age = N, N_at_len = N_at_len,
+    cv_len = cv_len, observation_log_sd = observation_log_sd
   )
 
   result <- list(
@@ -223,7 +268,7 @@ simulate_example_data <- function(years      = 2000:2025,
 
   cat(sprintf("Simulated data: %d length bins x %d years\n", nL, nY))
   cat(sprintf("  Bins: %s\n", paste(len_labels, collapse = ", ")))
-  cat(sprintf("  Years: %d-%d\n", min(years), max(years)))
+  cat(sprintf("  Years: %s-%s\n", as.character(min(years)), as.character(max(years))))
   cat(sprintf("  True VB: Linf=%.1f, k=%.3f, t0=%.2f\n", Linf, vbk, t0))
   cat(sprintf("  True M=%.2f, mean F=%.2f\n", M, mean_F))
 

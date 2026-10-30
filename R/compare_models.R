@@ -34,6 +34,9 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   Goodness-of-fit measures use the same calculation as
 #'   \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 #'   is NA; nonfinite response-scale predictions at observed cells are errors.
+#'   Data frames, tibbles and matrices follow the same input conversion as
+#'   fitting. Numeric text and factor labels are read as observations, never
+#'   as internal factor-level codes.
 #'
 #' @export
 compare_models <- function(model1, model2, data.CatL,
@@ -58,9 +61,6 @@ compare_models <- function(model1, model2, data.CatL,
     model2_name <- paste0(model2_name, " (", suffix[2L], ")")
   }
   data_check <- .acl_comparison_data(list(model1, model2), data.CatL)
-  # Normalize legal character matrices exactly once after validating the cells.
-  data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
-  data.CatL[-1L] <- lapply(data.CatL[-1L], as.numeric)
   fit_diagnostics <- rbind(.acl_fit_status(model1), .acl_fit_status(model2))
   fit_diagnostics <- cbind(Model = c(model1_name, model2_name), fit_diagnostics)
   eligible <- data_check$verified && all(fit_diagnostics$numerical_ok)
@@ -72,9 +72,7 @@ compare_models <- function(model1, model2, data.CatL,
     paste(reasons, collapse = "; "), ". Inspect fit_diagnostics and raw statistics.", call. = FALSE)
 
   # ===== 1. Convergence & model summary =====
-  get_nobs <- function(m, d) sum(is.finite(as.matrix(d[, -1L, drop=FALSE])) & as.matrix(d[, -1L, drop=FALSE]) > 0)
-
-  n_obs <- get_nobs(model1, data.CatL)
+  n_obs <- data_check$n_obs
 
   obj1 <- as.numeric(model1$opt$objective)[1]
   obj2 <- as.numeric(model2$opt$objective)[1]

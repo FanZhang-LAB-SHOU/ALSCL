@@ -33,7 +33,10 @@ Default 2000:2025. Use \code{sim_data()} for subannual simulations.}
 \item{bin_breaks}{Numeric vector of bin boundary points. Defines n+1
 boundaries for n bins. Default \code{c(0, 20, 25, 30, 35, 40, 45, 50, 55, 60)}
 giving 9 bins: 0-20, 20-25, 25-30, ..., 55-60. Works with any bin width
-(1mm, 2mm, 3mm, 5mm, etc.) and unequal widths.}
+(1mm, 2mm, 3mm, 5mm, etc.) and unequal widths. Values must be finite
+and produce positive midpoints; they are sorted and deduplicated before use. The exterior
+values define the first/last midpoints and labels, while the first and last
+probability bins absorb the distribution tails, as in the fitting models.}
 
 \item{Linf}{Numeric. VB asymptotic length. Default 55.}
 
@@ -41,17 +44,19 @@ giving 9 bins: 0-20, 20-25, 25-30, ..., 55-60. Works with any bin width
 
 \item{t0}{Numeric. VB theoretical age at length 0. Default -0.1.}
 
-\item{M}{Numeric. Natural mortality. Default 0.8.}
+\item{M}{Finite nonnegative numeric. Natural mortality. Default 0.8.}
 
 \item{nage}{Integer. Maximum age (plus group). Default 7.}
 
 \item{L50_sel}{Numeric. Length at 50 percent selectivity. Default 28.}
 
-\item{L95_sel}{Numeric. Length at 95 percent selectivity. Default 36.}
+\item{L95_sel}{Numeric. Length at 95 percent selectivity, greater than
+L50_sel. Default 36.}
 
 \item{L50_mat}{Numeric. Length at 50 percent maturity. Default 33.}
 
-\item{L95_mat}{Numeric. Length at 95 percent maturity. Default 40.}
+\item{L95_mat}{Numeric. Length at 95 percent maturity, greater than
+L50_mat. Default 40.}
 
 \item{wgt_a}{Numeric. Weight-length parameter a in W = a * L^b. Default 2.2e-6.}
 
@@ -85,6 +90,14 @@ A list with components:
 Generates realistic catch-at-length, weight-at-length, and maturity-at-length
 data for a generic short-lived species (e.g., krill-like). Supports unequal
 length bin widths. Useful for package documentation, testing, and tutorials.
+}
+\details{
+Biological inputs must be finite scalars, Linf and vbk must be
+positive, t0 must be below recruitment age 1, and variation parameters and
+the weight coefficient must be nonnegative. Invalid inputs and nonfinite
+simulated values are rejected before any CSV files are created or replaced.
+The age-length key uses the same open-tail probabilities as the ACL core;
+this does not make the quick recruitment process identical to a fitted model.
 }
 \examples{
 # Quick usage with defaults (9 bins like real krill data)

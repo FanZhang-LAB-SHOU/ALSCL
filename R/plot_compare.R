@@ -55,6 +55,7 @@ utils::globalVariables(c(
 .acl_plot_comparison_grid <- function(models, data.CatL, midpoints = FALSE) {
   if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)
     stop("data.CatL must contain length labels and time columns.", call. = FALSE)
+  data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
   original <- as.matrix(data.CatL[, -1L, drop = FALSE])
   observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
   if (any(is.na(observed) & !is.na(original)) || any(is.infinite(observed)) ||
@@ -98,7 +99,11 @@ utils::globalVariables(c(
 #' @param model1 First model result (reference).
 #' @param model2 Second model result (alternative).
 #' @param quantities Character vector. Quantities to compare. Accepts: "SSB", "R" (or "Rec"),
-#'   "B", "N", "CN", "CB", "F". Default c("SSB","R","B","N","CN","CB").
+#'   "B", "N", "CN", "CB". Default c("SSB","R","B","N","CN"), the
+#'   quantities reported with uncertainty by both ACL and ALSCL. CB can be
+#'   requested explicitly when both supplied results contain it.
+#'   For F, use \code{plot_compare_annual_F()} and explicitly choose the group
+#'   mean or apical summary; F is not a scalar time series in the model reports.
 #' @param se Logical. Show confidence intervals. Default FALSE.
 #' @param model1_name,model2_name Character. Labels. Auto-detected if NULL.
 #' @param colors Named character vector of 2 colors. NULL = use global theme.
@@ -109,6 +114,11 @@ utils::globalVariables(c(
 #' @param return_data Logical. Return data alongside plot. Default FALSE.
 #'
 #' @return A ggplot object (can be further modified with + theme(), + labs(), etc.)
+#' @details Every requested quantity must be a finite series matching its model's
+#'   time metadata. Unknown or unavailable quantities are errors, rather than
+#'   silently omitted panels. With se = TRUE, both models must have complete,
+#'   finite estimates and finite nonnegative standard errors for every requested
+#'   quantity. Use se = FALSE when uncertainty is unavailable.
 #' @export
 #'
 #' @examples
@@ -134,7 +144,7 @@ utils::globalVariables(c(
 #' plot_compare_ts(result_acl, result_alscl)  # uses global settings
 #' }
 plot_compare_ts <- function(model1, model2,
-                            quantities = c("SSB", "R", "B", "N", "CN", "CB"),
+                            quantities = c("SSB", "R", "B", "N", "CN"),
                             se = FALSE,
                             model1_name = NULL, model2_name = NULL,
                             colors = NULL, linetypes = NULL, linewidth = NULL,
@@ -149,6 +159,14 @@ plot_compare_ts <- function(model1, model2,
                                m1 = model1_name, m2 = model2_name)
   year1 <- .acl_plot_year(model1, name = model1_name)
   year2 <- .acl_plot_year(model2, name = model2_name)
+  if (!is.logical(se) || length(se) != 1L || is.na(se))
+    stop("se must be TRUE or FALSE.", call. = FALSE)
+  if (!is.character(quantities) || !length(quantities) || anyNA(quantities) ||
+      any(!nzchar(quantities)))
+    stop("quantities must be a nonempty character vector of supported quantities.", call. = FALSE)
+  if (any(quantities %in% c("F", "f")))
+    stop("F is a group-by-time quantity. Use plot_compare_annual_F() with method = 'mean' ",
+         "or 'apical' to choose its time-series summary.", call. = FALSE)
 
   # Aliases: user-friendly names -> report field names
   qty_aliases <- c(R = "Rec", Rec = "Rec", rec = "Rec",
@@ -156,27 +174,33 @@ plot_compare_ts <- function(model1, model2,
                    B = "B", biomass = "B",
                    N = "N", abundance = "N",
                    CN = "CN", catch = "CN",
-                   CB = "CB",
-                   F = "F", f = "F")
+                   CB = "CB")
 
   qty_labels <- c(SSB = "Spawning Stock Biomass", Rec = "Recruitment",
                   B = "Total Biomass", N = "Total Abundance",
-                  CN = "Catch Numbers", CB = "Catch Biomass",
-                  F = "Fishing Mortality")
+                  CN = "Catch Numbers", CB = "Catch Biomass")
 
   # Resolve aliases
-  resolved <- sapply(quantities, function(q) {
-    if (q %in% names(qty_aliases)) qty_aliases[q] else q
-  }, USE.NAMES = FALSE)
+  unknown <- setdiff(quantities, names(qty_aliases))
+  if (length(unknown))
+    stop("Unknown quantities: ", paste(unknown, collapse = ", "),
+         ". Available: SSB, R, Rec, B, N, CN, CB.", call. = FALSE)
+  resolved <- unique(unname(qty_aliases[quantities]))
 
   df_list <- list()
   for (q in resolved) {
-    v1 <- model1$report[[q]]; v2 <- model2$report[[q]]
-    if (is.null(v1) || is.null(v2)) next
-    # Handle matrix quantities: take column/row means or first row/col
-    v1 <- as.numeric(v1); v2 <- as.numeric(v2)
-    # Ensure length matches year
-    if (length(v1) != length(year1) || length(v2) != length(year2)) next
+    series <- function(model, years, name) {
+      value <- model$report[[q]]
+      if (is.null(value))
+        stop("Quantity '", q, "' is unavailable in ", name, ".", call. = FALSE)
+      if (!is.numeric(value) || length(value) != length(years) ||
+          any(!is.finite(value)))
+        stop("Quantity '", q, "' in ", name,
+             " must have one finite numeric estimate per time step.", call. = FALSE)
+      as.numeric(value)
+    }
+    v1 <- series(model1, year1, model1_name)
+    v2 <- series(model2, year2, model2_name)
     label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
     df_list[[length(df_list) + 1]] <- data.frame(
       Year = c(year1, year2), Value = c(as.numeric(v1), as.numeric(v2)),
@@ -184,11 +208,6 @@ plot_compare_ts <- function(model1, model2,
       Quantity = label, stringsAsFactors = FALSE)
   }
   df <- do.call(rbind, df_list)
-  if (is.null(df) || nrow(df) == 0) {
-    stop("No valid quantities found in model reports. ",
-         "Available: SSB, R, B, N, CN, CB, F. ",
-         "Check that both models contain the requested report fields.")
-  }
   df$Quantity <- factor(df$Quantity, levels = unique(df$Quantity))
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Value,
@@ -205,22 +224,19 @@ plot_compare_ts <- function(model1, model2,
     ggplot2::theme(legend.position = cfg$legend_pos,
                    strip.text = ggplot2::element_text(face = "bold"))
 
-  if (se && !is.null(model1$est_std) && !is.null(model2$est_std)) {
+  if (se) {
     ribbon_list <- list()
     for (q in resolved) {
       for (info in list(list(m = model1, name = model1_name),
                         list(m = model2, name = model2_name))) {
         years <- info$m$year
-        rows <- which(rownames(info$m$est_std) == q)
-        if (length(rows) == length(years)) {
-          ss <- info$m$est_std[rows, , drop = FALSE]
-          label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
-          ribbon_list[[length(ribbon_list) + 1]] <- data.frame(
-            Year = years, estimate = ss[, "Estimate"],
-            lower = ss[, "Estimate"] - 1.96 * ss[, "Std. Error"],
-            upper = ss[, "Estimate"] + 1.96 * ss[, "Std. Error"],
-            Model = info$name, Quantity = label, stringsAsFactors = FALSE)
-        }
+        ss <- .acl_plot_estimates(info$m, q, length(years))
+        label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
+        ribbon_list[[length(ribbon_list) + 1]] <- data.frame(
+          Year = years, estimate = ss[, "Estimate"],
+          lower = ss[, "Estimate"] - 1.96 * ss[, "Std. Error"],
+          upper = ss[, "Estimate"] + 1.96 * ss[, "Std. Error"],
+          Model = info$name, Quantity = label, stringsAsFactors = FALSE)
       }
     }
     if (length(ribbon_list) > 0) {

@@ -26,9 +26,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.7 · 简体中文 / English**
+**Version 2.2.8 · 简体中文 / English**
 
-**2.2.7:** 明确首尾体长组边界限制，修正具名丰度矩阵的坐标，统一不确定性检查，并保留生长图的自定义样式。 / Enforce open tail-bin limits, align named abundance matrices, validate plotting uncertainty and preserve growth-plot styling. [Changes](NEWS.md) · [2.2.7 validation](docs/RELEASE_2.2.7.md).
+**2.2.8:** 统一模拟与拟合的分箱概率，补全输入、回溯映射和区间验证，修正绘图坐标与排序，并支持源码模式并行测试。 / Align simulation tail probabilities, validate inputs and intervals, preserve retrospective maps and plotting coordinates, and support parallel source-checkout tests. [Changes](NEWS.md) · [2.2.8 validation](docs/RELEASE_2.2.8.md).
 
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。
@@ -590,7 +590,7 @@ plot_deviance(b, type="R", log=TRUE, se=TRUE)
 
 | 函数 / Function | 主要用途与参数 / Purpose and controls |
 |---|---|
-| `plot_compare_ts` | B/SSB/Rec/N/CN/CB/F，`quantities`、`se`、`colors`、`linetypes` |
+| `plot_compare_ts` | B/SSB/Rec/N/CN/CB；F 用 `plot_compare_annual_F`，`quantities`、`se`、`colors`、`linetypes` |
 | `plot_compare_F` | 两模型原生维度 F 热图；`palette` / Native-dimension heatmaps |
 | `plot_compare_residuals` | 直方图、QQ、年度均值及长度组箱线图；`bins` / Residual panels |
 | `plot_compare_growth` | VB、pla 及可选 Age/Length 外部参照；`ref_data`、`nls_start` / Growth and reference fit |

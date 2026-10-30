@@ -27,7 +27,14 @@
 #' @details Natural and mean fishing mortality must be finite and nonnegative.
 #'   Zero total mortality produces zero catch through the continuous Baranov
 #'   limit. Invalid biological arrays are rejected before simulation; a replicate
-#'   with nonfinite output is rejected before its file is written.
+#'   with nonfinite output is rejected before its file is written. Age-length
+#'   probabilities must sum to one for each age; each growth-transition column
+#'   must also sum to one, so probability arrays cannot lose population mass.
+#'   Initial total mortality and all process/observation standard deviations
+#'   must be finite and nonnegative. AR(1) coefficients may be negative but must
+#'   lie strictly between -1 and 1. Beverton-Holt alpha and initial recruitment
+#'   may be zero; beta must be positive. These process inputs are checked before
+#'   creating the output directory or drawing random numbers.
 #'
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
@@ -41,8 +48,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   # Determine model type from bio_vars (set by sim_cal).
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
   .acl_simulation_biology(bio_vars, params, model_type)
-  .acl_scalar(params$M, "M", 0)
-  if (!is.null(params$F_mean)) .acl_scalar(params$F_mean, "F_mean", 0)
+  .acl_simulation_process(params, model_type)
   grid <- .acl_simulation_grid(params, sim_year, model_type)
   params$growth_step <- grid$step
   params$burn_in <- grid$burn_in
@@ -494,6 +500,25 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   number * F * factor
 }
 
+# Validate process scales before random draws or output writes. Missing optional
+# fields retain the defaults used by each simulation engine.
+.acl_simulation_process <- function(params, model_type) {
+  for (name in c("M", "init_Z", "std_logR", "std_logN0", "std_SN", "alpha"))
+    .acl_scalar(params[[name]], name, 0)
+  .acl_scalar(params$beta, "beta", 0, TRUE)
+  defaults <- list(R_init = if (model_type == "length_based") 10000 else 500,
+    F_mean = if (model_type == "length_based") 0.2 else 0.3,
+    F_sd = 0.2, F_ar = 0.75, R_ar = 0.1)
+  for (name in c("R_init", "F_mean", "F_sd"))
+    .acl_scalar(params[[name]] %||% defaults[[name]], name, 0)
+  for (name in c("F_ar", "R_ar")) {
+    value <- .acl_scalar(params[[name]] %||% defaults[[name]], name)
+    if (abs(value) >= 1)
+      stop(name, " must be strictly between -1 and 1.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 # Reject corrupted biological arrays before random draws or output writes.
 .acl_simulation_biology <- function(bio, params, model_type) {
   if (!is.character(model_type) || length(model_type) != 1L ||
@@ -516,10 +541,15 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   if (!is.matrix(bio$pla) || !identical(dim(bio$pla), dimensions))
     stop("pla dimensions do not match the simulation model_type, nage and nlen.", call. = FALSE)
   check(bio$pla, "pla", nage * nlen, 1)
+  totals <- if (model_type == "age_based") rowSums(bio$pla) else colSums(bio$pla)
+  if (any(abs(totals - 1) > 1e-8))
+    stop("pla probabilities must sum to one for each age.", call. = FALSE)
   if (model_type == "length_based") {
     if (!is.matrix(bio$Gij) || !identical(dim(bio$Gij), c(nlen, nlen)))
       stop("Gij must be an nlen by nlen matrix.", call. = FALSE)
     check(bio$Gij, "Gij", nlen * nlen, 1)
+    if (any(abs(colSums(bio$Gij) - 1) > 1e-8))
+      stop("Gij probabilities must sum to one in every source-length column.", call. = FALSE)
   }
   invisible(NULL)
 }

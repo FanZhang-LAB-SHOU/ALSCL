@@ -193,3 +193,9 @@ sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
                 output_dir = file.path(tempdir(), "alscl-zero-mortality"))
 stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
 ```
+
+### Consistency corrections
+
+The quick simulator now integrates the first and last length bins to negative and positive infinity, matching the fitted models. Finite `bin_breaks` still determine labels and midpoints; they do not truncate probability. Corrected simulations can change even with the same seed, especially when the first boundary excludes small fish. Previously saved datasets retain their original generating truth. Use nonnegative M, F and noise scales, positive growth parameters and a nonnegative weight coefficient, and increasing selectivity/maturity endpoints. Invalid parameters or nonfinite generated values stop before CSV files are created. The full simulator also requires normalized age-length keys and growth transitions.
+
+The full simulator validates `init_Z`, process and observation standard deviations, and mean fishing mortality as finite nonnegative values. `F_ar` and `R_ar` must lie strictly between -1 and 1; negative stationary correlations remain valid. Beverton–Holt alpha and initial recruitment may be zero, while beta must be positive. Invalid process inputs stop before random draws or file creation, preserving existing simulations and the caller's random-number state.

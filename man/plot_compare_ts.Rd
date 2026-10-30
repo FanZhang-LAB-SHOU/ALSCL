@@ -7,7 +7,7 @@
 plot_compare_ts(
   model1,
   model2,
-  quantities = c("SSB", "R", "B", "N", "CN", "CB"),
+  quantities = c("SSB", "R", "B", "N", "CN"),
   se = FALSE,
   model1_name = NULL,
   model2_name = NULL,
@@ -25,7 +25,11 @@ plot_compare_ts(
 \item{model2}{Second model result (alternative).}
 
 \item{quantities}{Character vector. Quantities to compare. Accepts: "SSB", "R" (or "Rec"),
-"B", "N", "CN", "CB", "F". Default c("SSB","R","B","N","CN","CB").}
+"B", "N", "CN", "CB". Default c("SSB","R","B","N","CN"), the
+quantities reported with uncertainty by both ACL and ALSCL. CB can be
+requested explicitly when both supplied results contain it.
+For F, use \code{plot_compare_annual_F()} and explicitly choose the group
+mean or apical summary; F is not a scalar time series in the model reports.}
 
 \item{se}{Logical. Show confidence intervals. Default FALSE.}
 
@@ -50,6 +54,13 @@ A ggplot object (can be further modified with + theme(), + labs(), etc.)
 Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
 on the same axes. Fully supports the global theme system and can be
 extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
+}
+\details{
+Every requested quantity must be a finite series matching its model's
+time metadata. Unknown or unavailable quantities are errors, rather than
+silently omitted panels. With se = TRUE, both models must have complete,
+finite estimates and finite nonnegative standard errors for every requested
+quantity. Use se = FALSE when uncertainty is unavailable.
 }
 \examples{
 \dontrun{

@@ -30,6 +30,10 @@
 #' @param base_theme A ggplot2 theme object.
 #'
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
+#' @details Matrix positions are matched to fitted time and group metadata;
+#'   optional matrix dimnames do not replace these coordinates. Intervals require
+#'   one finite estimate and finite nonnegative standard error per plotted cell.
+#'   Use se = FALSE for saved fits without a complete uncertainty table.
 #'
 #' @export
 plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NULL, line_type = "solid", facet_ncol = NULL,
@@ -44,6 +48,8 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
 
   type <- match.arg(type)
   se_type <- match.arg(se_type, c("ribbon", "errorbar"))
+  if (!is.logical(se) || length(se) != 1L || is.na(se))
+    stop("se must be TRUE or FALSE.", call. = FALSE)
 
   # Detect model type: ACL has report$F, ALSCL has report$FL
   is_alscl <- is.null(model_result[["report"]][["F"]]) && !is.null(model_result[["report"]][["FL"]])
@@ -53,7 +59,17 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
     type <- "age"
   }
 
-  Year <- model_result[["year"]]
+  Year <- .acl_plot_year(model_result)
+  # Plot coordinates come from matrix positions, not optional row/column names.
+  checked_matrix <- function(name, periods) {
+    value <- model_result$report[[name]]
+    if (!is.matrix(value) || !is.numeric(value) || !nrow(value) ||
+        ncol(value) != periods || !length(value) || any(!is.finite(value)))
+      stop("report$", name, " must be a finite numeric group-by-time matrix with ",
+           periods, " time columns.", call. = FALSE)
+    dimnames(value) <- NULL
+    value
+  }
 
   # Get theme
   current_theme <- if (!is.null(base_theme)) {
@@ -69,13 +85,12 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
 
     if (type == "year" || type == "length") {
       # --- F at length, faceted by length bin or year ---
-      FL <- model_result[["report"]][["FL"]]
-      if (!is.matrix(FL) || ncol(FL) != length(Year)) {
-        stop("report$FL must be a length-by-time matrix with one column per year value.")
-      }
+      FL <- checked_matrix("FL", length(Year))
       len_label <- model_result[["len_label"]]
       if (is.null(len_label)) len_label <- paste0("L", seq_len(nrow(FL)))
-      if (length(len_label) != nrow(FL)) stop("len_label must match the rows of report$FL.")
+      if (length(len_label) != nrow(FL) || anyNA(len_label) ||
+          any(!nzchar(as.character(len_label))) || anyDuplicated(len_label))
+        stop("len_label must identify the rows of report$FL uniquely.")
 
       if (type == "length") {
         len_mid <- model_result[["len_mid"]]
@@ -110,8 +125,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
         if (length(rows) != length(FL) || !all(c("Estimate", "Std. Error") %in% colnames(est_std))) {
           stop("se = TRUE requires one FL estimate and standard error for every length-by-time cell in est_std.")
         }
-        ss_fl <- est_std[rows, , drop = FALSE]
-        ss_fl <- as.data.frame(ss_fl)
+        ss_fl <- .acl_plot_estimates(model_result, "FL", length(FL))
 
         ci <- data.frame(
           Group    = rep(GroupLabels, times = ncol(FL)),
@@ -137,8 +151,8 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
 
     } else if (type == "age") {
       # --- Emergent F at age (FA), faceted by year ---
-      FA <- model_result[["report"]][["FA"]]
-      fa_years <- Year[1:(length(Year) - 1)]
+      FA <- checked_matrix("FA", length(Year) - 1L)
+      fa_years <- head(Year, -1L)
 
       FA_long <- reshape2::melt(FA)
       colnames(FA_long) <- c("AgeGroup", "YearIdx", "F")
@@ -154,8 +168,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
           ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
         data_out <- FA_long
       } else {
-        ss_fa <- model_result[["est_std"]][grep("^FA$", rownames(model_result[["est_std"]])), ]
-        ss_fa <- as.data.frame(ss_fa)
+        ss_fa <- .acl_plot_estimates(model_result, "FA", length(FA))
 
         ci <- data.frame(
           AgeGroup = rep(seq_len(nrow(FA)), times = ncol(FA)),
@@ -184,7 +197,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
   # ===================================================================
   } else {
 
-    Fmat <- model_result[["report"]][["F"]]
+    Fmat <- checked_matrix("F", length(Year))
 
     if (type == "year") {
       AgeGroup <- factor(paste("Age bin", seq_len(nrow(Fmat))), levels = paste("Age bin", seq_len(nrow(Fmat))))
@@ -204,11 +217,10 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
           ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
         data_out <- F_long
       } else {
-        ss_f <- model_result[["est_std"]][grep("^F$", rownames(model_result[["est_std"]])), ]
-        ss_f <- as.data.frame(ss_f)
+        ss_f <- .acl_plot_estimates(model_result, "F", length(Fmat))
 
         ci <- data.frame(
-          AgeGroup = rep(paste0("Age group ", seq_len(nrow(Fmat))), times = ncol(Fmat)),
+          AgeGroup = rep(AgeGroup, times = ncol(Fmat)),
           Year     = rep(Year, each = nrow(Fmat)),
           estimate = ss_f[, "Estimate"],
           lower    = ss_f[, "Estimate"] - 1.96 * ss_f[, "Std. Error"],
@@ -243,8 +255,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NUL
           ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
         data_out <- F_long
       } else {
-        ss_f <- model_result[["est_std"]][grep("^F$", rownames(model_result[["est_std"]])), ]
-        ss_f <- as.data.frame(ss_f)
+        ss_f <- .acl_plot_estimates(model_result, "F", length(Fmat))
 
         ci <- data.frame(
           AgeGroup = rep(seq_len(nrow(Fmat)), times = ncol(Fmat)),

@@ -423,3 +423,7 @@ if (!is.null(borders)) {
                   len_upper = c(borders, Inf))
 }
 ```
+
+### 一致性修正
+
+拟合、诊断和模型比较统一解析普通 data.frame、matrix、tibble 及保存数值文本的 factor 列。因子按标签转为观测值，不使用内部等级编码；体长标签按向量提取。修改了观测值、缺测掩码、年份或体长组顺序时，原有匹配检查仍会报错。

@@ -135,7 +135,7 @@ plot_SSB <- function(model_result, line_size = 1.2, line_color = NULL, line_type
       ss_sba <- quantity$se
       ss_sba <- as.data.frame(ss_sba)
       ci <- data.frame(
-        AgeGroup = rep(levels(AgeLabels), times = ncol(SBA)),
+        AgeGroup = rep(AgeLabels, times = ncol(SBA)),
         Year     = rep(Year, each = nrow(SBA)),
         estimate = ss_sba[, "Estimate"],
         lower    = ss_sba[, "Estimate"] - 1.96 * ss_sba[, "Std. Error"],

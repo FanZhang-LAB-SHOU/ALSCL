@@ -78,3 +78,9 @@ For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
 F-at-age (FA: (A-1) x (Y-1)) is an emergent property.
 }
+\details{
+Matrix positions are matched to fitted time and group metadata;
+optional matrix dimnames do not replace these coordinates. Intervals require
+one finite estimate and finite nonnegative standard error per plotted cell.
+Use se = FALSE for saved fits without a complete uncertainty table.
+}

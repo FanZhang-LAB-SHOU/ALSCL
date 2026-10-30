@@ -136,7 +136,7 @@ plot_biomass <- function(model_result, line_size = 1.2, line_color = NULL, line_
       ss_ba <- quantity$se
       ss_ba <- as.data.frame(ss_ba)
       ci <- data.frame(
-        AgeGroup = rep(levels(AgeLabels), times = ncol(BA)),
+        AgeGroup = rep(AgeLabels, times = ncol(BA)),
         Year     = rep(Year, each = nrow(BA)),
         estimate = ss_ba[, "Estimate"],
         lower    = ss_ba[, "Estimate"] - 1.96 * ss_ba[, "Std. Error"],

@@ -49,6 +49,9 @@
 .acl_survey_data <- function(data.CatL) {
   if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)
     stop("data.CatL must contain length labels and time columns.", call. = FALSE)
+  # Use the same table representation as fitting. In particular, tibble's
+  # one-column `[` result is still a table, while factors must retain labels.
+  data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
   original <- as.matrix(data.CatL[, -1L, drop = FALSE])
   observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
   if (any(is.na(observed) & !is.na(original)) ||
@@ -57,7 +60,7 @@
   mask <- is.finite(observed) & observed > 0
   if (!any(mask)) stop("No positive finite observations are available.", call. = FALSE)
   years <- suppressWarnings(as.numeric(sub("^X", "", colnames(data.CatL)[-1L])))
-  labels <- trimws(as.character(data.CatL[, 1L]))
+  labels <- trimws(as.character(data.CatL[[1L]]))
   list(observed = observed, mask = mask, years = years, labels = labels)
 }
 
@@ -106,5 +109,5 @@
   survey <- .acl_survey_data(data.CatL)
   unknown <- as.character(unlist(lapply(seq_along(models), function(i)
     .acl_validate_survey_fit(models[[i]], survey, paste("Model", i))), use.names = FALSE))
-  list(verified = !length(unknown), issues = unknown)
+  list(verified = !length(unknown), issues = unknown, n_obs = sum(survey$mask))
 }

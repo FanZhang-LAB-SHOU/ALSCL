@@ -1,4 +1,4 @@
-# ALSCL 2.2.7: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.8: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。

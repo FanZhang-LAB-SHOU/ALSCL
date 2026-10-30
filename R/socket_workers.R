@@ -5,11 +5,18 @@
                                     settings = list()) {
   package_path <- normalizePath(getNamespaceInfo(asNamespace("ALSCL"), "path"),
                                 winslash = "/", mustWork = TRUE)
-  initialize <- function(paths, package_path, cache, dll_path, settings) {
+  source_mode <- !file.exists(file.path(package_path, "Meta", "package.rds"))
+  initialize <- function(paths, package_path, source_mode, cache, dll_path, settings) {
     .libPaths(c(dirname(package_path), paths))
     if (!is.null(cache)) options(ALSCL.tmb.cache = cache)
     options(settings)
-    loadNamespace("ALSCL", lib.loc = dirname(package_path))
+    if (source_mode) {
+      if (!requireNamespace("pkgload", quietly = TRUE))
+        stop("Install pkgload to run socket workers from a source checkout, or install ALSCL first.",
+             call. = FALSE)
+      pkgload::load_all(package_path, quiet = TRUE, export_all = FALSE,
+                        helpers = FALSE)
+    } else loadNamespace("ALSCL", lib.loc = dirname(package_path))
     loaded <- normalizePath(getNamespaceInfo(asNamespace("ALSCL"), "path"),
                             winslash = "/", mustWork = TRUE)
     if (!identical(loaded, package_path))
@@ -23,6 +30,6 @@
   initialize <- utils::removeSource(initialize)
   environment(initialize) <- baseenv()
   parallel::clusterCall(cl, initialize, .libPaths(), package_path,
-                        cache, dll_path, settings)
+                        source_mode, cache, dll_path, settings)
   invisible(NULL)
 }

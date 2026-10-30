@@ -1,3 +1,21 @@
+# ALSCL 2.2.8
+
+- Align survey observations and predictions independently of matrix names; validate residual caps and full-simulator process inputs before random draws or file writes.
+- Match quick-simulation tail probabilities to the model core; validate biological inputs, generated outputs and full-simulator probability sums before saving.
+- Normalize tibble and factor survey inputs consistently across fitting, diagnostics and comparison; slice time-dependent maps for retrospective peels.
+- Validate all requested F/comparison uncertainty, retain numeric age ordering and matrix-position coordinates, and honor residual labels and title alignment.
+- Direct F time-series comparisons to the explicit apical/mean helper instead of silently omitting F. Keep grid-free defaults and refresh affected manual figures.
+- Load the same source checkout on development socket workers; check source and installed workflows in CI.
+
+### 简体中文
+
+- 调查拟合图不受矩阵行列名影响；残差截断必须为正，完整模拟过程参数在随机抽样及写文件前验证。
+- 快速模拟的尾部概率与核心一致；保存前检查生物输入、生成结果及完整模拟器概率和。
+- 拟合、诊断与比较统一解析 tibble 和因子观测；回溯同步截短按时期设置的 map。
+- F 和比较图检查完整不确定性，统一年龄顺序及矩阵位置坐标，残差图遵守标签和标题位置。
+- F 时间序列比较明确转用最大值／均值汇总函数，不再静默丢弃；保留默认无网格并刷新相关配图。
+- 开发模式的 socket 进程加载同一源码目录；CI 检查源码及安装模式。
+
 # ALSCL 2.2.7
 
 - Reject explicitly finite outer length bounds with an actionable message; the model retains tail-absorbing first/last bins, existing interval labels and default inputs.

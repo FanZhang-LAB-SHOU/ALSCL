@@ -97,7 +97,7 @@ plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_ty
       ss_cna <- quantity$se
       ss_cna <- as.data.frame(ss_cna)
       ci <- data.frame(
-        AgeGroup = rep(levels(AgeLabels), times = ncol(CNA)),
+        AgeGroup = rep(AgeLabels, times = ncol(CNA)),
         Year     = rep(Year, each = nrow(CNA)),
         estimate = ss_cna[, "Estimate"],
         lower    = ss_cna[, "Estimate"] - 1.96 * ss_cna[, "Std. Error"],

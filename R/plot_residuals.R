@@ -21,7 +21,8 @@
 #' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
 #' @param type Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length".
-#' @param resid_cap Numeric or NULL. Symmetrically cap residuals at +/- this value.
+#' @param resid_cap Finite positive numeric scalar or NULL. Symmetrically cap
+#'   residuals at +/- this value; NULL disables capping.
 #'   Useful for species with many length bins where tail bins (e.g. >120 for tuna)
 #'   have very few observations, producing extreme log-residuals that distort the
 #'   plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
@@ -67,6 +68,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
 
 
   type <- match.arg(type)
+  if (!is.null(resid_cap)) .acl_scalar(resid_cap, "resid_cap", 0, TRUE)
   if (length(f) != 1L || !is.finite(f) || f <= 0 || f > 1) stop("f must be in (0, 1].")
   smoother <- function(data, x, group) {
     valid <- is.finite(data[[x]]) & is.finite(data$residual)
@@ -121,8 +123,9 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
-      ggplot2::labs(x=.acl_lab("x","year"),y=.acl_lab("y","residual"),title=.acl_title("resid_length"))+
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "year") else xlab,
+        y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,
+        title = if (is.null(title)) .acl_title("resid_length") else title)
 
     data_out <-plot_data
 
@@ -160,8 +163,10 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +
-      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+ggplot2::labs(x=.acl_lab("x","length"),y=.acl_lab("y","residual"),title=.acl_title("resid_year"))+
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
+      ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "length") else xlab,
+        y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,
+        title = if (is.null(title)) .acl_title("resid_year") else title)
 
     data_out <-df_long
 

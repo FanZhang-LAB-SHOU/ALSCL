@@ -86,7 +86,18 @@ test_that("actual multistart and retrospective workers use the loaded installati
   custom <- file.path(folder, "library")
   dir.create(custom)
   installed <- getNamespaceInfo(asNamespace("ALSCL"), "path")
-  expect_true(file.copy(installed, custom, recursive = TRUE))
+  if (file.exists(file.path(installed, "Meta", "package.rds"))) {
+    expect_true(file.copy(installed, custom, recursive = TRUE))
+  } else {
+    # test_local() loads a source checkout, which cannot be copied as an
+    # installed library. Still exercise the isolated-installation regression.
+    install_log <- file.path(folder, "install.log")
+    status <- system2(file.path(R.home("bin"), "R"),
+      c("CMD", "INSTALL", shQuote(paste0("--library=", custom)), shQuote(installed)),
+      stdout = install_log, stderr = install_log)
+    expect_equal(status, 0L, info = paste(readLines(install_log, warn = FALSE), collapse = "\n"))
+    if (status != 0L) return(invisible(NULL))
+  }
   config <- file.path(folder, "config.rds")
   saveRDS(list(paths = .libPaths(), custom = custom, folder = folder,
     cache = getOption("ALSCL.tmb.cache"),

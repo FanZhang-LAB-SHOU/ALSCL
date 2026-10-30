@@ -73,7 +73,12 @@ retro_acl(
 
 \item{parameters.U}{Optional upper bounds for parameters.}
 
-\item{map}{Optional TMB map argument for fixing parameters.}
+\item{map}{Optional TMB map argument for fixing or tying parameters.
+Maps for dev_log_R and dev_log_F must match the complete input time grid.
+Each peel retains the corresponding earliest periods, preserving fixed
+entries and ties and dropping unused factor levels. F maps use group-by-time
+column-major order (one group with F_structure = "year"). Other maps,
+including dev_log_N0 and named NULL releases, are unchanged.}
 
 \item{len_mid}{Optional numeric vector of length bin midpoints.}
 

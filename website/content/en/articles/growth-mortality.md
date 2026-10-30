@@ -284,3 +284,7 @@ plot_VB(b, se = FALSE, ylab = "Length (cm)",
         axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
         age_range = c(1, 15), text_size = 4)
 ```
+
+### Consistency corrections
+
+Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.

@@ -52,7 +52,8 @@ Sparse facets use a linear trend; otherwise the span is enlarged when needed for
 
 \item{type}{Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length".}
 
-\item{resid_cap}{Numeric or NULL. Symmetrically cap residuals at +/- this value.
+\item{resid_cap}{Finite positive numeric scalar or NULL. Symmetrically cap
+residuals at +/- this value; NULL disables capping.
 Useful for species with many length bins where tail bins (e.g. >120 for tuna)
 have very few observations, producing extreme log-residuals that distort the
 plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.}

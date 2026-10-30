@@ -113,6 +113,12 @@ The Elog_index represents the estimated abundance of the population within certa
 The resulting plot is a line graph, with data points represented by distinct markers.
 The function allows for faceted plots to better visualize the distribution of counts across different length groups or years.
 }
+\details{
+Predicted and observed matrices are aligned by position with fitted
+year and length metadata, independently of optional matrix dimnames. Missing
+and zero observations remain excluded. Dimensions and metadata must agree;
+predictions must be finite, including after an exponential transformation.
+}
 \examples{
 \dontrun{
 # Use 'run_acl' to obtain 'model_result'

@@ -400,3 +400,7 @@ if (!is.null(borders)) {
                   len_upper = c(borders, Inf))
 }
 ```
+
+### Consistency corrections
+
+Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.

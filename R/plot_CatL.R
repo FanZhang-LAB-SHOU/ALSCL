@@ -39,6 +39,10 @@
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the plot.
+#' @details Predicted and observed matrices are aligned by position with fitted
+#'   year and length metadata, independently of optional matrix dimnames. Missing
+#'   and zero observations remain excluded. Dimensions and metadata must agree;
+#'   predictions must be finite, including after an exponential transformation.
 #'
 #' @examples
 #' \dontrun{
@@ -75,61 +79,37 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
 
 
 
-  # Apply exp transformation if exp_transform is TRUE
-  transform_fn <- if(exp_transform) exp else identity
+  if (!is.logical(exp_transform) || length(exp_transform) != 1L || is.na(exp_transform))
+    stop("exp_transform must be TRUE or FALSE.", call. = FALSE)
   type <- match.arg(type)
+  Elog_index <- model_result$report$Elog_index
+  if (is.data.frame(Elog_index)) Elog_index <- as.matrix(Elog_index)
+  logN_at_len <- .acl_observed_log(model_result)
+  if (!is.matrix(Elog_index) || !is.numeric(Elog_index) || !length(Elog_index) ||
+      !identical(dim(Elog_index), dim(logN_at_len)))
+    stop("Observed and predicted log abundance must be numeric matrices with matching dimensions.", call. = FALSE)
+  if (any(!is.finite(Elog_index)))
+    stop("Predicted log abundance must contain finite values.", call. = FALSE)
+  Year <- .acl_plot_year(model_result, ncol(Elog_index))
+  # Optional row/column names are not indices or replacement coordinates.
+  dimnames(Elog_index) <- dimnames(logN_at_len) <- NULL
+  transform_fn <- if (exp_transform) exp else identity
+  Elog_index <- transform_fn(Elog_index)
+  logN_at_len <- transform_fn(logN_at_len)
+  if (any(!is.finite(Elog_index)) || any(is.infinite(logN_at_len)))
+    stop("Exponential transformation produced nonfinite abundance; use exp_transform = FALSE.", call. = FALSE)
 
-  len_label=model_result[["len_label"]]
-
-  if(type=="length"){
-
-
-
-    # Transform the logN_at_len data
-
-    logN_at_len<-.acl_observed_log(model_result)
-    # Extract the Elog_index data
-    Elog_index <- model_result[["report"]][["Elog_index"]]
-
-    # Make sure it's a matrix
-    if(!is.matrix(Elog_index)){
-      Elog_index <- as.matrix(Elog_index)
-    }
-
-    # Create Year variable from column names of Elog_index (assuming columns are years)
-
-    Year <-model_result[["year"]]
-
-
-    # Create LengthGroup variable from row names of Elog_index
+  if (type == "length") {
+    len_label <- model_result$len_label
+    if (length(len_label) != nrow(Elog_index) || anyNA(len_label) ||
+        any(!nzchar(as.character(len_label))) || anyDuplicated(len_label))
+      stop("Length labels must identify every matrix row uniquely.", call. = FALSE)
     len_levels <- .acl_fix_len_labels(len_label)
-
-    # Convert matrix to data frame in long format
-    Elog_index_long <- reshape2::melt(Elog_index)
-    colnames(Elog_index_long) <- c("LengthGroup", "Year", "Count")
-    Elog_index_long$Year <- Year[match(Elog_index_long$Year, 1:length(Year))]
-
-    Elog_index_long$LengthGroup <- factor(len_levels[Elog_index_long$LengthGroup],
-                                          levels = len_levels)
-
-
-
-    # Convert matrix to data frame in long format
-    logN_at_len_long <- reshape2::melt(logN_at_len)
-    colnames(logN_at_len_long) <- c("LengthGroup", "Year", "Count")
-
-    logN_at_len_long$Year <- logN_at_len_long %>%
-      dplyr::mutate(Year = as.numeric(gsub("X", "", Year))) %>%
-      dplyr::pull(Year)
-
-
-    logN_at_len_long$LengthGroup <- factor(len_levels[as.integer(logN_at_len_long$LengthGroup)],
-                                           levels = len_levels)
-
-
-    # Just before the plotting, apply the transformation function to 'Count' column
-    Elog_index_long$Count <- transform_fn(Elog_index_long$Count)
-    logN_at_len_long$Count <- transform_fn(logN_at_len_long$Count)
+    long_data <- function(value) data.frame(
+      LengthGroup = factor(rep(len_levels, ncol(value)), levels = len_levels),
+      Year = rep(Year, each = nrow(value)), Count = as.numeric(value))
+    Elog_index_long <- long_data(Elog_index)
+    logN_at_len_long <- long_data(logN_at_len)
 
     # Plot Elog_index over the years using ggplot2
     p <- ggplot2::ggplot() +
@@ -149,11 +129,11 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
   }
 
   if(type=="year"){
-    # Define the data
-    Elog_index <- model_result[["report"]][["Elog_index"]]
-    logN_at_len<-.acl_observed_log(model_result)
-    len_mid <- model_result[["len_mid"]]
-    year <- model_result[["year"]]
+    len_mid <- model_result$len_mid
+    year <- Year
+    if (!is.numeric(len_mid) || length(len_mid) != nrow(Elog_index) ||
+        any(!is.finite(len_mid)) || any(diff(len_mid) <= 0))
+      stop("Length midpoints must match matrix rows and be finite and increasing.", call. = FALSE)
 
     # Transform the matrix into a data frame and add column names
     df1 <- as.data.frame(Elog_index)
@@ -168,14 +148,12 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
     df_long1 <- df1 %>%
       tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
 
-    df_long1$Abundance <- transform_fn(df_long1$Abundance)
     year_levels <- paste("Year", year)
     df_long1$year <- factor(paste("Year", df_long1$year), levels = year_levels)
 
     df_long2 <- df2 %>%
       tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
 
-    df_long2$Abundance <- transform_fn(df_long2$Abundance)
     df_long2$year <- factor(paste("Year", df_long2$year), levels = year_levels)
 
     # Plot the data using ggplot2

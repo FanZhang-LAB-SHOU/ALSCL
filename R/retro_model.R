@@ -1,5 +1,38 @@
 utils::globalVariables(c("Variable", "RetrospectiveYear"))
 
+# Time-dependent maps describe the complete input grid. Truncate their
+# column-major entries with each peel, retaining ties and fixed (NA) entries.
+.acl_retro_map <- function(fit_args, peel, model_type) {
+  mapping <- fit_args$map
+  if (is.null(mapping) || !is.list(mapping)) return(mapping)
+  periods <- ncol(fit_args$data.CatL) - 1L
+  kept <- periods - peel
+  for (name in c("dev_log_R", "dev_log_F")) {
+    value <- mapping[[name]]
+    if (is.null(value)) next
+    groups <- 1L
+    if (name == "dev_log_F") {
+      structure <- match.arg(fit_args$F_structure %||% "group_year",
+                             c("group_year", "year"))
+      if (structure == "group_year")
+        groups <- if (model_type == "acl")
+          .acl_positive_integer(fit_args$nage, "nage", 2L) else nrow(fit_args$data.CatL)
+    }
+    if (length(value) != groups * periods)
+      stop("Map length does not match parameter ", name,
+           " on the complete input time grid.", call. = FALSE)
+    if (!is.factor(value))
+      stop("map entries must be factors (factor(NA) fixes a parameter), or NULL to unfix.",
+           call. = FALSE)
+    if (peel > 0L) {
+      # Unused levels would create parameters with no retained observations
+      # in TMB. Dropping them preserves all equality relationships that remain.
+      mapping[[name]] <- droplevels(value[seq_len(groups * kept)])
+    }
+  }
+  mapping
+}
+
 # Retain compact results rather than serializing a live TMB objective between
 # processes. A failed fit still contributes a diagnostic row and a missing rho.
 .acl_retro_fit <- function(peel, fit_args, model_type, silent) {
@@ -9,6 +42,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
     colnames(fit_args$data.CatL)[seq.int(2L, end_col)])))
   error <- NULL
   fit <- tryCatch({
+    if ("map" %in% names(fit_args))
+      fit_args["map"] <- list(.acl_retro_map(fit_args, peel, model_type))
     for (name in c("data.CatL", "data.wgt", "data.mat"))
       fit_args[[name]] <- fit_args[[name]][, seq_len(end_col), drop = FALSE]
     do.call(if (model_type == "acl") run_acl else run_alscl, fit_args)
@@ -71,7 +106,12 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param parameters Optional custom starting parameter list.
 #' @param parameters.L Optional lower bounds for parameters.
 #' @param parameters.U Optional upper bounds for parameters.
-#' @param map Optional TMB map argument for fixing parameters.
+#' @param map Optional TMB map argument for fixing or tying parameters.
+#'   Maps for dev_log_R and dev_log_F must match the complete input time grid.
+#'   Each peel retains the corresponding earliest periods, preserving fixed
+#'   entries and ties and dropping unused factor levels. F maps use group-by-time
+#'   column-major order (one group with F_structure = "year"). Other maps,
+#'   including dev_log_N0 and named NULL releases, are unchanged.
 #' @param len_mid Optional numeric vector of length bin midpoints.
 #' @param len_border Optional numeric vector of length bin borders.
 #' @param len_lower Optional lower bin boundaries (ALSCL only). The first entry must be

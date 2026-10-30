@@ -50,5 +50,12 @@ length-dependent. Supports quarterly (sub-annual) time steps.
 Natural and mean fishing mortality must be finite and nonnegative.
 Zero total mortality produces zero catch through the continuous Baranov
 limit. Invalid biological arrays are rejected before simulation; a replicate
-with nonfinite output is rejected before its file is written.
+with nonfinite output is rejected before its file is written. Age-length
+probabilities must sum to one for each age; each growth-transition column
+must also sum to one, so probability arrays cannot lose population mass.
+Initial total mortality and all process/observation standard deviations
+must be finite and nonnegative. AR(1) coefficients may be negative but must
+lie strictly between -1 and 1. Beverton-Holt alpha and initial recruitment
+may be zero; beta must be positive. These process inputs are checked before
+creating the output directory or drawing random numbers.
 }
