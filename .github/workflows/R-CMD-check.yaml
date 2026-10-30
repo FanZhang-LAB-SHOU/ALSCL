@@ -33,10 +33,10 @@ jobs:
       - name: Check manual plot export guards
         run: Rscript scripts/test_plot_exports.R
       - name: Check source checkout socket workers
-        shell: bash
+        shell: Rscript {0}
         run: |
-          R CMD INSTALL .
-          Rscript -e 'testthat::test_local(filter="parallel|core-225", stop_on_failure=TRUE)'
+          callr::rcmd("INSTALL", ".", show = TRUE, fail_on_status = TRUE)
+          testthat::test_local(filter = "parallel|core-225", stop_on_failure = TRUE)
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual")'
