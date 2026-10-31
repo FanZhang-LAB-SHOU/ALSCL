@@ -51,12 +51,14 @@ plot_CatL(b, type = "length", exp_transform = TRUE, facet_ncol = 4,
 ```r
 # 绘制本图
 plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
 [![调查拟合 year 对数尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
+
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`type = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
 
 朱红色为观测对数，深蓝色为拟合的 Elog_index。
 
@@ -70,12 +72,14 @@ plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
 ```r
 # 绘制本图
 plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
 [![调查拟合 year 原尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
+
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`type = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
 
 原尺度曲线为 exp(Elog_index)，即对数正态中位数。
 
@@ -396,3 +400,7 @@ plot_deviance(saved, type = "F", se = FALSE)
 调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。
 
 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
+
+调查拟合图标题表示调查指数，山脊图标题表示调查体长组成，两者都不是渔业捕获量估计。过程偏差图在 `log = TRUE` 时标为对数偏差（参照值 0），在 `log = FALSE` 时标为乘数（参照值 1）。取指数只改变尺度，不改变已拟合的过程；两者都不是似然偏差统计量。
+
+单模型与比较调查拟合图使用调查指数标签，不再取渔业捕获量标签。可用 `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` 统一设置；未设置 `survey` 时仍兼容旧的自定义 `ylab$abundance`，否则默认为 “Survey index”。单模型对数图会增加 “Log” 前缀，显式 `ylab` 仍优先。`ylab$catch` 继续用于真实捕获量图，不会改变调查指数标签。

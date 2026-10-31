@@ -55,4 +55,9 @@ supply the plotted coordinates. With se = TRUE, the standard-error table
 must have one finite estimate and finite nonnegative standard error per
 plotted value. Missing or invalid uncertainty produces an explicit error;
 use se = FALSE to plot reported estimates alone.
+
+Titles, axis labels, time-axis breaks and expansion inherit
+\code{acl_theme_set()}. Title keys are N, NA_ and NL;
+append \code{_se} for interval plots (use \code{NA_se} for NA).
+Axis labels use \code{xlab$year} and \code{ylab$abundance}.
 }

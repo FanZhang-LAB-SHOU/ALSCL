@@ -42,7 +42,7 @@ Excel 使用科学记数显示小数，例如 `5.1361E-02` 等于 `0.051361`；�
 
 ## 导入自己的实测数据
 
-[real_data_workflow.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) 提供指南辅助函数，需 `source()`，不属于包的导出 API。Excel 读取采用 [readxl::read_excel](https://readxl.tidyverse.org/reference/read_excel.html)，保留原始年份表头并显式转换数值。
+下面保留旧的 [real_data_workflow.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) 脚本工作流，其 `validate_survey_tables()` 和 `fit_survey_tables()` 仍需 `source()`。当前开发版本另提供公开的 `read_survey_csv()`、`read_survey_excel()`、`prepare_alscl_data()` 和 `check_alscl_data()`，无需加载仓库脚本；完整用法见[评估工作流](assessment-workflows.html)。Excel 读取需要可选的 `readxl`，保留时间表头并显式转换数字文本。
 
 
 ```r

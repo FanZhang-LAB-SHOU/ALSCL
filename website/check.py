@@ -30,6 +30,11 @@ for row in inventory:
 blocks=[]
 for path,soup in pages.items():
     name=path.relative_to(SITE).as_posix()
+    for paragraph in soup.select('main p'):
+        prose=''.join(str(part) for part in paragraph.find_all(string=True)
+                      if part.find_parent(['code','pre']) is None)
+        if r'\n\n' in prose:
+            errors.append(f'{name}: escaped paragraph break is visible in prose')
     if name in ('index.html','zh/index.html'):
         current=soup.select_one('.current-version')
         if current is None or current.get_text(strip=True)!=version:

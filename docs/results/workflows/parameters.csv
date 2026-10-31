@@ -1,0 +1,16 @@
+"parameter","scale","status","estimate","std_error","conf_low","conf_high","numerical_ok"
+"log_init_Z","natural","estimated",0.419838507758266,0.0688676407116384,0.304408361887255,0.57903919427145,TRUE
+"mean_log_R","natural","estimated",349.308056588024,21.1569769940399,310.207873318048,393.33662647628,TRUE
+"log_sigma_log_R","natural","estimated",0.235216451442596,0.0401622202922387,0.168317242853556,0.328705354788779,TRUE
+"mean_log_F","natural","estimated",0.273599546699298,0.016197755883002,0.243625184124284,0.307261797351268,TRUE
+"log_sigma_index","natural","estimated",0.195041937445736,0.00768158701302416,0.180552721591377,0.210693901633235,TRUE
+"log_sigma_log_N0","natural","fixed",0.2,NA,NA,NA,TRUE
+"logit_log_R","natural","fixed",0.1,NA,NA,NA,TRUE
+"log_sigma_log_F","natural","fixed",0.2,NA,NA,NA,TRUE
+"logit_log_F_y","natural","fixed",0.75,NA,NA,NA,TRUE
+"logit_log_F_l","natural","fixed",0.75,NA,NA,NA,TRUE
+"log_vbk","natural","fixed",0.2,NA,NA,NA,TRUE
+"log_Linf","natural","fixed",60,NA,NA,NA,TRUE
+"log_t0","natural","fixed",0.0166666666666667,NA,NA,NA,TRUE
+"log_cv_len","natural","fixed",0.2,NA,NA,NA,TRUE
+"log_cv_grow","natural","fixed",0.2,NA,NA,NA,TRUE

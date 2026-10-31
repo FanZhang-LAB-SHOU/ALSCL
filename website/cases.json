@@ -62,5 +62,21 @@
       "en": "Refit successively shorter time series and interpret retrospective trajectories and Mohn’s rho.",
       "zh": "逐次截短时间序列并重新拟合，解释回溯轨迹与 Mohn rho。"
     }
+  },
+  {
+    "slug": "case-sensitivity-projection",
+    "title": {
+      "en": "How sensitive is the assessment, and what happens under future F?",
+      "zh": "评估对假设有多敏感，未来 F 会怎样改变结果？"
+    },
+    "group": "scenarios",
+    "group_title": {
+      "en": "Sensitivity and future scenarios",
+      "zh": "敏感性与未来情景"
+    },
+    "description": {
+      "en": "Compare M and shared-F assumptions on the same data, profile a free parameter, and project explicitly defined future F scenarios.",
+      "zh": "对同一份数据比较 M 与共享 F 假设，对自由参数做剖面，再投影假设明确的未来 F 情景。"
+    }
   }
 ]

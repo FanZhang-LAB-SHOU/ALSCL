@@ -1,4 +1,4 @@
-#' Run stock assessment model (with optional parallel processing)
+#' Fit simulated datasets with either assessment model
 #'
 #' This function runs a stock assessment model using the specified iteration range.
 #' Supports parallel execution on multiple CPU cores for faster computation.
@@ -25,15 +25,28 @@
 #' @export
 #' @param train_times Number of optimization passes per replicate.
 #' @param control Named nlminb control settings.
-sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
+#' @param model Model fitted to each simulation, "acl" (default) or "alscl".
+#' @details M and F are per model time step, including quarterly simulations.
+#'   Each replicate uses one fitting worker and sequential standard errors to
+#'   avoid nested parallelism. Model-specific parameters and maps must match the
+#'   selected model. sim_acl() retains the original ACL interface; sim_alscl()
+#'   provides the corresponding ALSCL convenience interface.
+sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
-                    F_structure = c("group_year", "year"), polish = TRUE) {
+                    F_structure = c("group_year", "year"), polish = TRUE,
+                    model = c("acl", "alscl")) {
+  model <- match.arg(model)
   F_structure <- match.arg(F_structure)
   ncores <- .acl_positive_integer(ncores, "ncores")
-  if (!length(iter_range)) stop("iter_range must not be empty.")
+  if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||
+      any(iter_range < 1 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
+      anyDuplicated(iter_range))
+    stop("iter_range must contain distinct positive integer replicate IDs.", call. = FALSE)
+  old <- options(ALSCL.sd_cores = 1L)
+  on.exit(options(old), add = TRUE)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  info <- .acl_compile("ACL")
+  info <- .acl_compile(toupper(model))
   cache <- dirname(dirname(info$cpp_path))
   # Force caller expressions before serializing the closure to socket workers.
   # Global variables referenced by promises are not exported by parLapply().
@@ -43,6 +56,7 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     parameters.U = parameters.U, map = map, M = M, train_times = train_times,
     control = control, silent = TRUE, F_structure = F_structure, polish = polish)
   fit_one <- function(iter) {
+    started <- proc.time()[["elapsed"]]
     result <- tryCatch({
       e <- new.env(parent = emptyenv())
       load(file.path(sim_data_path, paste0("sim_rep", iter)), envir = e)
@@ -57,9 +71,12 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
         coefficients <- stats::coef(stats::lm(stats::qlogis(s$q_surv[valid]) ~ s$len_mid[valid]))
         L50 <- -coefficients[1]/coefficients[2]; L95 <- L50+log(19)/coefficients[2]
       }
-      do.call(run_acl, c(tables, list(rec.age = s$ages[1], nage = s$nage, sel_L50 = unname(L50), sel_L95 = unname(L95),
+      do.call(if (model == "acl") run_acl else run_alscl,
+        c(tables, list(rec.age = s$ages[1], nage = s$nage, sel_L50 = unname(L50), sel_L95 = unname(L95),
         len_mid = s$len_mid, len_border = s$len_border, growth_step = step), fit_args))
     }, error = function(e) list(converge = "FAILED", error = conditionMessage(e), iter = iter))
+    result$iter <- iter
+    if (is.null(result$elapsed)) result$elapsed <- unname(proc.time()[["elapsed"]] - started)
     .acl_save_simulation_result(result, file.path(output_dir, paste0("result_rep_", iter)))
     result
   }
@@ -72,6 +89,25 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   names(results) <- paste0("result_rep_", iter_range)
   results
 }
+
+#' Fit simulation replicates with ACL
+#' @inheritParams sim_model
+#' @return The named list of replicate fits or error records returned by sim_model().
+#' @export
+sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
+                    parameters = NULL, parameters.L = NULL, parameters.U = NULL,
+                    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
+                    F_structure = c("group_year", "year"), polish = TRUE) {
+  sim_model(iter_range, sim_data_path, output_dir, parameters, parameters.L,
+    parameters.U, map, M, ncores, train_times, control, F_structure, polish,
+    model = "acl")
+}
+
+#' Fit simulation replicates with ALSCL
+#' @param ... Arguments passed to sim_model(), excluding model.
+#' @return The named list of replicate fits or error records returned by sim_model().
+#' @export
+sim_alscl <- function(...) sim_model(..., model = "alscl")
 
 # Shared by the repository tutorial and batch fitting; validate coordinates
 # before converting matrices to tables so rows can never be silently recycled.

@@ -1,6 +1,6 @@
-> 用于渔业资源评估的年龄与体长结构统计捕获体长模型
+> 利用调查体长数据的年龄结构与年龄—体长联合结构资源评估模型
 
-**ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构模型 **ACL** 和年龄—体长联合结构模型 **ALSCL**，以及模拟、诊断、模型比较和绘图工具。
+**ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构 catch-at-length 模型 **ACL**，以及年龄—体长联合结构统计 catch-at-length 模型 **ALSCL**（age- and length-structured statistical catch-at-length），并提供模拟、诊断、模型比较和绘图工具。
 
 可以从 [完整拟合示例](articles/first-model.html) 开始，从 [首页目录](#contents) 查阅基本功能，阅读 [专题案例](articles/index.html)，或通过 [函数参考](reference/index.html) 查找具体用法。模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。
 
@@ -31,7 +31,7 @@ library(ALSCL)
 | | ACL | ALSCL |
 |---|---|---|
 | 种群状态 | 年龄 × 时间的尾数 | 体长 × 年龄 × 时间的尾数 |
-| 生长表达 | 年龄—体长概率矩阵 | 生长转移矩阵 |
+| 体长与生长表达 | 年龄—体长概率矩阵 | 补充和初始状态使用年龄—体长概率矩阵；存活个体通过生长转移矩阵推进 |
 | 捕捞死亡率 | 按年龄估计 | 按体长估计；年龄别 F 由模型推导 |
 | 拟合函数 | `run_acl()` | `run_alscl()` |
 

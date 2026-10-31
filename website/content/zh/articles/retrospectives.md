@@ -21,9 +21,11 @@ rb$rho_text
 # 从仓库根目录重建图、结果 CSV 和会话记录
 source("scripts/ytf_workflow.R", encoding = "UTF-8")
 result <- run_ytf_guide(out = "my_ytf_guide", npeels = 3)
-# 保留活跃结果用于需要 TMB 对象的图
+# 已保存的观测和拟合报告即可用于这张图
 plot_ridges(result$alscl)
 ```
+
+`plot_ridges()` 需要已保存的观测和拟合报告，不依赖活跃 TMB 对象；移除 `obj` 后仍可绘图。这不代表需要计算编译模型的其他操作也可以脱离活跃对象。
 
 默认输出目录为 `docs`，会覆盖同名图和结果文件；使用自己的目录可保留仓库版本。工作流依赖 `ggplot2`、`patchwork`、`jsonlite`。首次 TMB 编译需要编译器，回溯要执行多次优化。可设置 `options(ALSCL.tmb.cache="可写路径")`；保存 `.rds` 不能保证其中 TMB 外部指针跨会话有效，重新打开 R 后应重拟合依赖活跃 `obj` 的操作。
 

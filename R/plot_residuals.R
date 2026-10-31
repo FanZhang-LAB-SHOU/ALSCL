@@ -1,26 +1,29 @@
-#' @title Plot the Distribution of Model Residuals from an Age-Structured Assessment Model (ACL)
+#' @title Plot conditional log residuals from an ACL or ALSCL fit
 #'
-#' @description This function takes the output from the `run_acl` function and creates a facet plot of the residuals for each index.
-#' The residuals reflect the difference between the observed and expected values from the ACL model, a type of age-structured
-#' assessment model commonly used in fishery science. The function can handle two types of residuals:
-#' 1) "length", where residuals are calculated over length groups for each year, and
-#' 2) "year", where residuals are calculated over years for each length group.
-#' Each index is represented in a separate facet. Missing and zero observations
+#' @description Plot observed log survey index minus fitted Elog_index.
+#' The type argument selects the layout of these same residuals:
+#' 1) "length" plots residuals over time, with one facet per length group;
+#' 2) "year" plots residuals over length, with one facet per model time step.
+#' Missing and zero observations
 #' are excluded using the fit's stored observations, including saved fits without
 #' a live TMB object. Older fits use the observation mask in the TMB data.
 #'
-#' @param model_result A list obtained from the `run_acl` function. This list should contain a "report" component that includes
-#' a "resid_index" component, representing the residuals for each index.
+#' @param model_result An ACL or ALSCL fitted result with report$resid_index,
+#'   stored observations and time/length metadata.
 #' @param f Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
 #' influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
-#' Sparse facets use a linear trend; otherwise the span is enlarged when needed for at least five neighbors.
+#' Each facet is handled independently: fewer than two distinct observed x values
+#' omit its trend, two to five use a linear trend, and six or more use loess.
+#' The loess span is enlarged per facet when needed for at least five neighbors.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
 #' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
-#' @param type Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length".
+#' @param type Character. "length" uses time on the x-axis and length-group
+#'   facets; "year" uses length on the x-axis and time-period facets.
+#'   Default is "length". This changes the layout, not the residual definition.
 #' @param resid_cap Finite positive numeric scalar or NULL. Symmetrically cap
 #'   residuals at +/- this value; NULL disables capping.
 #'   Useful for species with many length bins where tail bins (e.g. >120 for tuna)
@@ -75,13 +78,18 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     valid <- is.finite(data[[x]]) & is.finite(data$residual)
     counts <- vapply(split(data[[x]][valid], data[[group]][valid], drop = TRUE),
                      function(z) length(unique(z)), integer(1))
-    if (!length(counts) || min(counts) < 2L) return(NULL)
-    # Sparse facets cannot support a local polynomial; use a linear trend.
-    short <- min(counts) < 6L
-    ggplot2::geom_smooth(method = if (short) "lm" else "loess", formula = y ~ x,
-      method.args = if (short) list() else list(degree = 1),
-      span = max(f, min(1, 5/min(counts))), se = FALSE, na.rm = TRUE,
-      color = smooth_color, linetype = 2, linewidth = line_size)
+    # Facets with the same support can share a layer, but a sparse facet must
+    # not remove trends or change the method/span in better-supported facets.
+    lapply(sort(unique(counts[counts >= 2L])), function(n) {
+      selected <- names(counts)[counts == n]
+      trend_data <- data[valid & as.character(data[[group]]) %in% selected, , drop = FALSE]
+      short <- n < 6L
+      ggplot2::geom_smooth(data = trend_data,
+        method = if (short) "lm" else "loess", formula = y ~ x,
+        method.args = if (short) list() else list(degree = 1),
+        span = max(f, 5 / n), se = FALSE, na.rm = TRUE,
+        color = smooth_color, linetype = 2, linewidth = line_size)
+    })
   }
   observed_log <- .acl_observed_log(model_result)
   residuals <- model_result$report$resid_index

@@ -83,6 +83,10 @@ compare_models <- function(model1, model2, data.CatL,
   aic2 <- 2 * npar2 + 2 * obj2
   bic1 <- npar1 * log(n_obs) + 2 * obj1
   bic2 <- npar2 * log(n_obs) + 2 * obj2
+  valid_elapsed <- function(value) is.numeric(value) && length(value) == 1L &&
+    is.finite(value) && value > 0
+  elapsed_ratio <- if (valid_elapsed(model1$elapsed) && valid_elapsed(model2$elapsed))
+    round(model2$elapsed / model1$elapsed, 4) else NA_real_
 
   summary_df <- data.frame(
     Metric = c("Model Type", "Convergence", "Boundary Hit",
@@ -101,7 +105,7 @@ compare_models <- function(model1, model2, data.CatL,
       "0 (ref)",
       "0 (ref)",
       round(.acl_max_gradient(model1), 6),
-      "1.0 (ref)"
+      if (valid_elapsed(model1$elapsed)) "1.0 (ref)" else NA_character_
     )),
     Model2 = as.character(c(
       model2_name,
@@ -115,7 +119,7 @@ compare_models <- function(model1, model2, data.CatL,
       round(aic2 - aic1, 2),
       round(bic2 - bic1, 2),
       round(.acl_max_gradient(model2), 6),
-      ""
+      elapsed_ratio
     )),
     stringsAsFactors = FALSE
   )

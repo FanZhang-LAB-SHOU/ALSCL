@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_pla.R
 \name{plot_pla}
 \alias{plot_pla}
-\title{Visualize the Probability Length at Age in Fisheries Stock Assessment through Heatmap}
+\title{Plot the probability of length given age}
 \usage{
 plot_pla(
   model_result,
@@ -23,7 +23,8 @@ plot_pla(
 )
 }
 \arguments{
-\item{model_result}{A list that contains model output. The model output should include a PLA report.}
+\item{model_result}{An ACL or ALSCL fitted result containing report$pla
+and length-group metadata.}
 
 \item{low_col}{Character or NULL. NULL inherits the global low_col setting.}
 
@@ -56,15 +57,12 @@ NULL inherits global x_breaks; when both are NULL all age bins are labelled.}
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }
 \value{
-A ggplot object showing the heatmap of the probability length at age.
+A ggplot heatmap of the probability of length given age.
 }
 \description{
-Display the age-length key reported by an age-structured catch-at-length
-(ACL) or age-and-length-structured catch-at-length (ALSCL) fit.
-It generates a heatmap to visualize the Probability Length at Age (PLA) derived from a given model result.
-The PLA matrix is an essential output from fish stock assessment models which shows the probability that a fish of a certain age is within a certain length group.
-This visualization is beneficial to understand the size structure of the fish population over age, which is crucial for setting appropriate catch limits.
-The function also allows customization of the color gradient used in the heatmap to make the contrast between different probability values more apparent.
+Display the age-length probability matrix reported by an ACL or ALSCL fit.
+Each cell shows the probability that a fish of a given age falls within
+a length group. Columns correspond to ages and rows to length groups.
 }
 \examples{
 \dontrun{

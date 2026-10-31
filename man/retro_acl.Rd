@@ -50,7 +50,7 @@ retro_acl(
 \arguments{
 \item{nyear}{Integer. Number of time columns to peel. Default is 5.}
 
-\item{data.CatL}{The Catch-at-Length data or a named input bundle, as in
+\item{data.CatL}{Survey abundance indices at length or a named input bundle, as in
 \code{retro_acl(x, nyear = 3)}.}
 
 \item{data.wgt}{The weight data.}
@@ -61,11 +61,11 @@ retro_acl(
 
 \item{nage}{The number of age classes.}
 
-\item{M}{The natural mortality rate.}
+\item{M}{Natural mortality per model time step.}
 
-\item{sel_L50}{Length at 50 percent selectivity.}
+\item{sel_L50}{Length at 50 percent survey catchability.}
 
-\item{sel_L95}{Length at 95 percent selectivity.}
+\item{sel_L95}{Length at 95 percent survey catchability.}
 
 \item{parameters}{Optional custom starting parameter list.}
 
@@ -100,7 +100,8 @@ fit_diagnostics and errors remain available.}
 
 \item{facet_row}{Integer or NULL. Number of facet rows.}
 
-\item{train_times}{Numeric. Number of optimization restarts. Default is 1.}
+\item{train_times}{Positive integer. Number of consecutive optimization passes
+per start. Default is 1; nstarts controls the number of independent starts.}
 
 \item{title}{Character or NULL. Custom plot title.}
 

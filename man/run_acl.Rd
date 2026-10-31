@@ -100,7 +100,8 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.}
 }
 \value{
-A list with report, opt, obj, est_std, vcov, pdHess, gradient,
+An alscl_fit list (legacy dollar access is unchanged) with report,
+opt, obj, est_std, vcov, pdHess, gradient,
 max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
 start_diagnostics records each start's PID, Unix start/end times, elapsed
@@ -115,6 +116,9 @@ After standard-error calculation, obj is restored to the final fitted
 parameters, including sequential and fallback paths. Its report describes
 the same fitted state as report. Saved estimates and standard errors are
 unchanged by this restoration; refit serialized results before using obj.
+recipe stores the complete resolved fitting inputs and software settings.
+Use summary(), extract_parameters(), extract_estimates(), save_assessment()
+and refit_model() for inspection, portable storage and reproducible refitting.
 }
 \description{
 Fit the ACL survey catch-at-length model

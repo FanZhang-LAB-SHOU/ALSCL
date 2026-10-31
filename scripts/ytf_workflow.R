@@ -60,9 +60,16 @@ run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
       auto_unbox=TRUE,pretty=TRUE,null="null")
   }
 for(typ in c('length','year')) for(ex in c(FALSE,TRUE)) {
- render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
-  plot_CatL(b,type=typ,exp_transform=ex,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),point_size=1,line_size=.6,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
-  note_zh=if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。'else if(typ=='length')'点为观测对数，曲线为拟合的 Elog_index。'else '朱红色为观测对数，深蓝色为拟合的 Elog_index。',note_en=if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).'else if(typ=='length')'Points are log observations; curves show fitted Elog_index.'else 'Vermilion curves are log observations; navy curves show fitted Elog_index.')
+ if (typ == 'length') {
+  render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
+   plot_CatL(b,type='length',exp_transform=ex,facet_ncol=4,x_breaks=c(2000,2010,2015),point_size=1,line_size=.6,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
+   note_zh=if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '点为观测对数，曲线为拟合的 Elog_index。',note_en=if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Points are log observations; curves show fitted Elog_index.')
+ } else {
+  render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
+   plot_CatL(b,type='year',exp_transform=ex,facet_ncol=4,x_breaks=c(10,30,50),line_size1=.6,line_size2=.4,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
+   note_zh=paste(if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '朱红色为观测对数，深蓝色为拟合的 Elog_index。','line_size1 = 0.6 控制拟合线，line_size2 = 0.4 控制观测线。'),
+   note_en=paste(if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Vermilion curves are log observations; navy curves show fitted Elog_index.','line_size1 = 0.6 controls fitted curves; line_size2 = 0.4 controls observations.'))
+ }
 }
 for(fun in c('plot_abundance','plot_biomass','plot_SSB','plot_catch')) {
  types<-switch(fun,plot_abundance=c('N','NA','NL'),plot_biomass=c('B','BA','BL'),plot_SSB=c('SSB','SBA','SBL'),plot_catch=c('CN','CNA','CNL'))
@@ -72,16 +79,16 @@ for(fun in c('plot_abundance','plot_biomass','plot_SSB','plot_catch')) {
 }
 render('recruitment','补充量','Recruitment',plot_recruitment(b,se=TRUE),note_zh='补充量对应最小年龄组；受设定的补充年龄和时间步长影响。',note_en='Recruitment enters the youngest age class; its interpretation depends on recruitment age and time step.')
 render('SSB_Rec','亲体与补充关系','Spawning biomass and recruitment',plot_SSB_Rec(b,age_at_recruitment=1),note_zh='横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。',note_en='Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.')
-render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,age_range=c(1,15),se=TRUE),note_zh='生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。',note_en='Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation.')
-render('pla','年龄长度转换','Age length conversion',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。',note_en='Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.')
+render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,se=TRUE),note_zh='生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。',note_en='Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.')
+render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。',note_en='Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.')
 for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
  fit<-if(model=='ACL')a else b
  render(paste('F',model,typ,sep='_'),paste(model,'捕捞死亡率',typ),paste(model,'fishing mortality',typ),plot_fishing_mortality(fit,type=if(model=="ACL" && typ=="length")"age" else typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
  note_zh=if(model=='ACL' && typ=='length')'当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。' else '年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。',
  note_en=if(model=='ACL' && typ=='length')'In this version, ACL length is an alias of age; the output is still age-specific F.' else 'F is an instantaneous rate per model step. Native F dimensions differ between the models.')
 }
-for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残差',typ),paste('Log residuals',typ),plot_residuals(b,type=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。',note_en='Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.')
-for(typ in c('R','F'))for(lg in c(TRUE,FALSE))render(paste0('deviation_',typ,'_',lg),paste('过程偏差',typ,lg),paste('Process deviations',typ,lg),plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
+for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残差',typ),paste('Log residuals',typ),plot_residuals(b,type=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。逐分面按有效横坐标数量选择趋势：少于 2 个不画，2–5 个用直线，至少 6 个用 loess，并单独调整 span。平滑线不是显著性检验。',note_en='Observed minus fitted log index, without standardization. Each facet selects its trend from its own distinct observed x values: fewer than two omit smoothing, two to five use a line, and six or more use loess with a facet-specific span. These are not significance tests.')
+for(typ in c('R','F'))for(lg in c(TRUE,FALSE))render(paste0('deviation_',typ,'_',lg),paste(if(lg)'对数过程偏差' else '过程乘数',typ),paste(if(lg)'Log process deviations' else 'Process multipliers',typ),plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
 note_zh=if(lg)'对数过程偏差以 0 为参照。这不是似然偏差统计量。' else '指数转换后以 1 为参照，区间不对称。这不是原尺度残差。',note_en=if(lg)'Log process deviations use zero as reference; these are not likelihood deviance statistics.' else 'Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.')
 render('ridges','长度组成山脊图','Length composition ridges',plot_ridges(b),height=8.5,note_zh='每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。',note_en='Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported.')
 render('compare_ts','种群时间序列比较','Population time series comparison',plot_compare_ts(a,b,se=TRUE,ncol=2),height=5.7,note_zh='只比较共同输出与相同时间窗；自由纵轴不能直接比较不同量的振幅。',note_en='Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.')
@@ -96,8 +103,8 @@ growth_display <- function(p) {
 # 参考生长点也是模拟数据 / Reference growth points are synthetic too.
 set.seed(42); ref<-data.frame(Age=rep(1:15,each=5)); ref$Length<-VB_func(60,.2,1/60,ref$Age)+rnorm(nrow(ref),0,2)
 write.csv(ref,file.path(out,'data','synthetic_growth_reference.csv'),row.names=FALSE)
-render('compare_growth','生长与外部参照接口','Growth and reference-data interface',growth_display(plot_compare_growth(a,b,age_range=c(1,15),ref_data=ref,ref_name='Synthetic reference',nls_start=list(Linf=60,k=.2,t0=1/60))),height=8.5,note_zh='灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。',note_en='The reference curve uses synthetic Age and Length data, not empirical measurements from the paper.')
-render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),ncol=2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians.')
+render('compare_growth','生长与外部参照接口','Growth and reference-data interface',growth_display(plot_compare_growth(a,b,age_range=c(1,15),ref_data=ref,ref_name='Synthetic reference',nls_start=list(Linf=60,k=.2,t0=1/60))),height=8.5,note_zh='灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。ref_name 必须是非空名称，且与两个模型名称不同。',note_en='The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. ref_name must be nonempty and differ from both model names.')
+render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),ncol=2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.')
 render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,ncol=2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
 # Portable fits omit the TMB objective. Survey q is a fixed input in this
 # teaching example, so reconstruct this plotting data from the original bundle.
@@ -145,7 +152,7 @@ write.csv(retro_b$rho_text,file.path(out,'results','rho_ALSCL.csv'),row.names=FA
     note_en="Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.")
   write.csv(truth,file.path(out,"results","truth.csv"),row.names=FALSE)
   write.csv(estimates,file.path(out,"results","estimates.csv"),row.names=FALSE)
-  writeLines(capture.output(sessionInfo()),file.path(out,"results","sessionInfo.txt"))
+  writeLines(trimws(capture.output(sessionInfo()), which="right"),file.path(out,"results","sessionInfo.txt"))
   message("COMPLETE: ",length(registry)," YTF figures")
   invisible(list(acl=a,alscl=b,retro_acl=retro_a,retro_alscl=retro_b,inputs=inputs))
 }

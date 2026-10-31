@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_ridges.R
 \name{plot_ridges}
 \alias{plot_ridges}
-\title{Plot ridges of Observed and Estimated Catch-at-Length Over Years}
+\title{Plot Observed and Fitted Survey Length Compositions over Time}
 \usage{
 plot_ridges(
   model_result,

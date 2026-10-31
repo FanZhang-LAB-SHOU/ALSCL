@@ -43,6 +43,7 @@ UI = {
                close='关闭', functions='函数参考', setup='示例准备')}
 
 GROUPS = [
+    ('workflow', 'Assessment workflows', '评估工作流程', ['check_alscl_data', 'check_fit', 'extract_estimates', 'extract_parameters', 'fit_scenarios', 'inspect_parameters', 'prepare_alscl_data', 'profile_model', 'project_model', 'read_assessment', 'read_survey_csv', 'read_survey_excel', 'refit_model', 'save_assessment', 'sim_alscl', 'sim_model', 'summarize_simulations']),
     ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'alscl_speed_info', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
     ('biology', 'Biology and simulation', '生物参数与模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data', 'sim_acl']),
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
@@ -296,6 +297,7 @@ def load_reference():
 def example_setup(name, lang):
     if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data']: return 'library(ALSCL)'
     base = 'library(ALSCL)\nlibrary(ggplot2)\nlibrary(patchwork)\ndata("YTF_example")\nx <- YTF_example\ninputs <- x[c("data.CatL", "data.wgt", "data.mat")]\ndat <- x$data.CatL'
+    if name in ['prepare_alscl_data', 'read_survey_csv', 'read_survey_excel', 'check_alscl_data', 'inspect_parameters', 'fit_scenarios', 'profile_model', 'sim_model', 'sim_alscl', 'summarize_simulations']: return base
     if name in ['sim_cal','sim_data','sim_acl']:
         base += '\npa <- initialize_params(species = "flatfish")\nbio <- sim_cal(pa)'
         if name == 'sim_acl': base += '\nsm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,\n               output_dir = "simulation_examples/flatfish")'
@@ -320,8 +322,6 @@ def reference_body(name, entry, lang, supplements):
         for arg,row in entry['arguments'].items():
             default=entry['defaults'][arg] or ('…' if arg=='...' else ui['required'])
             explanation=row[3 if lang=='en' else 2]
-            if arg=='ncores' and lang=='zh':
-                explanation = '独立起点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。' if name.startswith('run_') else '外层并行进程数，用于模拟重复或回溯拟合；每个内部拟合使用单进程。'
             if arg=='growth_step' and name=='run_alscl': explanation='Years per model step; default 1. Use 0.25 for quarterly data.' if lang=='en' else '每个模型时间步包含的年数，默认 1；季度数据显式设为 0.25。'
             body+=f'<tr><th scope="row"><code>{html.escape(arg)}</code></th><td><code>{html.escape(default)}</code></td><td>{md(explanation)}</td></tr>'
         body+='</tbody></table>'
@@ -386,7 +386,7 @@ def build(out):
                 render_page(out,'articles/'+case['slug']+'.html',lang,case['title'][lang],body,
                             'website/content/'+lang+'/articles/'+case['slug']+'.md','case')
         render_page(out,'articles/index.html',lang,UI[lang]['articles'],case_index,kind='case')
-        reference_index=md('All 45 exported functions, grouped by task. Signatures and defaults are read directly from the R source when this website is built.' if lang=='en' else '按任务分类的全部 45 个公开函数。函数签名和默认值在建站时直接从 R 源代码读取。')
+        reference_index=md(f'All {len(FUNCTIONS)} exported functions, grouped by task. Signatures and defaults are read directly from the R source when this website is built.' if lang=='en' else f'按任务分类的全部 {len(FUNCTIONS)} 个公开函数。函数签名和默认值在建站时直接从 R 源代码读取。')
         for key,en,zh,names in GROUPS:
             reference_index+=f'<h2 id="{key}">{en if lang=="en" else zh}</h2><table class="reference-index"><tbody>'
             for name in names:

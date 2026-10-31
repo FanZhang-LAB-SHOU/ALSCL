@@ -1,8 +1,8 @@
 #' Simulate Example Data for ALSCL Package
 #'
-#' Generates realistic catch-at-length, weight-at-length, and maturity-at-length
-#' data for a generic short-lived species (e.g., krill-like). Supports unequal
-#' length bin widths. Useful for package documentation, testing, and tutorials.
+#' Generates synthetic survey abundance indices, individual weights and
+#' maturity proportions at length for a generic short-lived species.
+#' Supports unequal length-bin widths for documentation, tests and tutorials.
 #'
 #' @param years Numeric vector of consecutive annual observation years.
 #'   Default 2000:2025. Use \code{sim_data()} for subannual simulations.
@@ -16,10 +16,11 @@
 #' @param Linf Numeric. VB asymptotic length. Default 55.
 #' @param vbk Numeric. VB growth coefficient. Default 0.45.
 #' @param t0 Numeric. VB theoretical age at length 0. Default -0.1.
-#' @param M Finite nonnegative numeric. Natural mortality. Default 0.8.
+#' @param M Finite nonnegative numeric. Natural mortality per annual model
+#'   time step. Default 0.8.
 #' @param nage Integer. Maximum age (plus group). Default 7.
-#' @param L50_sel Numeric. Length at 50 percent selectivity. Default 28.
-#' @param L95_sel Numeric. Length at 95 percent selectivity, greater than
+#' @param L50_sel Numeric. Length at 50 percent survey catchability. Default 28.
+#' @param L95_sel Numeric. Length at 95 percent survey catchability, greater than
 #'   L50_sel. Default 36.
 #' @param L50_mat Numeric. Length at 50 percent maturity. Default 33.
 #' @param L95_mat Numeric. Length at 95 percent maturity, greater than
@@ -29,7 +30,8 @@
 #' @param mean_F Nonnegative numeric. Arithmetic mean fishing mortality across
 #'   the returned years (default 0.3). Zero gives zero fishing mortality in every
 #'   year. The time-varying trajectory is rescaled to this realized mean.
-#' @param cv_catch Numeric. CV of observation noise on catches. Default 0.3.
+#' @param cv_catch Numeric. CV of multiplicative lognormal observation noise
+#'   on the survey abundance index. Default 0.3.
 #' @param rec_sigma Numeric. SD of log-recruitment variation. Default 0.5.
 #' @param seed Integer or NULL. Random seed for reproducibility. Default NULL
 #'   (different result each run). Set e.g. \code{seed = 42} for reproducible output.
@@ -38,7 +40,8 @@
 #'
 #' @return A list with components:
 #'   \describe{
-#'     \item{data.CatL}{Catch-at-length data.frame (LengthBin x Years)}
+#'     \item{data.CatL}{Survey abundance-index data.frame: length-bin labels
+#'       followed by annual time columns.}
 #'     \item{data.wgt}{Weight-at-length data.frame (same structure)}
 #'     \item{data.mat}{Maturity-at-length data.frame (same structure)}
 #'     \item{true_params}{List of true parameter values used in simulation}
@@ -202,7 +205,7 @@ simulate_example_data <- function(years      = 2000:2025,
     N[nage, y] <- N[nage, y] + N[nage, y-1] * exp(-M - F_trend[y-1])
   }
 
-  # --- Convert to catch-at-length ---
+  # --- Generate survey abundance indices at length ---
   CatL_mat <- matrix(0, nrow = nL, ncol = nY)
   for (y in seq_len(nY)) {
     # Survey index observes abundance, not fishery removals.

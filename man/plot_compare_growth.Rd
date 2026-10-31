@@ -43,7 +43,8 @@ containing observed age-length measurements (e.g. from otolith readings).
 If provided, a VB curve is fitted via \code{nls()} and overlaid as a
 reference, with the raw data as scatter points.}
 
-\item{ref_name}{Character. Label for the reference curve. Default "Observed VB".}
+\item{ref_name}{Character. Nonempty label for the reference curve, distinct
+from both model labels when ref_data is supplied. Default "Observed VB".}
 
 \item{ref_color}{Character. Color for reference curve/points. Default "grey30".}
 

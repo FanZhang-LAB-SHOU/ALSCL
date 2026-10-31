@@ -1,4 +1,4 @@
-#' Plot Estimated and Observed Catch-at-Length (Log or not) over the years or across lengths
+#' Plot Fitted and Observed Survey Indices over Time or across Lengths
 #'
 #' Compare observed survey indices with their fitted lognormal medians over time
 #' or across length bins. Elog_index contains predicted natural-log survey indices;
@@ -32,8 +32,9 @@
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label, used verbatim. NULL uses
 #'   Survey index on the original scale and Log survey index on the natural-log
-#'   scale. A customized global abundance label replaces Survey index and gains
-#'   a Log prefix on the log scale.
+#'   scale. A global survey label replaces Survey index and gains a Log prefix
+#'   on the log scale. If survey is unset, a legacy custom abundance label
+#'   is retained. Explicit ylab takes priority.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
@@ -90,12 +91,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
   if (!is.logical(exp_transform) || length(exp_transform) != 1L || is.na(exp_transform))
     stop("exp_transform must be TRUE or FALSE.", call. = FALSE)
   type <- match.arg(type)
-  if (is.null(ylab)) {
-    ylab <- .acl_lab("y", "abundance")
-    if (identical(ylab, .acl_defaults$ylab$abundance)) {
-      ylab <- if (exp_transform) "Survey index" else "Log survey index"
-    } else if (!exp_transform) ylab <- paste("Log", ylab)
-  }
+  if (is.null(ylab)) ylab <- .acl_survey_label(log = !exp_transform)
   Elog_index <- model_result$report$Elog_index
   if (is.data.frame(Elog_index)) Elog_index <- as.matrix(Elog_index)
   logN_at_len <- .acl_observed_log(model_result)
@@ -171,7 +167,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
     df_long2$year <- factor(paste("Year", df_long2$year), levels = year_levels)
 
     # Plot the data using ggplot2
-    auto_title <- "Estimated and Observed Catch-at-Length Distribution Yearly"
+    auto_title <- .acl_title("CatL_year_dist")
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_line(data=df_long2, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size2,color=line_color2,linetype=line_type2,alpha=line_alpha2) +

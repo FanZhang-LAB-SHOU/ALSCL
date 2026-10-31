@@ -1,0 +1,4 @@
+"value","internal_value","objective","delta_nll","scenario","elapsed","pid","error","warnings","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues"
+0.281089131149457,-1.26908346724067,-334.760566796311,0.932103254688172,"point_1",4.403,57625,"","",0,2.24240537249898e-09,TRUE,FALSE,FALSE,TRUE,""
+0.31232125683273,-1.16372295158284,-335.692670051077,-7.73070496506989e-11,"point_2",2.313,57624,"","",0,9.7415561180203e-08,TRUE,FALSE,FALSE,TRUE,""
+0.343553382516003,-1.06841277177852,-334.930414423467,0.762255627532795,"point_3",4.359,57624,"","",0,1.05517017345846e-09,TRUE,FALSE,FALSE,TRUE,""

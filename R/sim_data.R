@@ -6,10 +6,12 @@
 #' \code{sim_cal()}.
 #'
 #' \strong{Age-based pathway} (M7 flatfish, krill): Standard forward-projection
-#' of \code{N_at_age} with age-length transition matrix (pla). F is age-dependent.
+#' of \code{N_at_age}, converted to abundance at length using the age-length
+#' probability matrix (pla). F is age-dependent.
 #'
-#' \strong{Length-based pathway} (M6 tuna): Three-dimensional tracking of
-#' \code{nla[length, age]} with growth transition matrix (Gij). F is
+#' \strong{Length-based pathway} (M6 tuna): Joint length-age abundance
+#' \code{nla[length, age]} advances over time using growth transition matrix
+#' Gij. F is
 #' length-dependent. Supports quarterly (sub-annual) time steps.
 #'
 #' @param bio_vars A list from \code{sim_cal()} containing biological variables.
@@ -17,14 +19,18 @@
 #' @param sim_year Total simulation years; NULL uses params$nyear.
 #' @param output_dir Directory for saving results (default: current directory).
 #' @param iter_range Integer vector, which iterations (seeds) to run (default: 4:100).
-#' @param return_iter Integer or NULL, which iteration to return in memory.
+#' @param return_iter Integer or NULL. Replicate ID to return in memory;
+#'   NULL returns the replicate with ID max(iter_range). All requested
+#'   replicates are still saved to output_dir.
 #'
 #' @return A list containing simulated fishery data for the observation window
 #'   (post-burn-in), including SN_at_len, N_at_len, N_at_age, SSB, etc.
 #'   Matrix dimensions are retained for a one-period observation window.
 #'   The \code{years} vector starts at \code{params$first.year} and advances by
 #'   \code{growth_step}; burn-in must be an exact number of time steps.
-#' @details Natural and mean fishing mortality must be finite and nonnegative.
+#' @details Natural mortality and the F_mean process baseline must be finite
+#'   and nonnegative. F_mean scales exponentiated AR(1) log deviations before
+#'   fishing selectivity is applied; it is not the arithmetic mean F.
 #'   Zero total mortality produces zero catch through the continuous Baranov
 #'   limit. Invalid biological arrays are rejected before simulation; a replicate
 #'   with nonfinite output is rejected before its file is written. Age-length

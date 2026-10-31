@@ -24,8 +24,8 @@ Determines which TMB model parameter names and defaults to use.}
 \code{"tuna"} (M6 tuna-like, quarterly, Linf=152), or
 \code{"krill"} (Antarctic krill-like, Linf=60-90).
 When NULL (default), generic wide-range defaults are used.
-Each preset provides species-specific initial values and bounds that have
-been tested in simulation studies. See Details.}
+Each preset supplies initial values and bounds; inspect these before
+fitting a different stock. See Details.}
 
 \item{parameters}{A list of custom initial values (default NULL = use all defaults).
 Only the parameters you specify will be overridden; all others keep their
@@ -41,17 +41,16 @@ and \code{parameters.U}. Each is a named list of parameter values with
 names matching the corresponding TMB model template.
 }
 \description{
-Unified function that generates default initial values, lower bounds, and
-upper bounds for either the ACL or ALSCL stock assessment model. Users can
-select a built-in species preset to get biologically appropriate starting
-values and bounds, then override any specific parameters as needed.
+Generate initial values and lower and upper bounds for an ACL or ALSCL
+fit. Select a built-in species preset and override individual values to
+match the biological assumptions and units of the assessment.
 }
 \details{
 \strong{Species presets:}
 
-When a species preset is selected, the function returns initial values and
-bounds that have been calibrated from actual assessment scripts. This avoids
-common convergence issues caused by biologically inappropriate starting values.
+A species preset returns the initial values and bounds listed below.
+These are starting configurations; convergence depends on the data, model
+assumptions and optimization, and must be checked for the fitted assessment.
 
 \tabular{lllllll}{
 \strong{Preset}  \tab \strong{Linf} \tab \strong{vbk} \tab \strong{nage} \tab \strong{M} \tab \strong{growth_step} \tab \strong{Notes} \cr

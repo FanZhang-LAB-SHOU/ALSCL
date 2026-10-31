@@ -18,10 +18,12 @@ test_that("all six theme recovery paths keep panel grids hidden", {
     expect_true(all(vapply(grid_elements_226(p), inherits,
                            logical(1), "element_blank")), info = name)
   }
-  # An explicit per-call theme remains the user's choice even during recovery.
+  # Base themes preserve the grid-free default; a subsequent layer can opt in.
   custom <- plot_fishing_mortality(m, base_theme = ggplot2::theme_minimal())
   expect_true(all(vapply(grid_elements_226(custom), inherits,
-                         logical(1), "element_line")))
+                         logical(1), "element_blank")))
+  custom <- custom + ggplot2::theme(panel.grid.major.x = ggplot2::element_line())
+  expect_s3_class(grid_elements_226(custom)[[1]], "element_line")
 })
 
 test_that("theme recovery retains a valid configured theme", {

@@ -51,12 +51,14 @@ Original-scale curves are lognormal medians, exp(Elog_index).
 ```r
 # Draw this figure
 plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
 [![Survey fit year log scale](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
+
+`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `type = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
 
 
 Vermilion curves are log observations; navy curves show fitted Elog_index.
@@ -70,12 +72,14 @@ Vermilion curves are log observations; navy curves show fitted Elog_index.
 ```r
 # Draw this figure
 plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
 [![Survey fit year original scale](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
+
+`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `type = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
 
 
 Original-scale curves are lognormal medians, exp(Elog_index).
@@ -396,3 +400,7 @@ Fishing-mortality plots use matrix positions and fitted time/group metadata, so 
 Survey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.
 
 The default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.
+
+Survey-fit titles refer to survey indices, and ridge titles refer to survey length compositions; neither is a fishery catch estimate. In process-deviation plots, `log = TRUE` labels log deviations (reference value 0), while `log = FALSE` labels multiplicative factors (reference value 1). Exponentiation changes the scale, not the underlying fitted process; neither quantity is a likelihood deviance statistic.
+
+Single-model and comparison survey-fit plots use the survey-index label rather than the fishery-catch label. Set `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` to label both consistently. When `survey` is unset, a customized legacy `ylab$abundance` still applies; otherwise the default is “Survey index”. Single-model log plots add a “Log” prefix, and their explicit `ylab` remains authoritative. `ylab$catch` continues to describe actual catch plots and does not relabel survey indices.

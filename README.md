@@ -14,19 +14,22 @@ Shanghai Ocean University.
 
 **[Visit the ALSCL documentation website →](https://fanzhang-lab-shou.github.io/ALSCL/)**
 
-ALSCL has a dedicated documentation website with installation instructions, all 15 basic-function topics, a reference for all 45 public functions, and worked cases for simulation, fitting your own survey data, model comparison and retrospective analysis. English is the default; use the language switch on any page to read the Simplified Chinese version.
+ALSCL has a dedicated documentation website with installation instructions, all 17 basic-function topics, a reference for all 62 public functions, and worked cases for simulation, fitting your own survey data, model comparison, retrospective analysis, sensitivity and future scenarios. English is the default; use the language switch on any page to read the Simplified Chinese version.
 
-ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功能、全部 45 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较和回溯分析的操作案例。网站默认英文，每页均可切换为简体中文。
+ALSCL 提供独立的在线文档网站，包含安装说明、17 项基本功能、全部 62 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较、回溯分析、敏感性和未来情景的操作案例。网站默认英文，每页均可切换为简体中文。
 
 - [English documentation](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文文档](https://fanzhang-lab-shou.github.io/ALSCL/zh/)
 - [Worked case studies / 专题案例](https://fanzhang-lab-shou.github.io/ALSCL/articles/)
+- [Assessment workflows / 评估工作流](docs/ASSESSMENT_WORKFLOWS.md): input checks, portable results, residuals, sensitivity, profiles, projections and simulation summaries / 输入检查、可移植结果、残差、敏感性、剖面、投影及模拟汇总（当前开发版本 / current development source）。
 - [Function reference / 函数参考](https://fanzhang-lab-shou.github.io/ALSCL/reference/)
 
-**基于年龄及体长结构的统计调查体长种群评估模型**
+**利用调查体长数据的年龄结构与年龄—体长联合结构资源评估模型**
 
-**Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
+**Age-structured and joint age–length stock assessment using survey length data**
 
-**Version 2.2.9 · 简体中文 / English**
+**Latest release: 2.2.9 · 简体中文 / English**
+
+The latest `main` source also contains the additions listed under [Unreleased](NEWS.md#unreleased); these are not part of the 2.2.9 release tag. / 最新 `main` 源码还包含 [Unreleased](NEWS.md#unreleased) 中的新增功能，早先的 2.2.9 发布标签不含这些接口。
 
 **2.2.9:** 统一绘图设置与坐标，保留批量失败记录，验证模拟数据坐标，并同步中英文说明。 / Apply global plotting controls, preserve failed replicate records, validate simulation coordinates and synchronize bilingual documentation. [Changes](NEWS.md) · [2.2.9 validation](docs/RELEASE_2.2.9.md).
 
@@ -39,32 +42,32 @@ ALSCL is an R package for fitting statistical catch-at-length models to fishery-
 
 ## 模型概述 / Overview
 
-对于难以判龄的鱼类，仅靠长度资料推断队列动态具有挑战性。ACL 在年龄维度推进数量，再用年龄—体长概率矩阵转换为长度组成；这种方法不能完整表达同一队列内部的长度相关死亡和个体生长差异。
+对于难以判龄的鱼类，仅靠长度资料推断队列动态具有挑战性。ACL 在年龄维度推进数量，年龄—体长概率矩阵表示同龄个体的体长差异，并将年龄别数量转换为体长别数量；其种群状态不逐步追踪同一队列经历存活与生长后的体长组成。
 
-Estimating cohort dynamics from length-based data is a long-standing challenge in fisheries stock assessment, especially for hard-to-age species where otolith reading is unreliable or unavailable. Traditional age-structured catch-at-length models (ACL) convert numbers-at-age to numbers-at-length via a fixed age-length key, but cannot account for **length-dependent processes** — such as size-selective fishing mortality and individual growth variability — within each cohort.
+Estimating cohort dynamics from length-based data is a long-standing challenge in fisheries stock assessment, especially for hard-to-age species where otolith reading is unreliable or unavailable. In the ACL model, an age–length probability matrix represents variation in length within an age class and converts numbers-at-age to numbers-at-length. Its population state does not retain the length composition of each cohort through successive survival and growth steps.
 
-渔业独立调查提供的体长别数量、体重和成熟比例，使仅使用调查资料开展评估成为可能，减少对商业捕获量报告的依赖；调查可捕性、采样设计和生物假设仍需仔细评估。
+两种模型都使用渔业独立调查的体长别数量、体重和成熟比例，无需将商业渔获观测作为输入。自然死亡率、调查可捕性及生物假设仍决定调查信息如何约束种群估计。
 
-Meanwhile, the increasing availability of high-quality **fishery-independent survey data** (survey catch-at-length, weight-at-length, maturity-at-length) has created opportunities for stock assessment models that rely solely on survey data, avoiding the well-known uncertainties in fisheries-dependent catch reporting.
+Both models use fishery-independent survey numbers-at-length, weight-at-length and maturity-at-length. Commercial catch observations are not required inputs; natural mortality, survey catchability and the biological assumptions still determine how survey information constrains population estimates.
 
 ALSCL 包提供以下两种模型：
 
-The **ALSCL** package addresses both challenges by providing two integrated models:
+The **ALSCL** R package provides two population models:
 
 - **ACL（年龄结构模型）**：在年龄空间追踪种群动态，并通过 `pla` 将年龄别尾数转换为体长别尾数。适合检验年龄结构假设下的种群变化。
 
-- **ACL** (Age-structured Catch-at-Length) — the classical approach that tracks population dynamics in age space $`N(a, t)`$ and projects to length via an age-length probability matrix (**pla**). Fast and well-suited when growth is predictable.
-- **ALSCL（年龄—体长联合结构模型）**：同时追踪时间、年龄、体长三个维度，使用增长转移矩阵 G，直接在体长维度估计捕捞死亡率，并由队列存活推导年龄别 F。
+- **ACL** (age-structured catch-at-length) — tracks population numbers by age and time, $`N(a, t)`$, and converts them to numbers-at-length through the age–length probability matrix `pla`.
+- **ALSCL（年龄—体长联合结构模型）**：联合追踪体长、年龄与时间上的种群数量。自然死亡率与体长别捕捞死亡率决定存活，再通过生长转移矩阵 G 推进存活个体的体长；年龄别 F 由队列存活推导。
 
-- **ALSCL** (Age- and Length-Structured Catch-at-Length) — a hybrid model that simultaneously tracks the **three-dimensional dynamics** across time, age, and length $`N(l, a, t)`$. Growth is modeled via a **transition matrix** $`\mathbf{G}`$ that explicitly represents how individuals move between length bins over each time step. ALSCL estimates fishing mortality at length ($`F_l`$) directly, with $`F_a`$ derived as a secondary output.
+- **ALSCL** (age- and length-structured statistical catch-at-length) — tracks population numbers jointly by length, age and time, $`N(l, a, t)`$. Natural mortality and length-specific fishing mortality determine survival; the growth transition matrix $`\mathbf{G}`$ then moves survivors between length bins. Age-specific F is derived from cohort survival.
 
-Zhang & Cadigan (2022) 的黄尾鲽和大眼金枪鱼模拟表明，在长度相关过程重要时，ALSCL 可改善年龄别种群动态的估计。实际表现取决于数据和假设，应结合诊断及模拟评估。
+Zhang & Cadigan (2022) 通过黄尾鲽和大眼金枪鱼模拟比较这两种结构。实际应用应结合残差诊断、敏感性分析以及匹配数据和假设的模拟实验评估所选结构。
 
-Simulation studies using yellowtail flounder (*Limanda ferruginea*) and bigeye tuna (*Thunnus obesus*) operating models demonstrate that ALSCL outperforms ACL by providing more accurate estimates of age-based population dynamics when length-dependent processes are important (Zhang & Cadigan, 2022).
+Zhang & Cadigan (2022) compare the two structures using yellowtail flounder (*Limanda ferruginea*) and bigeye tuna (*Thunnus obesus*) simulations. For a new application, assess the chosen structure using residual diagnostics, sensitivity analyses and simulation experiments matched to the data and assumptions.
 
 估计通过 TMB 和 R 的 `stats::nlminb()` 完成，支持诊断绘图、模型比较、回溯分析与模拟实验。
 
-Estimation is performed via maximum likelihood with the objective function calculated in TMB and minimized in R via `stats::nlminb()`. The package includes a comprehensive suite of diagnostic visualization, model comparison, retrospective analysis, and simulation tools.
+Estimation is performed via maximum likelihood with the objective function calculated in TMB and minimized in R via `stats::nlminb()`. The package provides diagnostic plots, model comparison, retrospective analysis and simulation tools.
 
 ## 获取帮助 / Getting help
 
@@ -87,10 +90,10 @@ Estimation is performed via maximum likelihood with the objective function calcu
 | 完整学习资源 / Learning resource | 内容 / Contents |
 |---|---|
 | **[在线文档网站 / Documentation website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 基本功能、专题案例和函数参考；支持英文与简体中文 / Basic functions, worked cases and function reference in English and Simplified Chinese |
-| **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 15 章、目录、前后页导航 / 15 chapters with navigation |
+| **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 16 章、目录、前后页导航 / 16 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
-| [45 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
+| [62 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
 | [45 张 YTF 图谱 / YTF gallery](docs/PLOT_GALLERY.md) | 22 个绘图函数及主要类型 / All plotting families |
 | [两个完整案例 / Case studies](docs/CASE_STUDIES.md) | 年度 flatfish、季度 tuna 和 7 张图 / Annual and quarterly examples |
 | [Excel 填表示例 / Workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) | 三表及行列示意 / Three input sheets and instructions |
@@ -414,7 +417,8 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | [`run_acl`](docs/FUNCTION_REFERENCE.md#run_acl), [`run_alscl`](docs/FUNCTION_REFERENCE.md#run_alscl) | 两个模型拟合 / Fit both models |
 | [`create_parameters`](docs/FUNCTION_REFERENCE.md#create_parameters), [`create_parameters_alscl`](docs/FUNCTION_REFERENCE.md#create_parameters_alscl), [`generate_map`](docs/FUNCTION_REFERENCE.md#generate_map) | 初值、边界、固定映射 / Starts, bounds and maps |
 | [`initialize_params`](docs/FUNCTION_REFERENCE.md#initialize_params), [`sim_cal`](docs/FUNCTION_REFERENCE.md#sim_cal), [`sim_data`](docs/FUNCTION_REFERENCE.md#sim_data) | 完整随机模拟 / Full stochastic simulation |
-| [`simulate_example_data`](docs/FUNCTION_REFERENCE.md#simulate_example_data), [`sim_acl`](docs/FUNCTION_REFERENCE.md#sim_acl) | 快速三表、批量 ACL 拟合 / Quick tables and batch fitting |
+| [`simulate_example_data`](docs/FUNCTION_REFERENCE.md#simulate_example_data) | 快速生成三张输入表 / Simulate three input tables |
+| [`sim_model`](docs/FUNCTION_REFERENCE.md#sim_model), [`sim_acl`](docs/FUNCTION_REFERENCE.md#sim_acl), [`sim_alscl`](docs/FUNCTION_REFERENCE.md#sim_alscl) | 选择 ACL 或 ALSCL 批量拟合 / Batch fitting with ACL or ALSCL |
 | [`VB_func`](docs/FUNCTION_REFERENCE.md#VB_func), [`mat_func`](docs/FUNCTION_REFERENCE.md#mat_func) | 生长与 logistic 生物函数 / Biological helpers |
 | [`diagnose_model`](docs/FUNCTION_REFERENCE.md#diagnose_model), [`diagnostic_metrics`](docs/FUNCTION_REFERENCE.md#diagnostic_metrics), [`compare_models`](docs/FUNCTION_REFERENCE.md#compare_models) | 数值、拟合及比较 / Diagnostics and comparison |
 | [`retro_model`](docs/FUNCTION_REFERENCE.md#retro_model), [`retro_acl`](docs/FUNCTION_REFERENCE.md#retro_acl), [`retro_alscl`](docs/FUNCTION_REFERENCE.md#retro_alscl) | 统一及模型专用回溯 / Retrospective interfaces |
@@ -431,7 +435,7 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | `Linf`, `vbk` | 60, 0.2/年 / year | 152, 0.38/年 / year |
 | `M`, `F_mean` | 0.2, 0.3 每年 / per step | 0.2, 0.2 每季度 / per step |
 
-全部参数签名、默认值与返回结构见 [45 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
+全部参数签名、默认值与返回结构见 [62 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
 
 The full reference documents every public argument and the inner estimation parameter lists.
 

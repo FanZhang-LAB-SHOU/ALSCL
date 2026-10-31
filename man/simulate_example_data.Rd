@@ -44,13 +44,14 @@ probability bins absorb the distribution tails, as in the fitting models.}
 
 \item{t0}{Numeric. VB theoretical age at length 0. Default -0.1.}
 
-\item{M}{Finite nonnegative numeric. Natural mortality. Default 0.8.}
+\item{M}{Finite nonnegative numeric. Natural mortality per annual model
+time step. Default 0.8.}
 
 \item{nage}{Integer. Maximum age (plus group). Default 7.}
 
-\item{L50_sel}{Numeric. Length at 50 percent selectivity. Default 28.}
+\item{L50_sel}{Numeric. Length at 50 percent survey catchability. Default 28.}
 
-\item{L95_sel}{Numeric. Length at 95 percent selectivity, greater than
+\item{L95_sel}{Numeric. Length at 95 percent survey catchability, greater than
 L50_sel. Default 36.}
 
 \item{L50_mat}{Numeric. Length at 50 percent maturity. Default 33.}
@@ -66,7 +67,8 @@ L50_mat. Default 40.}
 the returned years (default 0.3). Zero gives zero fishing mortality in every
 year. The time-varying trajectory is rescaled to this realized mean.}
 
-\item{cv_catch}{Numeric. CV of observation noise on catches. Default 0.3.}
+\item{cv_catch}{Numeric. CV of multiplicative lognormal observation noise
+on the survey abundance index. Default 0.3.}
 
 \item{rec_sigma}{Numeric. SD of log-recruitment variation. Default 0.5.}
 
@@ -80,16 +82,17 @@ year. The time-varying trajectory is rescaled to this realized mean.}
 \value{
 A list with components:
 \describe{
-\item{data.CatL}{Catch-at-length data.frame (LengthBin x Years)}
+\item{data.CatL}{Survey abundance-index data.frame: length-bin labels
+followed by annual time columns.}
 \item{data.wgt}{Weight-at-length data.frame (same structure)}
 \item{data.mat}{Maturity-at-length data.frame (same structure)}
 \item{true_params}{List of true parameter values used in simulation}
 }
 }
 \description{
-Generates realistic catch-at-length, weight-at-length, and maturity-at-length
-data for a generic short-lived species (e.g., krill-like). Supports unequal
-length bin widths. Useful for package documentation, testing, and tutorials.
+Generates synthetic survey abundance indices, individual weights and
+maturity proportions at length for a generic short-lived species.
+Supports unequal length-bin widths for documentation, tests and tutorials.
 }
 \details{
 Biological inputs must be finite scalars, Linf and vbk must be

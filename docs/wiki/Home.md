@@ -4,11 +4,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.2.9 · 简体中文与英文 · 15 章 / chapters**
+**ALSCL 2.2.9 · 简体中文与英文 · 16 章 / chapters**
 
-本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
+本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
-This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures and seven case-study figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
+This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures, case-study figures and six assessment-workflow figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -31,6 +31,7 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 | 13 | [ggsci 配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) |
 | 14 | [全部函数与参数 · Complete function reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) |
 | 15 | [进阶、复现与故障处理 · Reproducibility](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility) |
+| 16 | [评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) |
 
 ## 相关链接 · Links
 

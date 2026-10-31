@@ -21,13 +21,21 @@
 #'   midpoints in \code{model_result$len_mid}; ACL: legacy alias for "age", with
 #'   a warning). Default is "year".
 #' @param return_data Logical. Whether to return data alongside the plot. Default is FALSE.
-#' @param x_breaks Numeric vector. Custom x-axis breaks.
-#' @param title Character. Custom plot title.
-#' @param xlab Character. Custom x-axis label.
-#' @param ylab Character. Custom y-axis label.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks; NULL inherits
+#'   the global x_breaks setting. Expansion follows global x_expand.
+#' @param title Character or NULL. Custom plot title; NULL inherits the global
+#'   F_year, F_age or F_length title, with _se appended for interval plots.
+#' @param xlab Character or NULL. Custom x-axis label; NULL inherits the global
+#'   year, age or length label. Uncustomized age axes are labeled Age Group
+#'   because the plotted coordinates are group positions, not calendar ages.
+#' @param ylab Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
 #' @param font_family Character. Font family for text elements.
 #' @param title_size Numeric. Title text size.
-#' @param base_theme A ggplot2 theme object.
+#' @param base_theme A ggplot2 theme object, a supported theme name such as
+#'   "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
+#'   settings in theme objects are retained; typography follows the global
+#'   settings and explicit font_family/title_size arguments. Major and minor
+#'   grids are removed for every base theme.
 #'
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
 #' @details Matrix positions are matched to fitted time and group metadata;
@@ -73,12 +81,27 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
     value
   }
 
-  # Get theme
-  current_theme <- if (!is.null(base_theme)) {
-    base_theme
-  } else {
-    .acl_plot_theme()
+  # Retain the existing theme-object interface and also accept the theme names
+  # used by the other plot functions. Resolve typography through the shared layer.
+  theme_object <- inherits(base_theme, "theme")
+  if (!is.null(base_theme) && !theme_object &&
+      (!is.character(base_theme) || length(base_theme) != 1L ||
+       is.na(base_theme) || !nzchar(base_theme)))
+    stop("base_theme must be a ggplot2 theme object, a theme name, or NULL.", call. = FALSE)
+  common_theme <- .acl_base_theme(font_family = font_family, title_size = title_size,
+    base_theme = if (theme_object) "bw" else base_theme)
+  current_theme <- if (theme_object) list(base_theme, common_theme[[2L]]) else common_theme
+  if (theme_object) {
+    text_elements <- names(base_theme)[vapply(base_theme, inherits, logical(1), "element_text")]
+    family <- if (is.null(font_family)) acl_theme("font_family") else font_family
+    if (length(text_elements)) current_theme <- c(current_theme, list(do.call(ggplot2::theme,
+      stats::setNames(lapply(text_elements, function(x) ggplot2::element_text(family = family)),
+                      text_elements))))
   }
+  current_theme <- c(current_theme, list(ggplot2::theme(
+    panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.x = ggplot2::element_blank(), panel.grid.major.y = ggplot2::element_blank(),
+    panel.grid.minor.x = ggplot2::element_blank(), panel.grid.minor.y = ggplot2::element_blank())))
 
   # ===================================================================
   # ALSCL model: FL (L x Y) and FA ((A-1) x (Y-1))
@@ -110,9 +133,6 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       if (type == "length") FL_long$Length <- len_mid[FL_long$Group]
       FL_long$Group <- GroupLabels[FL_long$Group]
 
-      default_title <- if (type == "length") "Fishing Mortality at Length (ALSCL)" else "Fishing Mortality at Length Over Years (ALSCL)"
-      default_xlab <- if (type == "length") "Length" else "Year"
-      default_ylab <- "Fishing Mortality"
       facet_by <- if (type == "length") ~Year else ~Group
 
       if (!se) {
@@ -160,9 +180,6 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       colnames(FA_long) <- c("AgeGroup", "YearIdx", "F")
       FA_long$Year <- fa_years[FA_long$YearIdx]
 
-      default_title <- "Emergent F-at-Age (ALSCL)"
-      default_xlab <- "Age Group"
-      default_ylab <- "Fishing Mortality"
 
       if (!se) {
         p <- ggplot2::ggplot(FA_long, ggplot2::aes(x = AgeGroup, y = F)) +
@@ -209,9 +226,6 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       F_long$Year <- Year[as.numeric(F_long$Year)]
       F_long$AgeGroup <- AgeGroup[as.numeric(F_long$AgeGroup)]
 
-      default_title <- "Fishing Mortality Over Years"
-      default_xlab <- "Year"
-      default_ylab <- "Fishing Mortality"
 
       if (!se) {
         p <- ggplot2::ggplot(F_long, ggplot2::aes(x = Year, y = F)) +
@@ -247,9 +261,6 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       colnames(F_long) <- c("AgeGroup", "Year", "F")
       F_long$Year <- Year[as.numeric(F_long$Year)]
 
-      default_title <- "Fishing Mortality Over Age Groups"
-      default_xlab <- "Age Group"
-      default_ylab <- "Fishing Mortality"
 
       if (!se) {
         p <- ggplot2::ggplot(F_long, ggplot2::aes(x = AgeGroup, y = F)) +
@@ -283,24 +294,17 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   }
 
   # ===== Apply labels and theme =====
+  title_key <- paste0("F_", type, if (se) "_se" else "")
+  axis_label <- .acl_lab("x", type)
+  if (type == "age" && identical(axis_label, .acl_defaults$xlab$age))
+    axis_label <- "Age Group"
   p <- p +
     ggplot2::labs(
-      title = if (!is.null(title)) title else default_title,
-      x     = if (!is.null(xlab)) xlab else default_xlab,
-      y     = if (!is.null(ylab)) ylab else default_ylab
+      title = if (!is.null(title)) title else .acl_title(title_key),
+      x     = if (!is.null(xlab)) xlab else axis_label,
+      y     = if (!is.null(ylab)) ylab else .acl_lab("y", "F")
     ) +
-    current_theme
-
-  if (!is.null(x_breaks)) {
-    p <- p + ggplot2::scale_x_continuous(breaks = x_breaks)
-  }
-
-  if (!is.null(font_family) || !is.null(title_size)) {
-    theme_args <- list()
-    if (!is.null(font_family)) theme_args$text <- ggplot2::element_text(family = font_family)
-    if (!is.null(title_size))  theme_args$plot.title <- ggplot2::element_text(size = title_size)
-    p <- p + do.call(ggplot2::theme, theme_args)
-  }
+    .acl_scale_x(x_breaks, n_breaks = 5) + current_theme
 
   if (return_data) {
     return(list(plot = p, data = data_out))

@@ -92,17 +92,12 @@
   opt$cpu_seconds <- unname(sum(elapsed[c("user.self", "sys.self")]))
   opt
 }
-.acl_fit <- function(model, prepared, parameters, parameters.L, parameters.U, map,
-                     train_times, ncores, silent, output, control, nstarts = ncores,
-                     F_structure = c("group_year", "year"), polish = TRUE) {
+# Build the exact data, starts, bounds and maps used by both preflight and fitting.
+# This stage never compiles a template or creates a live TMB objective.
+.acl_model_setup <- function(model, prepared, parameters = NULL,
+                             parameters.L = NULL, parameters.U = NULL, map = NULL,
+                             F_structure = c("group_year", "year")) {
   F_structure <- match.arg(F_structure)
-  if (!is.logical(polish) || length(polish) != 1L || is.na(polish))
-    stop("polish must be TRUE or FALSE.")
-  train_times <- .acl_positive_integer(train_times, "train_times")
-  ncores <- .acl_positive_integer(ncores, "ncores")
-  nstarts <- .acl_positive_integer(nstarts, "nstarts")
-  workers <- min(ncores, nstarts)
-  started <- proc.time()[["elapsed"]]
   config <- create_parameters(model_type = tolower(model), parameters = parameters,
                               parameters.L = parameters.L, parameters.U = parameters.U)
   p <- config$parameters; d <- prepared$data
@@ -138,6 +133,34 @@
     if (is.null(mapping[[nm]]) || any(!is.na(mapping[[nm]])))
       p[[nm]] <- max(config$parameters.L[[nm]], min(config$parameters.U[[nm]], p[[nm]]))
   }
+  list(data = d, parameters = p, config = config, map = mapping,
+       random = random, F_structure = F_structure)
+}
+
+.acl_check_fit_flags <- function(polish, silent, output) {
+  flags <- list(polish = polish, silent = silent, output = output)
+  for (nm in names(flags)) {
+    value <- flags[[nm]]
+    if (!is.logical(value) || length(value) != 1L || is.na(value))
+      stop(nm, " must be TRUE or FALSE.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.acl_fit <- function(model, prepared, parameters, parameters.L, parameters.U, map,
+                     train_times, ncores, silent, output, control, nstarts = ncores,
+                     F_structure = c("group_year", "year"), polish = TRUE) {
+  F_structure <- match.arg(F_structure)
+  .acl_check_fit_flags(polish, silent, output)
+  train_times <- .acl_positive_integer(train_times, "train_times")
+  ncores <- .acl_positive_integer(ncores, "ncores")
+  nstarts <- .acl_positive_integer(nstarts, "nstarts")
+  workers <- min(ncores, nstarts)
+  started <- proc.time()[["elapsed"]]
+  setup <- .acl_model_setup(model, prepared, parameters, parameters.L,
+                            parameters.U, map, F_structure)
+  config <- setup$config; p <- setup$parameters; d <- setup$data
+  mapping <- setup$map; random <- setup$random
   if (silent) {
     invisible(utils::capture.output(info <- .acl_compile(model)))
   } else info <- .acl_compile(model)

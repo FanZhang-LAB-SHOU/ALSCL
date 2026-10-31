@@ -12,12 +12,16 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ```r
 # 绘制本图
-plot_VB(b, age_range = c(1, 15), se = TRUE)
+plot_VB(b, se = TRUE)
 ```
 
 [![生长曲线与区间](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)
 
 生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。
+
+`age_range = NULL` 时，`plot_VB()` 使用拟合结果中的年龄范围；没有年龄元数据的旧结果从 1–25 岁开始。自动范围的起点不早于 `t0`，若没有正跨度则报错。显式范围必须为两个有限、递增的年龄，且起点不早于 `t0`，避免在生长曲线起点之前出现负体长和上下界倒置的区间。仍支持合法的显式范围，包括超出最老拟合年龄的外推。
+
+曲线和区间均继承 `ylab$growth` 及所选字体。无论是否显示区间，都保留 Linf/k 标注，并遵守 `text_size`、`text_color`；显式 `ylab` 覆盖全局标签。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
 
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_VB)
@@ -41,6 +45,8 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 
 ## ACL 捕捞死亡率 year
+
+`plot_fishing_mortality()` 也继承全局标题、标签、`x_breaks` 与 `x_expand`。标题键为 `F_year`、`F_age`、`F_length`，区间版本加 `_se`；横轴分别使用 `xlab$year`、`xlab$age`、`xlab$length`，纵轴使用 `ylab$F`。年龄模式的坐标是组序号，因此未修改时默认标签仍为 “Age Group”，自定义的 `xlab$age` 则会生效。ACL 的旧 length 别名使用年龄模式设置。单次调用中显式指定的标签和刻度优先。`base_theme` 支持 `"theme_bw"`、`"bw"` 等名称、`ggplot2::theme_bw()` 等现有主题对象，或以 `NULL` 继承全局设置；这些形式均保持无主、次网格线。
 
 ```r
 # 绘制本图
@@ -178,7 +184,7 @@ plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
 
 
 
-## 过程偏差 R TRUE
+## 对数过程偏差 R
 
 ```r
 # 绘制本图
@@ -187,7 +193,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R TRUE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)
+[![对数过程偏差 R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -196,7 +202,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
 
 
 
-## 过程偏差 R FALSE
+## 过程乘数 R
 
 ```r
 # 绘制本图
@@ -205,7 +211,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R FALSE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)
+[![过程乘数 R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -214,7 +220,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
 
 
 
-## 过程偏差 F TRUE
+## 对数过程偏差 F
 
 ```r
 # 绘制本图
@@ -223,7 +229,7 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F TRUE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)
+[![对数过程偏差 F](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -232,7 +238,7 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
 
 
 
-## 过程偏差 F FALSE
+## 过程乘数 F
 
 ```r
 # 绘制本图
@@ -241,7 +247,7 @@ plot_deviance(b, type = "F", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F FALSE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)
+[![过程乘数 F](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -288,3 +294,7 @@ plot_VB(b, se = FALSE, ylab = "Length (cm)",
 ### 一致性修正
 
 捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。
+
+每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
+
+调查拟合图标题表示调查指数，山脊图标题表示调查体长组成，两者都不是渔业捕获量估计。过程偏差图在 `log = TRUE` 时标为对数偏差（参照值 0），在 `log = FALSE` 时标为乘数（参照值 1）。取指数只改变尺度，不改变已拟合的过程；两者都不是似然偏差统计量。

@@ -21,7 +21,7 @@ retro_alscl(
 \arguments{
 \item{nyear}{Integer. Number of time columns to peel. Default is 5.}
 
-\item{data.CatL}{The Catch-at-Length data or a named input bundle, as in
+\item{data.CatL}{Survey abundance indices at length or a named input bundle, as in
 \code{retro_alscl(x, nyear = 3)}.}
 
 \item{data.wgt}{The weight data.}
@@ -32,11 +32,11 @@ retro_alscl(
 
 \item{nage}{The number of age classes.}
 
-\item{M}{The natural mortality rate.}
+\item{M}{Natural mortality per model time step.}
 
-\item{sel_L50}{Length at 50 percent selectivity.}
+\item{sel_L50}{Length at 50 percent survey catchability.}
 
-\item{sel_L95}{Length at 95 percent selectivity.}
+\item{sel_L95}{Length at 95 percent survey catchability.}
 
 \item{growth_step}{Numeric. Growth transition time step. Defaults to 1 for
 separate arguments; bundled calls retain the bundle's setting or infer it

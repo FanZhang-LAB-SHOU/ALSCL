@@ -9,7 +9,7 @@ sim_cal(params)
 \arguments{
 \item{params}{A list of parameters from \code{initialize_params()}.
 Must contain \code{model_type} ("age_based" or "length_based") to
-determine which transition matrix to build.
+determine the matrix orientation and whether to build growth transitions.
 Length midpoints must lie inside the matching open-tail bins; geometry is
 checked again so that manually edited parameter lists cannot bypass it.}
 }
@@ -22,15 +22,19 @@ A list containing:
 \item{mat}{Maturity-at-length vector}
 \item{q_surv}{Survey catchability-at-length vector}
 \item{sel}{Selectivity vector (at-age for age_based, at-length for length_based)}
-\item{pla}{Age-length transition matrix (always built for initial conditions)}
-\item{Gij}{Growth transition matrix (length_based only)}
+\item{pla}{Probability of length given age. Rows are ages and columns
+are length groups for age_based; this orientation is transposed for
+length_based. Each age's probabilities sum to one.}
+\item{Gij}{Growth transition probabilities for length_based: row i and
+column j give the probability of moving from length group j to i in
+one model time step. Each column sums to one.}
 \item{nlen, len_mid, len_lower, len_upper}{Length bin dimensions and coordinates}
 }
 }
 \description{
 This function calculates derived biological variables (length-at-age,
 weight-at-length, maturity, selectivity, survey catchability) and the
-appropriate transition matrix for the simulation model. For age-based
-species (flatfish, krill) it builds the age-length transition matrix (pla);
-for length-based species (tuna) it builds the growth transition matrix (Gij).
+age-length probability matrix for the selected operating model. Both
+pathways construct pla, the probability of length given age. The length-based
+pathway additionally constructs Gij, the growth transition matrix.
 }

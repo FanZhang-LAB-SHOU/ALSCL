@@ -46,7 +46,8 @@ plot_deviance(
 
 \item{facet_scales}{Scales for facet wrap. Default is "free".}
 
-\item{log}{Logical, whether to keep log scale (TRUE) or apply exp transform (FALSE).}
+\item{log}{Logical. TRUE plots log process deviations; FALSE plots their
+exponentiated multiplicative factors. These are not likelihood deviances.}
 
 \item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.}
 }
@@ -65,4 +66,6 @@ objects without these reported quantities may use the finite Estimate
 column in est_std. With se = TRUE, a complete table of finite estimates
 and finite nonnegative standard errors is required. Groups and periods
 must match the model metadata, including the single group for shared F.
+Titles and y-axis labels use the global dev_R/dev_F keys on the log
+scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 }

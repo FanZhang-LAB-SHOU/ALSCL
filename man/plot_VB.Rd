@@ -6,7 +6,7 @@
 \usage{
 plot_VB(
   model_result,
-  age_range = c(1, 25),
+  age_range = NULL,
   line_size = NULL,
   line_color = NULL,
   line_type = "solid",
@@ -33,7 +33,10 @@ plot_VB(
 \arguments{
 \item{model_result}{A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.}
 
-\item{age_range}{Numeric vector of length 2, defining the range of ages to consider.}
+\item{age_range}{NULL or a finite increasing numeric pair in years. NULL
+uses the fitted age range in model_result$age, or c(1, 25) for older fits
+without age metadata; the automatic lower endpoint is at least t0. An
+explicit range must start at or after t0 to avoid negative-length extrapolation.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
@@ -49,9 +52,11 @@ plot_VB(
 
 \item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
 
-\item{text_color}{Character. The color of the text in the plot. Default is "black".}
+\item{text_color}{Character. Color of the growth-parameter annotation in all
+display modes. Default is "black".}
 
-\item{text_size}{Numeric. The thickness of the text in the plot. Default is 5.}
+\item{text_size}{Numeric. Size of the growth-parameter annotation in all
+display modes. Default is 5.}
 
 \item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
 
@@ -86,7 +91,11 @@ This function takes Linf, k, and t0 as input, creates a sequence of ages, applie
 \details{
 If the growth covariance is unavailable or unusable, a request for
 confidence intervals warns and draws the estimate only, preserving all
-supplied labels, axis settings, text styles and theme options.
+supplied labels, axis settings, text styles and theme options. The parameter
+annotation is retained with and without intervals and inherits font_family.
+The y-axis inherits the global growth label unless ylab is supplied.
+An automatic age range with no positive span at or above t0 is rejected;
+supply an explicit biologically meaningful age_range in that case.
 }
 \examples{
 \dontrun{

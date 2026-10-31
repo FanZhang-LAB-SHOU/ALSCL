@@ -144,7 +144,7 @@ Dashed lines are generating truth; colored lines are conditional estimates from 
 
 ## Extend to quarters or more replicates
 
-For quarters, start with `initialize_params(species = "tuna")` and regenerate biology, observations and matching fit settings. Do not only relabel the annual columns. For repeated simulations, keep seeds, truth and failures; `sim_acl()` automates ACL fits only. ALSCL replicates need a loop around `run_alscl()` with replicate-specific inputs.
+For quarters, start with `initialize_params(species = "tuna")` and regenerate biology, observations and matching fit settings. Do not only relabel the annual columns. For repeated simulations, use `sim_model(model = "acl")` or `sim_model(model = "alscl")`, or the model-specific `sim_acl()` and `sim_alscl()` interfaces. Keep replicate-specific seeds, truth and failures; a custom loop remains optional. See the [batch fitting and simulation summary example](assessment-workflows.html).
 
 |Symptom|Check first|
 |---|---|
@@ -181,7 +181,7 @@ source("scripts/simulation_workflow.R", encoding = "UTF-8")
 inputs <- simulation_to_tables(sm, pa)
 ```
 
-### Stable simulation boundaries in 2.2.5
+### Biological inputs and zeros
 
 `mat_func()` uses a stable logistic calculation: a steep increasing curve approaches one without overflowing. `L50` and `L95` must be distinct finite scalars; a descending curve (`L95 < L50`) remains available for dome selectivity. Length values and derived biological arrays must be finite. Simulated natural and fishing mortality must be nonnegative. With both `M = 0` and `F_mean = 0`, fishery catch numbers and biomass are zero, rather than undefined; abundance and recruitment still follow the chosen operating model.
 
@@ -198,6 +198,6 @@ stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
 
 The quick simulator now integrates the first and last length bins to negative and positive infinity, matching the fitted models. Finite `bin_breaks` still determine labels and midpoints; they do not truncate probability. Corrected simulations can change even with the same seed, especially when the first boundary excludes small fish. Previously saved datasets retain their original generating truth. Use nonnegative M, F and noise scales, positive growth parameters and a nonnegative weight coefficient, and increasing selectivity/maturity endpoints. Invalid parameters or nonfinite generated values stop before CSV files are created. The full simulator also requires normalized age-length keys and growth transitions.
 
-The full simulator validates `init_Z`, process and observation standard deviations, and mean fishing mortality as finite nonnegative values. `F_ar` and `R_ar` must lie strictly between -1 and 1; negative stationary correlations remain valid. Beverton–Holt alpha and initial recruitment may be zero, while beta must be positive. Invalid process inputs stop before random draws or file creation, preserving existing simulations and the caller's random-number state.
+The full simulator validates `init_Z`, process and observation standard deviations, and the F process baseline as finite nonnegative values. `F_ar` and `R_ar` must lie strictly between -1 and 1; negative stationary correlations remain valid. Beverton–Holt alpha and initial recruitment may be zero, while beta must be positive. Invalid process inputs stop before random draws or file creation, preserving existing simulations and the caller's random-number state.
 
 `sim_acl()` saves the status of every replicate, including failures, to `result_rep_<iter>`. Reusing an output directory replaces an earlier success with the current failure record; inspect `converge` and `error` before summarizing results. Output write failures are reported and must not be treated as saved results. `simulation_to_tables(sm, pa)` uses the simulation length coordinates and rejects conflicting parameter coordinates instead of relabeling observations; legacy simulations without coordinates can use matching parameter metadata.

@@ -50,11 +50,12 @@ Fractional years are allowed for subannual observations.}
 
 \item{nage}{Integer. Number of age classes including plus-group (default 15).}
 
-\item{M}{Numeric. Natural mortality rate (default 0.2).}
+\item{M}{Numeric. Natural mortality per model time step (default 0.2).}
 
-\item{init_Z}{Numeric. Initial total mortality for equilibrium (default 0.5).}
+\item{init_Z}{Numeric. Total mortality per model time step used to construct
+the initial equilibrium age distribution (default 0.5).}
 
-\item{vbk}{Numeric. Von Bertalanffy k (default 0.2).}
+\item{vbk}{Numeric. Von Bertalanffy k per year (default 0.2).}
 
 \item{Linf}{Numeric. Asymptotic length (default 60).}
 
@@ -79,7 +80,8 @@ to -Inf and Inf so that the outer bins absorb the distribution tails.}
 
 \item{cv_inc}{Numeric. CV of growth increment (default 0.2).}
 
-\item{std_logR}{Numeric. SD of log-recruitment deviations (default 0.3).}
+\item{std_logR}{Numeric. Innovation SD of AR(1) log-recruitment deviations
+(default 0.3).}
 
 \item{std_logN0}{Numeric. SD of initial log-N deviations (default 0.2).}
 
@@ -89,17 +91,21 @@ to -Inf and Inf so that the outer bins absorb the distribution tails.}
 
 \item{std_SN}{Numeric. Survey observation error SD (default 0.2).}
 
-\item{q_surv_L50}{Numeric. Survey selectivity L50 (default 15).}
+\item{q_surv_L50}{Numeric. Length at 50 percent survey catchability (default 15).}
 
-\item{q_surv_L95}{Numeric. Survey selectivity L95 (default 20).}
+\item{q_surv_L95}{Numeric. Length at 95 percent survey catchability (default 20).}
 
 \item{R_init}{Numeric. Initial recruitment (default 500).}
 
-\item{F_mean}{Numeric. Mean fishing mortality (default 0.3).}
+\item{F_mean}{Numeric. Baseline fishing mortality per model time step
+(default 0.3). The simulator multiplies this value by exponentiated
+zero-mean AR(1) log deviations and then by fishing selectivity. It is the
+median of the pre-selectivity F process, not its arithmetic mean.}
 
-\item{F_ar}{Numeric. AR1 coefficient for F deviations (default 0.75).}
+\item{F_ar}{Numeric. AR(1) coefficient for log-F deviations (default 0.75).}
 
-\item{F_sd}{Numeric. SD of F deviations (default 0.2).}
+\item{F_sd}{Numeric. Innovation SD of AR(1) log-F deviations (default 0.2).
+Their stationary marginal SD is F_sd / sqrt(1 - F_ar^2).}
 
 \item{R_ar}{Numeric. AR1 coefficient for recruitment deviations (default 0.1).}
 
@@ -123,10 +129,15 @@ A list containing all initialized parameters and derived variables
 Initializes all biological, fishing, and survey parameters needed for the
 population simulation via \code{sim_cal()} and \code{sim_data()}. Users can
 select a built-in species preset (\code{"flatfish"}, \code{"tuna"}, or
-\code{"krill"}) to get biologically consistent parameter sets, or specify
-all parameters manually.
+\code{"krill"}) as starting configurations, then supply the biological and
+process assumptions for the intended simulation.
 }
 \details{
+The full simulator's F_mean is a process baseline. In contrast,
+\code{\link[=simulate_example_data]{simulate_example_data()}} rescales its F trajectory so that mean_F is the
+arithmetic mean over the returned years. The names are retained for
+compatibility; the two quantities have different definitions.
+
 Species presets and their key parameters:
 \itemize{
 \item flatfish: nage=15, Linf=60, vbk=0.2, M=0.2, annual (M7 model)

@@ -54,19 +54,27 @@ a warning). Default is "year".}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
-\item{x_breaks}{Numeric vector. Custom x-axis breaks.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks; NULL inherits
+the global x_breaks setting. Expansion follows global x_expand.}
 
-\item{title}{Character. Custom plot title.}
+\item{title}{Character or NULL. Custom plot title; NULL inherits the global
+F_year, F_age or F_length title, with _se appended for interval plots.}
 
-\item{xlab}{Character. Custom x-axis label.}
+\item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
+year, age or length label. Uncustomized age axes are labeled Age Group
+because the plotted coordinates are group positions, not calendar ages.}
 
-\item{ylab}{Character. Custom y-axis label.}
+\item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.}
 
 \item{font_family}{Character. Font family for text elements.}
 
 \item{title_size}{Numeric. Title text size.}
 
-\item{base_theme}{A ggplot2 theme object.}
+\item{base_theme}{A ggplot2 theme object, a supported theme name such as
+"bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
+settings in theme objects are retained; typography follows the global
+settings and explicit font_family/title_size arguments. Major and minor
+grids are removed for every base theme.}
 }
 \value{
 A ggplot object, or a list with plot and data if return_data = TRUE.

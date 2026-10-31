@@ -21,9 +21,11 @@ Here `nyear` counts terminal **steps**: four quarterly steps equal one year. Ret
 # Rebuild figures, CSV and session record
 source("scripts/ytf_workflow.R", encoding = "UTF-8")
 result <- run_ytf_guide(out = "my_ytf_guide", npeels = 3)
-# Keep live fits for TMB-dependent plots
+# Saved observations and fitted reports are sufficient for this plot
 plot_ridges(result$alscl)
 ```
+
+`plot_ridges()` needs the saved observations and fitted report, not a live TMB objective. It can also draw a portable result after removing `obj`; this does not apply to operations that evaluate the compiled model.
 
 
 The default output is `docs` and overwrites matching outputs; choose another folder to preserve bundled files. The workflow requires ggplot2, patchwork and jsonlite. Initial compilation needs a compiler, and retrospectives involve multiple fits. A writable TMB cache can be configured. Saved R objects do not preserve usable TMB external pointers across sessions; refit for operations requiring a live `obj`.

@@ -146,11 +146,17 @@ NULL
     B       = "Estimated Total Biomass (B)",
     B_se    = "Estimated Total Biomass (B) with 95% CI",
     BL      = "Estimated Biomass-at-Length",
+    BL_se   = "Estimated Biomass-at-Length with 95% CI",
+    BA      = "Estimated Biomass-at-Age",
+    BA_se   = "Estimated Biomass-at-Age with 95% CI",
 
     # plot_SSB
     SSB     = "Estimated Spawning Stock Biomass (SSB)",
     SSB_se  = "Estimated Spawning Stock Biomass (SSB) with 95% CI",
     SBL     = "Estimated SSB-at-Length",
+    SBL_se  = "Estimated SSB-at-Length with 95% CI",
+    SBA     = "Estimated SSB-at-Age",
+    SBA_se  = "Estimated SSB-at-Age with 95% CI",
 
     # plot_recruitment
     Rec     = "Estimated Recruitment (R)",
@@ -163,47 +169,54 @@ NULL
     CN      = "Estimated Catch Abundance (C)",
     CN_se   = "Estimated Catch Abundance (C) with 95% CI",
     CNA     = "Estimated Catch-at-Age",
+    CNA_se  = "Estimated Catch-at-Age with 95% CI",
+    CNL     = "Estimated Catch-at-Length",
+    CNL_se  = "Estimated Catch-at-Length with 95% CI",
 
     # plot_fishing_mortality
     F_year     = "Estimated Fishing Mortality by Year (F)",
     F_year_se  = "Estimated Fishing Mortality by Year (F) with 95% CI",
     F_age      = "Estimated Fishing Mortality-at-Age (F)",
     F_age_se   = "Estimated Fishing Mortality-at-Age (F) with 95% CI",
+    F_length   = "Estimated Fishing Mortality-at-Length (F)",
+    F_length_se = "Estimated Fishing Mortality-at-Length (F) with 95% CI",
 
     # plot_deviance
-    dev_R   = "Recruitment Deviance (dev log R)",
-    dev_F   = "Fishing Mortality Deviance (dev log F)",
+    dev_R   = "Log Recruitment Deviations Over Time",
+    dev_F   = "Log Fishing Mortality Deviations Over Time",
+    dev_R_multiplier = "Recruitment Multipliers Over Time",
+    dev_F_multiplier = "Fishing Mortality Multipliers Over Time",
 
     # plot_VB
     VB      = "Von Bertalanffy Growth Curve",
 
     # plot_CatL
-    CatL_obs_length = "Observed Catch-at-Length Over Years",
-    CatL_est_length = "Estimated Catch-at-Length Over Years",
-    CatL_year       = "Estimated(Line) and Observed(Point) Catch-at-Length Over Years",
-    CatL_year_dist  = "Estimated(Red) and Observed(Blue) Catch-at-Length Distribution Yearly",
+    CatL_obs_length = "Observed Survey Length Composition Over Time",
+    CatL_est_length = "Fitted Survey Length Composition Over Time",
+    CatL_year       = "Fitted (Line) and Observed (Point) Survey Indices Over Time",
+    CatL_year_dist  = "Fitted and Observed Survey Indices at Length",
 
     # plot_residuals
     resid_length = "Residuals by Length Bins",
     resid_year   = "Residuals by Year",
 
     # plot_ridges
-    ridges   = "Observed vs. Estimated Catch-at-Length",
+    ridges   = "Observed and Fitted Survey Length Compositions",
 
     # retro_acl
     retro    = "Retrospective Analysis",
 
     # plot_pla
-    pla      = "Age-Length Transition Probability Matrix",
+    pla      = "Age-Length Probability Matrix",
 
     # Comparison plot titles
     compare_ts      = "{m1} vs {m2}",
     compare_F       = "Fishing Mortality Comparison",
     compare_resid   = "Residual Diagnostics: {m1} vs {m2}",
     compare_growth  = "Growth Comparison",
-    compare_CatL    = "Observed vs Predicted Catch-at-Length",
+    compare_CatL    = "Observed and Fitted Survey Indices at Length",
     compare_metrics = "Model Fit Comparison: {m1} vs {m2}",
-    compare_sel     = "Survey Selectivity at Length",
+    compare_sel     = "Survey Catchability at Length",
     compare_annualF = "Fishing Mortality by Time Step"
   ),
 
@@ -222,8 +235,13 @@ NULL
     ssb       = "SSB",
     rec       = "Recruitment",
     catch     = "Catch abundance",
+    survey    = NULL, # NULL preserves legacy custom abundance labels for survey plots.
     F         = "Fishing mortality",
     deviance  = "Deviance",
+    dev_R     = "Log recruitment deviation",
+    dev_F     = "Log fishing mortality deviation",
+    dev_R_multiplier = "Recruitment multiplier",
+    dev_F_multiplier = "Fishing mortality multiplier",
     residual  = "Residual",
     growth    = "Length"
   )
@@ -296,7 +314,9 @@ acl_theme <- function(what = NULL) {
 #' @param low_col,high_col Character or NULL. Continuous heatmap endpoints.
 #' @param titles Named list. Override specific titles.
 #' @param xlab Named list. Override specific x-axis labels.
-#' @param ylab Named list. Override specific y-axis labels.
+#' @param ylab Named list. Override specific y-axis labels. The survey key
+#'   labels survey indices independently of catch abundance; when unset,
+#'   survey plots retain a legacy customized abundance label or use Survey index.
 #' @return Invisible previous settings.
 #' @export
 #' @examples
@@ -415,6 +435,17 @@ acl_theme_reset <- function() {
   labs <- if (axis == "x") acl_theme("xlab") else acl_theme("ylab")
   result <- labs[[key]]
   if (!is.null(result)) result else key
+}
+
+# Survey indices are distinct from fishery catch. Keep older custom abundance
+# labels as a fallback, while an explicit survey label takes priority.
+.acl_survey_label <- function(log = FALSE) {
+  labels <- acl_theme("ylab")
+  label <- labels$survey
+  if (is.null(label) && !identical(labels$abundance, .acl_defaults$ylab$abundance))
+    label <- labels$abundance
+  if (is.null(label)) return(if (log) "Log survey index" else "Survey index")
+  if (log) paste("Log", label) else label
 }
 
 #' Build the standard ALSCL ggplot theme layer

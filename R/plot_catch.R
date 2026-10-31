@@ -23,6 +23,11 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #'   on the reported scale. They are not truncated at zero. Inspect fit
 #'   diagnostics before using uncertainty intervals.
 #'
+#' @details Titles, axis labels, time-axis breaks and expansion inherit
+#'   \code{acl_theme_set()}. Title keys are CN, CNA and CNL;
+#'   append \code{_se} for interval plots.
+#'   Axis labels use \code{xlab$year} and \code{ylab$catch}.
+#'
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
@@ -52,9 +57,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
 
     if (!se) {
       p <- ggplot2::ggplot(CN, ggplot2::aes(x = Year, y = CN)) +
-        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::labs(x = "Year", y = "Total Catch Numbers", title = "Total Catch Over Years") +
-        current_theme
+        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
       data_out <- CN
     } else {
       # Use exact match ^CN$ to avoid matching CNA, CNL
@@ -67,9 +70,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::labs(y = "Total Catch Numbers", x = "Year", title = "Total Catch Over Years") +
-        current_theme
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
       data_out <- ci
     }
   }
@@ -91,9 +92,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
     if (!se) {
       p <- ggplot2::ggplot(CNA_long, ggplot2::aes(x = Year, y = CNA)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Catch Numbers", title = "Catch at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- CNA_long
     } else {
       ss_cna <- quantity$se
@@ -108,9 +107,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Catch Numbers", title = "Catch at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- ci
     }
   }
@@ -133,9 +130,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
     if (!se) {
       p <- ggplot2::ggplot(CNL_long, ggplot2::aes(x = Year, y = CNL)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Catch Numbers", title = "Catch at Length Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- CNL_long
     } else {
       ss_cnl <- quantity$se
@@ -150,12 +145,15 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Catch Numbers", title = "Catch at Length Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- ci
     }
   }
+
+  title_key <- if (se) paste0(type, "_se") else type
+  p <- p + ggplot2::labs(x = .acl_lab("x", "year"),
+                         y = .acl_lab("y", "catch"), title = .acl_title(title_key)) +
+    .acl_scale_x(n_breaks = 5) + current_theme
 
   if (return_data) {
     return(list(plot = p, data = data_out))

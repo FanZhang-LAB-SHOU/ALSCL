@@ -2,7 +2,7 @@
 
 **45 张图，覆盖 22 个公开绘图函数及主要类型。45 figures covering all 22 public plotting functions and major variants.**
 
-2.2.5 已重新拟合内置教学数据并生成全部 45 张图，使用无网格默认样式；BL/SBL 图包含实际可用的标准误区间。 / All 45 figures were regenerated from the bundled teaching fits for 2.2.5 with grid-free defaults, including the available BL/SBL intervals.
+全部 45 张图使用当前绘图函数重新生成，保留 2.2.5 建立的内置教学拟合及无网格默认样式；BL/SBL 图包含实际可用的标准误区间。 / All 45 figures are regenerated with the current plotting functions from the teaching fits established in 2.2.5. Defaults remain grid-free, including the available BL/SBL intervals.
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
@@ -40,7 +40,7 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [17. 补充量 / Recruitment](#recruitment)
 - [18. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
 - [19. 生长曲线与区间 / Growth curve and interval](#VB)
-- [20. 年龄长度转换 / Age length conversion](#pla)
+- [20. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
 - [21. ACL 捕捞死亡率 year / ACL fishing mortality year](#F_ACL_year)
 - [22. ACL 捕捞死亡率 age / ACL fishing mortality age](#F_ACL_age)
 - [23. ACL 捕捞死亡率 length / ACL fishing mortality length](#F_ACL_length)
@@ -49,10 +49,10 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [26. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](#F_ALSCL_length)
 - [27. 对数残差 length / Log residuals length](#residuals_length)
 - [28. 对数残差 year / Log residuals year](#residuals_year)
-- [29. 过程偏差 R TRUE / Process deviations R TRUE](#deviation_R_TRUE)
-- [30. 过程偏差 R FALSE / Process deviations R FALSE](#deviation_R_FALSE)
-- [31. 过程偏差 F TRUE / Process deviations F TRUE](#deviation_F_TRUE)
-- [32. 过程偏差 F FALSE / Process deviations F FALSE](#deviation_F_FALSE)
+- [29. 对数过程偏差 R / Log process deviations R](#deviation_R_TRUE)
+- [30. 过程乘数 R / Process multipliers R](#deviation_R_FALSE)
+- [31. 对数过程偏差 F / Log process deviations F](#deviation_F_TRUE)
+- [32. 过程乘数 F / Process multipliers F](#deviation_F_FALSE)
 - [33. 长度组成山脊图 / Length composition ridges](#ridges)
 - [34. 种群时间序列比较 / Population time series comparison](#compare_ts)
 - [35. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
@@ -113,12 +113,14 @@ Original-scale curves are lognormal medians, exp(Elog_index).
 ```r
 # 绘制本图 / Draw this figure
 plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
 [![调查拟合 year 对数尺度 / Survey fit year log scale](figures/ytf/CatL_year_FALSE.png)](figures/ytf/CatL_year_FALSE.png)
+
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线；年份模式不使用 `line_size` 和 `point_size`。 / `line_size1 = 0.6` controls fitted curves and `line_size2 = 0.4` controls observations; year mode does not use `line_size` or `point_size`.
 
 朱红色为观测对数，深蓝色为拟合的 Elog_index。
 
@@ -132,12 +134,14 @@ Vermilion curves are log observations; navy curves show fitted Elog_index.
 ```r
 # 绘制本图 / Draw this figure
 plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
-  point_size = 1, line_size = 0.6,
+  line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
 [![调查拟合 year 原尺度 / Survey fit year original scale](figures/ytf/CatL_year_TRUE.png)](figures/ytf/CatL_year_TRUE.png)
+
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线；年份模式不使用 `line_size` 和 `point_size`。 / `line_size1 = 0.6` controls fitted curves and `line_size2 = 0.4` controls observations; year mode does not use `line_size` or `point_size`.
 
 原尺度曲线为 exp(Elog_index)，即对数正态中位数。
 
@@ -448,28 +452,28 @@ This annual example aligns SSB with recruitment one year (one step) later; quart
 
 ```r
 # 绘制本图 / Draw this figure
-plot_VB(b, age_range = c(1, 15), se = TRUE)
+plot_VB(b, se = TRUE)
 ```
 
 [![生长曲线与区间 / Growth curve and interval](figures/ytf/VB.png)](figures/ytf/VB.png)
 
-生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。
+生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。
 
-Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation.
+Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_VB)
 
 <a id="plot_pla"></a>
 
 <a id="pla"></a>
-## 20. 年龄长度转换 / Age length conversion
+## 20. 年龄—体长概率矩阵 / Age–length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-[![年龄长度转换 / Age length conversion](figures/ytf/pla.png)](figures/ytf/pla.png)
+[![年龄—体长概率矩阵 / Age–length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
 
 色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。
 
@@ -598,9 +602,9 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
 
 [![对数残差 length / Log residuals length](figures/ytf/residuals_length.png)](figures/ytf/residuals_length.png)
 
-观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
+观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
 
-Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.
+Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance. Each facet chooses its smoother independently using the number of distinct observed x values: fewer than two omit smoothing, two to five use a linear trend, and six or more use loess. The loess span is enlarged within that facet when needed for at least five neighbors. A sparse tail bin does not remove or change trends in other panels.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
@@ -615,16 +619,16 @@ plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
 
 [![对数残差 year / Log residuals year](figures/ytf/residuals_year.png)](figures/ytf/residuals_year.png)
 
-观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
+观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
 
-Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.
+Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance. Each facet chooses its smoother independently using the number of distinct observed x values: fewer than two omit smoothing, two to five use a linear trend, and six or more use loess. The loess span is enlarged within that facet when needed for at least five neighbors. A sparse tail bin does not remove or change trends in other panels.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
 <a id="plot_deviance"></a>
 
 <a id="deviation_R_TRUE"></a>
-## 29. 过程偏差 R TRUE / Process deviations R TRUE
+## 29. 对数过程偏差 R / Log process deviations R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -633,7 +637,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R TRUE / Process deviations R TRUE](figures/ytf/deviation_R_TRUE.png)](figures/ytf/deviation_R_TRUE.png)
+[![对数过程偏差 R / Log process deviations R](figures/ytf/deviation_R_TRUE.png)](figures/ytf/deviation_R_TRUE.png)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -642,7 +646,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_R_FALSE"></a>
-## 30. 过程偏差 R FALSE / Process deviations R FALSE
+## 30. 过程乘数 R / Process multipliers R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -651,7 +655,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R FALSE / Process deviations R FALSE](figures/ytf/deviation_R_FALSE.png)](figures/ytf/deviation_R_FALSE.png)
+[![过程乘数 R / Process multipliers R](figures/ytf/deviation_R_FALSE.png)](figures/ytf/deviation_R_FALSE.png)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -660,7 +664,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_TRUE"></a>
-## 31. 过程偏差 F TRUE / Process deviations F TRUE
+## 31. 对数过程偏差 F / Log process deviations F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -669,7 +673,7 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F TRUE / Process deviations F TRUE](figures/ytf/deviation_F_TRUE.png)](figures/ytf/deviation_F_TRUE.png)
+[![对数过程偏差 F / Log process deviations F](figures/ytf/deviation_F_TRUE.png)](figures/ytf/deviation_F_TRUE.png)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -678,7 +682,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_FALSE"></a>
-## 32. 过程偏差 F FALSE / Process deviations F FALSE
+## 32. 过程乘数 F / Process multipliers F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -687,7 +691,7 @@ plot_deviance(b, type = "F", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F FALSE / Process deviations F FALSE](figures/ytf/deviation_F_FALSE.png)](figures/ytf/deviation_F_FALSE.png)
+[![过程乘数 F / Process multipliers F](figures/ytf/deviation_F_FALSE.png)](figures/ytf/deviation_F_FALSE.png)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -808,9 +812,9 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 [![生长与外部参照接口 / Growth and reference-data interface](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
 
-灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。
+灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。提供 `ref_data` 时，`ref_name` 必须是一个非空字符串，且不能与任一模型名称相同。名称用于标识独立的参照曲线；重复名称会在拟合参照曲线前报错。
 
-The reference curve uses synthetic Age and Length data, not empirical measurements from the paper.
+The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. When `ref_data` is supplied, `ref_name` must be one nonempty string and differ from both model names. The name identifies a separate reference curve; duplicate names are rejected before fitting the reference.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_growth)
 
@@ -830,9 +834,9 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
 
 [![两模型调查拟合 / Survey fits from both models](figures/ytf/compare_CatL.png)](figures/ytf/compare_CatL.png)
 
-显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。
+显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。
 
-Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians.
+Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_CatL)
 
@@ -971,3 +975,7 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 黑虚线为生成真值；固定生物参数，且模拟与拟合的补充过程不同。
 
 Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.
+
+调查拟合图标题表示调查指数，山脊图标题表示调查体长组成，两者都不是渔业捕获量估计。过程偏差图在 `log = TRUE` 时标为对数偏差（参照值 0），在 `log = FALSE` 时标为乘数（参照值 1）。取指数只改变尺度，不改变已拟合的过程；两者都不是似然偏差统计量。
+
+Survey-fit titles refer to survey indices, and ridge titles refer to survey length compositions; neither is a fishery catch estimate. In process-deviation plots, `log = TRUE` labels log deviations (reference value 0), while `log = FALSE` labels multiplicative factors (reference value 1). Exponentiation changes the scale, not the underlying fitted process; neither quantity is a likelihood deviance statistic.

@@ -1,4 +1,4 @@
-#' @title Plot ridges of Observed and Estimated Catch-at-Length Over Years
+#' @title Plot Observed and Fitted Survey Length Compositions over Time
 #'
 #' @description This function takes the model result as an input and creates two ridgeline plots to
 #' visualize observed and predicted survey length compositions over time.

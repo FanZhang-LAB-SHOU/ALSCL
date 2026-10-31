@@ -55,4 +55,9 @@ quantity or requested standard error produces an explicit error. With
 \code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
 on the reported scale. They are not truncated at zero. Inspect fit
 diagnostics before using uncertainty intervals.
+
+Titles, axis labels, time-axis breaks and expansion inherit
+\code{acl_theme_set()}. Title keys are CN, CNA and CNL;
+append \code{_se} for interval plots.
+Axis labels use \code{xlab$year} and \code{ylab$catch}.
 }

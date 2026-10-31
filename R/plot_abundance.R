@@ -21,6 +21,11 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #'   must have one finite estimate and finite nonnegative standard error per
 #'   plotted value. Missing or invalid uncertainty produces an explicit error;
 #'   use se = FALSE to plot reported estimates alone.
+#' @details Titles, axis labels, time-axis breaks and expansion inherit
+#'   \code{acl_theme_set()}. Title keys are N, NA_ and NL;
+#'   append \code{_se} for interval plots (use \code{NA_se} for NA).
+#'   Axis labels use \code{xlab$year} and \code{ylab$abundance}.
+#'
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
@@ -50,9 +55,7 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
 
     if (!se) {
       p <- ggplot2::ggplot(number, ggplot2::aes(x = Year, y = number)) +
-        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::labs(x = "Year", y = "Relative abundance", title = "Total Abundance Over Years") +
-        current_theme
+        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
       data_out <- number
     } else {
       # Use exact match ^N$ to avoid matching NA, NL, NLA
@@ -65,9 +68,7 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::labs(y = "Relative abundance", x = "Year", title = "Total Abundance Over Years") +
-        current_theme
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
       data_out <- ci
     }
   }
@@ -89,9 +90,7 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
     if (!se) {
       p <- ggplot2::ggplot(na_long, ggplot2::aes(x = Year, y = number.age)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative abundance", title = "Abundance at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- na_long
     } else {
       # Use exact match ^NA$ to avoid matching NLA
@@ -110,9 +109,7 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative abundance", title = "Abundance at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- ci
     }
   }
@@ -135,9 +132,7 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
     if (!se) {
       p <- ggplot2::ggplot(NL_long, ggplot2::aes(x = Year, y = Count)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative abundance", title = "Abundance at Length Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- NL_long
     } else {
       # Use exact match ^NL$ to avoid matching NLA
@@ -155,12 +150,15 @@ plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, li
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative abundance", title = "Abundance at Length Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- ci
     }
   }
+
+  title_key <- if (se) paste0(type, "_se") else if (type == "NA") "NA_" else type
+  p <- p + ggplot2::labs(x = .acl_lab("x", "year"),
+                         y = .acl_lab("y", "abundance"), title = .acl_title(title_key)) +
+    .acl_scale_x(n_breaks = 5) + current_theme
 
   if (return_data) {
     return(list(plot = p, data = data_out))

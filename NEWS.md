@@ -1,3 +1,39 @@
+# Unreleased
+
+- Align model names and descriptions with the implemented population, observation and growth processes. Clarify survey catchability, simulation F baselines and innovation standard deviations, natural parameter scales and nominal confidence levels without changing existing argument names or calculations.
+- Correct residual facet documentation, document the shared ACL/ALSCL simulation entry points, complete Chinese return-value descriptions, remove escaped paragraph artifacts and organize current tutorials by task. Probability-matrix and survey-catchability plot titles use the same terminology as the manuals.
+
+- Add public CSV/Excel preparation and compilation-free data/parameter checks, using the same effective starts, bounds and maps as fitting; preserve original numeric precision and validate scalar logical controls consistently.
+- Add fitted-result summaries and extraction, portable assessment archives and recipe-based refitting; retain legacy list access and fitting syntax.
+- Add standardized conditional residual tables and grid-free heatmap, actual-time lag and QQ diagnostics, without claiming calibrated tests.
+- Add named sensitivity batches and free-scalar parameter profiles with per-fit numerical status, warnings and errors; parallelize independent fits without nested workers.
+- Add deterministic ACL/ALSCL projections with explicit future F, recruitment and biology, correct terminal-mortality timing and no implied uncertainty, MSY or TAC calculation.
+- Add shared ACL/ALSCL simulation fitting and bias/RMSE/coverage summaries with aligned truth, failure rates and explicit denominators. Document all six workflows in English, Simplified Chinese, the website and Wiki chapter 16, with six new grid-free figures.
+
+### 新增评估能力 · 简体中文
+
+- 统一模型名称，分别说明种群数量、调查观测、存活和生长过程；明确调查可捕性、模拟 F 基准与创新标准差、自然参数尺度和名义置信水平，保留现有参数名与计算方式。
+- 修正残差图分面说明，介绍统一的 ACL／ALSCL 模拟入口，补齐中文返回字段解释，清理段落转义符，并按当前操作重组教程。概率矩阵及调查可捕性图标题与说明书保持一致。
+
+- 新增公开 CSV／Excel 导入、无须编译的数据与参数检查，和核心拟合共用实际初值、上下界及 map；保留原始数值精度，并统一检查逻辑控制参数。
+- 新增拟合结果汇总与提取、可移植评估文件和基于记录的重新拟合，保留旧列表访问及拟合语法。
+- 新增条件标准化残差表及无网格热图、实际时间滞后图和 QQ 图，不宣称为校准过的统计检验。
+- 新增具名敏感性批次和自由标量参数剖面，逐项保留数值状态、警告与错误；只并行独立拟合，避免嵌套进程。
+- 新增确定性 ACL／ALSCL 投影，显式提供未来 F、补充与生物学输入，正确处理末期死亡率时序，不隐含不确定性、MSY 或 TAC 计算。
+- 新增统一 ACL／ALSCL 模拟拟合与偏差、RMSE、覆盖率汇总，按真值对齐并报告失败率及各项分母；中英文文档、网站及 Wiki 第 16 章完整说明六类工作流，配六张新无网格图。
+
+### Existing development fixes
+
+- Growth plots default to fitted ages and reject explicit pre-t0 ranges, preventing negative-length extrapolations and reversed intervals. Parameter annotations, fonts and growth-axis labels are consistent with and without intervals.
+- Fishing-mortality plots inherit global titles, axis labels, breaks and expansion. Theme names and existing theme objects are both supported with grid-free panels.
+- Survey comparison axes use survey-index labels independently of fishery catch; the new survey label takes precedence while preserving legacy custom abundance labels.
+- Retrospective tutorials correctly show that saved observations and reports support ridge plots without a live TMB object.
+- Growth-reference labels must be nonempty and distinct from both model labels, preventing unrelated curves from being connected.
+- Residual smoothers choose their method and span independently in each facet; a sparse group no longer removes or changes trends in other groups.
+- All SSB, biomass, abundance and catch plot modes inherit global titles, axis labels, breaks and expansion, including interval variants.
+- Process-deviation labels distinguish log deviations from multiplicative factors; survey-index and composition titles describe the plotted quantities.
+- Bilingual examples define the retrospective result before use and use the effective year-profile line-width arguments. Manual figures are regenerated with no gridlines.
+
 # ALSCL 2.2.9
 
 - In 2.2.9, omitted generic `line_size` and `se_alpha` inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`. Combined residual/metric titles and F facet labels inherit the global typography. Grid lines remain absent by default. ACL F-deviation age panels use numeric order. `plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.

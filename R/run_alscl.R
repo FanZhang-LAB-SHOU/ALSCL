@@ -72,7 +72,8 @@
 #'   `1e-8` (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
 #'   remain unchanged; inspect `optimizer_history`, `refinement`, and
 #'   `diagnostics` separately. This may change estimates at numerical precision.
-#' @return A list with report, opt, obj, est_std, vcov, pdHess, gradient,
+#' @return An alscl_fit list (legacy dollar access is unchanged) with report,
+#'   opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 #'   year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
 #'   start_diagnostics records each start's PID, Unix start/end times, elapsed
@@ -87,6 +88,9 @@
 #'   parameters, including sequential and fallback paths. Its report describes
 #'   the same fitted state as report. Saved estimates and standard errors are
 #'   unchanged by this restoration; refit serialized results before using obj.
+#'   recipe stores the complete resolved fitting inputs and software settings.
+#'   Use summary(), extract_parameters(), extract_estimates(), save_assessment()
+#'   and refit_model() for inspection, portable storage and reproducible refitting.
 #' @export
 #' @param len_lower,len_upper Optional bounds consistent with len_border and len_mid.
 #'   The first lower boundary must be -Inf and the last upper boundary must be
@@ -106,6 +110,8 @@ run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
     return(.acl_fit_bundle(data.CatL, "alscl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action)
-  .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,
+  result <- .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
+  .acl_attach_recipe(result, model = "alscl",
+    args = mget(names(formals(run_alscl)), envir = environment(), inherits = FALSE))
 }

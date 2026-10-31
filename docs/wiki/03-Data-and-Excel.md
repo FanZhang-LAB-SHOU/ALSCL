@@ -49,9 +49,9 @@ The example uses midpoints 6:50 by 2 and 22 explicit internal boundaries 7:49. S
 
 ## 5. 导入自己的实测数据 / Importing your observations
 
-[real_data_workflow.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) 提供指南辅助函数，需 `source()`，不属于包的导出 API。Excel 读取采用 [readxl::read_excel](https://readxl.tidyverse.org/reference/read_excel.html)，保留原始年份表头并显式转换数值。
+下面保留旧的 [real_data_workflow.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) 脚本工作流，其 `validate_survey_tables()` 和 `fit_survey_tables()` 仍需 `source()`。当前开发版本另提供公开的 `read_survey_csv()`、`read_survey_excel()`、`prepare_alscl_data()` 和 `check_alscl_data()`，无需加载仓库脚本；完整用法见[评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md)。Excel 读取需要可选的 `readxl`，保留时间表头并显式转换数字文本。
 
-These are guide helpers, sourced from the repository, not package exports. The Excel reader preserves original time headers and converts numeric cells explicitly.
+The legacy script workflow below remains supported; its validate_survey_tables() and fit_survey_tables() helpers require source(). The current development version additionally exports read_survey_csv(), read_survey_excel(), prepare_alscl_data() and check_alscl_data(), with no repository script required; see [assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md). Excel import requires optional readxl and preserves time headers while converting numeric text explicitly.
 
 ```r
 install.packages("readxl") # 只需安装一次 / Install once
@@ -476,7 +476,7 @@ The 2.2.2 run used four cores for standard errors and the default safeguarded re
 
 ![CSV 示例残差 / CSV example residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true&v=d5c880c3e372)
 
-![CSV 示例亲体生物量 / CSV example spawning biomass](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true&v=93d725d5c1a8)
+![CSV 示例亲体生物量 / CSV example spawning biomass](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true&v=11216e95d941)
 
 详细的修改步骤 / Detailed adaptation instructions: [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 

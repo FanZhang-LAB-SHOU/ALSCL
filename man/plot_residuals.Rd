@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_residuals.R
 \name{plot_residuals}
 \alias{plot_residuals}
-\title{Plot the Distribution of Model Residuals from an Age-Structured Assessment Model (ACL)}
+\title{Plot conditional log residuals from an ACL or ALSCL fit}
 \usage{
 plot_residuals(
   model_result,
@@ -31,12 +31,14 @@ plot_residuals(
 )
 }
 \arguments{
-\item{model_result}{A list obtained from the \code{run_acl} function. This list should contain a "report" component that includes
-a "resid_index" component, representing the residuals for each index.}
+\item{model_result}{An ACL or ALSCL fitted result with report$resid_index,
+stored observations and time/length metadata.}
 
 \item{f}{Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
 influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
-Sparse facets use a linear trend; otherwise the span is enlarged when needed for at least five neighbors.}
+Each facet is handled independently: fewer than two distinct observed x values
+omit its trend, two to five use a linear trend, and six or more use loess.
+The loess span is enlarged per facet when needed for at least five neighbors.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -50,7 +52,9 @@ Sparse facets use a linear trend; otherwise the span is enlarged when needed for
 
 \item{facet_ncol}{Numeric, optional. Number of columns in facet wrap.  Default is NULL.}
 
-\item{type}{Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length".}
+\item{type}{Character. "length" uses time on the x-axis and length-group
+facets; "year" uses length on the x-axis and time-period facets.
+Default is "length". This changes the layout, not the residual definition.}
 
 \item{resid_cap}{Finite positive numeric scalar or NULL. Symmetrically cap
 residuals at +/- this value; NULL disables capping.
@@ -88,13 +92,12 @@ plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
 A ggplot object representing the facet plot of residuals.
 }
 \description{
-This function takes the output from the \code{run_acl} function and creates a facet plot of the residuals for each index.
-The residuals reflect the difference between the observed and expected values from the ACL model, a type of age-structured
-assessment model commonly used in fishery science. The function can handle two types of residuals:
+Plot observed log survey index minus fitted Elog_index.
+The type argument selects the layout of these same residuals:
 \enumerate{
-\item "length", where residuals are calculated over length groups for each year, and
-\item "year", where residuals are calculated over years for each length group.
-Each index is represented in a separate facet. Missing and zero observations
+\item "length" plots residuals over time, with one facet per length group;
+\item "year" plots residuals over length, with one facet per model time step.
+Missing and zero observations
 are excluded using the fit's stored observations, including saved fits without
 a live TMB object. Older fits use the observation mask in the TMB data.
 }

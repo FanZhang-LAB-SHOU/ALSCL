@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_CatL.R
 \name{plot_CatL}
 \alias{plot_CatL}
-\title{Plot Estimated and Observed Catch-at-Length (Log or not) over the years or across lengths}
+\title{Plot Fitted and Observed Survey Indices over Time or across Lengths}
 \usage{
 plot_CatL(
   model_result,
@@ -87,8 +87,9 @@ and time/length metadata.}
 
 \item{ylab}{Character or NULL. Custom y-axis label, used verbatim. NULL uses
 Survey index on the original scale and Log survey index on the natural-log
-scale. A customized global abundance label replaces Survey index and gains
-a Log prefix on the log scale.}
+scale. A global survey label replaces Survey index and gains a Log prefix
+on the log scale. If survey is unset, a legacy custom abundance label
+is retained. Explicit ylab takes priority.}
 
 \item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 

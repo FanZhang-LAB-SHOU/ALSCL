@@ -92,15 +92,15 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #'
 #' @param nyear Integer. Number of time columns to peel sequentially. Default is
 #'   5. One peel removes one model time step (one quarter for quarterly data).
-#' @param data.CatL The Catch-at-Length data or the same named input bundle used
+#' @param data.CatL Survey abundance indices at length or the same named input bundle used
 #'   by [run_acl()] or [run_alscl()]. For example, `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M The natural mortality rate.
-#' @param sel_L50 The length at 50 percent selectivity.
-#' @param sel_L95 The length at 95 percent selectivity.
+#' @param M Natural mortality per model time step.
+#' @param sel_L50 Length at 50 percent survey catchability.
+#' @param sel_L95 Length at 95 percent survey catchability.
 #' @param model_type Character. Model to use: `"acl"` (default) or `"alscl"`.
 #' @param growth_step Time step in years. NULL uses recruitment age when below 1, otherwise 1.
 #' @param parameters Optional custom starting parameter list.
@@ -118,7 +118,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #'   -Inf and the remaining entries must match len_border.
 #' @param len_upper Optional upper bin boundaries (ALSCL only). The final entry must be
 #'   Inf and the preceding entries must match len_border.
-#' @param train_times Numeric. Number of optimization restarts. Default is 1.
+#' @param train_times Positive integer. Number of consecutive optimization passes
+#'   per start. Default is 1; nstarts controls the number of independent starts.
 #' @param nstarts Positive integer. Number of independent starts per full/peel
 #'   fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.
 #' @param ncores Integer. Number of CPU cores for parallel peel computation.
@@ -353,15 +354,15 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' See [retro_model()] for full documentation of all parameters.
 #'
 #' @param nyear Integer. Number of time columns to peel. Default is 5.
-#' @param data.CatL The Catch-at-Length data or a named input bundle, as in
+#' @param data.CatL Survey abundance indices at length or a named input bundle, as in
 #'   `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M The natural mortality rate.
-#' @param sel_L50 Length at 50 percent selectivity.
-#' @param sel_L95 Length at 95 percent selectivity.
+#' @param M Natural mortality per model time step.
+#' @param sel_L50 Length at 50 percent survey catchability.
+#' @param sel_L95 Length at 95 percent survey catchability.
 #' @param ... Additional arguments passed to [retro_model()].
 #' @return A list. See [retro_model()].
 #' @inheritParams retro_model
@@ -381,15 +382,15 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' See [retro_model()] for full documentation of all parameters.
 #'
 #' @param nyear Integer. Number of time columns to peel. Default is 5.
-#' @param data.CatL The Catch-at-Length data or a named input bundle, as in
+#' @param data.CatL Survey abundance indices at length or a named input bundle, as in
 #'   `retro_alscl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M The natural mortality rate.
-#' @param sel_L50 Length at 50 percent selectivity.
-#' @param sel_L95 Length at 95 percent selectivity.
+#' @param M Natural mortality per model time step.
+#' @param sel_L50 Length at 50 percent survey catchability.
+#' @param sel_L95 Length at 95 percent survey catchability.
 #' @param growth_step Numeric. Growth transition time step. Defaults to 1 for
 #'   separate arguments; bundled calls retain the bundle's setting or infer it
 #'   as in [run_alscl()].

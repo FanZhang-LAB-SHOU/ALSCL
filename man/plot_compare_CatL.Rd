@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_CatL}
 \alias{plot_compare_CatL}
-\title{Compare Observed vs Predicted Catch-at-Length}
+\title{Compare Observed and Fitted Survey Indices at Length}
 \usage{
 plot_compare_CatL(
   model1,
@@ -59,7 +59,7 @@ Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 A ggplot object.
 }
 \description{
-Compare Observed vs Predicted Catch-at-Length
+Compare Observed and Fitted Survey Indices at Length
 }
 \details{
 Positive observations and their missing-data mask must match both
@@ -69,6 +69,9 @@ as in fitting; prediction curves retain every length in each selected period
 and must be finite at every plotted cell. Older results lacking observation
 metadata remain usable, but original-data alignment cannot be fully verified.
 Data frames, matrices and tibbles use the fitting functions' numeric conversion.
+The y-axis uses the global survey label, independently of the catch label.
+If survey is unset, a legacy custom abundance label is retained; otherwise
+the default is Survey index. The plotted predictions are exp(Elog_index).
 }
 \examples{
 \dontrun{

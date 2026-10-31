@@ -11,7 +11,7 @@ Both cases are refitted with the current package to teach annual and quarterly w
 | rec.age / nage | 1 / 15 | 0.25 / 20 |
 | Linf / annual k | 60 / 0.20 | 152 / 0.38 |
 | t0, years | 1/60 | 1/152 |
-| M / mean F, per step | 0.20 / 0.30 | 0.20 / 0.20 |
+| M / F process baseline, per step | 0.20 / 0.30 | 0.20 / 0.20 |
 | Maturity L50 / L95 | 35 / 40 | 100 / 120 |
 | Survey catchability L50 / L95 | 15 / 20 | 30 / 50 |
 |Midpoints| 6, 8, …, 50 | 12.5, 17.5, …, 122.5 |

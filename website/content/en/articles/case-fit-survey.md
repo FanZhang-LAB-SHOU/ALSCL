@@ -136,7 +136,7 @@ Check the optimizer code, gradient, Hessian, boundary hits, uncertainty and resi
 
 ## Run the complete example
 
-Install ALSCL 2.2.9 and download the repository. Run from the repository root; the import helpers are repository scripts, not exported package functions. CSV import needs no additional reader. For Excel, install `readxl` once.
+The legacy workflow below runs from a downloaded repository root and sources its helper script. The current development version also offers public read_survey_csv(), read_survey_excel(), prepare_alscl_data() and check_alscl_data() without sourcing that script; see [the complete workflow](assessment-workflows.html). CSV import needs no additional reader. Excel import uses optional `readxl`.
 
 ```r
 library(ALSCL)
@@ -339,7 +339,7 @@ In 2.2.9, `compare_models()` checks both fits against the supplied survey table:
 
 `fit_diagnostics` includes the full fit (`Peel = 0`) and every requested peel, with elapsed time, raw optimizer status, gradient, Hessian, boundaries and errors. `rho_by_peel` contains screened `Rho`, diagnostic `RawRho` and `Valid`. A quantity receives a reported value in `rho_text$Rho` only if the full fit and all requested peels pass the numerical screen and all terminal comparisons are finite with a nonzero reference. Otherwise it is `NA`, with a warning; failed peels are never silently dropped. `raw_rho_text` is an unscreened diagnostic summary, not a replacement for the screened result. It remains `NA` when a terminal comparison is missing. Available trajectories remain in `results` for inspection.
 
-## Refinement and shared F in 2.2.2
+## Optimizer refinement and F shared within each time step
 
 `run_acl(x)` and `run_alscl(x)` now finish the selected fit with up to five safeguarded Newton steps (`polish = TRUE`). Each step requires a positive-definite numerical Hessian, parameters strictly inside their bounds, a smaller maximum absolute gradient, and an objective increase no greater than `1e-8` for floating-point roundoff. Refinement stops if a condition fails; it cannot repair insufficient information or an inappropriate model. Set `polish = FALSE` to skip it. This can change estimates at numerical precision, so 2.2.2 does not promise bitwise equality with older fits.
 

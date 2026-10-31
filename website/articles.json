@@ -190,5 +190,17 @@
       "en": "Review all scalar estimation keys, their optimizer-scale transformations, initial values and lower and upper bounds.",
       "zh": "查阅全部标量估计参数、优化尺度变换、初值以及上下界。"
     }
+  },
+  {
+    "slug": "assessment-workflows",
+    "title": {
+      "en": "Assessment workflows",
+      "zh": "评估工作流"
+    },
+    "source": "docs/ASSESSMENT_WORKFLOWS.md",
+    "description": {
+      "en": "Prepare inputs, inspect maps, extract and save results, check residuals, run sensitivity/profile analyses, project conditional scenarios and summarize simulations.",
+      "zh": "整理输入、检查 map、提取和保存结果、检查残差、运行敏感性与剖面、投影条件情景并汇总模拟表现。"
+    }
   }
 ]

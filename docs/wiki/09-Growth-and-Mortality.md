@@ -17,27 +17,27 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ```r
 # 绘制本图 / Draw this figure
-plot_VB(b, age_range = c(1, 15), se = TRUE)
+plot_VB(b, se = TRUE)
 ```
 
-[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=012cfebef4a3)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=012cfebef4a3)
+[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=6dcfc65cbadd)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=6dcfc65cbadd)
 
-生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。
+生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。
 
-Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation.
+Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_VB)
 
 
 
-## 20. 年龄长度转换 / Age length conversion
+## 20. 年龄—体长概率矩阵 / Age–length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-[![年龄长度转换 / Age length conversion](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=b603331f5466)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=b603331f5466)
+[![年龄—体长概率矩阵 / Age–length probability matrix](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=ef5002aab224)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=ef5002aab224)
 
 色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。
 
@@ -55,7 +55,7 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 捕捞死亡率 year / ACL fishing mortality year](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=3cf718964745)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=3cf718964745)
+[![ACL 捕捞死亡率 year / ACL fishing mortality year](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=6459bbc874c9)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=6459bbc874c9)
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
@@ -73,7 +73,7 @@ plot_fishing_mortality(a, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 捕捞死亡率 age / ACL fishing mortality age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=66f85304d5b9)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=66f85304d5b9)
+[![ACL 捕捞死亡率 age / ACL fishing mortality age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=fdd297ac4b33)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=fdd297ac4b33)
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
@@ -91,7 +91,7 @@ plot_fishing_mortality(a, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 捕捞死亡率 length / ACL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=66f85304d5b9)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=66f85304d5b9)
+[![ACL 捕捞死亡率 length / ACL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=fdd297ac4b33)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=fdd297ac4b33)
 
 ACL 没有独立长度别 F；示例明确使用 age。旧 length 别名保留并警告，仍表示年龄别 F。
 
@@ -109,7 +109,7 @@ plot_fishing_mortality(b, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=2abfe95d12f7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=2abfe95d12f7)
+[![ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=8cc56a095b67)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=8cc56a095b67)
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
@@ -127,7 +127,7 @@ plot_fishing_mortality(b, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=6cc3c0e5e902)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=6cc3c0e5e902)
+[![ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=0c7d455f97cc)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=0c7d455f97cc)
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
@@ -145,7 +145,7 @@ plot_fishing_mortality(b, type = "length",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=b93fb9bf63c5)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=b93fb9bf63c5)
+[![ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=3e7b72988619)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=3e7b72988619)
 
 2.2.3 起，横轴为真实体长中点，按年份分面，阴影为近似 95% 区间。F 的单位为每模型时间步瞬时率。
 
@@ -169,9 +169,9 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
 
 [![对数残差 length / Log residuals length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=b5821541998b)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=b5821541998b)
 
-观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
+观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
 
-Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.
+Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance. Each facet chooses its smoother independently using the number of distinct observed x values: fewer than two omit smoothing, two to five use a linear trend, and six or more use loess. The loess span is enlarged within that facet when needed for at least five neighbors. A sparse tail bin does not remove or change trends in other panels.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
 
@@ -187,15 +187,15 @@ plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
 
 [![对数残差 year / Log residuals year](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=33d40c01318a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=33d40c01318a)
 
-观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
+观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
 
-Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.
+Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance. Each facet chooses its smoother independently using the number of distinct observed x values: fewer than two omit smoothing, two to five use a linear trend, and six or more use loess. The loess span is enlarged within that facet when needed for at least five neighbors. A sparse tail bin does not remove or change trends in other panels.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
 
 
 
-## 29. 过程偏差 R TRUE / Process deviations R TRUE
+## 29. 对数过程偏差 R / Log process deviations R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -204,7 +204,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R TRUE / Process deviations R TRUE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=b746892c3c91)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=b746892c3c91)
+[![对数过程偏差 R / Log process deviations R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=a9db81d17a07)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=a9db81d17a07)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -214,7 +214,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 
 
 
-## 30. 过程偏差 R FALSE / Process deviations R FALSE
+## 30. 过程乘数 R / Process multipliers R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -223,7 +223,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 R FALSE / Process deviations R FALSE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true&v=bca06722e9cd)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true&v=bca06722e9cd)
+[![过程乘数 R / Process multipliers R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true&v=59993ea53790)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true&v=59993ea53790)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -233,7 +233,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 
 
 
-## 31. 过程偏差 F TRUE / Process deviations F TRUE
+## 31. 对数过程偏差 F / Log process deviations F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -242,7 +242,7 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F TRUE / Process deviations F TRUE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true&v=e4ba37882b9f)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true&v=e4ba37882b9f)
+[![对数过程偏差 F / Log process deviations F](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true&v=da77cce5c3aa)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true&v=da77cce5c3aa)
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
@@ -252,7 +252,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 
 
 
-## 32. 过程偏差 F FALSE / Process deviations F FALSE
+## 32. 过程乘数 F / Process multipliers F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -261,7 +261,7 @@ plot_deviance(b, type = "F", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程偏差 F FALSE / Process deviations F FALSE](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true&v=501026b4dbc8)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true&v=501026b4dbc8)
+[![过程乘数 F / Process multipliers F](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true&v=069999ae5a7e)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true&v=069999ae5a7e)
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
@@ -282,7 +282,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
 ```
 
-[![长度组成山脊图 / Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=46f861e0371c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=46f861e0371c)
+[![长度组成山脊图 / Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=0e54771c9642)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=0e54771c9642)
 
 每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。保留 observations 的保存结果无需活跃 obj。
 

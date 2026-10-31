@@ -100,7 +100,8 @@ chapters=[
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
 ('14-Function-Reference','全部函数与参数 · Complete function reference',no_title(read('FUNCTION_REFERENCE.md'))),
-('15-Reproducibility','进阶、复现与故障处理 · Reproducibility',no_title(read('ADVANCED_WORKFLOWS.md'))+'\n\n## 常见问题 · Troubleshooting\n'+trouble)]
+('15-Reproducibility','进阶、复现与故障处理 · Reproducibility',no_title(read('ADVANCED_WORKFLOWS.md'))+'\n\n## 常见问题 · Troubleshooting\n'+trouble),
+('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md')))]
 # Internal anchor links inherited from a source refer to that source if not on this chapter.
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)
@@ -125,11 +126,11 @@ home=f'''# ALSCL 完整使用手册 · Complete user manual
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL {version} · 简体中文与英文 · 15 章 / chapters**
+**ALSCL {version} · 简体中文与英文 · {len(chapters)} 章 / chapters**
 
-本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
+本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
-This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures and seven case-study figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
+This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures, case-study figures and six assessment-workflow figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
 
 [开始使用 · Getting started]({base}/wiki/01-Start) · [仓库主页 · Repository]({base}/tree/main) · [单页书稿 · Single-page book]({base}/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook]({base}/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 

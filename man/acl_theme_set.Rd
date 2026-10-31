@@ -93,7 +93,9 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 
 \item{xlab}{Named list. Override specific x-axis labels.}
 
-\item{ylab}{Named list. Override specific y-axis labels.}
+\item{ylab}{Named list. Override specific y-axis labels. The survey key
+labels survey indices independently of catch abundance; when unset,
+survey plots retain a legacy customized abundance label or use Survey index.}
 
 \item{palette}{Character or NULL. ggsci palette: "npg" (default), "aaas",
 "nejm", "lancet", or "jama". Changing it resets palette-derived colors;

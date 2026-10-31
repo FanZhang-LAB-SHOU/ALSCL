@@ -60,7 +60,7 @@ retro_model(
 \item{nyear}{Integer. Number of time columns to peel sequentially. Default is
 5. One peel removes one model time step (one quarter for quarterly data).}
 
-\item{data.CatL}{The Catch-at-Length data or the same named input bundle used
+\item{data.CatL}{Survey abundance indices at length or the same named input bundle used
 by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. For example, \code{retro_acl(x, nyear = 3)}.}
 
 \item{data.wgt}{The weight data.}
@@ -71,11 +71,11 @@ by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. F
 
 \item{nage}{The number of age classes.}
 
-\item{M}{The natural mortality rate.}
+\item{M}{Natural mortality per model time step.}
 
-\item{sel_L50}{The length at 50 percent selectivity.}
+\item{sel_L50}{Length at 50 percent survey catchability.}
 
-\item{sel_L95}{The length at 95 percent selectivity.}
+\item{sel_L95}{Length at 95 percent survey catchability.}
 
 \item{model_type}{Character. Model to use: \code{"acl"} (default) or \code{"alscl"}.}
 
@@ -104,7 +104,8 @@ including dev_log_N0 and named NULL releases, are unchanged.}
 \item{len_upper}{Optional upper bin boundaries (ALSCL only). The final entry must be
 Inf and the preceding entries must match len_border.}
 
-\item{train_times}{Numeric. Number of optimization restarts. Default is 1.}
+\item{train_times}{Positive integer. Number of consecutive optimization passes
+per start. Default is 1; nstarts controls the number of independent starts.}
 
 \item{ncores}{Integer. Number of CPU cores for parallel peel computation.
 Default is 1. A bundle's fitting ncores is ignored: specify this argument

@@ -450,7 +450,8 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #'   containing observed age-length measurements (e.g. from otolith readings).
 #'   If provided, a VB curve is fitted via \code{nls()} and overlaid as a
 #'   reference, with the raw data as scatter points.
-#' @param ref_name Character. Label for the reference curve. Default "Observed VB".
+#' @param ref_name Character. Nonempty label for the reference curve, distinct
+#'   from both model labels when ref_data is supplied. Default "Observed VB".
 #' @param ref_color Character. Color for reference curve/points. Default "grey30".
 #' @param ref_linetype Character. Linetype for reference curve. Default "dotdash".
 #' @param show_points Logical. Show raw data points from \code{ref_data}. Default TRUE.
@@ -486,6 +487,13 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
+  if (!is.null(ref_data)) {
+    if (!is.character(ref_name) || length(ref_name) != 1L || is.na(ref_name) ||
+        !nzchar(trimws(ref_name)))
+      stop("ref_name must be a nonempty character string.", call. = FALSE)
+    if (ref_name %in% model_names)
+      stop("ref_name must be distinct from both model names.", call. = FALSE)
+  }
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                linewidth = linewidth, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
@@ -614,7 +622,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 # plot_compare_CatL: Observed vs predicted
 # ==========================================================================
 
-#' Compare Observed vs Predicted Catch-at-Length
+#' Compare Observed and Fitted Survey Indices at Length
 #'
 #' @inheritParams plot_compare_ts
 #' @param data.CatL Catch-at-length data frame.
@@ -635,6 +643,9 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #'   and must be finite at every plotted cell. Older results lacking observation
 #'   metadata remain usable, but original-data alignment cannot be fully verified.
 #'   Data frames, matrices and tibbles use the fitting functions' numeric conversion.
+#'   The y-axis uses the global survey label, independently of the catch label.
+#'   If survey is unset, a legacy custom abundance label is retained; otherwise
+#'   the default is Survey index. The plotted predictions are exp(Elog_index).
 #' @export
 #'
 #' @examples
@@ -709,7 +720,7 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
       shape = c(NA, NA, if (has_observed) obs_shape)))) +
     ggplot2::facet_wrap(~year_fct, ncol = ncol, scales = scales) +
     ggplot2::labs(title = .acl_title("compare_CatL", model1_name, model2_name),
-                  x = .acl_lab("x", "length"), y = .acl_lab("y", "catch"), color = "") +
+                  x = .acl_lab("x", "length"), y = .acl_survey_label(), color = "") +
     .acl_base_theme() +
     ggplot2::theme(legend.position = cfg$legend_pos,
                    strip.text = ggplot2::element_text(face = "bold"))

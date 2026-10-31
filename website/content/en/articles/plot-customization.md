@@ -1,10 +1,13 @@
 # Colors and export
 
-The plotting examples use the `a` and `b` fits from the [worked YTF example](first-model.html). Theme settings also apply to other fitted models.
+First complete the [worked YTF example](first-model.html) to create `a`, `b` and `x`. The following block also creates `rb` by fitting three retrospective peels; see [retrospectives](retrospectives.html) for their interpretation. Theme settings also apply to other fitted models.
 
 The default is **ggsci NPG**: navy estimates, vermilion observations, and navy/vermilion model comparisons. Retrospective colors follow descending terminal periods. Settings affect newly created plots, not existing objects.
 
 ```r
+# Create the retrospective result before styling it
+rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
+
 # Set once, then recreate plots
 acl_theme_set(palette = "npg", base_theme = "theme_bw", font_family = "sans")
 plot_retro(rb, facet_col = 2, rho_digits = 3)
@@ -84,9 +87,11 @@ p + ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
 
 Version 2.2.6 also keeps SSB, abundance, biomass, catch, deviation and fishing-mortality plots grid-free if theme loading fails. Explicit theme choices remain available. Manual ggplot exports check major and minor grids in every panel; a visible grid stops export without replacing an existing file. The 2.2.6 release archive includes the refreshed help images.
 
-### Growth-plot settings in 2.2.7
+### Growth-plot ranges and text settings
 
-`plot_VB()` honors `ylab` for both curves and intervals. If covariance is unavailable and `se = TRUE`, it warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+`plot_VB()` uses the fitted age range when `age_range = NULL`. For older results without age metadata, it starts from 1–25 years. Automatic ranges start no earlier than `t0`; a range with no positive span produces an error. An explicit range must contain two finite increasing ages and start at or after `t0`. This avoids negative predicted lengths and reversed intervals before the biological growth curve begins. Explicit valid ranges, including extrapolation beyond the oldest fitted age, remain supported.
+
+Curves and intervals both inherit `ylab$growth` and the selected font. The Linf/k annotation is shown with and without intervals and honors `text_size` and `text_color`. Explicit `ylab` overrides the global label. If covariance is unavailable and `se = TRUE`, the function warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
 
 ```r
 plot_VB(b, se = FALSE, ylab = "Length (cm)",
@@ -101,3 +106,23 @@ Both residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. 
 Survey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.
 
 In 2.2.9, omitted generic `line_size` and `se_alpha` inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`. Combined residual/metric titles and F facet labels inherit the global typography. Grid lines remain absent by default. ACL F-deviation age panels use numeric order. `plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.
+
+### Global labels and axes
+
+The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants (age-specific abundance retains `NA_` and `NA_se`). These settings only change labels and display ranges, not estimates or units. Major and minor gridlines remain absent.
+
+```r
+acl_theme_set(
+  titles = list(SSB = "Spawning biomass",
+                SSB_se = "Spawning biomass with 95% intervals"),
+  xlab = list(year = "Survey year"),
+  ylab = list(ssb = "Spawning biomass"),
+  x_breaks = c(2000, 2009, 2019), x_expand = c(0, 0)
+)
+plot_SSB(b, se = TRUE)
+acl_theme_reset()
+```
+
+`plot_fishing_mortality()` also inherits global titles, labels, `x_breaks` and `x_expand`. Title keys are `F_year`, `F_age` and `F_length`, with `_se` for interval variants. The horizontal label uses `xlab$year`, `xlab$age` or `xlab$length`; the vertical label uses `ylab$F`. Age-mode coordinates are group indices, so the unchanged default label is “Age Group”; a custom `xlab$age` is honored. The ACL legacy length alias uses the age settings. Explicit per-call labels and breaks take precedence. `base_theme` accepts a name such as `"theme_bw"` or `"bw"`, an existing ggplot2 theme object such as `ggplot2::theme_bw()`, or `NULL` for the global setting. All forms keep major and minor gridlines hidden.
+
+Single-model and comparison survey-fit plots use the survey-index label rather than the fishery-catch label. Set `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` to label both consistently. When `survey` is unset, a customized legacy `ylab$abundance` still applies; otherwise the default is “Survey index”. Single-model log plots add a “Log” prefix, and their explicit `ylab` remains authoritative. `ylab$catch` continues to describe actual catch plots and does not relabel survey indices.

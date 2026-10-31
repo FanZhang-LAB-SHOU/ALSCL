@@ -1,6 +1,6 @@
-> Age- and length-structured catch-at-length models for fisheries stock assessment
+> Age-structured and age- and length-structured statistical catch-at-length models for fisheries stock assessment
 
-**ALSCL** is an R package for fitting population models to fishery-independent survey length data using [Template Model Builder (TMB)](https://github.com/kaskr/adcomp). It provides an age-structured model (**ACL**) and a joint age–length model (**ALSCL**), together with simulation, diagnostics, model comparison and plotting tools.
+**ALSCL** is an R package for fitting population models to fishery-independent survey length data using [Template Model Builder (TMB)](https://github.com/kaskr/adcomp). It provides the age-structured catch-at-length model (**ACL**) and the age- and length-structured statistical catch-at-length model (**ALSCL**), together with simulation, diagnostics, model comparison and plotting tools.
 
 Start with a [worked example](articles/first-model.html), browse the [basic functions](#contents) and [worked case studies](articles/index.html), or look up a function in the [reference](reference/index.html). The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673).
 
@@ -31,7 +31,7 @@ Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is req
 | | ACL | ALSCL |
 |---|---|---|
 | Population state | Numbers by age and time | Numbers by length, age and time |
-| Growth representation | Age–length probability matrix | Growth transition matrix |
+| Length and growth representation | Age–length probability matrix | Age–length probability matrix for recruitment and initialization; growth transition matrix for survivors |
 | Fishing mortality | Estimated by age | Estimated by length; age-specific F is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 

@@ -42,7 +42,7 @@ Starting in 2.2.3, both fitting functions check the time grid directly: consecut
 ## Importing your observations
 
 
-These are guide helpers, sourced from the repository, not package exports. The Excel reader preserves original time headers and converts numeric cells explicitly.
+The legacy script workflow below remains supported; its validate_survey_tables() and fit_survey_tables() helpers require source(). The current development version additionally exports read_survey_csv(), read_survey_excel(), prepare_alscl_data() and check_alscl_data(), with no repository script required; see [assessment workflows](assessment-workflows.html). Excel import requires optional readxl and preserves time headers while converting numeric text explicitly.
 
 ```r
 library(ALSCL)

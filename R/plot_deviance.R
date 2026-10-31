@@ -14,7 +14,8 @@
 #' @param point_shape Numeric. The shape of the point. Default is 21.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_width Numeric, the width of the standard error.
-#' @param log Logical, whether to keep log scale (TRUE) or apply exp transform (FALSE).
+#' @param log Logical. TRUE plots log process deviations; FALSE plots their
+#'   exponentiated multiplicative factors. These are not likelihood deviances.
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
 #' @param facet_scales Scales for facet wrap. Default is "free".
 #' @param type Character. "R" for recruitment deviation, "F" for fishing mortality deviation.
@@ -25,6 +26,8 @@
 #'   column in est_std. With se = TRUE, a complete table of finite estimates
 #'   and finite nonnegative standard errors is required. Groups and periods
 #'   must match the model metadata, including the single group for shared F.
+#'   Titles and y-axis labels use the global dev_R/dev_F keys on the log
+#'   scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 #' @return A ggplot2 object.
 #' @export
 plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color = "white",
@@ -77,7 +80,6 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
   if (type == "F") {
     if (shared) {
       ci$Group <- "Shared F"
-      facet_title <- "Shared F Deviance Over Time"
     } else if (is_alscl) {
       labels <- model_result$len_label
       if (is.null(labels)) labels <- paste0("L", seq_len(n_groups))
@@ -86,11 +88,9 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
         stop("model_result$len_label must identify every length group uniquely.", call. = FALSE)
       labels <- .acl_fix_len_labels(labels, prefix = "Length")
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
-      facet_title <- "F Deviance at Length (ALSCL)"
     } else {
       labels <- paste0("Age group ", seq_len(n_groups))
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
-      facet_title <- "F Deviance Over Years"
     }
     ci <- ci[c("Group", "Year", "estimate", "lower", "upper")]
   }
@@ -99,11 +99,13 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
     if (any(!is.finite(ci$estimate)) || (se && any(!is.finite(as.matrix(ci[c("lower", "upper")])))))
       stop("Deviation estimates or intervals overflow on the response scale; use log = TRUE.", call. = FALSE)
   }
+  label_key <- paste0("dev_", type, if (!log) "_multiplier" else "")
   plot <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
     ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
     ggplot2::geom_point(size = point_size, fill = point_color, shape = point_shape) +
-    ggplot2::labs(y = if (type == "R") "Recruitment Deviance" else "F Deviance", x = "Year",
-      title = if (type == "R") "Recruitment Deviance Over Years" else facet_title) +
+    ggplot2::labs(y = .acl_lab("y", label_key), x = .acl_lab("x", "year"),
+      title = .acl_title(label_key)) +
+    .acl_scale_x(n_breaks = 5) +
     .acl_plot_theme()
   if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = facet_scales)
   if (se) plot <- plot +

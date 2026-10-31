@@ -23,6 +23,11 @@ utils::globalVariables(c("LengthGroup", "Count"))
 #'   on the reported scale. They are not truncated at zero. Inspect fit
 #'   diagnostics before using uncertainty intervals.
 #'
+#' @details Titles, axis labels, time-axis breaks and expansion inherit
+#'   \code{acl_theme_set()}. Title keys are SSB, SBL and SBA;
+#'   append \code{_se} for interval plots.
+#'   Axis labels use \code{xlab$year} and \code{ylab$ssb}.
+#'
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
@@ -52,9 +57,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
 
     if (!se) {
       p <- ggplot2::ggplot(SSB, ggplot2::aes(x = Year, y = SSB)) +
-        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::labs(x = "Year", y = "Relative biomass", title = "SSB Over Years") +
-        current_theme
+        ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
       data_out <- SSB
     } else {
       ss_ssb <- quantity$se
@@ -66,9 +69,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::labs(y = "Relative biomass", x = "Year", title = "SSB Over Years") +
-        current_theme
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
       data_out <- ci
     }
   }
@@ -106,9 +107,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
       data_out <- ci
     }
-    p <- p + ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-      ggplot2::labs(x = "Year", y = "Relative biomass", title = "Spawning Biomass at Length Over Years") +
-      current_theme
+    p <- p + ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
   }
 
   # ==========================
@@ -129,9 +128,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
     if (!se) {
       p <- ggplot2::ggplot(SBA_long, ggplot2::aes(x = Year, y = SBA)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative biomass", title = "Spawning Biomass at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- SBA_long
     } else {
       ss_sba <- quantity$se
@@ -146,12 +143,15 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales) +
-        ggplot2::labs(x = "Year", y = "Relative biomass", title = "Spawning Biomass at Age Over Years") +
-        current_theme
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
       data_out <- ci
     }
   }
+
+  title_key <- if (se) paste0(type, "_se") else type
+  p <- p + ggplot2::labs(x = .acl_lab("x", "year"),
+                         y = .acl_lab("y", "ssb"), title = .acl_title(title_key)) +
+    .acl_scale_x(n_breaks = 5) + current_theme
 
   if (return_data) {
     return(list(plot = p, data = data_out))

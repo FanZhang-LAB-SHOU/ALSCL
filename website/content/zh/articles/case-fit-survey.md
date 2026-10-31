@@ -136,7 +136,7 @@ diagnose_model(x$data.CatL, fit_alscl)
 
 ## 运行完整示例
 
-安装 ALSCL 2.2.9 并下载仓库，从仓库根目录运行。导入辅助函数属于仓库脚本，不是安装包的导出函数。读取 CSV 不需要额外读取器；读取 Excel 时先安装一次 `readxl`。
+下面保留的旧工作流从下载的仓库根目录运行，并加载辅助脚本。当前开发版本另有公开的 read_survey_csv()、read_survey_excel()、prepare_alscl_data() 和 check_alscl_data()，不需要 source 该脚本，详见[完整工作流](assessment-workflows.html)。CSV 不需要额外读取器；Excel 使用可选的 `readxl`。
 
 ```r
 library(ALSCL)
@@ -362,7 +362,7 @@ plot_fishing_mortality(b, type = "length", se = TRUE)
 
 `fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
 
-## 2.2.2 的优化收尾与年度共用 F
+## 优化收尾与时间步内共用 F
 
 `run_acl(x)` 和 `run_alscl(x)` 默认对选中的拟合执行最多五步受保护的 Newton 收尾（`polish = TRUE`）。每步要求数值 Hessian 正定、参数严格位于上下界内、最大绝对梯度下降，且目标函数增加不超过 `1e-8` 的浮点舍入容差。不满足条件就停止；收尾不能补足资料信息，也不能修复不合适的模型。`polish = FALSE` 可跳过收尾。这可能改变数值精度层面的估计，因此 2.2.2 不承诺与旧版拟合逐位一致。
 

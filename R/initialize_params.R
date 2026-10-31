@@ -3,8 +3,8 @@
 #' Initializes all biological, fishing, and survey parameters needed for the
 #' population simulation via \code{sim_cal()} and \code{sim_data()}. Users can
 #' select a built-in species preset (\code{"flatfish"}, \code{"tuna"}, or
-#' \code{"krill"}) to get biologically consistent parameter sets, or specify
-#' all parameters manually.
+#' \code{"krill"}) as starting configurations, then supply the biological and
+#' process assumptions for the intended simulation.
 #'
 #' @param species Character or NULL. Species preset name, one of
 #'   \code{"flatfish"}, \code{"tuna"}, \code{"krill"}, or \code{"?"} to list
@@ -14,9 +14,10 @@
 #' @param first.year Numeric. First year of the observation window (default 2020).
 #'   Fractional years are allowed for subannual observations.
 #' @param nage Integer. Number of age classes including plus-group (default 15).
-#' @param M Numeric. Natural mortality rate (default 0.2).
-#' @param init_Z Numeric. Initial total mortality for equilibrium (default 0.5).
-#' @param vbk Numeric. Von Bertalanffy k (default 0.2).
+#' @param M Numeric. Natural mortality per model time step (default 0.2).
+#' @param init_Z Numeric. Total mortality per model time step used to construct
+#'   the initial equilibrium age distribution (default 0.5).
+#' @param vbk Numeric. Von Bertalanffy k per year (default 0.2).
 #' @param Linf Numeric. Asymptotic length (default 60).
 #' @param t0 Numeric. Von Bertalanffy t0 (default 1/60).
 #' @param len_mid Numeric vector. Finite, positive, increasing midpoints of
@@ -30,17 +31,22 @@
 #' @param mat_L95 Numeric. Length at 95 pct maturity (default 40).
 #' @param cv_L Numeric. CV of length-at-age (default 0.2).
 #' @param cv_inc Numeric. CV of growth increment (default 0.2).
-#' @param std_logR Numeric. SD of log-recruitment deviations (default 0.3).
+#' @param std_logR Numeric. Innovation SD of AR(1) log-recruitment deviations
+#'   (default 0.3).
 #' @param std_logN0 Numeric. SD of initial log-N deviations (default 0.2).
 #' @param alpha Numeric. Beverton-Holt alpha (default 400).
 #' @param beta Numeric. Beverton-Holt beta (default 10).
 #' @param std_SN Numeric. Survey observation error SD (default 0.2).
-#' @param q_surv_L50 Numeric. Survey selectivity L50 (default 15).
-#' @param q_surv_L95 Numeric. Survey selectivity L95 (default 20).
+#' @param q_surv_L50 Numeric. Length at 50 percent survey catchability (default 15).
+#' @param q_surv_L95 Numeric. Length at 95 percent survey catchability (default 20).
 #' @param R_init Numeric. Initial recruitment (default 500).
-#' @param F_mean Numeric. Mean fishing mortality (default 0.3).
-#' @param F_ar Numeric. AR1 coefficient for F deviations (default 0.75).
-#' @param F_sd Numeric. SD of F deviations (default 0.2).
+#' @param F_mean Numeric. Baseline fishing mortality per model time step
+#'   (default 0.3). The simulator multiplies this value by exponentiated
+#'   zero-mean AR(1) log deviations and then by fishing selectivity. It is the
+#'   median of the pre-selectivity F process, not its arithmetic mean.
+#' @param F_ar Numeric. AR(1) coefficient for log-F deviations (default 0.75).
+#' @param F_sd Numeric. Innovation SD of AR(1) log-F deviations (default 0.2).
+#'   Their stationary marginal SD is F_sd / sqrt(1 - F_ar^2).
 #' @param R_ar Numeric. AR1 coefficient for recruitment deviations (default 0.1).
 #'
 #' @param growth_step Time step in years; defaults to the species preset.
@@ -52,6 +58,11 @@
 #'   (ages, years, etc.), ready to pass to \code{sim_cal()}.
 #'
 #' @details
+#' The full simulator's F_mean is a process baseline. In contrast,
+#' [simulate_example_data()] rescales its F trajectory so that mean_F is the
+#' arithmetic mean over the returned years. The names are retained for
+#' compatibility; the two quantities have different definitions.
+#'
 #' Species presets and their key parameters:
 #' \itemize{
 #'   \item flatfish: nage=15, Linf=60, vbk=0.2, M=0.2, annual (M7 model)
