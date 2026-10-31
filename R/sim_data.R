@@ -35,6 +35,13 @@
 #'   lie strictly between -1 and 1. Beverton-Holt alpha and initial recruitment
 #'   may be zero; beta must be positive. These process inputs are checked before
 #'   creating the output directory or drawing random numbers.
+#'   Length geometry is checked against the fitted-model bin convention, and
+#'   available biological-array coordinates must match the parameter list.
+#'   Survey observations retain true zeros and small positive values; no
+#'   artificial positive floor is applied. Survey biomass equals survey
+#'   abundance times weight at length. Fitting still treats zeros as missing
+#'   by default (or rejects them with zero_action = "error"); an all-zero survey
+#'   cannot be fitted by the lognormal observation model.
 #'
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
@@ -199,8 +206,6 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       RVN_at_len[i, ] <- N_at_len[i, ] * q_surv * exp(surv_error[i, ])
       RVB_at_len[i, ] <- RVN_at_len[i, ] * W_at_len
     }
-    # Floor small values
-    RVN_at_len[RVN_at_len < 1e-6] <- 1e-6
 
     # --- Extract observation window ---
     idx <- obs_start:obs_end
@@ -437,8 +442,6 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       RVN_at_len[i, ] <- rowSums(rvnla)
       RVB_at_len[i, ] <- RVN_at_len[i, ] * W_at_len
     }
-    # Floor small values
-    RVN_at_len[RVN_at_len < 1e-6] <- 1e-6
 
     # --- Extract observation window ---
     idx <- obs_start:obs_end
@@ -526,6 +529,18 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("Unknown simulation model_type.", call. = FALSE)
   nage <- .acl_positive_integer(params$nage, "nage", 2L)
   nlen <- .acl_positive_integer(bio$nlen, "nlen", 2L)
+  bins <- .acl_simulation_bins(params$len_mid, params$len_border)
+  if (length(bins$mid) != nlen)
+    stop("nlen does not match the simulation length bins.", call. = FALSE)
+  # Older biological lists can lack coordinates. Check all metadata that is
+  # available without requiring new fields in those otherwise usable lists.
+  for (name in c("len_mid", "len_lower", "len_upper")) {
+    value <- bio[[name]]
+    expected <- bins[[switch(name, len_mid = "mid", len_lower = "lower", len_upper = "upper")]]
+    if (!is.null(value) && (!is.numeric(value) ||
+        !isTRUE(all.equal(as.numeric(value), expected, tolerance = 1e-8))))
+      stop("bio_vars$", name, " must match the parameter length bins.", call. = FALSE)
+  }
   check <- function(value, name, size, upper = Inf) {
     if (!is.numeric(value) || length(value) != size ||
         any(!is.finite(value)) || any(value < 0 | value > upper))

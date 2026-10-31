@@ -66,8 +66,9 @@ test_that("standard errors fork where it is safe and use socket workers elsewher
 })
 
 test_that("only checked TMB versions use the parallel delta method", {
-  expect_identical(ALSCL:::.acl_tmb_checked, "1.9.21")
-  expect_true(ALSCL:::.acl_tmb_supported(ALSCL:::.acl_tmb_checked[1]))
+  expect_identical(ALSCL:::.acl_tmb_checked, c("1.9.21", "1.9.25"))
+  for (version in ALSCL:::.acl_tmb_checked)
+    expect_true(ALSCL:::.acl_tmb_supported(version))
   expect_false(ALSCL:::.acl_tmb_supported("0.0.1"))
   expect_false(ALSCL:::.acl_tmb_supported("99.0.0"))
 })

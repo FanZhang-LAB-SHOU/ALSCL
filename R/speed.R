@@ -23,6 +23,8 @@
 #'   sets the number of workers for multiple starts. Fits that already run on
 #'   parallel workers (\code{retro_model()}, \code{sim_acl()}) use one core
 #'   each; set \code{sd_cores = 1} when you run fits in your own parallel loop.
+#'   Parallel standard errors are enabled for checked TMB versions 1.9.21 and
+#'   1.9.25; other versions use sequential standard errors until validated.
 #' @param framework Automatic-differentiation library that TMB compiles the
 #'   model with. \code{"CppAD"} (default) is TMB's default library, used by
 #'   ALSCL 2.0.0 and earlier. Since 2.2.2, optimizer refinement can change
@@ -155,7 +157,7 @@ print.alscl_speed_info <- function(x, ...) {
 # against; tests/testthat/test-speed.R compares the two with identical().
 # Other versions use TMB::sdreport() itself. To add a version, run the tests
 # with it installed.
-.acl_tmb_checked <- "1.9.21"
+.acl_tmb_checked <- c("1.9.21", "1.9.25")
 .acl_tmb_supported <- function(version = utils::packageVersion("TMB"))
   as.character(version) %in% .acl_tmb_checked
 

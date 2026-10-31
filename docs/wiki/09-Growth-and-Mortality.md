@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons)
 
-**ALSCL 2.2.8 · 简体中文 / English**
+**ALSCL 2.2.9 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -20,7 +20,7 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 plot_VB(b, age_range = c(1, 15), se = TRUE)
 ```
 
-[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=3f280873fcaa)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=3f280873fcaa)
+[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=012cfebef4a3)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=012cfebef4a3)
 
 生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。
 

@@ -3,24 +3,9 @@
 library(ALSCL)
 
 simulation_to_tables <- function(sm, pa, first_year=NULL) {
-  step <- sm$growth_step
-  if (is.null(step)) step <- pa$growth_step
-  if (is.null(step)) step <- if (length(sm$ages)>1L) diff(sm$ages)[1L] else 1
-  years <- if (is.null(first_year)) sm$years else NULL
-  if (is.null(years)) {
-    if (is.null(first_year)) first_year <- sm$first.year
-    if (is.null(first_year)) first_year <- pa$first.year
-    if (is.null(first_year)) first_year <- 2000
-    years <- first_year + (seq_len(sm$nyear)-1)*step
-  }
-  if (!is.numeric(years) || length(years)!=sm$nyear || any(!is.finite(years)) ||
-      any(abs(diff(years)-step)>1e-8*max(1,step)))
-    stop("Simulation years must match nyear and growth_step.")
-  frame <- function(m) {
-    d <- data.frame(LengthBin=as.character(pa$len_mid),m,check.names=FALSE)
-    names(d) <- c("LengthBin",as.character(years)); d
-  }
-  list(data.CatL=frame(t(sm$SN_at_len)),data.wgt=frame(sm$weight),data.mat=frame(sm$mat))
+  # Recorded coordinates take priority; mismatched parameter grids are errors.
+  # Old simulation objects without len_mid may use the matching parameter grid.
+  ALSCL:::.acl_simulation_to_tables(sm, pa, first_year)
 }
 
 run_simulation_examples <- function(out="simulation_examples",fit_batch=FALSE) {

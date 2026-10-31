@@ -180,6 +180,15 @@
     report[[if (model == "ACL") "phi_log_F_a" else "phi_log_F_l"]] <- NULL
   sdresult <- tryCatch(.acl_sdreport(obj, opt$par),
     error = function(e) {warning("Standard errors unavailable: ", conditionMessage(e)); NULL})
+  # Numerical Hessian evaluations can leave the live TMB object at a perturbed
+  # parameter, including after a failed standard-error calculation. Restore the
+  # fitted joint mode before returning it for downstream report/evaluation use.
+  # Keep this outside the uncertainty handler: failure to restore the fitted
+  # objective must not be mistaken for merely unavailable standard errors.
+  restored_objective <- obj$fn(opt$par)
+  if (!is.finite(restored_objective))
+    stop("Could not restore the fitted TMB objective after standard-error calculation.",
+         call. = FALSE)
   sd_info <- if (is.null(sdresult)) NULL else attr(sdresult, "acl_sd_info")
   if (!silent && !is.null(sd_info)) message(.acl_sd_message(sd_info))
   est_std <- if (is.null(sdresult)) NULL else summary(sdresult)

@@ -62,11 +62,13 @@ acl_theme_set(
 
 \item{line_color}{Character. Default line color for single-model plots.}
 
-\item{line_size}{Numeric. Default line width for single-model plots.}
+\item{line_size}{Numeric. Default line width for single-model plots (1.5).
+Plot arguments set to NULL inherit this value; explicit widths take priority.}
 
 \item{se_color}{Character. Default CI color.}
 
-\item{se_alpha}{Numeric. Default CI transparency.}
+\item{se_alpha}{Numeric. Default CI transparency (0.2).
+Plot arguments set to NULL inherit this value; explicit alpha takes priority.}
 
 \item{compare_colors}{Character vector of 2 colors. Can be unnamed (positional)
 or named. The first color is always model1, second is model2.

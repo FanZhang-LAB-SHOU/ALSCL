@@ -1,11 +1,12 @@
 #' @title Plot ridges of Observed and Estimated Catch-at-Length Over Years
 #'
 #' @description This function takes the model result as an input and creates two ridgeline plots to
-#' visualize the density distribution of observed and estimated log catch at length over different years.
+#' visualize observed and predicted survey length compositions over time.
 #' Each time period is normalized to a length composition. Only positive observed
 #' values contribute to the observed composition; missing and zero observations
 #' remain missing, and a wholly unobserved period has no observed ridge. Predicted
-#' compositions use all length bins. Stored observations support saved fits without
+#' compositions use all length bins. Normalization is stable for large or small
+#' finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 #' a live TMB object; older fits use the observation mask in the TMB data.
 #'
 #' @param model_result A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year.
@@ -78,6 +79,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   if (!is.numeric(Elog_index) || length(dim(Elog_index)) != 2L ||
       !identical(dim(logN_at_len), dim(Elog_index)))
     stop("Observed and predicted log abundance must be numeric matrices with matching dimensions.", call. = FALSE)
+  if (!length(Elog_index) || any(!is.finite(Elog_index)))
+    stop("Predicted log abundance must contain finite values.", call. = FALSE)
   if (length(len_mid) != nrow(Elog_index) || length(year) != ncol(Elog_index))
     stop("Length and time metadata must match the abundance matrix dimensions.", call. = FALSE)
   # 两侧按输入时间顺序使用同一渐变 / Share ordered time colors across panels.
@@ -87,17 +90,24 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   # --- Build fill scale from palette ---
   fill_scale <- .acl_ridges_palette(palette, n_years)
 
-  # Transform the matrices into data frames and add column names
-  df_observed <- as.data.frame(exp(logN_at_len))
-  Total1 <- as.vector(colSums(df_observed, na.rm = TRUE))
-  Total1[Total1 == 0] <- NA_real_
-  df_observed <- as.data.frame(sweep(x = df_observed, MARGIN = 2, STATS = Total1, FUN = "/"))
+  # Subtract each column maximum before exponentiating. A shared log offset
+  # does not affect a composition and must not erase a ridge through overflow
+  # or underflow. Entirely unobserved columns remain missing.
+  composition <- function(z) {
+    out <- matrix(NA_real_, nrow(z), ncol(z))
+    for (j in seq_len(ncol(z))) {
+      valid <- is.finite(z[, j])
+      if (!any(valid)) next
+      values <- exp(z[valid, j] - max(z[valid, j]))
+      out[valid, j] <- values / sum(values)
+    }
+    out
+  }
+  df_observed <- as.data.frame(composition(logN_at_len))
   colnames(df_observed) <- year
   df_observed$len_mid <- len_mid
 
-  df_estimated <- as.data.frame(exp(Elog_index))
-  Total2 <- as.vector(colSums(df_estimated))
-  df_estimated <- as.data.frame(sweep(x = df_estimated, MARGIN = 2, STATS = Total2, FUN = "/"))
+  df_estimated <- as.data.frame(composition(Elog_index))
   colnames(df_estimated) <- year
   df_estimated$len_mid <- len_mid
 

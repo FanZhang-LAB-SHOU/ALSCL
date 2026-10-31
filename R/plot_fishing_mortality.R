@@ -7,12 +7,12 @@
 #' F-at-age (FA: (A-1) x (Y-1)) is an emergent property.
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric. The thickness of the line. Default is 1.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. The type of the line. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. The transparency of the ribbon. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
 #' @param facet_ncol Integer. The number of columns in facet_wrap.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
@@ -36,14 +36,16 @@
 #'   Use se = FALSE for saved fits without a complete uncertainty table.
 #'
 #' @export
-plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NULL, line_type = "solid", facet_ncol = NULL,
-                                   facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = "ribbon",
+plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", facet_ncol = NULL,
+                                   facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = "ribbon",
                                    type = c("year", "age", "length"), return_data = FALSE,
                                    x_breaks = NULL, title = NULL, xlab = NULL, ylab = NULL,
                                    font_family = NULL, title_size = NULL, base_theme = NULL) {
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
   type <- match.arg(type)

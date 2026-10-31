@@ -60,9 +60,12 @@ Fractional years are allowed for subannual observations.}
 
 \item{t0}{Numeric. Von Bertalanffy t0 (default 1/60).}
 
-\item{len_mid}{Numeric vector. Midpoints of length bins.}
+\item{len_mid}{Numeric vector. Finite, positive, increasing midpoints of
+length bins. Each midpoint must lie strictly inside its bin.}
 
-\item{len_border}{Numeric vector. Borders of length bins.}
+\item{len_border}{Numeric vector. Increasing borders of length bins, one
+more than the number of midpoints. The first and last borders are converted
+to -Inf and Inf so that the outer bins absorb the distribution tails.}
 
 \item{a}{Numeric. Length-weight coefficient (default exp(-12)).}
 

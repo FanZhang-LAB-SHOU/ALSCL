@@ -147,7 +147,7 @@ Type objective_function<Type>::operator() ()
 
   for(int i=0; i<A; ++i){
 	  for(int j=0; j<Y; ++j){
-		CNA(i,j)=NA(i,j)*(one - exp(-Z(i,j)))*(F(i,j)/Z(i,j));
+		CNA(i,j)=NA(i,j)*F(i,j)*survival_integral(Z(i,j));
 	  }
   }
 

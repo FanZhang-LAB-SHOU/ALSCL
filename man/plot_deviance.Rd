@@ -10,7 +10,7 @@ plot_deviance(
   point_size = 3,
   point_color = "white",
   point_shape = 21,
-  line_size = 1,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
   se_color = NULL,
@@ -32,7 +32,7 @@ plot_deviance(
 
 \item{point_shape}{Numeric. The shape of the point. Default is 21.}
 
-\item{line_size}{Numeric, the line size.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 

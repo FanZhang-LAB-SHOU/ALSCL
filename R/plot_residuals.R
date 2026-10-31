@@ -17,7 +17,7 @@
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
 #' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
-#' @param line_size Numeric. The size of the lines in the plot. Default is 1.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
 #' @param type Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length".
@@ -60,8 +60,9 @@
 #' print(p_year)
 #' }
 #' @export
-plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = 1, facet_scales = "free", facet_ncol=NULL,type=c("length","year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol=NULL,type=c("length","year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(smooth_color)) smooth_color <- acl_theme("smooth_color")
   if (is.null(hline_color)) hline_color <- acl_theme("hline_color")

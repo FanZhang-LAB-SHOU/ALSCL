@@ -62,7 +62,10 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.}
 }
 \value{
-A list containing the results of the stock assessment model.
+A list containing the results of the stock assessment model. Failed
+fits contain converge = "FAILED", error and iter. Each result, including
+failures, replaces its result_rep_\if{html}{\out{<iter>}} file in output_dir. Storage errors
+stop the batch rather than leave an old success file as the current result.
 }
 \description{
 This function runs a stock assessment model using the specified iteration range.

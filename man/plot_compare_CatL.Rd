@@ -61,6 +61,15 @@ A ggplot object.
 \description{
 Compare Observed vs Predicted Catch-at-Length
 }
+\details{
+Positive observations and their missing-data mask must match both
+fitted results whenever stored observations are available. Known length and
+time metadata must also match. Zeros and NA are omitted from observed points
+as in fitting; prediction curves retain every length in each selected period
+and must be finite at every plotted cell. Older results lacking observation
+metadata remain usable, but original-data alignment cannot be fully verified.
+Data frames, matrices and tibbles use the fitting functions' numeric conversion.
+}
 \examples{
 \dontrun{
 # All years (default)

@@ -6,12 +6,12 @@
 #' ribbon that illustrates the standard error, if the `se` argument is set to TRUE.
 #'
 #' @param model_result A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.
-#' @param line_size Numeric. Specifies the thickness of the line in the plot. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Specifies the type of the line in the plot. Default is "solid".
 #' @param se Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. The transparency of the confidence interval ribbon. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param se_type Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #'
@@ -47,10 +47,12 @@
 #'
 #' @export
 
-plot_recruitment <- function(model_result, line_size = 1.5, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
   quantity <- .acl_plot_population_data(model_result, "Rec", "Rec", se)
   se_type <- match.arg(se_type)
@@ -95,7 +97,7 @@ plot_recruitment <- function(model_result, line_size = 1.5, line_color = NULL, l
       { if (se_type[1] == "ribbon")
           ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
         else
-          ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, width = 0.3) } +
+          ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = 0.3) } +
       ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), title = if (!is.null(title)) title else .acl_title("Rec_se")) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)

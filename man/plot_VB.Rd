@@ -7,12 +7,12 @@
 plot_VB(
   model_result,
   age_range = c(1, 25),
-  line_size = 1.2,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
   se = FALSE,
   se_color = NULL,
-  se_alpha = 0.2,
+  se_alpha = NULL,
   se_type = c("ribbon", "errorbar"),
   text_color = "black",
   text_size = 5,
@@ -35,7 +35,7 @@ plot_VB(
 
 \item{age_range}{Numeric vector of length 2, defining the range of ages to consider.}
 
-\item{line_size}{Numeric. The thickness of the line in the plot. Default is 1.2.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -45,7 +45,7 @@ plot_VB(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric. The transparency of the confidence interval ribbon. Default is 0.2.}
+\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
 
 \item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
 

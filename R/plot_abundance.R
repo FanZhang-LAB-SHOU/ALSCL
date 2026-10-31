@@ -5,12 +5,12 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #' It handles three types: total number ("N"), number at age ("NA"), and number at length ("NL").
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric. Line thickness. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. CI ribbon transparency. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param type Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N".
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
 #' @param facet_scales Scales for facet wrap. Default is "free".
@@ -23,13 +23,15 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #'   use se = FALSE to plot reported estimates alone.
 #' @return A ggplot object or a list with plot and data.
 #' @export
-plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-                           se = FALSE, se_color = NULL, se_alpha = 0.2,
+plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+                           se = FALSE, se_color = NULL, se_alpha = NULL,
                            type = c("N", "NA", "NL"), facet_ncol = NULL, facet_scales = "free",
                            return_data = FALSE) {
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
   type <- match.arg(type)

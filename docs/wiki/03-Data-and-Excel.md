@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF)
 
-**ALSCL 2.2.8 · 简体中文 / English**
+**ALSCL 2.2.9 · 简体中文 / English**
 
 下载 [ALSCL_Data_Entry_Example.xlsx](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)。工作簿的 `Instructions` 是双语说明页；其余三张表已填入与 `YTF_example` 相同的数值。请另存副本再替换数据。
 
@@ -474,9 +474,9 @@ The updated script was rerun with the model-default maps and two successive opti
 
 The 2.2.2 run used four cores for standard errors and the default safeguarded refinement. These are numerical checks of synthetic data, not validation of an unseen stock assessment. Before refinement was added (2.2.1), the t0-only ALSCL fit could return false convergence at an unchanged optimum. Version 2.2.2 retains the successful earlier pass and refines its gradient to about 5.37e-9. The t0-only ACL with the original F structure still has an age-correlation boundary and fails the numerical screen; choosing shared F is a separate biological model decision, described below.
 
-![CSV 示例残差 / CSV example residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true&v=c773e1d9440d)
+![CSV 示例残差 / CSV example residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true&v=d5c880c3e372)
 
-![CSV 示例亲体生物量 / CSV example spawning biomass](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true&v=3e31a8f0ecdc)
+![CSV 示例亲体生物量 / CSV example spawning biomass](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true&v=93d725d5c1a8)
 
 详细的修改步骤 / Detailed adaptation instructions: [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 

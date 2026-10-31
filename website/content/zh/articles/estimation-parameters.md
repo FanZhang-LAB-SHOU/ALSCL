@@ -44,3 +44,5 @@ fixed_index <- list(log_sigma_index = factor(NA))
 拟合会按数据维度建立 `dev_log_R`、`dev_log_F`、`dev_log_N0` 随机效应。它们不是本表的普通标量初值；不要把生成器的 `std_logR`、`F_mean` 等直接作为估计列表键名。
 
 **提供初值不等于固定参数。**[必需输入与 map 示例](case-fit-survey.html)列明默认固定项、具名 NULL 的解除方法，以及从 CSV 到拟合的完整脚本。
+
+`create_parameters(species = "krill", model_type = "acl")` 提供 Linf 初值 90 和边界，不会自动固定 Linf，也不更改 M、nage 或时间步长。需要固定时，显式传入 `map = list(log_Linf = factor(NA))` 和选定初值；生物设置仍需在拟合参数中提供。

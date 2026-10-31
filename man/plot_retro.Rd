@@ -9,7 +9,7 @@ plot_retro(
   rho_digits = 4,
   rho_position = "top_right",
   rho_size = 3.5,
-  line_size = 1.2,
+  line_size = NULL,
   point_size = 3,
   point_shape = 21,
   facet_scales = "free",
@@ -40,7 +40,7 @@ plot_retro(
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
-\item{line_size}{Numeric. Line thickness. Default is 1.2.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{point_size}{Numeric. Point size. Default is 3.}
 

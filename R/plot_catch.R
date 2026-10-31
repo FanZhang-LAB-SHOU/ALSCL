@@ -5,12 +5,12 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' Supports total catch ("CN"), catch at age ("CNA"), and catch at length ("CNL").
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric. Line thickness. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. CI ribbon transparency. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param facet_ncol Numeric. Columns in facet wrap. Default is NULL.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
 #' @param type Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN".
@@ -25,13 +25,15 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #'
 #' @return A ggplot object or a list with plot and data.
 #' @export
-plot_catch <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-                       se = FALSE, se_color = NULL, se_alpha = 0.2,
+plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+                       se = FALSE, se_color = NULL, se_alpha = NULL,
                        facet_ncol = NULL, facet_scales = "free",
                        type = c("CN", "CNA", "CNL"), return_data = FALSE) {
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
   type <- match.arg(type)

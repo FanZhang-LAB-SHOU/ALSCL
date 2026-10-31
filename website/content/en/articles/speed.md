@@ -75,7 +75,7 @@ On macOS or Linux in RStudio you can choose forked processes for the full speed-
 |---|---|
 | `sd_cores = 1`, or one core available | Sequential `TMB::sdreport()` |
 | Fits inside `retro_model()` or `sim_acl()` running on parallel workers | One core per fit, so the number of processes does not multiply |
-| The installed TMB version is not one the parallel code was checked against (currently 1.9.21) | Sequential `TMB::sdreport()`; `fit$sd_info$note` says so |
+| The installed TMB version is not one the parallel code was checked against (currently 1.9.21 and 1.9.25) | Sequential `TMB::sdreport()`; `fit$sd_info$note` says so |
 | Socket workers would not save time (little work) | Computed in the main session |
 | The parallel calculation fails (for example, processes cannot be started) | A warning, then the sequential `TMB::sdreport()`; results are unaffected |
 
@@ -167,3 +167,7 @@ Reset an option with, for example, `options(ALSCL.sd_backend = NULL)`.
 ### Consistent package libraries in 2.2.5
 
 Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+
+### Changes in 2.2.9
+
+The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.

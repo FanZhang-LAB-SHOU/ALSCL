@@ -26,9 +26,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功�
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-**Version 2.2.8 · 简体中文 / English**
+**Version 2.2.9 · 简体中文 / English**
 
-**2.2.8:** 统一模拟与拟合的分箱概率，补全输入、回溯映射和区间验证，修正绘图坐标与排序，并支持源码模式并行测试。 / Align simulation tail probabilities, validate inputs and intervals, preserve retrospective maps and plotting coordinates, and support parallel source-checkout tests. [Changes](NEWS.md) · [2.2.8 validation](docs/RELEASE_2.2.8.md).
+**2.2.9:** 统一绘图设置与坐标，保留批量失败记录，验证模拟数据坐标，并同步中英文说明。 / Apply global plotting controls, preserve failed replicate records, validate simulation coordinates and synchronize bilingual documentation. [Changes](NEWS.md) · [2.2.9 validation](docs/RELEASE_2.2.9.md).
 
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。
@@ -303,7 +303,7 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
-**自己的正式数据 / Your own observations:** 2.2.3 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
+**自己的正式数据 / Your own observations:** 2.2.9 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 

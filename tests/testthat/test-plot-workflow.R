@@ -36,9 +36,11 @@ test_that("comparison plots use the diagnostic observation mask and metrics", {
       expect_equal(plot_data$Metric_Value, c(2, 2))
     }
   }
-  expect_error(plot_compare_metrics(model, model, data[1:2, ]), "dimensions differ")
+  expect_error(plot_compare_metrics(model, model, data[1:2, ]),
+               "Model 1 does not match data.CatL: prediction dimensions")
   model$report$Elog_index[1L, 1L] <- Inf
-  expect_error(plot_compare_metrics(model, model, data), "Predictions are non-finite")
+  expect_error(plot_compare_metrics(model, model, data),
+               "Model 1 does not match data.CatL: nonfinite predictions")
 })
 
 test_that("length fishing-mortality plots use actual midpoints and facet by year", {

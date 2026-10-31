@@ -83,6 +83,10 @@
 #'   processes, socket workers for the delta method, or sequential), cores, elapsed
 #'   seconds and a note; see \code{\link{alscl_speed}}.
 #'   The DLL remains loaded so the returned obj can be evaluated in the same session.
+#'   After standard-error calculation, obj is restored to the final fitted
+#'   parameters, including sequential and fallback paths. Its report describes
+#'   the same fitted state as report. Saved estimates and standard errors are
+#'   unchanged by this restoration; refit serialized results before using obj.
 #' @export
 #' @param len_lower,len_upper Optional bounds consistent with len_border and len_mid.
 #'   The first lower boundary must be -Inf and the last upper boundary must be

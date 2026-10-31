@@ -3,11 +3,11 @@
 #' This function takes Linf, k, and t0 as input, creates a sequence of ages, applies the VB function to each age, and then plots the result using ggplot2.
 #' @param model_result A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.
 #' @param age_range Numeric vector of length 2, defining the range of ages to consider.
-#' @param line_size Numeric. The thickness of the line in the plot. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. The type of the line in the plot. Default is "solid".
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. The transparency of the confidence interval ribbon. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param se_type Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".
 #' @param se Logical. Whether to calculate and plot standard error as confidence intervals. Default is FALSE.
 #' @param text_size Numeric. The thickness of the text in the plot. Default is 5.
@@ -33,10 +33,12 @@
 #' \dontrun{
 #' plot_VB(model_result, age_range = c(1, 25))
 #' }
-plot_VB <- function(model_result, age_range = c(1, 25), line_size = 1.2, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = c("ribbon", "errorbar"),text_color="black",text_size=5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+plot_VB <- function(model_result, age_range = c(1, 25), line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"),text_color="black",text_size=5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
   # Define the VB function
   VB_func <- function(Linf, k, t0, age) {
@@ -79,7 +81,7 @@ plot_VB <- function(model_result, age_range = c(1, 25), line_size = 1.2, line_co
     p <- ggplot2::ggplot(data, ggplot2::aes(x = age, y = length)) +
       {if (se_type[1] == "ribbon")
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), alpha = se_alpha, fill = se_color)
-       else ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, width = .1)} +
+       else ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = .1)} +
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "age") else xlab,
                     y = if (is.null(ylab)) "Length" else ylab,

@@ -75,7 +75,7 @@ Windows 不支持分叉；R 的文档（`?parallel::mclapply`）也不建议在�
 |---|---|
 | `sd_cores = 1`，或只有 1 个核可用 | 顺序计算的 `TMB::sdreport()` |
 | `retro_model()` 或 `sim_acl()` 中在并行进程里运行的拟合 | 每个拟合用 1 核，进程数不会成倍增加 |
-| 已安装的 TMB 版本不是并行代码核对过的版本（目前为 1.9.21） | 顺序计算的 `TMB::sdreport()`；`fit$sd_info$note` 会注明 |
+| 已安装的 TMB 版本不是并行代码核对过的版本（目前为 1.9.21 和 1.9.25） | 顺序计算的 `TMB::sdreport()`；`fit$sd_info$note` 会注明 |
 | 启动 socket 进程不会更快（计算量小） | 在主会话中计算 |
 | 并行计算失败（例如无法启动进程） | 给出警告，然后顺序计算 `TMB::sdreport()`；结果不受影响 |
 
@@ -167,3 +167,7 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 ### 2.2.5 的并行安装库一致性
 
 多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+
+### 2.2.9 修订
+
+已验证的 TMB 版本为 1.9.21 和 1.9.25。现有 Windows、macOS、Linux 检查已在 1.9.25 上通过两模型、两种 AD 框架的严格并行一致性测试，不允许用单核回退代替通过；Windows 使用 socket，并跳过 Unix fork 测试。其他 TMB 版本继续使用顺序计算保护。这扩大了可启用加速的版本范围，不保证小模型也会提速；实际方法请看 `fit$sd_info`。

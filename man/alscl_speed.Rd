@@ -26,7 +26,9 @@ cores and keeps one free. This setting is separate from the
 \code{ncores} argument of \code{run_acl()} and \code{run_alscl()}, which
 sets the number of workers for multiple starts. Fits that already run on
 parallel workers (\code{retro_model()}, \code{sim_acl()}) use one core
-each; set \code{sd_cores = 1} when you run fits in your own parallel loop.}
+each; set \code{sd_cores = 1} when you run fits in your own parallel loop.
+Parallel standard errors are enabled for checked TMB versions 1.9.21 and
+1.9.25; other versions use sequential standard errors until validated.}
 
 \item{framework}{Automatic-differentiation library that TMB compiles the
 model with. \code{"CppAD"} (default) is TMB's default library, used by

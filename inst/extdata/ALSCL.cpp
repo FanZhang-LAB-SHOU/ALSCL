@@ -218,7 +218,7 @@ Type objective_function<Type>::operator()()
 	for(int i=0; i<Y; ++i){
 		for(int j=0; j<A; ++j){
 			for(int k=0; k<L; ++k){
-				CNLA(k,j,i) = NLA(k,j,i) * (one - exp(-ZL(k,i))) * (FL(k,i)/(ZL(k,i)));
+				CNLA(k,j,i) = NLA(k,j,i) * FL(k,i) * survival_integral(ZL(k,i));
 				CBLA(k,j,i) = CNLA(k,j,i)*weight(k,i);
 			}
 		}

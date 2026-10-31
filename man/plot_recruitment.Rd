@@ -6,12 +6,12 @@
 \usage{
 plot_recruitment(
   model_result,
-  line_size = 1.5,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
   se = FALSE,
   se_color = NULL,
-  se_alpha = 0.2,
+  se_alpha = NULL,
   se_type = c("ribbon", "errorbar"),
   return_data = FALSE,
   title = NULL,
@@ -31,7 +31,7 @@ plot_recruitment(
 \arguments{
 \item{model_result}{A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.}
 
-\item{line_size}{Numeric. Specifies the thickness of the line in the plot. Default is 1.2.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -41,7 +41,7 @@ plot_recruitment(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric. The transparency of the confidence interval ribbon. Default is 0.2.}
+\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
 
 \item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
 

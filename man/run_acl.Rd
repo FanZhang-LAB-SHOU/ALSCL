@@ -111,6 +111,10 @@ sd_info records how the standard errors were computed: method (forked
 processes, socket workers for the delta method, or sequential), cores, elapsed
 seconds and a note; see \code{\link{alscl_speed}}.
 The DLL remains loaded so the returned obj can be evaluated in the same session.
+After standard-error calculation, obj is restored to the final fitted
+parameters, including sequential and fallback paths. Its report describes
+the same fitted state as report. Saved estimates and standard errors are
+unchanged by this restoration; refit serialized results before using obj.
 }
 \description{
 Fit the ACL survey catch-at-length model

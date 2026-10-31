@@ -1,5 +1,18 @@
 #ifndef ACL_MODEL_MATH_HPP
 #define ACL_MODEL_MATH_HPP
+// Integral of exp(-z*t) from 0 to 1. The sixth-order expansion avoids
+// cancellation in 1-exp(-z) near zero and has truncation error below 3e-33
+// for 0 <= z < 1e-4. A safe inactive denominator also supports z == 0.
+// CondExp keeps the expression differentiable by CppAD and TMBad.
+template<class Type>
+Type survival_integral(Type z) {
+  Type small = Type(1) + z * (Type(-0.5) + z * (Type(1.0/6.0) +
+    z * (Type(-1.0/24.0) + z * (Type(1.0/120.0) +
+    z * (Type(-1.0/720.0) + z * Type(1.0/5040.0))))));
+  Type denominator = CppAD::CondExpLt(z, Type(1e-4), Type(1), z);
+  Type ordinary = (Type(1) - exp(-z)) / denominator;
+  return CppAD::CondExpLt(z, Type(1e-4), small, ordinary);
+}
 // TMB's normal CDF has analytic AD derivatives. Evaluate right tails via
 // symmetry to avoid subtracting two probabilities rounded to one.
 template<class Type>

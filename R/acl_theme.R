@@ -271,9 +271,11 @@ acl_theme <- function(what = NULL) {
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks.
 #' @param x_expand Numeric vector of length 2. X-axis expansion.
 #' @param line_color Character. Default line color for single-model plots.
-#' @param line_size Numeric. Default line width for single-model plots.
+#' @param line_size Numeric. Default line width for single-model plots (1.5).
+#'   Plot arguments set to NULL inherit this value; explicit widths take priority.
 #' @param se_color Character. Default CI color.
-#' @param se_alpha Numeric. Default CI transparency.
+#' @param se_alpha Numeric. Default CI transparency (0.2).
+#'   Plot arguments set to NULL inherit this value; explicit alpha takes priority.
 #' @param compare_colors Character vector of 2 colors. Can be unnamed (positional)
 #'   or named. The first color is always model1, second is model2.
 #'   Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
@@ -481,6 +483,16 @@ acl_theme_reset <- function() {
       expand = ggplot2::expansion(mult = expd)
     )
   }
+}
+
+
+# Apply the same typography to a patchwork's outer title and panel titles.
+.acl_annotation_theme <- function(legend_pos) {
+  ggplot2::theme(
+    text = ggplot2::element_text(family = acl_theme("font_family")),
+    plot.title = ggplot2::element_text(size = acl_theme("title_size"),
+                                     hjust = acl_theme("title_hjust")),
+    legend.position = legend_pos)
 }
 
 

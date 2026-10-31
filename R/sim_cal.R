@@ -9,6 +9,8 @@
 #' @param params A list of parameters from \code{initialize_params()}.
 #'   Must contain \code{model_type} ("age_based" or "length_based") to
 #'   determine which transition matrix to build.
+#'   Length midpoints must lie inside the matching open-tail bins; geometry is
+#'   checked again so that manually edited parameter lists cannot bypass it.
 #'
 #' @return A list containing:
 #'   \describe{
@@ -20,11 +22,13 @@
 #'     \item{sel}{Selectivity vector (at-age for age_based, at-length for length_based)}
 #'     \item{pla}{Age-length transition matrix (always built for initial conditions)}
 #'     \item{Gij}{Growth transition matrix (length_based only)}
-#'     \item{nlen, len_lower, len_upper}{Length bin dimensions}
+#'     \item{nlen, len_mid, len_lower, len_upper}{Length bin dimensions and coordinates}
 #'   }
 #'
 #' @export
 sim_cal <- function(params) {
+
+  bins <- .acl_simulation_bins(params$len_mid, params$len_border)
 
   # =========================================================================
   # Extract common parameters
@@ -35,8 +39,8 @@ sim_cal <- function(params) {
   vbk        <- params$vbk
   Linf       <- params$Linf
   t0         <- params$t0
-  len_mid    <- params$len_mid
-  len_border <- params$len_border
+  len_mid    <- bins$mid
+  len_border <- c(-Inf, bins$border, Inf)
   cv_L       <- params$cv_L
   cv_inc     <- params$cv_inc
   q_surv_L50 <- params$q_surv_L50
@@ -49,8 +53,8 @@ sim_cal <- function(params) {
   # Length bin setup
   # =========================================================================
   nlen      <- length(len_mid)
-  len_lower <- len_border[1:nlen]
-  len_upper <- len_border[2:(nlen + 1)]
+  len_lower <- bins$lower
+  len_upper <- bins$upper
 
   # =========================================================================
   # Common derived variables
@@ -173,6 +177,7 @@ sim_cal <- function(params) {
     Gij        = Gij,
     q_surv     = q_surv,
     sel        = sel,
+    len_mid    = len_mid,
     len_lower  = len_lower,
     len_upper  = len_upper,
     nlen       = nlen

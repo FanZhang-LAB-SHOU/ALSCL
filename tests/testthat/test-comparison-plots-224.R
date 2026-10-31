@@ -153,6 +153,7 @@ test_that("paired residual plots omit missing cells and entirely missing periods
   data[1L, 2L] <- NA_real_
   data[2L, 3L] <- 0
   data[, 4L] <- NA_real_
+  m1$observations <- m2$observations <- as.matrix(data[, -1L])
   # Even extreme placeholder residuals must never enter the diagnostic plots.
   valid <- is.finite(as.matrix(data[, -1L])) & as.matrix(data[, -1L]) > 0
   m1$report$resid_index[!valid] <- 999

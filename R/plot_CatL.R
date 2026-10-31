@@ -1,19 +1,21 @@
 #' Plot Estimated and Observed Catch-at-Length (Log or not) over the years or across lengths
 #'
-#' This function visualizes the Elog_index (counts in length groups) over years or across lengths using ggplot2.
-#' The Elog_index represents the estimated abundance of the population within certain length groups, obtained from the model output.
+#' Compare observed survey indices with their fitted lognormal medians over time
+#' or across length bins. Elog_index contains predicted natural-log survey indices;
+#' exp_transform = TRUE displays their original-scale medians.
 #' The resulting plot is a line graph, with data points represented by distinct markers.
-#' The function allows for faceted plots to better visualize the distribution of counts across different length groups or years.
+#' Facets separate length groups or time periods.
 #'
-#' @param model_result A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups.
-#' @param line_size Numeric. Line thickness for type="length" plot. Default is 1.2.
+#' @param model_result A fitted result with report$Elog_index, observed survey data
+#'   and time/length metadata.
+#' @param line_size Numeric or NULL. Line thickness for type="length"; NULL inherits global line_size.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type for type="length" plot. Default is "solid".
-#' @param line_size1 Numeric. Line thickness for estimated (Elog_index) in type="year". Default is 1.8.
+#' @param line_size1 Numeric or NULL. Estimated-line thickness for type="year"; NULL uses 1.2 times global line_size (default 1.8).
 #' @param line_color1 Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type1 Character. Line type for estimated line. Default is "solid".
 #' @param line_alpha1 Numeric. Transparency for estimated line (0-1). Default is 1.
-#' @param line_size2 Numeric. Line thickness for observed (logN_at_len) in type="year". Default is 1.0.
+#' @param line_size2 Numeric or NULL. Observed-line thickness for type="year"; NULL uses two-thirds of global line_size (default 1.0).
 #' @param line_color2 Character or NULL. NULL inherits the global observed_color setting.
 #' @param line_type2 Character. Line type for observed line. Default is "solid".
 #' @param line_alpha2 Numeric. Transparency for observed line (0-1). Default is 0.6.
@@ -28,7 +30,10 @@
 #'
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
-#' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
+#' @param ylab Character or NULL. Custom y-axis label, used verbatim. NULL uses
+#'   Survey index on the original scale and Log survey index on the natural-log
+#'   scale. A customized global abundance label replaces Survey index and gains
+#'   a Log prefix on the log scale.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
@@ -63,15 +68,18 @@
 #' @export
 
 plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_shape=16,
-                      line_size = 1.2, line_color = NULL, line_type = "solid",
-                      line_size1 = 1.8, line_color1 = NULL, line_type1 = "solid", line_alpha1 = 1,
-                      line_size2 = 1.0, line_color2 = NULL, line_type2 = "solid", line_alpha2 = 0.6,
+                      line_size = NULL, line_color = NULL, line_type = "solid",
+                      line_size1 = NULL, line_color1 = NULL, line_type1 = "solid", line_alpha1 = 1,
+                      line_size2 = NULL, line_color2 = NULL, line_type2 = "solid", line_alpha2 = 0.6,
                       facet_ncol = NULL, facet_scales = "free", type = c("length","year"),
                       exp_transform = FALSE, return_data = FALSE,
                       title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
                       title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                       strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size1)) line_size1 <- 1.2 * acl_theme("line_size")
+  if (is.null(line_size2)) line_size2 <- (2 / 3) * acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_color)) point_color <- acl_theme("observed_color")
   if (is.null(line_color1)) line_color1 <- acl_theme("line_color")
@@ -82,6 +90,12 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
   if (!is.logical(exp_transform) || length(exp_transform) != 1L || is.na(exp_transform))
     stop("exp_transform must be TRUE or FALSE.", call. = FALSE)
   type <- match.arg(type)
+  if (is.null(ylab)) {
+    ylab <- .acl_lab("y", "abundance")
+    if (identical(ylab, .acl_defaults$ylab$abundance)) {
+      ylab <- if (exp_transform) "Survey index" else "Log survey index"
+    } else if (!exp_transform) ylab <- paste("Log", ylab)
+  }
   Elog_index <- model_result$report$Elog_index
   if (is.data.frame(Elog_index)) Elog_index <- as.matrix(Elog_index)
   logN_at_len <- .acl_observed_log(model_result)
@@ -116,7 +130,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
       ggplot2::geom_point(logN_at_len_long, mapping=aes(x = Year, y = Count),size= point_size, color= point_color,shape=point_shape) +
       ggplot2::geom_line(Elog_index_long,  mapping=aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), title = if (!is.null(title)) title else .acl_title("CatL_year")) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_year")) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
@@ -163,7 +177,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
       ggplot2::geom_line(data=df_long2, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size2,color=line_color2,linetype=line_type2,alpha=line_alpha2) +
       ggplot2::geom_line(data=df_long1, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size1,color=line_color1,linetype=line_type1,alpha=line_alpha1) +
       ggplot2::facet_wrap(~year, scales = facet_scales,ncol=facet_ncol) +
-      ggplot2::labs(caption = "Thicker line: estimated; thinner line: observed (default widths)", x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), title = if (!is.null(title)) title else auto_title) +
+      ggplot2::labs(caption = "Thicker line: estimated; thinner line: observed (default widths)", x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = if (!is.null(title)) title else auto_title) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 

@@ -200,3 +200,5 @@ F_annual <- sum(F_quarter)
 
 
 `plot_compare_annual_F()` does not annualize quarterly values. Apical is a within-step group maximum; mean is unweighted. Native F dimensions differ between models.
+
+Both compiled models evaluate the Baranov catch fraction stably for very small total mortality, consistently with the simulator. This prevents cancellation to zero at extreme values; ordinary-scale results may differ only at floating-point precision.

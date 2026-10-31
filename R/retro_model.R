@@ -130,7 +130,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
-#' @param line_size Numeric. Line thickness. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param point_size Numeric. Point size for endpoints. Default is 3.
 #' @param point_shape Numeric. Point shape for endpoints. Default is 21.
 #' @param facet_scales Character. Facet scales argument. Default is "free".
@@ -187,7 +187,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         len_lower = NULL, len_upper = NULL,
                         train_times = 1, ncores = 1, silent = FALSE,
                         plot = FALSE,
-                        line_size = 1.2, point_size = 3, point_shape = 21,
+                        line_size = NULL, point_size = 3, point_shape = 21,
                         facet_scales = "free", facet_col = NULL, facet_row = NULL,
                         title = NULL, xlab = NULL, ylab = NULL,
                         font_family = NULL, title_size = NULL,
@@ -370,7 +370,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
                       parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, plot = FALSE,
-                      line_size = 1.2, point_size=3,point_shape=21,facet_scales = "free", facet_col = NULL, facet_row = NULL,train_times=1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
+                      line_size = NULL, point_size=3,point_shape=21,facet_scales = "free", facet_col = NULL, facet_row = NULL,train_times=1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
   .acl_retro_wrapper(match.call(expand.dots = FALSE), environment(), "acl")
 }
 
@@ -413,7 +413,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param rho_digits Integer. Decimal places for Mohn's rho. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
-#' @param line_size Numeric. Line thickness. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param point_size Numeric. Point size. Default is 3.
 #' @param point_shape Numeric. Point shape. Default is 21.
 #' @param facet_scales Character. Facet scales. Default is "free".
@@ -448,7 +448,7 @@ plot_retro <- function(retro_result,
                        rho_digits = 4,
                        rho_position = "top_right",
                        rho_size = 3.5,
-                       line_size = 1.2, point_size = 3, point_shape = 21,
+                       line_size = NULL, point_size = 3, point_shape = 21,
                        facet_scales = "free", facet_col = NULL, facet_row = NULL,
                        title = NULL, xlab = NULL, ylab = NULL,
                        font_family = NULL, title_size = NULL,
@@ -456,6 +456,7 @@ plot_retro <- function(retro_result,
                        strip_text_size = NULL, legend_text_size = NULL,
                        x_breaks = NULL, base_theme = NULL, title_hjust = NULL, palette = NULL, colors = NULL) {
 
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points

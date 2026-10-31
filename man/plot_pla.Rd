@@ -47,7 +47,9 @@ plot_pla(
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Integer age-bin positions to label (between 1 and the number
+of age bins). This changes tick labels only, never the heatmap cells.
+NULL inherits global x_breaks; when both are NULL all age bins are labelled.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 

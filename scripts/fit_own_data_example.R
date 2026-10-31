@@ -1,4 +1,4 @@
-# ALSCL 2.2.8: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL 2.2.9: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
@@ -6,7 +6,7 @@
 
 library(ALSCL)
 source('scripts/plot_helpers.R')
-stopifnot(packageVersion("ALSCL") >= "2.2.2")
+stopifnot(packageVersion("ALSCL") >= "2.2.9")
 source("scripts/real_data_workflow.R", encoding = "UTF-8")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------

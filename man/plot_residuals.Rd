@@ -10,7 +10,7 @@ plot_residuals(
   line_color = NULL,
   smooth_color = NULL,
   hline_color = NULL,
-  line_size = 1,
+  line_size = NULL,
   facet_scales = "free",
   facet_ncol = NULL,
   type = c("length", "year"),
@@ -44,7 +44,7 @@ Sparse facets use a linear trend; otherwise the span is enlarged when needed for
 
 \item{hline_color}{Character or NULL. NULL inherits the global hline_color setting.}
 
-\item{line_size}{Numeric. The size of the lines in the plot. Default is 1.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{facet_scales}{Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".}
 

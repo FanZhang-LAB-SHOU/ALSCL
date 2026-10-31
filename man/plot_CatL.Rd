@@ -9,14 +9,14 @@ plot_CatL(
   point_size = 2.5,
   point_color = NULL,
   point_shape = 16,
-  line_size = 1.2,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
-  line_size1 = 1.8,
+  line_size1 = NULL,
   line_color1 = NULL,
   line_type1 = "solid",
   line_alpha1 = 1,
-  line_size2 = 1,
+  line_size2 = NULL,
   line_color2 = NULL,
   line_type2 = "solid",
   line_alpha2 = 0.6,
@@ -40,7 +40,8 @@ plot_CatL(
 )
 }
 \arguments{
-\item{model_result}{A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups.}
+\item{model_result}{A fitted result with report$Elog_index, observed survey data
+and time/length metadata.}
 
 \item{point_size}{Numeric. Specifies the size of the point in the plot. Default is 2.5.}
 
@@ -48,13 +49,13 @@ plot_CatL(
 
 \item{point_shape}{Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.}
 
-\item{line_size}{Numeric. Line thickness for type="length" plot. Default is 1.2.}
+\item{line_size}{Numeric or NULL. Line thickness for type="length"; NULL inherits global line_size.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type}{Character. Line type for type="length" plot. Default is "solid".}
 
-\item{line_size1}{Numeric. Line thickness for estimated (Elog_index) in type="year". Default is 1.8.}
+\item{line_size1}{Numeric or NULL. Estimated-line thickness for type="year"; NULL uses 1.2 times global line_size (default 1.8).}
 
 \item{line_color1}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -62,7 +63,7 @@ plot_CatL(
 
 \item{line_alpha1}{Numeric. Transparency for estimated line (0-1). Default is 1.}
 
-\item{line_size2}{Numeric. Line thickness for observed (logN_at_len) in type="year". Default is 1.0.}
+\item{line_size2}{Numeric or NULL. Observed-line thickness for type="year"; NULL uses two-thirds of global line_size (default 1.0).}
 
 \item{line_color2}{Character or NULL. NULL inherits the global observed_color setting.}
 
@@ -84,7 +85,10 @@ plot_CatL(
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
-\item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
+\item{ylab}{Character or NULL. Custom y-axis label, used verbatim. NULL uses
+Survey index on the original scale and Log survey index on the natural-log
+scale. A customized global abundance label replaces Survey index and gains
+a Log prefix on the log scale.}
 
 \item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
@@ -108,10 +112,11 @@ plot_CatL(
 A ggplot object representing the plot.
 }
 \description{
-This function visualizes the Elog_index (counts in length groups) over years or across lengths using ggplot2.
-The Elog_index represents the estimated abundance of the population within certain length groups, obtained from the model output.
+Compare observed survey indices with their fitted lognormal medians over time
+or across length bins. Elog_index contains predicted natural-log survey indices;
+exp_transform = TRUE displays their original-scale medians.
 The resulting plot is a line graph, with data points represented by distinct markers.
-The function allows for faceted plots to better visualize the distribution of counts across different length groups or years.
+Facets separate length groups or time periods.
 }
 \details{
 Predicted and observed matrices are aligned by position with fitted

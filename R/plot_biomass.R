@@ -5,12 +5,12 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #' biomass at length ("BL"), and biomass at age ("BA").
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric. Line thickness. Default is 1.2.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric. CI ribbon transparency. Default is 0.2.
+#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param type Character. "B" (total), "BL" (at length), or "BA" (at age). Default is "B".
 #' @param facet_ncol Integer. Columns in facet_wrap. Default is NULL.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
@@ -25,13 +25,15 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'
 #' @return A ggplot object or a list with plot and data.
 #' @export
-plot_biomass <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-                         se = FALSE, se_color = NULL, se_alpha = 0.2,
+plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+                         se = FALSE, se_color = NULL, se_alpha = NULL,
                          type = c("B", "BL", "BA"), facet_ncol = NULL, facet_scales = "free",
                          return_data = FALSE) {
   # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
   type <- match.arg(type)

@@ -9,7 +9,9 @@ sim_cal(params)
 \arguments{
 \item{params}{A list of parameters from \code{initialize_params()}.
 Must contain \code{model_type} ("age_based" or "length_based") to
-determine which transition matrix to build.}
+determine which transition matrix to build.
+Length midpoints must lie inside the matching open-tail bins; geometry is
+checked again so that manually edited parameter lists cannot bypass it.}
 }
 \value{
 A list containing:
@@ -22,7 +24,7 @@ A list containing:
 \item{sel}{Selectivity vector (at-age for age_based, at-length for length_based)}
 \item{pla}{Age-length transition matrix (always built for initial conditions)}
 \item{Gij}{Growth transition matrix (length_based only)}
-\item{nlen, len_lower, len_upper}{Length bin dimensions}
+\item{nlen, len_mid, len_lower, len_upper}{Length bin dimensions and coordinates}
 }
 }
 \description{

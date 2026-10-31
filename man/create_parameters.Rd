@@ -57,12 +57,14 @@ common convergence issues caused by biologically inappropriate starting values.
 \strong{Preset}  \tab \strong{Linf} \tab \strong{vbk} \tab \strong{nage} \tab \strong{M} \tab \strong{growth_step} \tab \strong{Notes} \cr
 flatfish \tab 60  \tab 0.2  \tab 15 \tab 0.2 \tab 1    \tab M7 operating model \cr
 tuna     \tab 152 \tab 0.38 \tab 20 \tab 0.2 \tab 0.25 \tab M6 operating model, quarterly \cr
-krill    \tab 90/60 \tab 0.3 \tab 5/7 \tab 0.3/0 \tab 1 \tab ACL fixes Linf=90; ALSCL estimates Linf \cr
+krill    \tab 90/60 \tab 0.3 \tab 5/7 \tab 0.3/0 \tab 1 \tab Starting Linf=90 (ACL) or 60 (ALSCL) \cr
 }
 
-The krill preset is notable because ACL and ALSCL use different nage, M,
-and Linf values -- this reflects the actual assessment workflow where ACL
-fixes Linf via map while ALSCL estimates it freely.
+The nage, M and growth_step columns describe the source assessment workflows,
+not arguments changed by this helper. Presets return only parameter starts
+and bounds; supply biology separately to run_acl() or run_alscl(). The krill
+ACL start is Linf=90, but Linf remains free unless an explicit
+map = list(log_Linf = factor(NA)) fixes it. No preset creates a map.
 
 \strong{Parameter naming differences between ACL and ALSCL:}
 

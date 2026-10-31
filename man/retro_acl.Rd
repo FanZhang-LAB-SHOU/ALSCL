@@ -21,7 +21,7 @@ retro_acl(
   len_mid = NULL,
   len_border = NULL,
   plot = FALSE,
-  line_size = 1.2,
+  line_size = NULL,
   point_size = 3,
   point_shape = 21,
   facet_scales = "free",
@@ -88,7 +88,7 @@ including dev_log_N0 and named NULL releases, are unchanged.}
 When no finite estimates are available, return plot = NULL with a warning;
 fit_diagnostics and errors remain available.}
 
-\item{line_size}{Numeric. Line thickness. Default is 1.2.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{point_size}{Numeric. Point size for endpoints. Default is 3.}
 

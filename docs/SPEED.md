@@ -56,7 +56,7 @@ On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on 
 Forked processes are used only where they are safe (macOS and Linux outside GUI front-ends); elsewhere socket workers share out the delta method (section 3.3). The sequential `TMB::sdreport()` is used in these cases:
 
 - one core (`sd_cores = 1`, or fits inside `retro_model()` and `sim_acl()` workers);
-- TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21). The test that compares the two with `identical()` runs the parallel code with any installed TMB, for both AD libraries, and fails if the parallel code falls back to the sequential calculation, so a new version can be added after the tests pass with it;
+- TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21 and 1.9.25). The test that compares the two with `identical()` runs the parallel code with any installed TMB, for both AD libraries, and fails if the parallel code falls back to the sequential calculation, so a new version can be added after the tests pass with it;
 - any failure of the parallel calculation, including a failure to start forked processes or socket workers, with a warning.
 
 ### 3.2 TMBad automatic differentiation (`framework`)
@@ -155,3 +155,9 @@ Fixes after a second review (commit `2b7d418`), both in the tests:
 
 - **Fork-failure test with an unchecked TMB version.** With a TMB version outside `.acl_tmb_checked`, standard errors are computed sequentially without forking, so the test that expected a fallback warning failed. The test now treats the installed TMB as checked, and a separate test checks that an unchecked version computes the standard errors sequentially without calling `mclapply()`.
 - **Identity test hid failures of the parallel code.** It muffled all warnings, so if the parallel code failed and fell back, it compared `TMB::sdreport()` with itself and passed. `.acl_sdreport()` has an argument `fallback = FALSE`, used only by the tests, that turns a parallel failure into an error; the test muffles only "NaNs produced" warnings and runs for both CppAD and TMBad. A further test makes the parallel delta method fail on purpose and checks that this gives an error.
+
+## Changes in 2.2.9
+
+The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.
+
+After standard-error calculation, the returned live TMB objective is restored to the final fitted parameters. In the fitting R session, `fit$obj$report()` therefore describes the same fitted state as `fit$report`, including sequential standard errors and a fallback from parallel calculation. This does not change the saved estimates or standard errors. Serialized fits still require refitting before using a live TMB objective.

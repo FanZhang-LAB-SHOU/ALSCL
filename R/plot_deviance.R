@@ -6,7 +6,7 @@
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
 #' @param se Logical, whether to draw the standard error bar.
-#' @param line_size Numeric, the line size.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character, the line type.
 #' @param point_color Character. The color of the point. Default is "white".
@@ -28,10 +28,11 @@
 #' @return A ggplot2 object.
 #' @export
 plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color = "white",
-                          point_shape = 21, line_size = 1, line_color = NULL,
+                          point_shape = 21, line_size = NULL, line_color = NULL,
                           line_type = "solid", se_color = NULL, se_width = 0.5,
                           facet_ncol = NULL, facet_scales = "free", log = TRUE,
                           type = c("R", "F")) {
+  if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
   type <- match.arg(type)
@@ -87,7 +88,8 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
       facet_title <- "F Deviance at Length (ALSCL)"
     } else {
-      ci$Group <- rep(paste0("Age group ", seq_len(n_groups)), times = length(years))
+      labels <- paste0("Age group ", seq_len(n_groups))
+      ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
       facet_title <- "F Deviance Over Years"
     }
     ci <- ci[c("Group", "Year", "estimate", "lower", "upper")]

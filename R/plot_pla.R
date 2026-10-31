@@ -20,7 +20,9 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Integer age-bin positions to label (between 1 and the number
+#'   of age bins). This changes tick labels only, never the heatmap cells.
+#'   NULL inherits global x_breaks; when both are NULL all age bins are labelled.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object showing the heatmap of the probability length at age.
@@ -50,6 +52,12 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
 
   age_labels <- paste("Age bin", seq_len(ncol(df)))
   colnames(df) <- age_labels
+  breaks <- if (is.null(x_breaks)) acl_theme("x_breaks") else x_breaks
+  if (!is.null(breaks) && (!is.numeric(breaks) || any(!is.finite(breaks)) ||
+      any(breaks != trunc(breaks)) || any(breaks < 1 | breaks > length(age_labels)) ||
+      anyDuplicated(breaks)))
+    stop("x_breaks must contain unique integer age-bin positions within the PLA matrix.", call. = FALSE)
+  age_breaks <- if (is.null(breaks)) age_labels else age_labels[breaks]
 
   len_levels <- .acl_fix_len_labels(len_label)
   df$LengthGroup <- factor(len_levels, levels = len_levels)
@@ -60,6 +68,7 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
   #
   p <- ggplot2::ggplot(dfm, ggplot2::aes(x=variable, y=LengthGroup, fill=value)) +
     ggplot2::geom_tile() +
+    ggplot2::scale_x_discrete(breaks = age_breaks, drop = FALSE) +
     ggplot2::scale_fill_gradient(low = low_col, high = high_col) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("x", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))

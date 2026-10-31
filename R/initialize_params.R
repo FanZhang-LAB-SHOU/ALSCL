@@ -19,8 +19,11 @@
 #' @param vbk Numeric. Von Bertalanffy k (default 0.2).
 #' @param Linf Numeric. Asymptotic length (default 60).
 #' @param t0 Numeric. Von Bertalanffy t0 (default 1/60).
-#' @param len_mid Numeric vector. Midpoints of length bins.
-#' @param len_border Numeric vector. Borders of length bins.
+#' @param len_mid Numeric vector. Finite, positive, increasing midpoints of
+#'   length bins. Each midpoint must lie strictly inside its bin.
+#' @param len_border Numeric vector. Increasing borders of length bins, one
+#'   more than the number of midpoints. The first and last borders are converted
+#'   to -Inf and Inf so that the outer bins absorb the distribution tails.
 #' @param a Numeric. Length-weight coefficient (default exp(-12)).
 #' @param b Numeric. Length-weight exponent (default 3).
 #' @param mat_L50 Numeric. Length at 50 pct maturity (default 35).
@@ -297,7 +300,7 @@ initialize_params <- function(nyear      = NULL,
   .acl_scalar(sp$rec.age, "rec.age", 0, TRUE)
   .acl_scalar(sp$M, "M", 0)
   if (sp$t0 >= sp$rec.age) stop("t0 must be below rec.age.")
-  if (length(sp$len_border) != length(sp$len_mid)+1L || any(diff(sp$len_border)<=0) || any(diff(sp$len_mid)<=0)) stop("Invalid simulation length bins.")
+  bins <- .acl_simulation_bins(sp$len_mid, sp$len_border, normalize_outer = TRUE)
 
   # Ensure model_type & growth_step exist (for backward compat / custom usage)
   if (is.null(sp$model_type))  sp$model_type  <- "age_based"
@@ -309,8 +312,8 @@ initialize_params <- function(nyear      = NULL,
   # Derived variables
   # =========================================================================
   # Apply -Inf / Inf to first/last border
-  sp$len_border[1] <- -Inf
-  sp$len_border[length(sp$len_border)] <- Inf
+  sp$len_mid <- bins$mid
+  sp$len_border <- c(-Inf, bins$border, Inf)
 
   # Generate age and year vectors. years retains the full-duration vector;
   # observation_years is the post-burn-in grid returned by sim_data().
@@ -320,4 +323,24 @@ initialize_params <- function(nyear      = NULL,
   sp$years <- sp$first.year + seq.int(0L, grid$nstep-1L) * sp$growth_step
 
   return(sp)
+}
+
+# The simulator stores all borders, whereas fitting stores interior borders.
+# Share containment and open-tail checks with fitting before constructing any
+# biological arrays. Only initialize_params normalizes supplied outer borders.
+.acl_simulation_bins <- function(len_mid, len_border, normalize_outer = FALSE) {
+  if (!is.numeric(len_mid) || length(len_mid) < 2L ||
+      any(!is.finite(len_mid)) || any(len_mid <= 0) || any(diff(len_mid) <= 0))
+    stop("len_mid must contain at least two finite, positive, increasing midpoints.",
+         call. = FALSE)
+  n <- length(len_mid)
+  if (!is.numeric(len_border) || length(len_border) != n + 1L ||
+      anyNA(len_border) || any(!is.finite(len_border[-c(1L, n + 1L)])) ||
+      any(diff(len_border) <= 0))
+    stop("len_border must contain one more increasing boundary than len_mid, with finite interior boundaries.",
+         call. = FALSE)
+  if (normalize_outer) len_border[c(1L, n + 1L)] <- c(-Inf, Inf)
+  .acl_length_bins(as.character(seq_len(n)), len_mid = len_mid,
+    len_border = len_border[-c(1L, n + 1L)],
+    len_lower = len_border[seq_len(n)], len_upper = len_border[seq_len(n) + 1L])
 }

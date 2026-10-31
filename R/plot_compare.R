@@ -53,30 +53,19 @@ utils::globalVariables(c(
 # Plots sharing one observed table must use its order. Legacy metric-only
 # results can lack metadata, but known mismatches must never be relabeled.
 .acl_plot_comparison_grid <- function(models, data.CatL, midpoints = FALSE) {
-  if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)
-    stop("data.CatL must contain length labels and time columns.", call. = FALSE)
-  data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
-  original <- as.matrix(data.CatL[, -1L, drop = FALSE])
-  observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
-  if (any(is.na(observed) & !is.na(original)) || any(is.infinite(observed)) ||
-      any(observed < 0, na.rm = TRUE))
-    stop("Comparison observations must be numeric, nonnegative and finite, or NA.", call. = FALSE)
-  years <- suppressWarnings(as.numeric(sub("^X", "", colnames(data.CatL)[-1L])))
-  labels <- trimws(as.character(data.CatL[, 1L]))
+  survey <- .acl_survey_data(data.CatL)
+  observed <- survey$observed; years <- survey$years; labels <- survey$labels
+  if (length(years) != ncol(observed) || any(!is.finite(years)) || any(diff(years) <= 0))
+    stop("data.CatL must have finite, increasing numeric time columns.", call. = FALSE)
   for (i in seq_along(models)) {
     model <- models[[i]]
-    fail <- function(part) stop("Model ", i, " does not match data.CatL: ", part, ".",
-                                call. = FALSE)
-    if (!is.null(model$year)) {
-      fit_years <- .acl_plot_year(model, ncol(observed), paste("Model", i))
-      if (length(years) != length(fit_years) || any(!is.finite(years)) ||
-          any(abs(fit_years - years) > 1e-8)) fail("time columns")
-    }
-    if (!is.null(model$len_label) &&
-        !identical(trimws(as.character(model$len_label)), labels)) fail("length labels/order")
+    # Share the in-sample checks used by diagnostic_metrics() and
+    # compare_models(): matching dimensions alone cannot identify the data.
+    .acl_validate_survey_fit(model, survey, paste("Model", i))
     if (midpoints && (!is.numeric(model$len_mid) ||
         length(model$len_mid) != nrow(observed) || any(!is.finite(model$len_mid)) ||
-        any(diff(model$len_mid) <= 0))) fail("length midpoints")
+        any(diff(model$len_mid) <= 0)))
+      stop("Model ", i, " does not match data.CatL: length midpoints.", call. = FALSE)
   }
   if (midpoints && !isTRUE(all.equal(as.numeric(models[[1L]]$len_mid),
                                      as.numeric(models[[2L]]$len_mid), tolerance = 1e-8)))
@@ -315,7 +304,7 @@ plot_compare_F <- function(model1, model2,
     ggplot2::labs(title = .acl_title("compare_F", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = "") +
     .acl_base_theme() + .acl_scale_x() +
-    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold", size = 12))
+    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"))
 
   return(p)
 }
@@ -338,6 +327,12 @@ plot_compare_F <- function(model1, model2,
 #' @param qq_alpha Numeric. QQ point transparency. Default 0.6.
 #' @param errorbar_width Numeric. Error bar cap width. Default 0.3.
 #' @return A ggplot object (combined 4-panel via patchwork).
+#' @details These are in-sample residuals. Known time labels, length labels,
+#'   positive-observation values and missing-data masks must match both fitted
+#'   results. Zeros and NA are excluded as in fitting. Older results without
+#'   stored observation metadata remain usable, but their original-data alignment
+#'   cannot be fully verified. Data frames, matrices and tibbles use the same
+#'   numeric conversion as the fitting functions.
 #' @export
 plot_compare_residuals <- function(model1, model2, data.CatL,
                                    model1_name = NULL, model2_name = NULL,
@@ -376,19 +371,20 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
   base_layers <- .acl_base_theme()
   no_legend <- ggplot2::theme(legend.position = "none")
 
-  # P1: Histogram -- keeps legend (will be collected to bottom)
+  # P1: Histogram; the shared model legend comes from the time-series lines.
   p1 <- ggplot2::ggplot(df, ggplot2::aes(x = Residual, fill = Model)) +
     ggplot2::geom_histogram(alpha = 0.5, position = "identity", bins = bins) +
     ggplot2::scale_fill_manual(values = cfg$colors) +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
     ggplot2::labs(title = "Residual Distribution", x = "Residual", y = "Count") +
     base_layers +
-    ggplot2::guides(fill = ggplot2::guide_legend(title = NULL)) +
-    ggplot2::theme(legend.position = "bottom")
+    no_legend
 
   # P2: QQ
   p2 <- ggplot2::ggplot(df, ggplot2::aes(sample = Residual, color = Model)) +
-    ggplot2::stat_qq(size = 0.8, alpha = qq_alpha) + ggplot2::stat_qq_line() +
+    ggplot2::stat_qq(size = 0.8, alpha = qq_alpha) +
+    ggplot2::stat_qq_line(ggplot2::aes(linetype = Model)) +
+    ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::labs(title = "QQ Plot", x = "Theoretical", y = "Sample") +
     base_layers + no_legend
@@ -402,13 +398,15 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 
   p3 <- ggplot2::ggplot(resid_by_year, ggplot2::aes(x = Year, y = mean_r, color = Model)) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
-    ggplot2::geom_line(linewidth = cfg$linewidth) +
-    ggplot2::geom_point(size = cfg$point_size) +
+    ggplot2::geom_line(ggplot2::aes(linetype = Model), linewidth = cfg$linewidth) +
+    ggplot2::geom_point(size = cfg$point_size, show.legend = FALSE) +
     ggplot2::geom_errorbar(ggplot2::aes(ymin = mean_r - sd_r, ymax = mean_r + sd_r),
-                           width = errorbar_width, alpha = 0.5) +
+                           width = errorbar_width, alpha = 0.5, show.legend = FALSE) +
     ggplot2::scale_color_manual(values = cfg$colors) +
-    ggplot2::labs(title = "Mean Residual by Year", x = "Year", y = "Mean Residual") +
-    base_layers + .acl_scale_x() + no_legend
+    ggplot2::scale_linetype_manual(values = cfg$linetypes) +
+    ggplot2::labs(title = "Mean Residual by Year", x = "Year", y = "Mean Residual",
+                  color = NULL, linetype = NULL) +
+    base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom")
 
   # P4: |Residual| by length bin
   df$abs_resid <- abs(df$Residual)
@@ -427,7 +425,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     p <- patchwork::wrap_plots(top, bottom, ncol = 1) +
       patchwork::plot_annotation(
         title = .acl_title("compare_resid", model1_name, model2_name),
-        theme = ggplot2::theme(legend.position = cfg$legend_pos)) +
+        theme = .acl_annotation_theme(cfg$legend_pos)) +
       patchwork::plot_layout(guides = "collect")
   } else {
     p <- p4
@@ -630,6 +628,13 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #' @param obs_shape Integer. Shape of observed points. Default 16.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
 #' @return A ggplot object.
+#' @details Positive observations and their missing-data mask must match both
+#'   fitted results whenever stored observations are available. Known length and
+#'   time metadata must also match. Zeros and NA are omitted from observed points
+#'   as in fitting; prediction curves retain every length in each selected period
+#'   and must be finite at every plotted cell. Older results lacking observation
+#'   metadata remain usable, but original-data alignment cannot be fully verified.
+#'   Data frames, matrices and tibbles use the fitting functions' numeric conversion.
 #' @export
 #'
 #' @examples
@@ -673,22 +678,35 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
   pred1 <- exp(model1$report$Elog_index); pred2 <- exp(model2$report$Elog_index)
   if (!identical(dim(pred1), dim(observed)) || !identical(dim(pred2), dim(observed)))
     stop("Prediction dimensions do not match data.CatL.", call. = FALSE)
+  selected <- match(years, year)
+  if (any(!is.finite(pred1[, selected, drop = FALSE])) ||
+      any(!is.finite(pred2[, selected, drop = FALSE])))
+    stop("Predictions must be finite at every plotted length and period.", call. = FALSE)
 
   df_list <- list()
   for (y in years) {
     yi <- which(year == y); if (length(yi) == 0) next
-    df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = observed[, yi], Source = "Observed", Year = y)
+    observed_df <- data.frame(Length = len_mid, Value = observed[, yi], Source = "Observed", Year = y)
+    valid <- is.finite(observed_df$Value) & observed_df$Value > 0
+    df_list[[length(df_list) + 1]] <- observed_df[valid, , drop = FALSE]
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred1[, yi], Source = model1_name, Year = y)
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred2[, yi], Source = model2_name, Year = y)
   }
   df <- do.call(rbind, df_list); df$year_fct <- factor(df$Year)
   color_vals <- c("Observed" = obs_color, cfg$colors)
+  has_observed <- any(df$Source == "Observed")
+  legend_order <- c(model1_name, model2_name, if (has_observed) "Observed")
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Length, y = Value, color = Source)) +
     ggplot2::geom_point(data = df[df$Source == "Observed", ],
                         size = obs_size, alpha = obs_alpha, shape = obs_shape) +
-    ggplot2::geom_line(data = df[df$Source != "Observed", ], linewidth = cfg$linewidth) +
-    ggplot2::scale_color_manual(values = color_vals) +
+    ggplot2::geom_line(data = df[df$Source != "Observed", ],
+                        ggplot2::aes(linetype = Source), linewidth = cfg$linewidth) +
+    ggplot2::scale_color_manual(values = color_vals, breaks = legend_order) +
+    ggplot2::scale_linetype_manual(values = cfg$linetypes, guide = "none") +
+    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(
+      linetype = c(unname(cfg$linetypes), if (has_observed) "blank"),
+      shape = c(NA, NA, if (has_observed) obs_shape)))) +
     ggplot2::facet_wrap(~year_fct, ncol = ncol, scales = scales) +
     ggplot2::labs(title = .acl_title("compare_CatL", model1_name, model2_name),
                   x = .acl_lab("x", "length"), y = .acl_lab("y", "catch"), color = "") +
@@ -795,11 +813,6 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
   if (requireNamespace("patchwork", quietly = TRUE)) {
     n <- length(panels)
     nc <- if (!is.null(ncol)) ncol else min(n, 3)
-    p <- patchwork::wrap_plots(panels, ncol = nc) +
-      patchwork::plot_annotation(
-        title = .acl_title("compare_metrics", model1_name, model2_name),
-        theme = ggplot2::theme(legend.position = cfg$legend_pos)) +
-      patchwork::plot_layout(guides = "collect")
     # Add legend to last panel for collection
     panels[[length(panels)]] <- panels[[length(panels)]] +
       ggplot2::theme(legend.position = "bottom") +
@@ -807,7 +820,7 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
     p <- patchwork::wrap_plots(panels, ncol = nc) +
       patchwork::plot_annotation(
         title = .acl_title("compare_metrics", model1_name, model2_name),
-        theme = ggplot2::theme(legend.position = cfg$legend_pos)) +
+        theme = .acl_annotation_theme(cfg$legend_pos)) +
       patchwork::plot_layout(guides = "collect")
   } else { p <- panels[[1]] }
   return(p)

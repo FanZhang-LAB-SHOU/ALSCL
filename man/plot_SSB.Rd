@@ -6,12 +6,12 @@
 \usage{
 plot_SSB(
   model_result,
-  line_size = 1.2,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
   se = FALSE,
   se_color = NULL,
-  se_alpha = 0.2,
+  se_alpha = NULL,
   type = c("SSB", "SBL", "SBA"),
   facet_ncol = NULL,
   facet_scales = "free",
@@ -21,7 +21,7 @@ plot_SSB(
 \arguments{
 \item{model_result}{A list from \code{run_acl} or \code{run_alscl}.}
 
-\item{line_size}{Numeric. Line thickness. Default is 1.2.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -31,7 +31,7 @@ plot_SSB(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric. CI ribbon transparency. Default is 0.2.}
+\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
 
 \item{type}{Character. "SSB" (total), "SBL" (at length), or "SBA" (at age). Default is "SSB".}
 

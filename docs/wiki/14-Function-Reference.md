@@ -2,11 +2,11 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 
-**ALSCL 2.2.8 · 简体中文 / English**
+**ALSCL 2.2.9 · 简体中文 / English**
 
-对应 ALSCL 2.2.5 的 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.2.9，覆盖 **45 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **45 exported functions** in ALSCL 2.2.5 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **45 exported functions** in ALSCL 2.2.9 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -80,7 +80,7 @@ dat <- x$data.CatL
 读取全局主题 / Read global theme settings
 
 ```r
-acl_theme(what = NULL)
+acl_theme (what = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -103,7 +103,7 @@ acl_theme("line_color")
 恢复默认主题 / Reset theme settings
 
 ```r
-acl_theme_reset()
+acl_theme_reset ()
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -123,16 +123,18 @@ acl_theme_reset()
 
 设置全局主题 / Set global theme settings
 
+2.2.9 中，省略的通用 `line_size` 与 `se_alpha` 继承 `acl_theme_set()`（默认 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差／指标组合图标题及 F 分面文字继承全局字体设置。默认仍无网格。ACL F 偏差图按年龄数字排序；`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。
+
+In 2.2.9, omitted generic `line_size` and `se_alpha` inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`. Combined residual/metric titles and F facet labels inherit the global typography. Grid lines remain absent by default. ACL F-deviation age panels use numeric order. `plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.
+
 ```r
-acl_theme_set(base_theme = NULL, font_family = NULL, title_size = NULL,
-    title_hjust = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    x_expand = NULL, line_color = NULL, line_size = NULL, se_color = NULL,
-    se_alpha = NULL, compare_colors = NULL, compare_linetypes = NULL,
-    compare_linewidth = NULL, compare_point_size = NULL, compare_se_alpha = NULL,
-    compare_legend_pos = NULL, compare_facet_ncol = NULL, compare_facet_scales = NULL,
-    titles = NULL, xlab = NULL, ylab = NULL, palette = NULL,
-    point_color = NULL, observed_color = NULL, smooth_color = NULL,
+acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_hjust = NULL,
+    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
+    x_breaks = NULL, x_expand = NULL, line_color = NULL, line_size = NULL, se_color = NULL,
+    se_alpha = NULL, compare_colors = NULL, compare_linetypes = NULL, compare_linewidth = NULL,
+    compare_point_size = NULL, compare_se_alpha = NULL, compare_legend_pos = NULL,
+    compare_facet_ncol = NULL, compare_facet_scales = NULL, titles = NULL, xlab = NULL,
+    ylab = NULL, palette = NULL, point_color = NULL, observed_color = NULL, smooth_color = NULL,
     hline_color = NULL, low_col = NULL, high_col = NULL)
 ```
 
@@ -149,9 +151,9 @@ acl_theme_set(base_theme = NULL, font_family = NULL, title_size = NULL,
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks. |
 | `x_expand` | `NULL` | 横轴留白设置，长度 2 的数值向量。 | Numeric vector of length 2. X-axis expansion. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character. Default line color for single-model plots. |
-| `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. Default line width for single-model plots. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character. Default CI color. |
-| `se_alpha` | `NULL` | 区间透明度，0–1。 | Numeric. Default CI transparency. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `compare_colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Character vector of 2 colors. Can be unnamed (positional) or named. The first color is always model1, second is model2. Examples: c("blue", "red"), c(ACL = "blue", ALSCL = "red"), c("M=0" = "steelblue", "M=0.5" = "tomato"). |
 | `compare_linetypes` | `NULL` | 按模型顺序提供两种线型。 | Character vector of 2 linetypes. Same rules as colors. |
 | `compare_linewidth` | `NULL` | 比较图全局线宽。 | Numeric. Line width for comparison plots. |
@@ -183,6 +185,12 @@ acl_theme_set(base_theme = "bw", line_color = "navy")
 <a id="alscl_speed"></a>
 ## `alscl_speed()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+已验证的 TMB 版本为 1.9.21 和 1.9.25。现有 Windows、macOS、Linux 检查已在 1.9.25 上通过两模型、两种 AD 框架的严格并行一致性测试，不允许用单核回退代替通过；Windows 使用 socket，并跳过 Unix fork 测试。其他 TMB 版本继续使用顺序计算保护。这扩大了可启用加速的版本范围，不保证小模型也会提速；实际方法请看 `fit$sd_info`。
+
+The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.
+
 设置拟合速度选项 / Set speed options for model fitting
 
 安装模式的 socket 工作进程继续加载与主进程相同的包安装。在 `pkgload::load_all()` 或 `testthat::test_local()` 下，工作进程改为用 pkgload 加载同一源码目录；该开发流程需要可选依赖 pkgload。CI 同时运行源码模式并行测试和完整安装包检查。
@@ -190,8 +198,8 @@ acl_theme_set(base_theme = "bw", line_color = "navy")
 Installed socket workers load the same package installation as the parent. During `pkgload::load_all()` or `testthat::test_local()`, workers instead load the same source checkout with pkgload. Install the optional development dependency pkgload for this workflow. CI exercises both source-mode parallel tests and the complete installed-package checks.
 
 ```r
-alscl_speed(sd_cores = getOption("ALSCL.sd_cores", "auto"),
-    framework = getOption("ALSCL.framework", "CppAD"))
+alscl_speed (sd_cores = getOption("ALSCL.sd_cores", "auto"), framework = getOption("ALSCL.framework",
+    "CppAD"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -216,7 +224,7 @@ options(old)
 查看速度设置的实际效果 / Show how fits will use the speed settings
 
 ```r
-alscl_speed_info()
+alscl_speed_info ()
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -241,7 +249,7 @@ alscl_speed_info()
 Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
 
 ```r
-compare_models(model1, model2, data.CatL, model1_name = NULL, model2_name = NULL)
+compare_models (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -280,9 +288,13 @@ compare_models(a, b, dat)
 
 建立模型初值及边界 / Construct estimation starts and bounds
 
+`create_parameters(species = "krill", model_type = "acl")` 提供 Linf 初值 90 和边界，不会自动固定 Linf，也不更改 M、nage 或时间步长。需要固定时，显式传入 `map = list(log_Linf = factor(NA))` 和选定初值；生物设置仍需在拟合参数中提供。
+
+`create_parameters(species = "krill", model_type = "acl")` supplies a Linf start of 90 and bounds, but does not fix Linf or change M, nage or the time step. To fix it, explicitly pass `map = list(log_Linf = factor(NA))` with the chosen starting value. Biological settings still belong in the fitting arguments.
+
 ```r
-create_parameters(model_type = c("acl", "alscl"), species = NULL, parameters = NULL,
-    parameters.L = NULL, parameters.U = NULL)
+create_parameters (model_type = c("acl", "alscl"), species = NULL, parameters = NULL, parameters.L = NULL,
+    parameters.U = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -307,9 +319,12 @@ create_parameters(model_type = "acl", species = "flatfish")
 
 ALSCL 初值及边界便捷入口 / ALSCL parameter constructor
 
+`create_parameters(species = "krill", model_type = "acl")` 提供 Linf 初值 90 和边界，不会自动固定 Linf，也不更改 M、nage 或时间步长。需要固定时，显式传入 `map = list(log_Linf = factor(NA))` 和选定初值；生物设置仍需在拟合参数中提供。
+
+`create_parameters(species = "krill", model_type = "acl")` supplies a Linf start of 90 and bounds, but does not fix Linf or change M, nage or the time step. To fix it, explicitly pass `map = list(log_Linf = factor(NA))` with the chosen starting value. Biological settings still belong in the fitting arguments.
+
 ```r
-create_parameters_alscl(species = NULL, parameters = NULL, parameters.L = NULL,
-    parameters.U = NULL)
+create_parameters_alscl (species = NULL, parameters = NULL, parameters.L = NULL, parameters.U = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -338,7 +353,7 @@ create_parameters_alscl(species = "flatfish")
 Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
 
 ```r
-diagnose_model(data.CatL, model_result)
+diagnose_model (data.CatL, model_result)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -377,7 +392,7 @@ diagnose_model(dat, b)
 Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
 
 ```r
-diagnostic_metrics(data.CatL, model_result)
+diagnostic_metrics (data.CatL, model_result)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -412,7 +427,7 @@ diagnostic_metrics(dat, b)
 合并 ACL 默认固定参数与自定义映射 / Merge ACL default and custom maps
 
 ```r
-generate_map(map = NULL)
+generate_map (map = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -437,17 +452,22 @@ The returned map drops NULL entries. Do not use `run_acl(x, map = generate_map(l
 <a id="initialize_params"></a>
 ## `initialize_params()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+模拟体长中点必须落在对应组内，检查规则与拟合一致；首尾组仍吸收分布尾部。参数准备阶段会拒绝无效分组，生物量计算和模拟前还会再次检查，包括用户手动修改的输入；错误发生在随机抽样和写文件前。
+
+Simulation length midpoints must lie within their corresponding bins, using the same containment rules as fitting. The first and last bins absorb the tails. Invalid bin geometry is rejected during parameter preparation and rechecked before biological calculations or simulation, including manually modified inputs, before random draws or output files.
+
 建立模拟生物参数 / Initialize simulation biology
 
 ```r
-initialize_params(nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
-    M = NULL, init_Z = NULL, vbk = NULL, Linf = NULL, t0 = NULL,
-    len_mid = NULL, len_border = NULL, a = NULL, b = NULL, mat_L50 = NULL,
-    mat_L95 = NULL, cv_L = NULL, cv_inc = NULL, std_logR = NULL,
-    std_logN0 = NULL, alpha = NULL, beta = NULL, std_SN = NULL,
-    q_surv_L50 = NULL, q_surv_L95 = NULL, R_init = NULL, F_mean = NULL,
-    F_ar = NULL, F_sd = NULL, R_ar = NULL, species = NULL, growth_step = NULL,
-    burn_in = NULL, observation_error = c("independent", "shared_time"))
+initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL, M = NULL,
+    init_Z = NULL, vbk = NULL, Linf = NULL, t0 = NULL, len_mid = NULL, len_border = NULL,
+    a = NULL, b = NULL, mat_L50 = NULL, mat_L95 = NULL, cv_L = NULL, cv_inc = NULL,
+    std_logR = NULL, std_logN0 = NULL, alpha = NULL, beta = NULL, std_SN = NULL,
+    q_surv_L50 = NULL, q_surv_L95 = NULL, R_init = NULL, F_mean = NULL, F_ar = NULL,
+    F_sd = NULL, R_ar = NULL, species = NULL, growth_step = NULL, burn_in = NULL,
+    observation_error = c("independent", "shared_time"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -515,7 +535,7 @@ pa <- initialize_params(species = "flatfish", nyear = 100, burn_in = 80)
 计算 logistic 成熟比例 / Calculate logistic maturity
 
 ```r
-mat_func(L50, L95, length)
+mat_func (L50, L95, length)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -567,21 +587,20 @@ mat_func(L50 = 35, L95 = 40, length = seq(6, 50, 2))
 矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。 Matrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.
 
 ```r
-plot_abundance(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-    se = FALSE, se_color = NULL, se_alpha = 0.2, type = c("N",
-        "NA", "NL"), facet_ncol = NULL, facet_scales = "free",
-    return_data = FALSE)
+plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    se = FALSE, se_color = NULL, se_alpha = NULL, type = c("N", "NA", "NL"), facet_ncol = NULL,
+    facet_scales = "free", return_data = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. CI ribbon transparency. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("N", "NA", "NL")` | 选择输出类型；可选值列于签名和英文说明。 | Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Number of columns in facet wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Scales for facet wrap. Default is "free". |
@@ -609,21 +628,20 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
 ```r
-plot_biomass(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-    se = FALSE, se_color = NULL, se_alpha = 0.2, type = c("B",
-        "BL", "BA"), facet_ncol = NULL, facet_scales = "free",
-    return_data = FALSE)
+plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    se = FALSE, se_color = NULL, se_alpha = NULL, type = c("B", "BL", "BA"), facet_ncol = NULL,
+    facet_scales = "free", return_data = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. CI ribbon transparency. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("B", "BL", "BA")` | 选择输出类型；可选值列于签名和英文说明。 | Character. "B" (total), "BL" (at length), or "BA" (at age). Default is "B". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Columns in facet_wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet_wrap. Default is "free". |
@@ -695,20 +713,20 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
 ```r
-plot_catch(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-    se = FALSE, se_color = NULL, se_alpha = 0.2, facet_ncol = NULL,
-    facet_scales = "free", type = c("CN", "CNA", "CNL"), return_data = FALSE)
+plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    se = FALSE, se_color = NULL, se_alpha = NULL, facet_ncol = NULL, facet_scales = "free",
+    type = c("CN", "CNA", "CNL"), return_data = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. CI ribbon transparency. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
 | `type` | `c("CN", "CNA", "CNL")` | 选择输出类型；可选值列于签名和英文说明。 | Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN". |
@@ -775,20 +793,22 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
 
 调查拟合 length 对数尺度 / Survey fit length log scale
 
+默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
+
+The default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.
+
 调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。
 
 Survey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.
 
 ```r
-plot_CatL(model_result, point_size = 2.5, point_color = NULL,
-    point_shape = 16, line_size = 1.2, line_color = NULL, line_type = "solid",
-    line_size1 = 1.8, line_color1 = NULL, line_type1 = "solid",
-    line_alpha1 = 1, line_size2 = 1, line_color2 = NULL, line_type2 = "solid",
-    line_alpha2 = 0.6, facet_ncol = NULL, facet_scales = "free",
-    type = c("length", "year"), exp_transform = FALSE, return_data = FALSE,
-    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
+plot_CatL (model_result, point_size = 2.5, point_color = NULL, point_shape = 16, line_size = NULL,
+    line_color = NULL, line_type = "solid", line_size1 = NULL, line_color1 = NULL,
+    line_type1 = "solid", line_alpha1 = 1, line_size2 = NULL, line_color2 = NULL,
+    line_type2 = "solid", line_alpha2 = 0.6, facet_ncol = NULL, facet_scales = "free",
+    type = c("length", "year"), exp_transform = FALSE, return_data = FALSE, title = NULL,
+    xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
+    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
     base_theme = NULL, title_hjust = NULL)
 ```
 
@@ -798,14 +818,14 @@ plot_CatL(model_result, point_size = 2.5, point_color = NULL,
 | `point_size` | `2.5` | 点大小。 | Numeric. Specifies the size of the point in the plot. Default is 2.5. |
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. NULL inherits the global observed_color setting. |
 | `point_shape` | `16` | 点形状编号，如 16、21。 | Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness for type="length" plot. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type for type="length" plot. Default is "solid". |
-| `line_size1` | `1.8` | plot_CatL 年份分面中拟合曲线的线宽/颜色/线型/透明度。 | Numeric. Line thickness for estimated (Elog_index) in type="year". Default is 1.8. |
+| `line_size1` | `NULL` | NULL 使用全局 line_size 的 1.2 倍。 | NULL uses 1.2 times global line_size. |
 | `line_color1` | `NULL` | plot_CatL 年份分面中拟合曲线的线宽/颜色/线型/透明度。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type1` | `"solid"` | plot_CatL 年份分面中拟合曲线的线宽/颜色/线型/透明度。 | Character. Line type for estimated line. Default is "solid". |
 | `line_alpha1` | `1` | plot_CatL 年份分面中拟合曲线的线宽/颜色/线型/透明度。 | Numeric. Transparency for estimated line (0-1). Default is 1. |
-| `line_size2` | `1` | plot_CatL 年份分面中观测曲线的线宽/颜色/线型/透明度。 | Numeric. Line thickness for observed (logN_at_len) in type="year". Default is 1.0. |
+| `line_size2` | `NULL` | NULL 使用全局 line_size 的 2/3 倍。 | NULL uses 2/3 times global line_size. |
 | `line_color2` | `NULL` | plot_CatL 年份分面中观测曲线的线宽/颜色/线型/透明度。 | Character or NULL. NULL inherits the global observed_color setting. |
 | `line_type2` | `"solid"` | plot_CatL 年份分面中观测曲线的线宽/颜色/线型/透明度。 | Character. Line type for observed line. Default is "solid". |
 | `line_alpha2` | `0.6` | plot_CatL 年份分面中观测曲线的线宽/颜色/线型/透明度。 | Numeric. Transparency for observed line (0-1). Default is 0.6. |
@@ -847,9 +867,8 @@ plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
 总体 F 比较 apical / Summary F comparison apical
 
 ```r
-plot_compare_annual_F(model1, model2, model1_name = NULL, model2_name = NULL,
-    method = c("apical", "mean"), colors = NULL, linetypes = NULL,
-    linewidth = NULL)
+plot_compare_annual_F (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical",
+    "mean"), colors = NULL, linetypes = NULL, linewidth = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -882,13 +901,18 @@ plot_compare_annual_F(a, b, method = "apical") +
 <a id="plot_compare_CatL"></a>
 ## `plot_compare_CatL()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+`plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
+
+`plot_compare_residuals()` and `plot_compare_CatL()` verify known observations and their positive-observation mask as well as time and length metadata. Pass the original fitting table; changing its values or turning a missing cell into an observation is an error. Older fits without stored observations remain usable, but their observation alignment cannot be fully verified. Zero and NA observations are omitted from the comparison points, consistently with fitting; prediction curves remain available at those positions.
+
 两模型调查拟合 / Survey fits from both models
 
 ```r
-plot_compare_CatL(model1, model2, data.CatL, years = NULL, model1_name = NULL,
-    model2_name = NULL, colors = NULL, linetypes = NULL, linewidth = NULL,
-    ncol = 4, scales = "free_y", obs_color = "grey40", obs_size = 1.5,
-    obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL)
+plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, model2_name = NULL,
+    colors = NULL, linetypes = NULL, linewidth = NULL, ncol = 4, scales = "free_y",
+    obs_color = "grey40", obs_size = 1.5, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -931,8 +955,7 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
 死亡率矩阵比较 / Fishing mortality matrices
 
 ```r
-plot_compare_F(model1, model2, model1_name = NULL, model2_name = NULL,
-    palette = NULL)
+plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -964,10 +987,9 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 生长与外部参照接口 / Growth and reference-data interface
 
 ```r
-plot_compare_growth(model1, model2, age_range = c(1, 20), model1_name = NULL,
-    model2_name = NULL, colors = NULL, linetypes = NULL, linewidth = NULL,
-    ref_data = NULL, ref_name = "Observed VB", ref_color = "grey30",
-    ref_linetype = "dotdash", show_points = TRUE, point_size = NULL,
+plot_compare_growth (model1, model2, age_range = c(1, 20), model1_name = NULL, model2_name = NULL,
+    colors = NULL, linetypes = NULL, linewidth = NULL, ref_data = NULL, ref_name = "Observed VB",
+    ref_color = "grey30", ref_linetype = "dotdash", show_points = TRUE, point_size = NULL,
     point_alpha = 0.4, nls_start = NULL)
 ```
 
@@ -1014,9 +1036,9 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 拟合指标比较 / Fit metric comparison
 
 ```r
-plot_compare_metrics(model1, model2, data.CatL, model1_name = NULL, model2_name = NULL,
-    colors = NULL, metrics = NULL, ncol = NULL, legend_pos = NULL,
-    label_size = 3.2, bar_width = 0.6, bar_alpha = 0.85)
+plot_compare_metrics (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL, colors = NULL,
+    metrics = NULL, ncol = NULL, legend_pos = NULL, label_size = 3.2, bar_width = 0.6,
+    bar_alpha = 0.85)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1065,12 +1087,18 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
 <a id="plot_compare_residuals"></a>
 ## `plot_compare_residuals()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+`plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
+
+`plot_compare_residuals()` and `plot_compare_CatL()` verify known observations and their positive-observation mask as well as time and length metadata. Pass the original fitting table; changing its values or turning a missing cell into an observation is an error. Older fits without stored observations remain usable, but their observation alignment cannot be fully verified. Zero and NA observations are omitted from the comparison points, consistently with fitting; prediction curves remain available at those positions.
+
 残差联合诊断 / Combined residual diagnostics
 
 ```r
-plot_compare_residuals(model1, model2, data.CatL, model1_name = NULL, model2_name = NULL,
-    colors = NULL, linetypes = NULL, linewidth = NULL, point_size = NULL,
-    legend_pos = NULL, bins = 35, qq_alpha = 0.6, errorbar_width = 0.3)
+plot_compare_residuals (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL, colors = NULL,
+    linetypes = NULL, linewidth = NULL, point_size = NULL, legend_pos = NULL, bins = 35,
+    qq_alpha = 0.6, errorbar_width = 0.3)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1110,8 +1138,8 @@ plot_compare_residuals(a, b, dat)
 固定调查可捕性 / Fixed survey catchability
 
 ```r
-plot_compare_selectivity(model1, model2, model1_name = NULL, model2_name = NULL,
-    colors = NULL, linetypes = NULL, linewidth = NULL)
+plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL,
+    linetypes = NULL, linewidth = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1153,10 +1181,9 @@ Fishing-mortality plots use matrix positions and fitted time/group metadata, so 
 `plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_annual_F(a, b, method = "apical")` or `method = "mean"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.
 
 ```r
-plot_compare_ts(model1, model2, quantities = c("SSB", "R", "B", "N",
-    "CN"), se = FALSE, model1_name = NULL, model2_name = NULL,
-    colors = NULL, linetypes = NULL, linewidth = NULL, ncol = NULL,
-    scales = NULL, return_data = FALSE)
+plot_compare_ts (model1, model2, quantities = c("SSB", "R", "B", "N", "CN"), se = FALSE,
+    model1_name = NULL, model2_name = NULL, colors = NULL, linetypes = NULL, linewidth = NULL,
+    ncol = NULL, scales = NULL, return_data = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1194,13 +1221,16 @@ plot_compare_ts(a, b, se = TRUE, ncol = 2)
 
 过程偏差 R TRUE / Process deviations R TRUE
 
+2.2.9 中，省略的通用 `line_size` 与 `se_alpha` 继承 `acl_theme_set()`（默认 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差／指标组合图标题及 F 分面文字继承全局字体设置。默认仍无网格。ACL F 偏差图按年龄数字排序；`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。
+
+In 2.2.9, omitted generic `line_size` and `se_alpha` inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`. Combined residual/metric titles and F facet labels inherit the global typography. Grid lines remain absent by default. ACL F-deviation age panels use numeric order. `plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.
+
 `se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。 `se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.
 
 ```r
-plot_deviance(model_result, se = TRUE, point_size = 3, point_color = "white",
-    point_shape = 21, line_size = 1, line_color = NULL, line_type = "solid",
-    se_color = NULL, se_width = 0.5, facet_ncol = NULL, facet_scales = "free",
-    log = TRUE, type = c("R", "F"))
+plot_deviance (model_result, se = TRUE, point_size = 3, point_color = "white", point_shape = 21,
+    line_size = NULL, line_color = NULL, line_type = "solid", se_color = NULL, se_width = 0.5,
+    facet_ncol = NULL, facet_scales = "free", log = TRUE, type = c("R", "F"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1210,7 +1240,7 @@ plot_deviance(model_result, se = TRUE, point_size = 3, point_color = "white",
 | `point_size` | `3` | 点大小。 | Numeric. The size of the point. Default is 3. |
 | `point_color` | `"white"` | 点颜色。 | Character. The color of the point. Default is "white". |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. The shape of the point. Default is 21. |
-| `line_size` | `1` | 线宽；参数名按函数区别使用。 | Numeric, the line size. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character, the line type. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
@@ -1243,25 +1273,24 @@ ACL 捕捞死亡率 year / ACL fishing mortality year
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
 ```r
-plot_fishing_mortality(model_result, line_size = 1, line_color = NULL, line_type = "solid",
-    facet_ncol = NULL, facet_scales = "free", se = FALSE, se_color = NULL,
-    se_alpha = 0.2, se_type = "ribbon", type = c("year", "age",
-        "length"), return_data = FALSE, x_breaks = NULL, title = NULL,
-    xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
+plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    facet_ncol = NULL, facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL,
+    se_type = "ribbon", type = c("year", "age", "length"), return_data = FALSE, x_breaks = NULL,
+    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
     base_theme = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list obtained from run_acl or run_alscl. |
-| `line_size` | `1` | 线宽；参数名按函数区别使用。 | Numeric. The thickness of the line. Default is 1. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line. Default is "solid". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. The number of columns in facet_wrap. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet_wrap. Default is "free". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. The transparency of the ribbon. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `se_type` | `"ribbon"` | 区间样式：ribbon 或 errorbar。 | Character. "ribbon" or "errorbar". Default is "ribbon". |
 | `type` | `c("year", "age", "length")` | year 为时间横轴；age 按年绘年龄别 F；ALSCL length 按年绘实际体长别 F。ACL 旧 length 别名仍画年龄并警告。 | year uses a time axis; age facets F-at-age by year; ALSCL length uses actual midpoints and year facets. The legacy ACL length alias still draws age and warns. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return data alongside the plot. Default is FALSE. |
@@ -1292,11 +1321,14 @@ ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长�
 
 年龄长度转换 / Age length conversion
 
+2.2.9 中，省略的通用 `line_size` 与 `se_alpha` 继承 `acl_theme_set()`（默认 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差／指标组合图标题及 F 分面文字继承全局字体设置。默认仍无网格。ACL F 偏差图按年龄数字排序；`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。
+
+In 2.2.9, omitted generic `line_size` and `se_alpha` inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`. Combined residual/metric titles and F facet labels inherit the global typography. Grid lines remain absent by default. ACL F-deviation age panels use numeric order. `plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.
+
 ```r
-plot_pla(model_result, low_col = NULL, high_col = NULL, title = NULL,
-    xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
-    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
-    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL,
+    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
     title_hjust = NULL)
 ```
 
@@ -1314,7 +1346,7 @@ plot_pla(model_result, low_col = NULL, high_col = NULL, title = NULL,
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
-| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `x_breaks` | `NULL` | 整数年龄组位置；仅选择刻度，不删除热图单元。NULL 继承全局值。 | Integer age-bin positions selecting ticks without removing cells; NULL inherits the global setting. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
@@ -1337,23 +1369,22 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。 Standard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.
 
 ```r
-plot_recruitment(model_result, line_size = 1.5, line_color = NULL, line_type = "solid",
-    se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = c("ribbon",
-        "errorbar"), return_data = FALSE, title = NULL, xlab = NULL,
-    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
-    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
-    x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
+plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"),
+    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment. |
-| `line_size` | `1.5` | 线宽；参数名按函数区别使用。 | Numeric. Specifies the thickness of the line in the plot. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Specifies the type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. The transparency of the confidence interval ribbon. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon 或 errorbar。 | Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
@@ -1394,13 +1425,12 @@ Survey fit plots align both observed and predicted matrices by their positions a
 Both residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. For example, `plot_residuals(b, type = "year", title = "Survey residuals", xlab = "Length (cm)", ylab = "Log residual", title_hjust = 0)` uses the supplied labels and a left-aligned title. Default plots remain free of major and minor gridlines.
 
 ```r
-plot_residuals(model_result, f = 0.4, line_color = NULL, smooth_color = NULL,
-    hline_color = NULL, line_size = 1, facet_scales = "free",
-    facet_ncol = NULL, type = c("length", "year"), resid_cap = NULL,
-    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL,
-    font_family = NULL, title_size = NULL, axis_title_size = NULL,
-    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
-    x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
+plot_residuals (model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL,
+    line_size = NULL, facet_scales = "free", facet_ncol = NULL, type = c("length",
+        "year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL,
+    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+    title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1410,7 +1440,7 @@ plot_residuals(model_result, f = 0.4, line_color = NULL, smooth_color = NULL,
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `smooth_color` | `NULL` | 残差平滑线颜色。 | Character or NULL. NULL inherits the global smooth_color setting. |
 | `hline_color` | `NULL` | 残差零参考线颜色。 | Character or NULL. NULL inherits the global hline_color setting. |
-| `line_size` | `1` | 线宽；参数名按函数区别使用。 | Numeric. The size of the lines in the plot. Default is 1. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric, optional. Number of columns in facet wrap. Default is NULL. |
 | `type` | `c("length", "year")` | 选择输出类型；可选值列于签名和英文说明。 | Character. Specifies whether the residuals are calculated over "length" or "year". Default is "length". |
@@ -1451,13 +1481,12 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
 ACL 回溯分析 / ACL retrospective analysis
 
 ```r
-plot_retro(retro_result, rho_digits = 4, rho_position = "top_right",
-    rho_size = 3.5, line_size = 1.2, point_size = 3, point_shape = 21,
-    facet_scales = "free", facet_col = NULL, facet_row = NULL,
-    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    base_theme = NULL, title_hjust = NULL, palette = NULL, colors = NULL)
+plot_retro (retro_result, rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
+    line_size = NULL, point_size = 3, point_shape = 21, facet_scales = "free", facet_col = NULL,
+    facet_row = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
+    palette = NULL, colors = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1466,7 +1495,7 @@ plot_retro(retro_result, rho_digits = 4, rho_position = "top_right",
 | `rho_digits` | `4` | Mohn rho 显示的小数位数。 | Integer. Decimal places for Mohn's rho. Default is 4. |
 | `rho_position` | `"top_right"` | Mohn rho 标注位置。 | Character. Position of rho text. Default is "top_right". |
 | `rho_size` | `3.5` | Mohn rho 标注字号。 | Numeric. Font size of rho text. Default is 3.5. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `point_size` | `3` | 点大小。 | Numeric. Point size. Default is 3. |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales. Default is "free". |
@@ -1503,12 +1532,15 @@ plot_retro(rb, facet_col = 2, rho_digits = 3)
 
 长度组成山脊图 / Length composition ridges
 
+保存了观测与拟合报告的结果可直接使用 `plot_ridges()`，不需要活跃 TMB 对象。未保存观测的旧结果仍需原会话对象或重新拟合。记录包版本、提交号、随机种子、数据来源、三表单位、固定参数、边界、时间步和诊断；RDS 不保存可跨会话执行的编译模型。 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
+
+Saved fits containing observations and fitted reports support `plot_ridges()` without a live TMB object. Older fits without saved observations still require their original live object or refitting. Record version, commit, seed, provenance, units, maps, bounds, time step and diagnostics. An RDS file does not preserve a portable compiled model. The default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.
+
 ```r
-plot_ridges(model_result, ridges_alpha = 0.8, ridges_scale = NULL,
-    palette = "viridis", title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    base_theme = NULL, title_hjust = NULL)
+plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "viridis",
+    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
+    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
+    x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1555,21 +1587,20 @@ plot_ridges(b)
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
 ```r
-plot_SSB(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
-    se = FALSE, se_color = NULL, se_alpha = 0.2, type = c("SSB",
-        "SBL", "SBA"), facet_ncol = NULL, facet_scales = "free",
-    return_data = FALSE)
+plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid",
+    se = FALSE, se_color = NULL, se_alpha = NULL, type = c("SSB", "SBL", "SBA"),
+    facet_ncol = NULL, facet_scales = "free", return_data = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. CI ribbon transparency. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("SSB", "SBL", "SBA")` | 选择输出类型；可选值列于签名和英文说明。 | Character. "SSB" (total), "SBL" (at length), or "SBA" (at age). Default is "SSB". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
@@ -1637,12 +1668,11 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 亲体与补充关系 / Spawning biomass and recruitment
 
 ```r
-plot_SSB_Rec(model_result, age_at_recruitment = 1, point_size = 2,
-    point_color = NULL, point_shape = 16, return_data = FALSE,
-    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    base_theme = NULL, title_hjust = NULL)
+plot_SSB_Rec (model_result, age_at_recruitment = 1, point_size = 2, point_color = NULL,
+    point_shape = 16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL,
+    font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+    title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1689,25 +1719,24 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 `ylab` 在所有模式生效；协方差不可用时提示并仅绘制曲线，保留全部自定义样式。 `ylab` is honored in every mode; unavailable covariance triggers a warning and an estimate-only curve that retains all custom styling.
 
 ```r
-plot_VB(model_result, age_range = c(1, 25), line_size = 1.2,
-    line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL,
-    se_alpha = 0.2, se_type = c("ribbon", "errorbar"), text_color = "black",
-    text_size = 5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    base_theme = NULL, title_hjust = NULL)
+plot_VB (model_result, age_range = c(1, 25), line_size = NULL, line_color = NULL,
+    line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon",
+        "errorbar"), text_color = "black", text_size = 5, title = NULL, xlab = NULL,
+    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+    title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components. |
 | `age_range` | `c(1, 25)` | 生长图的年龄上下限，单位为年。 | Numeric vector of length 2, defining the range of ages to consider. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. The thickness of the line in the plot. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to calculate and plot standard error as confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `0.2` | 区间透明度，0–1。 | Numeric. The transparency of the confidence interval ribbon. Default is 0.2. |
+| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon 或 errorbar。 | Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon". |
 | `text_color` | `"black"` | 生长参数标注文字颜色。 | Character. The color of the text in the plot. Default is "black". |
 | `text_size` | `5` | 生长参数标注文字大小。 | Numeric. The thickness of the text in the plot. Default is 5. |
@@ -1745,16 +1774,14 @@ ACL 回溯入口 / ACL retrospective wrapper
 Retrospective peels shorten time-dependent `map$dev_log_R` and `map$dev_log_F` with the retained periods. Supply maps for the full dataset: recruitment uses one entry per period; F uses group-by-time column order (age groups for ACL, length groups for ALSCL, one group for `F_structure = "year"`). Factor ties and fixed NA entries are retained. Invalid full-data map lengths are rejected. Scalar maps and `dev_log_N0` do not change with a peel.
 
 ```r
-retro_acl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
-    nage, M, sel_L50, sel_L95, parameters = NULL, parameters.L = NULL,
-    parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
-    plot = FALSE, line_size = 1.2, point_size = 3, point_shape = 21,
-    facet_scales = "free", facet_col = NULL, facet_row = NULL,
-    train_times = 1, title = NULL, xlab = NULL, ylab = NULL,
-    font_family = NULL, title_size = NULL, axis_title_size = NULL,
-    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
-    x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4,
-    rho_position = "top_right", rho_size = 3.5, ncores = 1, ...)
+retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+    parameters = NULL, parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL,
+    len_border = NULL, plot = FALSE, line_size = NULL, point_size = 3, point_shape = 21,
+    facet_scales = "free", facet_col = NULL, facet_row = NULL, train_times = 1, title = NULL,
+    xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
+    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
+    base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right",
+    rho_size = 3.5, ncores = 1, ...)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1775,7 +1802,7 @@ retro_acl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Optional numeric vector of length bin midpoints. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Optional numeric vector of length bin borders. |
 | `plot` | `FALSE` | TRUE 请求附带图；没有有限估计时警告并返回 plot = NULL，仍保留诊断。 | Include a plot when TRUE; if no finite estimates are available, warn and return plot = NULL while retaining diagnostics. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `point_size` | `3` | 点大小。 | Numeric. Point size for endpoints. Default is 3. |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape for endpoints. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales argument. Default is "free". |
@@ -1835,8 +1862,8 @@ ALSCL 回溯入口 / ALSCL retrospective wrapper
 Retrospective peels shorten time-dependent `map$dev_log_R` and `map$dev_log_F` with the retained periods. Supply maps for the full dataset: recruitment uses one entry per period; F uses group-by-time column order (age groups for ACL, length groups for ALSCL, one group for `F_structure = "year"`). Factor ties and fixed NA entries are retained. Invalid full-data map lengths are rejected. Scalar maps and `dev_log_N0` do not change with a peel.
 
 ```r
-retro_alscl(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
-    nage, M, sel_L50, sel_L95, growth_step = 1, ...)
+retro_alscl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+    growth_step = 1, ...)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1888,20 +1915,17 @@ rb$rho_text
 Retrospective peels shorten time-dependent `map$dev_log_R` and `map$dev_log_F` with the retained periods. Supply maps for the full dataset: recruitment uses one entry per period; F uses group-by-time column order (age groups for ACL, length groups for ALSCL, one group for `F_structure = "year"`). Factor ties and fixed NA entries are retained. Invalid full-data map lengths are rejected. Scalar maps and `dev_log_N0` do not change with a peel.
 
 ```r
-retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
-    nage, M, sel_L50, sel_L95, model_type = c("acl", "alscl"),
-    growth_step = NULL, parameters = NULL, parameters.L = NULL,
-    parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
-    len_lower = NULL, len_upper = NULL, train_times = 1, ncores = 1,
-    silent = FALSE, plot = FALSE, line_size = 1.2, point_size = 3,
-    point_shape = 21, facet_scales = "free", facet_col = NULL,
-    facet_row = NULL, title = NULL, xlab = NULL, ylab = NULL,
-    font_family = NULL, title_size = NULL, axis_title_size = NULL,
-    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
-    x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4,
-    rho_position = "top_right", rho_size = 3.5,
-    F_structure = c("group_year", "year"), polish = TRUE,
-    zero_action = c("missing", "error"), control = list(), nstarts = 1)
+retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+    model_type = c("acl", "alscl"), growth_step = NULL, parameters = NULL, parameters.L = NULL,
+    parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL,
+    len_upper = NULL, train_times = 1, ncores = 1, silent = FALSE, plot = FALSE,
+    line_size = NULL, point_size = 3, point_shape = 21, facet_scales = "free", facet_col = NULL,
+    facet_row = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
+    rho_digits = 4, rho_position = "top_right", rho_size = 3.5, F_structure = c("group_year",
+        "year"), polish = TRUE, zero_action = c("missing", "error"), control = list(),
+    nstarts = 1)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1929,7 +1953,7 @@ retro_model(nyear = 5, data.CatL, data.wgt, data.mat, rec.age,
 | `ncores` | `1` | 显式指定并行回溯轮数；不沿用 x 内拟合用的 ncores，各轮拟合单进程。 | Explicit peel workers; stored fitting ncores is ignored, and each fit uses one fitting worker. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Logical. If TRUE, suppress all progress messages. Default is FALSE. |
 | `plot` | `FALSE` | TRUE 请求附带图；没有有限估计时警告并返回 plot = NULL，仍保留诊断。 | Include a plot when TRUE; if no finite estimates are available, warn and return plot = NULL while retaining diagnostics. |
-| `line_size` | `1.2` | 线宽；参数名按函数区别使用。 | Numeric. Line thickness. Default is 1.2. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `point_size` | `3` | 点大小。 | Numeric. Point size for endpoints. Default is 3. |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape for endpoints. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales argument. Default is "free". |
@@ -1987,6 +2011,12 @@ rb$rho_text
 <a id="run_acl"></a>
 ## `run_acl()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+标准误计算结束后，返回的可执行 TMB 对象会恢复到最终拟合参数。在拟合所在的 R 会话中，`fit$obj$report()` 与 `fit$report` 因此描述同一个拟合状态，包括顺序计算及并行失败后的回退。已保存的估计值和标准误不因此改变。序列化保存的结果仍需重新拟合后才能使用可执行 TMB 对象。
+
+After standard-error calculation, the returned live TMB objective is restored to the final fitted parameters. In the fitting R session, `fit$obj$report()` therefore describes the same fitted state as `fit$report`, including sequential standard errors and a fallback from parallel calculation. This does not change the saved estimates or standard errors. Serialized fits still require refitting before using a live TMB objective.
+
 拟合年龄型 ACL / Fit age-based ACL
 
 ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
@@ -1994,12 +2024,11 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
-run_acl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
-    sel_L95, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
-    map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
-    train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
-    zero_action = c("missing", "error"), control = list(), nstarts = ncores,
-    F_structure = c("group_year", "year"), polish = TRUE)
+run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, parameters = NULL,
+    parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
+    output = FALSE, train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
+    zero_action = c("missing", "error"), control = list(), nstarts = ncores, F_structure = c("group_year",
+        "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2054,6 +2083,12 @@ Parameters are estimated from their starting values unless fixed by the map. A w
 <a id="run_alscl"></a>
 ## `run_alscl()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+标准误计算结束后，返回的可执行 TMB 对象会恢复到最终拟合参数。在拟合所在的 R 会话中，`fit$obj$report()` 与 `fit$report` 因此描述同一个拟合状态，包括顺序计算及并行失败后的回退。已保存的估计值和标准误不因此改变。序列化保存的结果仍需重新拟合后才能使用可执行 TMB 对象。
+
+After standard-error calculation, the returned live TMB objective is restored to the final fitted parameters. In the fitting R session, `fit$obj$report()` therefore describes the same fitted state as `fit$report`, including sequential standard errors and a fallback from parallel calculation. This does not change the saved estimates or standard errors. Serialized fits still require refitting before using a live TMB objective.
+
 拟合年龄与长度联合 ALSCL / Fit joint age-length ALSCL
 
 ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
@@ -2061,13 +2096,11 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
-run_alscl(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50,
-    sel_L95, growth_step = 1, parameters = NULL, parameters.L = NULL,
-    parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
-    len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1,
-    ncores = 1, silent = FALSE, zero_action = c("missing", "error"),
-    control = list(), nstarts = ncores,
-    F_structure = c("group_year", "year"), polish = TRUE)
+run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, growth_step = 1,
+    parameters = NULL, parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL,
+    len_border = NULL, len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1,
+    ncores = 1, silent = FALSE, zero_action = c("missing", "error"), control = list(),
+    nstarts = ncores, F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2126,11 +2159,14 @@ Parameters are estimated from their starting values unless fixed by the map. A w
 
 批量拟合 ACL 模拟重复 / Fit simulated replicates with ACL
 
+`sim_acl()` 将每次重复的结果（包括失败状态）保存到 `result_rep_<iter>`。复用输出目录时，本轮失败记录会替换旧成功结果；汇总前检查 `converge` 和 `error`。写入失败会明确报告，不能视为已经保存。`simulation_to_tables(sm, pa)` 使用模拟结果的长度坐标，并拒绝与参数不一致的坐标，不再给观测重新贴错标签；没有坐标的旧模拟可使用匹配的参数元数据。
+
+`sim_acl()` saves the status of every replicate, including failures, to `result_rep_<iter>`. Reusing an output directory replaces an earlier success with the current failure record; inspect `converge` and `error` before summarizing results. Output write failures are reported and must not be treated as saved results. `simulation_to_tables(sm, pa)` uses the simulation length coordinates and rejects conflicting parameter coordinates instead of relabeling observations; legacy simulations without coordinates can use matching parameter metadata.
+
 ```r
-sim_acl(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
-    parameters = NULL, parameters.L = NULL, parameters.U = NULL,
-    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
-    F_structure = c("group_year", "year"), polish = TRUE)
+sim_acl (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters = NULL,
+    parameters.L = NULL, parameters.U = NULL, map = NULL, M = 0.2, ncores = 1, train_times = 1,
+    control = list(), F_structure = c("group_year", "year"), polish = TRUE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2184,10 +2220,16 @@ do.call(sim_acl, c(list(iter_range = 4:5,
 <a id="sim_cal"></a>
 ## `sim_cal()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+模拟体长中点必须落在对应组内，检查规则与拟合一致；首尾组仍吸收分布尾部。参数准备阶段会拒绝无效分组，生物量计算和模拟前还会再次检查，包括用户手动修改的输入；错误发生在随机抽样和写文件前。
+
+Simulation length midpoints must lie within their corresponding bins, using the same containment rules as fitting. The first and last bins absorb the tails. Invalid bin geometry is rejected during parameter preparation and rechecked before biological calculations or simulation, including manually modified inputs, before random draws or output files.
+
 从参数计算生物矩阵 / Calculate biological arrays
 
 ```r
-sim_cal(params)
+sim_cal (params)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2232,6 +2274,16 @@ bio <- sim_cal(pa)
 <a id="sim_data"></a>
 ## `sim_data()`
 
+**2.2.9 修订 / Changes in 2.2.9.**
+
+完整模拟保留真实零值和极小正调查观测，不再把小于 `1e-6` 的值替换为 `1e-6`。调查生物量等于调查尾数乘以重量，零资源情形也保持一致。只有原先触发下限的新模拟数据会变化，旧保存数据不改写。拟合规则不变：`zero_action = "missing"` 将零视为缺失，`"error"` 拒绝零值；全零调查没有正观测，不能使用当前对数正态模型拟合。
+
+Full simulations retain genuine zero and very small positive survey observations; they no longer replace values below `1e-6` with `1e-6`. Survey biomass equals survey abundance times weight, including extinction scenarios. This changes only newly generated data that previously hit that floor; saved datasets are not rewritten. The fitting convention is unchanged: zero observations are missing with `zero_action = "missing"` and rejected with `"error"`; an entirely zero survey contains no positive observations and cannot be fitted by the current lognormal model.
+
+模拟体长中点必须落在对应组内，检查规则与拟合一致；首尾组仍吸收分布尾部。参数准备阶段会拒绝无效分组，生物量计算和模拟前还会再次检查，包括用户手动修改的输入；错误发生在随机抽样和写文件前。
+
+Simulation length midpoints must lie within their corresponding bins, using the same containment rules as fitting. The first and last bins absorb the tails. Invalid bin geometry is rejected during parameter preparation and rechecked before biological calculations or simulation, including manually modified inputs, before random draws or output files.
+
 运行完整随机种群模拟 / Simulate full population dynamics
 
 完整模拟器要求 `init_Z`、过程与观测标准差、平均捕捞死亡率均为有限非负值。`F_ar` 与 `R_ar` 必须严格介于 -1 和 1 之间，允许负的平稳相关。Beverton–Holt 的 alpha 和初始补充量可以为零，beta 必须为正。非法过程输入会在随机抽样或创建文件前报错，保留已有模拟文件及调用者的随机数状态。
@@ -2243,8 +2295,8 @@ The full simulator validates `init_Z`, process and observation standard deviatio
 The quick simulator now integrates the first and last length bins to negative and positive infinity, matching the fitted models. Finite `bin_breaks` still determine labels and midpoints; they do not truncate probability. Corrected simulations can change even with the same seed, especially when the first boundary excludes small fish. Previously saved datasets retain their original generating truth. Use nonnegative M, F and noise scales, positive growth parameters and a nonnegative weight coefficient, and increasing selectivity/maturity endpoints. Invalid parameters or nonfinite generated values stop before CSV files are created. The full simulator also requires normalized age-length keys and growth transitions.
 
 ```r
-sim_data(bio_vars, params, sim_year = NULL, output_dir = ".",
-    iter_range = 4:100, return_iter = NULL)
+sim_data (bio_vars, params, sim_year = NULL, output_dir = ".", iter_range = 4:100,
+    return_iter = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2314,10 +2366,9 @@ sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
 The quick simulator now integrates the first and last length bins to negative and positive infinity, matching the fitted models. Finite `bin_breaks` still determine labels and midpoints; they do not truncate probability. Corrected simulations can change even with the same seed, especially when the first boundary excludes small fish. Previously saved datasets retain their original generating truth. Use nonnegative M, F and noise scales, positive growth parameters and a nonnegative weight coefficient, and increasing selectivity/maturity endpoints. Invalid parameters or nonfinite generated values stop before CSV files are created. The full simulator also requires normalized age-length keys and growth transitions.
 
 ```r
-simulate_example_data(years = 2000:2025, bin_breaks = c(0, 20, 25, 30, 35,
-    40, 45, 50, 55, 60), Linf = 55, vbk = 0.45, t0 = -0.1, M = 0.8,
-    nage = 7, L50_sel = 28, L95_sel = 36, L50_mat = 33, L95_mat = 40,
-    wgt_a = 2.2e-06, wgt_b = 3.2, mean_F = 0.3, cv_catch = 0.3,
+simulate_example_data (years = 2000:2025, bin_breaks = c(0, 20, 25, 30, 35, 40, 45, 50, 55, 60),
+    Linf = 55, vbk = 0.45, t0 = -0.1, M = 0.8, nage = 7, L50_sel = 28, L95_sel = 36,
+    L50_mat = 33, L95_mat = 40, wgt_a = 2.2e-06, wgt_b = 3.2, mean_F = 0.3, cv_catch = 0.3,
     rec_sigma = 0.5, seed = NULL, save_csv = FALSE, output_dir = ".")
 ```
 
@@ -2371,7 +2422,7 @@ simulate_example_data(years = 2000:2019, seed = 42,
 计算 VB 平均体长 / Calculate VB mean length
 
 ```r
-VB_func(Linf, k, t0, age)
+VB_func (Linf, k, t0, age)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |

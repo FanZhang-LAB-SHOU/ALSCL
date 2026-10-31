@@ -58,4 +58,11 @@ must be finite and nonnegative. AR(1) coefficients may be negative but must
 lie strictly between -1 and 1. Beverton-Holt alpha and initial recruitment
 may be zero; beta must be positive. These process inputs are checked before
 creating the output directory or drawing random numbers.
+Length geometry is checked against the fitted-model bin convention, and
+available biological-array coordinates must match the parameter list.
+Survey observations retain true zeros and small positive values; no
+artificial positive floor is applied. Survey biomass equals survey
+abundance times weight at length. Fitting still treats zeros as missing
+by default (or rejects them with zero_action = "error"); an all-zero survey
+cannot be fitted by the lognormal observation model.
 }

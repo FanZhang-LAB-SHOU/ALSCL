@@ -6,14 +6,14 @@
 \usage{
 plot_fishing_mortality(
   model_result,
-  line_size = 1,
+  line_size = NULL,
   line_color = NULL,
   line_type = "solid",
   facet_ncol = NULL,
   facet_scales = "free",
   se = FALSE,
   se_color = NULL,
-  se_alpha = 0.2,
+  se_alpha = NULL,
   se_type = "ribbon",
   type = c("year", "age", "length"),
   return_data = FALSE,
@@ -29,7 +29,7 @@ plot_fishing_mortality(
 \arguments{
 \item{model_result}{A list obtained from \code{run_acl} or \code{run_alscl}.}
 
-\item{line_size}{Numeric. The thickness of the line. Default is 1.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -43,7 +43,7 @@ plot_fishing_mortality(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric. The transparency of the ribbon. Default is 0.2.}
+\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
