@@ -82,8 +82,8 @@
   {
     "slug": "case-model-validation",
     "title": {
-      "en": "Can the model reproduce and predict survey observations?",
-      "zh": "模型能重现并预测调查观测吗？"
+      "en": "Can the fitted model reproduce observations and predict withheld time steps?",
+      "zh": "模型能重现观测并预测留出时间步吗？"
     },
     "group": "evaluation",
     "group_title": {

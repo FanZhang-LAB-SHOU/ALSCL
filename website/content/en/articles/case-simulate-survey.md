@@ -1,33 +1,11 @@
 # How do I simulate survey data?
 
-## The problem
+On this page you generate survey tables from a known population, fit ACL and ALSCL to one replicate and compare the estimates with the truth. You need the package installed ([Install ALSCL](getting-started.html)) and a copy of the repository, with R running from its root because step 2 sources `scripts/simulation_workflow.R`. At the end you have the tables, one replicate with its truth, two fits and a figure of their estimates against the truth. The figures show the flatfish preset, replicate 4, drawn by [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R).
 
-You need controlled survey observations to test a workflow or investigate model performance. This case separates a quick input-table check from a simulation experiment that retains generating truth. Neither pathway provides empirical fishery data.
-
-## Choose the experiment before generating data
-
-|Question|Pathway|What to retain|
-|---|---|---|
-|Does import or plotting work?|Quick annual tables|Seed, settings and three input tables|
-|How do estimation and generating truth differ?|Full operating model|Parameters, biological arrays, truth, observations and all fit outcomes|
-|Do annual and quarterly settings behave differently?|Full presets with an explicit time step|Time units and all changed biological assumptions|
-
-The figures in this case come from the repository’s full flatfish preset, replicate 4. They illustrate the full pathway below, not the quick-table simulator. The flatfish case has 20 retained annual observations after an 80-year burn-in; the tuna preset has 20 retained quarterly observations after a 95-year burn-in.
-
-## Prepare the session
-
-Install ALSCL, download or clone the repository, and run R from its root directory. The helper script below is distributed in the repository, not exported by the installed package.
+<h2 id="quick">1. Create annual input tables with the quick simulator</h2>
 
 ```r
 library(ALSCL)
-source("scripts/simulation_workflow.R", encoding = "UTF-8")
-```
-
-## Path 1: create annual input tables
-
-Use this path to test import, validation and plotting. Choose a new output directory if you want to preserve previous files.
-
-```r
 quick <- simulate_example_data(
   years = 2000:2019, seed = 42, bin_breaks = seq(5, 51, 2),
   Linf = 60, vbk = 0.2, t0 = 1/60, M = 0.2, nage = 15,
@@ -35,16 +13,15 @@ quick <- simulate_example_data(
   wgt_a = exp(-12), wgt_b = 3, mean_F = 0.3,
   cv_catch = 0.2, rec_sigma = 0.3,
   save_csv = TRUE, output_dir = "my_annual_simulation")
-str(quick)
+str(quick, max.level = 1)
 ```
 
-Inspect the returned tables and exported CSV files. This simplified annual simulator differs from the full operating model. Relabeling years as quarters does not create quarterly dynamics.
+`simulate_example_data()` is the quick simulator for testing import, fitting and plotting: it returns the three tables `data.CatL`, `data.wgt` and `data.mat` and the generating values `true_params`, and `save_csv = TRUE` writes the three CSV files to `output_dir`. Experiments use the operating model of step 2. An invalid setting, such as `L95_sel` below `L50_sel`, stops the call before any file is written; [Simulate survey data](simulation.html#choose) lists every setting.
 
-## Path 2: retain truth and simulation replicates
-
-Use this path when the question concerns bias, uncertainty or differences between an operating model and an estimator.
+<h2 id="replicate">2. Generate one replicate with the full operating model</h2>
 
 ```r
+source("scripts/simulation_workflow.R", encoding = "UTF-8")
 pa <- initialize_params(species = "flatfish", first.year = 2000,
                         observation_error = "independent")
 bio <- sim_cal(pa)
@@ -56,14 +33,11 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs),
 str(inputs)
 ```
 
-`iter_range` controls replicate IDs and seeds; `return_iter` selects the in-memory replicate. `simulation_to_tables()` transposes survey numbers and constructs time headers from `growth_step`. The saved `sim_rep*` files use `load()`, not `readRDS()`.
+`initialize_params()` builds the flatfish preset (age-based dynamics, 20 annual time steps labelled 2000-2019 after an 80-year burn-in), `sim_cal()` derives the biological arrays and `sim_data()` runs the population: `iter_range` gives the replicate ids and seeds, each saved as `sim_rep<id>` with `save()` (read it back with `load()`), and `return_iter = 4` returns that replicate as `sm`, with the survey numbers `SN_at_len`, the retained `years` and the truth `SSB`, `Rec` and `TB` ([Simulate survey data](simulation.html#generate) lists every element). `simulation_to_tables(sm, pa)` returns the three tables with the length midpoints as rows and `sm$years` as columns; `str(inputs)` should show three 23-by-21 data frames. If the converter stops because `len_mid` differs from the replicate's recorded coordinates, pass the parameter list that generated the file.
 
-## Validate and visualize the simulated observations
-
-The converter returns three data frames with length-bin labels in the first column. Validate them before passing them to an estimator. Use the full preset’s actual length midpoints when drawing the heatmap.
+<h2 id="plot">3. Plot the simulated observations</h2>
 
 ```r
-inputs <- prepare_alscl_data(inputs)  # checks alignment and values; biology is added later
 library(ggplot2)
 years <- as.numeric(names(inputs$data.CatL)[-1])
 observations <- data.frame(
@@ -78,17 +52,17 @@ p_data
 ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 160)
 ```
 
+The heatmap shows the log10 survey index by year and length bin, with `pa$len_mid` as the 23 bin midpoints.
+
 ![Full flatfish simulation: survey numbers by length and year](../assets/manual/figures/cases/flatfish_data.png)
 
-**Read the figure:** color is the log10 survey index. Bands moving through length classes reflect cohort progression modified by catchability and noise. This is an observation surface, not total abundance; a change in survey catchability can change it without the same change in population size.
+Bands moving through the length bins from year to year are cohorts growing through the survey. The index is small below 10 cm, where catchability is under 0.1, and largest at 15-30 cm; a change in catchability changes this surface while the population stays the same.
 
 ![Generating growth curve, maturity and survey catchability](../assets/manual/figures/cases/flatfish_biology.png)
 
-The upper panel links age to mean length. The lower curves represent maturity and survey catchability, which have different roles. Keep their L50/L95 settings separate. The figure’s biological values are the flatfish preset, not assumptions for an unknown stock.
+The upper panel is the growth curve, 11 cm at age 1 to 57 cm at age 15. The lower curves are maturity (L50 35 cm, from `data.mat`) and survey catchability (L50 15 cm, from `sel_L50` and `sel_L95`); your stock needs its own values.
 
-## Fit both structures to one replicate
-
-For a conditional demonstration, fix the known growth and selected process parameters as in the repository’s case-study script. ACL and ALSCL use different parameter names and transformations. The following block uses the `pa` and `inputs` just generated.
+<h2 id="fit">4. Fit both models to the replicate</h2>
 
 ```r
 pA <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), t0 = pa$t0,
@@ -101,20 +75,24 @@ pB <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), log_t0 = log(pa$t0),
 mA <- lapply(pA, function(value) factor(NA))
 mB <- lapply(pB, function(value) factor(NA))
 mB$logit_log_F_l <- mB$logit_log_F_y <- factor(NA)
-common <- c(inputs, list(
-  rec.age = pa$rec.age, nage = pa$nage, M = pa$M,
-  sel_L50 = pa$q_surv_L50, sel_L95 = pa$q_surv_L95,
-  len_mid = pa$len_mid, len_border = pa$len_border[-c(1, length(pa$len_border))],
-  growth_step = pa$growth_step, train_times = 2, ncores = 1, silent = TRUE))
-a <- run_acl(common, parameters = pA, map = mA)
-b <- run_alscl(common, parameters = pB, map = mB)
-checks <- list(ACL = diagnose_model(inputs$data.CatL, a),
-               ALSCL = diagnose_model(inputs$data.CatL, b))
+x <- prepare_alscl_data(inputs,
+  fit_args = list(rec.age = pa$rec.age, nage = pa$nage, M = pa$M,
+    sel_L50 = pa$q_surv_L50, sel_L95 = pa$q_surv_L95,
+    len_mid = pa$len_mid, len_border = pa$len_border[-c(1, length(pa$len_border))],
+    growth_step = pa$growth_step, train_times = 2, silent = TRUE),
+  fit_config = list(acl = list(parameters = pA, map = mA),
+                    alscl = list(parameters = pB, map = mB)))
+for (model in c("acl", "alscl")) print(check_alscl_data(x, model)$summary)
+a <- run_acl(x)
+b <- run_alscl(x)
+checks <- list(ACL = diagnose_model(x$data.CatL, a),
+               ALSCL = diagnose_model(x$data.CatL, b))
+c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-## Compare estimates with generating truth
+The input bundle `x` carries the generating biology in `fit_args` and each model's starting values and `map`, under its own parameter names, in `fit_config`. Growth, the length CVs, the process standard deviations and the recruitment correlation are fixed at the generating values, plus the two F correlations in ALSCL, so each model estimates five scalar parameters, as in [Annual and quarterly time steps](case-studies.html#annual). `pa$len_border` runs from `-Inf` to `Inf`; dropping its ends leaves the 22 internal boundaries. `check_alscl_data()` should report 23 length bins, 20 time steps, 460 positive observations and `free_fixed` 5 for both models; ACL takes about 20 seconds and ALSCL about 90 after compilation, and the last line should print `TRUE TRUE`. If a check fails, run `diagnose_model()` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
 
-Here `TB` is the simulator’s total biomass and `B` is the fitted report’s biomass. Align the same periods and quantities before subtracting or dividing values.
+<h2 id="truth">5. Compare the estimates with the generating truth</h2>
 
 ```r
 truth <- data.frame(Year = rep(years, 3),
@@ -137,23 +115,17 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs, checks = checks,
         "my_full_simulation/assessment_summary.rds")
 ```
 
+The simulator calls total biomass `TB` and the fitted report calls it `B`; the code lines them up by year and quantity.
+
 ![Flatfish replicate 4: generating truth and conditional ACL/ALSCL estimates](../assets/manual/figures/cases/flatfish_truth.png)
 
-Dashed lines are generating truth; colored lines are conditional estimates from the bundled case. Compare direction and magnitude within each panel; free y scales prevent comparisons of apparent amplitude across quantities. Because the generator here is age-based and only one replicate is shown, the plot does not rank the models in general.
+Dashed lines are the truth, solid lines the two conditional estimates; the y scales are free, so compare within each panel. Both models follow the decline to 2010 and the rise after it, and ALSCL sits below the truth for biomass and spawning biomass after 2014. One replicate of an age-based generator is shown; ranking the models needs many replicates with the failed fits kept, which [Simulate survey data](simulation.html#fit) summarizes with `summarize_simulations()`.
 
-## Extend to quarters or more replicates
+<h2 id="next">What next</h2>
 
-For quarters, start with `initialize_params(species = "tuna")` and regenerate biology, observations and matching fit settings. Do not only relabel the annual columns. For repeated simulations, use `sim_model(model = "acl")` or `sim_model(model = "alscl")`, or the model-specific `sim_acl()` and `sim_alscl()` interfaces. Keep replicate-specific seeds, truth and failures; a custom loop remains optional. See the [batch fitting and simulation summary example](assessment-workflows.html).
-
-|Symptom|Check first|
+| What you want to do | Read |
 |---|---|
-|Time headers and `growth_step` disagree|Use the converter with the same parameter list used to generate the replicate|
-|Unreasonable trajectories|Check units, burn-in, growth, recruitment age and survey catchability|
-|A fit fails|Keep its error and seed; inspect numerical diagnostics before summarizing successful fits|
-|Files cannot be read|Use `load()` for `sim_rep*` and `readRDS()` for files saved with `saveRDS()`|
-
-## What to check and report
-
-Confirm table alignment, time units, retained duration, generating biology and observation error before fitting. Two replicates demonstrate file handling; they do not establish performance. For a simulation study, vary the target assumption deliberately and retain failed fits alongside bias, RMSE and interval coverage.
-
-Continue with the [simulation function guide](simulation.html), [annual and quarterly settings](case-studies.html), or [fitting tables and specifying biology](case-fit-survey.html).
+| Fit the quarterly tuna replicate | [Annual and quarterly time steps](case-studies.html) |
+| Fit many replicates and summarize bias, RMSE and coverage | [Simulate survey data](simulation.html#fit) |
+| Simulate from a fitted model and refit the draws | [Can the fitted model reproduce observations and predict withheld time steps?](case-model-validation.html) |
+| Keep seeds, settings and versions | [Reproduce results and fix problems](reproducibility.html) |

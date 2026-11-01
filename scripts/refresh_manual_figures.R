@@ -2,6 +2,9 @@
 # First run scripts/ytf_workflow.R (save returned fits) and the own-data example.
 # Rscript scripts/refresh_manual_figures.R [ytf_fits.rds] [own_assessment.rds]
 library(ALSCL)
+# The figures must come from this checkout: stop when an older installation is loaded.
+if (packageVersion("ALSCL") < read.dcf("DESCRIPTION", "Version")[[1]])
+  stop("Installed ALSCL ", packageVersion("ALSCL"), " is older than this checkout; run R CMD INSTALL . first.")
 library(ggplot2)
 library(patchwork)
 args <- commandArgs(TRUE)

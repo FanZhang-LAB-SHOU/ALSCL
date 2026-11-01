@@ -114,6 +114,8 @@ acl_theme()
 acl_theme("line_color")
 ```
 
+![示例图 / Example figure: `plot_SSB(b, se = TRUE) under each palette of acl_theme_set()`](figures/palettes/ssb_by_palette.png)
+
 <a id="acl_theme_reset"></a>
 ## `acl_theme_reset()`
 
@@ -202,6 +204,8 @@ The previous `acl.theme` option, returned invisibly. The active global option is
 # 调用示例；变量按上文创建 / Use objects defined above
 acl_theme_set(base_theme = "bw", line_color = "navy")
 ```
+
+![示例图 / Example figure: `acl_theme_set(palette = "npg")`](figures/palettes/palettes.png)
 
 <a id="alscl_speed"></a>
 ## `alscl_speed()`
@@ -668,6 +672,8 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
+![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_abundance_N.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_abundance)。
 
 <a id="plot_biomass"></a>
@@ -758,6 +764,8 @@ plot_catch(a, type = "CNA", se = FALSE)
 plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
+
+![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_biomass_B.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_biomass)。
 
@@ -850,6 +858,8 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
+![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_catch_CN.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_catch)。
 
 <a id="plot_CatL"></a>
@@ -929,6 +939,8 @@ plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
+![示例图 / Example figure: `plot_CatL(b, type = "year", facet_ncol = 4)`](figures/ytf/CatL_year_FALSE.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_CatL)。
 
 <a id="plot_compare_annual_F"></a>
@@ -967,6 +979,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_annual_F(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
+
+![示例图 / Example figure: `plot_compare_annual_F(a, b, method = "apical")`](figures/ytf/compare_F_apical.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_annual_F)。
 
@@ -1025,6 +1039,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
 ```
 
+![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)`](figures/ytf/compare_CatL.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_CatL)。
 
 <a id="plot_compare_F"></a>
@@ -1058,6 +1074,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 ```
+
+![示例图 / Example figure: `plot_compare_F(a, b)`](figures/ytf/compare_F.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_F)。
 
@@ -1111,6 +1129,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = "Synthetic reference",
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
+
+![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](figures/ytf/compare_growth.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_growth)。
 
@@ -1170,6 +1190,8 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
     0.3)))
 ```
 
+![示例图 / Example figure: `plot_compare_metrics(a, b, dat, ncol = 2)`](figures/ytf/compare_metrics.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_metrics)。
 
 <a id="plot_compare_residuals"></a>
@@ -1220,6 +1242,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_residuals(a, b, dat)
 ```
 
+![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](figures/ytf/compare_residuals.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_residuals)。
 
 <a id="plot_compare_selectivity"></a>
@@ -1256,6 +1280,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_compare_selectivity(a, b)
 ```
+
+![示例图 / Example figure: `plot_compare_selectivity(a, b)`](figures/ytf/compare_selectivity.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_selectivity)。
 
@@ -1307,6 +1333,8 @@ Comparison plots give distinct default labels to two fits of the same model: for
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_compare_ts(a, b, se = TRUE, ncol = 2)
 ```
+
+![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, ncol = 2)`](figures/ytf/compare_ts.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_ts)。
 
@@ -1360,6 +1388,8 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
+
+![示例图 / Example figure: `plot_deviance(b, type = "R", log = TRUE, se = TRUE, facet_ncol = 3)`](figures/ytf/deviation_R_TRUE.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_deviance)。
 
@@ -1418,6 +1448,8 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
+![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](figures/ytf/F_ALSCL_year.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_fishing_mortality)。
 
 ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长度别 F。 / For ACL, length remains an age-plot compatibility alias.
@@ -1466,6 +1498,8 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
+
+![示例图 / Example figure: `plot_pla(b)`](figures/ytf/pla.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_pla)。
 
@@ -1518,6 +1552,8 @@ A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_recruitment(b, se = TRUE)
 ```
+
+![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](figures/ytf/recruitment.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_recruitment)。
 
@@ -1589,6 +1625,8 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
+![示例图 / Example figure: `plot_residuals(b, type = "year", facet_ncol = 4)`](figures/ytf/residuals_year.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_residuals)。
 
 <a id="plot_retro"></a>
@@ -1642,6 +1680,8 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_retro(rb, facet_col = 2, rho_digits = 3)
 ```
+
+![示例图 / Example figure: `plot_retro(rb, facet_col = 2, rho_digits = 3)`](figures/ytf/retro_ALSCL.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_retro)。
 
@@ -1698,6 +1738,8 @@ A two-panel composition of observed and fitted length distributions, returned as
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_ridges(b)
 ```
+
+![示例图 / Example figure: `plot_ridges(b)`](figures/ytf/ridges.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_ridges)。
 
@@ -1790,6 +1832,8 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
+![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_SSB_SSB.png)
+
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_SSB)。
 
 <a id="plot_SSB_Rec"></a>
@@ -1840,6 +1884,8 @@ A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
+
+![示例图 / Example figure: `plot_SSB_Rec(b, age_at_recruitment = 1)`](figures/ytf/SSB_Rec.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_SSB_Rec)。
 
@@ -1899,6 +1945,8 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_VB(b, se = TRUE)
 ```
+
+![示例图 / Example figure: `plot_VB(b, se = TRUE)`](figures/ytf/VB.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_VB)。
 
@@ -1992,6 +2040,8 @@ ra$fit_diagnostics
 ra$rho_text
 ```
 
+![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_col = 2)`](figures/ytf/retro_ACL.png)
+
 <a id="retro_alscl"></a>
 ## `retro_alscl()`
 
@@ -2046,6 +2096,8 @@ rb <- retro_alscl(x, nyear = 3)
 rb$fit_diagnostics
 rb$rho_text
 ```
+
+![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_col = 2)`](figures/ytf/retro_ALSCL.png)
 
 <a id="retro_model"></a>
 ## `retro_model()`
@@ -2150,6 +2202,8 @@ rb$fit_diagnostics
 rb$rho_by_peel
 rb$rho_text
 ```
+
+![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_col = 2)`](figures/ytf/retro_ALSCL.png)
 
 <a id="run_acl"></a>
 ## `run_acl()`
@@ -2514,6 +2568,8 @@ sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
                output_dir = "simulation_examples/flatfish")
 ```
 
+![示例图 / Example figure: `sim_data(sim_cal(pa), pa, iter_range = 4, return_iter = 4)`](figures/cases/flatfish_truth.png)
+
 <a id="simulate_example_data"></a>
 ## `simulate_example_data()`
 
@@ -2723,6 +2779,8 @@ checks$plots$lag
 checks$plots$qq
 ```
 
+![示例图 / Example figure: `check_fit(b, max_lag = 4)$plots$heatmap`](figures/workflows/residual-heatmap.png)
+
 
 <a id="extract_estimates"></a>
 
@@ -2826,6 +2884,8 @@ z <- fit_scenarios(x, list(reference = list(), low_M = list(M = 0.15),
 z$status
 z$estimates
 ```
+
+![示例图 / Example figure: `fit_scenarios(x, list(reference = list(), low_M = list(M = 0.15), high_M = list(M = 0.25)), model = "acl")`](figures/workflows/scenario-SSB.png)
 
 
 <a id="inspect_parameters"></a>
@@ -2938,6 +2998,8 @@ p <- profile_model(a, "mean_log_F", values, scale = "natural", ncores = 2)
 p$grid
 ```
 
+![示例图 / Example figure: `profile_model(a, "mean_log_F", values = grid, scale = "natural")`](figures/workflows/profile-F.png)
+
 
 <a id="project_model"></a>
 
@@ -2986,6 +3048,8 @@ scenario <- project_model(b, F = rep(0.15, h),
 scenario$summary
 # F is per model step; supplied recruitment and biology are assumptions.
 ```
+
+![示例图 / Example figure: `project_model(a, F = F_future, recruitment = R_future, weight = w, maturity = m)`](figures/workflows/projection-SSB.png)
 
 
 <a id="read_assessment"></a>
@@ -3339,6 +3403,8 @@ refitted <- run_acl(simulated$simulations[[1]]$x, silent = TRUE)
 simulated$simulations[[1]]$truth$SSB
 ```
 
+![示例图 / Example figure: `simulate_fit(b, nsim = 3, seed = 42, process = "resample")`](figures/workflows/fitted-simulation.png)
+
 
 <a id="hindcast_model"></a>
 
@@ -3381,3 +3447,5 @@ validation$diagnostics
 validation$scores
 head(validation$predictions)
 ```
+
+![示例图 / Example figure: `hindcast_model(x, model = "acl", horizon = 1, nfolds = 3)`](figures/workflows/hindcast-predictions.png)

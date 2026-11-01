@@ -1,71 +1,39 @@
 # 移除近期数据后，估计结果会怎样变化？
 
-## 要解决的问题
+本页带你对模拟 YTF 示例运行 ACL 和 ALSCL 的回溯分析：每个模型在去掉最后 1、2、3 个时间步后重新拟合，每一轮与完整拟合比较，再用 Mohn's rho 汇总修订幅度。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）；每次分析运行四次拟合，[运行回溯分析](retrospectives.html)解释了函数及其返回表。结束时你会有两个结果、它们的图和一个保存文件夹。
 
-新增观测后，资源评估可能修订历史生物量或补充量。回溯分析通过移除末端观测并重新拟合同一模型，检查估计的变化。它不衡量预测准确度。
-
-## 重新拟合截短序列
-
-以下完整设置使用模拟 YTF 示例及其条件生物假设。需要可用的编译器，并会执行多次拟合。
+<h2 id="run">1. 运行 ALSCL 回溯分析</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+rb$fit_diagnostics
 rb$rho_text
+plot_retro(rb, facet_col = 2, rho_digits = 3)
 ```
 
-## 检查轨迹与 Mohn rho
+`retro_alscl()` 像 `run_alscl(x)` 一样读取输入列表 `x`，先拟合完整序列，再做三轮：第 1 轮去掉最后一个时间步，第 2 轮去掉最后两个，第 3 轮去掉最后三个。`nyear` 以时间步计（季度数据就是季度），每一轮至少要保留两个。调用中的参数对每次拟合都生效，本次调用的 `ncores` 让各轮并行运行（[运行回溯分析](retrospectives.html#run)）。先读 `rb$fit_diagnostics`：每次拟合一行（`Peel` 为 0 是完整拟合），含数值检查和报错信息。只有完整拟合和所有轮次都通过检查、每个末端比较都有限且参考值非零时，`rb$rho_text$Rho` 才给出每个量的 Mohn's rho；否则为 `NA` 并警告，`rb$errors` 列出失败的拟合，`rb$raw_rho_text` 保留未经检查的均值供诊断。教学数据的四次拟合约需六分钟，全部通过（[retro_diagnostics_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/retro_diagnostics_ALSCL.csv)）。
 
 ![仓库提供的 ALSCL 回溯示例](../assets/manual/figures/ytf/retro_ALSCL.png)
 
-在每次截短序列的最后一个时间点，将其估计与完整拟合比较。正 rho 表示截短拟合在这些末端时期往往偏高，负值则相反。方向相反的偏差可能抵消，所以应查看单条轨迹及每次拟合的数值状态。参考估计为零时，相对差异无定义。
+每条线是一次拟合，按其最后一个时间步着色；空心点标出末端估计，rho 把它与完整拟合在同一时间步的值比较。像这里一样，各轮的线在大部分序列上与完整拟合重合、只在最后几年分开，说明新观测只修订近期估计。在记录运行中，生物量的 rho 为 0.033，产卵生物量 0.017，丰度 0.027，补充量 0.0018（[rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)）；正值表示截短的拟合结束在完整拟合之上。符号相反的项在均值中会抵消，所以也要读 `rb$rho_by_peel`。若没有任何拟合给出估计，`plot_retro()` 会停止并提示你读 `fit_diagnostics` 和 `errors`。
 
-## 对照 ACL 的回溯结果
-
-使用相同观测与截短次数，同时保留 ACL 自己的参数名与 map。
+<h2 id="acl">2. 运行 ACL 分析并比较两个模型</h2>
 
 ```r
 ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
-plot_retro(ra, facet_col = 2, rho_digits = 3)
+ra$fit_diagnostics
 ra$rho_text
+plot_retro(ra, facet_col = 2, rho_digits = 3)
 ```
 
 ![模拟 YTF：ACL 回溯轨迹](../assets/manual/figures/ytf/retro_ACL.png)
 
-两种模型的配图均为仓库已有示例。先检查各模型内部的修订，再比较同一指标与末端时期的 rho。不同纵轴尺度可能放大或掩盖视觉差异。
+相同的观测和轮数，使用 `x$fit_config$acl` 中 ACL 自己的初值和 `map`。先比较每个模型内部的修订，再比较两个模型同一个量的 rho；纵轴尺度不同。在记录运行中 ACL 的数值更小：生物量 0.0069，产卵生物量 0.0079，补充量 -0.010，丰度 -0.00025（[rho_ACL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv)）。各轮和各模型同向的修订比其大小更重要；rho 本身说明不了原因，所以反复出现的同向修订需要检查输入、固定值和 F 结构（[判断拟合是否可用](diagnostics.html)）。
 
-## 检查返回表
-
-```r
-head(rb$results)
-rb$last_points
-rb$rho_text
-names(rb)
-```
-
-`fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
-
-### 直接检查每次拟合，无须重复计算
-
-```r
-rb$fit_diagnostics
-rb$rho_by_peel
-rb$rho_text
-rb$raw_rho_text
-rb$errors
-```
-
-`retro_acl(x, nyear = 3)` 和 `retro_alscl(x, nyear = 3)` 直接使用与拟合函数相同的输入列表。通用写法为 `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`。各次拟合依次使用共用设置、模型专用设置及调用时显式覆盖值；显式 `map`、`parameters` 和 `control` 会整体替换对应列表。`zero_action`、`control`、`nstarts`、`F_structure` 和 `polish` 都传给每次拟合。`x` 内用于拟合的 `ncores` 不用于回溯：请在回溯调用中显式设置 `ncores`，控制同时运行的截短拟合数。每个截短拟合内部依序运行 `nstarts` 个起点。
-
-## 应用于自己的评估
-
-将输入与生物参数替换为完整数据拟合时使用的同一套配置。固定参数、观测处理和时间单位应保持一致。`nyear` 计算移除的末端时间步：三个季度步并不是三年。每次截短后应保留足够观测，详见 [函数使用说明](retrospectives.html)。
-
-## 导出回溯记录
+<h2 id="save">3. 保存记录</h2>
 
 ```r
 dir.create("my_retrospective", showWarnings = FALSE)
@@ -82,18 +50,13 @@ saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,
 writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ```
 
-|现象|解释或检查|
+结果是没有活动 TMB 对象的表，所以 `saveRDS()` 能完整保存，`plot_retro()` 在新会话中可以重画。文件夹记录每次拟合的序列、每个量和每一轮的 rho、数值检查、图、`x` 的设置和会话信息。对自己的评估，用你报告的那次拟合的设置运行分析，使各轮与完整拟合只差去掉的观测；季度数据用 `nyear = 4` 去掉一年。
+
+<h2 id="next">下一步</h2>
+
+| 想做什么 | 阅读 |
 |---|---|
-|截短后时间步太少|减少截短次数，每次拟合至少保留两个时间步|
-|末端偏差正负交替|查看各次截短，平均 rho 可能掩盖抵消|
-|将季度分析理解为年度分析|用 `growth_step` 将移除步数转换为时长|
-|需要自定义 `zero_action`|在 `x$fit_args` 中设置，或显式传给 `retro_alscl(x, ...)`；各次拟合使用同一设置|
-|短序列拟合不稳定|先检查诊断，再解释末端修订|
-
-## 决定下一步检查什么
-
-持续同向的修订提示需要检查输入变化、模型假设和参数敏感性。rho 本身不能确定成因，也不能直接作为修正系数。作出结论前，应记录完整拟合、各次截短的诊断及末端时间。
-
-## 全部拟合失败时保留诊断
-
-当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
+| 读每张返回表和 rho 的公式 | [运行回溯分析](retrospectives.html) |
+| 修复未通过数值检查的一轮 | [判断拟合是否可用](diagnostics.html) |
+| 给留出时间步的预测打分 | [模型能重现观测并预测留出时间步吗？](case-model-validation.html) |
+| 用更多核心运行各轮 | [速度设置](speed.html) |

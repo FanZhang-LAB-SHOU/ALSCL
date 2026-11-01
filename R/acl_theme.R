@@ -47,7 +47,7 @@ NULL
 # ---------------------------------------------------------------------------
 # Default configuration (internal)
 # ---------------------------------------------------------------------------
-# ggsci 色板与角色 / ggsci palettes and semantic roles.
+# ggsci palettes and semantic roles.
 .acl_palette <- function(palette = "npg", n = NULL) {
   palette <- match.arg(tolower(palette), c("npg", "aaas", "nejm", "lancet", "jama"))
   cols <- switch(palette,
@@ -57,7 +57,7 @@ NULL
     lancet = ggsci::pal_lancet("lanonc")(9),
     jama = ggsci::pal_jama("default")(7))
   if (is.null(n)) return(cols)
-  # 原生颜色用尽后插值；不循环重复 / Interpolate beyond the native size.
+  # Interpolate beyond the native palette size instead of recycling.
   if (n <= length(cols)) cols[seq_len(n)] else grDevices::colorRampPalette(cols)(n)
 }
 
@@ -71,7 +71,7 @@ NULL
        hline_color = "grey55", low_col = "#F7F9FC", high_col = primary)
 }
 
-# 连续量使用浅到深渐变 / Continuous values use a light-to-dark gradient.
+# Continuous values use a light-to-dark gradient.
 .acl_fill_continuous <- function(palette = NULL, name = ggplot2::waiver()) {
   if (is.null(palette)) return(ggplot2::scale_fill_gradient(
     low = acl_theme("low_col"), high = acl_theme("high_col"), name = name))
@@ -151,8 +151,8 @@ NULL
     BA_se   = "Estimated Biomass-at-Age with 95% CI",
 
     # plot_SSB
-    SSB     = "Estimated Spawning Stock Biomass (SSB)",
-    SSB_se  = "Estimated Spawning Stock Biomass (SSB) with 95% CI",
+    SSB     = "Estimated spawning biomass (SSB)",
+    SSB_se  = "Estimated spawning biomass (SSB) with 95% CI",
     SBL     = "Estimated SSB-at-Length",
     SBL_se  = "Estimated SSB-at-Length with 95% CI",
     SBA     = "Estimated SSB-at-Age",
@@ -163,11 +163,11 @@ NULL
     Rec_se  = "Estimated Recruitment (R) with 95% CI",
 
     # plot_SSB_Rec
-    SSB_Rec = "Spawning Stock Biomass vs. Recruitment",
+    SSB_Rec = "Spawning biomass and recruitment",
 
     # plot_catch
-    CN      = "Estimated Catch Abundance (C)",
-    CN_se   = "Estimated Catch Abundance (C) with 95% CI",
+    CN      = "Estimated catch numbers (CN)",
+    CN_se   = "Estimated catch numbers (CN) with 95% CI",
     CNA     = "Estimated Catch-at-Age",
     CNA_se  = "Estimated Catch-at-Age with 95% CI",
     CNL     = "Estimated Catch-at-Length",
@@ -230,11 +230,11 @@ NULL
 
   ylab = list(
     year      = "Year",
-    abundance = "Relative abundance",
+    abundance = "Abundance",
     biomass   = "Biomass",
     ssb       = "SSB",
     rec       = "Recruitment",
-    catch     = "Catch abundance",
+    catch     = "Catch numbers",
     survey    = NULL, # NULL preserves legacy custom abundance labels for survey plots.
     F         = "Fishing mortality",
     deviance  = "Deviance",

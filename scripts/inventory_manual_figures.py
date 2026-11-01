@@ -34,6 +34,8 @@ for folder in ['docs/figures', 'man/figures']:
             source = 'scripts/plot_speed_benchmark.R'
         elif '/parallel/' in rel:
             source = 'scripts/plot_parallel_benchmark.R'
+        elif '/palettes/' in rel:
+            source = 'scripts/palette_swatches.R'
         elif path.name == 'convergence-2.2.2.png':
             source = 'scripts/plot_convergence_222.R'
         else:

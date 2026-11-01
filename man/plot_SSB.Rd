@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_SSB.R
 \name{plot_SSB}
 \alias{plot_SSB}
-\title{Plot Spawning Stock Biomass (SSB), SBL, or SBA Over Years}
+\title{Plot spawning biomass (SSB), SBL or SBA over time}
 \usage{
 plot_SSB(
   model_result,

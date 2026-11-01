@@ -1,12 +1,8 @@
 # ACL 与 ALSCL 的评估结果有什么不同？
 
-## 要解决的问题
+本页带你对同一组模拟 YTF 观测拟合 ACL 和 ALSCL，看两种种群结构在哪些方面一致、在哪些方面不同。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）；`YTF_example` 提供数据表、生物学设置和两个模型的固定参数，因此这一比较以这些教学数值为条件。结束时你会有比较表、四张图和一个保存文件夹。
 
-你希望判断改变种群结构是否会影响评估。对同一组模拟 YTF 观测拟合 ACL 与 ALSCL，并保留示例提供的生物设置。这是条件比较，不能证明某个模型在所有情形下更好。
-
-## 拟合同一组观测
-
-内置数据为模拟数据。示例配置固定了已知生长及部分过程参数，因此拟合区间不包含这些假设的不确定性。
+<h2 id="fit">1. 对同一组观测拟合两个模型</h2>
 
 ```r
 library(ALSCL)
@@ -17,7 +13,9 @@ a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 ```
 
-## 检查拟合是否可解释
+两次拟合都读取输入列表 `x`，因此共用数据表、`M`、调查可捕性和时间网格，每个模型从 `x$fit_config` 取自己的初值和 `map`；固定的生长和过程参数值对区间没有贡献不确定性。给两个模型相同的数据表和生物学设置，这样下面的每一处差异都来自模型结构。
+
+<h2 id="checks">2. 检查两次拟合并比较拟合统计量</h2>
 
 ```r
 diagnose_model(x$data.CatL, a)
@@ -29,17 +27,13 @@ comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-比较估计轨迹前，先检查数值状态与残差结构。只有观测数据及似然定义可比较时，才比较基于似然的准则。不能仅凭目标函数值对数值不可靠的拟合排序。
+先读每次拟合的数值检查（[理解第一次拟合](first-model.html#checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低者，仅在两者都合格时给出）和 `issues`。在记录运行（[comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，调查指数 RMSE 也更小，为 2.5 对 4.7。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
 
 ![模拟 YTF：ACL 与 ALSCL 的残差比较](../assets/manual/figures/ytf/compare_residuals.png)
 
-各面板对比残差分布以及随时间、体长的变化。年度误差线表示离散程度，不是置信区间。模型即使拟合出相似生物量趋势，也可能保留系统性观测残差。
+四个面板分别是残差直方图、QQ 图、逐年平均残差（误差线为一个标准差）和按体长组的绝对残差；[判断拟合是否可用](diagnostics.html#residuals)解释这些规律。
 
-`compare_models()` 会核对两个拟合与传入调查表的时间标签、体长标签及顺序、正观测值和观测掩码；确认不一致时直接报错。旧保存结果若缺少核对所需元数据，仍可读取原始统计量，但不自动给出模型偏好。任一拟合未通过数值筛查时，函数发出警告，保留原始 AIC/BIC 和拟合指标供检查，不宣布哪个模型更优。查看 `comparison$fit_diagnostics` 与 `comparison$comparison`（`data_verified`、`eligible`、`preferred`、`issues`）。通过筛查只表示可以开展条件比较，仍需审查似然可比性和生物假设。
-
-## 比较调查观测的拟合
-
-为两种模型选择相同年份，检查约束各次拟合的观测。
+<h2 id="survey">3. 比较对调查观测的拟合</h2>
 
 ```r
 plot_compare_CatL(a, b, x$data.CatL,
@@ -48,9 +42,9 @@ plot_compare_CatL(a, b, x$data.CatL,
 
 ![模拟 YTF：四个年份的调查观测及拟合中位数](../assets/manual/figures/ytf/compare_CatL.png)
 
-点为观测，曲线为拟合中位数。讨论派生丰度差异前，先比较拟合形状，特别是观测稀疏的大体长组。上图使用仓库中的模拟拟合。
+点是观测，曲线是选定四个年份的拟合中位数。读丰度差异之前，先比较拟合形状，特别是观测稀疏的较大体长组。
 
-## 比较种群估计
+<h2 id="estimates">4. 比较种群估计</h2>
 
 ```r
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
@@ -58,11 +52,9 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![模拟 YTF 示例的条件种群估计](../assets/manual/figures/ytf/compare_ts.png)
 
-观察时间位置、趋势与尺度的差异。上图为仓库已有示例图；新拟合结果由安装版本与数值设置决定。结果相近不证明参数可识别，单个示例也不能判断模型的普遍优劣。
+观察时间位置、趋势和尺度上的差异；`se = TRUE` 加上由标准误得到的区间。区间重叠说明两个条件估计在这组数据上相近；一组数据给不出两种结构的一般排序。
 
-## 检查捕捞死亡率的尺度
-
-ACL 按年龄表示捕捞死亡率，ALSCL 按体长表示。因此面板坐标不同，不能逐单元格一一比较。
+<h2 id="mortality">5. 比较捕捞死亡率</h2>
 
 ```r
 plot_compare_F(a, b)
@@ -70,9 +62,9 @@ plot_compare_F(a, b)
 
 ![模拟 YTF：年龄别与体长别捕捞死亡率](../assets/manual/figures/ytf/compare_F.png)
 
-比较时间变化时，应考虑不同的状态变量。若使用 `plot_compare_annual_F()`，不要因函数名含 annual 就认为季度值会自动年化。
+ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_annual_F()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
-## 保存可复核的比较结果
+<h2 id="save">6. 保存比较结果供复核</h2>
 
 ```r
 dir.create("my_model_comparison", showWarnings = FALSE)
@@ -88,15 +80,14 @@ saveRDS(list(inputs = inputs, fit_args = x$fit_args, fit_config = x$fit_config,
 writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 ```
 
-|观察|能支持什么|不能证明什么|
-|---|---|---|
-|两次数值拟合均可接受|值得进一步比较拟合结果|全部假设正确|
-|残差结构不同|模型解释观测分布的方式不同|某个模型普遍更好|
-|生物量或补充量不同|评估结论依赖种群结构或相关假设|哪个是实测种群的真值|
-|区间重叠|条件估计未被这些区间清楚分开|等价或管理后果相同|
+文件夹里有 CSV 表、种群图、装有输入、设置、比较结果和两个报告的 RDS 文件，以及会话信息。报告时一并写明时间窗、固定的生物学设置、零值的处理和对固定值的敏感性。
 
-处理自己的观测时，应同时替换两种模型的输入，并审查各模型的参数名。不能分别拟合不同数据，却把全部差异归因于模型结构。报告时间窗、固定生物参数、零值处理、数值诊断与敏感性结果。
+<h2 id="next">下一步</h2>
 
-## 继续追查差异
-
-审查固定的生物假设、残差结构以及对初值的敏感性。[模型比较绘图](model-comparison.html) 提供调查拟合、死亡率与生长的对照；[回溯分析案例](case-retrospective-bias.html) 检查移除末端观测后估计如何修订。
+| 想做什么 | 阅读 |
+|---|---|
+| 绘制其他比较图 | [模型比较与真值](model-comparison.html) |
+| 检查单个拟合的残差规律 | [判断拟合是否可用](diagnostics.html) |
+| 去掉近期时间步后重新拟合 | [移除近期数据后，估计结果会怎样变化？](case-retrospective-bias.html) |
+| 检验对 M 和 F 结构的敏感性 | [评估对假设有多敏感，未来 F 情景会怎样改变结果？](case-sensitivity-projection.html) |
+| 对自己的数据表拟合两个模型 | [如何拟合自己的调查数据？](case-fit-survey.html) |

@@ -4,7 +4,7 @@
 #' and plots fishing mortality over years, ages, or length-bin midpoints using ggplot2.
 #' For ACL models, F is at the age level (A x Y).
 #' For ALSCL models, F is at the length level (FL: L x Y) and
-#' F-at-age (FA: (A-1) x (Y-1)) is an emergent property.
+#' F-at-age (FA: (A-1) x (Y-1)) is derived from F at length.
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
@@ -27,7 +27,7 @@
 #'   F_year, F_age or F_length title, with _se appended for interval plots.
 #' @param xlab Character or NULL. Custom x-axis label; NULL inherits the global
 #'   year, age or length label. Uncustomized age axes are labeled Age Group
-#'   because the plotted coordinates are group positions, not calendar ages.
+#'   because the plotted coordinates are group positions.
 #' @param ylab Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
 #' @param font_family Character. Font family for text elements.
 #' @param title_size Numeric. Title text size.
@@ -58,8 +58,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
 
   type <- match.arg(type)
   se_type <- match.arg(se_type, c("ribbon", "errorbar"))
-  if (!is.logical(se) || length(se) != 1L || is.na(se))
-    stop("se must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(se, "se")
 
   # Detect model type: ACL has report$F, ALSCL has report$FL
   is_alscl <- is.null(model_result[["report"]][["F"]]) && !is.null(model_result[["report"]][["FL"]])

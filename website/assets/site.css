@@ -46,3 +46,5 @@ main>p,main>ul,main>ol{line-height:1.7}
  .mobile-toc li{margin:8px 0}
 }
 @media print{.mobile-toc,.reference-jumps{display:none!important}.reading-paths{background:none}.guide-entry{break-inside:avoid}}
+
+.example-figure{margin:18px 0 26px}.example-figure img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px}.example-figure figcaption{font-size:14px;color:#59636d;margin-top:6px}

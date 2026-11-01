@@ -72,8 +72,7 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
   model <- toupper(fit$model_type)
   if (length(model) != 1L || !model %in% c("ACL", "ALSCL"))
     stop("fit$model_type must be ACL or ALSCL.", call. = FALSE)
-  if (!is.logical(allow_failed_fit) || length(allow_failed_fit) != 1L || is.na(allow_failed_fit))
-    stop("allow_failed_fit must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(allow_failed_fit, "allow_failed_fit")
   failed_fit <- isFALSE(fit$diagnostics$numerical_ok)
   if (failed_fit) {
     if (!allow_failed_fit)

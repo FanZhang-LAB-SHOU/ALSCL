@@ -39,7 +39,7 @@ screens passed; preferred is NULL when an automatic preference is withheld.}
 }
 }
 \description{
-Computes a comprehensive set of comparison metrics between two model results,
+Computes a set of comparison metrics between two model results,
 including convergence diagnostics, parameter estimates, goodness-of-fit statistics,
 time-series correlations, and information criteria.
 }

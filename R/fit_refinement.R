@@ -83,7 +83,7 @@
   if (!isTRUE(fit$convergence_code == 0L)) issues <- c(issues, "nonzero raw optimizer code")
   stationary <- is.finite(fit$max_abs_gradient) && fit$max_abs_gradient < 1e-3
   if (!stationary) issues <- c(issues, "large or nonfinite gradient")
-  if (!isTRUE(fit$pdHess) || !covariance_ok) issues <- c(issues, "Hessian/covariance unavailable or not positive definite")
+  if (!isTRUE(fit$pdHess) || !covariance_ok) issues <- c(issues, "Hessian or covariance unavailable or not positive definite")
   if (isTRUE(fit$bound_hit)) issues <- c(issues, "optimizer-scale boundary")
   if (any(natural$near_boundary)) issues <- c(issues, "natural-scale boundary")
   if (nrow(correlations)) issues <- c(issues, "strong parameter correlation (review identifiability)")

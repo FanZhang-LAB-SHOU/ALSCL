@@ -24,9 +24,9 @@ plot_compare_annual_F(
 
 \item{method}{Character. How to summarize F across age/length groups each model
 time step. Quarterly fits remain quarterly; no annual aggregation is performed.
-\code{"apical"} (default): maximum F across groups -- comparable across
+\code{"apical"} (default): maximum F across groups, comparable across
 age-based and length-based models.
-\code{"mean"}: arithmetic mean across all groups -- can be misleading when
+\code{"mean"}: arithmetic mean across all groups, which can mislead when
 models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).}
 
 \item{colors}{Named character vector of 2 colors. NULL = use global theme.}

@@ -120,13 +120,13 @@ The code is the same; four settings change their meaning. `growth_step = 0.25` m
 
 `check_alscl_data()$time` 打印 2000 到 2004.75 的 20 个季度：这里的二十个时间步是五年。两次拟合都通过数值检查；ALSCL 约需两分钟。如果标签的间隔不等于 `growth_step`，拟合会停在 `Time column spacing must equal growth_step`；请保留每个季度一列，没有调查的季度填 `NA`，体重和成熟比例则要完整。
 
-`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks; ALSCL takes about two minutes. If the labels are not spaced by `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
+`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks; ALSCL takes about two minutes. If the label spacing differs from `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
 
 ![金枪鱼模拟调查 / Tuna synthetic survey](figures/cases/tuna_data.png)
 
-热图现在每年有四列。指数在 30-70 cm 最大，在 122.5 cm 组最小，生长曲线要到 4 龄以后才到达这个体长。
+热图每年有四列。指数在 30-70 cm 最大，在 122.5 cm 组最小，生长曲线要到 4 龄以后才到达这个体长。
 
-The heat map now has four columns per year. The index is largest at 30-70 cm and smallest in the 122.5 cm bin, which the growth curve reaches only after age 4.
+The heat map has four columns per year. The index is largest at 30-70 cm and smallest in the 122.5 cm bin, which the growth curve reaches only after age 4.
 
 ![金枪鱼的生长、成熟与调查可捕性 / Tuna growth, maturity and survey catchability](figures/cases/tuna_biology.png)
 
@@ -136,9 +136,9 @@ Growth runs from 13 cm at age 0.25 to 129 cm at age 5 (`vbk` 0.38 per year); mat
 
 ![金枪鱼的生成真值与条件估计 / Tuna generating truth and conditional estimates](figures/cases/tuna_truth.png)
 
-补充量现在按季度计。ALSCL 的生物量和产卵生物量跟随真值；ACL 的生物量低于真值，2000-2001 年的产卵生物量起点过低，并高估了多数季度的补充量。该案例由体长型动态生成，这正是 ALSCL 假设的结构；单个重复不能给两个模型排名。
+补充量按季度计。ALSCL 的生物量和产卵生物量跟随真值；ACL 的生物量低于真值，2000-2001 年的产卵生物量起点过低，并高估了多数季度的补充量。该案例由体长型动态生成，这正是 ALSCL 假设的结构；单个重复不能给两个模型排名。
 
-Recruitment is now per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case was generated with length-based dynamics, the structure ALSCL assumes; one replicate cannot rank the two models.
+Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case was generated with length-based dynamics, the structure ALSCL assumes; one replicate cannot rank the two models.
 
 <a id="case-studies-simulation"></a>
 
@@ -169,4 +169,4 @@ For a study, raise `iter_range` for more replicates, vary one setting at a time 
 | 读拟合结果的数值检查、估计值和残差 / Read the numerical checks, estimates and residuals of a fit | [理解第一次拟合](USER_GUIDE.md#builtin) / [Understand your first fit](USER_GUIDE.md#builtin) |
 | 决定哪些参数固定、哪些估计 / Decide which parameters to fix or estimate | [拟合设置](USER_GUIDE.md#fitting) / [Fitting controls](USER_GUIDE.md#fitting) |
 | 生成调查数据并批量拟合重复 / Generate survey data and fit replicates in batch | [模拟与批量实验](USER_GUIDE.md#simulation) / [Simulation](USER_GUIDE.md#simulation) |
-| 从拟合模型模拟，或预测留出的年份 / Simulate from a fitted model or predict held-out years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
+| 从拟合模型模拟，或预测留出的年份 / Simulate from a fitted model or predict withheld years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |

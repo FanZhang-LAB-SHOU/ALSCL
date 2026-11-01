@@ -82,7 +82,7 @@ utils::globalVariables(c(
 #' Compare Time-Series Outputs of Two Models
 #'
 #' Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
-#' on the same axes. Fully supports the global theme system and can be
+#' on the same axes. The plot uses the global theme and can be
 #' extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
 #'
 #' @param model1 First model result (reference).
@@ -148,8 +148,7 @@ plot_compare_ts <- function(model1, model2,
                                m1 = model1_name, m2 = model2_name)
   year1 <- .acl_plot_year(model1, name = model1_name)
   year2 <- .acl_plot_year(model2, name = model2_name)
-  if (!is.logical(se) || length(se) != 1L || is.na(se))
-    stop("se must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(se, "se")
   if (!is.character(quantities) || !length(quantities) || anyNA(quantities) ||
       any(!nzchar(quantities)))
     stop("quantities must be a nonempty character vector of supported quantities.", call. = FALSE)
@@ -165,9 +164,9 @@ plot_compare_ts <- function(model1, model2,
                    CN = "CN", catch = "CN",
                    CB = "CB")
 
-  qty_labels <- c(SSB = "Spawning Stock Biomass", Rec = "Recruitment",
-                  B = "Total Biomass", N = "Total Abundance",
-                  CN = "Catch Numbers", CB = "Catch Biomass")
+  qty_labels <- c(SSB = "Spawning biomass", Rec = "Recruitment",
+                  B = "Total biomass", N = "Total abundance",
+                  CN = "Catch numbers", CB = "Catch biomass")
 
   # Resolve aliases
   unknown <- setdiff(quantities, names(qty_aliases))
@@ -329,7 +328,7 @@ plot_compare_F <- function(model1, model2,
 #' @return A ggplot object (combined 4-panel via patchwork).
 #' @details These are in-sample residuals. Known time labels, length labels,
 #'   positive-observation values and missing-data masks must match both fitted
-#'   results. Zeros and NA are excluded as in fitting. Older results without
+#'   results. Zeros and NA are excluded as in fitting. Saved fits without
 #'   stored observation metadata remain usable, but their original-data alignment
 #'   cannot be fully verified. Data frames, matrices and tibbles use the same
 #'   numeric conversion as the fitting functions.
@@ -640,7 +639,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #'   fitted results whenever stored observations are available. Known length and
 #'   time metadata must also match. Zeros and NA are omitted from observed points
 #'   as in fitting; prediction curves retain every length in each selected period
-#'   and must be finite at every plotted cell. Older results lacking observation
+#'   and must be finite at every plotted cell. Saved fits lacking observation
 #'   metadata remain usable, but original-data alignment cannot be fully verified.
 #'   Data frames, matrices and tibbles use the fitting functions' numeric conversion.
 #'   The y-axis uses the global survey label, independently of the catch label.
@@ -883,9 +882,9 @@ plot_compare_selectivity <- function(model1, model2,
 #' @inheritParams plot_compare_ts
 #' @param method Character. How to summarize F across age/length groups each model
 #'   time step. Quarterly fits remain quarterly; no annual aggregation is performed.
-#'   \code{"apical"} (default): maximum F across groups -- comparable across
+#'   \code{"apical"} (default): maximum F across groups, comparable across
 #'   age-based and length-based models.
-#'   \code{"mean"}: arithmetic mean across all groups -- can be misleading when
+#'   \code{"mean"}: arithmetic mean across all groups, which can mislead when
 #'   models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).
 #' @return A ggplot object.
 #' @export

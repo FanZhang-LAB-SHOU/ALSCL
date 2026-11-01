@@ -39,10 +39,8 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
   type <- match.arg(type)
-  if (!is.logical(se) || length(se) != 1L || is.na(se))
-    stop("se must be TRUE or FALSE.", call. = FALSE)
-  if (!is.logical(log) || length(log) != 1L || is.na(log))
-    stop("log must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(se, "se")
+  .acl_check_flag(log, "log")
   years <- model_result$year
   if (!is.numeric(years) || !length(years) || any(!is.finite(years)) || any(diff(years) <= 0))
     stop("model_result$year must contain finite increasing time labels.", call. = FALSE)

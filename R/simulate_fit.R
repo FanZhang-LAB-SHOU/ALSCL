@@ -180,15 +180,8 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
       stats::plogis(parameters[[if (model == "ACL") "logit_log_F_a" else "logit_log_F_l"]])
   }
   if (!is.null(seed)) {
-    previous_kind <- RNGkind()
-    had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (had_seed) previous_seed <- get(".Random.seed", envir = .GlobalEnv)
-    on.exit({
-      do.call(RNGkind, as.list(previous_kind))
-      if (had_seed) assign(".Random.seed", previous_seed, envir = .GlobalEnv)
-      else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-        rm(".Random.seed", envir = .GlobalEnv)
-    }, add = TRUE)
+    restore_rng <- .acl_preserve_rng()
+    on.exit(restore_rng(), add = TRUE)
     set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion")
   }
   rng_kind <- RNGkind()

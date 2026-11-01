@@ -66,7 +66,7 @@ Positive observations and their missing-data mask must match both
 fitted results whenever stored observations are available. Known length and
 time metadata must also match. Zeros and NA are omitted from observed points
 as in fitting; prediction curves retain every length in each selected period
-and must be finite at every plotted cell. Older results lacking observation
+and must be finite at every plotted cell. Saved fits lacking observation
 metadata remain usable, but original-data alignment cannot be fully verified.
 Data frames, matrices and tibbles use the fitting functions' numeric conversion.
 The y-axis uses the global survey label, independently of the catch label.

@@ -1,44 +1,23 @@
-# Can the fitted model reproduce observations and predict withheld periods?
+# Can the fitted model reproduce observations and predict withheld time steps?
 
-Use this case to generate survey data from a fitted model, check estimates against known simulated values, or test predictions against observations withheld from fitting.
+On this page you check a fitted model from two sides. Fitted-model simulation draws new survey data from the fit and refits them, to see whether the estimates recover the known values; hindcast validation fits on the earlier time steps and scores the predictions of the withheld later ones against the observations. You need the package installed ([Install ALSCL](getting-started.html)); the code uses the synthetic `YTF_example` and takes about fifteen minutes in total, because steps 3 and 4 refit the models several times. For hindcast validation alone, run step 1 and go to step 4. At the end you have simulated datasets with their truth, a table of bias, RMSE and interval coverage, the prediction scores of both models against a persistence baseline, and a saved fit.
 
-**Before you start:** these functions require ALSCL 2.3.0 or later. Install that version, or run `pkgload::load_all(".")` from the downloaded repository root.
-
-| What would you like to check? | Where to start |
-|---|---|
-| Repeated observations at the same fitted population states | [Step 2: conditional simulation](#section-2) |
-| New population trajectories and how well they can be estimated | [Steps 2-3: resample processes and refit](#section-2) |
-| Predictions of later survey observations | [Step 4: leave out future periods](#section-4) |
-
-Start with step 1 to load `x`. For simulation, also fit `b` and continue through steps 2-3. For prediction checks only, go from `x` directly to step 4. Step 5 explains the prediction scores and saved records.
-
-<h2 id="section-1">1. Prepare the example and check its fit</h2>
-
-The case uses the **synthetic** `YTF_example` dataset. Load it once as the input bundle `x`:
+<h2 id="section-1">1. Load the example and fit the source model</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-```
-
-For simulation, fit the source model as `b` below. If you already fitted this same example, reuse that result and inspect its diagnostics. For prediction checks only, skip this fit and go to [step 4](#section-4), which creates its own training fits.
-
-```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-Continue when `numerical_ok` is `TRUE`. If it is `FALSE`, investigate the reported issues before generating simulations; see [fitting diagnostics](diagnostics.html). This screen checks the numerical fit. Residuals and sensitivity to assumptions still need assessment.
+`x` is the input bundle and `b` the ALSCL fit that the simulations of step 2 start from; hindcast validation in step 4 reads `x` only. `b$diagnostics` must show `numerical_ok` equal to `TRUE`, because `simulate_fit()` refuses a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, repair the fit as on [Judge whether a fit can be used](diagnostics.html) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biology ([Choose the fitting settings](fitting-controls.html)), and when you fix `mean_log_R` for a simulation study give its value in `parameters`, so that every simulated dataset uses the same value instead of one derived from its own data.
 
-The teaching example fixes several biological parameters through `map`. For your own assessment, choose supported stock-specific biology and inspect which parameters are fixed or estimated using [data and parameter checks](assessment-workflows.html). When fixing `mean_log_R` for a simulation study, supply its numeric value explicitly in `parameters` so that a data-derived value is not recalculated from each simulated dataset.
-
-<h2 id="section-2">2. Generate survey observations</h2>
+<h2 id="section-2">2. Generate survey observations from the fit</h2>
 
 <h3 id="conditional-draws">Keep the fitted population states</h3>
-
-`process = "conditional"` changes observation error while retaining the fitted population. This is the shortest way to inspect repeated surveys under the same fitted states.
 
 ```r
 conditional <- simulate_fit(b, nsim = 3, seed = 20261101,
@@ -47,9 +26,9 @@ conditional$metadata
 conditional$simulations[[1]]$observations[1:3, 1:3]
 ```
 
-<h3 id="process-draws">Generate new population trajectories</h3>
+`process = "conditional"` keeps the fitted population and redraws only the observation error, the shortest way to see repeated surveys of the same states. `metadata` records the model, the process, the seed, the original observation mask, the status of the source fit and the assumption `parameter_uncertainty = "none"`.
 
-`process = "resample"` redraws recruitment, fishing-mortality and initial-population deviations at the fitted scalar parameter values. Use these replicates for the refitting exercise in step 3.
+<h3 id="process-draws">Generate new population trajectories</h3>
 
 ```r
 resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
@@ -58,33 +37,13 @@ resampled$simulations[[1]]$truth$SSB
 simulated_x <- resampled$simulations[[1]]$x
 ```
 
-Each element of `$simulations` contains:
-
-| Field | What it contains |
-|---|---|
-| `$observations` | Simulated survey values, with length in rows and time in columns |
-| `$x` | An input bundle for the corresponding `run_acl()` or `run_alscl()` function |
-| `$truth` | Generating population quantities, scalar parameters and expected survey indices |
-
-Original missing and zero cells are preserved by default. Set `preserve_missing = FALSE` for a complete positive survey. A supplied seed reproduces the draws and restores the caller's random-number state afterward.
+`process = "resample"` also draws new process deviations of recruitment, fishing mortality and initial abundance at the fitted scalar parameter values: recruitment and F follow the fitted stationary AR(1) processes (one F series per time step under `F_structure = "year"`), the initial-abundance deviations are independent normals, and the C++ population model turns the draws into a new population. Both modes draw log observations around the fitted `Elog_index` with the fitted observation SD, so `exp(Elog_index)` is the median; scalar parameters, biology and survey catchability stay fixed, so neither mode carries parameter uncertainty. Each element of `$simulations` holds `observations` (length bins by time steps), `truth` (population quantities, scalar parameters and the deviations used) and `x`, an input bundle for `run_alscl()` that keeps the fitting configuration of `b` except `output`, `ncores` and `silent`, which you choose when fitting it. Missing and zero cells of the original survey stay as they are unless `preserve_missing = FALSE`; the seed makes the draws repeatable, and the caller's random-number state is restored afterwards. A `map` that fixes or ties the process deviations stops the resample mode, while conditional draws still work. For an operating model with its own recruitment assumptions, use [Simulate survey data](simulation.html).
 
 ![ALSCL observations simulated conditionally or with resampled processes](../assets/manual/figures/workflows/fitted-simulation.png)
 
-The figure shows three generated survey series in each mode for selected length groups. The dashed reference is the original fit's log observation median. Conditional simulations vary around the same fitted states; resampling also changes the population trajectory. The curves are individual draws, not confidence bands.
+The figure shows three draws per mode for three length bins; the dashed line is the fitted log median. Conditional draws scatter around the same fitted states, and resampled draws also move the trajectory. Each curve is one draw, an example of the generating distribution.
 
-<h3 id="simulation-assumptions">Understand what is being simulated</h3>
-
-Both modes use the fitted lognormal observation model: log observations have mean `Elog_index` and the fitted observation standard deviation. Thus `exp(Elog_index)` is the observation median. Scalar parameters remain fixed, so neither mode includes parameter-estimation uncertainty.
-
-In resample mode, recruitment follows a stationary AR(1) process. F follows a separable group/time AR(1) field, or a single time process for `F_structure = "year"`. Process SDs are marginal SDs; the temporal innovation SD is the marginal SD multiplied by `sqrt(1 - phi^2)`. Initial-abundance deviations are independent normals. The C++ population model uses these draws with the plus group and ALSCL growth transitions.
-
-Fixed or tied random-effect maps are rejected in resample mode; conditional simulation remains available. A known failed source fit is rejected by default. `allow_failed_fit = TRUE` permits exploratory use with a warning. For a separate operating model with its own recruitment assumptions, use [the operating-model simulation workflow](simulation.html).
-
-<h2 id="section-3">3. Refit the replicates and compare with truth</h2>
-
-This step fits the three resampled datasets with two starts each. It is more time-consuming than drawing observations. To examine prediction performance only, go directly to [step 4](#section-4).
-
-The same direct-input syntax applies to each replicate: `run_alscl(s$x)` for this ALSCL example, or `run_acl(s$x)` for simulations from an ACL fit. The loop keeps error records so that failed replicates remain in the summary.
+<h2 id="section-3">3. Refit the replicates and compare with the truth</h2>
 
 ```r
 replicate_fits <- lapply(resampled$simulations, function(s) {
@@ -98,20 +57,9 @@ performance$replicates
 performance$summary
 ```
 
-Read `$replicates` first to check fitting status. Then read `$summary` for bias, RMSE, coverage and their denominators. Three replicates demonstrate the interface; a study of bias or interval coverage needs adequate repetitions and explicit failed-fit and usable-interval counts. A parametric bootstrap also needs a stated resampling design, refitting protocol and interval construction; `simulate_fit()` supplies the generating step.
+Each refit is an ordinary fit of the simulated bundle, `run_alscl(s$x)` here and `run_acl(s$x)` for draws from an ACL fit, with two starts each; `tryCatch()` keeps the error message of a failed replicate so that it stays in the summary. `summarize_simulations()` matches the fits with the truth by replicate name and year and returns `replicates` (numerical checks, time and error of each fit) and `summary` (per quantity: failure rate, bias, relative bias, RMSE and interval coverage with their denominators); bias and RMSE use the fits that passed the checks, and coverage uses only intervals with a finite standard error ([Simulate survey data](simulation.html#fit) explains the denominators). In the recorded run all three refits passed, each taking about three minutes, with coverage 1.0 for spawning biomass and 0.95 for recruitment over 60 pairs ([simulation-performance.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/simulation-performance.csv)). Three replicates show the mechanics; a study of bias or coverage needs enough replicates for the failure rate to mean something, and a parametric bootstrap also needs a stated refitting protocol and interval construction, for which `simulate_fit()` supplies only the generating step. For replicates already on disk, `sim_model()` fits them in batch ([Simulate survey data](simulation.html#fit)).
 
-**If your simulations are already on disk:** `sim_model(..., nstarts = 3, ncores = 2)` uses three starts per replicate and at most two replicate workers. Starts and standard errors run sequentially inside each worker. `train_times` controls optimization passes per start; each fit retains `start_diagnostics`. This is a separate batch workflow, described in [simulation and batch experiments](simulation.html).
-
-<h2 id="section-4">4. Predict periods withheld from fitting</h2>
-
-`hindcast_model()` takes `x` and creates its own training fits. It does not reuse `b` or the simulated datasets. Here, each model is fitted through 2017 to predict 2018, and through 2018 to predict 2019.
-
-| Setting | Meaning in this annual example |
-|---|---|
-| `horizon = 1` | Predict one model period ahead |
-| `nfolds = 2` | Use the last two eligible training endpoints |
-| `min_train = 8` | Require at least eight training periods |
-| `ncores = 2` | Run at most two training folds in parallel |
+<h2 id="section-4">4. Predict time steps withheld from fitting</h2>
 
 ```r
 acl_validation <- hindcast_model(x, model = "acl", horizon = 1,
@@ -120,58 +68,48 @@ alscl_validation <- hindcast_model(x, model = "alscl", horizon = 1,
   nfolds = 2, min_train = 8, nstarts = 1, ncores = 2)
 acl_validation$diagnostics
 alscl_validation$diagnostics
-```
-
-Check every fold's `numerical_ok`, `prediction_ok`, warnings and errors. Failed or numerically unverified training fits remain in `$diagnostics` and contribute no predictions or scores. Once these rows are understood, inspect the scores and individual prediction cells:
-
-```r
 acl_validation$scores
 alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
+`hindcast_model()` is the hindcast validation: it fits each model on the time steps up to a training origin and predicts the survey index of the next `horizon` steps, from the last `nfolds` eligible origins, every fit starting afresh from `x` with the stored configuration. Here each model is fitted through 2017 to predict 2018 and through 2018 to predict 2019.
+
+| Setting | Meaning in this annual example |
+|---|---|
+| `horizon = 1` | Predict one time step ahead |
+| `nfolds = 2` | Use the last two eligible training origins |
+| `min_train = 8` | Require at least eight training time steps |
+| `ncores = 2` | Run at most two training folds in parallel; the starts inside a fold run one after another |
+
+`horizon` and `min_train` count time steps (quarters for quarterly data); each fold truncates the three tables and the time-varying maps, and a `map` that fixes or ties the process deviations over time stops the call. Read `$diagnostics` first: one row per fold with `origin`, the numerical checks, `prediction_ok`, warnings and errors; a fold that failed stays in the table and contributes no predictions or scores. `$predictions` lists every withheld cell with the observed, predicted and persistence log index and an inclusion flag.
+
 ![Withheld survey indices and model and persistence predictions](../assets/manual/figures/workflows/hindcast-predictions.png)
 
-The figure compares withheld log survey indices with the model prediction and a persistence baseline: the latest positive training observation in the same length bin, held constant. Step 5 compares their errors on the same eligible observation cells.
+The figure compares the withheld log survey indices with the model prediction and the persistence baseline, the latest positive training observation of the same length bin held constant, for three length bins. The prediction rule: the process deviations of recruitment and F continue along their fitted AR(1) conditional means from the training end (the last deviation times phi to the power of the horizon), the population equations advance abundance, and the fitted survey catchability turns it into survey indices; the last training weights and maturity are repeated for the biomass calculation only. These are plug-in point predictions along the conditional process path, without future shocks, parameter draws or intervals. Choose fixed values and starting values without looking at the withheld data, and compare models on the same origins, horizons and cells.
 
-<h3 id="forecast-design">Adapt the validation design</h3>
-
-`horizon` and `min_train` count model periods; one step is one quarter for quarterly inputs. The last `nfolds` eligible origins are used. Each fold truncates all three input tables and supported time maps, then uses the supplied fitting configuration. Starting estimates never come from a fit to the complete series. Choose biological assumptions, fixed values and manual starts without tuning to withheld data; compare models using the same origins, horizons and observation cells.
-
-<h3 id="forecast-assumptions">Understand the prediction rule</h3>
-
-Forecast log recruitment and log F deviations follow their AR(1) conditional-mean paths from the training endpoint. Population equations propagate abundance, and supplied catchability converts it to survey indices. Training-end weights and maturity are carried forward; future observed biology is not read into the prediction.
-
-These are plug-in point predictions along conditional log-process paths. They include no future random shocks or parameter draws and provide no predictive distribution or intervals. Nonidentity maps fixing or tying time-varying recruitment/F deviations are rejected because their future constraints are unspecified.
-
-<h2 id="section-5">5. Interpret scores and save the analysis</h2>
+<h2 id="section-5">5. Read the scores and save the analysis</h2>
 
 <h3 id="prediction-scores">Read the scores and their sample sizes together</h3>
 
-Scores use natural-log survey indices. Zero and missing validation observations are excluded. Model and persistence errors use the same cells with both predictions available.
-
 | Output | How to read it |
 |---|---|
-| `n_positive`, `n_prediction`, `n` | Positive held-out observations, those with model predictions, and cells scored for both model and persistence |
-| `log_RMSE`, `log_MAE` | Prediction error on the log-index scale; smaller values mean smaller errors on those cells |
-| `naive_log_RMSE`, `naive_log_MAE` | Corresponding persistence errors on the same cells |
+| `n_positive`, `n_prediction`, `n` | Positive withheld observations, those with a model prediction, and cells scored for both model and persistence |
+| `log_RMSE`, `log_MAE` | Prediction error on the log-index scale; smaller is better on those cells |
+| `naive_log_RMSE`, `naive_log_MAE` | The persistence errors on the same cells |
 | `log_MASE`, `naive_log_MASE`, `n_scaled` | Scaled absolute errors and the number of cells with a usable training scale |
 
-For MASE, each absolute log error is divided by that length bin's mean absolute difference between consecutive positive training log observations. Missing periods are not compressed. A zero or unavailable scale excludes that cell from the scaled score; when no eligible cells remain, the score is `NA`. Check `n_scaled` before interpreting it.
-
-In the executed example, both models scored the same 46 positive observations from 2018-2019. All four training fits passed the numerical screen, and both comparisons used the same persistence baseline.
+Scores use natural-log survey indices; zero and missing withheld observations are excluded, and model and persistence errors use the same cells. For MASE each absolute log error is divided by the length bin's mean absolute change between consecutive positive training observations; a bin without such a pair gets no scaled score, so check `n_scaled` before reading it. In the recorded run both models scored the same 46 positive observations of 2018-2019 and all four training fits passed the checks ([hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)):
 
 | Prediction | Scored observations | Log RMSE | Log MAE | Log MASE |
 |---|---:|---:|---:|---:|
-| ACL | 46 | 0.0963 | 0.0802 | 0.4213 |
-| ALSCL | 46 | 0.2583 | 0.1951 | 1.0655 |
-| Persistence | 46 | 0.1722 | 0.1467 | 0.7356 |
+| ACL | 46 | 0.096 | 0.080 | 0.42 |
+| ALSCL | 46 | 0.26 | 0.20 | 1.07 |
+| Persistence | 46 | 0.17 | 0.15 | 0.74 |
 
-Under this synthetic dataset, teaching maps and two-origin design, ACL improves on persistence and ALSCL does not. The difference deserves investigation even though both optimizations converged. Two validation periods do not establish a general model ranking. The three simulated-process refits also passed the numerical screen, but three replicates are insufficient to establish coverage.
+On this synthetic dataset, with the teaching maps and two origins, ACL predicts better than persistence and ALSCL worse, although both optimizations converged: a difference worth investigating, while two validation time steps give no general ranking of the models.
 
-<h3 id="save-record">Save a portable fit</h3>
-
-If you completed the simulation steps, save the source fit `b` with the following block. The archive can be read in a new R session and used for simulation without a live TMB pointer:
+<h3 id="save-record">Save the source fit and the validation</h3>
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -180,26 +118,19 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-```
-
-Replace the temporary path with a permanent filename for your analysis. Save the simulation objects and truth alongside the fit. To save the validation results from step 4, retain both models together:
-
-```r
 validation_file <- tempfile(fileext = ".rds")
 saveRDS(list(acl = acl_validation, alscl = alscl_validation),
   validation_file)
 ```
 
-Use a permanent path here too for your own analysis. Recipes retain available source revision, core/R source hashes and runtime metadata. A source HEAD alone does not establish a clean working tree; `refit_model()` warns about known implementation or dependency changes, while unknown older provenance remains unknown.
+`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary paths with permanent files and keep the simulation objects and the truth beside the fit.
 
-<h3 id="next-steps">Choose the next check</h3>
+<h2 id="next">What next</h2>
 
-Use [residual diagnostics](diagnostics.html) to examine observation patterns, [retrospective analysis](retrospectives.html) to examine revisions to historical estimates, or [sensitivity scenarios](case-sensitivity-projection.html) to examine supplied assumptions. These answer different questions from held-out prediction.
-
-To regenerate this case's figures and CSV results, run the following from the downloaded repository root. It performs the full fitting exercise again; the plotting helper checks every panel for gridlines before saving.
-
-```r
-pkgload::load_all(".")
-source("scripts/model_validation.R")
-run_model_validation_guide()
-```
+| What you want to do | Read |
+|---|---|
+| Examine residual patterns of the source fit | [Judge whether a fit can be used](diagnostics.html) |
+| See how the estimates change when recent time steps are removed | [Do estimates change when recent data are removed?](case-retrospective-bias.html) |
+| Test the sensitivity to the fixed values | [How sensitive is the assessment, and what happens under future F?](case-sensitivity-projection.html) |
+| Fit many simulated replicates in batch | [Simulate survey data](simulation.html#fit) |
+| Regenerate the figures and tables of this page | From the repository root: `pkgload::load_all("."); source("scripts/model_validation.R"); run_model_validation_guide()` |

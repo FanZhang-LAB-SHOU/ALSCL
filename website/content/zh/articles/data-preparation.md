@@ -31,7 +31,7 @@
 
 <h3 id="weight-table">体重表 data.wgt</h3>
 
-填入每个体长组、每个时间步一尾鱼的平均体重，全表使用同一单位（示例为 kg）。每个单元格都要有值，因为模型用尾数乘体重得到生物量。如果只有体长—体重关系而没有逐年测量值，就用关系式的结果填满所有时间步，并在报告评估时说明。
+填入每个体长组、每个时间步一尾鱼的平均体重，全表使用同一单位（示例为 kg）。每个单元格都要有值，因为模型用尾数乘体重得到生物量。如果只有体长-体重关系而没有逐年测量值，就用关系式的结果填满所有时间步，并在报告评估时说明。
 
 ![体重工作表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
 
@@ -56,7 +56,7 @@
 
 <h2 id="import">3. 把文件读入 R</h2>
 
-两个读取函数任选其一。两者都返回包含三张表的列表，把数字文本转换为数值，并在表格不匹配时停止并给出提示。
+两个读取函数任选其一。两者都返回包含三张表的列表，把数字文本转换为数值，并在表格不一致时停止并给出提示。
 
 ```r
 library(ALSCL)
@@ -71,11 +71,11 @@ tables <- read_survey_csv("my_data")
 str(tables)
 ```
 
-`str(tables)` 应显示三张行列数相同的数据框，每张表第一列是体长标签。提示 "nonnumeric cell in time column 2003" 说明表格里有文本；"must match data.CatL length labels and time columns" 说明某张表的行或列与其他表不同。修改文件后重新读取。
+`str(tables)` 应显示三张行列数相同的数据框，每张表第一列是体长标签。提示“nonnumeric cell in time column 2003”说明表格里有文本；“must match data.CatL length labels and time columns”说明某张表的行或列与其他表不同。修改文件后重新读取。
 
 <h2 id="bundle">4. 加入生物学设置，组成输入列表</h2>
 
-`prepare_alscl_data()` 把三张表和两个模型共用的设置 `fit_args` 组合成输入列表 `x`。这些设置描述你的种群和调查，模型不估计它们。
+`prepare_alscl_data()` 把三张表和两个模型共用的设置 `fit_args` 组合成输入列表 `x`。这些设置描述你的种群和调查，模型把它们当作已知值。
 
 | 设置 | 含义 | 数值来源 |
 |---|---|---|
@@ -112,6 +112,10 @@ plan[, c("parameter", "status", "natural_start", "n_free")]
 
 若 `check$valid` 为 `FALSE`，`check$errors` 中的信息会指出要修改的表、列或设置；警告提示值得查看的情况，例如零值很多或某个时间步没有观测。检查通过后，用 `run_acl(x)` 或 `run_alscl(x)` 拟合，并按[理解第一次拟合](first-model.html)继续。
 
+<h2 id="legacy">仓库脚本和兼容数据</h2>
+
+调用仓库中 `scripts/real_data_workflow.R` 的 `validate_survey_tables()` 或 `fit_survey_tables()` 的脚本仍可使用，该脚本的读取函数直接调用上面的包函数。软件包还附带 `example_data`，是三张 ALSCL 数据表（9 个体长组，2001-2021），物种、单位和体长组边界都没有记录；只用它试运行函数。
+
 <h2 id="next">下一步</h2>
 
 | 想做什么 | 阅读 |
@@ -120,7 +124,3 @@ plan[, c("parameter", "status", "natural_start", "n_free")]
 | 决定哪些参数固定、哪些估计，选择 F 结构 | [拟合设置](fitting-controls.html) |
 | 跟着完整的实测数据示例从 CSV 做到保存结果 | [如何拟合自己的调查数据？](case-fit-survey.html) |
 | 检查季度调查的时间网格 | [年度与季度时间步](case-studies.html) |
-
-<h2 id="legacy">旧的辅助脚本和数据</h2>
-
-2.2.9 之前编写的脚本可能调用仓库中 `scripts/real_data_workflow.R` 的 `validate_survey_tables()` 或 `fit_survey_tables()`。该脚本仍可使用，其读取函数现在直接调用上面的包函数。软件包还附带 `example_data`，是三张较早的 ALSCL 数据表（9 个体长组，2001-2021），物种、单位和体长组边界都没有记录；只用它试运行函数，不要用作评估数据。

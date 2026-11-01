@@ -52,7 +52,7 @@ A ggplot object (can be further modified with + theme(), + labs(), etc.)
 }
 \description{
 Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
-on the same axes. Fully supports the global theme system and can be
+on the same axes. The plot uses the global theme and can be
 extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
 }
 \details{

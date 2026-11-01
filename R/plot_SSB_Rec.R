@@ -1,7 +1,7 @@
-#' @title Plot the Relationship between Spawning Stock Biomass (SSB) and Recruitment (Rec)
+#' @title Plot spawning biomass against recruitment
 #'
-#' @description This function takes the model result as an input and creates a scatter plot to visualize the relationship between
-#' Spawning Stock Biomass (SSB) and Recruitment (Rec). These metrics are fundamental in the context of fishery stock assessment.
+#' @description Scatter plot of spawning biomass against the recruitment it
+#' produced, paired by the recruitment age.
 #'
 #' @param model_result A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec".
 #' @param age_at_recruitment Numeric. Recruitment age in years, used to pair SSB

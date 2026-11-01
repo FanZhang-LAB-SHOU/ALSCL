@@ -1,4 +1,4 @@
-#' @title Plot conditional log residuals from an ACL or ALSCL fit
+#' @title Plot log residuals of the survey index from an ACL or ALSCL fit
 #'
 #' @description Plot observed log survey index minus fitted Elog_index.
 #' The type argument selects the layout of these same residuals:
@@ -6,7 +6,7 @@
 #' 2) "year" plots residuals over length, with one facet per model time step.
 #' Missing and zero observations
 #' are excluded using the fit's stored observations, including saved fits without
-#' a live TMB object. Older fits use the observation mask in the TMB data.
+#' a live TMB object. Saved fits use the observation mask in the TMB data.
 #'
 #' @param model_result An ACL or ALSCL fitted result with report$resid_index,
 #'   stored observations and time/length metadata.

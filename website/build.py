@@ -349,6 +349,11 @@ def reference_body(name, entry, lang, supplements):
     body += '<p>'+('Run the setup before the example. Fitting examples require an R-compatible C++ toolchain; simulation and export examples may write files.' if lang=='en' else '先运行准备代码，再运行示例。拟合需要与 R 匹配的 C++ 工具链；模拟与导出示例可能写入文件。')+'</p>'
     body += f'<details class="example-setup" open><summary>{ui["setup"]}</summary>'+md('```r\n'+example_setup(name,lang)+'\n```')+'</details>'
     body += md('```r\n'+code_language(entry['example'],lang)+'\n```')
+    if extra.get('figure'):
+        fig = extra['figure']
+        caption = fig['caption'][lang] + ': <code>' + html.escape(fig['code']) + '</code>'
+        body += (f'<figure class="example-figure"><img src="{REPO}/blob/main/docs/{fig["src"]}?raw=true" alt="{html.escape(fig["caption"][lang])}">'
+                 f'<figcaption>{caption}</figcaption></figure>')
     body += f'<h2 id="see-also">{ui["related"]}</h2><ul>'
     for slug in extra['articles']:
         item=next(a for a in ARTICLES + CASES if a['slug']==slug)

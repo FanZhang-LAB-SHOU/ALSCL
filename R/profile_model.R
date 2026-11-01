@@ -87,6 +87,7 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
     candidate$map <- mapping
     candidate$ncores <- 1L
     candidate$output <- FALSE
+    candidate$silent <- TRUE
     candidate
   })
   names(settings) <- paste0("point_", seq_along(values))

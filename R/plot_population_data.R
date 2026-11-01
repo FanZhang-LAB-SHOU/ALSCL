@@ -1,8 +1,7 @@
 # Validate the output actually supplied by a fit instead of assuming every
 # model reports every population quantity and its standard error.
 .acl_plot_population_data <- function(model_result, type, choices, se) {
-  if (!is.logical(se) || length(se) != 1L || is.na(se))
-    stop("se must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(se, "se")
   value <- model_result$report[[type]]
   if (is.null(value)) {
     available <- choices[vapply(choices, function(nm)

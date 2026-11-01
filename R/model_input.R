@@ -1,4 +1,21 @@
 # Shared input validation and bin parsing.
+# Save the caller's RNG kind and seed; the returned function restores them.
+.acl_preserve_rng <- function() {
+  previous_kind <- RNGkind()
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  previous_seed <- if (had_seed) get(".Random.seed", envir = .GlobalEnv)
+  function() {
+    do.call(RNGkind, as.list(previous_kind))
+    if (had_seed) assign(".Random.seed", previous_seed, envir = .GlobalEnv)
+    else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+      rm(".Random.seed", envir = .GlobalEnv)
+  }
+}
+.acl_check_flag <- function(x, name) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x))
+    stop(name, " must be TRUE or FALSE.", call. = FALSE)
+  invisible(x)
+}
 .acl_positive_integer <- function(x, name, minimum = 1L) {
   if (length(x) != 1L || !is.numeric(x) || !is.finite(x) || x != floor(x) || x < minimum || x > .Machine$integer.max)
     stop(name, " must be an integer >= ", minimum, call. = FALSE)
@@ -13,7 +30,7 @@
 .acl_length_bins <- function(labels, len_mid = NULL, len_border = NULL,
                              len_lower = NULL, len_upper = NULL) {
   labels <- trimws(as.character(labels)); n <- length(labels)
-  if (n < 2L || anyNA(labels) || anyDuplicated(labels)) stop("At least two distinct length bins are required.")
+  if (n < 2L || anyNA(labels) || anyDuplicated(labels)) stop("At least two distinct length bins are required.", call. = FALSE)
   number <- "[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
   single <- grepl(paste0("^", number, "$"), labels, perl = TRUE)
   lower <- upper <- mid <- rep(NA_real_, n)
@@ -32,7 +49,7 @@
         pat <- paste0("^(", number, ")\\s*-\\s*(", number, ")$")
         parts <- regmatches(s, regexec(pat, s, perl = TRUE))[[1L]]
         if (length(parts) != 3L) {
-          if (is.null(len_mid) || is.null(len_border)) stop("Cannot parse length bin '", s, "'; supply len_mid and len_border.")
+          if (is.null(len_mid) || is.null(len_border)) stop("Cannot parse length bin '", s, "'; supply len_mid and len_border.", call. = FALSE)
         } else {
           lower[i] <- as.numeric(parts[2L]); upper[i] <- as.numeric(parts[3L])
           mid[i] <- (lower[i] + upper[i]) / 2
@@ -40,7 +57,7 @@
       }
     }
     if (all(!is.na(lower)) && all(!is.na(upper))) {
-      if (any(upper <= lower) || any(abs(upper[-n] - lower[-1L]) > 1e-8)) stop("Length intervals must have positive widths and be contiguous.")
+      if (any(upper <= lower) || any(abs(upper[-n] - lower[-1L]) > 1e-8)) stop("Length intervals must have positive widths and be contiguous.", call. = FALSE)
       if (!is.finite(mid[1L]) && n > 2L) mid[1L] <- upper[1L] - (upper[2L] - lower[2L]) / 2
       if (!is.finite(mid[n]) && n > 2L) mid[n] <- lower[n] + (upper[n-1L] - lower[n-1L]) / 2
     }
@@ -48,15 +65,15 @@
   }
   if (!is.null(len_mid)) mid <- len_mid
   if (!is.null(len_border)) edges <- len_border
-  if (!is.numeric(mid) || length(mid) != n || any(!is.finite(mid)) || any(diff(mid) <= 0)) stop("len_mid must contain one finite increasing midpoint per bin.")
-  if (!is.numeric(edges) || length(edges) != n-1L || any(!is.finite(edges)) || any(diff(edges) <= 0)) stop("len_border must contain nbin - 1 finite increasing boundaries.")
+  if (!is.numeric(mid) || length(mid) != n || any(!is.finite(mid)) || any(diff(mid) <= 0)) stop("len_mid must contain one finite increasing midpoint per bin.", call. = FALSE)
+  if (!is.numeric(edges) || length(edges) != n-1L || any(!is.finite(edges)) || any(diff(edges) <= 0)) stop("len_border must contain nbin - 1 finite increasing boundaries.", call. = FALSE)
   lower <- if (is.null(len_lower)) c(-Inf, edges) else len_lower
   upper <- if (is.null(len_upper)) c(edges, Inf) else len_upper
   if (!is.numeric(lower) || !is.numeric(upper) || length(lower) != n || length(upper) != n ||
       anyNA(lower) || anyNA(upper) || any(lower >= upper) || any(mid <= lower | mid >= upper) ||
       any(!is.finite(lower[-1L])) || any(!is.finite(upper[-n])) ||
       any(abs(lower[-1L] - edges) > 1e-8) || any(abs(upper[-n] - edges) > 1e-8))
-    stop("Length bounds must contain the midpoints and agree with len_border.")
+    stop("Length bounds must contain the midpoints and agree with len_border.", call. = FALSE)
   # The likelihood and growth transition absorb both distribution tails. Do
   # not silently reinterpret an explicit finite truncation as an open bin.
   if (is.finite(lower[1L]) || is.finite(upper[n]))
@@ -76,32 +93,32 @@
   if (is.null(growth_step)) growth_step <- if (rec.age < 1) rec.age else 1
   growth_step <- .acl_scalar(growth_step, "growth_step", 0, TRUE)
   .acl_scalar(sel_L50, "sel_L50"); .acl_scalar(sel_L95, "sel_L95")
-  if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.")
+  if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.", call. = FALSE)
   frames <- list(data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat)
-  if (any(vapply(frames, function(x) length(dim(x)) != 2L || ncol(x) < 3L || nrow(x) < 2L, logical(1)))) stop("Inputs require a length-label column, at least two time columns and two length bins.")
+  if (any(vapply(frames, function(x) length(dim(x)) != 2L || ncol(x) < 3L || nrow(x) < 2L, logical(1)))) stop("Inputs require a length-label column, at least two time columns and two length bins.", call. = FALSE)
   frames <- lapply(frames, as.data.frame, stringsAsFactors = FALSE); catl <- frames$data.CatL
-  if (anyDuplicated(names(catl)[-1L])) stop("Time column names must be unique.")
+  if (anyDuplicated(names(catl)[-1L])) stop("Time column names must be unique.", call. = FALSE)
   for (nm in names(frames)[-1L]) {
     x <- frames[[nm]]
-    if (!identical(dim(x), dim(catl)) || !identical(as.character(x[[1L]]), as.character(catl[[1L]])) || !identical(names(x)[-1L], names(catl)[-1L])) stop(nm, " must match data.CatL length labels and time columns, including order.")
+    if (!identical(dim(x), dim(catl)) || !identical(as.character(x[[1L]]), as.character(catl[[1L]])) || !identical(names(x)[-1L], names(catl)[-1L])) stop(nm, " must match data.CatL length labels and time columns, including order.", call. = FALSE)
   }
   numeric_matrix <- function(x, name) {
     original <- as.matrix(x[-1L])
     z <- suppressWarnings(matrix(as.numeric(original), nrow = nrow(x), dimnames = list(NULL, names(x)[-1L])))
-    if (any(is.na(z) & !is.na(original))) stop(name, " contains nonnumeric observations.")
+    if (any(is.na(z) & !is.na(original))) stop(name, " contains nonnumeric observations.", call. = FALSE)
     z
   }
   obs <- numeric_matrix(catl, "data.CatL"); weight <- numeric_matrix(frames$data.wgt, "data.wgt"); mat <- numeric_matrix(frames$data.mat, "data.mat")
-  if (any(is.infinite(obs)) || any(obs < 0, na.rm = TRUE)) stop("Catch must be nonnegative and finite, or NA for missing observations.")
-  if (zero_action == "error" && any(obs == 0, na.rm = TRUE)) stop("Zero observations are incompatible with the lognormal observation model.")
-  if (any(!is.finite(weight)) || any(weight < 0)) stop("Weights must be finite and nonnegative.")
-  if (any(!is.finite(mat)) || any(mat < 0 | mat > 1)) stop("Maturity must be finite and in [0, 1].")
+  if (any(is.infinite(obs)) || any(obs < 0, na.rm = TRUE)) stop("Survey indices must be nonnegative and finite, or NA for missing observations.", call. = FALSE)
+  if (zero_action == "error" && any(obs == 0, na.rm = TRUE)) stop("Zero observations are incompatible with the lognormal observation model.", call. = FALSE)
+  if (any(!is.finite(weight)) || any(weight < 0)) stop("Weights must be finite and nonnegative.", call. = FALSE)
+  if (any(!is.finite(mat)) || any(mat < 0 | mat > 1)) stop("Maturity must be finite and in [0, 1].", call. = FALSE)
   observed <- !is.na(obs) & obs > 0
-  if (!any(observed)) stop("At least one positive survey observation is required.")
+  if (!any(observed)) stop("At least one positive survey observation is required.", call. = FALSE)
   log_obs <- matrix(0, nrow(obs), ncol(obs), dimnames = dimnames(obs)); log_obs[observed] <- log(obs[observed])
   bins <- .acl_length_bins(catl[[1L]], len_mid, len_border, len_lower, len_upper)
   years <- suppressWarnings(as.numeric(sub("^X", "", names(catl)[-1L])))
-  if (any(!is.finite(years)) || any(diff(years) <= 0)) stop("Time columns must have increasing numeric labels (decimal years are supported).")
+  if (any(!is.finite(years)) || any(diff(years) <= 0)) stop("Time columns must have increasing numeric labels (decimal years are supported).", call. = FALSE)
   if (any(abs(diff(years) - growth_step) > 1e-8 * max(1, growth_step)))
     stop("Time column spacing must equal growth_step (", growth_step,
          " years). Include every model period; use NA survey observations for missing periods,",

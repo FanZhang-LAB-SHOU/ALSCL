@@ -34,7 +34,7 @@ plot_VB(
 \item{model_result}{A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.}
 
 \item{age_range}{NULL or a finite increasing numeric pair in years. NULL
-uses the fitted age range in model_result$age, or c(1, 25) for older fits
+uses the fitted age range in model_result$age, or c(1, 25) for saved fits
 without age metadata; the automatic lower endpoint is at least t0. An
 explicit range must start at or after t0 to avoid negative-length extrapolation.}
 

@@ -1,8 +1,8 @@
 # Colors and export
 
-First complete the [worked YTF example](first-model.html) to create `a`, `b` and `x`. The following block also creates `rb` by fitting three retrospective peels; see [retrospectives](retrospectives.html) for their interpretation. Theme settings also apply to other fitted models.
+On this page you set a palette and theme once for every ALSCL plot, override colors for one plot, export a figure, and set the labels and axes of the growth and population plots. You need `a`, `b` and `x` from [Understand your first fit](first-model.html); step 1 also fits a retrospective analysis `rb` ([Run a retrospective analysis](retrospectives.html)).
 
-The default is **ggsci NPG**: navy estimates, vermilion observations, and navy/vermilion model comparisons. Retrospective colors follow descending terminal periods. Settings affect newly created plots, not existing objects.
+<h2 id="theme">1. Set the theme once</h2>
 
 ```r
 # Create the retrospective result before styling it
@@ -16,7 +16,30 @@ plot_compare_ts(a, b, se = TRUE)
 # Alternative journal palettes
 acl_theme_set(palette = "jama") # npg, aaas, nejm, lancet, jama
 plot_abundance(b, type = "NL", facet_ncol = 3)
+```
 
+The default palette is ggsci NPG: navy estimates, vermilion observations, and navy and vermilion for model comparisons. Retrospective colors follow the terminal time steps, newest first. `acl_theme_set()` changes the plots created afterwards; recreate an existing plot to restyle it. The palettes are `npg` (10 colors), `aaas` (10), `nejm` (8), `lancet` (9) and `jama` (7).
+
+![The five palettes with the roles of their colours](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/palettes.png?raw=true)
+
+The figure shows the five palettes `acl_theme_set()` accepts. In each row the first labelled colour draws lines, intervals and points of single-model plots, the second draws observations and the second model in comparisons, and the third draws smoothers; the remaining colours are used in order when a plot needs more groups, for example the peels of a retrospective. The next figure shows the same comparison plot under every palette, so you can pick one by eye; `docs/figures/palettes/ssb_by_palette.png` in the repository shows a single-model plot in the same way.
+
+![plot_compare_ts(a, b, quantities = "SSB", se = TRUE) under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true)
+
+| Setting | Scope and precedence |
+|---|---|
+| `palette` | Switching resets derived roles |
+| `line_color`, `se_color`, `point_color` | Single-model lines, intervals and scatter |
+| `observed_color`, `smooth_color`, `hline_color` | Observation, residual smoother and reference line |
+| `compare_colors` | Model pair, optionally matched by name |
+| `low_col`, `high_col` | Sequential heatmap endpoints |
+| `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | Typography |
+| `line_size` / `linewidth` | Function-specific line width |
+| `facet_ncol` / `facet_col` / `ncol` | Function-specific facet layout |
+
+<h2 id="override">2. Override colors for one plot</h2>
+
+```r
 # Per-call overrides take precedence
 plot_retro(rb, palette = "nejm", rho_position = "top_left")
 plot_retro(rb, colors = c("2019" = "#3C5488", "2018" = "#E64B35",
@@ -37,22 +60,9 @@ plot_ridges(b, palette = c("#E8F1FA", "#3C5488"))
 acl_theme_reset()
 ```
 
-Ridges independently use the **sequential viridis gradient**, sampled in input-year order and shared by observed and fitted panels. They do not inherit the global ggsci categorical palette; NULL also selects viridis. Choose cividis, plasma, ocean, or a vector of gradient colors for an alternative.
+Explicit colors in a call override the theme and a palette passed with them; `NULL` inherits the theme. Set `se_color` together with `line_color`; it stays at the theme value otherwise. Named retrospective colors must cover every terminal time step; unnamed colors follow the same order. With more peels than palette colors, the colors are interpolated. Ridges use a viridis gradient in input-year order, shared by the observed and fitted panels and independent of the global palette; `NULL` also selects viridis, and `cividis`, `plasma`, `ocean` or a vector of colors replace it.
 
-Named retrospective colors must cover every terminal period; unnamed colors follow descending periods. Use the global theme for automatic plots from `retro_*`, or call `plot_retro()` on the returned result for per-plot styling.
-
-|Setting|Scope and precedence|
-|---|---|
-| `palette` |Switching resets derived roles|
-| `line_color`, `se_color`, `point_color` |Single-model lines, intervals and scatter|
-| `observed_color`, `smooth_color`, `hline_color` |Observation, residual smoother and reference|
-| `compare_colors` |Model pair, optionally matched by name|
-| `low_col`, `high_col` |Sequential heatmap endpoints|
-| `font_family`, `title_size`, `axis_text_size`, `strip_text_size` |Typography|
-| `line_size` / `linewidth` | Function-specific line width |
-| `facet_ncol` / `facet_col` / `ncol` | Function-specific facet layout |
-
-Beyond native palette size, retrospective colors are interpolated. These are not additional native categorical colors. For many peels, show fewer at once or supply reviewed named colors; check lines and endpoints in print.
+<h2 id="export">3. Set typography and export</h2>
 
 ```r
 # Typography and layout
@@ -69,15 +79,9 @@ do.call(acl_theme_set, old)
 acl_theme_reset()
 ```
 
-Explicit colors override the theme; `NULL` color arguments inherit it. Changing `line_color` alone does not change `se_color`; specify both to match custom ribbons. Explicit colors win when supplied together with a palette.
+`ggsave()` writes `p` at the given size and resolution. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore; `acl_theme_reset()` returns to the defaults. Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
 
-Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
-
-### Growth-plot ranges and text settings
-
-`plot_VB()` uses the fitted age range when `age_range = NULL`. For older results without age metadata, it starts from 1-25 years. Automatic ranges start no earlier than `t0`; a range with no positive span produces an error. An explicit range must contain two finite increasing ages and start at or after `t0`. This avoids negative predicted lengths and reversed intervals before the biological growth curve begins. Explicit valid ranges, including extrapolation beyond the oldest fitted age, remain supported.
-
-Curves and intervals both inherit `ylab$growth` and the selected font. The Linf/k annotation is shown with and without intervals and honors `text_size` and `text_color`. Explicit `ylab` overrides the global label. If covariance is unavailable and `se = TRUE`, the function warns and draws only the curve while retaining the requested labels, text sizes, axis breaks, base theme and annotation settings.
+<h2 id="growth">4. Set the growth-plot range and text</h2>
 
 ```r
 plot_VB(b, se = FALSE, ylab = "Length (cm)",
@@ -85,9 +89,9 @@ plot_VB(b, se = FALSE, ylab = "Length (cm)",
         age_range = c(1, 15), text_size = 4)
 ```
 
-### Global labels and axes
+`plot_VB()` uses the fitted age range when `age_range = NULL` (1-25 years for a result without age metadata), starting no earlier than `t0`; a range with no positive span produces an error. An explicit range must contain two finite increasing ages and start at or after `t0`, which avoids negative predicted lengths before the growth curve begins. Curves and intervals inherit `ylab$growth` and the selected font, an explicit `ylab` overrides the global label, and the Linf/k annotation honors `text_size` and `text_color`. If the covariance is unavailable and `se = TRUE`, the function warns and draws only the curve.
 
-The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants (age-specific abundance retains `NA_` and `NA_se`). These settings only change labels and display ranges, not estimates or units. Major and minor gridlines remain absent.
+<h2 id="labels">5. Set global labels and axes</h2>
 
 ```r
 acl_theme_set(
@@ -101,6 +105,15 @@ plot_SSB(b, se = TRUE)
 acl_theme_reset()
 ```
 
-`plot_fishing_mortality()` also inherits global titles, labels, `x_breaks` and `x_expand`. Title keys are `F_year`, `F_age` and `F_length`, with `_se` for interval variants. The horizontal label uses `xlab$year`, `xlab$age` or `xlab$length`; the vertical label uses `ylab$F`. Age-mode coordinates are group indices, so the unchanged default label is “Age Group”; a custom `xlab$age` is honored. The ACL legacy length alias uses the age settings. Explicit per-call labels and breaks take precedence. `base_theme` accepts a name such as `"theme_bw"` or `"bw"`, an existing ggplot2 theme object such as `ggplot2::theme_bw()`, or `NULL` for the global setting. All forms keep major and minor gridlines hidden.
+The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit the global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants. These settings change labels and display ranges only, and the gridlines stay hidden.
 
-Single-model and comparison survey-fit plots use the survey-index label rather than the fishery-catch label. Set `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` to label both consistently. When `survey` is unset, a customized legacy `ylab$abundance` still applies; otherwise the default is “Survey index”. Single-model log plots add a “Log” prefix, and their explicit `ylab` remains authoritative. `ylab$catch` continues to describe actual catch plots and does not relabel survey indices.
+`plot_fishing_mortality()` inherits the same settings with the title keys `F_year`, `F_age` and `F_length` (plus `_se`), the horizontal label `xlab$year`, `xlab$age` or `xlab$length` and the vertical label `ylab$F`. Age-mode coordinates are group indices, so the default label is "Age Group" until you set `xlab$age`; the ACL `type = "length"` alias uses the age settings. Per-call labels and breaks take precedence. `base_theme` accepts a name such as `"theme_bw"` or `"bw"`, a theme object such as `ggplot2::theme_bw()`, or `NULL` for the global setting.
+
+Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is unset, a customized `ylab$abundance` applies, otherwise "Survey index". Log plots add a "Log" prefix, an explicit `ylab` wins, and `ylab$catch` labels the catch plots only.
+
+<h2 id="next">What next</h2>
+
+| What you want to do | Read |
+|---|---|
+| Choose which population plot to draw | [Survey and population plots](population-plots.html) |
+| Compare two fits in one figure | [Model comparisons](model-comparison.html) |

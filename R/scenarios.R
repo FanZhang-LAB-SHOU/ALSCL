@@ -1,3 +1,17 @@
+# Apply FUN over X on socket workers (or sequentially for one worker). Shared by
+# the scenario, profile, hindcast, retrospective and simulation batches. The
+# model is compiled in the parent so that workers never write the same cache.
+.acl_cluster_lapply <- function(X, FUN, ncores, model, ...) {
+  ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(X)))
+  if (ncores == 1L) return(lapply(X, FUN, ...))
+  info <- .acl_compile(toupper(model))
+  cl <- parallel::makeCluster(ncores)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  .acl_initialize_workers(cl, cache = dirname(dirname(info$cpp_path)),
+                          settings = .acl_worker_options())
+  parallel::parLapply(cl, X, FUN, ...)
+}
+
 # Run independent assessment tasks with one parallel layer. Results are portable
 # in both modes: a TMB external pointer cannot be sent back from a socket worker.
 .acl_batch_fit <- function(args, model) {
@@ -17,17 +31,8 @@
        pid = Sys.getpid(), warnings = unique(warnings))
 }
 
-.acl_batch_apply <- function(settings, model, ncores) {
-  ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(settings)))
-  if (ncores == 1L) return(lapply(settings, .acl_batch_fit, model = model))
-  # Compile in the parent to avoid multiple workers writing the same cache.
-  info <- .acl_compile(toupper(model))
-  cl <- parallel::makeCluster(ncores)
-  on.exit(parallel::stopCluster(cl), add = TRUE)
-  .acl_initialize_workers(cl, cache = dirname(dirname(info$cpp_path)),
-                          settings = .acl_worker_options())
-  parallel::parLapply(cl, settings, .acl_batch_fit, model = model)
-}
+.acl_batch_apply <- function(settings, model, ncores)
+  .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
 
 .acl_batch_status <- function(results) {
   do.call(rbind, lapply(seq_along(results), function(i) {

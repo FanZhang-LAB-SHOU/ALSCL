@@ -23,7 +23,7 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 
 `sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。拟合模型模拟还依赖随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
 
-当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或旧拟合没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
+当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或拟合结果没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
 
 <h2 id="reproduce">2. 在以后重现拟合</h2>
 
@@ -109,12 +109,12 @@ list.files(getOption("ALSCL.tmb.cache"))
 | 调查表中有零 | 零按缺失处理（`zero_action = "missing"`） | 拟合前判断零是否真实 |
 | 体重表或成熟比例表有空白单元格 | 两张表必须完整 | 补全并记录来源 |
 | 收敛码不是 0、梯度大或 Hessian 不正定 | 优化器提前停止，或某个参数得不到信息 | 见[理解第一次拟合](first-model.html#checks) |
-| 季度 F 看起来偏小 | F 按时间步计，从不年化 | 按时间步报告 F |
+| 季度 F 看起来偏小 | F 在所有输出中都按时间步计 | 按时间步报告 F |
 | 对 ACL 拟合调用 `plot_fishing_mortality(a, type = "length")` 给出警告 | ACL 没有按体长的 F；`"length"` 等同 `"age"` | 用 `type = "age"`，或拟合 ALSCL |
 | `plot_VB()` 只画出一条线，没有区间 | 生长参数被固定 | 属于预期；用 `map` 释放 |
 | 第一次拟合报错，信息中出现 `TMB::compile`、`make`、`g++` 或 `clang` | 没有编译器，或 Rtools 对应另一个 R 版本 | 安装编译器（第 4 步），重启 R |
 | `Install RcppEigen to compile model templates` 或 `Model sources are missing` | 缺少 RcppEigen，或安装损坏 | 安装 RcppEigen 或重新安装 ALSCL |
-| `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中较旧的副本 | 只保留一个安装，或用 `ncores = 1` |
+| `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中的副本 | 只保留一个安装，或用 `ncores = 1` |
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` | 新的 R 进程无法启动 | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` |
 | 回溯分析后 `rho_text$Rho` 是 `NA` | 某次拟合未通过数值检查 | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 |
 | `The current implementation differs from the saved assessment` | 保存之后软件包、TMB 或模型源文件变了 | 预期末位有差异，或安装记录的版本 |
@@ -127,5 +127,5 @@ list.files(getOption("ALSCL.tmb.cache"))
 | 检验估计值对固定值的敏感性 | [判断拟合是否可用](diagnostics.html#sensitivity) |
 | 选择速度设置并检查本会话的实际情况 | [速度设置](speed.html) |
 | 运行回溯分析并解读 Mohn's rho | [回溯分析](retrospectives.html) |
-| 从拟合模型模拟，或检验对留出时期的预测 | [模型验证](case-model-validation.html) |
+| 从拟合模型模拟，或检验对留出时间步的预测 | [模型验证](case-model-validation.html) |
 | 比较情景、做参数剖面和投影 | [评估工作流](assessment-workflows.html) |

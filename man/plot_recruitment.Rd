@@ -75,10 +75,9 @@ plot_recruitment(
 A ggplot object representing the plot.
 }
 \description{
-This function visualizes the recruitment of a population over a period of time.
-Recruitment is a key parameter in population dynamics, representing the amount of new individuals added to a population,
-either by birth or immigration, over a specific time frame. The resulting plot is a line graph, with the option to add a
-ribbon that illustrates the standard error, if the \code{se} argument is set to TRUE.
+Plot the estimated recruitment, the number of fish entering the youngest
+age class, in each time step. With \code{se = TRUE} a ribbon shows the 95\%
+interval from the standard errors.
 }
 \details{
 With se = TRUE, the standard-error table must have one finite

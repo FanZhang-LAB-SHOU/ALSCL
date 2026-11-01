@@ -81,7 +81,7 @@ alscl_speed_info <- function() {
     item = c("sd_cores setting", "cores for standard errors", "standard errors computed by",
              "reason", "framework", "cross-version numerical identity", "TMB version"),
     value = c(format(setting), cores, method, .acl_fork_reason(), framework,
-              "not guaranteed (2.2.2 adds optimizer refinement)",
+              "not guaranteed across package versions (the optimizer finishing step can change estimates at numerical precision)",
               paste0(utils::packageVersion("TMB"),
                      if (.acl_tmb_supported()) " (checked)" else " (not checked: sequential standard errors)")))
   class(info) <- c("alscl_speed_info", class(info))

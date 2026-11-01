@@ -3,7 +3,7 @@
 #' This function takes Linf, k, and t0 as input, creates a sequence of ages, applies the VB function to each age, and then plots the result using ggplot2.
 #' @param model_result A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.
 #' @param age_range NULL or a finite increasing numeric pair in years. NULL
-#'   uses the fitted age range in model_result$age, or c(1, 25) for older fits
+#'   uses the fitted age range in model_result$age, or c(1, 25) for saved fits
 #'   without age metadata; the automatic lower endpoint is at least t0. An
 #'   explicit range must start at or after t0 to avoid negative-length extrapolation.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
@@ -49,8 +49,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   if (is.null(se_color)) se_color <- acl_theme("se_color")
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
-  if (!is.logical(se) || length(se) != 1L || is.na(se))
-    stop("se must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(se, "se")
   se_type <- match.arg(se_type)
 
   Linf <- model_result$report$Linf
@@ -68,7 +67,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
       age_range <- c(1, 25)
     } else {
       if (!is.numeric(fitted_ages) || !length(fitted_ages) || any(!is.finite(fitted_ages)))
-        stop("model_result$age must contain finite numeric ages; supply age_range for older fits without usable age metadata.",
+        stop("model_result$age must contain finite numeric ages; supply age_range for saved fits without usable age metadata.",
              call. = FALSE)
       age_range <- range(fitted_ages)
     }
