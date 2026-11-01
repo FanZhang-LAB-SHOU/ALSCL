@@ -19,8 +19,8 @@ b$start_diagnostics
 <h2 id="residuals">2. 残差规律</h2>
 
 ```r
-plot_residuals(b, type = "year", facet_ncol = 5)
-plot_residuals(b, type = "length", facet_ncol = 4)
+plot_residuals(b, facet_by = "year", facet_ncol = 5)
+plot_residuals(b, facet_by = "length", facet_ncol = 4)
 checks <- check_fit(b, max_lag = 4)
 checks$plots$heatmap
 checks$plots$lag
@@ -28,7 +28,7 @@ checks$plots$qq
 checks$lag_correlations
 ```
 
-残差是观测的对数调查指数减去拟合值。`type = "year"` 按年份分面画残差随体长的变化；`type = "length"` 按体长组分面画残差随年份的变化。`check_fit()` 把残差标准化，并增加三种视图：年份乘体长的热图，同色成块说明模型漏掉了某个队列或某段体长；同一体长组残差相隔 1 到 `max_lag` 个时间步的相关系数，短滞后处明显偏离 0 说明模型漏掉了年份效应；QQ 图，尾部偏离说明存在异常值或观测误差偏离对数正态。
+残差是观测的对数调查指数减去拟合值。`facet_by = "year"` 按年份分面画残差随体长的变化；`facet_by = "length"` 按体长组分面画残差随年份的变化。`check_fit()` 把残差标准化，并增加三种视图：年份乘体长的热图，同色成块说明模型漏掉了某个队列或某段体长；同一体长组残差相隔 1 到 `max_lag` 个时间步的相关系数，短滞后处明显偏离 0 说明模型漏掉了年份效应；QQ 图，尾部偏离说明存在异常值或观测误差偏离对数正态。
 
 把这些视图当作修改方向的提示，而不是检验：残差以拟合的过程偏差为条件，没有附带显著性水平。只出现在最小体长组的规律多半与调查选择性有关（`sel_L50`、`sel_L95`）；在热图上沿对角线移动的规律与生长有关。
 

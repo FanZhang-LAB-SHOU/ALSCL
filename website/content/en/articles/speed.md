@@ -1,6 +1,6 @@
 # Speed settings
 
-On this page you check how your session computes standard errors, choose the number of cores, decide whether to compile the models with the TMBad library, and read the measured gains. You need the package installed and the input bundle `x` from [Install ALSCL and run a first fit](getting-started.html); the ALSCL fit in step 1 takes one to two minutes. The [technical record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested, and the [change report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_REPORT.md) summarizes the review.
+On this page you check how your session computes standard errors, choose the number of cores, decide whether to compile the models with the TMBad library, and read the measured gains. You need the package installed and the input bundle `x` from [Install ALSCL and run a first fit](getting-started.html); the ALSCL fit in step 1 takes one to two minutes. The [technical record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested and reviewed.
 
 The defaults suit normal use: fits use several cores for the standard errors where the session supports it, and the parallel standard errors are identical to the sequential calculation at the same fitted parameters. Two settings, both set with `alscl_speed()`, control this:
 

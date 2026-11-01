@@ -15,3 +15,5 @@
 ^website$
 ^_site$
 ^\.venv-docs$
+^tests/testthat/_problems$
+^tests/testthat/testthat-problems\.rds$

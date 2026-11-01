@@ -20,7 +20,7 @@ rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
 
 # 一次设置，随后重新创建图 / Set once, then recreate plots
 acl_theme_set(palette = "npg", base_theme = "theme_bw", font_family = "sans")
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 plot_compare_ts(a, b, se = TRUE)
 
 # 可选期刊色板 / Alternative journal palettes
@@ -48,8 +48,8 @@ The figure shows the five palettes `acl_theme_set()` accepts. In each row the fi
 | `compare_colors` | 模型对，可按模型名称匹配 / Model pair, optionally matched by name |
 | `low_col`、`high_col` / `low_col`, `high_col` | 连续热图的端点 / Sequential heatmap endpoints |
 | `font_family`、`title_size`、`axis_text_size`、`strip_text_size` / `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | 字体与字号 / Typography |
-| `line_size` / `linewidth` | 各函数自己的线宽参数 / Function-specific line width |
-| `facet_ncol` / `facet_col` / `ncol` | 各函数自己的分面列数参数 / Function-specific facet layout |
+| `line_size`、`point_size` / `line_size`, `point_size` | 单模型图的线宽和点大小；比较图读取 `compare_line_size` 和 `compare_point_size` / Line width and point size of single-model plots; comparison plots read `compare_line_size` and `compare_point_size` |
+| `facet_ncol`、`facet_nrow`、`facet_scales` / `facet_ncol`, `facet_nrow`, `facet_scales` | 分面布局，所有图使用相同的参数名 / Facet layout, with the same argument names in every plot |
 
 <a id="plot-customization-override"></a>
 
@@ -89,7 +89,7 @@ Explicit colors in a call override the theme and a palette passed with them; `NU
 acl_theme_set(palette="npg", title_size=16, axis_title_size=12,
               axis_text_size=10, strip_text_size=10, title_hjust=0,
               compare_legend_pos="bottom", compare_linetypes=c("solid","dashed"))
-p <- plot_retro(rb, facet_col=2, point_size=1.8, line_size=.8)
+p <- plot_retro(rb, facet_ncol = 2, point_size=1.8, line_size=.8)
 ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # 显式保存并恢复设置 / Preserve settings explicitly

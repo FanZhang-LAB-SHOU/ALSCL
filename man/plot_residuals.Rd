@@ -13,7 +13,7 @@ plot_residuals(
   line_size = NULL,
   facet_scales = "free",
   facet_ncol = NULL,
-  type = c("length", "year"),
+  facet_by = c("length", "year"),
   resid_cap = NULL,
   return_data = FALSE,
   title = NULL,
@@ -27,7 +27,8 @@ plot_residuals(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  ...
 )
 }
 \arguments{
@@ -52,9 +53,9 @@ The loess span is enlarged per facet when needed for at least five neighbors.}
 
 \item{facet_ncol}{Numeric, optional. Number of columns in facet wrap.  Default is NULL.}
 
-\item{type}{Character. "length" uses time on the x-axis and length-group
-facets; "year" uses length on the x-axis and time-period facets.
-Default is "length". This changes the layout, not the residual definition.}
+\item{facet_by}{Character. "length" (default) draws one panel per length bin
+with time on the x axis; "year" draws one panel per time step with length
+on the x axis. This changes the layout, not the residual definition.}
 
 \item{resid_cap}{Finite positive numeric scalar or NULL. Symmetrically cap
 residuals at +/- this value; NULL disables capping.
@@ -87,13 +88,15 @@ plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{...}{The former argument name type, accepted with a warning.}
 }
 \value{
 A ggplot object representing the facet plot of residuals.
 }
 \description{
 Plot observed log survey index minus fitted Elog_index.
-The type argument selects the layout of these same residuals:
+The facet_by argument selects the layout of these same residuals:
 \enumerate{
 \item "length" plots residuals over time, with one facet per length group;
 \item "year" plots residuals over length, with one facet per model time step.
@@ -107,14 +110,14 @@ a live TMB object. Saved fits use the observation mask in the TMB data.
 # Use 'run_acl' to get 'model_result'
 model_result <- run_acl(...)
 
-# Call the function with type = "length"
-p_length <- plot_residuals(model_result, type = "length")
+# One panel per length bin
+p_length <- plot_residuals(model_result, facet_by = "length")
 
 # Print the plot for "length"
 print(p_length)
 
-# Call the function with type = "year"
-p_year <- plot_residuals(model_result, type = "year")
+# One panel per time step
+p_year <- plot_residuals(model_result, facet_by = "year")
 
 # Print the plot for "year"
 print(p_year)

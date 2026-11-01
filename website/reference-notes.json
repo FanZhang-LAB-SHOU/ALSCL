@@ -336,7 +336,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(retro_model(x, nyear = 3, model = \"alscl\"), facet_col = 2)",
+      "code": "plot_retro(retro_model(x, nyear = 3, model = \"alscl\"), facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -362,7 +362,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ACL.png",
-      "code": "plot_retro(retro_acl(x, nyear = 3), facet_col = 2)",
+      "code": "plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -388,7 +388,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(retro_alscl(x, nyear = 3), facet_col = 2)",
+      "code": "plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -405,8 +405,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot`、`data1`（拟合）、`data2`（观测）的列表。"
     },
     "details": {
-      "en": "`type=\"length\"` facets by length and shows time series; `type=\"year\"` facets by time and shows length profiles. The default is log scale. With `exp_transform=TRUE`, fitted lines show original-scale medians, not a bias-corrected arithmetic mean.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nThe default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.\n\nTitles identify survey indices. In `type = \"year\"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `type = \"length\"`. The global `CatL_year_dist` title now applies to year facets.\n\nThe y-axis describes survey indices, not fishery catch. Set `acl_theme_set(ylab = list(survey = \"Survey index (per tow)\"))` to label single-model and comparison survey plots together. When `survey` is unset, a legacy customized `abundance` label is retained; otherwise the default is Survey index. The `catch` label continues to control actual catch plots only.",
-      "zh": "`type=\"length\"` 按体长分面展示时间序列；`type=\"year\"` 按时间分面展示体长剖面。默认是对数尺度；`exp_transform=TRUE` 显示原尺度中位数，不是偏差校正后的算术均值。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。\n\n标题明确标为调查指数。`type = \"year\"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `type = \"length\"`。按年份分面时也遵守全局 `CatL_year_dist` 标题。\n\n纵轴表示调查指数，不是渔业捕获量。使用 `acl_theme_set(ylab = list(survey = \"Survey index (per tow)\"))` 可统一单模型和比较调查图的标签。未设置 `survey` 时保留旧的自定义 `abundance` 标签，否则默认 Survey index。`catch` 标签仅控制实际捕获量图。"
+      "en": "`facet_by = \"length\"` facets by length and shows time series; `facet_by = \"year\"` facets by time and shows length profiles. The default is log scale. With `exp_transform=TRUE`, fitted lines show original-scale medians, not a bias-corrected arithmetic mean.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nThe default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.\n\nTitles identify survey indices. In `type = \"year\"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `type = \"length\"`. The global `CatL_by_year` title now applies to year facets.\n\nThe y-axis describes survey indices, not fishery catch. Set `acl_theme_set(ylab = list(survey = \"Survey index (per tow)\"))` to label single-model and comparison survey plots together. When `survey` is unset, a legacy customized `abundance` label is retained; otherwise the default is Survey index. The `catch` label continues to control actual catch plots only.",
+      "zh": "`facet_by = \"length\"` 按体长分面展示时间序列；`facet_by = \"year\"` 按时间分面展示体长剖面。默认是对数尺度；`exp_transform=TRUE` 显示原尺度中位数，不是偏差校正后的算术均值。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。\n\n标题明确标为调查指数。`type = \"year\"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `type = \"length\"`。按年份分面时也遵守全局 `CatL_by_year` 标题。\n\n纵轴表示调查指数，不是渔业捕获量。使用 `acl_theme_set(ylab = list(survey = \"Survey index (per tow)\"))` 可统一单模型和比较调查图的标签。未设置 `survey` 时保留旧的自定义 `abundance` 标签，否则默认 Survey index。`catch` 标签仅控制实际捕获量图。"
     },
     "articles": [
       "population-plots",
@@ -414,7 +414,7 @@
     ],
     "figure": {
       "src": "figures/ytf/CatL_year_FALSE.png",
-      "code": "plot_CatL(b, type = \"year\", facet_ncol = 4)",
+      "code": "plot_CatL(b, facet_by = \"year\", facet_ncol = 4)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -639,8 +639,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL age-specific F is derived from cohort survival. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Default age coordinates are group indices and are labeled Age Group. `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.",
-      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 的年龄别 F 从队列存活推导。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。默认年龄横坐标为组序号，标为 Age Group。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。"
+      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL age-specific F is derived from cohort survival. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Default age coordinates are group indices and are labeled Age group. `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.",
+      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 的年龄别 F 从队列存活推导。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。默认年龄横坐标为组序号，标为 Age group。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。"
     },
     "articles": [
       "growth-mortality",
@@ -665,8 +665,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Both ACL and ALSCL fits are supported. `type=\"length\"` uses time on the x-axis and one facet per length bin; `type=\"year\"` uses length on the x-axis and one facet per model period, including quarterly periods. Residuals are observed log index minus fitted `Elog_index`. Missing and excluded observations are not evidence of a perfect fit. Inspect time and length structure as well as overall error size.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nBoth residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. For example, `plot_residuals(b, type = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` uses the supplied labels and a left-aligned title. Default plots remain free of major and minor gridlines.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nEach facet selects its smoother independently using the number of distinct valid x values: fewer than 2 omits the trend, 2–5 uses a linear fit, and 6 or more uses loess with its own span. A sparse group never changes another group's trend.",
-      "zh": "支持 ACL 和 ALSCL 拟合。`type=\"length\"` 横轴为时间、按体长组分面；`type=\"year\"` 横轴为体长、按模型时期分面，也适用于季度时期。残差为观测对数指数减去拟合 `Elog_index`。缺失或排除的观测不意味着完美拟合；除误差大小外还应检查时间与体长结构。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n残差图的两种布局均遵守单次调用的 `title`、`xlab`、`ylab` 和 `title_hjust`。例如 `plot_residuals(b, type = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` 使用指定标签并左对齐标题。所有默认图继续不显示主、次网格线。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n每个分面按有效且不同的横坐标数量独立选择平滑方法：不足 2 个不画趋势，2–5 个使用线性拟合，6 个以上使用独立 span 的 loess。一个稀疏组不会改变其他组的趋势。"
+      "en": "Both ACL and ALSCL fits are supported. `facet_by = \"length\"` uses time on the x-axis and one facet per length bin; `facet_by = \"year\"` uses length on the x-axis and one facet per model period, including quarterly periods. Residuals are observed log index minus fitted `Elog_index`. Missing and excluded observations are not evidence of a perfect fit. Inspect time and length structure as well as overall error size.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nBoth residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. For example, `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` uses the supplied labels and a left-aligned title. Default plots remain free of major and minor gridlines.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nEach facet selects its smoother independently using the number of distinct valid x values: fewer than 2 omits the trend, 2–5 uses a linear fit, and 6 or more uses loess with its own span. A sparse group never changes another group's trend.",
+      "zh": "支持 ACL 和 ALSCL 拟合。`facet_by = \"length\"` 横轴为时间、按体长组分面；`facet_by = \"year\"` 横轴为体长、按模型时期分面，也适用于季度时期。残差为观测对数指数减去拟合 `Elog_index`。缺失或排除的观测不意味着完美拟合；除误差大小外还应检查时间与体长结构。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n残差图的两种布局均遵守单次调用的 `title`、`xlab`、`ylab` 和 `title_hjust`。例如 `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` 使用指定标签并左对齐标题。所有默认图继续不显示主、次网格线。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n每个分面按有效且不同的横坐标数量独立选择平滑方法：不足 2 个不画趋势，2–5 个使用线性拟合，6 个以上使用独立 span 的 loess。一个稀疏组不会改变其他组的趋势。"
     },
     "articles": [
       "growth-mortality",
@@ -674,7 +674,7 @@
     ],
     "figure": {
       "src": "figures/ytf/residuals_year.png",
-      "code": "plot_residuals(b, type = \"year\", facet_ncol = 4)",
+      "code": "plot_residuals(b, facet_by = \"year\", facet_ncol = 4)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -752,7 +752,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(rb, facet_col = 2, rho_digits = 3)",
+      "code": "plot_retro(rb, facet_ncol = 2, rho_digits = 3)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -769,8 +769,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Use compatible observations, units and time steps. Optional intervals are conditional on each model’s fixed assumptions.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\n`plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_annual_F(a, b, method = \"apical\")` or `method = \"mean\"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.",
-      "zh": "应使用相容的观测、单位和时间步长。可选区间以各模型的固定假设为条件。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n`plot_compare_ts()` 默认比较两模型共有的 SSB、补充量、B、N、CN。显式请求 CB 时，两模型都必须包含它（ACL 不报告 CB）；当前两模型均不报告 CB 标准误。请求的每种输出都必须存在；未知或不可用的输出会明确报错。捕捞死亡率请使用 `plot_compare_annual_F(a, b, method = \"apical\")` 或 `method = \"mean\"`。这两个选项分别取每个模型时期的组间最大值或非加权均值，不合并多个时期；该函数不提供汇总 F 的不确定性区间。"
+      "en": "Use compatible observations, units and time steps. Optional intervals are conditional on each model’s fixed assumptions.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\n`plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_F_ts(a, b, method = \"apical\")` or `method = \"mean\"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.",
+      "zh": "应使用相容的观测、单位和时间步长。可选区间以各模型的固定假设为条件。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n`plot_compare_ts()` 默认比较两模型共有的 SSB、补充量、B、N、CN。显式请求 CB 时，两模型都必须包含它（ACL 不报告 CB）；当前两模型均不报告 CB 标准误。请求的每种输出都必须存在；未知或不可用的输出会明确报错。捕捞死亡率请使用 `plot_compare_F_ts(a, b, method = \"apical\")` 或 `method = \"mean\"`。这两个选项分别取每个模型时期的组间最大值或非加权均值，不合并多个时期；该函数不提供汇总 F 的不确定性区间。"
     },
     "articles": [
       "model-comparison",
@@ -778,7 +778,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_ts.png",
-      "code": "plot_compare_ts(a, b, se = TRUE, ncol = 2)",
+      "code": "plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -804,7 +804,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_CatL.png",
-      "code": "plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)",
+      "code": "plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -837,7 +837,7 @@
       }
     }
   },
-  "plot_compare_annual_F": {
+  "plot_compare_F_ts": {
     "description": {
       "en": "Compare summary fishing-mortality time series.",
       "zh": "比较汇总捕捞死亡率时间序列。"
@@ -847,8 +847,8 @@
       "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
     },
     "details": {
-      "en": "`apical` and `mean` summarize groups differently. Despite the function name, quarterly per-step rates are not automatically annualized.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nDespite the historical function name, plot_compare_annual_F summarizes each model time step. It does not annualize quarterly F. The default method is apical (maximum across groups); method = \"mean\" is the arithmetic mean across groups.",
-      "zh": "`apical` 与 `mean` 的分组汇总方式不同。尽管函数名含 annual，季度每步死亡率不会自动年化。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n虽然函数名保留 annual_F，但它逐模型时间步汇总，不会把季度 F 换算成年度 F。默认 method 为 apical（组间最大值）；method = \"mean\" 为组间算术平均。"
+      "en": "`apical` and `mean` summarize the groups of each model time step differently; quarterly fits stay per quarter and are not annualized.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nThe default method is apical (maximum across groups); method = \"mean\" is the arithmetic mean across groups. Before 2.4.0 the function was called `plot_compare_annual_F()`; that name still works and warns once per session.",
+      "zh": "`apical` 与 `mean` 对每个模型时间步的各组汇总方式不同；季度拟合按季度计，不做年化。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。图形比较不代表似然或生物假设具有可比性。\n\n默认 method 为 apical（组间最大值）；method = \"mean\" 为组间算术平均。2.4.0 之前本函数名为 `plot_compare_annual_F()`，旧名仍可用，每个会话警告一次。"
     },
     "articles": [
       "model-comparison",
@@ -856,12 +856,30 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_F_apical.png",
-      "code": "plot_compare_annual_F(a, b, method = \"apical\")",
+      "code": "plot_compare_F_ts(a, b, method = \"apical\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
       }
     }
+  },
+  "plot_compare_annual_F": {
+    "description": {
+      "en": "Former name of plot_compare_F_ts().",
+      "zh": "plot_compare_F_ts() 的旧名。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Deprecated. The function summarizes F per model time step and never annualized quarterly values, so it is now called `plot_compare_F_ts()`. Calling the former name warns once per session; a later release removes it.",
+      "zh": "已弃用。本函数按模型时间步汇总 F，从未把季度值年化，因此更名为 `plot_compare_F_ts()`。调用旧名每个会话警告一次，以后的版本将删除。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
   },
   "plot_compare_growth": {
     "description": {
@@ -960,7 +978,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_metrics.png",
-      "code": "plot_compare_metrics(a, b, dat, ncol = 2)",
+      "code": "plot_compare_metrics(a, b, dat, facet_ncol = 2)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"

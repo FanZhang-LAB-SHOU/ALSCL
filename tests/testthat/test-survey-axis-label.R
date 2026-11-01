@@ -39,10 +39,10 @@ test_that("survey labels have independent global control and preserve legacy abu
   p <- plot_compare_CatL(m, m, x$data)
   expect_identical(p$labels$y, "Survey index (per tow)")
   for (type in c("year", "length")) {
-    expect_identical(plot_CatL(m, type = type)$labels$y, "Log Survey index (per tow)")
-    expect_identical(plot_CatL(m, type = type, exp_transform = TRUE)$labels$y,
+    expect_identical(plot_CatL(m, facet_by = type)$labels$y, "Log Survey index (per tow)")
+    expect_identical(plot_CatL(m, facet_by = type, exp_transform = TRUE)$labels$y,
                      "Survey index (per tow)")
-    expect_identical(plot_CatL(m, type = type, ylab = "Explicit units")$labels$y,
+    expect_identical(plot_CatL(m, facet_by = type, ylab = "Explicit units")$labels$y,
                      "Explicit units")
   }
   expect_identical(plot_catch(m)$labels$y, "Catch count")

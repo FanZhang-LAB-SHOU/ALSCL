@@ -95,7 +95,7 @@ for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残�
 for(typ in c('R','F'))for(lg in c(TRUE,FALSE))render(paste0('deviation_',typ,'_',lg),paste(if(lg)'对数过程偏差' else '过程乘数',typ),paste(if(lg)'Log process deviations' else 'Process multipliers',typ),plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
 note_zh=if(lg)'对数过程偏差以 0 为参照。这不是似然偏差统计量。' else '指数转换后以 1 为参照，区间不对称。这不是原尺度残差。',note_en=if(lg)'Log process deviations use zero as reference; these are not likelihood deviance statistics.' else 'Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.')
 render('ridges','长度组成山脊图','Length composition ridges',plot_ridges(b),height=8.5,note_zh='每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。',note_en='Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported.')
-render('compare_ts','种群时间序列比较','Population time series comparison',plot_compare_ts(a,b,se=TRUE,ncol=2),height=5.7,note_zh='只比较共同输出与相同时间窗；自由纵轴不能直接比较不同量的振幅。',note_en='Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.')
+render('compare_ts','种群时间序列比较','Population time series comparison',plot_compare_ts(a,b,se=TRUE,facet_ncol = 2),height=5.7,note_zh='只比较共同输出与相同时间窗；自由纵轴不能直接比较不同量的振幅。',note_en='Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.')
 render('compare_F','死亡率矩阵比较','Fishing mortality matrices',plot_compare_F(a,b)+scale_x_continuous(breaks=c(2000,2010,2019)),height=5,note_zh='ACL 纵轴是年龄，ALSCL 纵轴是长度；颜色可辅助观察，但两行不逐格对应。',note_en='ACL uses age and ALSCL length on the vertical axis; cells do not correspond one to one.')
 render('compare_residuals','残差联合诊断','Combined residual diagnostics',plot_compare_residuals(a,b,dat),height=5.5,note_zh='包括直方图、QQ 图、年度残差和长度组箱线图。年度误差棒是标准差，不是置信区间。',note_en='Includes histograms, QQ plots, annual residuals and length-bin boxplots. Annual error bars represent SD, not confidence intervals.')
 # 调整组合图排版，保留全部参数 / Wrap subtitles without changing estimates.
@@ -108,8 +108,8 @@ growth_display <- function(p) {
 set.seed(42); ref<-data.frame(Age=rep(1:15,each=5)); ref$Length<-VB_func(60,.2,1/60,ref$Age)+rnorm(nrow(ref),0,2)
 write.csv(ref,file.path(out,'data','synthetic_growth_reference.csv'),row.names=FALSE)
 render('compare_growth','生长与外部参照接口','Growth and reference-data interface',growth_display(plot_compare_growth(a,b,age_range=c(1,15),ref_data=ref,ref_name='Synthetic reference',nls_start=list(Linf=60,k=.2,t0=1/60))),height=8.5,note_zh='灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。ref_name 必须是非空名称，且与两个模型名称不同。',note_en='The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. ref_name must be nonempty and differ from both model names.')
-render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),ncol=2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.')
-render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,ncol=2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
+render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),facet_ncol = 2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.')
+render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,facet_ncol = 2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
 # Portable fits omit the TMB objective. Survey q is a fixed input in this
 # teaching example, so reconstruct this plotting data from the original bundle.
 survey_q_plot <- function() {
@@ -126,14 +126,14 @@ survey_q_plot <- function() {
     ALSCL:::acl_get_theme()+theme(legend.position='bottom')
 }
 render('compare_selectivity','固定调查可捕性','Fixed survey catchability',survey_q_plot(),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
-for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_annual_F(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。函数名称含 annual，但不会自动把季度率年化。',note_en='Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.')
+for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_F_ts(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。季度拟合按季度汇总，不做年化。',note_en='Apical is the maximum; mean is an unweighted group average. Quarterly fits are summarized per quarter; nothing is annualized.')
 # 回溯逐次删除末端时间步 / Peel successive terminal time steps.
 retro_a <- if (is.null(fits)) retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_acl
 retro_b <- if (is.null(fits)) retro_alscl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_alscl
 render('retro_ACL','ACL 回溯分析','ACL retrospective analysis',
-  plot_retro(retro_a,facet_col=2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
+  plot_retro(retro_a,facet_ncol = 2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
 render('retro_ALSCL','ALSCL 回溯分析','ALSCL retrospective analysis',
-  plot_retro(retro_b,facet_col=2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
+  plot_retro(retro_b,facet_ncol = 2,rho_digits=3,rho_size=3,point_size=1,line_size=.6),height=6)
 write.csv(retro_a$fit_diagnostics,file.path(out,'results','retro_diagnostics_ACL.csv'),row.names=FALSE)
 write.csv(retro_b$fit_diagnostics,file.path(out,'results','retro_diagnostics_ALSCL.csv'),row.names=FALSE)
 write.csv(retro_a$rho_text,file.path(out,'results','rho_ACL.csv'),row.names=FALSE)

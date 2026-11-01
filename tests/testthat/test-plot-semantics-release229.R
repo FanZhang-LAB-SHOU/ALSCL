@@ -15,7 +15,7 @@ test_that("ACL deviation facets retain numeric age order with and without interv
   for (se in c(FALSE, TRUE)) {
     p <- plot_deviance(fit, type = "F", se = se)
     built <- ggplot2::ggplot_build(p)
-    expect_equal(as.character(built$layout$layout$Group), paste("Age group", 1:15))
+    expect_equal(as.character(built$layout$layout$Group), paste("Age bin", 1:15))
     expect_equal(p$data$estimate, as.numeric(fit$report$dev_log_F))
     expect_equal(p$data$Year, rep(fit$year, each = 15L))
   }
@@ -45,15 +45,15 @@ test_that("survey plot labels identify the data scale and honor user settings", 
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   fit <- plot_semantics_fixture_229()
   for (type in c("year", "length")) {
-    log_plot <- plot_CatL(fit, type = type, return_data = TRUE)
-    raw_plot <- plot_CatL(fit, type = type, exp_transform = TRUE, return_data = TRUE)
+    log_plot <- plot_CatL(fit, facet_by = type, return_data = TRUE)
+    raw_plot <- plot_CatL(fit, facet_by = type, exp_transform = TRUE, return_data = TRUE)
     expect_equal(log_plot$plot$labels$y, "Log survey index")
     expect_equal(raw_plot$plot$labels$y, "Survey index")
     field <- if (type == "year") "Abundance" else "Count"
     expect_equal(raw_plot$data1[[field]], exp(log_plot$data1[[field]]))
     expect_equal(raw_plot$data2[[field]], exp(log_plot$data2[[field]]))
     for (exp_transform in c(FALSE, TRUE)) {
-      p <- plot_CatL(fit, type = type, exp_transform = exp_transform, ylab = "My units")
+      p <- plot_CatL(fit, facet_by = type, exp_transform = exp_transform, ylab = "My units")
       expect_equal(p$labels$y, "My units")
     }
   }
@@ -63,10 +63,10 @@ test_that("survey plot labels identify the data scale and honor user settings", 
   acl_theme_set(line_size = 3)
   expect_equal(unique(ggplot2::ggplot_build(plot_CatL(fit))$data[[2]]$linewidth), 3)
   expect_equal(unique(ggplot2::ggplot_build(plot_CatL(fit, line_size = .8))$data[[2]]$linewidth), .8)
-  yearly <- ggplot2::ggplot_build(plot_CatL(fit, type = "year"))
+  yearly <- ggplot2::ggplot_build(plot_CatL(fit, facet_by = "year"))
   expect_equal(unique(yearly$data[[1]]$linewidth), 2)
   expect_equal(unique(yearly$data[[2]]$linewidth), 3.6)
-  yearly <- ggplot2::ggplot_build(plot_CatL(fit, type = "year", line_size1 = .9, line_size2 = .4))
+  yearly <- ggplot2::ggplot_build(plot_CatL(fit, facet_by = "year", line_size1 = .9, line_size2 = .4))
   expect_equal(unique(yearly$data[[1]]$linewidth), .4)
   expect_equal(unique(yearly$data[[2]]$linewidth), .9)
 })

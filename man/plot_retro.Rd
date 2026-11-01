@@ -10,11 +10,11 @@ plot_retro(
   rho_position = "top_right",
   rho_size = 3.5,
   line_size = NULL,
-  point_size = 3,
+  point_size = NULL,
   point_shape = 21,
   facet_scales = "free",
-  facet_col = NULL,
-  facet_row = NULL,
+  facet_ncol = NULL,
+  facet_nrow = NULL,
   title = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -28,7 +28,8 @@ plot_retro(
   base_theme = NULL,
   title_hjust = NULL,
   palette = NULL,
-  colors = NULL
+  colors = NULL,
+  ...
 )
 }
 \arguments{
@@ -42,15 +43,15 @@ plot_retro(
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
-\item{point_size}{Numeric. Point size. Default is 3.}
+\item{point_size}{Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_shape}{Numeric. Point shape. Default is 21.}
 
 \item{facet_scales}{Character. Facet scales. Default is "free".}
 
-\item{facet_col}{Integer or NULL. Number of facet columns.}
+\item{facet_ncol}{Integer or NULL. Number of facet columns.}
 
-\item{facet_row}{Integer or NULL. Number of facet rows.}
+\item{facet_nrow}{Integer or NULL. Number of facet rows.}
 
 \item{title}{Character or NULL. Custom plot title.}
 
@@ -81,6 +82,8 @@ Native colors are interpolated when there are more peels than colors.}
 
 \item{colors}{Character vector or NULL. Explicit period colors, ordered by
 descending terminal period or named by terminal period. Overrides palette.}
+
+\item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }
 \value{
 A ggplot object.

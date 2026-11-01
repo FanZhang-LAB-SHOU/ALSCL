@@ -17,11 +17,12 @@ acl_theme_set(
   x_expand = NULL,
   line_color = NULL,
   line_size = NULL,
+  point_size = NULL,
   se_color = NULL,
   se_alpha = NULL,
   compare_colors = NULL,
   compare_linetypes = NULL,
-  compare_linewidth = NULL,
+  compare_line_size = NULL,
   compare_point_size = NULL,
   compare_se_alpha = NULL,
   compare_legend_pos = NULL,
@@ -36,7 +37,8 @@ acl_theme_set(
   smooth_color = NULL,
   hline_color = NULL,
   low_col = NULL,
-  high_col = NULL
+  high_col = NULL,
+  ...
 )
 }
 \arguments{
@@ -65,6 +67,9 @@ acl_theme_set(
 \item{line_size}{Numeric. Default line width for single-model plots (1.5).
 Plot arguments set to NULL inherit this value; explicit widths take priority.}
 
+\item{point_size}{Numeric. Default point size for single-model plots (2.5).
+Plot arguments set to NULL inherit this value; explicit sizes take priority.}
+
 \item{se_color}{Character. Default CI color.}
 
 \item{se_alpha}{Numeric. Default CI transparency (0.2).
@@ -77,7 +82,7 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 
 \item{compare_linetypes}{Character vector of 2 linetypes. Same rules as colors.}
 
-\item{compare_linewidth}{Numeric. Line width for comparison plots.}
+\item{compare_line_size}{Numeric. Line width for comparison plots (1.2).}
 
 \item{compare_point_size}{Numeric. Point size for comparison plots.}
 
@@ -89,7 +94,9 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 
 \item{compare_facet_scales}{Character. Facet scales for comparison plots.}
 
-\item{titles}{Named list. Override specific titles.}
+\item{titles}{Named list. Override specific titles. The keys are listed in
+\code{acl_theme("titles")}; the former keys CatL_year, CatL_year_dist and
+compare_annualF are accepted with a warning.}
 
 \item{xlab}{Named list. Override specific x-axis labels.}
 
@@ -106,6 +113,8 @@ leaves settings unchanged; use acl_theme_reset() to reset.}
 Default point, observation, smoother and reference-line colors.}
 
 \item{low_col, high_col}{Character or NULL. Continuous heatmap endpoints.}
+
+\item{...}{The former argument name compare_linewidth, accepted with a warning.}
 }
 \value{
 Invisible previous settings.
@@ -119,7 +128,7 @@ current values.
 # --- Set just one thing ---
 acl_theme_set(base_theme = "theme_classic")
 acl_theme_set(font_family = "Times New Roman")
-acl_theme_set(compare_linewidth = 2)
+acl_theme_set(compare_line_size = 2)
 
 # --- Compare ACL vs ALSCL (default) ---
 acl_theme_set(

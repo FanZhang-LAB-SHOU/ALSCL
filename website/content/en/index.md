@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website describes ALSCL 2.3.0; see [News](news/index.html) for the changes in each release.
+The website describes ALSCL 2.4.0; see [News](news/index.html) for the changes in each release.
 
 <h2 id="models">Two model structures</h2>
 
@@ -72,7 +72,7 @@ The example fixes selected biological and process parameters. Its uncertainty in
 
 ```r
 diagnose_model(x$data.CatL, b)
-plot_residuals(b, type = "year")
+plot_residuals(b, facet_by = "year")
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```

@@ -12,11 +12,12 @@ plot_compare_metrics(
   model2_name = NULL,
   colors = NULL,
   metrics = NULL,
-  ncol = NULL,
+  facet_ncol = NULL,
   legend_pos = NULL,
   label_size = 3.2,
   bar_width = 0.6,
-  bar_alpha = 0.85
+  bar_alpha = 0.85,
+  ...
 )
 }
 \arguments{
@@ -35,7 +36,7 @@ plot_compare_metrics(
 \code{"IC"} (AIC, BIC, NLL), \code{"npar"}.
 Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
 
-\item{ncol}{Integer. Columns for panel layout. Default: auto.}
+\item{facet_ncol}{Integer or NULL. Columns of panels. NULL uses up to three.}
 
 \item{legend_pos}{Character. Legend position. NULL = use global theme.}
 
@@ -44,6 +45,8 @@ Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
 \item{bar_width}{Numeric. Bar width. Default 0.6.}
 
 \item{bar_alpha}{Numeric. Bar transparency. Default 0.85.}
+
+\item{...}{The former argument name ncol, accepted with a warning.}
 }
 \value{
 A ggplot object.

@@ -1,5 +1,9 @@
-# Unreleased
+# ALSCL 2.4.0
 
+- Plot functions share one set of argument names. The facet layout is `facet_ncol` and `facet_scales` in every plot (the comparison plots used `ncol` and `scales`; the retrospective plots used `facet_col` and `facet_row`, now `facet_nrow`). The line width is `line_size` everywhere (the comparison plots used `linewidth`; the theme key `compare_linewidth` is now `compare_line_size`). Every plot that draws points takes `point_size = NULL`, which inherits the new theme key `point_size` (2.5). `se = FALSE` is the default in every plot, including `plot_deviance()`. `plot_CatL()` and `plot_residuals()` choose their layout with `facet_by` ("length" or "year") instead of `type`, which names the plotted quantity in the other functions. The former names still work and warn once per session; a later release removes them.
+- `plot_compare_annual_F()` is renamed `plot_compare_F_ts()`: it summarizes F per model time step and never annualized quarterly values. The former name warns once per session.
+- Plot titles use sentence case, so every title reads the same way ("Estimated total abundance (N)"). The title keys `CatL_by_length` and `CatL_by_year` replace `CatL_year` and `CatL_year_dist`, whose names were inverted; `compare_F_ts` replaces `compare_annualF`; `plot_retro()` uses the `retro` key; `plot_pla()` uses the new `ylab$length`; the unused `ylab$deviance` is removed. Time-step panels are labelled "Year 2000" in every plot, or "2000 Q2" for quarterly fits, and age panels "Age bin".
+- `docs/SPEED.md` now also holds the change report of the 2.1.0 release (commits, files, cross-platform checks, open points, reproduction steps), so `SPEED_REPORT.md` is removed; `RELEASE_2.2.2.md` is removed as the other release notes were. The function reference no longer carries version subsections. `website/check.py` also flags former argument names and deprecated functions in documented code, full-width punctuation on English pages, and broken links in the Markdown manuals.
 - Rewrite the website tutorials as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history is kept in this file only. The English and Chinese pages share one block structure.
 - Generate the bilingual manuals (`docs/USER_GUIDE.md`, `ASSESSMENT_WORKFLOWS.md`, `MODEL_VALIDATION.md`, `CASE_STUDIES.md`, `PLOT_STYLE.md`, `SPEED_GUIDE.md`, `ADVANCED_WORKFLOWS.md` and the new `CASES.md`), the book and the Wiki from the article pairs with `scripts/build_manual.py`, so every tutorial is written once per language. Remove `MATHEMATICAL_FRAMEWORK.md`, `BOOK_THEORY_NOTES.md` and the `RELEASE_2.2.x.md` notes, whose content is in the theory page and in this file.
 - Shorten `README.md` to an entry page: what the package does, documentation links, installation, a ten-line example and the citation.
@@ -7,8 +11,12 @@
 - Plot labels name each quantity the same way everywhere: "Spawning biomass (SSB)", "Catch numbers (CN)", "Abundance"; `plot_recruitment()` labels its axis "Recruitment". The gallery figures are regenerated with these labels and every figure description says what the figure shows, when to use it and what a pattern means.
 - Tidy the fitting code without changing results: one helper runs batches on socket workers for scenarios, profiles, hindcasts, retrospective peels and simulation replicates; one helper saves and restores the random-number state; one helper checks TRUE/FALSE arguments. `retro_model()` reports progress through `message()` so `suppressMessages()` silences it, and `profile_model()` runs its grid fits silently. Core input errors omit the internal call and the survey-index message names the survey index.
 
-### 未发布 · 简体中文
+### 2.4.0 · 简体中文
 
+- 绘图函数统一参数名。所有图的分面布局用 `facet_ncol` 和 `facet_scales`（比较图原来用 `ncol`、`scales`；回溯图原来用 `facet_col`、`facet_row`，后者现为 `facet_nrow`）。线宽统一为 `line_size`（比较图原来用 `linewidth`；主题键 `compare_linewidth` 改为 `compare_line_size`）。画点的图都接受 `point_size = NULL`，继承新的主题键 `point_size`（2.5）。所有图默认 `se = FALSE`，包括 `plot_deviance()`。`plot_CatL()` 和 `plot_residuals()` 用 `facet_by`（"length" 或 "year"）选择布局，不再用 `type`；`type` 在其他函数中表示所画的量。旧参数名仍可用，每个会话警告一次，以后的版本将删除。
+- `plot_compare_annual_F()` 更名为 `plot_compare_F_ts()`：它按模型时间步汇总 F，从未把季度值年化。旧名每个会话警告一次。
+- 图标题改为句首大写（如 "Estimated total abundance (N)"），所有标题格式一致。标题键 `CatL_by_length`、`CatL_by_year` 取代名称写反的 `CatL_year`、`CatL_year_dist`；`compare_F_ts` 取代 `compare_annualF`；`plot_retro()` 使用 `retro` 键；`plot_pla()` 使用新增的 `ylab$length`；删除未使用的 `ylab$deviance`。时间步面板在所有图中标为 "Year 2000"，季度拟合标为 "2000 Q2"；年龄面板统一标为 "Age bin"。
+- `docs/SPEED.md` 并入 2.1.0 发布时的改动报告（提交、文件、三平台检查、未决问题、复现步骤），删除 `SPEED_REPORT.md`；`RELEASE_2.2.2.md` 与其他发布说明一样删除。函数参考不再保留版本小节。`website/check.py` 还会检查文档代码中的旧参数名和已弃用函数、英文页面中的全角标点，以及 Markdown 手册中的失效链接。
 - 网站教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本文件中。中英文页面采用相同的段落结构。
 - 双语手册（`docs/USER_GUIDE.md`、`ASSESSMENT_WORKFLOWS.md`、`MODEL_VALIDATION.md`、`CASE_STUDIES.md`、`PLOT_STYLE.md`、`SPEED_GUIDE.md`、`ADVANCED_WORKFLOWS.md` 和新增的 `CASES.md`）、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。删除 `MATHEMATICAL_FRAMEWORK.md`、`BOOK_THEORY_NOTES.md` 和 `RELEASE_2.2.x.md`，其内容已在模型原理页和本文件中。
 - `README.md` 精简为入口页：软件包功能、文档链接、安装、十行示例和引用。
@@ -210,7 +218,7 @@
 - Add safeguarded Newton refinement (`polish = TRUE`) and preserve every raw optimizer pass. An unchanged failed restart no longer replaces an earlier successful result. Raw convergence codes remain available.
 - Add `F_structure = "year"` to both fitting functions, retrospectives and simulation fitting: one shared F per time step with a correctly normalized 1D AR(1) likelihood. The default remains the original group-by-time field; legacy calls and speed settings remain supported.
 - Add natural-scale boundaries, covariance conditioning, high parameter correlations and an independent numerical screen. Shared-F deviation plots use one series. See the [complete survey example](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
-- Update English and Simplified Chinese documentation, website and Wiki. Refinement can change estimates at numerical precision; the old speed benchmark is not a promise of cross-version identity.
+- Update English and Simplified Chinese documentation, website and Wiki. Refinement can change estimates at numerical precision; the old speed benchmark is not a promise of cross-version identity. The numerical checks of this release (gradient before and after refinement for four model and F-structure combinations) are in `docs/results/convergence-2.2.2.csv`, produced by `scripts/check_convergence_222.R`.
 
 ### 简体中文
 

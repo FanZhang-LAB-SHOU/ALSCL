@@ -6,9 +6,9 @@
 
 ## 速度设置 / Speed settings
 
-本页带你确认本会话如何计算标准误、选择核数、决定是否用 TMBad 库编译模型，并了解实测的提速幅度。你需要已安装的软件包和[安装 ALSCL 并完成第一次拟合](USER_GUIDE.md#start)中的输入列表 `x`；第 1 步的 ALSCL 拟合需要一到两分钟。[技术记录](SPEED.md)（英文）说明每项改动的测试方法，[改动报告](SPEED_REPORT.md)（英文）汇总审查结果。
+本页带你确认本会话如何计算标准误、选择核数、决定是否用 TMBad 库编译模型，并了解实测的提速幅度。你需要已安装的软件包和[安装 ALSCL 并完成第一次拟合](USER_GUIDE.md#start)中的输入列表 `x`；第 1 步的 ALSCL 拟合需要一到两分钟。[技术记录](SPEED.md)（英文）说明每项改动的测试和审查方法。
 
-On this page you check how your session computes standard errors, choose the number of cores, decide whether to compile the models with the TMBad library, and read the measured gains. You need the package installed and the input bundle `x` from [Install ALSCL and run a first fit](USER_GUIDE.md#start); the ALSCL fit in step 1 takes one to two minutes. The [technical record](SPEED.md) explains how each change was tested, and the [change report](SPEED_REPORT.md) summarizes the review.
+On this page you check how your session computes standard errors, choose the number of cores, decide whether to compile the models with the TMBad library, and read the measured gains. You need the package installed and the input bundle `x` from [Install ALSCL and run a first fit](USER_GUIDE.md#start); the ALSCL fit in step 1 takes one to two minutes. The [technical record](SPEED.md) explains how each change was tested and reviewed.
 
 默认设置适合日常使用：在支持的会话中，拟合用多个核计算标准误，并行标准误与相同拟合参数处的顺序计算逐位相同。这由两项设置控制，均通过 `alscl_speed()` 设定：
 

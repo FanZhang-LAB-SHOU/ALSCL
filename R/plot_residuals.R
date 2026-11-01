@@ -1,7 +1,7 @@
 #' @title Plot log residuals of the survey index from an ACL or ALSCL fit
 #'
 #' @description Plot observed log survey index minus fitted Elog_index.
-#' The type argument selects the layout of these same residuals:
+#' The facet_by argument selects the layout of these same residuals:
 #' 1) "length" plots residuals over time, with one facet per length group;
 #' 2) "year" plots residuals over length, with one facet per model time step.
 #' Missing and zero observations
@@ -21,15 +21,16 @@
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
 #' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
-#' @param type Character. "length" uses time on the x-axis and length-group
-#'   facets; "year" uses length on the x-axis and time-period facets.
-#'   Default is "length". This changes the layout, not the residual definition.
+#' @param facet_by Character. "length" (default) draws one panel per length bin
+#'   with time on the x axis; "year" draws one panel per time step with length
+#'   on the x axis. This changes the layout, not the residual definition.
 #' @param resid_cap Finite positive numeric scalar or NULL. Symmetrically cap
 #'   residuals at +/- this value; NULL disables capping.
 #'   Useful for species with many length bins where tail bins (e.g. >120 for tuna)
 #'   have very few observations, producing extreme log-residuals that distort the
 #'   plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
+#' @param ... The former argument name type, accepted with a warning.
 #'
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
@@ -50,28 +51,30 @@
 #' # Use 'run_acl' to get 'model_result'
 #' model_result <- run_acl(...)
 #'
-#' # Call the function with type = "length"
-#' p_length <- plot_residuals(model_result, type = "length")
+#' # One panel per length bin
+#' p_length <- plot_residuals(model_result, facet_by = "length")
 #'
 #' # Print the plot for "length"
 #' print(p_length)
 #'
-#' # Call the function with type = "year"
-#' p_year <- plot_residuals(model_result, type = "year")
+#' # One panel per time step
+#' p_year <- plot_residuals(model_result, facet_by = "year")
 #'
 #' # Print the plot for "year"
 #' print(p_year)
 #' }
 #' @export
-plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol=NULL,type=c("length","year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol = NULL, facet_by = c("length", "year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {
+  renamed <- .acl_renamed(list(...), "plot_residuals")
+  if (missing(facet_by) && !is.null(renamed$facet_by)) facet_by <- renamed$facet_by
+  facet_by <- match.arg(facet_by)
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(smooth_color)) smooth_color <- acl_theme("smooth_color")
   if (is.null(hline_color)) hline_color <- acl_theme("hline_color")
 
 
-  type <- match.arg(type)
   if (!is.null(resid_cap)) .acl_scalar(resid_cap, "resid_cap", 0, TRUE)
   if (length(f) != 1L || !is.finite(f) || f <= 0 || f > 1) stop("f must be in (0, 1].")
   smoother <- function(data, x, group) {
@@ -98,7 +101,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
   model_result$report$resid_index[!is.finite(observed_log)] <- NA_real_
   len_label=model_result[["len_label"]]
 
-  if(type=="length"){
+  if (facet_by == "length") {
 
     fixed_len_labels <- .acl_fix_len_labels(len_label)
     num_indices <- dim(model_result[["report"]][["resid_index"]])[1]
@@ -139,7 +142,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     data_out <-plot_data
 
   }
-  if (type=="year")
+  if (facet_by == "year")
   {
     # Define the data
     resid_index <- model_result[["report"]][["resid_index"]]
@@ -164,8 +167,8 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       df_long$residual <- pmax(pmin(df_long$residual, resid_cap), -resid_cap)
     }
 
-    df_long$Year <- factor(paste("Year", df_long$Year),
-                           levels = paste("Year", sort(unique(as.numeric(df_long$Year)))))
+    year_levels <- .acl_time_labels(year)
+    df_long$Year <- factor(year_levels[match(as.numeric(df_long$Year), year)], levels = year_levels)
     p <- ggplot2::ggplot(df_long, ggplot2::aes(x=length, y=residual)) +
       ggplot2::geom_line(color = line_color, linewidth = line_size) +
       smoother(df_long, "length", "Year") +

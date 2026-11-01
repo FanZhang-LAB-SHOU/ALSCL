@@ -37,7 +37,7 @@ The four panels show the residual histogram, the QQ plot, the mean residual by y
 
 ```r
 plot_compare_CatL(a, b, x$data.CatL,
-                  years = c(2000, 2005, 2010, 2015), ncol = 2)
+                  years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
 ![Synthetic YTF: observed survey indices and fitted medians in four years](../assets/manual/figures/ytf/compare_CatL.png)
@@ -62,7 +62,7 @@ plot_compare_F(a, b)
 
 ![Synthetic YTF: age-based and length-based fishing mortality](../assets/manual/figures/ytf/compare_F.png)
 
-ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_annual_F()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
+ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_F_ts()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
 
 <h2 id="save">6. Save the comparison for review</h2>
 

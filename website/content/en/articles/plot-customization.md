@@ -10,7 +10,7 @@ rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
 
 # Set once, then recreate plots
 acl_theme_set(palette = "npg", base_theme = "theme_bw", font_family = "sans")
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 plot_compare_ts(a, b, se = TRUE)
 
 # Alternative journal palettes
@@ -34,8 +34,8 @@ The figure shows the five palettes `acl_theme_set()` accepts. In each row the fi
 | `compare_colors` | Model pair, optionally matched by name |
 | `low_col`, `high_col` | Sequential heatmap endpoints |
 | `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | Typography |
-| `line_size` / `linewidth` | Function-specific line width |
-| `facet_ncol` / `facet_col` / `ncol` | Function-specific facet layout |
+| `line_size`, `point_size` | Line width and point size of single-model plots; comparison plots read `compare_line_size` and `compare_point_size` |
+| `facet_ncol`, `facet_nrow`, `facet_scales` | Facet layout, with the same argument names in every plot |
 
 <h2 id="override">2. Override colors for one plot</h2>
 
@@ -69,7 +69,7 @@ Explicit colors in a call override the theme and a palette passed with them; `NU
 acl_theme_set(palette="npg", title_size=16, axis_title_size=12,
               axis_text_size=10, strip_text_size=10, title_hjust=0,
               compare_legend_pos="bottom", compare_linetypes=c("solid","dashed"))
-p <- plot_retro(rb, facet_col=2, point_size=1.8, line_size=.8)
+p <- plot_retro(rb, facet_ncol = 2, point_size=1.8, line_size=.8)
 ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # Preserve settings explicitly

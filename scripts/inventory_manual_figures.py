@@ -36,8 +36,6 @@ for folder in ['docs/figures', 'man/figures']:
             source = 'scripts/plot_parallel_benchmark.R'
         elif '/palettes/' in rel:
             source = 'scripts/palette_swatches.R'
-        elif path.name == 'convergence-2.2.2.png':
-            source = 'scripts/plot_convergence_222.R'
         else:
             raise ValueError(f'Unclassified manual image: {rel}')
         rows.append(dict(path=rel, kind=kind, source=source,

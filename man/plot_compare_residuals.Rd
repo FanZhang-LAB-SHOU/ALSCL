@@ -12,12 +12,13 @@ plot_compare_residuals(
   model2_name = NULL,
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL,
+  line_size = NULL,
   point_size = NULL,
   legend_pos = NULL,
   bins = 35,
   qq_alpha = 0.6,
-  errorbar_width = 0.3
+  errorbar_width = 0.3,
+  ...
 )
 }
 \arguments{
@@ -33,7 +34,7 @@ plot_compare_residuals(
 
 \item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
 
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
 \item{point_size}{Numeric. Point size. NULL = use global theme.}
 
@@ -44,6 +45,8 @@ plot_compare_residuals(
 \item{qq_alpha}{Numeric. QQ point transparency. Default 0.6.}
 
 \item{errorbar_width}{Numeric. Error bar cap width. Default 0.3.}
+
+\item{...}{The former argument name linewidth, accepted with a warning.}
 }
 \value{
 A ggplot object (combined 4-panel via patchwork).

@@ -52,7 +52,7 @@ GROUPS = [
     ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data']),
     ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_recruitment', 'plot_SSB_Rec']),
     ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_pla', 'plot_fishing_mortality', 'plot_residuals', 'plot_deviance', 'plot_ridges']),
-    ('comparison', 'Compare models visually', '模型比较绘图', ['plot_compare_ts', 'plot_compare_CatL', 'plot_compare_F', 'plot_compare_annual_F', 'plot_compare_growth', 'plot_compare_selectivity', 'plot_compare_residuals', 'plot_compare_metrics']),
+    ('comparison', 'Compare models visually', '模型比较绘图', ['plot_compare_ts', 'plot_compare_CatL', 'plot_compare_F', 'plot_compare_F_ts', 'plot_compare_growth', 'plot_compare_selectivity', 'plot_compare_residuals', 'plot_compare_metrics', 'plot_compare_annual_F']),
     ('theme', 'Plot appearance', '绘图样式', ['acl_theme', 'acl_theme_set', 'acl_theme_reset'])]
 
 def md(text):

@@ -57,7 +57,9 @@ for path,soup in pages.items():
             if parse_qs(u.query).get('v') != [digest]:
                 errors.append(f'{name}: stale or missing figure content version: {value}')
     for pre in soup.select('main .highlight pre'):
-        blocks.append((name,pre.get_text()))
+        # Usage blocks restate the signature; they are not calls to check.
+        heading=pre.find_previous(['h2','h3'])
+        if heading is None or heading.get('id')!='usage': blocks.append((name,pre.get_text()))
     switch=soup.select_one('#language-switch')
     if not switch:errors.append(f'{name}: missing language switch')
     else:
@@ -68,6 +70,7 @@ for path,soup in pages.items():
     if not name.startswith('zh/'):
         main=soup.select_one('main')
         if re.search('[\u3400-\u9fff]',main.get_text()):errors.append(f'{name}: untranslated Chinese in English content')
+        if re.search('[\u3000-\u303f\uff00-\uffef]',main.get_text()):errors.append(f'{name}: full-width punctuation in English content')
 for language in ['','zh/']:
     for f in functions:
         path=SITE/(language+'reference/'+f['name']+'.html')
@@ -93,15 +96,22 @@ env <- new.env(parent=baseenv())
 for (p in list.files("R", "\\.R$", full.names=TRUE)) {
  for (x in parse(p)) {
   if (is.call(x) && is.symbol(x[[1]]) && as.character(x[[1]]) %in% c("<-","=") &&
-      is.symbol(x[[2]]) && is.call(x[[3]]) && identical(x[[3]][[1]], as.name("function"))) eval(x,env)
+      is.symbol(x[[2]]) && is.call(x[[3]]) && (identical(x[[3]][[1]], as.name("function")) ||
+      as.character(x[[2]]) %in% c(".acl_renamed_arguments", ".acl_deprecated_functions"))) eval(x,env)
  }
 }
+renamed <- get(".acl_renamed_arguments", env); deprecated_functions <- get(".acl_deprecated_functions", env)
 check_call <- function(x) {
  if (!is.call(x) && !is.expression(x)) return(invisible(NULL))
  if (is.call(x) && is.symbol(x[[1]])) {
   name <- as.character(x[[1]])
+  if (name %in% names(deprecated_functions))
+   stop(name, ": deprecated function; use ", deprecated_functions[[name]])
   if (exists(name,env,inherits=FALSE)) {
    f <- get(name,env); formal <- names(formals(f)); actual <- names(as.list(x)[-1])
+   former <- intersect(actual, names(renamed[[name]]))
+   if (length(former)) stop(name, ": former argument name(s): ", paste(former, collapse=", "),
+    "; use ", paste(renamed[[name]][former], collapse=", "))
    if (!"..." %in% formal && length(actual)) {
     invalid <- setdiff(actual[nzchar(actual)],formal)
     if (length(invalid)) stop(name, ": unknown named argument(s): ",paste(invalid,collapse=", "))
@@ -134,6 +144,34 @@ if (failed) quit(status=1)
             match=re.match(r'(\d+)\.R (.*)',line)
             errors.append((blocks[int(match[1])][0]+': '+match[2]) if match else line)
         if result.stderr:errors.append(result.stderr)
+
+# Relative links and anchors inside the Markdown manuals, the README and NEWS.
+def slug(text):
+    text = re.sub(r'`|\*|\[|\]|\(.*?\)', '', text).strip().lower()
+    text = re.sub(r'[^\w\u3000-\u9fff\- ]', '', text)
+    return text.replace(' ', '-')
+markdown = [p for p in (ROOT/'docs').glob('*.md')] + [ROOT/'README.md', ROOT/'NEWS.md']
+anchors = {}
+for md in markdown:
+    text = md.read_text()
+    ids = set(re.findall(r'<(?:a|h[1-6])[^>]*\bid="([^"]+)"', text))
+    ids |= {slug(h) for h in re.findall(r'^#{1,6} +(.+?)\s*$', text, re.M)}
+    anchors[md] = ids
+link_count = 0
+for md in markdown:
+    text = re.sub(r'```.*?```', '', md.read_text(), flags=re.S)
+    for target in re.findall(r'(?<!!)\[[^\]]*\]\(([^)\s]+)\)', text) + re.findall(r'!\[[^\]]*\]\(([^)\s]+)\)', text):
+        u = urlsplit(target)
+        if u.scheme or u.netloc or target.startswith('#') and not u.path: 
+            if target.startswith('#') and unquote(u.fragment) not in anchors[md]:
+                errors.append(f'{md.relative_to(ROOT)}: missing anchor {target}')
+            continue
+        link_count += 1
+        file = (md.parent/unquote(u.path)).resolve()
+        if not file.exists():
+            errors.append(f'{md.relative_to(ROOT)}: missing {target}')
+        elif u.fragment and file in anchors and unquote(u.fragment) not in anchors[file]:
+            errors.append(f'{md.relative_to(ROOT)}: missing anchor {target}')
 if errors:
     print('\n'.join(errors));raise SystemExit(f'{len(errors)} documentation check(s) failed')
-print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed and direct named calls checked.')
+print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed, direct named calls and former names checked; {link_count} Markdown manual links resolved.')

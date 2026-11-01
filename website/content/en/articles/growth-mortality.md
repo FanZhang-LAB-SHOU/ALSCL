@@ -62,7 +62,7 @@ plot_fishing_mortality(a, type = "age",
 
 [![ACL fishing mortality age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)
 
-The same `F` values arranged by age: one panel per time step, the age class index on the horizontal axis (labelled Age Group because the coordinate is the class position), with the 95% band. Use it to read the selection pattern of the fishery at each time step; a flat line, as here, means the ACL fit applies similar mortality to all ages, and a dome or ramp would show which ages the gear takes.
+The same `F` values arranged by age: one panel per time step, the age class index on the horizontal axis (labelled Age group because the coordinate is the class position), with the 95% band. Use it to read the selection pattern of the fishery at each time step; a flat line, as here, means the ACL fit applies similar mortality to all ages, and a dome or ramp would show which ages the gear takes.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -112,7 +112,7 @@ The same `FL` values arranged by length: one panel per time step, the length bin
 
 ```r
 # Draw this figure
-plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
@@ -126,7 +126,7 @@ Log residuals, the observed minus the fitted log survey index, one panel per len
 
 ```r
 # Draw this figure
-plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(10, 30, 50))
 ```
 

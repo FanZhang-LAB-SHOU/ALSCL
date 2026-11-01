@@ -6,8 +6,8 @@
 \usage{
 plot_deviance(
   model_result,
-  se = TRUE,
-  point_size = 3,
+  se = FALSE,
+  point_size = NULL,
   point_color = "white",
   point_shape = 21,
   line_size = NULL,
@@ -24,9 +24,9 @@ plot_deviance(
 \arguments{
 \item{model_result}{A list from \code{run_acl} or \code{run_alscl}.}
 
-\item{se}{Logical, whether to draw the standard error bar.}
+\item{se}{Logical. Whether to draw 95\% intervals from the standard errors. Default is FALSE.}
 
-\item{point_size}{Numeric. The size of the point. Default is 3.}
+\item{point_size}{Numeric or NULL. NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_color}{Character. The color of the point. Default is "white".}
 

@@ -5,12 +5,12 @@
 #' For ALSCL, F deviations are at the length level (L x Y).
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param se Logical, whether to draw the standard error bar.
+#' @param se Logical. Whether to draw 95% intervals from the standard errors. Default is FALSE.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character, the line type.
 #' @param point_color Character. The color of the point. Default is "white".
-#' @param point_size Numeric. The size of the point. Default is 3.
+#' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the point. Default is 21.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_width Numeric, the width of the standard error.
@@ -30,11 +30,12 @@
 #'   scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 #' @return A ggplot2 object.
 #' @export
-plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color = "white",
+plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_color = "white",
                           point_shape = 21, line_size = NULL, line_color = NULL,
                           line_type = "solid", se_color = NULL, se_width = 0.5,
                           facet_ncol = NULL, facet_scales = "free", log = TRUE,
                           type = c("R", "F")) {
+  if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
@@ -87,7 +88,7 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
       labels <- .acl_fix_len_labels(labels, prefix = "Length")
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     } else {
-      labels <- paste0("Age group ", seq_len(n_groups))
+      labels <- paste("Age bin", seq_len(n_groups))
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     }
     ci <- ci[c("Group", "Year", "estimate", "lower", "upper")]

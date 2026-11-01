@@ -52,12 +52,12 @@ test_that("ridge auto scaling and rendering tolerate an entirely missing period"
 test_that("residual plots apply the same missing mask after removing the live object", {
   fit <- missing_lag_fixture()
   original <- lapply(c("length", "year"), function(type) {
-    plot_residuals(fit, type = type, return_data = TRUE)$data
+    plot_residuals(fit, facet_by = type, return_data = TRUE)$data
   })
   fit$obj <- NULL
   for (i in seq_along(original)) {
     type <- c("length", "year")[[i]]
-    out <- plot_residuals(fit, type = type, return_data = TRUE)
+    out <- plot_residuals(fit, facet_by = type, return_data = TRUE)
     expect_equal(out$data, original[[i]])
     expect_equal(sum(is.na(out$data$residual)), 5L)
     expect_equal(sort(out$data$residual[!is.na(out$data$residual)]), c(.1, .7, .8, .9))
@@ -79,7 +79,7 @@ test_that("observation extraction preserves genuine log-zero observations and re
   fit$report$resid_index[1L, 1L] <- 0
   fit$obj <- NULL
   expect_equal(plot_residuals(fit, return_data = TRUE)$data$residual[1L], 0)
-  catl <- plot_CatL(fit, type = "year", exp_transform = TRUE, return_data = TRUE)
+  catl <- plot_CatL(fit, facet_by = "year", exp_transform = TRUE, return_data = TRUE)
   expect_equal(sum(is.na(catl$data2$Abundance)), 5L)
   expect_equal(catl$data2$Abundance[1L], 1)
   fit <- missing_lag_fixture()

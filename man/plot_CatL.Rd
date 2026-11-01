@@ -6,7 +6,7 @@
 \usage{
 plot_CatL(
   model_result,
-  point_size = 2.5,
+  point_size = NULL,
   point_color = NULL,
   point_shape = 16,
   line_size = NULL,
@@ -22,7 +22,7 @@ plot_CatL(
   line_alpha2 = 0.6,
   facet_ncol = NULL,
   facet_scales = "free",
-  type = c("length", "year"),
+  facet_by = c("length", "year"),
   exp_transform = FALSE,
   return_data = FALSE,
   title = NULL,
@@ -36,26 +36,27 @@ plot_CatL(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  ...
 )
 }
 \arguments{
 \item{model_result}{A fitted result with report$Elog_index, observed survey data
 and time/length metadata.}
 
-\item{point_size}{Numeric. Specifies the size of the point in the plot. Default is 2.5.}
+\item{point_size}{Numeric or NULL. Point size for facet_by = "length"; NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_color}{Character or NULL. NULL inherits the global observed_color setting.}
 
 \item{point_shape}{Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.}
 
-\item{line_size}{Numeric or NULL. Line thickness for type="length"; NULL inherits global line_size.}
+\item{line_size}{Numeric or NULL. Line thickness for facet_by = "length"; NULL inherits global line_size.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
-\item{line_type}{Character. Line type for type="length" plot. Default is "solid".}
+\item{line_type}{Character. Line type for facet_by = "length" plot. Default is "solid".}
 
-\item{line_size1}{Numeric or NULL. Estimated-line thickness for type="year"; NULL uses 1.2 times global line_size (default 1.8).}
+\item{line_size1}{Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (default 1.8).}
 
 \item{line_color1}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -63,7 +64,7 @@ and time/length metadata.}
 
 \item{line_alpha1}{Numeric. Transparency for estimated line (0-1). Default is 1.}
 
-\item{line_size2}{Numeric or NULL. Observed-line thickness for type="year"; NULL uses two-thirds of global line_size (default 1.0).}
+\item{line_size2}{Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (default 1.0).}
 
 \item{line_color2}{Character or NULL. NULL inherits the global observed_color setting.}
 
@@ -75,7 +76,9 @@ and time/length metadata.}
 
 \item{facet_scales}{Character. Specifies scales for facet_wrap. Default is "free".}
 
-\item{type}{Character. It specifies whether the Elog_index is plotted across "length" or "year". Default is "length".}
+\item{facet_by}{Character. "length" (default) draws one panel per length bin
+with time on the x axis; "year" draws one panel per time step with length
+on the x axis.}
 
 \item{exp_transform}{Logical. Specifies whether to apply the exponential function to the data before plotting. If TRUE, the exponential of the data values is plotted. Default is FALSE.}
 
@@ -108,6 +111,8 @@ is retained. Explicit ylab takes priority.}
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{...}{The former argument name type, accepted with a warning.}
 }
 \value{
 A ggplot object representing the plot.
@@ -131,14 +136,14 @@ predictions must be finite, including after an exponential transformation.
 model_result <- run_acl(...)
 
 # Plot Elog_index across lengths
-plot_CatL(model_result, type = "length")
+plot_CatL(model_result, facet_by = "length")
 
 # Plot Elog_index over years
-plot_CatL(model_result, type = "year")
+plot_CatL(model_result, facet_by = "year")
 
 # With exp_transform set to TRUE
 model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
-plot_CatL(model_result, type = "year", exp_transform = TRUE)
+plot_CatL(model_result, facet_by = "year", exp_transform = TRUE)
 }
 
 }

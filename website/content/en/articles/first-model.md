@@ -53,8 +53,8 @@ The intervals come from the standard errors of the estimated parameters only; th
 <h2 id="fit-to-data">4. Check the fit to the observations</h2>
 
 ```r
-plot_CatL(a, type = "year", facet_ncol = 5)
-plot_residuals(a, type = "year", facet_ncol = 5)
+plot_CatL(a, facet_by = "year", facet_ncol = 5)
+plot_residuals(a, facet_by = "year", facet_ncol = 5)
 ```
 
 `plot_CatL()` shows the observed survey index (points) and the fitted index (line) across length bins, one panel per year. `plot_residuals()` shows the log residuals, observed minus fitted on the log scale, for the same panels. A usable fit has residuals scattered around zero in every panel. A run of residuals with the same sign across neighbouring lengths in one year, or across years in one length bin, means the model misses a feature of the data, such as a cohort passing through the survey or a selectivity that differs from the assumed one; [Diagnostics](diagnostics.html) shows how to examine such patterns.

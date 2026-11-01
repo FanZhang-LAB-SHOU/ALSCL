@@ -36,9 +36,10 @@ test_that("every exported plot family and comparison panel defaults to no grid",
     plot_compare_ts = list(m, m), plot_compare_F = list(m, m),
     plot_compare_residuals = list(m, m, d), plot_compare_growth = list(m, m),
     plot_compare_CatL = list(m, m, d), plot_compare_metrics = list(m, m, d),
-    plot_compare_selectivity = list(m, m), plot_compare_annual_F = list(m, m))
+    plot_compare_selectivity = list(m, m), plot_compare_F_ts = list(m, m))
   exported_plots <- grep("^plot_", getNamespaceExports("ALSCL"), value = TRUE)
-  expect_setequal(names(calls), exported_plots)
+  # Former names are wrappers of the functions already in the list.
+  expect_setequal(names(calls), setdiff(exported_plots, names(ALSCL:::.acl_deprecated_functions)))
   for (name in names(calls)) {
     plot <- do.call(getExportedValue("ALSCL", name), calls[[name]])
     for (panel in theme_panels_225(plot)) {

@@ -59,17 +59,17 @@ test_that("survey titles identify indices and normalized compositions and honor 
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   fit <- plot_label_fixture()
   for (type in c("year", "length")) for (raw in c(FALSE, TRUE)) {
-    p <- plot_CatL(fit, type = type, exp_transform = raw)
-    expect_match(p$labels$title, "Survey Indices")
+    p <- plot_CatL(fit, facet_by = type, exp_transform = raw)
+    expect_match(p$labels$title, "survey indices")
     expect_false(grepl("Catch", p$labels$title))
-    expect_equal(plot_CatL(fit, type = type, title = "My survey")$labels$title, "My survey")
+    expect_equal(plot_CatL(fit, facet_by = type, title = "My survey")$labels$title, "My survey")
   }
-  acl_theme_set(titles = list(CatL_year_dist = "By survey period"))
-  expect_equal(plot_CatL(fit, type = "year")$labels$title, "By survey period")
+  acl_theme_set(titles = list(CatL_by_year = "By survey period"))
+  expect_equal(plot_CatL(fit, facet_by = "year")$labels$title, "By survey period")
   testthat::local_mocked_bindings(plot_grid = function(...) list(...), .package = "cowplot")
   p <- plot_ridges(fit, ridges_scale = 1)
   for (panel in p[1:2]) {
-    expect_match(panel$labels$title, "Survey Length Composition")
+    expect_match(panel$labels$title, "survey length composition")
     expect_equal(as.numeric(tapply(panel$data$Abundance, panel$data$year, sum)), rep(1, 3))
     expect_s3_class(panel$theme$panel.grid.major, "element_blank")
     expect_s3_class(panel$theme$panel.grid.minor, "element_blank")

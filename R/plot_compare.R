@@ -91,16 +91,18 @@ utils::globalVariables(c(
 #'   "B", "N", "CN", "CB". Default c("SSB","R","B","N","CN"), the
 #'   quantities reported with uncertainty by both ACL and ALSCL. CB can be
 #'   requested explicitly when both supplied results contain it.
-#'   For F, use \code{plot_compare_annual_F()} and explicitly choose the group
+#'   For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 #'   mean or apical summary; F is not a scalar time series in the model reports.
 #' @param se Logical. Show confidence intervals. Default FALSE.
 #' @param model1_name,model2_name Character. Labels. Auto-detected if NULL.
 #' @param colors Named character vector of 2 colors. NULL = use global theme.
 #' @param linetypes Named character vector of 2 linetypes. NULL = use global theme.
-#' @param linewidth Numeric. NULL = use global theme.
-#' @param ncol Integer. Facet columns. NULL = use global theme.
-#' @param scales Character. Facet scales. NULL = use global theme.
+#' @param line_size Numeric or NULL. Line width; NULL uses the global compare_line_size.
+#' @param facet_ncol Integer or NULL. Facet columns; NULL uses the global compare_facet_ncol.
+#' @param facet_scales Character or NULL. Facet scales; NULL uses the global compare_facet_scales.
 #' @param return_data Logical. Return data alongside plot. Default FALSE.
+#' @param ... Former argument names, accepted with a warning: linewidth for
+#'   line_size, ncol for facet_ncol and scales for facet_scales.
 #'
 #' @return A ggplot object (can be further modified with + theme(), + labs(), etc.)
 #' @details Every requested quantity must be a finite series matching its model's
@@ -136,15 +138,20 @@ plot_compare_ts <- function(model1, model2,
                             quantities = c("SSB", "R", "B", "N", "CN"),
                             se = FALSE,
                             model1_name = NULL, model2_name = NULL,
-                            colors = NULL, linetypes = NULL, linewidth = NULL,
-                            ncol = NULL, scales = NULL,
-                            return_data = FALSE) {
+                            colors = NULL, linetypes = NULL, line_size = NULL,
+                            facet_ncol = NULL, facet_scales = NULL,
+                            return_data = FALSE, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_ts")
+  if (is.null(line_size)) line_size <- renamed$line_size
+  if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
+  if (is.null(facet_scales)) facet_scales <- renamed$facet_scales
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
 
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, ncol = ncol, scales = scales,
+                               line_size = line_size, facet_ncol = facet_ncol,
+                               facet_scales = facet_scales,
                                m1 = model1_name, m2 = model2_name)
   year1 <- .acl_plot_year(model1, name = model1_name)
   year2 <- .acl_plot_year(model2, name = model2_name)
@@ -153,7 +160,7 @@ plot_compare_ts <- function(model1, model2,
       any(!nzchar(quantities)))
     stop("quantities must be a nonempty character vector of supported quantities.", call. = FALSE)
   if (any(quantities %in% c("F", "f")))
-    stop("F is a group-by-time quantity. Use plot_compare_annual_F() with method = 'mean' ",
+    stop("F is a group-by-time quantity. Use plot_compare_F_ts() with method = 'mean' ",
          "or 'apical' to choose its time-series summary.", call. = FALSE)
 
   # Aliases: user-friendly names -> report field names
@@ -200,10 +207,10 @@ plot_compare_ts <- function(model1, model2,
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Value,
                                          color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$linewidth) +
+    ggplot2::geom_line(linewidth = cfg$line_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
-    ggplot2::facet_wrap(~Quantity, ncol = cfg$ncol, scales = cfg$scales) +
+    ggplot2::facet_wrap(~Quantity, ncol = cfg$facet_ncol, scales = cfg$facet_scales) +
     ggplot2::labs(title = .acl_title("compare_ts", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = "Value",
                   color = "Model", linetype = "Model") +
@@ -290,7 +297,7 @@ plot_compare_F <- function(model1, model2,
     message("Note: ", model1_name, " uses F-at-", attr(df1, "dim_type"),
             " while ", model2_name, " uses F-at-", attr(df2, "dim_type"),
             ". The heatmap y-axes are not directly comparable.\n",
-            "  Use plot_compare_annual_F() for a comparable summary.")
+            "  Use plot_compare_F_ts() for a comparable summary.")
   }
 
   df <- rbind(df1, df2)
@@ -325,6 +332,7 @@ plot_compare_F <- function(model1, model2,
 #' @param legend_pos Character. Legend position. NULL = use global theme (default "bottom").
 #' @param qq_alpha Numeric. QQ point transparency. Default 0.6.
 #' @param errorbar_width Numeric. Error bar cap width. Default 0.3.
+#' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object (combined 4-panel via patchwork).
 #' @details These are in-sample residuals. Known time labels, length labels,
 #'   positive-observation values and missing-data masks must match both fitted
@@ -336,14 +344,16 @@ plot_compare_F <- function(model1, model2,
 plot_compare_residuals <- function(model1, model2, data.CatL,
                                    model1_name = NULL, model2_name = NULL,
                                    colors = NULL, linetypes = NULL,
-                                   linewidth = NULL, point_size = NULL,
+                                   line_size = NULL, point_size = NULL,
                                    legend_pos = NULL, bins = 35,
-                                   qq_alpha = 0.6, errorbar_width = 0.3) {
+                                   qq_alpha = 0.6, errorbar_width = 0.3, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_residuals")
+  if (is.null(line_size)) line_size <- renamed$line_size
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, point_size = point_size,
+                               line_size = line_size, point_size = point_size,
                                legend_pos = legend_pos,
                                m1 = model1_name, m2 = model2_name)
 
@@ -375,7 +385,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::geom_histogram(alpha = 0.5, position = "identity", bins = bins) +
     ggplot2::scale_fill_manual(values = cfg$colors) +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
-    ggplot2::labs(title = "Residual Distribution", x = "Residual", y = "Count") +
+    ggplot2::labs(title = "Residual distribution", x = "Residual", y = "Count") +
     base_layers +
     no_legend
 
@@ -385,7 +395,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::stat_qq_line(ggplot2::aes(linetype = Model)) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::scale_color_manual(values = cfg$colors) +
-    ggplot2::labs(title = "QQ Plot", x = "Theoretical", y = "Sample") +
+    ggplot2::labs(title = "QQ plot", x = "Theoretical", y = "Sample") +
     base_layers + no_legend
 
   # P3: Mean residual by year
@@ -397,13 +407,13 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 
   p3 <- ggplot2::ggplot(resid_by_year, ggplot2::aes(x = Year, y = mean_r, color = Model)) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
-    ggplot2::geom_line(ggplot2::aes(linetype = Model), linewidth = cfg$linewidth) +
+    ggplot2::geom_line(ggplot2::aes(linetype = Model), linewidth = cfg$line_size) +
     ggplot2::geom_point(size = cfg$point_size, show.legend = FALSE) +
     ggplot2::geom_errorbar(ggplot2::aes(ymin = mean_r - sd_r, ymax = mean_r + sd_r),
                            width = errorbar_width, alpha = 0.5, show.legend = FALSE) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
-    ggplot2::labs(title = "Mean Residual by Year", x = "Year", y = "Mean Residual",
+    ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"), y = "Mean residual",
                   color = NULL, linetype = NULL) +
     base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom")
 
@@ -414,7 +424,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
   p4 <- ggplot2::ggplot(df, ggplot2::aes(x = LenBin, y = abs_resid, fill = Model)) +
     ggplot2::geom_boxplot(alpha = 0.6, outlier.size = 0.5) +
     ggplot2::scale_fill_manual(values = cfg$colors) +
-    ggplot2::labs(title = "|Residual| by Length Bin", x = "Length Bin", y = "|Residual|") +
+    ggplot2::labs(title = "|Residual| by length bin", x = "Length bin", y = "|Residual|") +
     base_layers + no_legend +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 
@@ -458,6 +468,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #' @param point_alpha Numeric. Transparency of data points. Default 0.4.
 #' @param nls_start Named list. Starting values for nls. Default attempts
 #'   auto-detection from data range.
+#' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
 #' @export
 #'
@@ -478,12 +489,14 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #' }
 plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
                                 model1_name = NULL, model2_name = NULL,
-                                colors = NULL, linetypes = NULL, linewidth = NULL,
+                                colors = NULL, linetypes = NULL, line_size = NULL,
                                 ref_data = NULL, ref_name = "Observed VB",
                                 ref_color = "grey30", ref_linetype = "dotdash",
                                 show_points = TRUE, point_size = NULL,
-                                point_alpha = 0.4, nls_start = NULL) {
+                                point_alpha = 0.4, nls_start = NULL, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_growth")
+  if (is.null(line_size)) line_size <- renamed$line_size
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   if (!is.null(ref_data)) {
@@ -494,7 +507,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
       stop("ref_name must be distinct from both model names.", call. = FALSE)
   }
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, point_size = point_size,
+                               line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
 
   VB <- function(Linf, k, t0, age) Linf * (1 - exp(-k * (age - t0)))
@@ -508,7 +521,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
   all_linetypes <- cfg$linetypes
 
   p_vb <- ggplot2::ggplot(vb_df, ggplot2::aes(x = Age, y = Length, color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$linewidth)
+    ggplot2::geom_line(linewidth = cfg$line_size)
 
   # Add reference VB curve from observed data
   if (!is.null(ref_data)) {
@@ -562,7 +575,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 
     # Rebuild with all data (including ref curve)
     p_vb <- ggplot2::ggplot(vb_df, ggplot2::aes(x = Age, y = Length, color = Model, linetype = Model)) +
-      ggplot2::geom_line(linewidth = cfg$linewidth)
+      ggplot2::geom_line(linewidth = cfg$line_size)
 
     if (show_points) {
       p_vb <- p_vb +
@@ -607,7 +620,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
   p_pla <- ggplot2::ggplot(pla_df, ggplot2::aes(x = Age, y = Length, fill = Probability)) +
     ggplot2::geom_tile() + .acl_fill_continuous() +
     ggplot2::facet_wrap(~Model) +
-    ggplot2::labs(title = "Length-at-Age Probability (pla)", x = "Age Group", y = "Length Bin") +
+    ggplot2::labs(title = "Length-at-age probability (pla)", x = "Age group", y = "Length bin") +
     .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"))
 
   if (requireNamespace("patchwork", quietly = TRUE)) {
@@ -627,8 +640,8 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #' @param data.CatL Catch-at-length data frame.
 #' @param years Numeric vector of years to show. Default NULL = all years.
 #'   Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.
-#' @param ncol Integer. Facet columns. Default 4.
-#' @param scales Character. Facet scales. Default "free_y".
+#' @param facet_ncol Integer. Facet columns. Default 4.
+#' @param facet_scales Character. Facet scales. Default "free_y".
 #' @param obs_color Character. Color for observed points. Default "grey40".
 #' @param obs_size Numeric. Size of observed points. Default 1.5.
 #' @param obs_alpha Numeric. Transparency of observed points. Default 0.6.
@@ -658,20 +671,24 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #'
 #' # Customize layout
 #' plot_compare_CatL(result_acl, result_alscl, data.CatL,
-#'   ncol = 5, obs_color = "black", obs_size = 2)
+#'   facet_ncol = 5, obs_color = "black", obs_size = 2)
 #' }
 plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
                               model1_name = NULL, model2_name = NULL,
-                              colors = NULL, linetypes = NULL, linewidth = NULL,
-                              ncol = 4, scales = "free_y",
+                              colors = NULL, linetypes = NULL, line_size = NULL,
+                              facet_ncol = 4, facet_scales = "free_y",
                               obs_color = "grey40", obs_size = 1.5,
                               obs_alpha = 0.6, obs_shape = 16,
-                              legend_pos = NULL) {
+                              legend_pos = NULL, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_CatL")
+  if (is.null(line_size)) line_size <- renamed$line_size
+  if (missing(facet_ncol) && !is.null(renamed$facet_ncol)) facet_ncol <- renamed$facet_ncol
+  if (missing(facet_scales) && !is.null(renamed$facet_scales)) facet_scales <- renamed$facet_scales
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, legend_pos = legend_pos,
+                               line_size = line_size, legend_pos = legend_pos,
                                m1 = model1_name, m2 = model2_name)
 
   grid <- .acl_plot_comparison_grid(list(model1, model2), data.CatL, midpoints = TRUE)
@@ -702,7 +719,7 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred1[, yi], Source = model1_name, Year = y)
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred2[, yi], Source = model2_name, Year = y)
   }
-  df <- do.call(rbind, df_list); df$year_fct <- factor(df$Year)
+  df <- do.call(rbind, df_list); df$year_fct <- .acl_period_factor(df$Year, year)
   color_vals <- c("Observed" = obs_color, cfg$colors)
   has_observed <- any(df$Source == "Observed")
   legend_order <- c(model1_name, model2_name, if (has_observed) "Observed")
@@ -711,13 +728,13 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
     ggplot2::geom_point(data = df[df$Source == "Observed", ],
                         size = obs_size, alpha = obs_alpha, shape = obs_shape) +
     ggplot2::geom_line(data = df[df$Source != "Observed", ],
-                        ggplot2::aes(linetype = Source), linewidth = cfg$linewidth) +
+                        ggplot2::aes(linetype = Source), linewidth = cfg$line_size) +
     ggplot2::scale_color_manual(values = color_vals, breaks = legend_order) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes, guide = "none") +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(
       linetype = c(unname(cfg$linetypes), if (has_observed) "blank"),
       shape = c(NA, NA, if (has_observed) obs_shape)))) +
-    ggplot2::facet_wrap(~year_fct, ncol = ncol, scales = scales) +
+    ggplot2::facet_wrap(~year_fct, ncol = facet_ncol, scales = facet_scales) +
     ggplot2::labs(title = .acl_title("compare_CatL", model1_name, model2_name),
                   x = .acl_lab("x", "length"), y = .acl_survey_label(), color = "") +
     .acl_base_theme() +
@@ -739,11 +756,12 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 #'   \code{"error"} (RMSE, MAE), \code{"R2"}, \code{"MAPE"},
 #'   \code{"IC"} (AIC, BIC, NLL), \code{"npar"}.
 #'   Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.
-#' @param ncol Integer. Columns for panel layout. Default: auto.
+#' @param facet_ncol Integer or NULL. Columns of panels. NULL uses up to three.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
 #' @param label_size Numeric. Text label size on bars. Default 3.2.
 #' @param bar_width Numeric. Bar width. Default 0.6.
 #' @param bar_alpha Numeric. Bar transparency. Default 0.85.
+#' @param ... The former argument name ncol, accepted with a warning.
 #' @return A ggplot object.
 #' @export
 #'
@@ -763,10 +781,12 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 plot_compare_metrics <- function(model1, model2, data.CatL,
                                  model1_name = NULL, model2_name = NULL,
                                  colors = NULL, metrics = NULL,
-                                 ncol = NULL, legend_pos = NULL,
+                                 facet_ncol = NULL, legend_pos = NULL,
                                  label_size = 3.2, bar_width = 0.6,
-                                 bar_alpha = 0.85) {
+                                 bar_alpha = 0.85, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_metrics")
+  if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, legend_pos = legend_pos,
@@ -802,10 +822,10 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 
   # Define available panels
   all_panels <- list(
-    error = list(metrics = c("RMSE", "MAE"),                        title = "Error Metrics"),
+    error = list(metrics = c("RMSE", "MAE"),                        title = "Error metrics"),
     R2    = list(metrics = "R2",                                     title = "R-squared"),
     MAPE  = list(metrics = "MAPE",                                   title = "MAPE (%)"),
-    IC    = list(metrics = c("AIC", "BIC", "Neg. Log-Likelihood"),   title = "Information Criteria"),
+    IC    = list(metrics = c("AIC", "BIC", "Neg. Log-Likelihood"),   title = "Information criteria"),
     npar  = list(metrics = "N. Parameters",                          title = "Parameters")
   )
 
@@ -822,7 +842,7 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 
   if (requireNamespace("patchwork", quietly = TRUE)) {
     n <- length(panels)
-    nc <- if (!is.null(ncol)) ncol else min(n, 3)
+    nc <- if (!is.null(facet_ncol)) facet_ncol else min(n, 3)
     # Add legend to last panel for collection
     panels[[length(panels)]] <- panels[[length(panels)]] +
       ggplot2::theme(legend.position = "bottom") +
@@ -846,23 +866,26 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #' Connects the supplied catchability values directly, preserving their range.
 #' The values are fixed model inputs, not estimated fishery selectivity.
 #' @inheritParams plot_compare_ts
+#' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
 #' @export
 plot_compare_selectivity <- function(model1, model2,
                                      model1_name = NULL, model2_name = NULL,
-                                     colors = NULL, linetypes = NULL, linewidth = NULL) {
+                                     colors = NULL, linetypes = NULL, line_size = NULL, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_selectivity")
+  if (is.null(line_size)) line_size <- renamed$line_size
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, m1 = model1_name, m2 = model2_name)
+                               line_size = line_size, m1 = model1_name, m2 = model2_name)
 
   q1 <- exp(model1$obj$env$data$log_q); q2 <- exp(model2$obj$env$data$log_q)
   df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
               data.frame(Length = model2$len_mid, Selectivity = q2, Model = model2_name))
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Length, y = Selectivity, color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$linewidth) +
+    ggplot2::geom_line(linewidth = cfg$line_size) +
     ggplot2::geom_point(size = cfg$point_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
@@ -874,30 +897,36 @@ plot_compare_selectivity <- function(model1, model2,
 
 
 # ==========================================================================
-# plot_compare_annual_F
+# plot_compare_F_ts
 # ==========================================================================
 
 #' Compare Fishing Mortality by Time Step
 #'
+#' One summary value of F per model time step for each fit, on the same axes.
+#' Quarterly fits stay quarterly; nothing is annualized.
+#'
 #' @inheritParams plot_compare_ts
 #' @param method Character. How to summarize F across age/length groups each model
-#'   time step. Quarterly fits remain quarterly; no annual aggregation is performed.
+#'   time step.
 #'   \code{"apical"} (default): maximum F across groups, comparable across
 #'   age-based and length-based models.
 #'   \code{"mean"}: arithmetic mean across all groups, which can mislead when
 #'   models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).
+#' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
 #' @export
-plot_compare_annual_F <- function(model1, model2,
-                                  model1_name = NULL, model2_name = NULL,
-                                  method = c("apical", "mean"),
-                                  colors = NULL, linetypes = NULL, linewidth = NULL) {
+plot_compare_F_ts <- function(model1, model2,
+                              model1_name = NULL, model2_name = NULL,
+                              method = c("apical", "mean"),
+                              colors = NULL, linetypes = NULL, line_size = NULL, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_compare_F_ts")
+  if (is.null(line_size)) line_size <- renamed$line_size
   method <- match.arg(method)
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               linewidth = linewidth, m1 = model1_name, m2 = model2_name)
+                               line_size = line_size, m1 = model1_name, m2 = model2_name)
 
   get_F <- function(m, mname) {
     Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report$F
@@ -911,13 +940,29 @@ plot_compare_annual_F <- function(model1, model2,
 
   ylab <- if (method == "apical") "Apical F (max across groups)" else "Mean F"
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = MeanF, color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$linewidth) +
+    ggplot2::geom_line(linewidth = cfg$line_size) +
     ggplot2::geom_point(size = cfg$point_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
-    ggplot2::labs(title = .acl_title("compare_annualF", model1_name, model2_name),
+    ggplot2::labs(title = .acl_title("compare_F_ts", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = ylab) +
     .acl_base_theme() + .acl_scale_x() +
     ggplot2::theme(legend.position = cfg$legend_pos)
   return(p)
+}
+
+
+#' Former name of plot_compare_F_ts()
+#'
+#' Deprecated. \code{plot_compare_annual_F()} summarizes F per model time step
+#' and never annualized quarterly values, so it is now called
+#' \code{\link{plot_compare_F_ts}()}. This alias warns once per session and
+#' will be removed in a later release.
+#'
+#' @param ... Arguments passed to \code{plot_compare_F_ts()}.
+#' @return A ggplot object.
+#' @export
+plot_compare_annual_F <- function(...) {
+  .acl_deprecated_function("plot_compare_annual_F")
+  plot_compare_F_ts(...)
 }

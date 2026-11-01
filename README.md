@@ -18,7 +18,7 @@ ALSCL 是一个 R 包，用渔业独立调查的体长数据拟合两个种群�
 
 ALSCL is an R package that fits two population models to fishery-independent survey length data: the age-structured catch-at-length model **ACL** and the age- and length-structured statistical catch-at-length model **ALSCL** (Zhang & Cadigan 2022). The models are written in TMB. The package provides data preparation and checks, fitting, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, saved assessments and 22 plotting functions.
 
-**Latest release: 2.3.0 · 简体中文 / English** · [Changes / 更新记录](NEWS.md)
+**Latest release: 2.4.0 · 简体中文 / English** · [Changes / 更新记录](NEWS.md)
 
 ## 文档 / Documentation
 
@@ -28,7 +28,7 @@ The documentation is organized by task: each page states its purpose, the code t
 
 | 入口 / Entry | 内容 / Contents |
 |---|---|
-| **[在线文档（英文）/ Website, English](https://fanzhang-lab-shou.github.io/ALSCL/)** · **[简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个工作案例，64 个函数的参考 / Install, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 64 functions |
+| **[在线文档（英文）/ Website, English](https://fanzhang-lab-shou.github.io/ALSCL/)** · **[简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个工作案例，65 个函数的参考 / Install, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 65 functions |
 | [Wiki 双语手册 / Bilingual Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿 / Single-page book](docs/BOOK.md) | 同一内容的中英对照版本，18 章 / The same content with both languages side by side, 18 chapters |
 | [使用指南 / User guide](docs/USER_GUIDE.md) | 安装到回溯分析的双语手册 / The bilingual manual from installation to retrospectives |
 | [评估工作流 / Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证 / Model validation](docs/MODEL_VALIDATION.md) · [工作案例 / Worked cases](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 / Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |

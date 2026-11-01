@@ -47,10 +47,12 @@ plot_fishing_mortality(
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
-\item{type}{Character. "year" (faceted by group), "age" (faceted by year),
-or "length" (ALSCL: faceted by year showing F vs numeric length-bin
-midpoints in \code{model_result$len_mid}; ACL: legacy alias for "age", with
-a warning). Default is "year".}
+\item{type}{Character. Which dimension of F runs along the x axis: "year"
+(one panel per age or length group), "age" (one panel per time step) or
+"length" (ALSCL only: one panel per time step with the numeric length-bin
+midpoints in \code{model_result$len_mid} on the x axis; for ACL a legacy
+alias for "age", with a warning). Default is "year". Time-step panels are
+labelled "Year 2000", or "2000 Q2" for quarterly fits.}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
@@ -61,7 +63,7 @@ the global x_breaks setting. Expansion follows global x_expand.}
 F_year, F_age or F_length title, with _se appended for interval plots.}
 
 \item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
-year, age or length label. Uncustomized age axes are labeled Age Group
+year, age or length label. Uncustomized age axes are labeled Age group
 because the plotted coordinates are group positions.}
 
 \item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.}

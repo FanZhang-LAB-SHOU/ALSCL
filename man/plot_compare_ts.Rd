@@ -13,10 +13,11 @@ plot_compare_ts(
   model2_name = NULL,
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL,
-  ncol = NULL,
-  scales = NULL,
-  return_data = FALSE
+  line_size = NULL,
+  facet_ncol = NULL,
+  facet_scales = NULL,
+  return_data = FALSE,
+  ...
 )
 }
 \arguments{
@@ -28,7 +29,7 @@ plot_compare_ts(
 "B", "N", "CN", "CB". Default c("SSB","R","B","N","CN"), the
 quantities reported with uncertainty by both ACL and ALSCL. CB can be
 requested explicitly when both supplied results contain it.
-For F, use \code{plot_compare_annual_F()} and explicitly choose the group
+For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 mean or apical summary; F is not a scalar time series in the model reports.}
 
 \item{se}{Logical. Show confidence intervals. Default FALSE.}
@@ -39,13 +40,16 @@ mean or apical summary; F is not a scalar time series in the model reports.}
 
 \item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
 
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
-\item{ncol}{Integer. Facet columns. NULL = use global theme.}
+\item{facet_ncol}{Integer or NULL. Facet columns; NULL uses the global compare_facet_ncol.}
 
-\item{scales}{Character. Facet scales. NULL = use global theme.}
+\item{facet_scales}{Character or NULL. Facet scales; NULL uses the global compare_facet_scales.}
 
 \item{return_data}{Logical. Return data alongside plot. Default FALSE.}
+
+\item{...}{Former argument names, accepted with a warning: linewidth for
+line_size, ncol for facet_ncol and scales for facet_scales.}
 }
 \value{
 A ggplot object (can be further modified with + theme(), + labs(), etc.)

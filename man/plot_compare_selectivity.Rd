@@ -11,7 +11,8 @@ plot_compare_selectivity(
   model2_name = NULL,
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL
+  line_size = NULL,
+  ...
 )
 }
 \arguments{
@@ -25,7 +26,9 @@ plot_compare_selectivity(
 
 \item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
 
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
+
+\item{...}{The former argument name linewidth, accepted with a warning.}
 }
 \value{
 A ggplot object.

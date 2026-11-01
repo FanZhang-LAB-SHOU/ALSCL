@@ -19,7 +19,7 @@ alscl_speed(sd_cores = 1)          # sequential standard errors
 alscl_speed_info()                 # what the settings mean on this computer
 ```
 
-The [speed guide](SPEED_GUIDE.md) explains the settings for users; this page records how they were developed and checked.
+The [speed guide](SPEED_GUIDE.md) explains the settings for users; this page records how they were developed, checked and reviewed, and sections 7 to 10 keep the change report of the 2.1.0 release.
 
 An external review of the first version (12 October 2026) found four problems, all confirmed and fixed (section 6): a failure to start forked processes left fits without standard errors, `sd_cores = Inf` was accepted, the documentation website did not build, and TMBad, then the default, differed from CppAD by up to 2.7e-8 in a fit with 10 fixed effects.
 
@@ -156,7 +156,66 @@ Fixes after a second review (commit `2b7d418`), both in the tests:
 - **Fork-failure test with an unchecked TMB version.** With a TMB version outside `.acl_tmb_checked`, standard errors are computed sequentially without forking, so the test that expected a fallback warning failed. The test now treats the installed TMB as checked, and a separate test checks that an unchecked version computes the standard errors sequentially without calling `mclapply()`.
 - **Identity test hid failures of the parallel code.** It muffled all warnings, so if the parallel code failed and fell back, it compared `TMB::sdreport()` with itself and passed. `.acl_sdreport()` has an argument `fallback = FALSE`, used only by the tests, that turns a parallel failure into an error; the test muffles only "NaNs produced" warnings and runs for both CppAD and TMBad. A further test makes the parallel delta method fail on purpose and checks that this gives an error.
 
-## Changes in 2.2.9
+## 7. Commits and files
+
+The changes were released as ALSCL 2.1.0 and compared with ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Sections 7 to 10 keep the change report that accompanied that release.
+
+| Commit | Content |
+|---|---|
+| [`4402f78`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4402f780cb35e8272f003cbfc1e699648261b4df) | First version of the code, tests and help page |
+| [`7bf2c5a`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/7bf2c5a652e657d46a53280eb6a3d97d7918be91) | Documentation (`docs/SPEED.md`), benchmark script and results (`docs/results/speed/`), README and NEWS |
+| [`54f1350`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/54f1350) | First version of this report (the version reviewed) |
+| [`243469b`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/243469b2f8104b31075d30a771d157c74f50a56b) | Fixes after the first review (section 6), CppAD as the default, website and function reference |
+| [`2b7d418`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/2b7d418) | Report revised after the first review (the version reviewed second) |
+| [`23d1cc2`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/23d1cc27c5969c3d8743881c1c769b1ecfc9c857) | Test fixes after the second review (section 6) |
+
+The TMB templates (`inst/extdata/*.cpp`) are unchanged.
+
+Links point to commit `23d1cc2`.
+
+| File | Change |
+|---|---|
+| [`R/speed.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/speed.R) | New. `alscl_speed()` (L39); `.acl_check_cores()` (L53); `.acl_fork_safe()` (L64, whether `"auto"` may fork); `.acl_cores()` (L74); `.acl_tmb_checked` and `.acl_tmb_supported()` (L89-L90, TMB versions the parallel delta method was checked against); `.acl_mclapply()` (L100, turns a failure to fork or a worker failure into an error of class `acl_parallel_error`); `.acl_optimhess()` (L120, parallel `stats::optimHess()`); `.acl_delta_sd()` (L141, parallel delta method); `.acl_sdreport()` (L200, the replacement for the `TMB::sdreport()` call; `check_version` and `fallback` are for the tests). |
+| [`R/model_fit.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/model_fit.R#L151) | One line: `TMB::sdreport(obj, par.fixed = opt$par, getReportCovariance = FALSE)` becomes `.acl_sdreport(obj, opt$par)`. |
+| [`R/compile_acl.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/compile_acl.R#L6-L30) | `.acl_compile()` gains `framework`, passes it to `TMB::compile()` and adds it to the cache key. |
+| [`R/retro_model.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/retro_model.R#L193-L195), [`R/sim_acl.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/R/sim_acl.R#L61-L63) | Socket workers receive the main process's AD library and `sd_cores = 1`. |
+| `DESCRIPTION` | `TMB (>= 1.9.0)`; `Matrix` added to Imports (for `Matrix::solve`). |
+| [`tests/testthat/test-speed.R`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/23d1cc27c5969c3d8743881c1c769b1ecfc9c857/tests/testthat/test-speed.R) | Settings and input validation (including `Inf`, `NA`, `2^31`); fork-safety rules; TMB version list; `identical()` checks of the parallel Hessian and of the whole sdreport object against TMB for both models and both AD libraries, with fallback turned into an error; a deliberate failure of the parallel delta method gives an error; a simulated failure to fork; an unchecked TMB version computes standard errors without forking; one and two cores give identical `est_std`; TMBad and CppAD agree within 1e-8 on the test fixture. |
+| `docs/FUNCTION_REFERENCE.md`, `website/build.py`, `website/check.py`, `website/reference-notes.json`, `website/content/*/news.md`, `docs/BOOK.md`, `docs/wiki/14-Function-Reference.md`, `README.md` | `alscl_speed()` added to the function reference, the website groups, the bilingual notes and the changelog; 43 changed to 44 functions. `BOOK.md` and the wiki were regenerated with `scripts/build_wiki.py`. |
+
+## 8. Checks on Linux, macOS and Windows
+
+The repository's GitHub Actions workflow ran `R CMD check --no-manual` (warnings treated as errors, `NOT_CRAN = true`) on commit `07e0fb8` for [pull request #3](https://github.com/FanZhang-LAB-SHOU/ALSCL/pull/3), and the documentation workflow built the website. A local `R CMD check` on macOS gave 0 errors, 0 warnings and 0 notes.
+
+| System | `R CMD check` | Tests |
+|---|---|---|
+| ubuntu-latest | OK | 353 passed, 0 failed, 0 skipped |
+| macos-latest | OK | 353 passed, 0 failed, 0 skipped |
+| windows-latest | OK | 292 passed, 0 failed, 6 skipped |
+
+The six tests skipped on Windows are those that need forked processes; on Windows standard errors are computed sequentially. The comparison of TMBad and CppAD fits ran on all three systems, so the templates compile with TMBad on Windows as well.
+
+## 9. Open points
+
+1. **TMBad as an option.** Whether TMBad could become the default after more checks (fits that estimate more fixed effects, real data).
+2. **Not yet done:** a benchmark on an idle computer.
+3. **Dependence on TMB internals.** `.acl_sdreport()` and `.acl_delta_sd()` use `obj$env$spHess`, `obj$env$f` (with `rangeweight`, `doforward = 0` and `type = "ADGrad"`), `obj$env$L.created.by.newton` and the TMB 1.9.21 semantics of `last.par.best`. The version list and the identity checks in step 3 of section 4 are meant to catch changes in TMB.
+4. **Fits in a user's own parallel loop** should set `sd_cores = 1`; this is documented but not detected.
+
+## 10. How to reproduce
+
+```bash
+git clone https://github.com/FanZhang-LAB-SHOU/ALSCL.git && cd ALSCL && git checkout v2.1.0
+Rscript -e 'devtools::test()'
+git archive 4dc1fc3 | (mkdir -p /tmp/alscl-original && tar -x -C /tmp/alscl-original)
+Rscript scripts/benchmark_speed.R /tmp/alscl-original docs/results/speed 3
+python3 -m venv .venv-docs && .venv-docs/bin/python -m pip install -r website/requirements.txt
+.venv-docs/bin/python website/build.py && .venv-docs/bin/python website/check.py
+```
+
+The tests compile both templates with both AD libraries, which takes several minutes; the benchmark takes about 90 minutes. On macOS with a non-ASCII path, set `LC_ALL=en_US.UTF-8`.
+
+## 11. Changes in 2.2.9
 
 The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.
 

@@ -30,7 +30,7 @@ acl_theme()
 # Change just one thing
 acl_theme_set(font_family = "Times New Roman")
 acl_theme_set(base_theme = "theme_classic")
-acl_theme_set(compare_linewidth = 2)
+acl_theme_set(compare_line_size = 2)
 
 # ACL vs ALSCL comparison style
 acl_theme_set(
