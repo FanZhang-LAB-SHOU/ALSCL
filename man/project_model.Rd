@@ -4,7 +4,15 @@
 \alias{project_model}
 \title{Project conditional population scenarios from a fitted assessment}
 \usage{
-project_model(fit, F, recruitment, weight, maturity, M = NULL)
+project_model(
+  fit,
+  F,
+  recruitment,
+  weight,
+  maturity,
+  M = NULL,
+  allow_failed_fit = FALSE
+)
 }
 \arguments{
 \item{fit}{An ACL or ALSCL fit retaining its terminal population report.}
@@ -26,6 +34,12 @@ must match future times.}
 or one value per future period. NULL uses the original fitted M stored in
 the fit recipe. Legacy fits without a recipe require explicit M; its first
 value also specifies the terminal fitted interval's natural mortality.}
+
+\item{allow_failed_fit}{Logical; default FALSE. A fit with
+\code{diagnostics$numerical_ok = FALSE} is rejected unless this is TRUE. An
+explicit override issues a warning and is recorded in the result. Use it
+only to explore scenarios conditional on a fit that failed the numerical
+screen, not to treat that fit as a validated assessment.}
 }
 \value{
 A list with \code{summary} (future time, N, B, SSB, Rec, CN, CB, F_mean,
@@ -59,6 +73,12 @@ a group maximum. Neither is an annualization of subannual mortality.
 
 Only saved report arrays and metadata are needed: a live TMB object is not
 used. All assumptions and supplied future inputs are retained in the result.
+Legacy fits without a numerical-screen result remain accepted; their status
+is unavailable, not a passed screen. Check their fitting diagnostics before
+using a projection. Passing the numerical screen does not establish model
+adequacy or parameter identifiability. The assumptions record
+\code{source_fit_status} as "passed", "failed", or "unknown", along with
+\code{source_fit_numerical_ok} and whether a \code{failed_fit_override} was used.
 }
 \examples{
 \dontrun{

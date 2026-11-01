@@ -18,7 +18,8 @@ sim_model(
   control = list(),
   F_structure = c("group_year", "year"),
   polish = TRUE,
-  model = c("acl", "alscl")
+  model = c("acl", "alscl"),
+  nstarts = 1
 )
 }
 \arguments{
@@ -44,7 +45,7 @@ use a first observation year of 2000.}
 Uses socket workers on all platforms.
 Use \code{parallel::detectCores()} to see available cores.}
 
-\item{train_times}{Number of optimization passes per replicate.}
+\item{train_times}{Number of optimization passes per independent start.}
 
 \item{control}{Named nlminb control settings.}
 
@@ -63,6 +64,10 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.}
 
 \item{model}{Model fitted to each simulation, "acl" (default) or "alscl".}
+
+\item{nstarts}{Positive integer; number of independent optimization starts
+per simulated dataset. Defaults to 1, independently of ncores. Starts run
+sequentially within each replicate; ncores controls parallel replicates.}
 }
 \value{
 A list containing the results of the stock assessment model. Failed
@@ -77,7 +82,11 @@ Supports parallel execution on multiple CPU cores for faster computation.
 \details{
 M and F are per model time step, including quarterly simulations.
 Each replicate uses one fitting worker and sequential standard errors to
-avoid nested parallelism. Model-specific parameters and maps must match the
-selected model. sim_acl() retains the original ACL interface; sim_alscl()
+avoid nested parallelism, including when nstarts is greater than 1. Each
+successful result retains nstarts, workers and start_diagnostics from the
+core fit. train_times controls successive optimization passes from each
+start, whereas nstarts controls independent initial values. Model-specific
+parameters and maps must match the selected model. sim_acl() retains the
+original ACL interface; sim_alscl()
 provides the corresponding ALSCL convenience interface.
 }

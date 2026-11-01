@@ -10,7 +10,7 @@ For ALSCL 2.2.9. Run scripts from the repository root after installing the packa
 
 See [assessment workflows](ASSESSMENT_WORKFLOWS.md) for public input preparation, extraction and portable records, residual checks, sensitivity/profile analyses, conditional projections and simulation summaries. Use supported stock-specific biology and inspected maps for real data; the YTF fixed map is a teaching configuration.
 
-[首页 / Home](../README.md) · [62 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
+[首页 / Home](../README.md) · [64 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 
 | 学习模块 / Module | 你会完成什么 / Outcome |
 |---|---|
@@ -381,6 +381,12 @@ Simulation length midpoints must lie within their corresponding bins, using the 
 复现旧实验时，应保存原始输入、生成真值、种子和包的代码版本。2.2.4 对快速模拟器 `mean_F` 的修正、首尾组概率积分修正，以及 2.2.9 取消完整模拟器调查值的 `1e-6` 下限，都可能使相同种子重新生成不同观测。已保存的数据不会被改写。版本沿革见[更新日志](../NEWS.md)。
 
 To reproduce an older experiment, keep its saved inputs, generating truth, seed and package revision. The correction to quick-simulator `mean_F` in 2.2.4, tail-bin integration changes, and removal of the full simulator's `1e-6` survey floor in 2.2.9 can change regenerated observations with the same seed. Saved datasets are not rewritten. See the [changelog](../NEWS.md) for version history.
+
+### 拟合模型生成与预测验证 / Fitted-model generation and prediction validation
+
+新增 `simulate_fit()` 区分固定状态的观测模拟与固定标量参数的过程重抽样，返回可直接拟合的输入及真值；`hindcast_model()` 用早期数据拟合，再对留出调查指数评分。完整运行步骤见[模型验证案例](MODEL_VALIDATION.md)。模拟批次的 `nstarts` 控制每个重复的独立初值数，`ncores` 仍控制外层并行。
+
+`simulate_fit()` distinguishes observation simulation at fitted states from process resampling at fixed scalar estimates, retaining reusable inputs and truth. `hindcast_model()` fits earlier data and scores withheld survey observations. See the complete [model-validation case](MODEL_VALIDATION.md). Simulation-batch `nstarts` controls independent starts per replicate; `ncores` controls outer parallelism.
 
 <a id="excel"></a>
 ## 4. Excel 每行每列填什么 / What to enter in Excel
@@ -861,6 +867,7 @@ The 2.2.2 run used four cores for standard errors and the default safeguarded re
 ![CSV 示例亲体生物量 / CSV example spawning biomass](figures/own-data-example/SSB.png)
 
 详细的修改步骤 / Detailed adaptation instructions: [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
+
 
 <a id="fitting"></a>
 ## 6. 可以调节哪些拟合设置 / Adjustable fitting settings

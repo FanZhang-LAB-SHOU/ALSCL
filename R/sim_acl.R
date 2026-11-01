@@ -23,22 +23,30 @@
 #'   failures, replaces its result_rep_<iter> file in output_dir. Storage errors
 #'   stop the batch rather than leave an old success file as the current result.
 #' @export
-#' @param train_times Number of optimization passes per replicate.
+#' @param train_times Number of optimization passes per independent start.
 #' @param control Named nlminb control settings.
 #' @param model Model fitted to each simulation, "acl" (default) or "alscl".
+#' @param nstarts Positive integer; number of independent optimization starts
+#'   per simulated dataset. Defaults to 1, independently of ncores. Starts run
+#'   sequentially within each replicate; ncores controls parallel replicates.
 #' @details M and F are per model time step, including quarterly simulations.
 #'   Each replicate uses one fitting worker and sequential standard errors to
-#'   avoid nested parallelism. Model-specific parameters and maps must match the
-#'   selected model. sim_acl() retains the original ACL interface; sim_alscl()
+#'   avoid nested parallelism, including when nstarts is greater than 1. Each
+#'   successful result retains nstarts, workers and start_diagnostics from the
+#'   core fit. train_times controls successive optimization passes from each
+#'   start, whereas nstarts controls independent initial values. Model-specific
+#'   parameters and maps must match the selected model. sim_acl() retains the
+#'   original ACL interface; sim_alscl()
 #'   provides the corresponding ALSCL convenience interface.
 sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
                     F_structure = c("group_year", "year"), polish = TRUE,
-                    model = c("acl", "alscl")) {
+                    model = c("acl", "alscl"), nstarts = 1) {
   model <- match.arg(model)
   F_structure <- match.arg(F_structure)
   ncores <- .acl_positive_integer(ncores, "ncores")
+  nstarts <- .acl_positive_integer(nstarts, "nstarts")
   if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||
       any(iter_range < 1 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
       anyDuplicated(iter_range))
@@ -54,7 +62,8 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   force(output_dir)
   fit_args <- list(parameters = parameters, parameters.L = parameters.L,
     parameters.U = parameters.U, map = map, M = M, train_times = train_times,
-    control = control, silent = TRUE, F_structure = F_structure, polish = polish)
+    control = control, silent = TRUE, F_structure = F_structure, polish = polish,
+    ncores = 1L, nstarts = nstarts)
   fit_one <- function(iter) {
     started <- proc.time()[["elapsed"]]
     result <- tryCatch({
@@ -97,17 +106,19 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
 sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
-                    F_structure = c("group_year", "year"), polish = TRUE) {
+                    F_structure = c("group_year", "year"), polish = TRUE,
+                    nstarts = 1) {
   sim_model(iter_range, sim_data_path, output_dir, parameters, parameters.L,
     parameters.U, map, M, ncores, train_times, control, F_structure, polish,
-    model = "acl")
+    model = "acl", nstarts = nstarts)
 }
 
 #' Fit simulation replicates with ALSCL
-#' @param ... Arguments passed to sim_model(), excluding model.
+#' @param ... Arguments passed to sim_model(), excluding model and nstarts.
+#' @inheritParams sim_model
 #' @return The named list of replicate fits or error records returned by sim_model().
 #' @export
-sim_alscl <- function(...) sim_model(..., model = "alscl")
+sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts = nstarts)
 
 # Shared by the repository tutorial and batch fitting; validate coordinates
 # before converting matrices to tables so rows can never be silently recycled.

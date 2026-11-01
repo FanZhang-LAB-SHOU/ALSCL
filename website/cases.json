@@ -78,5 +78,21 @@
       "en": "Compare M and shared-F assumptions on the same data, profile a free parameter, and project explicitly defined future F scenarios.",
       "zh": "对同一份数据比较 M 与共享 F 假设，对自由参数做剖面，再投影假设明确的未来 F 情景。"
     }
+  },
+  {
+    "slug": "case-model-validation",
+    "title": {
+      "en": "Can the model reproduce and predict survey observations?",
+      "zh": "模型能重现并预测调查观测吗？"
+    },
+    "group": "evaluation",
+    "group_title": {
+      "en": "Evaluate an assessment",
+      "zh": "评估结果的可靠性"
+    },
+    "description": {
+      "en": "Simulate observations from fitted ACL/ALSCL models, refit retained truth, and test predictions on time-held-out data.",
+      "zh": "从拟合的 ACL／ALSCL 模拟观测，保留真值重新拟合，并用按时间留出的数据检验预测。"
+    }
   }
 ]

@@ -43,7 +43,7 @@ UI = {
                close='关闭', functions='函数参考', setup='示例准备')}
 
 GROUPS = [
-    ('workflow', 'Assessment workflows', '评估工作流程', ['check_alscl_data', 'check_fit', 'extract_estimates', 'extract_parameters', 'fit_scenarios', 'inspect_parameters', 'prepare_alscl_data', 'profile_model', 'project_model', 'read_assessment', 'read_survey_csv', 'read_survey_excel', 'refit_model', 'save_assessment', 'sim_alscl', 'sim_model', 'summarize_simulations']),
+    ('workflow', 'Assessment workflows', '评估工作流程', ['check_alscl_data', 'check_fit', 'extract_estimates', 'extract_parameters', 'fit_scenarios', 'hindcast_model', 'inspect_parameters', 'prepare_alscl_data', 'profile_model', 'project_model', 'read_assessment', 'read_survey_csv', 'read_survey_excel', 'refit_model', 'save_assessment', 'sim_alscl', 'sim_model', 'simulate_fit', 'summarize_simulations']),
     ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'alscl_speed_info', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
     ('biology', 'Biology and simulation', '生物参数与模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data', 'sim_acl']),
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
@@ -297,7 +297,7 @@ def load_reference():
 def example_setup(name, lang):
     if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data']: return 'library(ALSCL)'
     base = 'library(ALSCL)\nlibrary(ggplot2)\nlibrary(patchwork)\ndata("YTF_example")\nx <- YTF_example\ninputs <- x[c("data.CatL", "data.wgt", "data.mat")]\ndat <- x$data.CatL'
-    if name in ['prepare_alscl_data', 'read_survey_csv', 'read_survey_excel', 'check_alscl_data', 'inspect_parameters', 'fit_scenarios', 'profile_model', 'sim_model', 'sim_alscl', 'summarize_simulations']: return base
+    if name in ['prepare_alscl_data', 'read_survey_csv', 'read_survey_excel', 'check_alscl_data', 'inspect_parameters', 'fit_scenarios', 'profile_model', 'sim_model', 'sim_alscl', 'simulate_fit', 'hindcast_model', 'summarize_simulations']: return base
     if name in ['sim_cal','sim_data','sim_acl']:
         base += '\npa <- initialize_params(species = "flatfish")\nbio <- sim_cal(pa)'
         if name == 'sim_acl': base += '\nsm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,\n               output_dir = "simulation_examples/flatfish")'
@@ -334,7 +334,7 @@ def reference_body(name, entry, lang, supplements):
     body += md('```r\n'+code_language(entry['example'],lang)+'\n```')
     body += f'<h2 id="see-also">{ui["related"]}</h2><ul>'
     for slug in extra['articles']:
-        item=next(a for a in ARTICLES if a['slug']==slug)
+        item=next(a for a in ARTICLES + CASES if a['slug']==slug)
         body+=f'<li><a href="../articles/{slug}.html">{item["title"][lang]}</a></li>'
     body+='</ul>'
     return summary,body

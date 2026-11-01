@@ -4,10 +4,14 @@
 \alias{sim_alscl}
 \title{Fit simulation replicates with ALSCL}
 \usage{
-sim_alscl(...)
+sim_alscl(..., nstarts = 1)
 }
 \arguments{
-\item{...}{Arguments passed to sim_model(), excluding model.}
+\item{...}{Arguments passed to sim_model(), excluding model and nstarts.}
+
+\item{nstarts}{Positive integer; number of independent optimization starts
+per simulated dataset. Defaults to 1, independently of ncores. Starts run
+sequentially within each replicate; ncores controls parallel replicates.}
 }
 \value{
 The named list of replicate fits or error records returned by sim_model().

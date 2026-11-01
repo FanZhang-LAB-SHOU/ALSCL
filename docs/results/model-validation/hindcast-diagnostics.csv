@@ -1,0 +1,5 @@
+"model","fold","elapsed","pid","error","warnings","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues","origin_index","origin","nstarts","prediction_ok","prediction_error"
+"ACL",1,5.225,6851,"","",0,5.99452253460808e-10,TRUE,FALSE,FALSE,TRUE,"",18,2017,1,TRUE,""
+"ACL",2,5.409,6850,"","",0,5.45483658243029e-10,TRUE,FALSE,FALSE,TRUE,"",19,2018,1,TRUE,""
+"ALSCL",1,72.46,6883,"","",0,2.74146150225363e-10,TRUE,FALSE,FALSE,TRUE,"",18,2017,1,TRUE,""
+"ALSCL",2,83.341,6884,"","",0,6.31850127774669e-12,TRUE,FALSE,FALSE,TRUE,"",19,2018,1,TRUE,""

@@ -114,10 +114,15 @@ archive <- tempfile(fileext = ".rds")
 save_assessment(b, archive)
 saved <- read_assessment(archive)
 summary(saved)
+saved$recipe$implementation
 plot_SSB(saved)
 # Refit when a live objective is needed:
 # b_again <- refit_model(saved, silent = TRUE)
 ```
+
+存档的 `recipe$implementation` 还记录可取得的源码提交、核心模板／头文件和 R 源码摘要及运行环境。源码 HEAD 本身不证明工作区没有修改。旧存档来源未知时仍可读取；`refit_model()` 对已知的实现或依赖变化发出警告。
+
+The archive also retains available source revision, core-template/header and R source hashes, and runtime metadata in `recipe$implementation`. A source HEAD alone does not establish a clean working tree. Older archives remain readable when provenance is unknown; `refit_model()` warns about known implementation or dependency changes.
 
 ## 3. 按模型时间轴检查观测残差 · 3. Diagnose observation residuals on the model time grid
 
@@ -258,6 +263,10 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 ![显式保持未来生物学输入的 ALSCL 条件 SSB 情景 / Conditional ALSCL SSB scenarios with explicitly held future biology](figures/workflows/projection-SSB.png)
 
+明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。
+
+Fits explicitly failing the numerical screen are rejected by default. allow_failed_fit = TRUE permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.
+
 ## 6. 拟合模拟重复，并报告失败率 · 6. Fit simulation replicates and report their failure rate
 
 `sim_model()` 可选择 ACL 或 ALSCL 拟合 `sim_data()` 生成的文件；`sim_acl()` 保留原有 ACL 接口，`sim_alscl()` 是对应的 ALSCL 入口。这里用两次重复演示文件对齐，并不足以精确估计模拟性能。初值和 map 必须采用所选模型的名称；教学预设是条件模拟设置，不是正式数据应固定这些参数的证据。
@@ -318,3 +327,10 @@ saveRDS(list(input = x, scenarios = scenarios, profile = profile_F,
   file.path(record_dir, "workflow_record.rds"))
 writeLines(capture.output(sessionInfo()), file.path(record_dir, "session.txt"))
 ```
+
+
+## 7. 模型生成与预测验证 · Model generation and prediction checks
+
+`simulate_fit()` 从拟合模型生成数据，`hindcast_model()` 检验按时间留出的调查指数。完整可执行示例见[模型验证](MODEL_VALIDATION.md)。
+
+`simulate_fit()` generates observations from the fitted model; `hindcast_model()` tests time-held-out survey predictions. See the complete executable [model-validation case](MODEL_VALIDATION.md).

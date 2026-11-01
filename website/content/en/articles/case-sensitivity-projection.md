@@ -130,3 +130,6 @@ Full recorded tables: [scenario status](https://github.com/FanZhang-LAB-SHOU/ALS
 ## Retain diagnostics and assumptions
 
 Review warnings, errors, gradients, Hessians and boundaries for every fit. A numerical pass does not remove residual structure or prove adequacy. See the [complete workflow](assessment-workflows.html) for conditional residual diagnostics, portable records and simulation failure/coverage summaries.
+
+
+Fits explicitly failing the numerical screen are rejected by default. allow_failed_fit = TRUE permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.

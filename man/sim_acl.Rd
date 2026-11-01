@@ -17,7 +17,8 @@ sim_acl(
   train_times = 1,
   control = list(),
   F_structure = c("group_year", "year"),
-  polish = TRUE
+  polish = TRUE,
+  nstarts = 1
 )
 }
 \arguments{
@@ -43,7 +44,7 @@ use a first observation year of 2000.}
 Uses socket workers on all platforms.
 Use \code{parallel::detectCores()} to see available cores.}
 
-\item{train_times}{Number of optimization passes per replicate.}
+\item{train_times}{Number of optimization passes per independent start.}
 
 \item{control}{Named nlminb control settings.}
 
@@ -60,6 +61,10 @@ parameters, a smaller maximum gradient and objective increase at most
 \code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
 remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.}
+
+\item{nstarts}{Positive integer; number of independent optimization starts
+per simulated dataset. Defaults to 1, independently of ncores. Starts run
+sequentially within each replicate; ncores controls parallel replicates.}
 }
 \value{
 The named list of replicate fits or error records returned by sim_model().

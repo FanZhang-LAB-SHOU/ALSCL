@@ -14,9 +14,9 @@ Shanghai Ocean University.
 
 **[Visit the ALSCL documentation website →](https://fanzhang-lab-shou.github.io/ALSCL/)**
 
-ALSCL has a dedicated documentation website with installation instructions, all 17 basic-function topics, a reference for all 62 public functions, and worked cases for simulation, fitting your own survey data, model comparison, retrospective analysis, sensitivity and future scenarios. English is the default; use the language switch on any page to read the Simplified Chinese version.
+ALSCL has a dedicated documentation website with installation instructions, all 17 basic-function topics, a reference for all 64 public functions, and worked cases for simulation, fitting your own survey data, model comparison, retrospective analysis, sensitivity and future scenarios. English is the default; use the language switch on any page to read the Simplified Chinese version.
 
-ALSCL 提供独立的在线文档网站，包含安装说明、17 项基本功能、全部 62 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较、回溯分析、敏感性和未来情景的操作案例。网站默认英文，每页均可切换为简体中文。
+ALSCL 提供独立的在线文档网站，包含安装说明、17 项基本功能、全部 64 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较、回溯分析、敏感性和未来情景的操作案例。网站默认英文，每页均可切换为简体中文。
 
 - [English documentation](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文文档](https://fanzhang-lab-shou.github.io/ALSCL/zh/)
 - [Worked case studies / 专题案例](https://fanzhang-lab-shou.github.io/ALSCL/articles/)
@@ -93,7 +93,8 @@ Estimation is performed via maximum likelihood with the objective function calcu
 | **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 16 章、目录、前后页导航 / 16 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
-| [62 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
+| [模型模拟与预测验证 / Model validation](docs/MODEL_VALIDATION.md) | 从拟合模型模拟、重新估计及时间留出检验 / Fitted-model simulation, refitting and time-held-out checks |
+| [64 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
 | [45 张 YTF 图谱 / YTF gallery](docs/PLOT_GALLERY.md) | 22 个绘图函数及主要类型 / All plotting families |
 | [两个完整案例 / Case studies](docs/CASE_STUDIES.md) | 年度 flatfish、季度 tuna 和 7 张图 / Annual and quarterly examples |
 | [Excel 填表示例 / Workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) | 三表及行列示意 / Three input sheets and instructions |
@@ -418,6 +419,7 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | [`create_parameters`](docs/FUNCTION_REFERENCE.md#create_parameters), [`create_parameters_alscl`](docs/FUNCTION_REFERENCE.md#create_parameters_alscl), [`generate_map`](docs/FUNCTION_REFERENCE.md#generate_map) | 初值、边界、固定映射 / Starts, bounds and maps |
 | [`initialize_params`](docs/FUNCTION_REFERENCE.md#initialize_params), [`sim_cal`](docs/FUNCTION_REFERENCE.md#sim_cal), [`sim_data`](docs/FUNCTION_REFERENCE.md#sim_data) | 完整随机模拟 / Full stochastic simulation |
 | [`simulate_example_data`](docs/FUNCTION_REFERENCE.md#simulate_example_data) | 快速生成三张输入表 / Simulate three input tables |
+| [`simulate_fit`](docs/FUNCTION_REFERENCE.md#simulate_fit), [`hindcast_model`](docs/FUNCTION_REFERENCE.md#hindcast_model) | 拟合模型生成数据及时间留出预测验证 / Fitted-model simulation and time-held-out prediction checks |
 | [`sim_model`](docs/FUNCTION_REFERENCE.md#sim_model), [`sim_acl`](docs/FUNCTION_REFERENCE.md#sim_acl), [`sim_alscl`](docs/FUNCTION_REFERENCE.md#sim_alscl) | 选择 ACL 或 ALSCL 批量拟合 / Batch fitting with ACL or ALSCL |
 | [`VB_func`](docs/FUNCTION_REFERENCE.md#VB_func), [`mat_func`](docs/FUNCTION_REFERENCE.md#mat_func) | 生长与 logistic 生物函数 / Biological helpers |
 | [`diagnose_model`](docs/FUNCTION_REFERENCE.md#diagnose_model), [`diagnostic_metrics`](docs/FUNCTION_REFERENCE.md#diagnostic_metrics), [`compare_models`](docs/FUNCTION_REFERENCE.md#compare_models) | 数值、拟合及比较 / Diagnostics and comparison |
@@ -435,7 +437,7 @@ Three peels refit after successively removing terminal observations. Mohn's rho 
 | `Linf`, `vbk` | 60, 0.2/年 / year | 152, 0.38/年 / year |
 | `M`, `F_mean` | 0.2, 0.3 每年 / per step | 0.2, 0.2 每季度 / per step |
 
-全部参数签名、默认值与返回结构见 [62 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
+全部参数签名、默认值与返回结构见 [64 个公开函数参考](docs/FUNCTION_REFERENCE.md)，包括 ACL 的 14 个、ALSCL 的 15 个标量估计参数。
 
 The full reference documents every public argument and the inner estimation parameter lists.
 

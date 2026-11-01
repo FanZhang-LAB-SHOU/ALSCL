@@ -127,3 +127,8 @@ Simulation length midpoints must lie within their corresponding bins, using the 
 ## Reproducing saved experiments
 
 To reproduce an older experiment, keep its saved inputs, generating truth, seed and package revision. The correction to quick-simulator `mean_F` in 2.2.4, tail-bin integration changes, and removal of the full simulator's `1e-6` survey floor in 2.2.9 can change regenerated observations with the same seed. Saved datasets are not rewritten. See the [changelog](../news/index.html) for version history.
+
+
+## Simulate directly from an assessment fit
+
+`simulate_fit(fit, process = "conditional")` varies observations at the fitted states; `process = "resample"` redraws the fitted model’s recruitment, F and initial-state deviations. Both keep scalar parameters fixed and retain a directly reusable input bundle and truth. These differ from the operating-model simulations above. See the [complete fitted-model simulation and validation case](case-model-validation.md). Existing simulation batches also accept `nstarts`, run sequentially inside each replicate worker; `ncores` controls the number of simultaneous replicates.

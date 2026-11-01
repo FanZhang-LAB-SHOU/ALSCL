@@ -1,5 +1,10 @@
 # Unreleased
 
+- Add fitted-model survey simulation with conditional observations or resampled stationary process deviations, retained truth and directly reusable input bundles. Add expanding-window time-held-out survey prediction checks with numerical screening, paired persistence baselines, log-scale scores and explicit denominators. Document both in a new bilingual worked case with grid-free figures.
+
+- Reject deterministic projections from known failed fits unless explicitly overridden with a warning; preserve unknown legacy status. Add independent starts to simulation batches while keeping one fitting worker per replicate.
+- Record available source revisions, core/R source fingerprints and runtime provenance in assessment recipes, and warn on known implementation changes when refitting.
+
 - Align model names and descriptions with the implemented population, observation and growth processes. Clarify survey catchability, simulation F baselines and innovation standard deviations, natural parameter scales and nominal confidence levels without changing existing argument names or calculations.
 - Correct residual facet documentation, document the shared ACL/ALSCL simulation entry points, complete Chinese return-value descriptions, remove escaped paragraph artifacts and organize current tutorials by task. Probability-matrix and survey-catchability plot titles use the same terminology as the manuals.
 
@@ -11,6 +16,11 @@
 - Add shared ACL/ALSCL simulation fitting and bias/RMSE/coverage summaries with aligned truth, failure rates and explicit denominators. Document all six workflows in English, Simplified Chinese, the website and Wiki chapter 16, with six new grid-free figures.
 
 ### 新增评估能力 · 简体中文
+
+- 新增拟合模型调查模拟，可固定状态模拟观测或重新抽取平稳过程，保留真值及可直接拟合的输入列表；新增扩展窗口时间留出预测检验，包含数值检查、配对持平基准、对数评分及明确分母，配中英文完整案例与无网格图。
+
+- 默认拒绝已知数值失败拟合的确定性投影；显式覆盖会警告，旧结果缺失的状态保持未知。模拟批次新增独立多初值，每个重复仍使用单个拟合进程。
+- 评估配方记录可取得的源码提交、核心／R 源码摘要与运行环境；重新拟合时提示已知实现变化。
 
 - 统一模型名称，分别说明种群数量、调查观测、存活和生长过程；明确调查可捕性、模拟 F 基准与创新标准差、自然参数尺度和名义置信水平，保留现有参数名与计算方式。
 - 修正残差图分面说明，介绍统一的 ACL／ALSCL 模拟入口，补齐中文返回字段解释，清理段落转义符，并按当前操作重组教程。概率矩阵及调查可捕性图标题与说明书保持一致。

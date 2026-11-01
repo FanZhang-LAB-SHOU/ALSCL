@@ -15,6 +15,11 @@
 #'   or one value per future period. NULL uses the original fitted M stored in
 #'   the fit recipe. Legacy fits without a recipe require explicit M; its first
 #'   value also specifies the terminal fitted interval's natural mortality.
+#' @param allow_failed_fit Logical; default FALSE. A fit with
+#'   `diagnostics$numerical_ok = FALSE` is rejected unless this is TRUE. An
+#'   explicit override issues a warning and is recorded in the result. Use it
+#'   only to explore scenarios conditional on a fit that failed the numerical
+#'   screen, not to treat that fit as a validated assessment.
 #' @return A list with `summary` (future time, N, B, SSB, Rec, CN, CB, F_mean,
 #'   F_apical), long `trajectories`, `fishing_mortality`, future `F`, `states`
 #'   (NA, NL and, for ALSCL, NLA), `catch` (CNA and CNL), supplied `biology`,
@@ -41,6 +46,12 @@
 #'
 #'   Only saved report arrays and metadata are needed: a live TMB object is not
 #'   used. All assumptions and supplied future inputs are retained in the result.
+#'   Legacy fits without a numerical-screen result remain accepted; their status
+#'   is unavailable, not a passed screen. Check their fitting diagnostics before
+#'   using a projection. Passing the numerical screen does not establish model
+#'   adequacy or parameter identifiability. The assumptions record
+#'   `source_fit_status` as "passed", "failed", or "unknown", along with
+#'   `source_fit_numerical_ok` and whether a `failed_fit_override` was used.
 #' @examples
 #' \dontrun{
 #' fit <- run_acl(YTF_example)
@@ -54,12 +65,24 @@
 #' scenario$summary
 #' }
 #' @export
-project_model <- function(fit, F, recruitment, weight, maturity, M = NULL) {
+project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
+                          allow_failed_fit = FALSE) {
   if (!is.list(fit) || !is.list(fit$report))
     stop("fit must contain a fitted population report.", call. = FALSE)
   model <- toupper(fit$model_type)
   if (length(model) != 1L || !model %in% c("ACL", "ALSCL"))
     stop("fit$model_type must be ACL or ALSCL.", call. = FALSE)
+  if (!is.logical(allow_failed_fit) || length(allow_failed_fit) != 1L || is.na(allow_failed_fit))
+    stop("allow_failed_fit must be TRUE or FALSE.", call. = FALSE)
+  failed_fit <- isFALSE(fit$diagnostics$numerical_ok)
+  if (failed_fit) {
+    if (!allow_failed_fit)
+      stop("The source fit failed the numerical screen (diagnostics$numerical_ok = FALSE). ",
+        "Review fit$diagnostics; set allow_failed_fit = TRUE only for an exploratory projection.",
+        call. = FALSE)
+    warning("The source fit failed the numerical screen; this exploratory projection uses that failed fit ",
+      "because allow_failed_fit = TRUE.", call. = FALSE)
+  }
   if (!is.numeric(recruitment) || !is.null(dim(recruitment)) || !length(recruitment) ||
       any(!is.finite(recruitment)) || any(recruitment < 0))
     stop("recruitment must contain finite nonnegative numbers for every future period.", call. = FALSE)
@@ -196,7 +219,9 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL) {
       state_timing = "start of each future period",
       mortality_timing = "terminal fitted F/M produce first future state; future F[t]/M[t] produce catch[t] and survival to t+1",
       mortality_units = "instantaneous per model time step; not annualized",
-      source_fit_numerical_ok = fit$diagnostics$numerical_ok))
+      source_fit_numerical_ok = fit$diagnostics$numerical_ok,
+      source_fit_status = if (failed_fit) "failed" else if (isTRUE(fit$diagnostics$numerical_ok)) "passed" else "unknown",
+      failed_fit_override = failed_fit && allow_failed_fit))
 }
 
 .acl_projection_catch_fraction <- function(F, M) {

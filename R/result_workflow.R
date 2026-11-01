@@ -4,10 +4,113 @@
     versions = list(ALSCL = as.character(utils::packageVersion("ALSCL")),
                     TMB = as.character(utils::packageVersion("TMB")),
                     R = as.character(getRversion())),
+    implementation = .acl_implementation(model),
     settings = list(ALSCL.framework = .acl_framework(),
                     ALSCL.sd_cores = getOption("ALSCL.sd_cores", "auto")))
   class(result) <- c("alscl_fit", "list")
   result
+}
+
+# Read an optional source-checkout revision without invoking git or storing paths.
+.acl_checkout_revision <- function(root) {
+  if (!is.character(root) || length(root) != 1L || is.na(root) || !nzchar(root) || !dir.exists(root))
+    return(NA_character_)
+  read_text <- function(path) {
+    if (!file.exists(path) || dir.exists(path)) return(character())
+    readLines(path, warn = FALSE)
+  }
+  valid_sha <- function(x) length(x) == 1L && !is.na(x) &&
+    grepl("^([a-fA-F0-9]{40}|[a-fA-F0-9]{64})$", x)
+  tryCatch({
+    git_dir <- file.path(root, ".git")
+    if (!dir.exists(git_dir)) {
+      pointer <- read_text(git_dir)
+      if (length(pointer) != 1L || !startsWith(pointer, "gitdir: ")) return(NA_character_)
+      path <- substring(pointer, 9L)
+      git_dir <- if (grepl("^(/|[A-Za-z]:[/\\\\])", path)) path else file.path(root, path)
+    }
+    head <- read_text(file.path(git_dir, "HEAD"))
+    if (valid_sha(head)) return(tolower(head))
+    if (length(head) != 1L || !startsWith(head, "ref: ")) return(NA_character_)
+    ref <- substring(head, 6L)
+    common <- read_text(file.path(git_dir, "commondir"))
+    common_dir <- if (length(common) == 1L) {
+      if (grepl("^(/|[A-Za-z]:[/\\\\])", common)) common else file.path(git_dir, common)
+    } else git_dir
+    for (directory in unique(c(git_dir, common_dir))) {
+      sha <- read_text(file.path(directory, ref))
+      if (valid_sha(sha)) return(tolower(sha))
+      packed <- strsplit(read_text(file.path(directory, "packed-refs")), " ", fixed = TRUE)
+      for (entry in packed) if (length(entry) == 2L && identical(entry[2L], ref) && valid_sha(entry[1L]))
+        return(tolower(entry[1L]))
+    }
+    NA_character_
+  }, error = function(e) NA_character_)
+}
+
+.acl_source_identity <- function(description, root) {
+  field <- function(name) {
+    value <- description[[name]]
+    if (is.character(value) && length(value) == 1L && !is.na(value) && nzchar(value)) value else NA_character_
+  }
+  revision <- .acl_checkout_revision(root)
+  revision_source <- if (!is.na(revision)) "checkout HEAD" else NA_character_
+  if (is.na(revision)) {
+    candidate <- field("RemoteSha")
+    if (!is.na(candidate) && grepl("^([a-fA-F0-9]{40}|[a-fA-F0-9]{64})$", candidate)) {
+      revision <- tolower(candidate)
+      revision_source <- "DESCRIPTION RemoteSha"
+    }
+  }
+  list(revision = revision, revision_source = revision_source,
+    repository = field("Repository"), remote_type = field("RemoteType"), built = field("Built"))
+}
+
+.acl_implementation <- function(model) {
+  description_file <- system.file("DESCRIPTION", package = "ALSCL")
+  description <- tryCatch(as.list(read.dcf(description_file)[1L, ]), error = function(e) list())
+  files <- c(paste0(toupper(model), ".cpp"), "model_math.hpp")
+  paths <- vapply(files, function(file) system.file("extdata", file, package = "ALSCL"), character(1))
+  hashes <- stats::setNames(rep(NA_character_, length(files)), files)
+  present <- nzchar(paths) & file.exists(paths)
+  hashes[present] <- unname(tools::md5sum(paths[present]))
+  root <- if (nzchar(description_file)) dirname(description_file) else NA_character_
+  r_files <- if (!is.na(root)) sort(list.files(file.path(root, "R"), pattern = "[.][Rr]$", full.names = TRUE)) else character()
+  r_hashes <- stats::setNames(unname(tools::md5sum(r_files)), basename(r_files))
+  blas <- unname(extSoftVersion()["BLAS"])
+  list(source = .acl_source_identity(description, root),
+    model_sources = hashes, r_sources = r_hashes,
+    runtime = list(platform = R.version$platform, arch = R.version$arch, os = R.version$os,
+      BLAS = if (length(blas) == 1L && !is.na(blas)) basename(blas) else NA_character_,
+      LAPACK = La_version(), Matrix = as.character(utils::packageVersion("Matrix")),
+      RcppEigen = as.character(utils::packageVersion("RcppEigen"))))
+}
+
+.acl_check_implementation <- function(recipe) {
+  saved <- recipe$implementation
+  if (!is.list(saved)) return(invisible(NULL))
+  current <- .acl_implementation(recipe$model)
+  changed <- character()
+  different <- function(old, new) is.character(old) && length(old) == 1L &&
+    !is.na(old) && nzchar(old) && is.character(new) && length(new) == 1L &&
+    !is.na(new) && nzchar(new) && !identical(old, new)
+  for (file in intersect(names(saved$model_sources), names(current$model_sources)))
+    if (different(unname(saved$model_sources[file]), unname(current$model_sources[file])))
+      changed <- c(changed, paste0("model source ", file))
+  if (length(saved$r_sources) && length(current$r_sources) &&
+      !identical(saved$r_sources[order(names(saved$r_sources))], current$r_sources[order(names(current$r_sources))]))
+    changed <- c(changed, "R source files")
+  if (different(saved$source$revision, current$source$revision)) changed <- c(changed, "source revision")
+  for (package in c("ALSCL", "TMB"))
+    if (different(recipe$versions[[package]], as.character(utils::packageVersion(package))))
+      changed <- c(changed, paste(package, "version"))
+  for (package in c("Matrix", "RcppEigen"))
+    if (different(saved$runtime[[package]], current$runtime[[package]]))
+      changed <- c(changed, paste(package, "version"))
+  if (length(changed)) warning("The current implementation differs from the saved assessment (",
+    paste(changed, collapse = "; "), "). Results may differ.",
+    call. = FALSE)
+  invisible(changed)
 }
 
 .acl_recipe <- function(fit) {
@@ -225,7 +328,15 @@ vcov.alscl_fit <- function(object, ...) object$vcov
 #' @return The normalized archive path, invisibly. The original fit is unchanged.
 #' @details The archive excludes the session-specific TMB object, and stores a
 #'   schema version, fitted estimates, input tables, map, bounds, settings and
-#'   software versions. A fresh session can summarize and plot it without a live
+#'   software versions. New fits also record available source revisions, MD5
+#'   hashes of the model template and shared header, and platform, BLAS, LAPACK
+#'   and dependency information in recipe$implementation. These identify the
+#'   recorded source files; a checkout revision alone does not establish that
+#'   the working tree was clean. R source-file hashes are also recorded when
+#'   available in a source tree; ordinary installed packages need not retain
+#'   those files. Missing source metadata remains unavailable, and no
+#'   source revision is inferred for an older fit supplied with x.
+#'   A fresh session can summarize and plot it without a live
 #'   TMB pointer. refit_model rebuilds a live model; cross-version numerical
 #'   equality is not promised. Only read archives from trusted sources.
 #' @examples
@@ -249,6 +360,8 @@ save_assessment <- function(fit, file, x = NULL, overwrite = FALSE) {
     args <- .acl_resolved_args(x, model)
     unknown <- .acl_validate_survey_fit(fit, .acl_survey_data(args$data.CatL))
     fit <- .acl_attach_recipe(fit, model, args)
+    # Current source metadata cannot establish which implementation fitted legacy results.
+    fit$recipe$implementation <- NULL
     fit$recipe$provenance <- paste("User-supplied recipe for legacy fit; original biology, weights, maturity, maps, bounds, starts, software and computational settings unverified.",
       if (length(unknown)) paste("Observation checks incomplete:", paste(unknown, collapse = "; ")) else "Stored observations match supplied observations.")
   }
@@ -296,9 +409,15 @@ read_assessment <- function(file) {
 #' @details Recorded framework and standard-error settings are applied during the
 #'   fit and restored afterward. Uses the recorded original starts, not a claim of
 #'   portable executable pointers. Refitting with different software may differ.
+#'   When recorded metadata is available, a change in model- or R-source hashes,
+#'   source revision, or ALSCL, TMB, Matrix or RcppEigen version produces a
+#'   warning before fitting. Missing metadata in older archives remains
+#'   supported. Platform and build information is retained for inspection;
+#'   it does not establish cross-platform numerical equality.
 #' @export
 refit_model <- function(fit, ...) {
   recipe <- .acl_recipe(fit)
+  .acl_check_implementation(recipe)
   overrides <- list(...)
   if (!"output" %in% names(overrides)) overrides$output <- FALSE
   args <- .acl_bundle_args(recipe$args, recipe$model, overrides)

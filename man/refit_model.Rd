@@ -23,4 +23,9 @@ Refit a stored assessment with optional argument overrides
 Recorded framework and standard-error settings are applied during the
 fit and restored afterward. Uses the recorded original starts, not a claim of
 portable executable pointers. Refitting with different software may differ.
+When recorded metadata is available, a change in model- or R-source hashes,
+source revision, or ALSCL, TMB, Matrix or RcppEigen version produces a
+warning before fitting. Missing metadata in older archives remains
+supported. Platform and build information is retained for inspection;
+it does not establish cross-platform numerical equality.
 }

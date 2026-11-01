@@ -90,10 +90,13 @@ archive <- tempfile(fileext = ".rds")
 save_assessment(b, archive)
 saved <- read_assessment(archive)
 summary(saved)
+saved$recipe$implementation
 plot_SSB(saved)
 # Refit when a live objective is needed:
 # b_again <- refit_model(saved, silent = TRUE)
 ```
+
+存档的 `recipe$implementation` 还记录可取得的源码提交、核心模板／头文件和 R 源码摘要及运行环境。源码 HEAD 本身不证明工作区没有修改。旧存档来源未知时仍可读取；`refit_model()` 对已知的实现或依赖变化发出警告。
 
 ## 3. 按模型时间轴检查观测残差
 
@@ -204,6 +207,8 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 ![显式保持未来生物学输入的 ALSCL 条件 SSB 情景](../assets/manual/figures/workflows/projection-SSB.png)
 
+明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。
+
 ## 6. 拟合模拟重复，并报告失败率
 
 `sim_model()` 可选择 ACL 或 ALSCL 拟合 `sim_data()` 生成的文件；`sim_acl()` 保留原有 ACL 接口，`sim_alscl()` 是对应的 ALSCL 入口。这里用两次重复演示文件对齐，并不足以精确估计模拟性能。初值和 map 必须采用所选模型的名称；教学预设是条件模拟设置，不是正式数据应固定这些参数的证据。
@@ -256,3 +261,8 @@ saveRDS(list(input = x, scenarios = scenarios, profile = profile_F,
   file.path(record_dir, "workflow_record.rds"))
 writeLines(capture.output(sessionInfo()), file.path(record_dir, "session.txt"))
 ```
+
+
+## 7. 从拟合模型模拟，并验证未来时期预测
+
+`simulate_fit()` 从拟合的过程与观测模型生成数据；`hindcast_model()` 预测未参与各次训练拟合的时期。[完整模型验证案例](case-model-validation.md) 说明条件／过程模拟、真值保留、重复拟合、时间留出预测及配对对数评分。

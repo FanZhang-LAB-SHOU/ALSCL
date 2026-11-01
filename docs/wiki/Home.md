@@ -4,7 +4,7 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.2.9 · 简体中文与英文 · 16 章 / chapters**
+**ALSCL 2.2.9 · 简体中文与英文 · 17 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
 
@@ -32,6 +32,7 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 | 14 | [全部函数与参数 · Complete function reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) |
 | 15 | [进阶、复现与故障处理 · Reproducibility](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility) |
 | 16 | [评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) |
+| 17 | [模型模拟与预测验证 · Model simulation and prediction checks](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/17-Model-Validation) |
 
 ## 相关链接 · Links
 

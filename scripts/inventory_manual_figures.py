@@ -27,7 +27,9 @@ for folder in ['docs/figures', 'man/figures']:
         elif '/cases/' in rel:
             source = 'scripts/case_studies.R'
         elif '/workflows/' in rel:
-            source = 'scripts/assessment_workflow.R'
+            source = ('scripts/model_validation.R'
+                      if path.name in ('fitted-simulation.png', 'hindcast-predictions.png')
+                      else 'scripts/assessment_workflow.R')
         elif '/speed/' in rel:
             source = 'scripts/plot_speed_benchmark.R'
         elif '/parallel/' in rel:

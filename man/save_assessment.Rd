@@ -24,7 +24,15 @@ Save a portable assessment and its complete refit recipe
 \details{
 The archive excludes the session-specific TMB object, and stores a
 schema version, fitted estimates, input tables, map, bounds, settings and
-software versions. A fresh session can summarize and plot it without a live
+software versions. New fits also record available source revisions, MD5
+hashes of the model template and shared header, and platform, BLAS, LAPACK
+and dependency information in recipe$implementation. These identify the
+recorded source files; a checkout revision alone does not establish that
+the working tree was clean. R source-file hashes are also recorded when
+available in a source tree; ordinary installed packages need not retain
+those files. Missing source metadata remains unavailable, and no
+source revision is inferred for an older fit supplied with x.
+A fresh session can summarize and plot it without a live
 TMB pointer. refit_model rebuilds a live model; cross-version numerical
 equality is not promised. Only read archives from trusted sources.
 }

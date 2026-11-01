@@ -101,7 +101,8 @@ chapters=[
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
 ('14-Function-Reference','全部函数与参数 · Complete function reference',no_title(read('FUNCTION_REFERENCE.md'))),
 ('15-Reproducibility','进阶、复现与故障处理 · Reproducibility',no_title(read('ADVANCED_WORKFLOWS.md'))+'\n\n## 常见问题 · Troubleshooting\n'+trouble),
-('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md')))]
+('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md'))),
+('17-Model-Validation','模型模拟与预测验证 · Model simulation and prediction checks',no_title(read('MODEL_VALIDATION.md')))]
 # Internal anchor links inherited from a source refer to that source if not on this chapter.
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)

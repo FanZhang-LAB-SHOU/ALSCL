@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Add `simulate_fit()` for observations conditional on fitted states or resampled stationary processes, and `hindcast_model()` for expanding-window survey prediction checks with paired persistence baselines. Retain truth, failure diagnostics, actual scoring denominators and grid-free worked figures.
+- Guard projections against known failed fits; add `nstarts` to simulation batches; record available source revisions, core/R hashes and runtime metadata in assessment recipes, with change warnings during refitting.
+
 - Align model names and descriptions with the implemented population, observation and growth processes. Clarify survey catchability, simulation F baselines and innovation standard deviations, natural parameter scales and nominal confidence levels without changing existing argument names or calculations.
 - Correct residual facet documentation, document the shared ACL/ALSCL simulation entry points, complete Chinese return-value descriptions, remove escaped paragraph artifacts and organize current tutorials by task. Probability-matrix and survey-catchability plot titles use the same terminology as the manuals.
 

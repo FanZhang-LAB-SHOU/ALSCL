@@ -90,10 +90,13 @@ archive <- tempfile(fileext = ".rds")
 save_assessment(b, archive)
 saved <- read_assessment(archive)
 summary(saved)
+saved$recipe$implementation
 plot_SSB(saved)
 # Refit when a live objective is needed:
 # b_again <- refit_model(saved, silent = TRUE)
 ```
+
+The archive also retains available source revision, core-template/header and R source hashes, and runtime metadata in `recipe$implementation`. A source HEAD alone does not establish a clean working tree. Older archives remain readable when provenance is unknown; `refit_model()` warns about known implementation or dependency changes.
 
 ## 3. Diagnose observation residuals on the model time grid
 
@@ -204,6 +207,8 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 ![Conditional ALSCL SSB scenarios with explicitly held future biology](../assets/manual/figures/workflows/projection-SSB.png)
 
+Fits explicitly failing the numerical screen are rejected by default. allow_failed_fit = TRUE permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.
+
 ## 6. Fit simulation replicates and report their failure rate
 
 `sim_model()` selects ACL or ALSCL for files produced by `sim_data()`. `sim_acl()` retains the original ACL interface; `sim_alscl()` is its ALSCL counterpart. This short example uses two replicates to demonstrate file alignment, not to estimate simulation performance precisely. Use the matching model's starts and map. The teaching presets are conditional simulation settings, not evidence for fixing those parameters with real data.
@@ -256,3 +261,8 @@ saveRDS(list(input = x, scenarios = scenarios, profile = profile_F,
   file.path(record_dir, "workflow_record.rds"))
 writeLines(capture.output(sessionInfo()), file.path(record_dir, "session.txt"))
 ```
+
+
+## 7. Simulate the fitted model and validate future-period predictions
+
+Use `simulate_fit()` to generate data from the fitted process and observation model, and `hindcast_model()` to predict periods excluded from each training fit. The [complete model-validation case](case-model-validation.md) covers conditional versus process simulations, retained truth, replicate refitting, time-held-out forecasts and paired log-scale scores.
