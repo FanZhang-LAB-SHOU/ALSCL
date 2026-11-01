@@ -40,9 +40,9 @@ for i,m in enumerate(marks):
  blocks[int(m[1])]=block
 intro=f'''# 开始使用 · Getting started
 
-安装 ALSCL {version} 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装最新 main 开发源码后即可使用本手册中的函数。源码基于 ALSCL {version}；较早的发布标签不含全部新增接口。以下代码在 R 中运行。
 
-Install ALSCL {version} to use the bundled data, fit models and create plots. Run the following in R.
+Install the latest main development source to use the functions in this manual. It is based on ALSCL {version}; the earlier release tag does not contain every new interface. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -129,11 +129,25 @@ home=f'''# ALSCL 完整使用手册 · Complete user manual
 
 **ALSCL {version} · 简体中文与英文 · {len(chapters)} 章 / chapters**
 
-本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。说明随 main 开发源码更新；较早的 {version} 发布标签不包含全部新增接口。
 
-This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures, case-study figures and six assessment-workflow figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual follows main; the earlier {version} release tag does not contain every new interface.
 
 [开始使用 · Getting started]({base}/wiki/01-Start) · [仓库主页 · Repository]({base}/tree/main) · [单页书稿 · Single-page book]({base}/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook]({base}/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
+
+## 选择阅读路线 · Choose a reading path
+
+| 你的任务 / Your task | 建议顺序 / Suggested order |
+|---|---|
+| 第一次使用 / First run | [安装 / Install]({base}/wiki/01-Start) → [内置拟合 / First fit]({base}/wiki/04-Built-in-YTF) → [诊断 / Diagnostics]({base}/wiki/07-Diagnostics) |
+| 拟合自己的数据 / Your own data | [准备数据 / Prepare data]({base}/wiki/03-Data-and-Excel) → [参数与 map / Parameters and maps]({base}/wiki/06-Fitting) → [诊断 / Diagnostics]({base}/wiki/07-Diagnostics) |
+| 整理和评估拟合结果 / Work with fitted results | [结果、敏感性与情景 / Results, sensitivity and scenarios]({base}/wiki/16-Assessment-Workflows) |
+| 模拟或检验未来预测 / Simulation or prediction checks | [模型验证完整案例 / Model-validation case]({base}/wiki/17-Model-Validation) |
+| 选择图形与导出 / Plot and export | [种群图 / Population plots]({base}/wiki/08-Population-Plots) → [配色和导出 / Style and export]({base}/wiki/13-Colors-and-Export) |
+
+这些是按任务选择的入口，不必按章节编号从头读起。需要逐项查参数时使用第 14 章；想用单一语言连续阅读时，访问 [English website](https://fanzhang-lab-shou.github.io/ALSCL/) 或 [简体中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
+
+Use these task-based entry points without reading every chapter in numerical order. Chapter 14 is an argument reference. The website provides continuous reading in either language.
 
 ## 目录 · Contents
 

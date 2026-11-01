@@ -11,8 +11,8 @@
     },
     "articles": [
       "getting-started",
-      "data-preparation",
-      "first-model"
+      "first-model",
+      "data-preparation"
     ]
   },
   {
@@ -28,23 +28,8 @@
     "articles": [
       "model-theory",
       "fitting-controls",
-      "speed",
-      "estimation-parameters"
-    ]
-  },
-  {
-    "id": "simulation",
-    "title": {
-      "en": "Simulation and time steps",
-      "zh": "模拟与时间步"
-    },
-    "description": {
-      "en": "Generate data with known truth and explore annual and quarterly assessment workflows.",
-      "zh": "生成具有已知真值的模拟数据，了解年度与季度评估流程。"
-    },
-    "articles": [
-      "simulation",
-      "case-studies"
+      "estimation-parameters",
+      "speed"
     ]
   },
   {
@@ -78,6 +63,21 @@
       "population-plots",
       "growth-mortality",
       "plot-customization"
+    ]
+  },
+  {
+    "id": "simulation",
+    "title": {
+      "en": "Simulation and time steps",
+      "zh": "模拟与时间步"
+    },
+    "description": {
+      "en": "Generate data with known truth and explore annual and quarterly assessment workflows.",
+      "zh": "生成具有已知真值的模拟数据，了解年度与季度评估流程。"
+    },
+    "articles": [
+      "simulation",
+      "case-studies"
     ]
   },
   {

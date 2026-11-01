@@ -4,9 +4,9 @@
 
 **ALSCL 2.2.9 · 简体中文 / English**
 
-安装 ALSCL 2.2.9 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装最新 main 开发源码后即可使用本手册中的函数。源码基于 ALSCL 2.2.9；较早的发布标签不含全部新增接口。以下代码在 R 中运行。
 
-Install ALSCL 2.2.9 to use the bundled data, fit models and create plots. Run the following in R.
+Install the latest main development source to use the functions in this manual. It is based on ALSCL 2.2.9; the earlier release tag does not contain every new interface. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL

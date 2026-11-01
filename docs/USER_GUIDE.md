@@ -2,13 +2,24 @@
 
 **从模拟案例到自己的调查体长数据。From simulation examples to your own survey length data.**
 
-适用版本：ALSCL 2.2.9。本指南中的 R 代码从仓库根目录执行；先安装包。代码注释使用简体中文和英文，所有拟合图使用内置 `YTF_example`。
+本指南随基于 ALSCL 2.2.9 的 `main` 开发源码更新。先安装最新源码并加载软件包；只有使用 `source("scripts/...")` 或仓库示例文件的代码才需要从仓库根目录执行。拟合配图使用内置模拟数据 `YTF_example`。
 
-For ALSCL 2.2.9. Run scripts from the repository root after installing the package. Comments are bilingual; all fitted-model figures use the bundled `YTF_example`.
+This guide follows the development source on `main`, based on ALSCL 2.2.9. Install the latest source and load the package first. Only examples using `source("scripts/...")` or repository files require the repository root as the working directory. Fitted-model figures use the synthetic `YTF_example`.
 
-新增的六类评估能力见[评估工作流](ASSESSMENT_WORKFLOWS.md)：公开数据导入与预检、结果提取与保存、残差检查、敏感性与参数剖面、条件未来投影、模拟表现汇总。实测数据应使用有依据的生物学输入与检查后的 map，不照搬 YTF 的教学固定规则。
+第一次使用，先完成[内置案例](#builtin)，再看[诊断](#diagnostics)；需要了解公式时再查[模型原理](#theory)。准备正式数据时，按[整理三张表](#excel) → [导入与检查](#observations) → [参数与 map](#fitting)的顺序阅读。实测数据使用自己的生物学依据，YTF 的教学固定规则不应直接照搬。
 
-See [assessment workflows](ASSESSMENT_WORKFLOWS.md) for public input preparation, extraction and portable records, residual checks, sensitivity/profile analyses, conditional projections and simulation summaries. Use supported stock-specific biology and inspected maps for real data; the YTF fixed map is a teaching configuration.
+For a first run, follow the [built-in example](#builtin), then [diagnostics](#diagnostics); consult the [model principles](#theory) when you need the equations. For your own observations, read [table preparation](#excel) → [import and checks](#observations) → [parameters and maps](#fitting). Choose stock-specific biological inputs; the YTF fixed map is a teaching configuration.
+
+| 现在要做什么 / Your task | 从这里继续 / Continue here |
+|---|---|
+| 提取、保存并检查已有拟合 / Inspect and save a fit | [评估工作流 / Assessment workflows](ASSESSMENT_WORKFLOWS.md) |
+| 检查固定假设、参数剖面或未来情景 / Examine assumptions, parameter profiles or future scenarios | [评估工作流第 4–5 步 / Workflow steps 4–5](ASSESSMENT_WORKFLOWS.md) |
+| 从拟合模型模拟数据，或预测留出的时期 / Simulate from a fit or predict held-out periods | [模型模拟与时间留出验证 / Model validation](MODEL_VALIDATION.md) |
+| 查找一个参数或绘图选项 / Look up an argument or plot option | [函数参考 / Function reference](FUNCTION_REFERENCE.md) |
+
+新增评估接口需要最新开发源码，较早的 2.2.9 发布标签不包含全部功能。网站可选择单一语言连续阅读：[English](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
+
+The new assessment interfaces require the latest development source; the earlier 2.2.9 release tag does not include all of them. For continuous reading in one language, use the [English](https://fanzhang-lab-shou.github.io/ALSCL/) or [Simplified Chinese](https://fanzhang-lab-shou.github.io/ALSCL/zh/) website.
 
 [首页 / Home](../README.md) · [64 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 

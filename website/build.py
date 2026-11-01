@@ -43,10 +43,13 @@ UI = {
                close='关闭', functions='函数参考', setup='示例准备')}
 
 GROUPS = [
-    ('workflow', 'Assessment workflows', '评估工作流程', ['check_alscl_data', 'check_fit', 'extract_estimates', 'extract_parameters', 'fit_scenarios', 'hindcast_model', 'inspect_parameters', 'prepare_alscl_data', 'profile_model', 'project_model', 'read_assessment', 'read_survey_csv', 'read_survey_excel', 'refit_model', 'save_assessment', 'sim_alscl', 'sim_model', 'simulate_fit', 'summarize_simulations']),
+    ('workflow', 'Prepare data and inspect parameters', '准备数据与检查参数', ['read_survey_csv', 'read_survey_excel', 'prepare_alscl_data', 'check_alscl_data', 'inspect_parameters']),
     ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'alscl_speed_info', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
-    ('biology', 'Biology and simulation', '生物参数与模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data', 'sim_acl']),
-    ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
+    ('results', 'Extract, save and reload results', '提取、保存与读取结果', ['extract_parameters', 'extract_estimates', 'save_assessment', 'read_assessment', 'refit_model']),
+    ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['check_fit', 'diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
+    ('assumptions', 'Sensitivity, profiles and projections', '敏感性、参数剖面与情景投影', ['fit_scenarios', 'profile_model', 'project_model']),
+    ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
+    ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data']),
     ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_recruitment', 'plot_SSB_Rec']),
     ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_pla', 'plot_fishing_mortality', 'plot_residuals', 'plot_deviance', 'plot_ridges']),
     ('comparison', 'Compare models visually', '模型比较绘图', ['plot_compare_ts', 'plot_compare_CatL', 'plot_compare_F', 'plot_compare_annual_F', 'plot_compare_growth', 'plot_compare_selectivity', 'plot_compare_residuals', 'plot_compare_metrics']),
@@ -110,9 +113,10 @@ def article_sections(lang, home=False):
         items = ''
         for slug in group['articles']:
             article = ARTICLES_BY_SLUG[slug]
-            detail = 'Full guide and examples' if lang=='en' else '详细说明与示例'
-            items += f'<h3 id="basic-{slug}">{html.escape(article["title"][lang])}</h3><p>{html.escape(article["description"][lang])}</p>'
-            items += '<p><a href="' + ('articles/' if home else '') + slug + '.html">' + detail + ' →</a></p>'
+            href = ('articles/' if home else '') + slug + '.html'
+            items += (f'<div class="guide-entry"><h3 id="basic-{slug}"><a href="{href}">'
+                      f'{html.escape(article["title"][lang])}</a></h3>'
+                      f'<p>{html.escape(article["description"][lang])}</p></div>')
         sections.append(f'<section class="article-group"><{tag} id="{anchor}">{html.escape(group["title"][lang])}</{tag}>'
                         f'<p>{html.escape(group["description"][lang])}</p>{items}</section>')
     return '\n'.join(sections)
@@ -125,6 +129,7 @@ def rewrite_links(soup, route, lang):
     known_docs = {'USER_GUIDE.md': 'articles/first-model.html', 'PLOT_GALLERY.md': 'articles/population-plots.html',
                   'FUNCTION_REFERENCE.md': 'reference/index.html', 'CASE_STUDIES.md': 'articles/case-studies.html',
                   'PLOT_STYLE.md': 'articles/plot-customization.html', 'ADVANCED_WORKFLOWS.md': 'articles/reproducibility.html',
+                  'ASSESSMENT_WORKFLOWS.md': 'articles/assessment-workflows.html', 'MODEL_VALIDATION.md': 'articles/case-model-validation.html',
                   'BOOK_THEORY_NOTES.md': 'articles/model-theory.html', 'MATHEMATICAL_FRAMEWORK.md': 'articles/model-theory.html'}
     section_routes = {'theory':'model-theory','builtin':'first-model','simulation':'simulation','excel':'data-preparation',
                       'observations':'data-preparation','fitting':'fitting-controls','diagnostics':'diagnostics',
@@ -205,6 +210,12 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
     other = 'zh' if lang=='en' else 'en'
     switch = link(route, lang_route(other, route_base), '简体中文' if lang=='en' else 'English', id='language-switch', hreflang='zh-Hans' if other=='zh' else 'en', lang='zh-Hans' if other=='zh' else 'en')
     sidebar = '<nav class="toc" aria-label="'+ui['contents']+'"><h2>'+ui['contents']+'</h2><ul>'+''.join(toc)+'</ul></nav>'
+    mobile_toc = ''
+    if kind != 'home' and toc:
+        mobile_toc = (f'<details class="mobile-toc"><summary>{ui["contents"]}</summary>'
+                      f'<nav aria-label="{ui["contents"]}"><ul>'
+                      + ''.join(item for item, heading in zip(toc, headings) if heading.name == 'h2')
+                      + '</ul></nav></details>')
     if kind=='home':
         sidebar = f'''<section><h2>{'Links' if lang=='en' else '相关链接'}</h2>
         <p><a href="{REPO}">{'Browse source code' if lang=='en' else '浏览源代码'}</a></p>
@@ -244,7 +255,7 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
 <div id="navigation" class="navigation">{nav}</div>
 <div class="nav-tools"><button id="search-open" aria-label="{ui['search']}"><span>⌕</span> {'Search' if lang=='en' else '搜索'} <kbd>/</kbd></button>{switch}<a class="github" href="{REPO}" aria-label="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.1c-3.12.68-3.78-1.33-3.78-1.33-.51-1.29-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.72.39-1.22.71-1.5-2.49-.28-5.11-1.25-5.11-5.54 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.08 1.15a10.72 10.72 0 0 1 5.6 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.7.12 2.98.72.79 1.15 1.79 1.15 3.02 0 4.3-2.62 5.25-5.12 5.53.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.77.54A11.2 11.2 0 0 0 12 .8Z"/></svg></a></div></nav></header>
 <div class="layout"><main id="main">{breadcrumb}<div class="page-header">{logo}<h1>{html.escape(title)}</h1>{source_link}</div>
-{soup}</main><aside>{sidebar}</aside></div>
+{mobile_toc}{soup}</main><aside>{sidebar}</aside></div>
 <footer><span>{'Developed by' if lang=='en' else '开发者'} <span class="author-name">Hongyu Lin {orcid_link(route, "Hongyu Lin", "0000-0001-6226-179X")}</span>, <span class="author-name">Fan Zhang {orcid_link(route, "Fan Zhang", "0000-0003-0214-1790")}</span>, Sisong Dong.</span><span>ALSCL {VERSION} · <a href="{REPO}">{'Source & documentation' if lang=='en' else '源代码与文档'}</a></span></footer>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><h2 id="search-title">{ui['search']}</h2><button id="search-close" aria-label="{ui['close']}">×</button></div>
 <label class="sr-only" for="search-input">{ui['search']}</label><input id="search-input" type="search" autocomplete="off" placeholder="{'Function, argument or topic…' if lang=='en' else '函数、参数或主题…'}">
@@ -311,6 +322,10 @@ def reference_body(name, entry, lang, supplements):
     summary = choose(entry['summary'],lang)
     description = extra.get('description',{}).get(lang,summary)
     body = md(description)
+    body += ('<nav class="reference-jumps" aria-label="'+('Reference sections' if lang=='en' else '参考页导航')+'">'
+             + ' · '.join(f'<a href="#{anchor}">{ui[key]}</a>' for anchor,key in
+                          [('examples','examples'),('arguments','arguments'),('value','returns'),('see-also','related')])
+             + '</nav>')
     arguments=[arg + (' = '+default if default else '') for arg,default in (entry['defaults'] or {}).items()]
     signature=name+'('+', '.join(arguments)+')'
     if len(signature)>78: signature=name+'(\n  '+',\n  '.join(arguments)+'\n)'
@@ -327,10 +342,12 @@ def reference_body(name, entry, lang, supplements):
         body+='</tbody></table>'
     body += f'<h2 id="value">{ui["returns"]}</h2>'+md(extra['value'][lang])
     body += f'<h2 id="details">{ui["details"]}</h2>'+md(extra['details'][lang])
-    if lang=='en' and entry['help'].get('Details'): body+=entry['help']['Details']
+    if lang=='en' and entry['help'].get('Details'):
+        body += ('<details class="help-details"><summary>Additional details from R help</summary>'
+                 + entry['help']['Details'] + '</details>')
     body += f'<h2 id="examples">{ui["examples"]}</h2>'
     body += '<p>'+('Run the setup before the example. Fitting examples require an R-compatible C++ toolchain; simulation and export examples may write files.' if lang=='en' else '先运行准备代码，再运行示例。拟合需要与 R 匹配的 C++ 工具链；模拟与导出示例可能写入文件。')+'</p>'
-    body += f'<details class="example-setup"><summary>{ui["setup"]}</summary>'+md('```r\n'+example_setup(name,lang)+'\n```')+'</details>'
+    body += f'<details class="example-setup" open><summary>{ui["setup"]}</summary>'+md('```r\n'+example_setup(name,lang)+'\n```')+'</details>'
     body += md('```r\n'+code_language(entry['example'],lang)+'\n```')
     body += f'<h2 id="see-also">{ui["related"]}</h2><ul>'
     for slug in extra['articles']:

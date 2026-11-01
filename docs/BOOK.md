@@ -6,11 +6,25 @@
 
 **ALSCL 2.2.9 · 简体中文与英文 · 17 章 / chapters**
 
-本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。说明随 main 开发源码更新；较早的 2.2.9 发布标签不包含全部新增接口。
 
-This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures, case-study figures and six assessment-workflow figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual follows main; the earlier 2.2.9 release tag does not contain every new interface.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
+
+## 选择阅读路线 · Choose a reading path
+
+| 你的任务 / Your task | 建议顺序 / Suggested order |
+|---|---|
+| 第一次使用 / First run | [安装 / Install](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) → [内置拟合 / First fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF) → [诊断 / Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics) |
+| 拟合自己的数据 / Your own data | [准备数据 / Prepare data](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel) → [参数与 map / Parameters and maps](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting) → [诊断 / Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics) |
+| 整理和评估拟合结果 / Work with fitted results | [结果、敏感性与情景 / Results, sensitivity and scenarios](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) |
+| 模拟或检验未来预测 / Simulation or prediction checks | [模型验证完整案例 / Model-validation case](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/17-Model-Validation) |
+| 选择图形与导出 / Plot and export | [种群图 / Population plots](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots) → [配色和导出 / Style and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) |
+
+这些是按任务选择的入口，不必按章节编号从头读起。需要逐项查参数时使用第 14 章；想用单一语言连续阅读时，访问 [English website](https://fanzhang-lab-shou.github.io/ALSCL/) 或 [简体中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
+
+Use these task-based entry points without reading every chapter in numerical order. Chapter 14 is an argument reference. The website provides continuous reading in either language.
 
 
 ## 全书目录 · Book contents
@@ -36,9 +50,9 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 <a id="chapter-01"></a>
 ## 01 开始使用 · Getting started
 
-安装 ALSCL 2.2.9 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装最新 main 开发源码后即可使用本手册中的函数。源码基于 ALSCL 2.2.9；较早的发布标签不含全部新增接口。以下代码在 R 中运行。
 
-Install ALSCL 2.2.9 to use the bundled data, fit models and create plots. Run the following in R.
+Install the latest main development source to use the functions in this manual. It is based on ALSCL 2.2.9; the earlier release tag does not contain every new interface. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -4549,7 +4563,7 @@ retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
 | `rho_position` | `"top_right"` | Mohn rho 标注位置。 | Character. Position of rho text. Default is "top_right". |
 | `rho_size` | `3.5` | Mohn rho 标注字号。 | Numeric. Font size of rho text. Default is 3.5. |
 | `ncores` | `1` | 独立回溯拟合的最大并行工作进程数；1 为顺序执行。 | Maximum workers across independent retrospective peels; 1 runs sequentially. |
-| `...` | `必填 / required` | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
+| `...` | 可选 / optional | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
 
 **返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
 
@@ -4604,7 +4618,7 @@ retro_alscl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `sel_L50` | `必填 / required` | 调查可捕性达到 0.5 的体长。 | Length at survey catchability 0.5. |
 | `sel_L95` | `必填 / required` | 调查可捕性达到 0.95 的体长，必须大于 sel_L50。 | Length at survey catchability 0.95, greater than sel_L50. |
 | `growth_step` | `1` | 每个时间步包含的年数；季度为 0.25。 | Numeric. Growth transition time step. Default is 1. |
-| `...` | `必填 / required` | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
+| `...` | 可选 / optional | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
 
 **返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
 
@@ -5397,7 +5411,7 @@ fit_scenarios (x, scenarios, model = c("alscl", "acl"), ncores = 1, F_summary = 
 | `model` | `c("alscl", "acl")` | "alscl"（默认）或 "acl"。 | "alscl" (default) or "acl". |
 | `ncores` | `1` | 不同情景的最大工作进程数；内部拟合和标准误使用一个进程。 | Maximum independent scenario workers; inner fitting and standard errors use one worker. |
 | `F_summary` | `c("mean", "apical")` | "mean" 为组间非加权均值，"apical" 为最大值；F 保持每模型时间步单位。 | "mean" for the unweighted group mean, or "apical" for the maximum. F remains per model step. |
-| `...` | `required` | 各情景之前应用的 run_* 共用覆盖。parameters/map/control 均为整份列表替换。 | Common run_* overrides, applied before each scenario. Complete parameter/map/control lists replace their predecessors. |
+| `...` | 可选 / optional | 各情景之前应用的 run_* 共用覆盖。parameters/map/control 均为整份列表替换。 | Common run_* overrides, applied before each scenario. Complete parameter/map/control lists replace their predecessors. |
 
 **返回 / Returns:** 返回具名拟合/错误记录、完整设置、状态、耗时、估计长表、模型、F 汇总方式和工作进程数。
 
@@ -5698,7 +5712,7 @@ refit_model (fit, ...)
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
 |---|---|---|---|
 | `fit` | `required` | ACL 或 ALSCL 拟合结果；保存的可移植结果也可使用。 | An ACL or ALSCL fit, including a portable saved result. |
-| `...` | `required` | 具名 run_* 覆盖参数；列表整项替换，具名 NULL 保留。 | Named run_* overrides; lists replace whole entries and named NULL is retained. |
+| `...` | 可选 / optional | 具名 run_* 覆盖参数；列表整项替换，具名 NULL 保留。 | Named run_* overrides; lists replace whole entries and named NULL is retained. |
 
 **返回 / Returns:** 新的拟合结果、更新后的配方和当前会话活跃 TMB 对象。
 
@@ -5771,7 +5785,7 @@ sim_alscl (..., nstarts = 1)
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
 |---|---|---|---|
-| `...` | `required` | 传入 sim_model() 的参数（model 和 nstarts 除外）；参数名和 map 必须对应 ALSCL。 | Arguments passed to sim_model(), excluding model and nstarts; use ALSCL parameter names and maps. |
+| `...` | 可选 / optional | 传入 sim_model() 的参数（model 和 nstarts 除外）；参数名和 map 必须对应 ALSCL。 | Arguments passed to sim_model(), excluding model and nstarts; use ALSCL parameter names and maps. |
 
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
 
@@ -5956,7 +5970,7 @@ hindcast_model (x, model = c("acl", "alscl"), horizon = 1, nfolds = 3, min_train
 | `nstarts` | `NULL` | 每折独立初值数；NULL 保留列表明确设置，否则 1。 | Independent starts per fold; NULL preserves an explicit bundle setting, otherwise one. |
 | `silent` | `TRUE` | 抑制拟合进度；警告仍保留在诊断表。 | Suppress fitting progress; retain warnings in diagnostics. |
 | `save_fits` | `FALSE` | 是否返回各折拟合；始终保留配置与诊断。 | Return fold fits; settings and diagnostics are retained regardless. |
-| `...` | `required` | 具名核心拟合覆盖设置，列表整体替换。 | Named core fitting overrides; list arguments replace the complete corresponding list. |
+| `...` | 可选 / optional | 具名核心拟合覆盖设置，列表整体替换。 | Named core fitting overrides; list arguments replace the complete corresponding list. |
 
 **返回 / Returns:** predictions 按体长／时间／折列出观测、模型和持平基准的对数预测、误差、尺度分母及纳入状态。scores 按期距报告配对对数 RMSE／MAE、对数 MASE 与计数。diagnostics、recipes、settings、start_diagnostics、process_paths 保留状态、失败、警告和复现细节；可选保存 fits。
 
@@ -6088,19 +6102,27 @@ Executable scripts and numerical results accompany the guide. Interpret figures 
 <a id="chapter-16"></a>
 ## 16 评估工作流 · Assessment workflows
 
-## 先运行完整示例 · Start with a complete worked assessment
+[English](#assessment-en) · [简体中文](#assessment-zh)
 
-本指南串联六项工作：整理和检查输入、提取和保存结果、检查残差、运行敏感性情景和参数剖面、投影明确假设下的未来情景，以及汇总模拟表现。这些函数由 GitHub 最新 `main` 源码提供，早先的 2.2.9 发布标签不含这些接口；运行示例前请安装最新源码。
+<a id="assessment-en"></a>
 
-下面从**模拟数据** `YTF_example` 开始。其模型专属 map 为了形成可复现教学案例，条件固定了若干生物学参数；这不意味着正式资源评估也应固定同样的参数。使用真实观测时，请提供有依据的种群生物学输入，检查实际生效的 map，并研究信息不足的参数，不要只为获得优化成功代码而随意固定。
+## English
 
-按顺序运行代码块。拟合需要可用的 TMB 编译工具。所有示例图保持包默认的无网格样式。
+Use this guide to prepare an assessment, inspect its results and choose follow-up analyses. The examples share one input bundle, `x`, and two fitted objects: `a` for ACL and `b` for ALSCL.
 
-This guide covers six connected tasks: preparing and checking inputs, extracting and saving results, checking residuals, fitting sensitivity scenarios and parameter profiles, projecting explicitly defined future scenarios, and summarizing simulation performance. These functions are available from the latest `main` source on GitHub; they are not included in the earlier 2.2.9 release tag. Install the latest source before running the examples.
+### Choose your starting point
 
-The examples below start from the **synthetic** `YTF_example`. Its model-specific maps deliberately condition on several biological values to make a reproducible teaching example. Those maps are not a recommendation to fix the same parameters in your own stock assessment. For real observations, use supported stock-specific biology, inspect the effective map, and investigate weakly identified parameters rather than fixing them merely to obtain a successful optimizer code.
+| Your task | Where to start |
+|---|---|
+| Learn with the bundled example | Load `YTF_example` below, then [fit the teaching models](#assessment-en-fit). You can try the CSV exercise later. |
+| Use your own observations | Complete the [own-data case](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel), then return here with your input bundle and fitted results. |
+| Continue from an existing assessment | Use the fitted object that matches your own `x`; go to [results](#assessment-en-results) and [diagnostics](#assessment-en-diagnostics). |
 
-Run the blocks in order. Model fitting requires a working TMB compiler. All plots retain the package's default absence of gridlines.
+After fitting, choose the task you need: [save results](#assessment-en-results), [check residuals](#assessment-en-diagnostics), [test assumptions](#assessment-en-sensitivity), [project a scenario](#assessment-en-projections), [evaluate simulation replicates](#assessment-en-simulations), or [validate predictions](#assessment-en-validation). Sensitivity, profiles and simulation batches perform additional fits; they are optional analyses.
+
+**Version and setup.** These workflows require the latest `main` source on GitHub; they are not included in the earlier 2.2.9 release tag. Install that source and prepare a working TMB compiler before fitting. All example plots use grid-free panels.
+
+#### Load the teaching data
 
 ```r
 library(ALSCL)
@@ -6108,24 +6130,18 @@ library(ggplot2)
 data("YTF_example")
 x <- YTF_example
 acl_theme_set(palette = "npg", base_theme = "theme_bw")
-
-check_alscl_data(x, "acl")$summary
-check_alscl_data(x, "alscl")$summary
-a <- run_acl(x, silent = TRUE)
-b <- run_alscl(x, silent = TRUE)
-summary(a)
-summary(b)
 ```
 
-## 1. 整理自己的数据，并检查实际待估参数 · 1. Prepare your own tables and inspect what will be estimated
+This setup only loads data. It does not fit either model. Keep `x` unchanged when reproducing the figures on this page.
 
-三张表的第一列为体长组标签，后续列名为数值时间。`data.CatL` 是调查数量或指数，`data.wgt` 是平均个体重量，`data.mat` 是成熟比例；体长组、时期及顺序必须一致。缺失调查时期仍须保留 `NA` 列，体重和成熟比例必须覆盖每个时期。导入保留零值，再由 `zero_action = "missing"` 排除或 `"error"` 拒绝。
+The examples below start from the **synthetic** `YTF_example`. Its model-specific maps deliberately condition on several biological values to make a reproducible teaching example. Those maps are not a recommendation to fix the same parameters in your own stock assessment. For real observations, use supported stock-specific biology, inspect the effective map, and investigate weakly identified parameters rather than fixing them merely to obtain a successful optimizer code.
 
-下面的 CSV 往返示例可以直接运行。只有因为示例表来自 YTF，才使用其生物学输入。**`survey_x` 不复制 `fit_config`**，因此使用核心默认 map：ACL 固定文档列明的四个默认标量，ALSCL 固定两个，其他标量参数参与估计。使用自己的文件时，数据表和 `fit_args` 都须换成研究对象的设置。M、调查可捕性、体重、成熟比例、补充年龄及体长分组不会由包自动估计。
+<a id="assessment-en-inputs"></a>
+### 1. Prepare your own tables and inspect what will be estimated
+
+For a real assessment, prepare the three aligned survey tables and review the effective parameter map before fitting. The optional exercise below writes and reads the bundled tables; first run the teaching-data setup above to create its input, `x`.
 
 The three tables have length-bin labels in the first column and numeric time headers thereafter. `data.CatL` contains survey numbers or indices, `data.wgt` mean individual weights, and `data.mat` mature proportions. Their bins, periods and order must agree. Missing survey periods remain explicit columns of `NA`; weights and maturity must be supplied for every period. Zeros are retained on import, then excluded by `zero_action = "missing"` or rejected by `"error"`.
-
-This executable CSV round-trip demonstrates the new public readers. It uses YTF biology only because the tables are YTF data. **No `fit_config` is copied into `survey_x`**, so the ordinary fitting defaults apply: ACL fixes its four documented default scalars, ALSCL fixes its two; the remaining scalar parameters are estimated. For your own files, replace both the input tables and `fit_args` with your stock-specific settings. The package does not estimate M, catchability, weights, maturity, recruitment age or bin definitions automatically.
 
 ```r
 folder <- tempfile("survey-csv-")
@@ -6148,17 +6164,15 @@ parameter_plan[, c("parameter", "status", "map_source", "start",
 # Required sheets: data.CatL, data.wgt, data.mat; optional dependency: readxl.
 ```
 
-## 修改 map 前先看参数计划 · Read the parameter plan before changing map
+**Read the output:** `input_check$valid` reports whether the configuration is usable by the fitting functions. Resolve `errors` and review `warnings`; then use `parameter_plan` to see the effective starts, bounds and fixed/free choices.
 
-`check_alscl_data()` 和 `inspect_parameters()` 与核心拟合共用准备逻辑，但不编译、不优化；包含数据初值、t0 的补充年龄约束、上下界、随机效应维度及共享 F 限制。输入检查通过不等于可辨识或收敛。
+#### Read the parameter plan before changing map
 
-`kind = "fixed_effect"` 表示外层标量参数，并不表示数值被固定。`status` 区分 free、fixed、tied、mixed、inactive；`map_source` 区分默认规则、显式设置及 `F_structure`。`n_free` 统计独立映射值。共享 F 模型每个模型时间步只有一个 F 随机值，不使用的组间相关系数标为 inactive。
-
-初值不等于固定值。整个 `map = NULL` 恢复默认规则，具名 NULL 才释放单个默认固定参数；用单方括号赋值保留 NULL。释放方差或相关参数需要足够数据支持，下面仅展示如何检查该选择。
-
-`check_alscl_data()` and `inspect_parameters()` share the fitting preparation and do not compile or optimize. They include data-derived starts, the recruitment-age constraint on t0, bounds, random-effect dimensions and the shared-F restriction. A valid input check establishes consistency, not identifiability or convergence.
+This executable CSV round-trip demonstrates the new public readers. It uses YTF biology only because the tables are YTF data. **No `fit_config` is copied into `survey_x`**, so the ordinary fitting defaults apply: ACL fixes its four documented default scalars, ALSCL fixes its two; the remaining scalar parameters are estimated. For your own files, replace both the input tables and `fit_args` with your stock-specific settings. The package does not estimate M, catchability, weights, maturity, recruitment age or bin definitions automatically.
 
 In the table, `kind = "fixed_effect"` means an outer-model scalar, not that its value is fixed. `status` distinguishes free, fixed, tied, mixed and inactive entries; `map_source` distinguishes default rules, explicit settings and `F_structure`. `n_free` counts independent mapped values. A shared-F model has one random F value per model step, and its unused group correlation is inactive.
+
+`check_alscl_data()` and `inspect_parameters()` share the fitting preparation and do not compile or optimize. They include data-derived starts, the recruitment-age constraint on t0, bounds, random-effect dimensions and the shared-F restriction. A valid input check establishes consistency, not identifiability or convergence.
 
 Starting values are not fixed values. A whole `map = NULL` restores defaults; a named NULL releases one default fix. Use single-bracket assignment to retain that NULL. Releasing a variance or correlation is a scientific choice requiring sufficient information; the following code only inspects that choice.
 
@@ -6174,23 +6188,26 @@ inspect_parameters(shared_x, "alscl")
 # own_alscl <- run_alscl(survey_x)
 ```
 
-## 2. 提取结果，保存可移植评估记录 · 2. Extract results and keep a portable assessment record
+<a id="assessment-en-fit"></a>
+#### Fit once and retain the objects used below
 
-`summary()` 同时报告数值状态与参数估计。`extract_parameters()` 默认返回自然尺度估计，但保留内部参数名称，使变换明确；固定参数的不确定性为 `NA`。`mean_log_F` 或 `mean_log_R` 取指数得到过程基准水平，不是多年算术平均。
+For the teaching route, fit the original `x` here. The separate `survey_x` above demonstrates import and default-map inspection; it does not replace `x` in the examples below.
 
-`conf_level` 表示名义置信水平（默认 0.95）。报告的 Wald 区间是逐点区间，以拟合模型和固定输入为条件；它不表示固定参数落入本次区间的概率。模拟中的 `coverage` 则统计可用区间包含各自生成真值的实际比例。
+```r
+check_alscl_data(x, "acl")$summary
+check_alscl_data(x, "alscl")$summary
+a <- run_acl(x, silent = TRUE)
+b <- run_alscl(x, silent = TRUE)
+summary(a)
+summary(b)
+```
 
-`extract_estimates()` 返回带实际时间、年龄或体长坐标的长表。F 保留 ACL 的年龄组或 ALSCL 的体长组，不会静默取平均或转成年率。缺少不确定性时保留 `NA`；即使有有限标准误，也不代表数值检查失败的拟合适合推断。
+Continue with `a`, `b` and the same `x`. Review each summary before interpreting estimates. With your own data, first complete the import and fitting steps in the [own-data case](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel), then apply the result and diagnostic tools to those fits. The operating-model simulation in section 6 specifically uses the extra simulation settings stored in `YTF_example`.
 
-可移植文件保留输入、map、上下界、报告、版本及计算设置，并移除当前会话专用的 TMB 指针。读取后可汇总、提取和使用基于报告的绘图。需要活跃模型或改变假设时，用 `refit_model()` 重新运行记录；不同软件版本间不保证逐位相同。
+<a id="assessment-en-results"></a>
+### 2. Extract results and keep a portable assessment record
 
-`summary()` reports numerical status alongside parameter estimates. `extract_parameters()` gives natural-scale estimates by default, with internal-scale names retained so each transformation is explicit. Fixed values have `NA` uncertainty. Exponentiating `mean_log_F` or `mean_log_R` gives the process baseline, not an arithmetic average over years.
-
-`conf_level` is a nominal confidence level (default 0.95). The reported Wald intervals are pointwise and conditional on the fitted model and fixed inputs. It is not a probability assigned to a fixed parameter, and the simulation `coverage` statistic measures the observed fraction of usable intervals containing their generating truth.
-
-`extract_estimates()` returns long tables with actual time, age or length coordinates. F retains native age groups for ACL and length groups for ALSCL; it is neither silently averaged nor annualized. Missing uncertainty remains `NA`; a finite standard error alone does not establish that a failed fit is suitable for inference.
-
-A portable archive stores inputs, maps, bounds, reports, versions and recorded fitting settings, and removes the session-specific TMB pointer. Summaries, extraction and report-based plots work after reading. `refit_model()` reruns the saved recipe when a live model or a changed assumption is needed; it is not a claim of identical results across software versions.
+Start by extracting parameter and time-series tables from `b`, then save a portable copy. The saved object can be summarized and plotted in a fresh R session.
 
 ```r
 parameter_estimates <- extract_parameters(b)
@@ -6208,23 +6225,24 @@ plot_SSB(saved)
 # b_again <- refit_model(saved, silent = TRUE)
 ```
 
-存档的 `recipe$implementation` 还记录可取得的源码提交、核心模板／头文件和 R 源码摘要及运行环境。源码 HEAD 本身不证明工作区没有修改。旧存档来源未知时仍可读取；`refit_model()` 对已知的实现或依赖变化发出警告。
+#### Read estimates and uncertainty
+
+`summary()` reports numerical status alongside parameter estimates. `extract_parameters()` gives natural-scale estimates by default, with internal-scale names retained so each transformation is explicit. Fixed values have `NA` uncertainty. Exponentiating `mean_log_F` or `mean_log_R` gives the process baseline, not an arithmetic average over years.
+
+`extract_estimates()` returns long tables with actual time, age or length coordinates. F retains native age groups for ACL and length groups for ALSCL; it is neither silently averaged nor annualized. Missing uncertainty remains `NA`; a finite standard error alone does not establish that a failed fit is suitable for inference.
+
+`conf_level` is a nominal confidence level (default 0.95). The reported Wald intervals are pointwise and conditional on the fitted model and fixed inputs. It is not a probability assigned to a fixed parameter, and the simulation `coverage` statistic measures the observed fraction of usable intervals containing their generating truth.
+
+#### What the archive keeps
+
+A portable archive stores inputs, maps, bounds, reports, versions and recorded fitting settings, and removes the session-specific TMB pointer. Summaries, extraction and report-based plots work after reading. `refit_model()` reruns the saved recipe when a live model or a changed assumption is needed; it is not a claim of identical results across software versions.
 
 The archive also retains available source revision, core-template/header and R source hashes, and runtime metadata in `recipe$implementation`. A source HEAD alone does not establish a clean working tree. Older archives remain readable when provenance is unknown; `refit_model()` warns about known implementation or dependency changes.
 
-## 3. 按模型时间轴检查观测残差 · 3. Diagnose observation residuals on the model time grid
+<a id="assessment-en-diagnostics"></a>
+### 3. Diagnose observation residuals on the model time grid
 
-标准化残差为 `(log(观测) - 拟合对数指数) / 拟合观测标准差`。表格保留原始观测，标记被排除的零值／缺失单元，并将对应残差设为 `NA`。热图定位体长与时间方向的系统模式；滞后表按真实模型时间步配对，不压缩缺失时期，相关系数至少需要三对且两侧都非常数的观测。QQ 图将合并标准化残差与标准正态分位数比较。
-
-这些残差条件于估计的潜在效应。标准化不意味着独立，也不会把图形变成校准过的拟合优度检验。请结合数值状态、残差模式、生物学假设及敏感性判断。三类图均无网格。
-
-本次重新生成的 YTF 图中，QQ 图正尾较重，热图最大体长组在后期呈现正残差模式。即使模型通过数值检查，也应调查这些模式；优化成功不能证明观测结构适当。
-
-Standardized residuals are `(log(observation) - fitted_log_index) / fitted_observation_SD`. The table retains original observations and marks excluded zero/missing cells, whose residuals are `NA`. The heatmap locates systematic length/time patterns; the lag table uses actual model-step separations and does not compress missing periods. Correlations need at least three nonconstant paired observations. The QQ plot compares pooled standardized residuals with standard-normal quantiles.
-
-These residuals condition on fitted latent effects. Standardization does not make them independent or turn the plots into calibrated goodness-of-fit tests. Interpret numerical status, residual patterns, biological assumptions and sensitivity together. All three plots are grid-free.
-
-In the regenerated YTF figures, the QQ plot has a heavier positive tail and the heatmap shows positive residuals in the largest length group during later periods. These patterns warrant investigation even though the fitted models pass the numerical screen; successful optimization does not establish adequate observation structure.
+Use `check_fit()` after reviewing the numerical summary. Start with the heatmap to locate length/time patterns, then inspect the lag and QQ plots.
 
 ```r
 checks <- check_fit(b, max_lag = 4)
@@ -6235,27 +6253,22 @@ checks$plots$lag
 checks$plots$qq
 ```
 
-![按体长和时期排列的条件标准化残差 / Conditional standardized residuals by length and period](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=2dbeb4799a6c)
+![Conditional standardized residuals by length and period](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=2dbeb4799a6c)
 
-![按实际时间配对的滞后相关，配对数见返回表 / Actual-time lag correlations with available pair counts](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true&v=22adbe12d133)
+![Actual-time lag correlations with available pair counts](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true&v=22adbe12d133)
 
-![合并条件残差 QQ 图 / Pooled conditional residual QQ plot](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true&v=3294444a2cd7)
+![Pooled conditional residual QQ plot](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true&v=3294444a2cd7)
 
-## 4. 区分假设敏感性与参数剖面 · 4. Separate sensitivity scenarios from parameter profiles
+In the YTF example shown here, the QQ plot has a heavier positive tail and the heatmap shows positive residuals in the largest length group during later periods. These patterns warrant investigation even though the fitted models pass the numerical screen; successful optimization does not establish adequate observation structure.
 
-`fit_scenarios()` 保持相同三张观测输入表，只应用具名设置变化。这里使用 ACL 缩短示例运行时间；改为 `model = "alscl"` 即选取相应 ALSCL 设置，参数名和 map 必须与模型匹配。M = 0.15 只是围绕 YTF 输入的示例扰动，不是生物学建议。
+#### How to interpret these checks
 
-三套 ACL 配置使用相同调查表、生长输入、提供的初值和 map，仅改变下表列出的设置。`YTF_example` 的 M 为每年度时间步 0.20，默认 F 结构为 `"group_year"`。
+Standardized residuals are `(log(observation) - fitted_log_index) / fitted_observation_SD`. The table retains original observations and marks excluded zero/missing cells, whose residuals are `NA`. The heatmap locates systematic length/time patterns; the lag table uses actual model-step separations and does not compress missing periods. Correlations need at least three nonconstant paired observations. The QQ plot compares pooled standardized residuals with standard-normal quantiles.
 
-| 情景 ID | 每时间步 M | F 结构 | 相对参考配置的改变 |
-|---|---:|---|---|
-| `reference` | 0.20 | `group_year`：年龄 × 时间 | 无 |
-| `low_M` | 0.15 | `group_year`：年龄 × 时间 | 外部提供的自然死亡率 |
-| `shared_F` | 0.20 | `year`：每时间步内各年龄共用 F | F 结构；不使用的年龄相关参数变为 inactive |
+These residuals condition on fitted latent effects. Standardization does not make them independent or turn the plots into calibrated goodness-of-fit tests. Interpret numerical status, residual patterns, biological assumptions and sensitivity together. All three plots are grid-free.
 
-季度数据的 `"year"` 仍表示每模型时间步一个 F，即每季度一个，并非每日历年一个。后面的两套 ALSCL 未来情景另比较每时间步 F = 0.10 和 F = 0.25，补充量、体重、成熟比例及 M 均相同。
-
-比较轨迹前先检查 `status` 的每一行，包括警告和失败拟合；函数不自动排名。`F_summary = "mean"` 是未加权组间均值，`"apical"` 是最大值，两者含义不同，也都不把季度 F 转为年率。`ncores` 并行运行独立情景；内层拟合和标准误使用单个 worker，并保留指定的 `nstarts`。列表覆盖整体替换，map 也不逐项深度合并。
+<a id="assessment-en-sensitivity"></a>
+### 4. Separate sensitivity scenarios from parameter profiles
 
 `fit_scenarios()` keeps the same three observation tables and applies explicitly named setting changes. Here ACL is used to keep the example short. Set `model = "alscl"` to use the matching ALSCL configuration; parameter and map names must belong to that model. M = 0.15 is an illustrative perturbation around the YTF value, not a biological recommendation.
 
@@ -6266,10 +6279,6 @@ The three ACL configurations use the same survey tables, growth inputs, supplied
 | `reference` | 0.20 | `group_year`: age × time | None |
 | `low_M` | 0.15 | `group_year`: age × time | Supplied natural mortality |
 | `shared_F` | 0.20 | `year`: shared across ages within each step | F structure; unused age correlation becomes inactive |
-
-For quarterly data, `"year"` still means one F per model step (one per quarter), not one per calendar year. The two future ALSCL projections separately compare F = 0.10 and F = 0.25 per step with identical recruitment, weights, maturity and M.
-
-Inspect every row of `status`, including warnings and failed fits, before comparing trajectories. There is no automatic ranking. `F_summary = "mean"` requests an unweighted group mean; `"apical"` requests the maximum. These meanings differ and neither annualizes subannual F. `ncores` parallelizes independent scenarios; inner fits and standard errors use one worker while preserving the chosen `nstarts`. List-valued overrides replace entire lists, including map; they are not deep merges.
 
 ```r
 scenarios <- fit_scenarios(x, list(
@@ -6287,17 +6296,17 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![ACL 对输入 M 与共享 F 结构的敏感性 / ACL sensitivity to the supplied M and shared-F structure](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
+![ACL sensitivity to the supplied M and shared-F structure](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
 
-## 对实际参与估计的参数做剖面 · Profile a parameter that was actually estimated
+#### Read scenario status before comparing curves
 
-参数剖面将一个自由标量依次固定在网格值上，重新估计其他自由标量与随机效应。YTF 示例固定了 `log_Linf`，因此这里不能对它做剖面。`mean_log_F` 参与估计，下面三个点演示自然基准尺度的接口；有科学意义的剖面通常需要更密、理由明确的范围及各点成功拟合。
+Inspect every row of `status`, including warnings and failed fits, before comparing trajectories. There is no automatic ranking. `F_summary = "mean"` requests an unweighted group mean; `"apical"` requests the maximum. These meanings differ and neither annualizes subannual F. `ncores` parallelizes independent scenarios; inner fits and standard errors use one worker while preserving the chosen `nstarts`. List-valued overrides replace entire lists, including map; they are not deep merges.
 
-`delta_nll` 相对于原始拟合计算。负值表示网格拟合找到更低的目标函数，应重新检查原始最优点；不会截成零。失败点保留。函数不自动推导置信区间或似然比阈值。M 和调查可捕性等外部输入应使用敏感性情景，而不是标量参数剖面。
+For quarterly data, `"year"` still means one F per model step (one per quarter), not one per calendar year.
+
+#### Profile a parameter that was actually estimated
 
 A parameter profile fixes one free scalar at successive values and refits the other free scalars and random effects. The YTF example fixes `log_Linf`, so it is not an eligible target here. `mean_log_F` is free, and the following three points illustrate how the API works on its natural baseline scale. A useful scientific profile usually needs a denser, justified range and successful fits across the grid.
-
-`delta_nll` is measured relative to the original fit. A negative value means a grid refit found a lower objective and the original optimum should be investigated; it is not clipped to zero. Failed points remain visible. The function does not infer confidence intervals or automatic likelihood-ratio cutoffs. External inputs such as M and survey catchability belong in sensitivity scenarios, not this scalar profile.
 
 ```r
 profile_values <- exp(a$opt$par[["mean_log_F"]]) * c(0.9, 1, 1.1)
@@ -6310,21 +6319,16 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![自由 F 过程基准水平的示例剖面 / Illustrative profile of the free F process baseline](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
+![Illustrative profile of the free F process baseline](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
 
-## 5. 投影假设明确的未来情景 · 5. Project explicitly defined future scenarios
+`delta_nll` is measured relative to the original fit. A negative value means a grid refit found a lower objective and the original optimum should be investigated; it is not clipped to zero. Failed points remain visible. The function does not infer confidence intervals or automatic likelihood-ratio cutoffs. External inputs such as M and survey catchability belong in sensitivity scenarios, not this scalar profile.
 
-`project_model()` 根据提供的未来 F、补充量、体重和成熟比例推进保存的种群状态。下面**明确选择**将末次观测的体重／成熟比例及末期拟合补充量延续四期；这是示例假设，不是函数自动决定的默认值。生长保持拟合的年龄—体长键，ALSCL 还保持拟合的生长转移矩阵。未来 M 默认使用原始记录输入，也可显式指定。
+<a id="assessment-en-projections"></a>
+### 5. Project explicitly defined future scenarios
 
-状态、B 和 SSB 表示每个未来时期的**期初**。第一未来状态先经历末期拟合 F 与原始 M，再加入第一期补充；未来 F[t] 影响当期渔获及存活到 t+1 的数量。因此两个情景的第一期未来 SSB 相同，但第一期渔获不同，后续 SSB 才出现响应。M 和 F 均为每个模型时间步的瞬时率，季度模型也一样。
+`project_model()` advances saved population states under supplied future fishing mortality, recruitment, weights and maturity. The code below **explicitly chooses** to carry forward the last observed weight/maturity columns and terminal fitted recruitment for four periods. Those are example assumptions, not defaults selected by the function. Growth remains at the fitted age–length key and, for ALSCL, fitted transition matrix. Future M defaults to the original recorded input; it can also be supplied explicitly.
 
-这只是确定性的条件情景，没有不确定性区间、估计的亲体补充关系、MSY 或 TAC 计算。结果用于检视明确假设，不能表示确定的预测或管理建议。
-
-`project_model()` advances saved population states under supplied future fishing mortality, recruitment, weights and maturity. The code below **explicitly chooses** to carry forward the last observed weight/maturity columns and terminal fitted recruitment for four periods. Those are example assumptions, not defaults selected by the function. Growth remains at the fitted key and, for ALSCL, fitted transition matrix. Future M defaults to the original recorded input; it can also be supplied explicitly.
-
-States, B and SSB describe the **start** of each future period. The first future state uses the terminal fitted F and original M, followed by the first supplied recruitment. Future F[t] affects catch[t] and survival into t+1. The two scenarios therefore have the same first future SSB, but different first-period catches; their SSB responses appear subsequently. M and F are instantaneous rates per model step, including quarters.
-
-These are deterministic conditional scenarios. They include no uncertainty intervals, estimated stock–recruitment function, MSY or TAC calculation. Use the output to examine stated assumptions, not to imply forecast certainty or a management recommendation.
+The two scenarios compare F = 0.10 and F = 0.25 per step with identical recruitment, weights, maturity and M.
 
 ```r
 h <- 4L
@@ -6349,17 +6353,20 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![显式保持未来生物学输入的 ALSCL 条件 SSB 情景 / Conditional ALSCL SSB scenarios with explicitly held future biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
+![Conditional ALSCL SSB scenarios with explicitly held future biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
 
-明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。
+#### Read the timing of the response
 
-Fits explicitly failing the numerical screen are rejected by default. allow_failed_fit = TRUE permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.
+States, B and SSB describe the **start** of each future period. The first future state uses the terminal fitted F and original M, followed by the first supplied recruitment. Future F[t] affects catch[t] and survival into t+1. The two scenarios therefore have the same first future SSB, but different first-period catches; their SSB responses appear subsequently. M and F are instantaneous rates per model step, including quarters.
 
-## 6. 拟合模拟重复，并报告失败率 · 6. Fit simulation replicates and report their failure rate
+#### Assumptions and numerical status
 
-`sim_model()` 可选择 ACL 或 ALSCL 拟合 `sim_data()` 生成的文件；`sim_acl()` 保留原有 ACL 接口，`sim_alscl()` 是对应的 ALSCL 入口。这里用两次重复演示文件对齐，并不足以精确估计模拟性能。初值和 map 必须采用所选模型的名称；教学预设是条件模拟设置，不是正式数据应固定这些参数的证据。
+These are deterministic conditional scenarios. They include no uncertainty intervals, estimated stock–recruitment function, MSY or TAC calculation. Use the output to examine stated assumptions, not to imply forecast certainty or a management recommendation.
 
-每个输入文件 `sim_rep<i>` 含 `sim.data`；拟合记录命名并保存为 `result_rep_<i>`，失败也保存。真值必须以这些结果名称为键，使用模拟记录的时间坐标；不能把单个返回重复的真值复用于所有拟合。下面逐个读取模拟文件并显式对齐。
+Fits explicitly failing the numerical screen are rejected by default. `allow_failed_fit = TRUE` permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.
+
+<a id="assessment-en-simulations"></a>
+### 6. Fit simulation replicates and report their failure rate
 
 `sim_model()` selects ACL or ALSCL for files produced by `sim_data()`. `sim_acl()` retains the original ACL interface; `sim_alscl()` is its ALSCL counterpart. This short example uses two replicates to demonstrate file alignment, not to estimate simulation performance precisely. Use the matching model's starts and map. The teaching presets are conditional simulation settings, not evidence for fixing those parameters with real data.
 
@@ -6393,15 +6400,15 @@ performance$summary
 head(performance$estimates)
 ```
 
-## 解释模拟统计的分母，并保留记录 · Interpret the simulation denominators and retain the record
-
-偏差和 RMSE 使用通过数值检查的估计—真值配对；覆盖率还要求可用的报告标准误。请同时报告 `failure_rate`、`n_replicates`、`n_valid_fits`、`n_valid_pairs` 和 `n_intervals`。缺少标准误不算作未覆盖；相对偏差排除零真值。F 不在该汇总内，因为需要另外明确组间汇总及其不确定性。
-
-这是操作模型实验，不自动等于围绕拟合模型的参数自助法。两次重复不能证明覆盖率或模型优越性；正式实验应预先定义情景和足够重复。保存配置、全部失败及生成真值，不只保存成功估计。
+#### Read the simulation denominators
 
 Bias and RMSE use numerically valid estimate–truth pairs; coverage additionally requires usable reported standard errors. Always report `failure_rate`, `n_replicates`, `n_valid_fits`, `n_valid_pairs` and `n_intervals` alongside the performance statistics. Missing standard errors are not counted as coverage failures; relative bias excludes zero truth. F is intentionally excluded because its group summary and uncertainty must be defined separately.
 
 These are operating-model experiments, not automatically a fitted parametric bootstrap. Two replicates cannot establish coverage or model superiority. For a real experiment, specify scenarios and sufficient replication before interpreting results. Save the configuration, all failures and the generating truth, rather than only successful estimates.
+
+#### Save the completed workflow
+
+The following block collects outputs from sections 4–6. Run it after those sections; if you only used one analysis, save that analysis object separately.
 
 ```r
 record_dir <- tempfile("assessment-record-")
@@ -6416,71 +6423,434 @@ saveRDS(list(input = x, scenarios = scenarios, profile = profile_F,
 writeLines(capture.output(sessionInfo()), file.path(record_dir, "session.txt"))
 ```
 
+<a id="assessment-en-validation"></a>
+### 7. Simulate the fitted model and validate future-period predictions
 
-## 7. 模型生成与预测验证 · Model generation and prediction checks
+Use `simulate_fit()` to generate data from the fitted process and observation model, and `hindcast_model()` to predict periods excluded from each training fit. The [complete model-validation case](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) covers conditional versus process simulations, retained truth, replicate refitting, time-held-out forecasts and paired log-scale scores.
 
-`simulate_fit()` 从拟合模型生成数据，`hindcast_model()` 检验按时间留出的调查指数。完整可执行示例见[模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md)。
+<a id="assessment-zh"></a>
 
-`simulate_fit()` generates observations from the fitted model; `hindcast_model()` tests time-held-out survey predictions. See the complete executable [model-validation case](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md).
+## 简体中文
+
+本指南说明如何准备评估、检查结果并选择后续分析。示例共用一个输入列表 `x` 和两个拟合对象：`a` 是 ACL，`b` 是 ALSCL。
+
+### 选择适合你的起点
+
+| 你要做什么 | 从哪里开始 |
+|---|---|
+| 先用内置数据熟悉操作 | 加载下面的 `YTF_example`，再[拟合教学模型](#assessment-zh-fit)。CSV 练习可以稍后再做。 |
+| 分析自己的调查观测 | 先完成[正式数据拟合案例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel)，再带着自己的输入列表和拟合结果返回本页。 |
+| 已经有拟合结果 | 使用与你的 `x` 对应的拟合对象，直接查看[结果提取](#assessment-zh-results)和[诊断](#assessment-zh-diagnostics)。 |
+
+完成拟合后，可按需要选择：[保存结果](#assessment-zh-results)、[检查残差](#assessment-zh-diagnostics)、[检验假设敏感性](#assessment-zh-sensitivity)、[投影未来情景](#assessment-zh-projections)、[汇总模拟重复](#assessment-zh-simulations)或[验证预测](#assessment-zh-validation)。敏感性、参数剖面和模拟批次会进行额外拟合，可按分析目的选做。
+
+**版本与环境。** 这些工作流需要 GitHub 最新 `main` 源码，早先的 2.2.9 发布标签不含这些接口。拟合前请安装最新源码，并准备可用的 TMB 编译工具。所有示例图均保持无网格样式。
+
+#### 加载教学数据
+
+```r
+library(ALSCL)
+library(ggplot2)
+data("YTF_example")
+x <- YTF_example
+acl_theme_set(palette = "npg", base_theme = "theme_bw")
+```
+
+这一步只加载数据，不拟合模型。若要复现本页配图，请保留原来的 `x`。
+
+下面从**模拟数据** `YTF_example` 开始。其模型专属 map 为了形成可复现教学案例，条件固定了若干生物学参数；这不意味着正式资源评估也应固定同样的参数。使用真实观测时，请提供有依据的种群生物学输入，检查实际生效的 map，并研究信息不足的参数，不要只为获得优化成功代码而随意固定。
+
+<a id="assessment-zh-inputs"></a>
+### 1. 整理自己的数据，并检查实际待估参数
+
+使用正式数据时，先整理三张对齐的调查表，再检查实际生效的参数映射。下面的可选练习将内置表写入 CSV 后重新读取；先运行上方的教学数据准备代码，建立所需的 `x`。
+
+三张表的第一列为体长组标签，后续列名为数值时间。`data.CatL` 是调查数量或指数，`data.wgt` 是平均个体重量，`data.mat` 是成熟比例；体长组、时期及顺序必须一致。缺失调查时期仍须保留 `NA` 列，体重和成熟比例必须覆盖每个时期。导入保留零值，再由 `zero_action = "missing"` 排除或 `"error"` 拒绝。
+
+```r
+folder <- tempfile("survey-csv-")
+dir.create(folder)
+for (nm in c("data.CatL", "data.wgt", "data.mat")) {
+  write.csv(x[[nm]], file.path(folder, paste0(nm, ".csv")), row.names = FALSE)
+}
+tables <- read_survey_csv(folder)
+survey_x <- prepare_alscl_data(tables, fit_args = x$fit_args)
+input_check <- check_alscl_data(survey_x, "acl")
+input_check$valid
+input_check$errors
+input_check$warnings
+input_check$summary
+
+parameter_plan <- inspect_parameters(survey_x, "acl")
+parameter_plan[, c("parameter", "status", "map_source", "start",
+                    "natural_start", "lower", "upper", "n_free")]
+# For Excel, use read_survey_excel("survey.xlsx") instead.
+# Required sheets: data.CatL, data.wgt, data.mat; optional dependency: readxl.
+```
+
+**先看这些输出：** `input_check$valid` 表示配置能否交给拟合函数；先解决 `errors`，再查看 `warnings`。随后通过 `parameter_plan` 核对实际初值、上下界以及固定／估计的选择。
+
+#### 修改 map 前先看参数计划
+
+上面的 CSV 往返示例可以直接运行。只有因为示例表来自 YTF，才使用其生物学输入。**`survey_x` 不复制 `fit_config`**，因此使用核心默认 map：ACL 固定文档列明的四个默认标量，ALSCL 固定两个，其他标量参数参与估计。使用自己的文件时，数据表和 `fit_args` 都须换成研究对象的设置。M、调查可捕性、体重、成熟比例、补充年龄及体长分组不会由包自动估计。
+
+`kind = "fixed_effect"` 表示外层标量参数，并不表示数值被固定。`status` 区分 free、fixed、tied、mixed、inactive；`map_source` 区分默认规则、显式设置及 `F_structure`。`n_free` 统计独立映射值。共享 F 模型每个模型时间步只有一个 F 随机值，不使用的组间相关系数标为 inactive。
+
+`check_alscl_data()` 和 `inspect_parameters()` 与核心拟合共用准备逻辑，但不编译、不优化；包含数据初值、t0 的补充年龄约束、上下界、随机效应维度及共享 F 限制。输入检查通过不等于可辨识或收敛。
+
+初值不等于固定值。整个 `map = NULL` 恢复默认规则，具名 NULL 才释放单个默认固定参数；用单方括号赋值保留 NULL。释放方差或相关参数需要足够数据支持，下面仅展示如何检查该选择。
+
+```r
+released_x <- survey_x
+released_x$fit_args$map <- list(log_std_log_F = NULL)
+inspect_parameters(released_x, "acl")
+shared_x <- survey_x
+shared_x$fit_args$F_structure <- "year"
+inspect_parameters(shared_x, "alscl")
+# After reviewing inputs and assumptions:
+# own_acl <- run_acl(survey_x)
+# own_alscl <- run_alscl(survey_x)
+```
+
+<a id="assessment-zh-fit"></a>
+#### 拟合一次，保留后续共用的对象
+
+沿教学路线操作时，在这里拟合原始 `x`。上面的 `survey_x` 专门演示导入与默认 map 检查，不会替换后续示例中的 `x`。
+
+```r
+check_alscl_data(x, "acl")$summary
+check_alscl_data(x, "alscl")$summary
+a <- run_acl(x, silent = TRUE)
+b <- run_alscl(x, silent = TRUE)
+summary(a)
+summary(b)
+```
+
+接下来沿用 `a`、`b` 及同一份 `x`，解释估计前先检查两份 summary。分析自己的数据时，先完成[正式数据案例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel)中的导入和拟合，再将结果提取与诊断工具用于自己的拟合。第 6 节的操作模型模拟另外使用 `YTF_example` 保存的模拟参数。
+
+<a id="assessment-zh-results"></a>
+### 2. 提取结果，保存可移植评估记录
+
+先从 `b` 提取参数表和时间序列表，再保存可移植副本。重新打开 R 后，读取的对象仍可用于汇总和绘图。
+
+```r
+parameter_estimates <- extract_parameters(b)
+parameter_estimates
+estimates <- extract_estimates(b, quantities = c("SSB", "Rec", "F"))
+head(estimates)
+
+archive <- tempfile(fileext = ".rds")
+save_assessment(b, archive)
+saved <- read_assessment(archive)
+summary(saved)
+saved$recipe$implementation
+plot_SSB(saved)
+# Refit when a live objective is needed:
+# b_again <- refit_model(saved, silent = TRUE)
+```
+
+#### 解读估计值与不确定性
+
+`summary()` 同时报告数值状态与参数估计。`extract_parameters()` 默认返回自然尺度估计，但保留内部参数名称，使变换明确；固定参数的不确定性为 `NA`。`mean_log_F` 或 `mean_log_R` 取指数得到过程基准水平，不是多年算术平均。
+
+`extract_estimates()` 返回带实际时间、年龄或体长坐标的长表。F 保留 ACL 的年龄组或 ALSCL 的体长组，不会静默取平均或转成年率。缺少不确定性时保留 `NA`；即使有有限标准误，也不代表数值检查失败的拟合适合推断。
+
+`conf_level` 表示名义置信水平（默认 0.95）。报告的 Wald 区间是逐点区间，以拟合模型和固定输入为条件；它不表示固定参数落入本次区间的概率。模拟中的 `coverage` 则统计可用区间包含各自生成真值的实际比例。
+
+#### 存档保留了什么
+
+可移植文件保留输入、map、上下界、报告、版本及计算设置，并移除当前会话专用的 TMB 指针。读取后可汇总、提取和使用基于报告的绘图。需要活跃模型或改变假设时，用 `refit_model()` 重新运行记录；不同软件版本间不保证逐位相同。
+
+存档的 `recipe$implementation` 还记录可取得的源码提交、核心模板／头文件和 R 源码摘要及运行环境。源码 HEAD 本身不证明工作区没有修改。旧存档来源未知时仍可读取；`refit_model()` 对已知的实现或依赖变化发出警告。
+
+<a id="assessment-zh-diagnostics"></a>
+### 3. 按模型时间轴检查观测残差
+
+检查数值 summary 后，用 `check_fit()` 查看残差。先通过热图寻找体长和时间模式，再看滞后图与 QQ 图。
+
+```r
+checks <- check_fit(b, max_lag = 4)
+head(residuals(b, type = "standardized"))
+checks$lag_correlations
+checks$plots$heatmap
+checks$plots$lag
+checks$plots$qq
+```
+
+![按体长和时期排列的条件标准化残差](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=2dbeb4799a6c)
+
+![按实际时间配对的滞后相关，配对数见返回表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true&v=22adbe12d133)
+
+![合并条件残差 QQ 图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true&v=3294444a2cd7)
+
+本页 YTF 示例中，QQ 图正尾较重，热图最大体长组在后期呈现正残差模式。即使模型通过数值检查，也应调查这些模式；优化成功不能证明观测结构适当。
+
+#### 如何解释这些检查
+
+标准化残差为 `(log(观测) - 拟合对数指数) / 拟合观测标准差`。表格保留原始观测，标记被排除的零值／缺失单元，并将对应残差设为 `NA`。热图定位体长与时间方向的系统模式；滞后表按真实模型时间步配对，不压缩缺失时期，相关系数至少需要三对且两侧都非常数的观测。QQ 图将合并标准化残差与标准正态分位数比较。
+
+这些残差条件于估计的潜在效应。标准化不意味着独立，也不会把图形变成校准过的拟合优度检验。请结合数值状态、残差模式、生物学假设及敏感性判断。三类图均无网格。
+
+<a id="assessment-zh-sensitivity"></a>
+### 4. 区分假设敏感性与参数剖面
+
+`fit_scenarios()` 保持相同三张观测输入表，只应用具名设置变化。这里使用 ACL 缩短示例运行时间；改为 `model = "alscl"` 即选取相应 ALSCL 设置，参数名和 map 必须与模型匹配。M = 0.15 只是围绕 YTF 输入的示例扰动，不是生物学建议。
+
+三套 ACL 配置使用相同调查表、生长输入、提供的初值和 map，仅改变下表列出的设置。`YTF_example` 的 M 为每年度时间步 0.20，默认 F 结构为 `"group_year"`。
+
+| 情景 ID | 每时间步 M | F 结构 | 相对参考配置的改变 |
+|---|---:|---|---|
+| `reference` | 0.20 | `group_year`：年龄 × 时间 | 无 |
+| `low_M` | 0.15 | `group_year`：年龄 × 时间 | 外部提供的自然死亡率 |
+| `shared_F` | 0.20 | `year`：每时间步内各年龄共用 F | F 结构；不使用的年龄相关参数变为 inactive |
+
+```r
+scenarios <- fit_scenarios(x, list(
+  reference = list(),
+  low_M = list(M = 0.15),
+  shared_F = list(F_structure = "year")
+), model = "acl", ncores = 1, nstarts = 1,
+   F_summary = "mean", silent = TRUE)
+scenarios$status
+head(scenarios$estimates)
+
+scenario_ssb <- subset(scenarios$estimates, quantity == "SSB")
+ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
+  geom_line() + labs(x = "Year", y = "SSB") +
+  theme_bw() + theme(panel.grid = element_blank())
+```
+
+![ACL 对输入 M 与共享 F 结构的敏感性](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
+
+#### 先看情景状态，再比较曲线
+
+比较轨迹前先检查 `status` 的每一行，包括警告和失败拟合；函数不自动排名。`F_summary = "mean"` 是未加权组间均值，`"apical"` 是最大值，两者含义不同，也都不把季度 F 转为年率。`ncores` 并行运行独立情景；内层拟合和标准误使用单个 worker，并保留指定的 `nstarts`。列表覆盖整体替换，map 也不逐项深度合并。
+
+季度数据的 `"year"` 仍表示每模型时间步一个 F，即每季度一个，并非每日历年一个。
+
+#### 对实际参与估计的参数做剖面
+
+参数剖面将一个自由标量依次固定在网格值上，重新估计其他自由标量与随机效应。YTF 示例固定了 `log_Linf`，因此这里不能对它做剖面。`mean_log_F` 参与估计，下面三个点演示自然基准尺度的接口；有科学意义的剖面通常需要更密、理由明确的范围及各点成功拟合。
+
+```r
+profile_values <- exp(a$opt$par[["mean_log_F"]]) * c(0.9, 1, 1.1)
+profile_F <- profile_model(a, "mean_log_F", profile_values,
+                           scale = "natural", ncores = 1)
+profile_F$grid
+ggplot(profile_F$grid, aes(value, delta_nll)) +
+  geom_line() + geom_point() +
+  labs(x = "F process baseline", y = "Change in negative log likelihood") +
+  theme_bw() + theme(panel.grid = element_blank())
+```
+
+![自由 F 过程基准水平的示例剖面](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
+
+`delta_nll` 相对于原始拟合计算。负值表示网格拟合找到更低的目标函数，应重新检查原始最优点；不会截成零。失败点保留。函数不自动推导置信区间或似然比阈值。M 和调查可捕性等外部输入应使用敏感性情景，而不是标量参数剖面。
+
+<a id="assessment-zh-projections"></a>
+### 5. 投影假设明确的未来情景
+
+`project_model()` 根据提供的未来 F、补充量、体重和成熟比例推进保存的种群状态。下面**明确选择**将末次观测的体重／成熟比例及末期拟合补充量延续四期；这是示例假设，不是函数自动决定的默认值。生长保持拟合的年龄—体长键，ALSCL 还保持拟合的生长转移矩阵。未来 M 默认使用原始记录输入，也可显式指定。
+
+两套情景比较每时间步 F = 0.10 和 F = 0.25，补充量、体重、成熟比例及 M 均相同。
+
+```r
+h <- 4L
+w <- as.matrix(x$data.wgt[-1L])
+mat <- as.matrix(x$data.mat[-1L])
+future_w <- matrix(w[, ncol(w)], nrow(w), h)
+future_mat <- matrix(mat[, ncol(mat)], nrow(mat), h)
+future_rec <- rep(tail(b$report$Rec, 1), h)
+
+low_F <- project_model(b, F = rep(0.10, h), recruitment = future_rec,
+                       weight = future_w, maturity = future_mat)
+higher_F <- project_model(b, F = rep(0.25, h), recruitment = future_rec,
+                          weight = future_w, maturity = future_mat)
+low_F$summary
+higher_F$summary
+low_F$assumptions
+projection_ssb <- rbind(
+  transform(low_F$summary, scenario = "F = 0.10"),
+  transform(higher_F$summary, scenario = "F = 0.25"))
+ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
+  geom_line() + geom_point() + labs(x = "Year", y = "Start-of-period SSB") +
+  theme_bw() + theme(panel.grid = element_blank())
+```
+
+![显式保持未来生物学输入的 ALSCL 条件 SSB 情景](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
+
+#### 理解响应发生的时间
+
+状态、B 和 SSB 表示每个未来时期的**期初**。第一未来状态先经历末期拟合 F 与原始 M，再加入第一期补充；未来 F[t] 影响当期渔获及存活到 t+1 的数量。因此两个情景的第一期未来 SSB 相同，但第一期渔获不同，后续 SSB 才出现响应。M 和 F 均为每个模型时间步的瞬时率，季度模型也一样。
+
+#### 情景假设与数值状态
+
+这只是确定性的条件情景，没有不确定性区间、估计的亲体补充关系、MSY 或 TAC 计算。结果用于检视明确假设，不能表示确定的预测或管理建议。
+
+明确未通过数值检查的拟合默认拒绝投影。`allow_failed_fit = TRUE` 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。
+
+<a id="assessment-zh-simulations"></a>
+### 6. 拟合模拟重复，并报告失败率
+
+`sim_model()` 可选择 ACL 或 ALSCL 拟合 `sim_data()` 生成的文件；`sim_acl()` 保留原有 ACL 接口，`sim_alscl()` 是对应的 ALSCL 入口。这里用两次重复演示文件对齐，并不足以精确估计模拟性能。初值和 map 必须采用所选模型的名称；教学预设是条件模拟设置，不是正式数据应固定这些参数的证据。
+
+每个输入文件 `sim_rep<i>` 含 `sim.data`；拟合记录命名并保存为 `result_rep_<i>`，失败也保存。真值必须以这些结果名称为键，使用模拟记录的时间坐标；不能把单个返回重复的真值复用于所有拟合。下面逐个读取模拟文件并显式对齐。
+
+```r
+pa <- x$parameters
+bio <- sim_cal(pa)
+iterations <- 1:2
+simulation_dir <- tempfile("assessment-sim-")
+sm <- sim_data(bio, pa, iter_range = iterations,
+               return_iter = iterations[1], output_dir = simulation_dir)
+
+cfg <- x$fit_config$alscl
+simulation_fits <- sim_model(iterations, simulation_dir,
+  file.path(simulation_dir, "fits_alscl"), model = "alscl", ncores = 1,
+  parameters = cfg$parameters, parameters.L = cfg$parameters.L,
+  parameters.U = cfg$parameters.U, map = cfg$map, M = pa$M)
+
+simulation_truth <- setNames(lapply(iterations, function(i) {
+  e <- new.env(parent = emptyenv())
+  load(file.path(simulation_dir, paste0("sim_rep", i)), envir = e)
+  s <- e$sim.data
+  list(year = s$years, SSB = as.numeric(s$SSB), Rec = as.numeric(s$Rec))
+}), paste0("result_rep_", iterations))
+stopifnot(identical(names(simulation_fits), names(simulation_truth)))
+performance <- summarize_simulations(simulation_fits, simulation_truth,
+                                     quantities = c("SSB", "Rec"))
+performance$replicates
+performance$summary
+head(performance$estimates)
+```
+
+#### 解读模拟统计的分母
+
+偏差和 RMSE 使用通过数值检查的估计—真值配对；覆盖率还要求可用的报告标准误。请同时报告 `failure_rate`、`n_replicates`、`n_valid_fits`、`n_valid_pairs` 和 `n_intervals`。缺少标准误不算作未覆盖；相对偏差排除零真值。F 不在该汇总内，因为需要另外明确组间汇总及其不确定性。
+
+这是操作模型实验，不自动等于围绕拟合模型的参数自助法。两次重复不能证明覆盖率或模型优越性；正式实验应预先定义情景和足够重复。保存配置、全部失败及生成真值，不只保存成功估计。
+
+#### 保存已完成的工作流
+
+下面汇总第 4–6 节的对象，请完成这些分析后再运行；如果只做了其中一项，单独保存该分析对象即可。
+
+```r
+record_dir <- tempfile("assessment-record-")
+dir.create(record_dir)
+write.csv(scenarios$status, file.path(record_dir, "scenario_status.csv"), row.names = FALSE)
+write.csv(profile_F$grid, file.path(record_dir, "profile_F.csv"), row.names = FALSE)
+write.csv(performance$summary, file.path(record_dir, "simulation_summary.csv"), row.names = FALSE)
+saveRDS(list(input = x, scenarios = scenarios, profile = profile_F,
+  projections = list(low_F = low_F, higher_F = higher_F),
+  simulation_truth = simulation_truth, performance = performance),
+  file.path(record_dir, "workflow_record.rds"))
+writeLines(capture.output(sessionInfo()), file.path(record_dir, "session.txt"))
+```
+
+<a id="assessment-zh-validation"></a>
+### 7. 从拟合模型模拟，并验证未来时期预测
+
+`simulate_fit()` 从拟合的过程与观测模型生成数据；`hindcast_model()` 预测未参与各次训练拟合的时期。[完整模型验证案例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) 说明条件／过程模拟、真值保留、重复拟合、时间留出预测及配对对数评分。
 
 <a id="chapter-17"></a>
 ## 17 模型模拟与预测验证 · Model simulation and prediction checks
 
+[简体中文](#validation-zh) · [English](#validation-en)
+
+<a id="validation-zh"></a>
 ## 简体中文
 
+本案例带你从已拟合模型生成调查数据、将重新估计的结果与模拟真值比较，并检验模型能否预测未参与拟合的后续观测。
 
-本案例用两种互补方法检查模型：`simulate_fit()` 从已拟合的 ACL 或 ALSCL 生成观测；`hindcast_model()` 只拟合较早时期，再预测留出的后续调查指数。这些开发功能需要更新后的源码，2.2.9 发布标签不包含它们。
+**开始前：**这些函数位于 GitHub 最新 `main` 源码中，早先的 2.2.9 发布标签不包含它们。请使用已包含这些函数的安装版本，或在下载的仓库根目录运行 `pkgload::load_all(".")`。
 
-| 问题 | 函数与设计 | 含义 |
-|---|---|---|
-| 给定拟合种群状态，重复调查会是什么样？ | `simulate_fit(process = "conditional")` | 只改变观测误差，拟合状态保持不变。 |
-| 拟合的过程与观测模型会生成什么数据？ | `simulate_fit(process = "resample")` | 重新抽取补充、F 和初始种群偏差；标量参数保持拟合值。 |
-| 较早观测能否预测后续观测？ | `hindcast_model()` | 每次训练在验证期之前结束，对实际留出的指数评分。 |
+| 你想检查什么？ | 从哪里开始 |
+|---|---|
+| 相同拟合种群状态下，重复调查会有什么变化？ | [第 2 步：条件模拟](#validation-zh-section-2) |
+| 生成新的种群轨迹后，模型能否估计出对应真值？ | [第 2–3 步：重抽过程并重新拟合](#validation-zh-section-2) |
+| 模型能否预测后续调查观测？ | [第 4 步：留出未来时期](#validation-zh-section-4) |
 
-## 1. 拟合并检查源评估结果
+先在第 1 步读取 `x`。若要做模拟，再拟合 `b` 并继续第 2–3 步；若只检查预测，可从 `x` 直接进入第 4 步。第 5 步解释预测评分与结果保存。
 
-示例使用模拟的 `YTF_example` 数据。其教学 map 固定了部分生物学参数；正式评估应使用有依据的生物学输入和参数映射。数值检查通过表示优化结果可用于这些计算，不代表模型已充分描述真实种群。
+<a id="validation-zh-section-1"></a>
+## 1. 准备示例并检查拟合
 
-使用本地开发源码时，请先在仓库根目录运行 `pkgload::load_all(".")`，再执行下文。若已安装包含这些函数的版本，可直接用 `library(ALSCL)`。
+本案例使用**模拟的** `YTF_example` 数据。先读取一次，得到输入列表 `x`：
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)
-b <- run_alscl(x, silent = TRUE)
-stopifnot(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-## 2. 从拟合模型模拟观测
+若要做模拟，用下面的代码拟合源模型 `b`。若已拟合同一示例，可复用结果并检查诊断。若只检查预测，可以跳过这次拟合，直接进入[第 4 步](#validation-zh-section-4)，由函数自行建立训练拟合。
+
+```r
+b <- run_alscl(x, silent = TRUE)
+b$diagnostics
+stopifnot(b$diagnostics$numerical_ok)
+```
+
+`numerical_ok` 为 `TRUE` 时继续。若为 `FALSE`，先根据诊断处理问题，再生成模拟；参见[拟合诊断](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/diagnostics.html)。这一步检查数值拟合，残差与假设敏感性仍需另外评估。
+
+教学示例通过 `map` 固定了部分生物学参数。正式评估应采用有依据的种群生物学设置，并用[数据与参数检查](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md)确认哪些参数固定、哪些参与估计。若在模拟实验中固定 `mean_log_R`，请在 `parameters` 中明确提供数值，避免依据每份模拟数据重新计算固定值。
+
+<a id="validation-zh-section-2"></a>
+## 2. 生成调查观测
+
+<a id="validation-zh-conditional-draws"></a>
+### 保留拟合的种群状态
+
+`process = "conditional"` 保持拟合种群不变，只改变观测误差。想先看看相同状态下的重复调查，可以从这里开始。
 
 ```r
 conditional <- simulate_fit(b, nsim = 3, seed = 20261101,
   process = "conditional")
-resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
-  process = "resample")
 conditional$metadata
-resampled$simulations[[1]]$truth$SSB
-simulated_x <- resampled$simulations[[1]]$x
-# 两个模型均可直接读取各自模拟得到的输入列表。
-simulated_fit <- run_alscl(simulated_x, nstarts = 2, ncores = 1,
-  silent = TRUE)
-simulated_fit$diagnostics
+conditional$simulations[[1]]$observations[1:3, 1:3]
 ```
 
-两种模式均使用拟合的对数正态观测模型：对数观测的均值为 `Elog_index`，标准差为拟合观测标准差。因此，`exp(Elog_index)` 是观测中位数。默认保留原始缺失和零值位置；设置 `preserve_missing = FALSE` 可生成完整的正值调查数据。显式提供种子可复现抽样，并在结束后恢复调用者的随机数状态。
+<a id="validation-zh-process-draws"></a>
+### 生成新的种群轨迹
 
-`"resample"` 模式按拟合的平稳 AR(1) 分布生成补充偏差。F 使用可分离的组别／时间 AR(1) 场；`F_structure = "year"` 时使用单个时间过程。这些过程标准差是边际标准差，时间创新标准差等于边际标准差乘以 `sqrt(1 - phi^2)`。初始丰度偏差来自独立正态分布。已有 C++ 模型使用这些抽样计算种群状态，保留末龄加组及 ALSCL 生长转移。该模式不支持固定或绑定随机效应的 map，会明确报错；条件观测模拟仍可使用。
+`process = "resample"` 在拟合标量参数值下，重新抽取补充量、捕捞死亡率及初始种群偏差。第 3 步用这些重复数据进行重新拟合。
 
-两种模式都固定标量参数，不包含参数估计不确定性。它们也不同于 `sim_data()` 生成的独立操作模型模拟，后者有自己的补充量假设。明确失败的源拟合默认被拒绝；`allow_failed_fit = TRUE` 可在警告后用于探索。
+```r
+resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
+  process = "resample")
+resampled$simulations[[1]]$truth$SSB
+simulated_x <- resampled$simulations[[1]]$x
+```
+
+`$simulations` 中的每个重复都包含：
+
+| 字段 | 内容 |
+|---|---|
+| `$observations` | 模拟调查数值，行为体长组、列为时间 |
+| `$x` | 可直接交给对应 `run_acl()` 或 `run_alscl()` 的输入列表 |
+| `$truth` | 生成数据时的种群量、标量参数与预期调查指数 |
+
+默认保留原始缺失和零值位置。设置 `preserve_missing = FALSE` 可生成完整的正值调查数据。显式提供种子可复现抽样，函数结束后会恢复调用者的随机数状态。
 
 ![给定状态或重新抽取过程后生成的 ALSCL 调查观测](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=79b8f645c515)
 
-图中为若干体长组在两种模式下各生成的三条调查序列。参考线是原拟合的对数观测中位数。条件模拟围绕相同拟合状态变化，过程重抽样还改变种群轨迹。这些曲线是模拟实现，不是置信带。
+图中为若干体长组在两种模式下各生成的三条调查序列。虚线是原拟合的对数观测中位数。条件模拟围绕相同拟合状态变化，过程重抽样还改变种群轨迹。曲线表示单次模拟实现，不是置信带。
 
-## 3. 重新拟合重复数据，并与生成真值比较
+<a id="validation-zh-simulation-assumptions"></a>
+### 理解模拟假设
 
-每个重复保留输入列表与生成的种群真值。计算性能统计前，应保留失败拟合记录。
+两种模式均使用拟合的对数正态观测模型：对数观测的均值为 `Elog_index`，标准差为拟合观测标准差。因此，`exp(Elog_index)` 是观测中位数。两种模式都保持标量参数固定，不包含参数估计不确定性。
+
+重抽过程时，补充量遵循平稳 AR(1) 过程；F 使用可分离的组别／时间 AR(1) 场，`F_structure = "year"` 时使用单个时间过程。过程标准差为边际标准差，时间创新标准差等于边际标准差乘以 `sqrt(1 - phi^2)`。初始丰度偏差来自独立正态分布。C++ 种群模型利用这些抽样计算种群状态，保留末龄加组和 ALSCL 生长转移。
+
+重抽过程模式不支持固定或绑定随机效应的 map，会明确报错；条件模拟仍可使用。明确失败的源拟合默认被拒绝，`allow_failed_fit = TRUE` 可在警告后用于探索。若需要采用另有补充量假设的独立操作模型，参见[操作模型模拟流程](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/simulation.html)。
+
+<a id="validation-zh-section-3"></a>
+## 3. 重新拟合并与真值比较
+
+本步为三份重抽过程数据分别使用两个初值进行拟合，比生成观测更耗时。若只想检查预测表现，可直接进入[第 4 步](#validation-zh-section-4)。
+
+每个重复都支持直接输入：本例 ALSCL 模拟使用 `run_alscl(s$x)`；来自 ACL 拟合的模拟使用 `run_acl(s$x)`。下面的循环保留报错记录，使失败重复也进入汇总。
 
 ```r
 replicate_fits <- lapply(resampled$simulations, function(s) {
@@ -6490,14 +6860,25 @@ replicate_fits <- lapply(resampled$simulations, function(s) {
 truth <- lapply(resampled$simulations, function(s) s$truth)
 performance <- summarize_simulations(replicate_fits, truth,
   quantities = c("SSB", "Rec"))
+performance$replicates
 performance$summary
 ```
 
-三个重复用于演示接口，不足以确定偏差或区间覆盖率。正式实验应使用足够的重复，并报告失败拟合数及可用区间数。参数自助法还需要明确的重抽样设计、重新拟合协议及区间构造方法；`simulate_fit()` 提供生成步骤，不会自动计算自助法区间。
+先读 `$replicates` 检查拟合状态，再读 `$summary` 中的偏差、RMSE、覆盖率及分母。三个重复用于演示接口；研究偏差或区间覆盖率需要足够的重复，并报告失败拟合数与可用区间数。参数自助法还需明确重抽样设计、重新拟合协议和区间构造方法；`simulate_fit()` 提供数据生成步骤。
 
-对于已有磁盘操作模型批次，`sim_model(..., nstarts = 3, ncores = 2)` 每个重复使用三个初值，最多同时运行两个重复。初值和标准误在每个工作进程内依次计算。`train_times` 控制每个初值的优化轮数，每个结果保留 `start_diagnostics`。
+**如果已有磁盘上的模拟批次：**`sim_model(..., nstarts = 3, ncores = 2)` 每个重复使用三个初值，最多同时运行两个重复。初值和标准误在各工作进程内顺序计算；`train_times` 控制每个初值的优化轮数，各拟合保留 `start_diagnostics`。这一批量流程另见[模拟与批量实验](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/simulation.html)。
 
+<a id="validation-zh-section-4"></a>
 ## 4. 预测未参与拟合的时期
+
+`hindcast_model()` 读取 `x` 并自行建立训练拟合，不复用 `b` 或模拟数据。本例中，每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
+
+| 设置 | 在本年度示例中的含义 |
+|---|---|
+| `horizon = 1` | 向前预测一个模型时期 |
+| `nfolds = 2` | 使用最后两个合格的训练终点 |
+| `min_train = 8` | 要求至少保留八个训练时期 |
+| `ncores = 2` | 最多并行运行两个训练折 |
 
 ```r
 acl_validation <- hindcast_model(x, model = "acl", horizon = 1,
@@ -6506,28 +6887,50 @@ alscl_validation <- hindcast_model(x, model = "alscl", horizon = 1,
   nfolds = 2, min_train = 8, nstarts = 1, ncores = 2)
 acl_validation$diagnostics
 alscl_validation$diagnostics
+```
+
+逐折查看 `numerical_ok`、`prediction_ok`、警告与报错。失败或数值状态无法确认的训练拟合保留在 `$diagnostics` 中，不产生预测或参与评分。理解这些记录后，再看评分与逐个观测单元的预测：
+
+```r
 acl_validation$scores
 alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
-`min_train` 是最少训练时期数，`horizon` 按模型时间步计数；季度数据的一步为一季度。使用最后 `nfolds` 个合格预测起点。每折截短三张输入表及支持的时间映射，从提供的拟合配置开始；不会拿完整序列的拟合估计作为初值。比较模型时，起点、预测期距和观测必须相同。生物学假设、固定参数及手动提供的初值也应在不参照留出数据调参的前提下确定。
-
-未来对数补充量及对数 F 偏差沿训练末期出发的 AR(1) 条件均值路径延伸，再由种群方程推进丰度，并用给定调查可捕性转为指数。这是沿对数过程路径的代入式点预测，不是边际预测均值或预测分布；不抽取未来随机扰动或参数，也不提供预测区间。计算中沿用训练末期体重与成熟比例，不读取未来实际生物学资料。
-
-固定或绑定随时间变化的补充／F 偏差的非恒等 map 会被拒绝，因为这些约束未定义当前支持的未来无约束 AR(1) 预测。失败或数值状态无法确认的训练拟合保留在诊断表中，不产生预测或参与评分。
-
 ![留出的调查指数与模型预测及持平基准](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=6808289fa0c6)
 
-图中比较留出期的对数调查指数、模型预测及“沿用最近一次正训练观测”的基准。本例是模拟 YTF 数据上的方法演示，不证明任一模型普遍更好。
+图中比较留出期的对数调查指数、模型预测及持平基准。持平基准将相同体长组最近一次正训练观测保持不变。第 5 步在相同合格观测单元上比较两种预测的误差。
 
-## 5. 解读评分并保留复现记录
+<a id="validation-zh-forecast-design"></a>
+### 调整验证设计
 
-评分使用自然对数调查指数，并报告分母。验证数据中的零值与缺失值按拟合约定排除。持平基准使用相同体长组最近一次正训练观测；与基准比较时，两种方法使用相同的合格观测。
+`horizon` 与 `min_train` 都按模型时期计数；季度数据的一步为一季度。函数使用最后 `nfolds` 个合格起点，每折截短三张输入表和支持的时间映射，再使用提供的拟合配置。初值不会取自完整序列的拟合结果。生物学假设、固定值和手动初值都应在不参照留出数据调参的前提下确定；比较模型时，使用相同起点、期距与观测单元。
 
-对数尺度 MASE 将每个绝对预测误差除以该体长组训练期内相邻正观测的平均绝对对数差。缺失时期不会被压缩。尺度分母为零或不可用时，缩放评分记为 `NA`，不会记成零误差；请检查可用缩放观测数。短期验证上的较低分数不构成普遍排名。Mohn rho 和条件残差图回答其他问题，可与此检查配合使用。
+<a id="validation-zh-forecast-assumptions"></a>
+### 理解预测规则
 
-实际执行本例时，两个模型使用相同的 2018–2019 年共 46 个正观测，四个训练拟合均通过数值检查；两次比较使用同一个持平基准。
+未来对数补充量及对数 F 偏差沿训练末期出发的 AR(1) 条件均值路径延伸。种群方程推进丰度，再用给定调查可捕性转为指数。计算中沿用训练末期的体重与成熟比例，不读取未来实际生物学资料。
+
+这是沿条件对数过程路径的代入式点预测，不抽取未来随机扰动或参数，也不提供预测分布或区间。固定或绑定随时间变化的补充／F 偏差的非恒等 map 会被拒绝，因为其未来约束尚未定义。
+
+<a id="validation-zh-section-5"></a>
+## 5. 解读评分并保存分析
+
+<a id="validation-zh-prediction-scores"></a>
+### 同时查看误差与样本数
+
+评分使用自然对数调查指数，排除验证数据中的零值与缺失值。模型与持平基准都只对两种预测均可取得的相同单元计算误差。
+
+| 输出 | 读法 |
+|---|---|
+| `n_positive`、`n_prediction`、`n` | 正的留出观测数、其中有模型预测的数量，以及模型和持平基准共同评分的数量 |
+| `log_RMSE`、`log_MAE` | 对数指数尺度上的预测误差；对这些单元而言，越小表示误差越小 |
+| `naive_log_RMSE`、`naive_log_MAE` | 同一批单元上持平基准的对应误差 |
+| `log_MASE`、`naive_log_MASE`、`n_scaled` | 缩放后的绝对误差，以及训练期尺度可用的单元数 |
+
+MASE 将每个绝对对数误差除以该体长组训练期内相邻正观测的平均绝对对数差。缺失时期不会被压缩。尺度为零或不可用时，该单元不进入缩放评分；没有合格单元时评分为 `NA`。解释结果前应查看 `n_scaled`。
+
+实际执行本例时，两个模型对相同的 2018–2019 年共 46 个正观测评分。四个训练拟合均通过数值检查，两次比较使用同一个持平基准。
 
 | 预测方法 | 评分观测数 | 对数 RMSE | 对数 MAE | 对数 MASE |
 |---|---:|---:|---:|---:|
@@ -6535,22 +6938,38 @@ head(alscl_validation$predictions)
 | ALSCL | 46 | 0.2583 | 0.1951 | 1.0655 |
 | 持平基准 | 46 | 0.1722 | 0.1467 | 0.7356 |
 
-在这份模拟数据、教学 map 和两个起点的设计下，ACL 优于持平基准，ALSCL 没有优于基准。即使两者优化均收敛，这个差异也值得研究。两个验证时期不能确立普遍排名。三组过程模拟数据的重新拟合也都通过数值检查，但三个重复不足以确定覆盖率。
+在这份模拟数据、教学 map 和两个起点的设计下，ACL 优于持平基准，ALSCL 没有优于基准。即使两者优化均收敛，这个差异也值得研究。两个验证时期不能确立普遍模型排名。三组过程模拟数据的重新拟合也都通过数值检查，但三个重复不足以确定覆盖率。
+
+<a id="validation-zh-save-record"></a>
+### 保存可移植的拟合结果
+
+若已完成模拟步骤，可用下面的代码保存源拟合 `b`。保存的评估文件可在新的 R 会话中读取，并在没有活跃 TMB 指针的情况下用于模拟：
 
 ```r
 archive <- tempfile(fileext = ".rds")
 save_assessment(b, archive)
 saved <- read_assessment(archive)
 saved$recipe$implementation
-# 模拟不依赖序列化的活跃 TMB 指针。
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
 ```
 
-评估配方保存可取得的源码提交、核心／R 源码摘要与运行环境。源码 HEAD 本身不能证明工作区没有修改。`refit_model()` 会提示已知实现或依赖变化，旧结果无法恢复的来源保持未知。请同时保存模拟元数据、真值和验证诊断，以便核对输入、排除位置及拟合协议。
+正式分析时，将临时路径换成永久文件名，并在拟合结果旁保存模拟对象和真值。第 4 步的验证结果可将两个模型一起保存：
 
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
 
-从仓库根目录运行 `scripts/model_validation.R` 可重新生成这些图及 CSV 结果；绘图辅助程序在保存前逐面板检查网格线。
+正式分析时，同样将这里的临时路径换成永久文件名。评估配方保留可取得的源码提交、核心／R 源码摘要及运行环境。源码 HEAD 本身不能证明工作区没有修改；`refit_model()` 会提示已知实现或依赖变化，旧结果无法恢复的来源保持未知。
+
+<a id="validation-zh-next-steps"></a>
+### 选择下一项检查
+
+用[残差诊断](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/diagnostics.html)查看观测模式，用[回溯分析](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/retrospectives.html)检查历史估计的修订，或用[敏感性场景](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-sensitivity-projection.html)检查给定假设的影响。这些检查回答的问题与留出预测不同。
+
+要重新生成本案例的图和 CSV 结果，请在下载的仓库根目录运行下面的代码。这会重新执行完整拟合流程；绘图辅助程序在保存前逐面板检查网格线。
 
 ```r
 pkgload::load_all(".")
@@ -6558,62 +6977,100 @@ source("scripts/model_validation.R")
 run_model_validation_guide()
 ```
 
-
+<a id="validation-en"></a>
 ## English
 
+Use this case to generate survey data from a fitted model, check estimates against known simulated values, or test predictions against observations withheld from fitting.
 
-This case uses two complementary checks. `simulate_fit()` generates observations from a fitted ACL or ALSCL model; `hindcast_model()` fits earlier periods and predicts survey indices in withheld later periods. These development functions require the updated source and are not part of the 2.2.9 release tag.
+**Before you start:** these functions are in the latest GitHub `main` source, beyond the 2.2.9 release tag. Use an installation containing them, or run `pkgload::load_all(".")` from the downloaded repository root.
 
-| Question | Function and design | Interpretation |
-|---|---|---|
-| What would repeated observations look like at the fitted population states? | `simulate_fit(process = "conditional")` | Observation error varies; fitted states stay fixed. |
-| What data would the fitted process and observation model generate? | `simulate_fit(process = "resample")` | Recruitment, F and initial-population deviations are redrawn; scalar parameters stay at their fitted values. |
-| How well do earlier observations predict later observations? | `hindcast_model()` | Each training period ends before its validation period; score predictions against actual withheld indices. |
+| What would you like to check? | Where to start |
+|---|---|
+| Repeated observations at the same fitted population states | [Step 2: conditional simulation](#validation-en-section-2) |
+| New population trajectories and how well they can be estimated | [Steps 2–3: resample processes and refit](#validation-en-section-2) |
+| Predictions of later survey observations | [Step 4: leave out future periods](#validation-en-section-4) |
 
-## 1. Fit and check the source assessment
+Start with step 1 to load `x`. For simulation, also fit `b` and continue through steps 2–3. For prediction checks only, go from `x` directly to step 4. Step 5 explains the prediction scores and saved records.
 
-The example uses synthetic `YTF_example` data. Its teaching maps fix several biological parameters; choose your own supported biology and parameter map for a real assessment. Successful numerical checks establish that the optimizer result is usable for these calculations, not that the model adequately describes a stock.
+<a id="validation-en-section-1"></a>
+## 1. Prepare the example and check its fit
 
-When working from this development checkout, run `pkgload::load_all(".")` from the repository root before the following blocks. An installation containing these functions can use `library(ALSCL)` directly.
+The case uses the **synthetic** `YTF_example` dataset. Load it once as the input bundle `x`:
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)
-b <- run_alscl(x, silent = TRUE)
-stopifnot(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-## 2. Simulate observations from the fitted model
+For simulation, fit the source model as `b` below. If you already fitted this same example, reuse that result and inspect its diagnostics. For prediction checks only, skip this fit and go to [step 4](#validation-en-section-4), which creates its own training fits.
+
+```r
+b <- run_alscl(x, silent = TRUE)
+b$diagnostics
+stopifnot(b$diagnostics$numerical_ok)
+```
+
+Continue when `numerical_ok` is `TRUE`. If it is `FALSE`, investigate the reported issues before generating simulations; see [fitting diagnostics](https://fanzhang-lab-shou.github.io/ALSCL/articles/diagnostics.html). This screen checks the numerical fit. Residuals and sensitivity to assumptions still need assessment.
+
+The teaching example fixes several biological parameters through `map`. For your own assessment, choose supported stock-specific biology and inspect which parameters are fixed or estimated using [data and parameter checks](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md). When fixing `mean_log_R` for a simulation study, supply its numeric value explicitly in `parameters` so that a data-derived value is not recalculated from each simulated dataset.
+
+<a id="validation-en-section-2"></a>
+## 2. Generate survey observations
+
+<a id="validation-en-conditional-draws"></a>
+### Keep the fitted population states
+
+`process = "conditional"` changes observation error while retaining the fitted population. This is the shortest way to inspect repeated surveys under the same fitted states.
 
 ```r
 conditional <- simulate_fit(b, nsim = 3, seed = 20261101,
   process = "conditional")
-resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
-  process = "resample")
 conditional$metadata
-resampled$simulations[[1]]$truth$SSB
-simulated_x <- resampled$simulations[[1]]$x
-# Both models accept their corresponding simulated input bundle directly.
-simulated_fit <- run_alscl(simulated_x, nstarts = 2, ncores = 1,
-  silent = TRUE)
-simulated_fit$diagnostics
+conditional$simulations[[1]]$observations[1:3, 1:3]
 ```
 
-Both modes use the fitted lognormal observation model: log observations have mean `Elog_index` and the fitted observation standard deviation. Consequently, `exp(Elog_index)` is an observation median. Original missing and zero cells are preserved by default; set `preserve_missing = FALSE` to generate a complete positive survey. A supplied seed gives reproducible draws while restoring the caller's random-number state.
+<a id="validation-en-process-draws"></a>
+### Generate new population trajectories
 
-In `"resample"` mode, recruitment follows the fitted stationary AR(1) distribution. The F field follows its separable group/time AR(1) distribution, or a single time process when `F_structure = "year"`. These process SDs are marginal SDs: the temporal innovation SD equals the marginal SD multiplied by `sqrt(1 - phi^2)`. Initial-abundance deviations are independent normals. The existing C++ model calculates population states from these draws, including the plus group and ALSCL growth transitions. Fixed or tied random-effect maps are unsupported for this resampling mode and are rejected explicitly; conditional observation simulation remains available.
+`process = "resample"` redraws recruitment, fishing-mortality and initial-population deviations at the fitted scalar parameter values. Use these replicates for the refitting exercise in step 3.
 
-Scalar parameters remain fixed in both modes. These draws contain no parameter-estimation uncertainty. They also differ from the separate operating-model simulations generated by `sim_data()`, which have their own recruitment assumptions. A known failed source fit is rejected by default; `allow_failed_fit = TRUE` gives an explicit warning for exploratory use.
+```r
+resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
+  process = "resample")
+resampled$simulations[[1]]$truth$SSB
+simulated_x <- resampled$simulations[[1]]$x
+```
+
+Each element of `$simulations` contains:
+
+| Field | What it contains |
+|---|---|
+| `$observations` | Simulated survey values, with length in rows and time in columns |
+| `$x` | An input bundle for the corresponding `run_acl()` or `run_alscl()` function |
+| `$truth` | Generating population quantities, scalar parameters and expected survey indices |
+
+Original missing and zero cells are preserved by default. Set `preserve_missing = FALSE` for a complete positive survey. A supplied seed reproduces the draws and restores the caller's random-number state afterward.
 
 ![ALSCL observations simulated conditionally or with resampled processes](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=79b8f645c515)
 
-The figure shows three generated survey series in each mode for selected length groups. The reference curve is the original fit's log observation median. The conditional simulations vary around the same fitted states; resampling also changes the population trajectory. These are simulation draws, not confidence bands.
+The figure shows three generated survey series in each mode for selected length groups. The dashed reference is the original fit's log observation median. Conditional simulations vary around the same fitted states; resampling also changes the population trajectory. The curves are individual draws, not confidence bands.
 
-## 3. Refit replicates and compare estimates with their generating values
+<a id="validation-en-simulation-assumptions"></a>
+### Understand what is being simulated
 
-Every simulation retains its input bundle and generating population quantities. Record failed fits rather than removing them before calculating performance statistics.
+Both modes use the fitted lognormal observation model: log observations have mean `Elog_index` and the fitted observation standard deviation. Thus `exp(Elog_index)` is the observation median. Scalar parameters remain fixed, so neither mode includes parameter-estimation uncertainty.
+
+In resample mode, recruitment follows a stationary AR(1) process. F follows a separable group/time AR(1) field, or a single time process for `F_structure = "year"`. Process SDs are marginal SDs; the temporal innovation SD is the marginal SD multiplied by `sqrt(1 - phi^2)`. Initial-abundance deviations are independent normals. The C++ population model uses these draws with the plus group and ALSCL growth transitions.
+
+Fixed or tied random-effect maps are rejected in resample mode; conditional simulation remains available. A known failed source fit is rejected by default. `allow_failed_fit = TRUE` permits exploratory use with a warning. For a separate operating model with its own recruitment assumptions, use [the operating-model simulation workflow](https://fanzhang-lab-shou.github.io/ALSCL/articles/simulation.html).
+
+<a id="validation-en-section-3"></a>
+## 3. Refit the replicates and compare with truth
+
+This step fits the three resampled datasets with two starts each. It is more time-consuming than drawing observations. To examine prediction performance only, go directly to [step 4](#validation-en-section-4).
+
+The same direct-input syntax applies to each replicate: `run_alscl(s$x)` for this ALSCL example, or `run_acl(s$x)` for simulations from an ACL fit. The loop keeps error records so that failed replicates remain in the summary.
 
 ```r
 replicate_fits <- lapply(resampled$simulations, function(s) {
@@ -6623,14 +7080,25 @@ replicate_fits <- lapply(resampled$simulations, function(s) {
 truth <- lapply(resampled$simulations, function(s) s$truth)
 performance <- summarize_simulations(replicate_fits, truth,
   quantities = c("SSB", "Rec"))
+performance$replicates
 performance$summary
 ```
 
-Three replicates demonstrate the interface; they do not establish bias or interval coverage. Design a larger experiment with adequate repetitions and report failed-fit and usable-interval counts. A parametric bootstrap additionally requires a stated resampling design, refitting protocol and interval construction. `simulate_fit()` supplies the generating step; it does not automatically calculate bootstrap intervals.
+Read `$replicates` first to check fitting status. Then read `$summary` for bias, RMSE, coverage and their denominators. Three replicates demonstrate the interface; a study of bias or interval coverage needs adequate repetitions and explicit failed-fit and usable-interval counts. A parametric bootstrap also needs a stated resampling design, refitting protocol and interval construction; `simulate_fit()` supplies the generating step.
 
-For existing on-disk operating-model batches, `sim_model(..., nstarts = 3, ncores = 2)` uses three starts per replicate and at most two replicate workers. Starts and standard errors run sequentially inside each worker. `train_times` controls optimization passes per start, and each result retains `start_diagnostics`.
+**If your simulations are already on disk:** `sim_model(..., nstarts = 3, ncores = 2)` uses three starts per replicate and at most two replicate workers. Starts and standard errors run sequentially inside each worker. `train_times` controls optimization passes per start; each fit retains `start_diagnostics`. This is a separate batch workflow, described in [simulation and batch experiments](https://fanzhang-lab-shou.github.io/ALSCL/articles/simulation.html).
 
-## 4. Predict periods that were not used for fitting
+<a id="validation-en-section-4"></a>
+## 4. Predict periods withheld from fitting
+
+`hindcast_model()` takes `x` and creates its own training fits. It does not reuse `b` or the simulated datasets. Here, each model is fitted through 2017 to predict 2018, and through 2018 to predict 2019.
+
+| Setting | Meaning in this annual example |
+|---|---|
+| `horizon = 1` | Predict one model period ahead |
+| `nfolds = 2` | Use the last two eligible training endpoints |
+| `min_train = 8` | Require at least eight training periods |
+| `ncores = 2` | Run at most two training folds in parallel |
 
 ```r
 acl_validation <- hindcast_model(x, model = "acl", horizon = 1,
@@ -6639,28 +7107,50 @@ alscl_validation <- hindcast_model(x, model = "alscl", horizon = 1,
   nfolds = 2, min_train = 8, nstarts = 1, ncores = 2)
 acl_validation$diagnostics
 alscl_validation$diagnostics
+```
+
+Check every fold's `numerical_ok`, `prediction_ok`, warnings and errors. Failed or numerically unverified training fits remain in `$diagnostics` and contribute no predictions or scores. Once these rows are understood, inspect the scores and individual prediction cells:
+
+```r
 acl_validation$scores
 alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
-`min_train` is a minimum number of model periods, and `horizon` counts model steps: one step means one quarter for quarterly data. The last `nfolds` eligible origins are used. Each fold truncates all three input tables and any supported time maps, then starts from the supplied fitting configuration. It never takes starting estimates from a fit to the complete series. Each model comparison must use the same origins, horizons and observations. Biological assumptions, fixed parameters and manually supplied starts must also be chosen without tuning to the withheld data.
-
-Forecast log recruitment and log F deviations follow their AR(1) conditional-mean paths from the training endpoint. The population equations then propagate abundance and transform it to survey indices using the supplied catchability. This is a plug-in point prediction along those log-process paths, not a marginal predictive mean or a predictive distribution. It includes no future random shocks or parameter draws, and provides no prediction interval. The calculation repeats training-end weights and maturity; future observed biology is not read into the prediction.
-
-Nonidentity maps fixing or tying time-varying recruitment/F deviations are rejected because these constraints do not define the supported unconstrained future AR(1) forecast. Failed or numerically unverified training fits remain in the diagnostics and do not contribute predictions or scores.
-
 ![Withheld survey indices and model and persistence predictions](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=6808289fa0c6)
 
-The figure compares held-out log survey indices with model predictions and the most recent positive training observation held constant. It is an illustration on synthetic YTF data, not evidence of general superiority of either assessment model.
+The figure compares withheld log survey indices with the model prediction and a persistence baseline: the latest positive training observation in the same length bin, held constant. Step 5 compares their errors on the same eligible observation cells.
 
-## 5. Read scores and retain a reproducible record
+<a id="validation-en-forecast-design"></a>
+### Adapt the validation design
 
-Scores use natural-log survey indices and report their denominators. Zero and missing validation observations are excluded, consistently with fitting. The persistence baseline uses the latest positive training observation in the same length bin. Comparisons with that baseline use the same eligible observations for both methods.
+`horizon` and `min_train` count model periods; one step is one quarter for quarterly inputs. The last `nfolds` eligible origins are used. Each fold truncates all three input tables and supported time maps, then uses the supplied fitting configuration. Starting estimates never come from a fit to the complete series. Choose biological assumptions, fixed values and manual starts without tuning to withheld data; compare models using the same origins, horizons and observation cells.
 
-Log-scale MASE divides each absolute forecast error by the mean absolute difference between consecutive positive training log observations in that length bin. Missing periods are not compressed. A zero or unavailable scaling denominator gives `NA` for the scaled score, not zero error; inspect the count of usable scaled observations. A lower score on one short validation design is not a universal model ranking. Mohn's rho and conditional residual plots answer different questions and remain useful alongside this check.
+<a id="validation-en-forecast-assumptions"></a>
+### Understand the prediction rule
 
-For the executed example, both models used the same 46 positive observations from 2018–2019. All four training fits passed the numerical screen. The persistence baseline is identical across the two comparisons.
+Forecast log recruitment and log F deviations follow their AR(1) conditional-mean paths from the training endpoint. Population equations propagate abundance, and supplied catchability converts it to survey indices. Training-end weights and maturity are carried forward; future observed biology is not read into the prediction.
+
+These are plug-in point predictions along conditional log-process paths. They include no future random shocks or parameter draws and provide no predictive distribution or intervals. Nonidentity maps fixing or tying time-varying recruitment/F deviations are rejected because their future constraints are unspecified.
+
+<a id="validation-en-section-5"></a>
+## 5. Interpret scores and save the analysis
+
+<a id="validation-en-prediction-scores"></a>
+### Read the scores and their sample sizes together
+
+Scores use natural-log survey indices. Zero and missing validation observations are excluded. Model and persistence errors use the same cells with both predictions available.
+
+| Output | How to read it |
+|---|---|
+| `n_positive`, `n_prediction`, `n` | Positive held-out observations, those with model predictions, and cells scored for both model and persistence |
+| `log_RMSE`, `log_MAE` | Prediction error on the log-index scale; smaller values mean smaller errors on those cells |
+| `naive_log_RMSE`, `naive_log_MAE` | Corresponding persistence errors on the same cells |
+| `log_MASE`, `naive_log_MASE`, `n_scaled` | Scaled absolute errors and the number of cells with a usable training scale |
+
+For MASE, each absolute log error is divided by that length bin's mean absolute difference between consecutive positive training log observations. Missing periods are not compressed. A zero or unavailable scale excludes that cell from the scaled score; when no eligible cells remain, the score is `NA`. Check `n_scaled` before interpreting it.
+
+In the executed example, both models scored the same 46 positive observations from 2018–2019. All four training fits passed the numerical screen, and both comparisons used the same persistence baseline.
 
 | Prediction | Scored observations | Log RMSE | Log MAE | Log MASE |
 |---|---:|---:|---:|---:|
@@ -6668,22 +7158,38 @@ For the executed example, both models used the same 46 positive observations fro
 | ALSCL | 46 | 0.2583 | 0.1951 | 1.0655 |
 | Persistence | 46 | 0.1722 | 0.1467 | 0.7356 |
 
-Under this synthetic dataset, teaching maps and two-origin design, ACL improves on the persistence baseline and ALSCL does not. The difference is worth investigating even though both optimizations converged. These two validation periods do not establish a general ranking. The three simulated-process refits also passed the numerical screen, but three replicates are insufficient to establish coverage.
+Under this synthetic dataset, teaching maps and two-origin design, ACL improves on persistence and ALSCL does not. The difference deserves investigation even though both optimizations converged. Two validation periods do not establish a general model ranking. The three simulated-process refits also passed the numerical screen, but three replicates are insufficient to establish coverage.
+
+<a id="validation-en-save-record"></a>
+### Save a portable fit
+
+If you completed the simulation steps, save the source fit `b` with the following block. The archive can be read in a new R session and used for simulation without a live TMB pointer:
 
 ```r
 archive <- tempfile(fileext = ".rds")
 save_assessment(b, archive)
 saved <- read_assessment(archive)
 saved$recipe$implementation
-# Simulations do not require a serialized live TMB pointer.
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
 ```
 
-Assessment recipes retain available source revision, core/R source hashes and runtime metadata. A source HEAD alone does not prove the working tree was clean. `refit_model()` warns about known implementation or dependency changes; unknown older provenance remains unknown. Save the simulation metadata, truth and validation diagnostics with your assessment so its inputs, exclusions and fitting protocol can be inspected.
+Replace the temporary path with a permanent filename for your analysis. Save the simulation objects and truth alongside the fit. To save the validation results from step 4, retain both models together:
 
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
 
-Run `scripts/model_validation.R` from the repository root to regenerate these figures and CSV results. The plotting helper checks every panel for gridlines before saving.
+Use a permanent path here too for your own analysis. Recipes retain available source revision, core/R source hashes and runtime metadata. A source HEAD alone does not establish a clean working tree; `refit_model()` warns about known implementation or dependency changes, while unknown older provenance remains unknown.
+
+<a id="validation-en-next-steps"></a>
+### Choose the next check
+
+Use [residual diagnostics](https://fanzhang-lab-shou.github.io/ALSCL/articles/diagnostics.html) to examine observation patterns, [retrospective analysis](https://fanzhang-lab-shou.github.io/ALSCL/articles/retrospectives.html) to examine revisions to historical estimates, or [sensitivity scenarios](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-sensitivity-projection.html) to examine supplied assumptions. These answer different questions from held-out prediction.
+
+To regenerate this case's figures and CSV results, run the following from the downloaded repository root. It performs the full fitting exercise again; the plotting helper checks every panel for gridlines before saving.
 
 ```r
 pkgload::load_all(".")

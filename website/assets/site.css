@@ -15,3 +15,34 @@ dialog{border:1px solid #d8dde3;border-radius:9px;padding:24px;width:min(660px,c
 @media(max-width:780px){.articles-menu{width:100%}.articles-menu .dropdown-heading{padding-left:14px}}
 
 .author-name{white-space:nowrap}.orcid-link{display:inline-flex;align-items:center;vertical-align:-2px;margin-left:2px;text-decoration:none;border-radius:50%}.orcid-link img{display:block;width:16px;height:16px}.dev-status img{display:inline-block;max-width:100%;height:20px;vertical-align:middle}footer span.author-name{display:inline;margin:0}
+
+/* Reading paths and compact guide listings keep the manual navigable. */
+main>p,main>ul,main>ol{line-height:1.7}
+.reading-paths{margin:24px 0 30px;padding:20px 22px;border:1px solid var(--line);border-radius:5px;background:#fafbfc}
+.reading-paths>p:first-child{font-weight:600;margin-bottom:12px}
+.reading-paths ol{margin:0;padding-left:22px}
+.reading-paths li{padding:4px 0}
+.reading-paths li+li{margin-top:8px}
+.reading-paths a{font-weight:600}
+.article-group{margin:32px 0}
+.guide-entry{display:grid;grid-template-columns:minmax(165px,30%) 1fr;gap:20px;padding:14px 0;border-bottom:1px solid var(--line)}
+.guide-entry h3{margin:0;font-size:17px;line-height:1.5;letter-spacing:0}
+.guide-entry h3 a{text-decoration:none}
+.guide-entry h3 a:hover{text-decoration:underline}
+.guide-entry p{margin:0;color:#59636d;font-size:15px;line-height:1.6}
+.reference-jumps{font-size:14px;margin:18px 0 26px}
+.help-details{margin:20px 0;padding:12px 16px;border:1px solid var(--line);border-radius:4px}
+.help-details summary{cursor:pointer;font-weight:500;color:#385e88}
+.help-details[open] summary{margin-bottom:14px}
+.mobile-toc{display:none}
+@media(max-width:780px){
+ .reading-paths{padding:16px 18px}
+ .guide-entry{grid-template-columns:1fr;gap:5px}
+ main table{min-width:0}
+ main table:has(tr>:nth-child(4)){min-width:560px}
+ .mobile-toc{display:block;margin:0 0 24px;padding:12px 15px;background:var(--soft);border:1px solid var(--line);border-radius:4px}
+ .mobile-toc summary{cursor:pointer;font-weight:600}
+ .mobile-toc ul{margin:12px 0 0;padding-left:20px}
+ .mobile-toc li{margin:8px 0}
+}
+@media print{.mobile-toc,.reference-jumps{display:none!important}.reading-paths{background:none}.guide-entry{break-inside:avoid}}
