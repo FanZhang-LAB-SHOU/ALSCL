@@ -1,126 +1,126 @@
 # Prepare your survey data
 
-**Goal:** turn three aligned survey tables into an input bundle `x`, ready for `run_acl(x)` or `run_alscl(x)`. This page covers table layout, import and checks. Choose biological inputs and parameter maps before fitting; the final section links to that step.
+On this page you turn your survey observations into an input bundle `x` that `run_acl(x)` and `run_alscl(x)` accept, and you check it before the first fit. You need the package installed ([Install ALSCL](getting-started.html)), your survey numbers at length by year or quarter, mean weight and maturity at length, and the biological values of your stock listed in step 4.
 
-Use the current `main` installation from [Getting started](getting-started.html) for the public import and checking functions below. If you want to try a fit without preparing files, start with the [bundled YTF example](first-model.html).
-
-<h2 id="table-layout">1. Fill in three matching tables</h2>
-
-Download the [Excel example workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx). Its `Instructions` sheet contains bilingual directions; the other three sheets contain the synthetic YTF example. Save a copy before replacing the values.
-
-| Location | Entry rule |
+| Step | What you will have afterwards |
 |---|---|
-| Sheet names | Exactly `data.CatL`, `data.wgt`, `data.mat` |
-| A1 | `LengthBin`; no title rows above the header |
-| A2:A… | One length bin per row; example midpoints are 6, 8, …, 50 |
-| B1, C1, … | Increasing numeric times: 2000, 2001 for annual data; 2000, 2000.25 for quarters |
-| Numeric cells | Value for that bin and period |
-| Alignment | Identical bins, periods and order in all three tables |
+| 1. Lay out three tables | A workbook or three CSV files with identical rows and columns |
+| 2. Choose the time step | A time grid without hidden gaps and a decision about zeros |
+| 3. Read the files | The three tables as a list in R, already checked for alignment |
+| 4. Add the biology | The input bundle `x` with your stock's settings |
+| 5. Check the bundle | A confirmation that `x` can be fitted, and the list of parameters that will be estimated |
 
-<h3 id="section-1">Survey number index: data.CatL</h3>
+<h2 id="table-layout">1. Lay out three matching tables</h2>
 
-Enter counts or a consistently standardized number index. For CPUE, keep effort, units and standardization comparable. Decimals are valid. Unknown observations are blank or `NA`; do not replace them with zero, dashes, `<1` or text labels.
+Both models read three tables with the same layout: the survey index table `data.CatL` (numbers of fish caught by the survey in each length bin and time step), the weight table `data.wgt` (mean weight of one fish in each bin and time step) and the maturity table `data.mat` (proportion mature). The rows are the length bins and the columns are the time steps, in the same order in all three tables. Download the [example workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx), keep a copy, and replace its values with yours.
 
-![Survey data worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
+| Location | Rule |
+|---|---|
+| Sheet names | Exactly `data.CatL`, `data.wgt` and `data.mat` (or three CSV files with these names) |
+| Cell A1 | `LengthBin`; no title rows above the header |
+| Column A | One length bin per row; the example uses the midpoints 6, 8, ..., 50 cm |
+| Row 1 | Increasing numeric time labels: 2000, 2001, ... for years; 2000, 2000.25, 2000.5, ... for quarters |
+| Other cells | One number per bin and time step; nothing else inside the grid |
+| All three tables | Identical bins, time labels and order |
 
-<h3 id="section-2">Mean individual weight: data.wgt</h3>
+<h3 id="survey-table">Survey index table data.CatL</h3>
 
-Enter mean weight per fish, using one documented unit. The table should contain individual weights rather than total weight in a bin. A defensible length–weight relationship can be repeated across periods when that assumption is reported. Every cell must have a value.
+Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
 
-![Mean-weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
+![Survey index worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
 
-<h3 id="section-3">Maturity proportion: data.mat</h3>
+<h3 id="weight-table">Weight table data.wgt</h3>
 
-Enter proportions between 0 and 1: use `0.6` for 60%. Both 0 and 1 are valid maturity values. Every cell must have a value. Keep units, totals, merged cells and explanatory prose outside all three data grids.
+Enter the mean weight of one fish in each bin and time step, in one unit throughout (the example uses kg). Every cell needs a value, because the model multiplies numbers by weight to obtain biomass. If you have a length-weight relationship rather than yearly measurements, fill all time steps with its values and say so when you report the assessment.
+
+![Weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
+
+<h3 id="maturity-table">Maturity table data.mat</h3>
+
+Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cell needs a value; 0 and 1 are valid. Spawning biomass is numbers times weight times maturity, so this table decides which bins count as spawners.
 
 ![Maturity worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true)
 
-Scientific notation can make tiny positive values easier to read. It changes their display, not the stored values.
+<h2 id="time-and-bins">2. Choose the time step and handle gaps</h2>
 
-<h2 id="time-and-bins">2. Check the time grid, bins and missing values</h2>
+The models advance the population one time step at a time, and `growth_step` is the length of that step in years: 1 for annual surveys, 0.25 for quarterly surveys. Consecutive column labels must differ by exactly `growth_step`, so the models know how much time passed between two columns. A time step without a survey stays in the table as a column of blank survey cells with its weight and maturity filled in; the models then treat that step as unobserved.
 
-Consecutive time headers must differ by `growth_step`. Use 1 for annual data and 0.25 for quarterly data. For example:
-
-| Situation | How to represent it |
+| Situation | What to enter |
 |---|---|
-| Annual observations for 2000, 2001 and 2003 | Keep a 2002 column; put `NA` in its survey cells and supply weight and maturity |
-| Quarterly observations | Use headers such as 2000, 2000.25, 2000.5 and `growth_step = 0.25` |
-| One unknown survey cell | Use blank or `NA`; keep the row and column |
-| A recorded survey zero | Retain the zero and decide explicitly how the observation model will treat it |
+| Annual survey, no survey in 2002 | Keep a 2002 column; leave its survey cells blank; fill weight and maturity |
+| Quarterly survey | Labels 2000, 2000.25, 2000.5, 2000.75, ...; `growth_step = 0.25` in step 4 |
+| One bin not observed in one time step | Leave that survey cell blank |
+| A recorded zero | Keep the 0; decide in step 4 whether zeros are treated as missing (`zero_action = "missing"`, the default) or stop the fit (`"error"`) |
 
-The models check this grid and do not fill missing periods or reinterpret irregular intervals. Omitting 2002 from an annual series produces an error.
+The length bins need their midpoints (`len_mid`, one per row) and the internal boundaries between bins (`len_border`, one fewer than the rows). The first and last bins extend to zero and infinity, so fish smaller or larger than your range are counted in the end bins. If your bins have equal width, the midpoints are the row labels and the boundaries lie halfway between them; if not, enter the actual boundaries from your survey design.
 
-For length bins, the example uses midpoints 6:50 by 2 and 22 internal boundaries 7:49. Supply actual boundaries for unequal bins. Interval labels must be contiguous and non-overlapping: labels such as `0-20`, `21-25` contain a gap that should be resolved from the original metadata. The first and last bins absorb the distribution tails.
+<h2 id="import">3. Read the files into R</h2>
 
-Package fits use `zero_action = "missing"` by default, excluding survey zeros from the log likelihood; `zero_action = "error"` rejects them. Excluding genuine zero observations changes inference. The current lognormal observation model has no zero-inflated component, so arbitrary small constants are not a principled replacement. These survey rules do not exclude legitimate zeros in the maturity table.
-
-<h2 id="section-4">3. Import Excel or CSV files</h2>
-
-Choose **one** import method. Both return `tables`, a list containing `data.CatL`, `data.wgt` and `data.mat`, and check their alignment. The public functions require no `source()` call.
-
-**Excel:** install the optional reader once, then select the downloaded example workbook or your own workbook.
-
-```r
-install.packages("readxl") # Once, if not already installed
-library(ALSCL)
-tables <- ALSCL::read_survey_excel(file.choose())
-str(tables)
-```
-
-**CSV:** place `data.CatL.csv`, `data.wgt.csv` and `data.mat.csv` in one folder. This example reads the supplied files when R's working directory is the downloaded repository root. Replace `"docs/data"` with your own folder for your observations.
+Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables do not match.
 
 ```r
 library(ALSCL)
-tables <- ALSCL::read_survey_csv("docs/data")
+install.packages("readxl") # once; only needed for Excel files
+tables <- read_survey_excel("my_survey.xlsx")
 str(tables)
 ```
 
-Excel import preserves time headers and converts numeric text explicitly. Successful import confirms table structure and values; it does not choose the biology or a parameter map.
-
-<h2 id="input-bundle">4. Add biological settings and inspect the parameter plan</h2>
-
-The following setup is for the **supplied synthetic workbook or CSV files**. Its biological settings come from `YTF_example` because these are YTF teaching data. For your stock, replace these values with supported stock-specific inputs before using the bundle.
-
 ```r
-data("YTF_example")
-demo_biology <- YTF_example$fit_args
-x <- prepare_alscl_data(tables, fit_args = demo_biology)
-
-input_check <- check_alscl_data(x, "acl")
-input_check$valid
-input_check$errors
-input_check$warnings
-
-parameter_plan <- inspect_parameters(x, "acl")
-parameter_plan[, c("parameter", "status", "start", "n_free")]
+# Three files data.CatL.csv, data.wgt.csv and data.mat.csv in one folder
+tables <- read_survey_csv("my_data")
+str(tables)
 ```
 
-This preparation does not copy `YTF_example$fit_config`: both models use their ordinary default maps. Inspect those maps before fitting. `check_alscl_data()` and `inspect_parameters()` prepare inputs without compiling or optimizing a model; a valid input check does not establish convergence or identifiability. Repeat the checks with `model = "alscl"` when preparing that model.
+`str(tables)` should show three data frames with the same number of rows and columns, the first column of each being the length labels. A message such as "nonnumeric cell in time column 2003" points to a text entry in the grid; "must match data.CatL length labels and time columns" means the rows or columns of one table differ from the others. Fix the file and read it again.
 
-For your data, provide recruitment age, number of age classes, natural mortality, survey catchability, time step and actual bin geometry. Weights and maturity also need independent support. Matching the example's table dimensions does not justify reusing its biology.
+<h2 id="bundle">4. Add the biology and build the input bundle</h2>
 
-**Next:** use [the own-data fitting case](case-fit-survey.html) to decide which parameters are supplied, fixed or estimated, and how `map` works. The [assessment workflow](assessment-workflows.html) then connects fitting, result extraction, saving and diagnostics. Once the inputs and assumptions have been reviewed, the direct calls are `run_acl(x)` and `run_alscl(x)`.
+`prepare_alscl_data()` combines the three tables with the settings both models share, `fit_args`, into the input bundle `x`. The settings describe your stock and your survey; the models do not estimate them.
 
-<h2 id="legacy-workflows">Earlier script-based workflows</h2>
-
-Older scripts that use `validate_survey_tables()` or `fit_survey_tables()` from the [repository helper script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) still run; its readers now call the exported functions, so sourcing it does not change how tables are read. New analyses use the exported functions above and do not need the script. Run this optional example from the repository root:
-
-```r
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
-my_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
-validate_survey_tables(my_inputs, growth_step = 1, zero_action = "error")
-```
-
-The script validator rejects survey zeros by default, asking you to resolve their meaning. This differs from the package fitting default described in step 2. Keep the intended `zero_action` explicit when adapting an older workflow.
-
-<h3 id="section-5">Inspecting legacy example_data</h3>
+| Setting | Meaning | Where the value comes from |
+|---|---|---|
+| `rec.age` | Age of the youngest age class in the model, in years | Age at which fish first appear in the survey |
+| `nage` | Number of age classes; the last one is a plus group | Oldest age worth tracking, divided by `growth_step` |
+| `M` | Natural mortality per time step | Literature or life-history methods; divide an annual value by 4 for quarterly steps |
+| `sel_L50`, `sel_L95` | Lengths at which survey catchability reaches 50% and 95% | Gear selectivity studies or the length distribution of the catch |
+| `growth_step` | Years per time step | Step 2 |
+| `len_mid`, `len_border` | Bin midpoints and internal boundaries | Step 2 |
+| `zero_action` | How a 0 in the survey table is treated | `"missing"` (default) or `"error"` |
 
 ```r
-data("example_data")
-names(example_data)
-head(example_data$data.CatL)
-example_data$data.CatL[[1]]
-sum(as.matrix(example_data$data.CatL[-1]) == 0, na.rm = TRUE)
+x <- prepare_alscl_data(tables, fit_args = list(
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1, len_mid = seq(6, 50, 2), len_border = seq(7, 49, 2)))
+saveRDS(x, "my_bundle.rds")
 ```
 
-These 9-bin, 2001–2021 tables are preserved unchanged from the original ALSCL repository. Their old help describes anonymized survey data, but species, units, source and zero meanings remain unverified. The gapped interval labels are rejected by the current bin parser. Recover the metadata and actual boundaries before assessment; these are not verified empirical data from the cited paper.
+The numbers above are the settings of the synthetic example; replace them with the values for your stock. `x` is a plain list, so `saveRDS()` keeps it for later sessions and `readRDS()` brings it back. Starting values and a `map` for each model can be added later as `fit_config`; without them the models use their default starting values and fix the parameters listed in [Fitting controls](fitting-controls.html).
+
+<h2 id="check">5. Check the bundle before fitting</h2>
+
+```r
+check <- check_alscl_data(x, "acl")
+check$valid
+check$errors
+check$warnings
+check$summary
+plan <- inspect_parameters(x, "acl")
+plan[, c("parameter", "status", "natural_start", "n_free")]
+```
+
+`check_alscl_data()` prepares the data exactly as a fit would, without compiling anything, and reports whether the bundle can be fitted. `check$summary` counts the bins, time steps, positive observations, zeros, blanks, time steps and bins without any observation, and the numbers of scalar (`free_fixed`) and random-effect (`free_random`) parameters that will be estimated. `inspect_parameters()` lists every parameter with its starting value on the natural scale and its status: `free` (estimated), `fixed` or `tied`. Run both again with `"alscl"` when you intend to fit that model.
+
+If `check$valid` is `FALSE`, the messages in `check$errors` name the table, column or setting to correct; warnings point to things worth a look, such as many zeros or an unobserved time step. When the check passes, fit with `run_acl(x)` or `run_alscl(x)` and continue as in [Understand your first fit](first-model.html).
+
+<h2 id="next">What next</h2>
+
+| What you want to do | Read |
+|---|---|
+| Fit the bundle and judge the result | [Understand your first fit](first-model.html) |
+| Decide which parameters to fix or estimate, choose the F structure | [Fitting controls](fitting-controls.html) |
+| Follow a complete own-data example from CSV to saved results | [How do I fit my own survey data?](case-fit-survey.html) |
+| Check the time grid of a quarterly survey | [Annual and quarterly time steps](case-studies.html) |
+
+<h2 id="legacy">Older helper script and data</h2>
+
+Scripts written before version 2.2.9 may call `validate_survey_tables()` or `fit_survey_tables()` from `scripts/real_data_workflow.R` in the repository. That script still works; its readers now call the package functions above. The package also ships `example_data`, three older ALSCL tables with 9 bins and the years 2001-2021 whose species, units and bin boundaries are not documented; use it only to try the functions, not as an assessment dataset.

@@ -1,6 +1,6 @@
 # Model principles
 
-The ALSCL package provides an age-structured model (ACL) and a joint age–length model (ALSCL) for survey catch-at-length assessment. The framework follows [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673), with time units and random-effect parameterization stated explicitly below.
+The ALSCL package provides an age-structured model (ACL) and a joint age-length model (ALSCL) for survey catch-at-length assessment. The framework follows [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673), with time units and random-effect parameterization stated explicitly below.
 
 ### Population dynamics
 
@@ -48,7 +48,7 @@ r_{t+1}=\phi_R r_t+\eta_t,\quad
 ```
 
 
-$`\exp(\mu_R)`$ is the median recruitment scale, not the arithmetic mean including stochastic variation. The full `sim_data()` operating model uses Beverton–Holt stock–recruitment with random deviations; its recruitment process differs from the fitted model.
+$`\exp(\mu_R)`$ is the median recruitment scale, not the arithmetic mean including stochastic variation. The full `sim_data()` operating model uses Beverton-Holt stock-recruitment with random deviations; its recruitment process differs from the fitted model.
 
 ### Initial conditions
 
@@ -62,7 +62,7 @@ u_{i-1}\sim N(0,\sigma_{N0}^2).
 ```
 
 
-Thus the initial log abundance contains the cumulative sum of earlier class deviations. The total deviations at different ages are not independent. ALSCL allocates these initial numbers across length using age–length probabilities.
+Thus the initial log abundance contains the cumulative sum of earlier class deviations. The total deviations at different ages are not independent. ALSCL allocates these initial numbers across length using age-length probabilities.
 
 ### Age-to-length conversion (ACL)
 
@@ -81,7 +81,7 @@ N_{l,t}=\sum_i p_{l|i}N_{i,t}.
 ```
 
 
-`pla` is the age–length probability matrix shown by `plot_pla()`. Differentiable normal CDF differences, symmetric right-tail calculations and normalization provide the implemented numerical treatment. Boundaries must match survey bins. Appendix S1 describes a fixed-order Taylor approximation; the package uses the CDF formulation above.
+`pla` is the age-length probability matrix shown by `plot_pla()`. Differentiable normal CDF differences, symmetric right-tail calculations and normalization provide the implemented numerical treatment. Boundaries must match survey bins. Appendix S1 describes a fixed-order Taylor approximation; the package uses the CDF formulation above.
 
 ### Growth transition matrix (ALSCL)
 

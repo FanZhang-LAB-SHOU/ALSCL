@@ -1,108 +1,119 @@
-# 用内置 YTF 数据完成首个拟合
+# 理解第一次拟合
 
-**完成[安装](getting-started.html)后，从本页开始。** 依次读取输入列表、拟合 ACL、检查结果，再与 ALSCL 比较。请在同一个 R 会话中运行；代码会创建后续教程使用的 `x`、`inputs`、`a` 和 `b`。
+[安装软件包](getting-started.html)之后，你已经有了输入列表 `x` 和拟合好的 ACL 模型 `a`。本页说明拟合结果包含什么、怎样判断它可用、怎样读估计值，以及第二个模型 ALSCL 与它有何不同。请在同一个 R 会话中按步骤运行；后面的页面会继续使用 `x`、`a` 和 `b`。
 
-示例为 **23 个体长组、20 个年度的模拟数据**。教学配置固定了部分生物和过程参数，所得区间以这些设置为条件。先用它熟悉流程，再为自己的种群选择有依据的假设。
+`YTF_example` 是模拟数据：23 个体长组、20 个年份，由一个已知的种群生成。它保存的设置固定了生长参数和部分过程参数，因此你看到的不确定性区间是在这些固定值之下得到的。先用它熟悉流程，再为自己的种群选择假设。
 
-<h2 id="section-1">1. 读取数据并拟合 ACL</h2>
+<h2 id="fit">1. 拟合两个模型</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-str(inputs)
-x$provenance
-
-a <- run_acl(x, train_times = 2, silent = TRUE)
+a <- run_acl(x, silent = TRUE)
+b <- run_alscl(x, silent = TRUE)
 ```
 
-`x` 已包含三张输入表、共享生物设置和两个模型各自的配置。`run_acl(x)` 会自动选择 ACL 配置。这里的 `train_times = 2` 表示每个初值连续优化两轮，不是两个独立初值。
+ALSCL 为同一套调查数据提供两个模型。ACL（`run_acl()`）追踪每个年龄的尾数，用年龄—体长概率矩阵把年龄换算成体长。ALSCL（`run_alscl()`）追踪每个体长和年龄的尾数，用生长转移矩阵把存活个体在体长组之间推进，适合难以鉴定年龄的种群。本例 ACL 拟合约二十秒，ALSCL 约两分钟，不含每个模型只做一次的编译。
 
-首次拟合会编译模型，因此可能更慢。运行结束后，`a` 保存 ACL 结果；先检查结果，再比较估计值或解释区间。
+两次调用读取同一个 `x`：三张表、`x$fit_args` 中两个模型共用的生物学设置（补充年龄、年龄组数、自然死亡率 `M`、调查可捕性 `sel_L50` 和 `sel_L95`、体长组和时间步），以及 `x$fit_config$acl` 或 `x$fit_config$alscl` 中各模型自己的初值和 `map`。本页最后一节详细说明输入列表。
 
-<h2 id="section-3">2. 检查拟合结果</h2>
+<h2 id="checks">2. 读数值检查</h2>
 
 ```r
-a$diagnostics
 diagnose_model(x$data.CatL, a)
-plot_residuals(a, type = "year")
+a$diagnostics$numerical_ok
+a$diagnostics$issues
 ```
 
-一起查看优化状态、最大梯度、Hessian 和参数边界，再看残差是否有系统性变化。若数值检查未通过，先按[诊断指南](diagnostics.html)排查，再使用估计量和区间。数值检查通过也不等于模型已经充分描述观测。
+看任何估计值之前先读数值检查。`diagnose_model()` 打印优化器收敛码（0 表示正常结束）、解处的最大绝对梯度（优化器真正到达极小值时小于 0.001）、Hessian 是否正定（计算标准误的前提）、是否有参数落在边界上，以及是否有方差或相关系数估计到了自然尺度的极限。`Numerical screen` 汇总以上各项，与 `a$diagnostics$numerical_ok` 相同；`a$diagnostics$issues` 给出未通过的项目。
 
-结果中最常用的部分是：
+| 未通过的检查 | 常见原因 | 可以尝试 |
+|---|---|---|
+| 收敛码不是 0，或梯度很大 | 优化器提前停止，或目标函数面很平 | 多用几个初值，`run_acl(x, nstarts = 4, ncores = 2)`，在 `a$start_diagnostics` 中比较各初值的目标函数值 |
+| Hessian 不正定 | 某个参数得不到数据的信息 | 用 `map` 固定该参数，或用 `F_structure = "year"` 让各组共用 F（[拟合设置](fitting-controls.html)） |
+| 参数落在边界上 | 边界或初值不适合这个种群 | 用 `inspect_parameters(x, "acl")` 查看初值和边界并调整 |
+| 自然尺度边界 | 标准差接近 0 或相关系数接近 1 | 把该参数固定在有依据的值，或简化 F 结构 |
+| 检查通过但残差有规律 | 模型漏掉了数据中的某种特征 | 继续阅读[诊断](diagnostics.html) |
 
-| 字段 | 内容 |
-|---|---|
-| `diagnostics` | 数值状态及需要排查的问题 |
-| `report` | SSB、补充量等种群量及调查预测 |
-| `opt` | 优化后的标量参数和目标函数值 |
-| `est_std`、`vcov` | 近似标准误和协方差 |
-| `sd_info` | 实际采用的标准误方法和核数 |
-| `obj` | 当前 R 会话中的可执行 TMB 目标函数 |
+<h2 id="estimates">3. 读估计值</h2>
 
 ```r
-names(a$report)
-a$sd_info
+estimates <- extract_estimates(a)
+head(estimates)
+subset(estimates, quantity == "SSB")
+extract_parameters(a)
+plot_SSB(a, se = TRUE)
 ```
 
-<h2 id="compare-models">3. 拟合 ALSCL，并比较两个模型</h2>
+`extract_estimates()` 把种群量整理成一张表：产卵生物量 `SSB`、补充量 `Rec`、总生物量 `B`、丰度 `N`、捕获尾数 `CN` 和捕捞死亡率 `F`，每行有年份、该量所在的年龄或体长（如有）、估计值、标准误和 95% 区间。`extract_parameters()` 列出标量参数的状态（估计或固定）和自然尺度上的估计值。`plot_SSB()` 画出产卵生物量及其区间，其他绘图函数用法相同。
 
-ALSCL 也使用同一个 `x`。函数选择对应的 ALSCL 配置，保留相同的观测和共享生物输入。
+区间只来自被估计参数的标准误；`x$fit_config` 中固定的值不贡献不确定性。表格背后的原始数组在 `a$report` 中（例如 `a$report$SSB`），`a$sd_info` 记录标准误的计算方式。
+
+<h2 id="fit-to-data">4. 检查对观测的拟合</h2>
 
 ```r
-b <- run_alscl(x, train_times = 2, silent = TRUE)
-b$diagnostics
-diagnose_model(x$data.CatL, b)
-plot_residuals(b, type = "year")
+plot_CatL(a, type = "year", facet_ncol = 5)
+plot_residuals(a, type = "year", facet_ncol = 5)
+```
 
+`plot_CatL()` 按年份分面，画出各体长组的观测调查指数（点）和拟合指数（线）。`plot_residuals()` 画同样分面的对数残差，即对数尺度上观测减拟合。可用的拟合在每个面板中残差都围绕 0 散布。若同一年相邻体长组的残差同号成串，或同一体长组多年同号成串，说明模型漏掉了数据中的某种特征，例如一个队列穿过调查范围，或实际选择性与假设不同；[诊断](diagnostics.html)说明如何检查这类规律。
+
+<h2 id="compare">5. 比较 ACL 与 ALSCL</h2>
+
+```r
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+comparison <- compare_models(a, b, x$data.CatL)
+comparison$comparison
+comparison$fit_diagnostics
 ```
 
 ![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
-各面板展示总生物量、产卵生物量和补充量，以及在各自固定假设下的近似区间。应一起比较诊断和轨迹，不能只凭这张图给模型排名。在相同观测集合上开展比较的方法见[模型比较](model-comparison.html)。
+图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；尺度上持续的差异通常来自两个模型在年龄与体长之间换算方式的不同。
 
-<h2 id="next-step">4. 选择下一步</h2>
+`compare_models()` 先核对两次拟合使用的观测相同，再打印 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的假设是否适合这个种群，是另一个需要用生物学知识回答的问题。
 
-| 想完成的任务 | 接着阅读 |
-|---|---|
-| 将教学数据换成自己的观测 | [准备三张输入表](data-preparation.html) |
-| 决定哪些参数固定、哪些估计 | [拟合设置与 map](fitting-controls.html) |
-| 绘制某个种群量 | [调查与种群图](population-plots.html) |
-| 保存结果、检查残差或测试敏感性 | [评估工作流](assessment-workflows.html) |
-| 从拟合模型生成数据，或检验未来预测 | [模拟与预测验证](case-model-validation.html) |
-
-<h2 id="section-2">输入列表、覆盖设置与旧写法</h2>
-
-首个拟合使用上面的直接调用即可。本节用于修改设置或整理已有脚本。
-
-结构化 `x` 的读取顺序为：三张数据表、共享的 `x$fit_args`、所选模型的 `x$fit_config$acl` 或 `x$fit_config$alscl`，最后应用调用时显式传入的参数。例如 `run_acl(x, M = 0.25, nstarts = 4, ncores = 2)` 修改 M，并用最多两个工作进程运行四个独立初值。0.25 仅用于说明覆盖写法，不是对自己种群的推荐值。
-
-列表参数（`parameters`、`map`、`control`）会整体替换已有列表，显式 `NULL` 也会保留。`x$parameters` 中的模拟设置和 `x$truth` 中的生成真值不会被当作拟合参数。修改 map 前请先看[拟合设置](fitting-controls.html)。
-
-自己的数据也可放入扁平命名列表，包含 `data.CatL`、`data.wgt`、`data.mat`、`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95` 及可选拟合参数。结构化输入可省略 `fit_config`，使用模型默认设置；若包含 `fit_config`，则必须包含所选模型。重名、未命名、未知参数或缺少必需参数都会在拟合前报错。
-
-所有写法共用相同拟合核心和 `alscl_speed()` 设置。`ncores` 控制独立初值的工作进程数，`alscl_speed()` 的 `sd_cores` 控制标准误计算。用 `a$sd_info` 或 `b$sd_info` 查看实际执行方式，具体选项见[速度设置](speed.html)。
-
-原来的逐项传参和 `do.call()` 写法继续支持。整理旧脚本时，下面的表达式与 `run_acl(x, silent = TRUE)` 使用相同拟合设置；本教程不必再运行一次。
+<h2 id="save">6. 保存拟合结果</h2>
 
 ```r
-old_args <- c(x[c("data.CatL", "data.wgt", "data.mat")],
-              x$fit_args, x$fit_config$acl, list(silent = TRUE))
-# 可选的旧接口示例：
-# legacy_fit <- do.call(run_acl, old_args)
+save_assessment(a, "ytf_acl.rds")
+saved <- read_assessment("ytf_acl.rds")
+plot_SSB(saved, se = TRUE)
 ```
 
-<h2 id="data-provenance">内置数据的来源与适用范围</h2>
+`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并记录配方（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。
 
-| 对象 | 内容与用途 |
+<h2 id="next">下一步</h2>
+
+| 想做什么 | 阅读 |
 |---|---|
-| `YTF` | 原有 26 项生物参数列表，不含调查表 |
-| `YTF_example` | 23 个体长组 × 20 期；三张表、模拟参数、真值、拟合设置和来源 |
-| `example_data` | 原 ALSCL 保留的 9 组 × 21 年三张表；来源未核实 |
+| 把示例换成自己的数据表 | [准备调查数据](data-preparation.html) |
+| 决定哪些参数固定、哪些估计 | [拟合设置](fitting-controls.html) |
+| 检查残差、比较不同设置 | [诊断](diagnostics.html) |
+| 绘制某个种群量 | [调查与种群图](population-plots.html) |
+| 做敏感性分析、参数剖面和投影 | [评估工作流](assessment-workflows.html) |
+| 从拟合模型模拟，或检验对未来年份的预测 | [模型验证](case-model-validation.html) |
 
-`YTF_example` 复用 `YTF` 的共有参数，包括调查对数 SD = 0.1，其余采用 flatfish 预设。随机种子为 4，预热 80 年后保留 20 年。年份仅为示意，cm 和 kg 是教学单位约定，数据不是论文的实测样本。[数据生成脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R)可重建对象，并恢复调用者的随机数状态。
+<h2 id="bundle">run_acl(x) 如何读取输入列表</h2>
 
-`x$fit_config` 固定已知生长及部分过程／相关参数，区间不包含这些固定值的不确定性。本例不能证明同时估计全部参数时可识别。模型比较与回溯分析应保留原始设置。
+输入列表 `x` 是一个命名列表。三张表 `data.CatL`、`data.wgt` 和 `data.mat` 存放观测。`x$fit_args` 存放两个模型共用的设置：`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`len_mid`、`len_border` 和 `growth_step`。`x$fit_config$acl` 和 `x$fit_config$alscl` 存放各模型的初值（`parameters`）和 `map`。其他元素，例如 `YTF_example` 中的模拟真值 `truth` 和来源 `provenance`，拟合函数不会读取。
+
+设置按这个顺序读取：数据表，然后 `fit_args`，然后所选模型的 `fit_config`，最后是调用时给出的参数。因此调用中的参数会覆盖保存的值，而 `map` 这类列表参数会整体替换保存的列表。
+
+```r
+# 两个工作进程运行四个初值；保存的 M 仅在本次调用中换成 0.25
+a4 <- run_acl(x, nstarts = 4, ncores = 2, M = 0.25)
+```
+
+也可以把每张表和每项设置作为单独参数传入，旧脚本常用 `do.call(run_acl, args)`；两种写法使用同一套拟合代码。只包含三张表和 `rec.age`、`nage`、`M`、`sel_L50`、`sel_L95` 的扁平命名列表同样可以作为输入列表。
+
+<h2 id="data-provenance">内置数据说明</h2>
+
+| 对象 | 内容 |
+|---|---|
+| `YTF_example` | 三张表（23 个体长组、20 个年份）、`fit_args`、`fit_config`、生成真值 `truth` 和来源 `provenance` |
+| `YTF` | 原有的 26 项生物参数列表，不含调查表 |
+| `example_data` | 三张较早的 ALSCL 数据表（9 个体长组，2001-2021），来源未核实，为兼容保留 |
+
+`YTF_example` 由包内模拟器生成（种子 4，预热 80 年，保留 20 年，调查对数 SD 0.1），不是论文的实测数据。[生成脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R)可以重建它。

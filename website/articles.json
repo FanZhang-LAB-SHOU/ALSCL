@@ -2,37 +2,37 @@
   {
     "slug": "getting-started",
     "title": {
-      "en": "Getting started",
-      "zh": "开始使用"
+      "en": "Install and run a first fit",
+      "zh": "安装并完成第一次拟合"
     },
     "source": "docs/wiki/01-Start.md",
     "description": {
-      "en": "Install the package and a compatible C++ compiler, check dependencies, and prepare an R session for TMB model fitting.",
-      "zh": "安装软件包与兼容的 C++ 编译器，检查依赖，并准备 TMB 模型拟合环境。"
+      "en": "Install the compiler and the package, load the example data, fit one model and read its numerical checks.",
+      "zh": "安装编译器和软件包，加载示例数据，拟合一个模型并读数值检查。"
     }
   },
   {
     "slug": "first-model",
     "title": {
-      "en": "Your first fit",
-      "zh": "完成第一个拟合"
+      "en": "Understand your first fit",
+      "zh": "理解第一次拟合"
     },
     "source": "docs/wiki/04-Built-in-YTF.md",
     "description": {
-      "en": "Fit run_acl() and run_alscl() to the bundled synthetic YTF example and learn the fitted objects, settings and data provenance.",
-      "zh": "对内置模拟 YTF 示例运行 run_acl() 与 run_alscl()，了解拟合对象、参数设置与数据来源。"
+      "en": "What a fitted object contains, how to judge it, how to read the estimates, and how ACL and ALSCL compare.",
+      "zh": "拟合结果包含什么、怎样判断它可用、怎样读估计值，以及 ACL 与 ALSCL 的比较。"
     }
   },
   {
     "slug": "data-preparation",
     "title": {
-      "en": "Prepare your own data",
-      "zh": "准备自己的数据"
+      "en": "Prepare your survey data",
+      "zh": "准备调查数据"
     },
     "source": "docs/wiki/03-Data-and-Excel.md",
     "description": {
-      "en": "Align the survey-number, mean-weight and maturity tables by length bin and time. Import Excel or CSV files and distinguish missing observations from genuine zeros.",
-      "zh": "按体长组和时间对齐调查数量、平均个体重量与成熟比例三张表。导入 Excel 或 CSV，并区分缺失观测与真实零值。"
+      "en": "Lay out the three tables, choose the time step, read the files, add the biology and check the bundle before fitting.",
+      "zh": "排好三张表，确定时间步，读入文件，加入生物学设置，并在拟合前检查输入列表。"
     }
   },
   {
@@ -50,13 +50,13 @@
   {
     "slug": "fitting-controls",
     "title": {
-      "en": "Fitting controls",
-      "zh": "初值、边界与拟合"
+      "en": "Choose the fitting settings",
+      "zh": "选择拟合设置"
     },
     "source": "docs/wiki/06-Fitting.md",
     "description": {
-      "en": "Set starting values, bounds, fixed parameters, time steps and successive optimization passes for run_acl() and run_alscl().",
-      "zh": "为 run_acl() 与 run_alscl() 设置初值、边界、固定参数、时间步和连续优化轮数。"
+      "en": "Decide which parameters are estimated or fixed, set starting values and bounds, choose the F structure and control the optimizer.",
+      "zh": "决定哪些参数估计或固定，设置初值和边界，选择 F 结构，控制优化器。"
     }
   },
   {
@@ -86,13 +86,13 @@
   {
     "slug": "diagnostics",
     "title": {
-      "en": "Diagnostics",
-      "zh": "诊断与结果解读"
+      "en": "Judge whether a fit can be used",
+      "zh": "判断拟合是否可用"
     },
     "source": "docs/wiki/07-Diagnostics.md",
     "description": {
-      "en": "Use diagnose_model() and diagnostic_metrics() to inspect optimization, gradients, the Hessian, boundaries and residual patterns before interpreting estimates.",
-      "zh": "使用 diagnose_model() 与 diagnostic_metrics() 检查优化、梯度、Hessian、参数边界和残差，再解释估计结果。"
+      "en": "Numerical checks, residual patterns, comparison of configurations and sensitivity to the fixed values.",
+      "zh": "数值检查、残差规律、设置之间的比较和对固定值的敏感性。"
     }
   },
   {
@@ -110,8 +110,8 @@
   {
     "slug": "retrospectives",
     "title": {
-      "en": "Retrospectives",
-      "zh": "回溯分析"
+      "en": "Run a retrospective analysis",
+      "zh": "运行回溯分析"
     },
     "source": "docs/wiki/11-Retrospectives.md",
     "description": {
@@ -122,8 +122,8 @@
   {
     "slug": "assessment-workflows",
     "title": {
-      "en": "Assessment workflows",
-      "zh": "评估工作流"
+      "en": "Assessment workflows: from bundle to saved results",
+      "zh": "评估工作流：从输入列表到保存结果"
     },
     "source": "docs/ASSESSMENT_WORKFLOWS.md",
     "description": {
@@ -170,8 +170,8 @@
   {
     "slug": "simulation",
     "title": {
-      "en": "Simulation",
-      "zh": "模拟与批量实验"
+      "en": "Simulate survey data",
+      "zh": "模拟调查数据"
     },
     "source": "docs/wiki/05-Simulation.md",
     "description": {
@@ -194,8 +194,8 @@
   {
     "slug": "reproducibility",
     "title": {
-      "en": "Reproducibility",
-      "zh": "进阶、复现与故障处理"
+      "en": "Reproduce results and fix problems",
+      "zh": "复现结果与排除故障"
     },
     "source": "docs/wiki/15-Reproducibility.md",
     "description": {

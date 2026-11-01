@@ -1,3 +1,15 @@
+# Unreleased
+
+- Rewrite the website tutorials as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history is kept in this file only. The English and Chinese pages share one block structure.
+- Generate the bilingual manuals (`docs/USER_GUIDE.md`, `ASSESSMENT_WORKFLOWS.md`, `MODEL_VALIDATION.md`, `CASE_STUDIES.md`, `PLOT_STYLE.md`, `SPEED_GUIDE.md`, `ADVANCED_WORKFLOWS.md` and the new `CASES.md`), the book and the Wiki from the article pairs with `scripts/build_manual.py`, so every tutorial is written once per language. Remove `MATHEMATICAL_FRAMEWORK.md`, `BOOK_THEORY_NOTES.md` and the `RELEASE_2.2.x.md` notes, whose content is in the theory page and in this file.
+- Shorten `README.md` to an entry page: what the package does, documentation links, installation, a ten-line example and the citation.
+
+### 未发布 · 简体中文
+
+- 网站教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本文件中。中英文页面采用相同的段落结构。
+- 双语手册（`docs/USER_GUIDE.md`、`ASSESSMENT_WORKFLOWS.md`、`MODEL_VALIDATION.md`、`CASE_STUDIES.md`、`PLOT_STYLE.md`、`SPEED_GUIDE.md`、`ADVANCED_WORKFLOWS.md` 和新增的 `CASES.md`）、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。删除 `MATHEMATICAL_FRAMEWORK.md`、`BOOK_THEORY_NOTES.md` 和 `RELEASE_2.2.x.md`，其内容已在模型原理页和本文件中。
+- `README.md` 精简为入口页：软件包功能、文档链接、安装、十行示例和引用。
+
 # ALSCL 2.3.0
 
 - Release the nineteen assessment-workflow functions added since 2.2.9 (data preparation and checks, result extraction and archives, sensitivity scenarios, profiles, projections, fitted-model simulation and hindcast validation): 64 exported functions.

@@ -1,3 +1,8 @@
+## Unreleased
+
+- The tutorials are rewritten as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history stays on this page.
+- The bilingual manuals, the book and the Wiki are generated from the article pairs with `scripts/build_manual.py`, so each tutorial is written once per language. `README.md` is now an entry page.
+
 ## ALSCL 2.3.0
 
 - Release the nineteen assessment-workflow functions added since 2.2.9 (data preparation and checks, result extraction and archives, sensitivity scenarios, profiles, projections, fitted-model simulation and hindcast validation): 64 exported functions.

@@ -1,151 +1,131 @@
-# Reproducibility
+# Reproduce results and fix problems
 
-Complete the [worked YTF example](first-model.html) first. The examples below use its `x`, `inputs`, `a` (ACL) and `b` (ALSCL) objects.
+After [Understand your first fit](first-model.html) you have the input bundle `x` and the fitted ACL model `a`. On this page you record what the fit depends on, rebuild it in a later session, run fits in parallel, keep the compiled models between sessions, and look up the common errors.
 
-## Sensitivity to fixed assumptions
-
-
-Changing M, q or fixed CV can alter abundance and SSB. Vary justified assumptions on identical observations and retain diagnostics, rather than optimizing assumptions solely for AIC.
+<h2 id="record">1. Record what a fit depends on</h2>
 
 ```r
-# Use inputs and x defined in the guide
-sensitivity <- lapply(c(.15, .20, .25), function(M_value) {
-  fit <- run_alscl(x, M = M_value, train_times = 2, silent = TRUE)
-  list(M=M_value, diagnostics=diagnose_model(x$data.CatL, fit), fit=fit)
-})
-# Inspect each diagnostic before comparison
-lapply(sensitivity, function(z) z$diagnostics)
-plot_compare_ts(sensitivity[[1]]$fit, sensitivity[[3]]$fit,
-                model1_name="M = 0.15", model2_name="M = 0.25")
+save_assessment(a, "ytf_acl.rds", overwrite = TRUE)
+packageVersion("ALSCL")
+a$recipe$versions
+a$recipe$implementation$source$revision
+writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
+`save_assessment()` writes the fit without the live TMB object `a$obj` and with a recipe that records everything the fit depends on:
 
-Review bounds and maps before releasing parameters. ACL and ALSCL use different t0 parameterizations. Compare objectives, gradients and derived quantities across credible starting values.
-
-## Parallelism and compilation
-
-```r
-# Fall back safely when core count is unavailable
-cores <- parallel::detectCores()
-workers <- if (is.na(cores)) 1L else max(1L, min(4L, cores - 1L))
-# Supply ncores once
-multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
-```
-
-|Entry| ncores=1 | ncores>1 |
-|---|---|---|
-| `run_acl`, `run_alscl` |Sequential execution of nstarts starts|Up to min(ncores, nstarts) socket workers|
-| `sim_acl` |Sequential replicates|Parallel replicates|
-| `retro_model`, `retro_acl`, `retro_alscl` |Sequential peels|Parallel peels|
-
-For `retro_acl(x)` and `retro_alscl(x)`, a stored fitting `ncores` is ignored; set `ncores` explicitly on the retrospective call to control peel workers. `nstarts` still controls the number of starts in each fit, executed sequentially. Inspect `fit_diagnostics` before interpreting `rho_text`; an invalid required fit makes the screened rho unavailable.
-
-
-Set `nstarts` to the same value when comparing worker counts. Its default is `ncores` for compatibility, so changing only `ncores` also changes the amount of work. Later starts use the same deterministic perturbations in serial and parallel runs. `multi$start_diagnostics` records each start’s PID, elapsed and CPU seconds, objective and convergence. More starts can help explore local optima but do not establish convergence; the selected result has the lowest finite objective. Runtime includes serial preparation, reporting and standard errors as well as the slowest worker and startup overhead. Avoid oversubscribing nested parallel jobs. Socket workers support Windows, macOS and Linux.
-
-
-Fits compile automatically with a cache keyed by sources, headers, R/TMB/RcppEigen and compilation options. Call run_acl() or run_alscl() directly to compile and fit. An OpenMP compiler option alone does not guarantee parallel likelihood evaluation.
-
-```r
-# Optional writable compilation cache
-options(ALSCL.tmb.cache=file.path(tempdir(), "alscl_tmb_cache"))
-```
-
-
-Use an R-compatible C++ toolchain: command-line tools on macOS, matching Rtools on Windows, and C++/make on Linux. Resolve dependency and toolchain failures before fitting.
-
-## Save portable results
-
-```r
-# obj contains session-specific external pointers
-portable <- function(fit) fit[setdiff(names(fit), "obj")]
-saveRDS(portable(b), "alscl_report.rds")
-capture.output(sessionInfo(), file="sessionInfo.txt")
-saved <- readRDS("alscl_report.rds")
-saved$report$SSB
-# These plots can use saved reports
-plot_SSB(saved)
-```
-
-
-Saved fits containing observations and fitted reports support `plot_ridges()` without a live TMB object. Older fits without saved observations still require their original live object or refitting. Record version, commit, seed, provenance, units, maps, bounds, time step and diagnostics. An RDS file does not preserve a portable compiled model.
-
-## Troubleshooting
-
-
-|Symptom|Action|
+| Item | Where in the saved fit |
 |---|---|
-| `YTF$data.CatL` is NULL |Load the input-data object|
-| Excel years become X2000 |Preserve original headers|
-| Discontinuous length boundaries |Verify actual bin definitions|
-| Zero survey observations |Establish meaning before excluding zeros|
-| Missing weight or maturity |Supply defensible complete biology|
-| Nonzero optimizer code, large gradient or non-positive-definite Hessian |Investigate data and parameterization|
-| Quarterly F appears small |Rates are per step, not auto-annualized|
-| ACL F plot with `type="length"` |Current ACL compatibility alias plots age-specific F|
-| Growth intervals collapse to a line |Expected when growth parameters are fixed|
+| Tables, settings, starting values, bounds, `map`, `nstarts` and the other arguments of the call | `recipe$args` |
+| ALSCL, TMB and R versions | `recipe$versions` |
+| MD5 hashes of the model source, Git revision when known, platform, BLAS, LAPACK, Matrix and RcppEigen | `recipe$implementation` |
+| Speed settings, `framework` and `sd_cores` | `recipe$settings` |
 
+`sessionInfo()` adds the operating system, the BLAS and LAPACK libraries and the loaded packages; keep its output next to the saved file. A fitted-model simulation also depends on its seed, which `simulate_fit()` records in `metadata$seed`.
 
-Executable scripts and numerical results accompany the guide. Interpret figures in light of model assumptions and data provenance.
+`save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when an older fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
 
-## Measured parallel performance
-
-On 7 October 2026, we ran real ACL and ALSCL fits on an Apple M2 Pro (32 GiB). Each trial used **the same four starts**, two optimizer passes per start, and the first 10 years of synthetic `YTF_example` (23 length bins, 15 ages). Each setting was repeated three times. Compilation and warm-up were excluded; worker startup, fitting, reporting and standard errors were included.
-
-| Model | Workers | Median (s) | Range (s) | Speedup |
-|---|---:|---:|---:|---:|
-| ACL | 1 | 4.23 | 4.18–4.44 | 1.00× |
-| ACL | 2 | 3.50 | 3.27–3.90 | 1.21× |
-| ACL | 4 | 3.08 | 2.93–3.14 | 1.38× |
-| ALSCL | 1 | 71.38 | 71.28–72.35 | 1.00× |
-| ALSCL | 2 | 45.03 | 44.55–51.00 | 1.59× |
-| ALSCL | 4 | 33.23 | 31.21–33.95 | 2.15× |
-
-![Measured total fitting times](../../../docs/figures/parallel/timing.png)
-
-The points show all three measurements; lines show medians and bars show ranges. The computer was shared with other analyses, so results are conditional on this workload and machine. Smaller jobs can lose time to worker startup, and the serial reporting phase limits speedup.
-
-![Actual concurrent fitting processes](../../../docs/figures/parallel/worker-timeline.png)
-
-The first four-worker trials recorded four different PIDs with overlapping execution intervals and real CPU usage. All 18 timed fits and 72 starts passed the benchmark checks. Starting vectors and per-start objectives agreed across worker counts; the selected fits passed optimizer, Hessian, gradient and boundary checks. The unchanged C++ likelihood is evaluated within each worker; a single start is still serial.
-
-See the [full bilingual report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md), [raw run timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv), [per-start evidence](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/starts.csv) and [reproducible benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R). The report also records the original-version test and distinguishes it from an equal-work speed comparison.
-
-## Speed settings for one fit
-
-`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. With the default settings, the parallel standard errors match the sequential calculation at the same fitted parameters: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in GUI front-ends such as RStudio). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
+<h2 id="reproduce">2. Reproduce a fit later</h2>
 
 ```r
-# Defaults: identical results, parallel standard errors
-alscl_speed()
-b <- run_alscl(x, silent = TRUE)
-# Faster option; results not identical to the default
-alscl_speed(framework = "TMBad")
-# Sequential standard errors, for example inside your own parallel loop
-alscl_speed(sd_cores = 1)
+saved <- read_assessment("ytf_acl.rds")
+refit <- refit_model(saved)
+max(abs(refit$opt$par - saved$opt$par))
+all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-In a benchmark of 90 fits on 12 October 2026 (ACL and ALSCL fitted to `YTF_example` and the flatfish and tuna cases, three runs each, Apple M2 Pro shared with other jobs), the default settings made fits 1.13-1.24 times faster and `framework = "TMBad"` 1.25-1.68 times faster than the original code.
+`read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
 
-| Model | Original (s) | Default (s) | TMBad (s) |
-|---|---:|---:|---:|
-| ACL, YTF_example | 8.6 | 7.7 (1.13×) | 6.6 (1.31×) |
-| ALSCL, YTF_example | 140.9 | 118.8 (1.19×) | 83.9 (1.68×) |
-| ALSCL, flatfish | 107.8 | 86.9 (1.24×) | 78.8 (1.37×) |
-| ALSCL, tuna (quarterly) | 217.4 | 180.9 (1.20×) | 141.3 (1.54×) |
+On the same computer with the same versions of ALSCL, TMB and R, the scalar parameters agree to the last digit and `all.equal()` returns `TRUE`. Differences in the last digits between machines or package versions come from floating-point arithmetic and the optimizer's stopping rule; a difference large enough to change a conclusion means the data, settings or package version differ.
 
-![Fit time before and after the speed settings](../../../docs/figures/speed/timing.png)
+`refit_model()` warns when the ALSCL, TMB, Matrix or RcppEigen version or the model source differs from the recipe; to reproduce exactly, install the versions in `saved$recipe$versions`. `A complete fit recipe is required` means the fit has no recipe; save it again with `x` as in step 1.
 
-With the default settings, every estimate, the objective function and every row of `summary(sdreport)` were identical to the original code in all six combinations, and `R CMD check` passed on Linux, macOS and Windows.
+<h2 id="parallel">3. Run fits in parallel</h2>
 
-![Estimates and standard errors before and after the speed settings](../../../docs/figures/speed/agreement.png)
+```r
+a4 <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+a4$start_diagnostics
+a4$workers
+```
 
-The [speed settings](speed.html) article explains every setting, how to check what your session does and how socket workers are used on Windows and in RStudio. See also the [speed report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md), the [raw timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/speed/runs.csv) and the [benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_speed.R).
+`ncores` sets how many socket workers, new R processes, a function starts. Each worker runs whole starts or whole fits, so the results are the same as in a sequential run.
 
-### Consistent package libraries in 2.2.5
+| Function | What runs on the workers | Starts in each fit |
+|---|---|---|
+| `run_acl()`, `run_alscl()` | The starts, on at most `min(ncores, nstarts)` workers | `nstarts`, default `ncores` |
+| `retro_model()`, `retro_acl()`, `retro_alscl()` | The peels of the retrospective analysis | The explicit `nstarts` of the bundle or call, otherwise one, in sequence |
+| `fit_scenarios()`, `hindcast_model()` | The tasks: one scenario or training fold each | The same rule |
+| `sim_model()`, `sim_acl()`, `sim_alscl()` | The replicates | `nstarts`, default one |
 
-Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
+Because `nstarts` defaults to `ncores`, set both when you compare timings. Later starts add fixed perturbations and the lowest objective is selected, so the result is the same for any `ncores`; `a4$start_diagnostics` records each start. The other functions ignore the `ncores` of a bundle and give each fit one worker and sequential standard errors.
 
-### Consistency corrections
+The cores used for the standard errors inside one fit are a separate setting, `alscl_speed(sd_cores = ...)`, with results identical to the sequential calculation; [Speed settings](speed.html) explains it.
 
-Installed socket workers load the same package installation as the parent. During `pkgload::load_all()` or `testthat::test_local()`, workers instead load the same source checkout with pkgload. Install the optional development dependency pkgload for this workflow. CI exercises both source-mode parallel tests and the complete installed-package checks.
+In a benchmark on 7 October 2026 (Apple M2 Pro, R 4.6.0, TMB 1.9.21), both models were fitted to the first 10 years of `YTF_example` with the same four starts, three times per number of workers; compilation was excluded and worker start-up included.
+
+| Model | Workers | Median (s) | Range (s) | Speed-up |
+|---|---:|---:|---:|---:|
+| ACL | 1 | 4.23 | 4.18-4.44 | 1.00x |
+| ACL | 2 | 3.50 | 3.27-3.90 | 1.21x |
+| ACL | 4 | 3.08 | 2.93-3.14 | 1.38x |
+| ALSCL | 1 | 71.4 | 71.3-72.4 | 1.00x |
+| ALSCL | 2 | 45.0 | 44.6-51.0 | 1.59x |
+| ALSCL | 4 | 33.2 | 31.2-34.0 | 2.15x |
+
+![Measured fitting times with one, two and four workers](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/parallel/timing.png?raw=true)
+
+The points are the three measurements, the lines the medians and the bars the ranges. The computer was shared with other analyses, so the results are conditional on that workload and machine. See the [benchmark report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md), the [raw timings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv) and the [benchmark script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R).
+
+<h2 id="compile">4. Compilation and the cache</h2>
+
+```r
+options(ALSCL.tmb.cache = tools::R_user_dir("ALSCL", "cache"))
+a <- run_acl(x, silent = TRUE)
+list.files(getOption("ALSCL.tmb.cache"))
+```
+
+The first fit of each model compiles its C++ template into a cache folder named by a key computed from the MD5 hashes of the model source and header, the R, TMB and RcppEigen versions, the OpenMP flag and the `framework`; a fit with the same key loads the library without compiling. The default cache lies under `tempdir()`, which R removes at the end of the session. Set `ALSCL.tmb.cache` before the first fit, for example in `.Rprofile`, to keep the compiled models between sessions; socket workers load the library compiled by the session.
+
+Compiling needs a C++ compiler:
+
+| System | Compiler |
+|---|---|
+| Windows | Rtools for your R version |
+| macOS | The Xcode Command Line Tools (`xcode-select --install`) |
+| Linux | A C++ compiler and `make`, for example `build-essential` |
+
+[Install ALSCL and run a first fit](getting-started.html#compiler) explains the installation; compilation errors name `TMB::compile`, `make` or the compiler.
+
+<h2 id="troubleshoot">5. Troubleshooting</h2>
+
+Error messages are quoted as the package prints them.
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `YTF$data.CatL` is `NULL` | `YTF` holds parameters, not tables | Use `YTF_example` |
+| Year labels read as `X2000`, or `must match data.CatL length labels and time columns` | `read.csv()` adds `X`; the tables differ | Read all tables with `check.names = FALSE` |
+| `Length intervals must have positive widths and be contiguous` | Bin labels overlap or leave gaps | Correct the labels or supply `len_mid` and `len_border` |
+| `Time columns must have increasing numeric labels` or `Time column spacing must equal growth_step` | A missing time step or a wrong `growth_step` | Keep the step as an NA column and set `growth_step` |
+| Zeros in the survey table | Zeros count as missing (`zero_action = "missing"`) | Decide whether a zero is real before fitting |
+| Blank cells in the weight or maturity table | Both tables must be complete | Fill them and record the source |
+| Convergence code not 0, large gradient or Hessian not positive definite | The optimizer stopped early or a parameter is not informed | See [Understand your first fit](first-model.html#checks) |
+| Quarterly F looks small | F is per time step, never annualized | Report F per time step |
+| `plot_fishing_mortality(a, type = "length")` warns on an ACL fit | ACL has no F by length; `"length"` means `"age"` | Use `type = "age"` or fit ALSCL |
+| `plot_VB()` draws a line without an interval | The growth parameters are fixed | Expected; release them with `map` |
+| The first fit names `TMB::compile`, `make`, `g++` or `clang` | No compiler, or Rtools for another R version | Install the compiler (step 4), restart R |
+| `Install RcppEigen to compile model templates` or `Model sources are missing` | RcppEigen absent, or a damaged installation | Install RcppEigen or reinstall ALSCL |
+| `Socket worker loaded a different ALSCL installation` | A worker found an older copy in another library | Keep one installation, or use `ncores = 1` |
+| Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | The new R processes could not start | Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
+| `rho_text$Rho` is `NA` after a retrospective analysis | A fit failed the numerical checks | Read `fit_diagnostics` and `rho_by_peel`, fix that fit |
+| `The current implementation differs from the saved assessment` | Package, TMB or model source changed since the save | Expect last-digit differences, or install the recorded versions |
+| `A complete fit recipe is required` | The fit has no recipe | Refit, or save with `x = x` |
+
+<h2 id="next">What next</h2>
+
+| What you want to do | Read |
+|---|---|
+| Test the sensitivity of the estimates to the fixed values | [Judge whether a fit can be used](diagnostics.html#sensitivity) |
+| Choose the speed settings and check what your session does | [Speed settings](speed.html) |
+| Run a retrospective analysis and read Mohn's rho | [Retrospectives](retrospectives.html) |
+| Simulate from the fit or test predictions of withheld periods | [Model validation](case-model-validation.html) |
+| Compare scenarios, profile a parameter, project forward | [Assessment workflows](assessment-workflows.html) |

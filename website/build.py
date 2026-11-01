@@ -130,7 +130,7 @@ def rewrite_links(soup, route, lang):
                   'FUNCTION_REFERENCE.md': 'reference/index.html', 'CASE_STUDIES.md': 'articles/case-studies.html',
                   'PLOT_STYLE.md': 'articles/plot-customization.html', 'ADVANCED_WORKFLOWS.md': 'articles/reproducibility.html',
                   'ASSESSMENT_WORKFLOWS.md': 'articles/assessment-workflows.html', 'MODEL_VALIDATION.md': 'articles/case-model-validation.html',
-                  'BOOK_THEORY_NOTES.md': 'articles/model-theory.html', 'MATHEMATICAL_FRAMEWORK.md': 'articles/model-theory.html'}
+                  'CASES.md': 'articles/index.html', 'SPEED_GUIDE.md': 'articles/speed.html'}
     section_routes = {'theory':'model-theory','builtin':'first-model','simulation':'simulation','excel':'data-preparation',
                       'observations':'data-preparation','fitting':'fitting-controls','diagnostics':'diagnostics',
                       'plotting':'population-plots','retrospective':'retrospectives'}

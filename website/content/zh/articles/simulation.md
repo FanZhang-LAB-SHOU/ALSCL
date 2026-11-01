@@ -1,15 +1,11 @@
-# 模拟与批量实验
+# 模拟调查数据
 
-运行以下示例前先加载 R 包。下文的 `source("scripts/…")` 需在仓库根目录运行；公开的批量拟合函数可直接通过已安装的包调用。
+读完本页，你会得到拟合函数可以直接使用的模拟调查表、重复文件（每个文件是一套模拟数据集，连同生成它的种群一起保存），以及对这些重复的拟合结果的偏差、RMSE 和区间覆盖率表。步骤 2 到 4 使用 `scripts/simulation_workflow.R` 中的 `simulation_to_tables()` 和 `run_simulation_examples()`，请在仓库根目录运行 R。
+
+<h2 id="choose">1. 选择模拟器</h2>
 
 ```r
 library(ALSCL)
-```
-
-## 1. 选择模拟器
-
-```r
-# 简单年度模拟，可直接导出 CSV
 quick <- simulate_example_data(
   years = 2000:2019, seed = 42, bin_breaks = seq(5, 51, 2),
   Linf = 60, vbk = 0.2, t0 = 1/60, M = 0.2, nage = 15,
@@ -17,117 +13,110 @@ quick <- simulate_example_data(
   wgt_a = exp(-12), wgt_b = 3, mean_F = 0.3,
   cv_catch = 0.2, rec_sigma = 0.3,
   save_csv = TRUE, output_dir = "my_simulation")
-str(quick)
+str(quick, max.level = 1)
+initialize_params(species = "?")
 ```
 
-`years` 必须是连续年度，不能通过写季度列名把该简易模拟器变成季度模型。`cv_catch` 控制调查观测 CV；`rec_sigma` 控制对数补充变异；该函数使用简化的共同 F、独立补充扰动及固定长度 CV = 0.1。它不等于完整 Beverton–Holt 模拟器，也不等于内置 `YTF_example` 的生成流程。
+`simulate_example_data()` 是快速模拟器，用于测试导入、拟合和绘图：一次调用返回调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，生成时使用的真值放在 `true_params` 中，`save_csv = TRUE` 还会把它们写成 CSV 文件保存到 `output_dir`。它对所有年龄使用同一个捕捞死亡率，体长 CV 固定为 0.1。`years` 必须是连续的日历年；把列名改成季度并不会产生季度动态。
 
+完整操作模型用于对照已知种群的实验，需要三次调用：`initialize_params()` 由预设生成参数列表，`sim_cal()` 据此推导生物学数组，`sim_data()` 让种群经过预热期（最初被丢弃的年份）向前演进，并为每次重复写一个文件；补充量服从 Beverton-Holt 曲线，补充量和捕捞死亡率都带有 AR(1) 过程偏差。下表比较两个预设；[`initialize_params()` 的函数参考](../reference/initialize_params.html)列出全部设置。
 
-### 年度与季度模拟模型
+| 设置 | flatfish | tuna |
+|---|---|---|
+| 操作模型 | 年龄结构 | 年龄与体长联合 |
+| `growth_step` | 1 年 | 0.25 年 |
+| `nyear`、`burn_in` | 100、80 年 | 100、95 年 |
+| 保留的观测 | 20 个年度时间步 | 20 个季度时间步 |
+| `nage`、`rec.age` | 15 个年龄组、1 年 | 20 个年龄组、0.25 年 |
+| `Linf`、`vbk` | 60、每年 0.2 | 152、每年 0.38 |
+| `M`、`F_mean` | 0.2、0.3（每个年度时间步） | 0.2、0.2（每个季度时间步） |
 
-两个预设的 seed 4 数据、三张 CSV 和完整真值对象已随文档保存，见[下载及读取方法](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/cases/README.md)。
+`str()` 显示三张表和 `true_params`；`initialize_params(species = "?")` 列出各预设。无效输入，例如 `L95_sel` 小于 `L50_sel`，会在写任何文件之前停止调用。
+
+<h2 id="generate">2. 生成重复并转换成输入表</h2>
 
 ```r
-# 参数 → 生物量表 → 随机模拟
+source("scripts/simulation_workflow.R", encoding = "UTF-8")
 pa <- initialize_params(species = "flatfish", first.year = 2000,
                         observation_error = "independent")
 bio <- sim_cal(pa)
 sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
                output_dir = "simulation_examples/flatfish")
-# 长度型季度案例
+inputs <- simulation_to_tables(sm, pa)
 tuna_pa <- initialize_params(species = "tuna", first.year = 2000)
 tuna <- sim_data(sim_cal(tuna_pa), tuna_pa, iter_range = 4:5,
                  return_iter = 4, output_dir = "simulation_examples/tuna")
-# 将模拟矩阵变成模型输入
-source("scripts/simulation_workflow.R", encoding = "UTF-8")
-flatfish_inputs <- simulation_to_tables(sm, pa)
 tuna_inputs <- simulation_to_tables(tuna, tuna_pa)
+sm$years
+tuna$years
+str(inputs)
 ```
 
-|设置| flatfish / YTF 风格 | tuna / 金枪鱼风格 |
-|---|---|---|
-|生成模型|年龄型|年龄与长度联合|
-| `growth_step` |1 年|0.25 年|
-| `nyear`, `burn_in` |100, 80 年|100, 95 年|
-|保留观测|20 年度|20 季度|
-| `nage`, `rec.age` |15, 1 年|20, 0.25 年|
-| `Linf`, `vbk` |60, 0.2/年|152, 0.38/年|
-| `M`, `F_mean` |0.2, 0.3 每年|0.2, 0.2 每季度|
+`iter_range` 给出重复编号，编号同时作为随机种子；`sim_data()` 用 `save()` 把每次重复保存为 `output_dir` 中的 `sim_rep<id>` 文件，读取时用 `load()`，`return_iter` 选择返回到内存的那一次。在 `sm` 中，`SN_at_len` 是按时间乘体长排列的调查尾数矩阵，`weight` 和 `mat` 按体长乘时间排列，`years` 是保留时间步的日历，`nyear` 是它们的个数，`SSB`、`Rec`、`TB` 和 `N_at_age` 是生成真值。
 
-这是包内的两个模拟预设案例，不能当成已取得论文两个案例的原始观测。完整参数见 [initialize_params](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#initialize_params)。`nyear`、`burn_in`、`sim_year` 的单位是**年**；返回 `sm$nyear` 是保留的**时间步数**。`SN_at_len` 是时间 × 长度，导入时要转置；`weight` 和 `mat` 已是长度 × 时间。
+`simulation_to_tables(sm, pa)` 转置 `SN_at_len`，用体长中点作为行标签、用 `sm$years` 作为列名，并把三张表作为一个列表返回；[模拟调查数据案例](case-simulate-survey.html)从 `pa` 加入生物学设置并拟合一次重复。`run_simulation_examples(out = "simulation_examples")` 为两个预设完成本步骤，把表写成 CSV 文件并在旁边保存 `truth.rds`；两个预设的第 4 次重复已保存在仓库中，见[下载和读取说明](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/cases/README.md)。
 
+如果 `simulation_to_tables()` 因参数列表中的 `len_mid` 与重复文件记录的坐标不同而停止，请传入生成该文件的参数列表。把 `sim_rep` 文件、参数列表和软件包版本与实验一起保存；[更新日志](../news/index.html)列出模拟器的改动。
 
-`iter_range` 同时指定重复编号和随机种子；`return_iter` 选择在内存中返回哪次重复。每个 `sim_rep4` 等文件由 `save()` 写出，应用 `load()`，不是 `readRDS()`。`observation_error="independent"` 让每个长度与时间单元有独立扰动；`"shared_time"` 让同一期的长度组共享扰动，适合专门的误差结构实验。
-
+<h2 id="rates">3. 设置死亡率、变异和时间单位</h2>
 
 ```r
-# 同时生成两个案例及 CSV、真值文件
-cases <- run_simulation_examples(out = "simulation_examples", fit_batch = FALSE)
-# 加上两个 ACL 重复拟合，保存失败诊断
-# run_simulation_examples(out = "simulation_examples", fit_batch = TRUE)
-e <- new.env()
-load("simulation_examples/flatfish/sim_rep4", envir = e)
-str(e$sim.data)
+mean(quick$true_params$F_trend)
+pa$F_sd / sqrt(1 - pa$F_ar^2)
+short_pa <- initialize_params(species = "flatfish", nyear = 5, burn_in = 2,
+                              first.year = 2024)
+short <- sim_data(sim_cal(short_pa), short_pa, iter_range = 4:5,
+                  return_iter = 4, output_dir = "simulation_examples/short")
+short$years
+short$nyear
 ```
 
-## 2. 明确死亡率、变异和时间单位
+快速模拟器的 `mean_F` 是生成的年度 F 的算术平均值。完整模拟器的 `F_mean` 是 `F[t] = F_mean * exp(d[t])` 中的基准水平，其中 `d[t]` 是均值为零的 AR(1) 过程，系数为 `F_ar`，创新标准差为 `F_sd`，所以生成的 F 的平均值与 `F_mean` 不同；与拟合所得对数 F 标准差比较时，应使用边际标准差 `F_sd / sqrt(1 - F_ar^2)`，而不是 `F_sd`。`std_logR` 和 `R_ar` 对补充量起同样作用，`std_SN` 是对数调查误差的标准差，`M` 和 `F_mean` 是每个时间步的速率，因此 tuna 的取值按季度计。
 
-`simulate_example_data()` 的 `mean_F` 是生成年度 F 序列的算术平均值。完整模拟器的 `F_mean` 则是 `F[t] = F_mean * exp(d[t])` 中的过程基准水平；加入随机偏差后，通常不等于实际序列的算术平均值。`F_sd` 是对数 F 的 AR(1) 创新标准差，平稳相关为 `F_ar` 时，边际标准差为 `F_sd / sqrt(1 - F_ar^2)`，不同于拟合模型采用的边际对数 F 标准差。`q_surv_L50` 和 `q_surv_L95` 定义调查可捕性曲线，是调查输入，不是捕捞选择性的估计结果。
+`nyear` 和 `burn_in` 都是以年为单位的时长；`growth_step` 必须能整除一年，`burn_in` 必须是 `growth_step` 的整数倍且小于 `nyear`，并且至少要保留两个时间步才能拟合。`first.year` 标记第一个保留的时间步，`sm$nyear` 是保留的时间步数。如果调用因 `burn_in` 不是 `growth_step` 的整数倍而停止，年度时间步请用整年，季度时间步请用整季度。
 
-完整模拟器的 `nyear`、`burn_in` 都以年为单位，且分别必须对应整数个 `growth_step`。因此季度模式允许半年预热，年度模式不允许。返回的 `sm$nyear` 是保留时间步数；`first.year` 是第一期保留观测的年份，`sm$years` 保存完整观测时间轴。`simulation_to_tables()` 与批量拟合函数保留这条时间轴；完全没有年份元数据的旧文件仍可使用从 2000 开始的后备规则。只保留一期时仍返回矩阵，但拟合至少需要两期。
+<h2 id="fit">4. 拟合重复并汇总</h2>
 
 ```r
-quick <- simulate_example_data(years = 2000:2019, mean_F = 0.3, seed = 42)
-stopifnot(isTRUE(all.equal(mean(quick$true_params$F_trend), 0.3)))
-zero_F <- simulate_example_data(years = 2000:2019, mean_F = 0, seed = 42)
-stopifnot(all(zero_F$true_params$F_trend == 0))
-pa <- initialize_params(species = "flatfish", nyear = 5, burn_in = 2,
-                        first.year = 2024)
-sm <- sim_data(sim_cal(pa), pa, iter_range = 4:5, return_iter = 4,
-               output_dir = "simulation_224")
-stopifnot(identical(as.numeric(sm$years), as.numeric(2024:2026)))
-source("scripts/simulation_workflow.R", encoding = "UTF-8")
-inputs <- simulation_to_tables(sm, pa)
+data("YTF_example")
+cfg <- YTF_example$fit_config$acl
+fits <- sim_acl(iter_range = 4:5, sim_data_path = "simulation_examples/flatfish",
+                output_dir = "simulation_examples/fits_acl",
+                parameters = cfg$parameters, map = cfg$map, M = pa$M,
+                nstarts = 2, ncores = 2)
+truth <- setNames(lapply(4:5, function(i) {
+  e <- new.env(parent = emptyenv())
+  load(file.path("simulation_examples/flatfish", paste0("sim_rep", i)), envir = e)
+  s <- e$sim.data
+  list(year = s$years, SSB = as.numeric(s$SSB), Rec = as.numeric(s$Rec))
+}), paste0("result_rep_", 4:5))
+performance <- summarize_simulations(fits, truth, quantities = c("SSB", "Rec"))
+performance$replicates
+performance$summary
 ```
 
-## 3. 检查生物输入与零值
+`sim_acl()` 读取 `sim_data_path` 中的每个 `sim_rep<id>` 文件，从文件构造三张表和生物学设置，再用你传入的初值、`map` 和 `M` 拟合 ACL；`sim_alscl()` 用 ALSCL 的参数名做同样的事。`YTF_example` 的设置把生长参数和部分过程参数固定在 flatfish 预设值上；自己的设置按[选择拟合设置](fitting-controls.html)构造。每次重复在一个工作进程中拟合，它的 `nstarts` 个初值依次运行；`ncores` 决定同时运行多少次重复。每次重复的结果，包括带有 `converge = "FAILED"` 和 `error` 信息的失败，都会返回并保存为 `output_dir` 下的 `result_rep_<id>`。
 
-`mat_func()` 使用稳定的 logistic 计算，陡峭上升曲线接近 1 时不会溢出。`L50` 与 `L95` 必须是不同的有限标量；仍允许下降曲线（`L95 < L50`），用于穹顶选择性。体长及派生生物矩阵必须有限，模拟的自然与捕捞死亡率必须非负。当 `M = 0` 且 `F_mean = 0` 时，渔获尾数和生物量为零；丰度和补充量仍按选定模拟模型演变。
+`summarize_simulations()` 需要真值列表与拟合列表同名，每个元素包含 `year` 和每个量的一个向量，这里从重复文件读取，使时间坐标一致。`performance$replicates` 给出每次重复的数值检查和错误信息；`performance$summary` 按量给出失败率、偏差、相对偏差、RMSE 和区间覆盖率，以及各自的计数。偏差和 RMSE 只使用通过数值检查的拟合，覆盖率还需要有限的标准误，所以报告统计量时要一并报告 `failure_rate`。如果调用停止并提示“identical unique replicate names”或“time coordinates differ”，说明真值不是从拟合所用的同一批文件读取的。
+
+<h2 id="fitted">5. 从拟合模型模拟</h2>
 
 ```r
-stopifnot(all(is.finite(mat_func(20, 20.1, c(20, 30, 50)))))
-pa0 <- initialize_params(species = "flatfish", nyear = 4, burn_in = 2,
-                         M = 0, F_mean = 0)
-sm0 <- sim_data(sim_cal(pa0), pa0, iter_range = 4,
-                output_dir = file.path(tempdir(), "alscl-zero-mortality"))
-stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
+fit <- run_acl(YTF_example, silent = TRUE)
+simulated <- simulate_fit(fit, nsim = 3, seed = 42, process = "resample")
+names(simulated$simulations[[1]])
+simulated$simulations[[1]]$truth$SSB
 ```
 
-### 体长分组与过程参数
+`simulate_fit()` 从拟合好的 ACL 或 ALSCL 模型生成数据集，这就是拟合模型模拟。`process = "conditional"` 保留拟合的种群，只重新抽取观测误差；`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差。`simulated$simulations` 的每个元素包含 `x`（`run_acl(x)` 可用的输入列表）、`observations` 和 `truth`，所以可以用 `lapply(simulated$simulations, function(s) s$truth)` 作为真值，对再拟合结果运行 `summarize_simulations()`。未通过数值检查的拟合会被拒绝，除非设置 `allow_failed_fit = TRUE`；[模型验证案例](case-model-validation.html)再拟合这些重复，并继续做预测检验。
 
-快速模拟器把首尾体长组分别积分到负无穷和正无穷，与拟合模型一致。有限 `bin_breaks` 仍用于标签与中点，不截断概率。M、F 和噪声尺度必须非负，生长参数为正、重量系数非负，选择性及成熟曲线的 95% 端点高于 50% 端点。非法参数或非有限生成结果会在创建 CSV 前报错。完整模拟器还检查年龄—体长概率及生长转移概率的归一化。
+<h2 id="next">下一步</h2>
 
-完整模拟器要求 `init_Z`、过程与观测标准差、F 过程基准水平均为有限非负值。`F_ar` 与 `R_ar` 必须严格介于 -1 和 1 之间，允许负的平稳相关。Beverton–Holt 的 alpha 和初始补充量可以为零，beta 必须为正。非法过程输入会在随机抽样或创建文件前报错，保留已有模拟文件及调用者的随机数状态。
-
-### 保留观测尺度与坐标
-
-完整模拟保留零值和极小正调查观测。调查生物量等于调查尾数乘以重量，零资源情形也保持一致。拟合时，`zero_action = "missing"` 将零视为缺失，`"error"` 拒绝零值；全零调查没有正观测，不能使用当前对数正态模型拟合。
-
-模拟体长中点必须落在对应组内，检查规则与拟合一致；首尾组仍吸收分布尾部。参数准备阶段会拒绝无效分组，生物量计算和模拟前还会再次检查，包括用户手动修改的输入；错误发生在随机抽样和写文件前。
-
-## 4. 批量拟合并汇总表现
-
-`sim_model(model = "acl")` 和 `sim_model(model = "alscl")` 可批量拟合重复文件；`sim_acl()` 和 `sim_alscl()` 提供模型专用入口，原来的 `sim_acl()` 写法保留。自行循环调用 `run_acl()` 或 `run_alscl()` 也是可选方式。生成器与拟合器的参数名不同，应使用对应模型的初值与 map，保留每次重复及其生成真值，并报告偏差、RMSE、区间覆盖率和失败率。匹配输入与汇总分母见[完整批量示例](assessment-workflows.html)。
-
-`sim_model()`、`sim_acl()` 和 `sim_alscl()` 在发送 socket 任务前求值路径与参数变量，因此一般控制台或脚本中的变量传参也支持多核。保留失败重复并检查逐次拟合诊断；工作进程运行成功并不单独证明评估结果可用。
-
-`sim_model()`、`sim_acl()` 和 `sim_alscl()` 将每次重复的结果（包括失败状态）保存到 `result_rep_<iter>`。复用输出目录时，本轮失败记录会替换旧成功结果；汇总前检查 `converge` 和 `error`。写入失败会明确报告，不能视为已经保存。`simulation_to_tables(sm, pa)` 使用模拟结果的长度坐标，并拒绝与参数不一致的坐标，不再给观测重新贴错标签；没有坐标的旧模拟可使用匹配的参数元数据。
-
-## 复现已保存的实验
-
-复现旧实验时，应保存原始输入、生成真值、种子和包的代码版本。2.2.4 对快速模拟器 `mean_F` 的修正、首尾组概率积分修正，以及 2.2.9 取消完整模拟器调查值的 `1e-6` 下限，都可能使相同种子重新生成不同观测。已保存的数据不会被改写。版本沿革见[更新日志](../news/index.html)。
-
-
-## 直接从评估拟合生成模拟数据
-
-`simulate_fit(fit, process = "conditional")` 在拟合状态下改变观测；`process = "resample"` 重新抽取拟合模型的补充、F 及初始状态偏差。两种模式均固定标量参数，保留可直接再拟合的输入列表与真值，与上面的操作模型模拟用途不同。完整步骤见[拟合模型模拟与预测验证案例](case-model-validation.html)。现有模拟批次也支持 `nstarts`，在每个重复内部依次运行；`ncores` 控制同时运行的重复数。
+| 想做什么 | 阅读 |
+|---|---|
+| 绘制一次重复，用两个模型拟合并与真值比较 | [如何模拟调查数据？](case-simulate-survey.html) |
+| 再拟合拟合模型模拟的数据并预测留出年份 | [模型验证](case-model-validation.html) |
+| 用更少的时间运行更多重复 | [速度设置](speed.html) |
+| 保存种子、设置和版本以便重复实验 | [复现结果](reproducibility.html) |
+| 比较年度和季度设置 | [年度与季度时间步](case-studies.html) |
+| 拟合自己的表 | [准备调查数据](data-preparation.html) |

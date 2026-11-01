@@ -1,37 +1,38 @@
-# Getting started
+# Install ALSCL and run a first fit
 
-Set up R, install ALSCL, then run the bundled example. You do not need your own survey files for the first fit.
+On this page you install the package, confirm that it loads, and fit one model to the bundled example. You need R 4.1 or later and an internet connection; you do not need survey data of your own yet. Allow about fifteen minutes, most of it for the one-time compilation in step 4.
 
-| Step | What you will have |
+| Step | What you will have afterwards |
 |---|---|
-| Prepare the compiler | The tools needed to compile the models on your computer |
-| Install and check the package | ALSCL loaded in R and the example data available |
-| Run the first example | A fitted model, numerical diagnostics and a plot |
+| 1. Install the compiler | The tools that build the two models on your computer |
+| 2. Install the package | ALSCL and its dependencies installed from GitHub |
+| 3. Load and check | The package and the example data loaded in your session |
+| 4. Fit the example | A fitted ACL model and its numerical checks |
 
-<h2 id="section-2">1. Prepare the compiler</h2>
+<h2 id="compiler">1. Install the compiler</h2>
 
-Model fitting requires an R-compatible C++ toolchain. Install the tools for your platform before the first fit.
+The two models are written in C++ for Template Model Builder (TMB). The first fit compiles them on your computer; later fits reuse the compiled files. Install the compiler for your system before the first fit.
 
-| Platform | Requirement |
+| System | What to install |
 |---|---|
-| Windows | Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) matching your R version. |
-| macOS | Install the Xcode Command Line Tools; use the R distribution's recommended compiler configuration. |
-| Linux | Install a C++ compiler, make and the development tools required by your R distribution. |
+| Windows | [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your R version |
+| macOS | The Xcode Command Line Tools (`xcode-select --install` in Terminal) |
+| Linux | A C++ compiler and `make`, for example `build-essential` on Debian and Ubuntu |
 
-The fitting functions compile the bundled C++ templates into a writable session cache. They manage compilation automatically. The first fit may take longer than later fits.
+If the compiler is missing, the first fit in step 4 stops with an error that mentions the compiler or `TMB::compile`. Install the tools, restart R and run the fit again.
 
-<h2 id="section-1">2. Install from GitHub</h2>
-
-Run the installation commands once, and repeat them when you want to update. This installs the current `main` source, including additions listed under **Unreleased** in the [changelog](../news/index.html). An earlier release tag may not contain those functions.
+<h2 id="install">2. Install the package</h2>
 
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 ```
 
-<h2 id="check-installation">3. Check that the package and data load</h2>
+ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](../news/index.html) lists what changed.
 
-Start each new analysis session by loading the package. The following check reads the bundled data without compiling or fitting a model.
+If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1.
+
+<h2 id="load">3. Load the package and the example data</h2>
 
 ```r
 library(ALSCL)
@@ -40,16 +41,28 @@ data("YTF_example")
 str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 ```
 
-You should see the installed version and three tables with matching length bins and time columns. Package dependencies are installed automatically. Excel import additionally requires `readxl`; install it when you reach the [data preparation guide](data-preparation.html).
+Every session starts with `library(ALSCL)`. `YTF_example` is a synthetic dataset shaped like a yellowtail flounder survey: a survey index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length bins in rows and 20 years in columns. The first column holds the length-bin labels; the other columns are the years.
 
-<h2 id="section-4">4. Run your first analysis</h2>
+You should see version 2.3.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
-Continue to the [first fit with the bundled YTF example](first-model.html). It creates the `x`, `a` and `b` objects used throughout the tutorials, then shows what to check before interpreting the plots.
+<h2 id="first-fit">4. Fit the example</h2>
 
-Once that example works, follow [data preparation](data-preparation.html) to organize your own observations. Use the [function reference](../reference/index.html) when you need a complete argument list. Installation or compilation problems are covered in [troubleshooting](reproducibility.html).
+```r
+x <- YTF_example
+a <- run_acl(x, silent = TRUE)
+diagnose_model(x$data.CatL, a)
+```
 
-<h2 id="section-3">When do I need the repository files?</h2>
+`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about twenty seconds. `silent = TRUE` hides the progress messages.
 
-Ordinary package calls, such as `run_acl()` and `plot_SSB()`, work after `library(ALSCL)`. The first-fit tutorial uses only bundled data.
+`diagnose_model()` prints the numerical checks of the fit: the optimizer convergence code (0 means it finished normally), the maximum absolute gradient at the solution (below 0.001), whether the Hessian is positive definite (`TRUE`, so standard errors can be computed) and whether a parameter sits on a bound (`FALSE`). The line `Numerical screen: TRUE` summarizes them; the same value is stored in `a$diagnostics$numerical_ok`. If it is `FALSE`, `a$diagnostics$issues` names the failed check, and [Understand your first fit](first-model.html) explains each check and what to do about it.
 
-Examples containing `source("scripts/...")` or a `docs/data/...` path also need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL). Open its root directory as your R working directory before running those examples. The [Excel workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx) can also be downloaded separately.
+<h2 id="next">What next</h2>
+
+| What you want to do | Read |
+|---|---|
+| See what the fitted object contains and how to judge it | [Understand your first fit](first-model.html) |
+| Fit your own survey tables | [Prepare your survey data](data-preparation.html) |
+| Fix an installation or compilation problem | [Reproducibility and troubleshooting](reproducibility.html) |
+
+Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.

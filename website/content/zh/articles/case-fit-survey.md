@@ -1,150 +1,66 @@
-# 如何把自己的正式数据整理成 x？
+# 如何拟合自己的调查数据？
 
-## 输入列表的结构
+本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）、按[准备调查数据](data-preparation.html)排好的三张表，以及第 1 步列出的生物学数值。
 
-ALSCL 提供了[完整可执行脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R)：读取 CSV 或 Excel 三表、组装 `x`、直接调用 `run_acl(x)` 和 `run_alscl(x)`、检查诊断、绘图并保存结果。演示使用内附的模拟 YTF 数据。**换成正式数据时，必须修改第 1–3 步的数据、生物参数、参数边界和固定假设，不能只换文件路径。**
-
-|x 中的字段|内容|
-|---|---|
-|`data.CatL`|按体长和时间排列的调查数量或口径一致的标准化数量指数|
-|`data.wgt`|平均单尾重量，不是该组总捕获重量|
-|`data.mat`|成熟比例，取值为零到一|
-|`fit_args`|共用生物参数、时间步、体长分组与拟合控制|
-|`fit_config$acl`|ACL 的初值、可选边界与 map|
-|`fit_config$alscl`|ALSCL 的初值、可选边界与 map|
-
-两个函数读取相同三表与共用设置，再选择对应模型配置。调用时显式传参优先级最高；列表参数会整体替换已有列表。具体规则见[输入列表与参数覆盖](first-model.html)。
-
-## 准备三张表
-
-把 `data.CatL.csv`、`data.wgt.csv` 和 `data.mat.csv` 放在同一文件夹。三表都以 `LengthBin` 为第一列，其余表头为数值时间；维度、标签和顺序必须一致。示例的标签是数值体长中点。年度或季度序列应保留所有规则时间点；调查缺测填写 `NA`，体重和成熟比例仍须完整。不要把缺失观测改成零。
-
-也可以使用 [Excel 模板](../assets/manual/data/ALSCL_Data_Entry_Example.xlsx)，工作表名称分别为 `data.CatL`、`data.wgt` 和 `data.mat`。另外记录物种、指数标准化方法、单位、体长边界及零值含义。
-
-![调查数量：模拟工作簿格式](../assets/manual/figures/excel_CatL.png)
-
-![平均单尾重量：模拟工作簿格式](../assets/manual/figures/excel_wgt.png)
-
-![成熟比例：模拟工作簿格式](../assets/manual/figures/excel_mat.png)
-
-这些图片展示内附模拟数据，不是你的研究种群的实测结果。体长和重量单位必须在整个分析中保持一致。
-
-## 哪些输入需要自己提供
-
-`parameters` 提供初值，或由 `map` 固定的参数取值。**填写一个数值本身不等于固定参数。** 以下数据和生物设置不会由任一拟合函数估计。
-
-|输入|需要提供的内容|
-|---|---|
-|`data.CatL`|按体长和时间排列的调查数量或口径一致的标准化数量指数，不是总捕获重量|
-|`data.wgt`, `data.mat`|与调查表对齐的平均单尾重量和成熟比例；作为已提供的值使用|
-|`M`|有外部依据的每模型步长自然死亡率；年度瞬时率乘以 `growth_step`|
-|`rec.age`, `nage`, `growth_step`|补充年龄（年）、包含加组的年龄组数、每步多少年|
-|`sel_L50`, `sel_L95`|固定调查可捕性曲线的位置，L95 大于 L50；不是待估的捕捞选择性|
-|`len_mid`, `len_border`|实际体长组中点和内部边界；核对任何从标签推导的值|
-
-`map` 不能让 `M`、调查可捕性或年龄与分组定义变成待估参数：它们是当前模型的输入，不属于参数向量。模型不会自动传播这些输入的不确定性。请记录来源、单位和敏感性情景；脚本中的生物数值是演示设置，不是你研究种群的估计结果。
-
-## 哪些参数可以由模型估计
-
-只要 map 允许，下表中的每个标量参数都可以参与估计。未提供的初值和边界使用套件默认值，部分初值会根据数据调整；仍需核对是否适合你的物种。`log_` 参数填写 `log(原尺度值)`，相关系数初值填写 `qlogis(rho)`，其中 `0 < rho < 1`；当前模型的这些相关系数限于正值。
-
-|含义|ACL 名称|ALSCL 名称|
-|---|---|---|
-|用于初始年龄结构的总死亡率|`log_init_Z`|`log_init_Z`|
-|初始对数数量偏差标准差|`log_std_log_N0`|`log_sigma_log_N0`|
-|对数补充量的位置参数|`mean_log_R`|`mean_log_R`|
-|补充过程标准差尺度|`log_std_log_R`|`log_sigma_log_R`|
-|补充量时间相关性|`logit_log_R`|`logit_log_R`|
-|对数捕捞死亡率的位置参数|`mean_log_F`|`mean_log_F`|
-|捕捞死亡率过程标准差尺度|`log_std_log_F`|`log_sigma_log_F`|
-|捕捞死亡率时间相关性|`logit_log_F_y`|`logit_log_F_y`|
-|捕捞死亡率年龄／体长相关性|`logit_log_F_a`|`logit_log_F_l`|
-|渐近体长和年度 VB 生长 k|`log_Linf`, `log_vbk`|`log_Linf`, `log_vbk`|
-|VB t0|`t0`（原尺度）|`log_t0`（对数尺度）|
-|年龄对应体长的 CV|`log_cv_len`|`log_cv_len`|
-|生长增量 CV|无此参数|`log_cv_grow`|
-|对数调查观测标准差|`log_std_index`|`log_sigma_index`|
-
-`log_init_Z` 与输入的自然死亡率 `M` 不同。对数过程位置参数取指数不等于无条件算术均值。ACL 允许负的 `t0`；ALSCL 当前要求 `0 < t0 < rec.age`，不能把外部负 t0 取绝对值后使用。初值和 `parameters.L` / `parameters.U` 均采用优化器尺度；相等上下界会报错，固定参数请使用 map。
-
-模型还会推断随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0`。它们的维度根据数据构建，不要加入标量初值列表。ACL 的 F 随年龄和年份变化，ALSCL 的 F 随体长和年份变化。这些随机效应不列在 `fit$opt$par` 中。
-
-## 如何设置 map 而不把参数都固定住
-
-|设置|效果|
-|---|---|
-|`parameters = list(log_Linf = log(60))`|自由参数的初值；只有 map 固定它时才成为固定值|
-|`map = list(log_Linf = factor(NA))`|将 Linf 固定在提供的值，未提供时使用其模型默认值|
-|`map = list(log_std_log_F = NULL)`|解除 ACL 这一默认固定项，其他项仍按模型默认规则|
-|`map = NULL` 或 `map = list()`|使用模型默认规则，不是全部开放估计|
-|`run_acl(x)` / `run_alscl(x)` 不写 `map`|使用对应 `x$fit_config` 中保存的 map（如果存在）|
-
-|模型|默认固定的标量参数|其余自由标量参数数目|
-|---|---|---|
-|ACL|`log_std_log_F`, `logit_log_F_y`, `logit_log_F_a`, `t0`|10|
-|ALSCL|`log_sigma_log_F`, `log_t0`|13|
-
-下方完整脚本使用 `map_acl <- list()` 和 `map_alscl <- list()`：**取消旧教学例子对生长、初始数量变异和补充量相关性等参数的额外固定**，保留上表列明的模型默认固定项。所有固定值仍需审查。默认设置是可复现的对照配置，不代表每个数据集都能识别全部自由参数。
-
-本脚本仍固定的标量取值为：两个模型的 F 过程标准差 0.2、t0 = 1/60，以及 ACL 跨年份和跨年龄的 F 相关系数 0.75（这两个固定相关参数的套件初值）。这些数值也必须按你的种群审查。脚本使用两轮连续优化（`train_times = 2`），不是两个独立起点。
-
-不修改旧 x，也可以直接取消其中额外的教学固定设置：
-
-```r
-fit_acl <- run_acl(x, map = NULL)
-fit_alscl <- run_alscl(x, map = NULL)
-```
-
-如果只固定 t0、估计其余标量参数，需要显式解除其他默认固定项。将 map 保存回 x 后仍可直接调用：
-
-```r
-x$fit_config$acl$map <- list(
-  t0 = factor(NA), log_std_log_F = NULL,
-  logit_log_F_y = NULL, logit_log_F_a = NULL)
-x$fit_config$alscl$map <- list(
-  log_t0 = factor(NA), log_sigma_log_F = NULL)
-# 先审查 parameters 中保存的 t0 / log_t0 取值。
-fit_acl <- run_acl(x)
-fit_alscl <- run_alscl(x)
-# ACL 有 13 个自由标量参数，ALSCL 有 14 个。
-```
-
-这组更灵活的设置是可选方案，不是下方配图使用的基线。若 t0 也需要估计，应保留具名 NULL 项：
-
-```r
-x$fit_config$acl$map["t0"] <- list(NULL)
-x$fit_config$alscl$map["log_t0"] <- list(NULL)
-# 下次拟合时，全部 14 / 15 个标量参数均自由。
-```
-
-不要用 `map$t0 <- NULL` 解除默认固定的 t0：它会删除条目，随后默认规则会再次固定 t0。解除列表应直接传给 `run_*()` 或保存在 x 中。`generate_map()` 仅使用 ACL 默认规则，而且返回值会移除 NULL 项；将其结果再交给 `run_acl()` 会重新补入缺失的默认项，可能撤销原本的解除设置。
-
-显式传入的 `map` 会整体替换 x 中原有 map，然后应用模型默认规则。若只修改保存的一个项目并保留其他设置，例如使用 `x$fit_config$acl$map["log_Linf"] <- list(NULL)`。正式分析不要对每个初值自动应用 `factor(NA)` 来生成 map。
-
-拟合后检查实际自由参数和诊断：
-
-```r
-names(fit_acl$opt$par)
-fit_acl$par_low_up
-names(fit_alscl$opt$par)
-fit_alscl$par_low_up
-diagnose_model(x$data.CatL, fit_acl)
-diagnose_model(x$data.CatL, fit_alscl)
-```
-
-同时检查优化码、梯度、Hessian、边界、估计不确定性和残差。将逐组解除的配置分别保存并比较诊断；增加优化次数或起点数不能让缺乏信息的参数变得可识别。较少固定项的拟合可能暴露旧教学设置掩盖的问题，应报告这些问题，不能为了得到好看的诊断而悄悄增加固定项。
-
-## 运行完整示例
-
-下面保留的旧工作流从下载的仓库根目录运行，并加载辅助脚本。当前开发版本另有公开的 read_survey_csv()、read_survey_excel()、prepare_alscl_data() 和 check_alscl_data()，不需要 source 该脚本，详见[完整工作流](assessment-workflows.html)。CSV 不需要额外读取器；Excel 使用可选的 `readxl`。
+<h2 id="bundle">1. 准备并检查输入列表</h2>
 
 ```r
 library(ALSCL)
-packageVersion("ALSCL")
-source("scripts/fit_own_data_example.R", encoding = "UTF-8")
+tables <- read_survey_csv("my_data")
+x <- prepare_alscl_data(tables, fit_args = list(
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1, len_mid = seq(6, 50, 2), len_border = seq(7, 49, 2)))
+check <- check_alscl_data(x, "acl")
+check$valid
+check$summary
 ```
 
-脚本创建 `x`、`a`（ACL）和 `b`（ALSCL），并在 `output/own-data-example` 保存输入、可移植结果摘要、两张 PNG 图和会话信息。正式分析时也应修改输出目录。下面是完整代码，可复制为 R 脚本，也可直接修改配套文件。
+两个模型都读取输入列表 `x`：调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，行是体长组，列是时间步；再加上 `x$fit_args` 中描述你的种群和调查的设置。`read_survey_csv()` 从一个文件夹读取三个文件，`read_survey_excel()` 读取一个工作簿中的三张工作表；表格布局、时间网格以及空白和零值的处理见[准备调查数据](data-preparation.html)。下表中的设置是模型照原样使用的输入；请为你的种群逐项提供，并记下来源。代码中的数值是教学数据的设置。
+
+| 设置 | 含义 | 数值来源 |
+|---|---|---|
+| `rec.age` | 最小年龄组的年龄（年） | 鱼首次出现在调查中的年龄 |
+| `nage` | 年龄组数；最后一组是加组 | 值得追踪的最大年龄除以 `growth_step` |
+| `M` | 每个时间步的自然死亡率 | 文献或生活史方法；年值乘以 `growth_step` |
+| `sel_L50`、`sel_L95` | 调查可捕性达到 50% 和 95% 的体长；`sel_L95` 较大 | 渔具选择性研究或渔获体长分布 |
+| `growth_step` | 每个时间步的年数：年度为 1，季度为 0.25 | 时间标签的间隔 |
+| `len_mid` | 每个体长组的中点，每行一个 | 调查设计 |
+| `len_border` | 相邻体长组之间的内部边界，比行数少一个 | 调查设计；只有等宽体长组才取相邻中点的中间值 |
+
+`check_alscl_data()` 按拟合时的方式准备数据，但不编译任何东西。`check$valid` 应为 `TRUE`，`check$summary` 应显示你预期的体长组数和时间步数、正观测数，以及将被估计的标量参数个数 `free_fixed`。若 `check$valid` 为 `FALSE`，`check$errors` 会指出要修改的表、时间列或设置；`check$warnings` 提示没有任何观测的时间步或体长组。拟合 ALSCL 之前，用 `"alscl"` 再检查一遍。
+
+<h2 id="map">2. 确定初值和 map</h2>
+
+```r
+plan <- inspect_parameters(x, "acl")
+plan[, c("parameter", "status", "map_source", "natural_start")]
+inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
+```
+
+`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态：`free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 是随机效应，总是被估计。
+
+| 含义 | ACL 参数 | ALSCL 参数 |
+|---|---|---|
+| 初始总死亡率（决定初始年龄结构） | `log_init_Z` | `log_init_Z` |
+| 初始丰度偏差的标准差 | `log_std_log_N0` | `log_sigma_log_N0` |
+| 平均对数补充量 | `mean_log_R` | `mean_log_R` |
+| 补充量偏差的标准差 | `log_std_log_R` | `log_sigma_log_R` |
+| 补充量在时间上的相关 | `logit_log_R` | `logit_log_R` |
+| 平均对数捕捞死亡率 | `mean_log_F` | `mean_log_F` |
+| F 偏差的标准差 | `log_std_log_F` | `log_sigma_log_F` |
+| F 在时间上的相关 | `logit_log_F_y` | `logit_log_F_y` |
+| F 在年龄或体长之间的相关 | `logit_log_F_a` | `logit_log_F_l` |
+| 渐近体长和年生长速率 | `log_Linf`、`log_vbk` | `log_Linf`、`log_vbk` |
+| 体长为零时的年龄 | `t0`（原尺度） | `log_t0`（对数尺度） |
+| 年龄别体长的离散程度 | `log_cv_len` | `log_cv_len` |
+| 生长增量 CV | 无 | `log_cv_grow` |
+| 调查观测标准差 | `log_std_index` | `log_sigma_index` |
+
+初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，因此它的 `t0` 必须在 0 和 `rec.age` 之间。填写初值不会固定参数：只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法提供某个参数的信息时，固定该参数，并记录每个固定值的来源。[拟合设置](fitting-controls.html)给出 `map`、边界和物种预设的规则；[估计参数清单](estimation-parameters.html)给出全部变换方式。
+
+<h2 id="run">3. 运行完整示例</h2>
+
+下面的脚本用教学数据完整运行每一步：读取 `docs/data` 中的三个 CSV 文件，把生物学设置收在 `bio` 中，由行标签推出体长组中点和边界，设置两个模型的初值和 map，组装并检查 `x`，拟合 ACL（`a`）和 ALSCL（`b`），打印它们的数值检查，绘制 `b` 的残差图和产卵生物量图，并把输入列表、两个拟合的可移植副本、两张图和会话信息保存到 `output/own-data-example`。请在下载的仓库根目录运行，因为脚本要加载 `scripts/plot_helpers.R` 并读取 `docs/data`：`source("scripts/fit_own_data_example.R", encoding = "UTF-8")`。
 
 ```r
 # ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
@@ -283,70 +199,86 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 # b <- run_alscl(x)
 ```
 
-## 替换成自己的正式数据
+脚本运行时会打印两个模型的 `check$summary`；教学数据显示 23 个体长组、20 个时间步、460 个正观测、没有零值和空白，以及 10 个（ACL）或 13 个（ALSCL）自由标量参数。随后 `diagnose_model()` 打印每个拟合的数值检查，第 5 步会解释。在记录运行（[own-data-example-checks.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)）中，两个拟合的收敛码都是 0，Hessian 正定，没有参数落在边界上，最大梯度约为 3e-9。脚本保存的两张图如下：
 
-1. **文件：**把 `data_dir` 改为自己的 CSV 文件夹，例如 `"my_data"`。读取 Excel 则改用 `read_survey_excel("my_survey.xlsx")`。保留数值时间表头，辅助函数会避免 R 自动将 `2000` 改名为 `X2000`。
-2. **生物参数与单位：**修改 `bio`。`rec.age` 以年为单位，`nage` 是含加组的年龄组数量。年度序列使用 `growth_step = 1`；规则季度表头如 `2020`、`2020.25`、`2020.5`、`2020.75`，使用 `0.25`。脚本将年瞬时自然死亡率乘以时间步长度，得到每步 `M`；生长参数 `vbk` 仍以年为单位。`sel_L50`、`sel_L95` 表示调查可捕性，不是待估的渔业选择性。
-3. **体长组：**填写真实的 `len_mid` 和 `len_border`。示例按中点计算边界，仅适用于其中连续等宽的体长组。内部边界数应比体长组数少一，首尾尾部由模型处理。若标签为 `"5-7"` 这类区间，本脚本需要另外填写数值中点向量。
-4. **模型假设：**审查 `p_acl`、`p_alscl`、边界和 map。新版例子使用模型默认 map，ACL 估计 10 个、ALSCL 估计 13 个标量参数，不再额外固定生长等参数。默认仍固定的值需要外部依据和敏感性检查。具名 NULL 可解除默认固定项，详见上文。可在对应 `fit_config` 中添加 `parameters.L` 和 `parameters.U`。
-5. **零值与缺失：**脚本设置 `zero_action = "error"`，遇到调查零值先停止。确认含义后再决定处理方式；`"missing"` 会把零值从似然中排除。不要随意添加极小常数。参见[数据准备](data-preparation.html)。
+![完整示例的 ALSCL 逐年残差](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true)
 
-ACL 使用原尺度 `t0`，ALSCL 使用 `log_t0`，当前要求 `0 < t0 < rec.age`。不要对负的外部 t0 估计取对数或绝对值以强行兼容。两个模型的若干方差参数名称也不同，不能直接互换整套参数列表。
+![完整示例的 ALSCL 产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true)
 
-## 直接拟合与检查加速
+每一年的残差都围绕 0 散布，产卵生物量序列的区间较窄，这就是这组模拟数据上可用拟合的样子；区间以固定值为条件。若脚本停在 `stopifnot(packageVersion("ALSCL") >= "2.3.0")`，安装当前版本（[安装 ALSCL](getting-started.html)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明工作目录不是仓库根目录；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
 
-组装好自己的 `x` 后，调用仍然很简单：
+<h2 id="replace">4. 换成自己的观测数据</h2>
+
+```r
+data_dir <- "my_data"
+bio <- list(rec.age = 2, nage = 12, M_annual = 0.25,
+            growth_step = 1, sel_L50 = 22, sel_L95 = 30,
+            Linf = 80, vbk = 0.15, t0 = 0.5,
+            cv_len = 0.15, cv_grow = 0.15)
+len_mid <- c(8, 11, 14, 17, 20, 24, 28, 33, 39, 46)
+len_border <- c(9.5, 12.5, 15.5, 18.5, 22, 26, 30.5, 36, 42.5)
+map_acl <- list(log_Linf = factor(NA), log_vbk = factor(NA))
+map_alscl <- list(log_Linf = factor(NA), log_vbk = factor(NA))
+# 然后运行脚本中的 prepare_alscl_data() 调用，并确认：
+for (model in c("acl", "alscl")) {
+  check <- check_alscl_data(x, model)
+  print(check$valid); print(check$warnings); print(check$summary)
+  print(inspect_parameters(x, model)[, c("parameter", "status", "map_source")])
+}
+```
+
+上面的数值只是说明每一项的形式，不是任何种群的估计值。保留 `inputs`、`x`、`a` 和 `b` 这些名字，脚本的其余部分就不用改。
+
+| 脚本中的行 | 改成 | 注意 |
+|---|---|---|
+| `data_dir <- "docs/data"` | 你的 CSV 文件夹，或 `inputs <- read_survey_excel("my_survey.xlsx")` | 三个文件或工作表必须使用这些名称；调查缺测留空 |
+| `bio <- list(...)` | 你的种群的数值 | `M_annual` 是年值，会乘以 `growth_step`；`vbk` 仍按年计；ALSCL 要求 `0 < t0 < rec.age` |
+| `len_mid <- ...`、`len_border <- ...` | 你的体长组中点和内部边界 | 体长组宽度不等时，删除等宽 `stopifnot()` 和中点公式那两行 |
+| `p_acl`、`p_alscl` | 优化器尺度上的初值 | ACL 填 `t0`，ALSCL 填 `log(t0)` |
+| `map_acl`、`map_alscl` | 你要固定或释放的参数 | 空列表沿用模型默认；每次都列出全部固定项 |
+| `zero_action = "error"` | `"missing"`，把零值当作缺失而不是终止 | 零值随后不进入似然 |
+| `output_dir` | 本次评估的文件夹 | 脚本会覆盖其中的文件 |
+
+修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似 "No positive observations in periods: 2004" 的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
+
+<h2 id="fit">5. 直接拟合并读结果</h2>
 
 ```r
 a <- run_acl(x)
 b <- run_alscl(x)
-# 相同总工作量：四个独立起点，最多两个并行进程
-a_multi <- run_acl(x, nstarts = 4, ncores = 2)
-b_multi <- run_alscl(x, nstarts = 4, ncores = 2)
-# 实际标准误计算方式与核心数
-a$sd_info
-b$sd_info
+diagnose_model(x$data.CatL, a)
+diagnose_model(x$data.CatL, b)
+b$diagnostics$issues
+estimates <- extract_estimates(b)
+subset(estimates, quantity == "SSB")
+extract_parameters(b)
+plot_CatL(b, type = "year", facet_ncol = 5)
+plot_residuals(b, type = "year", facet_ncol = 5)
+plot_SSB(b, se = TRUE)
 ```
 
-现有 `alscl_speed()` 设置自动生效。`ncores` 控制独立优化起点的并行数，`sd_cores` 控制单次拟合的标准误计算。默认自动微分框架仍为 CppAD。小任务使用更多进程不保证更快，详见[加速设置](speed.html)。
+`x` 装好你的表和设置后，每个模型的拟合就是一次调用；脚本存入 `x$fit_args` 的 `train_times = 2` 和 `nstarts = 1` 随之生效，调用中给出的参数，例如 `run_acl(x, nstarts = 4, ncores = 2)`，只在本次调用中覆盖保存的值。看任何估计值之前先读数值检查：收敛码 0、最大梯度小于 0.001、Hessian 正定、没有参数落在边界上，以及 `Numerical screen: TRUE`；`b$diagnostics$issues` 给出未通过的项目。`extract_estimates()` 返回一张表，包含 `quantity`、`year`、该量所在的 `age` 或 `length`（如有）、`estimate`、`std_error` 和区间 `conf_low` 到 `conf_high`；`extract_parameters()` 列出每个标量参数在自然尺度上的值及其状态 `estimated` 或 `fixed`。`plot_CatL()`、`plot_residuals()` 和 `plot_SSB()` 分别画出对观测的拟合、对数残差和带区间的产卵生物量，与[理解第一次拟合](first-model.html)中相同。
 
-## 检查结果
+检查未通过时，每次只改一处再重新拟合：收敛码不是 0 或梯度很大时，多用几个初值（`nstarts = 4, ncores = 2`）；Hessian 不正定时，固定 `b$diagnostics$high_correlations` 或接近 1 的相关系数所指向的参数，或用 `F_structure = "year"` 让各组共用 F（[拟合设置](fitting-controls.html)）。即使检查通过，相邻体长或相邻年份的残差同号成串也说明模型漏掉了数据中的某种特征；[诊断](diagnostics.html)说明如何检查这类规律，以及对 `M` 和其他固定值的敏感性。
 
-分别检查收敛码、最大梯度、Hessian、参数边界及残差模式。运行结束不代表所有参数都可识别或模型假设成立。完整模拟 CSV 流程已对两个模型实际运行：收敛码均为 0，Hessian 正定，没有命中参数边界，最大梯度低于 0.001。这验证的是示例流程，不是尚未提供的正式数据评估。
-
-下面两张图由该脚本用模拟 CSV 输入实际生成。
-
-更新后的脚本使用模型默认 map、两轮连续优化重新运行，保存的[诊断记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)如下：
-
-|模型|自由标量参数|收敛码|最大梯度|Hessian 正定|命中边界|
-|---|---|---|---|---|---|
-|ACL|10|0|2.62e-9|是|否|
-|ALSCL|13|0|2.59e-9|是|否|
-
-2.2.2 此次运行使用 4 核计算标准误，并启用默认受保护的收尾。这是模拟数据的数值检查，不是对尚未提供的正式评估的验证。加入收尾前（2.2.1），只固定 t0 的 ALSCL 可能在相同最优点误报 false convergence；2.2.2 保留先前成功轮次，并将梯度修正至约 5.37e-9。原 F 结构下只固定 t0 的 ACL 仍存在年龄相关边界，不能通过数值筛查；改用共用 F 是另一项生物学模型选择，下文说明。
-
-![完整 CSV 示例的 ALSCL 年度残差](../assets/manual/figures/own-data-example/residuals.png)
-
-![完整 CSV 示例的 ALSCL 产卵亲体生物量](../assets/manual/figures/own-data-example/SSB.png)
-
-亲体生物量区间以固定的模型假设为条件。正式分析应检查自己的图，并对有依据的 M、调查可捕性及固定生物参数做敏感性分析。
-
-## 保存并复用 x
-
-脚本保存 `inputs_x.rds`、`assessment_summary.rds`、`residuals.png`、`SSB.png` 和 `sessionInfo.txt`。可移植摘要不包含 `obj`，因为其 TMB 指针只属于当前 R 会话。在新会话中可重新拟合：
+<h2 id="save">6. 保存并复用结果</h2>
 
 ```r
-library(ALSCL)
-x <- readRDS("output/own-data-example/inputs_x.rds")
-a <- run_acl(x)
-b <- run_alscl(x)
+dir.create("output/my-assessment", recursive = TRUE, showWarnings = FALSE)
+saveRDS(x, "output/my-assessment/inputs_x.rds")
+save_assessment(a, "output/my-assessment/acl.rds")
+save_assessment(b, "output/my-assessment/alscl.rds")
+# 在以后的会话中
+x <- readRDS("output/my-assessment/inputs_x.rds")
+saved <- read_assessment("output/my-assessment/alscl.rds")
+summary(saved)
+plot_SSB(saved, se = TRUE)
+b2 <- refit_model(saved)
 ```
 
-将原始数据、配置、来源和包版本一起保留。旧的 `fit_survey_tables()` 辅助函数、逐项传参和 `do.call()` 写法继续支持。
+`x` 是普通列表，`saveRDS()` 保存表和设置，`readRDS()` 把它们读回。`save_assessment()` 写出保存的拟合结果：拟合中除 `b$obj` 以外的全部内容（`b$obj` 是只在当前会话有效的 TMB 对象指针），加上配方（数据表、设置、map、边界和软件包版本）。`read_assessment()` 把它读回，`summary()`、提取函数和绘图函数都能直接使用；`refit_model()` 按配方重建可执行的拟合，接受 `refit_model(saved, nstarts = 4)` 这样的覆盖参数，并在软件包或 TMB 版本与记录不同时发出警告。文件夹必须已存在，已有文件只有在 `overwrite = TRUE` 时才被替换。脚本则保存 `assessment_summary.rds`，即去掉 `obj` 的两个拟合，以及两张图和 `sessionInfo.txt`。把数据文件、保存的输入列表和保存的拟合结果放在一起。
 
-## 继续比较和回溯
-
-两个核心拟合函数直接检查时间网格：相邻数值表头之差必须等于 `growth_step`。年度数据 `2000, 2001, 2003` 会因缺少 2002 而报错；应保留 2002 列，调查值填 `NA`，并提供该期完整的重量和成熟数据。季度表头如 `2000, 2000.25, 2000.5` 必须设置 `growth_step = 0.25`。模型不会自动插补缺失时间步，也不会把不规则间隔重新解释为等间隔。
+<h2 id="continue">7. 继续比较和回溯</h2>
 
 ```r
 comparison <- compare_models(a, b, x$data.CatL)
@@ -360,72 +292,17 @@ rb$rho_text
 plot_fishing_mortality(b, type = "length", se = TRUE)
 ```
 
-`compare_models()` 会核对两个拟合与传入调查表的时间标签、体长标签及顺序、正观测值和观测掩码；确认不一致时直接报错。旧保存结果若缺少核对所需元数据，仍可读取原始统计量，但不自动给出模型偏好。任一拟合未通过数值筛查时，函数发出警告，保留原始 AIC/BIC 和拟合指标供检查，不宣布哪个模型更优。查看 `comparison$fit_diagnostics` 与 `comparison$comparison`（`data_verified`、`eligible`、`preferred`、`issues`）。通过筛查只表示可以开展条件比较，仍需审查似然可比性和生物假设。
+`compare_models()` 先核对两次拟合使用了同一张调查表，再比较 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的结构是否适合这个种群，要用生物学知识判断。[模型比较图](model-comparison.html)绘制各种比较图。
 
-`fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
+回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 以时间步计，季度数据四轮等于一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值状态，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的轨迹（[回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
 
-## 优化收尾与时间步内共用 F
+<h2 id="next">下一步</h2>
 
-`run_acl(x)` 和 `run_alscl(x)` 默认对选中的拟合执行最多五步受保护的 Newton 收尾（`polish = TRUE`）。每步要求数值 Hessian 正定、参数严格位于上下界内、最大绝对梯度下降，且目标函数增加不超过 `1e-8` 的浮点舍入容差。不满足条件就停止；收尾不能补足资料信息，也不能修复不合适的模型。`polish = FALSE` 可跳过收尾。这可能改变数值精度层面的估计，因此 2.2.2 不承诺与旧版拟合逐位一致。
-
-每轮优化的原始参数、目标函数、代码和信息保存在 `fit$optimizer_history`。后续一轮在同一点误报失败时，不再覆盖前一轮成功状态。`fit$raw_opt` 保存收尾前选中的结果；`fit$refinement` 记录接受的步骤及前后梯度。`convergence_code` 始终表示所选优化轮次的原始代码，不会因收尾而强行改为成功。多起点仍按收尾前最低有限目标函数选取；`starts` 和 `start_diagnostics` 记录收尾前各起点的结果。
-
-`fit$diagnostics` 增加独立的数值筛查：最大梯度小于 `1e-3`、Hessian 与协方差正定、不触及优化器边界或自然尺度边界。自由相关系数距离 0 或 1 不超过 `1e-4`，以及自由过程／观测标准差不超过 `1e-4`，都会标记。这些是筛查阈值，不是统计检验。`high_correlations` 列出绝对相关系数至少 0.95 的参数对，需进一步审查，但不能单凭高相关就断言不可识别。协方差条件数取决于参数尺度。`diagnose_model()` 分别显示原始优化代码和数值筛查结果；仍需检查残差、多起点、似然剖面和敏感性。
-
-### 明确选择 F 结构
-
-默认 `F_structure = "group_year"` 保留原来的年龄 × 时间（ACL）或体长 × 时间（ALSCL）二维可分离 AR(1) 场。可选 `F_structure = "year"` 假设**同一时间步内所有年龄或体长的瞬时 F 相同**。季度数据是每季度一个 F，不是每个日历年一个 F。这项生物学假设必须符合渔业情况，不能只为得到收敛结果而选择。
-
-共用结构为 `log(F[y]) = mean_log_F + u[y]`，采用平稳一维 AR(1)：`u[1]` 的标准差为 `sigma_F`，后续创新标准差为 `sigma_F * sqrt(1 - rho_y^2)`。F 随机效应从 A × Y 或 L × Y 减为 Y 个。C++ 似然只有一个正确归一化的一维 AR(1) 密度，并非把二维密度的单元格强制设成相同值。不再使用的年龄／体长相关参数自动固定，从自由参数及拟合报告中移除，即使其 map 项为 NULL 也不会估计；其他默认 map 规则保持不变。`report$dev_log_F` 为 1 × Y；`report$F`（ACL）或 `report$FL`（ALSCL）仍保留完整的组别 × Y 维度，F 偏差图显示一条共用序列。
-
-以下假设 `x` 已按完整调查案例整理好三表、生物设置与初值。这里只固定**有效标量参数中的 t0**；不使用的组别相关参数由模型结构排除：
-
-```r
-map_acl_t0 <- list(t0 = factor(NA), log_std_log_F = NULL,
-                   logit_log_F_y = NULL, logit_log_F_a = NULL)
-map_alscl_t0 <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
-a_year <- run_acl(x, map = map_acl_t0, F_structure = "year")
-b_year <- run_alscl(x, map = map_alscl_t0, F_structure = "year")
-a_year$optimizer_history
-a_year$refinement
-b_year$diagnostics
-b_year$sd_info
-diagnose_model(x$data.CatL, b_year)
-plot_deviance(a_year, type = "F", se = TRUE)
-plot_fishing_mortality(b_year, se = TRUE)
-# 保存设置后，继续使用最短写法：
-x$fit_config$acl$map <- map_acl_t0
-x$fit_config$alscl$map <- map_alscl_t0
-x$fit_args$F_structure <- "year"
-a_year <- run_acl(x)
-b_year <- run_alscl(x)
-```
-
-原来的逐项传参和 `do.call()` 写法保留。`retro_model()`（含其包装函数）和 `sim_acl()` 也支持 `F_structure` 与 `polish`；回溯每轮应使用相同结构。并行标准误和多起点继续沿用现有加速设置。注意 `sim_data()` 的 F 创新标准差不等于拟合 AR(1) 的边际标准差；一维平稳 AR(1) 的边际标准差为创新标准差除以 `sqrt(1 - rho_y^2)`。
-
-此前模拟 YTF 数据的只固定 t0 ACL 拟合中，年龄相关系数逼近 1；生成数据恰好在同一年对所有年龄使用相同 F，共用 F 结构可处理这种不匹配。只固定 t0 的 ALSCL 则主要受优化收尾误报影响。两项发现都不代表你的正式数据能识别全部参数。实测结果与适用限制见 [2.2.2 可复现验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md)。
-
-![2.2.2 convergence checks](../assets/manual/figures/convergence-2.2.2.png)
-
-### 2.2.5 的拟合数据匹配检查
-
-`diagnostic_metrics()`、`diagnose_model()` 和 `compare_models()` 核对已知时间标签、体长标签、正观测掩码及拟合时保存的观测。即使维度相同，颠倒年份或体长组顺序也会报错。请传原始拟合表，例如 `diagnose_model(x$data.CatL, b)`；这些是样本内诊断，不是留出预测接口。缺少元数据的旧结果仍可计算原始指标，但不能据此确认模型可比较。
-
-比较表和指标图共用计算规则：只使用有限正观测，常数观测的 R 方为 `NA`，观测位置的原尺度预测非有限时会报错；缺测与零值仍被排除。通过这些检查不代表模型在生物学上充分。
-
-### 2.2.7 的体长组边界
-
-模型首尾体长组吸收分布尾部。`len_border` 只包含内部边界，`len_mid` 是每组递增的中心值。ALSCL 可以省略 `len_lower` 和 `len_upper`，由内部边界生成；若显式提供，必须分别为 `c(-Inf, len_border)` 和 `c(len_border, Inf)`。显式有限外端点会被拒绝，不会实现有限截断的体长分布。`0-20` 等有限区间标签仍可使用，但遵循原有首尾组吸收尾部的约定。
-
-```r
-# x 是调查数据示例中已对齐的输入组合。
-borders <- x$fit_args$len_border
-if (!is.null(borders)) {
-  fit <- run_alscl(x, len_lower = c(-Inf, borders),
-                  len_upper = c(borders, Inf))
-}
-```
-
-### 一致性修正
-
-拟合、诊断和模型比较统一解析普通 data.frame、matrix、tibble 及保存数值文本的 factor 列。因子按标签转为观测值，不使用内部等级编码；体长标签按向量提取。修改了观测值、缺测掩码、年份或体长组顺序时，原有匹配检查仍会报错。
+| 想做什么 | 阅读 |
+|---|---|
+| 修改检查指出的设置，或更换 F 结构 | [拟合设置](fitting-controls.html) |
+| 检查残差规律和对固定值的敏感性 | [诊断](diagnostics.html) |
+| 运行回溯分析并读 Mohn's rho | [回溯分析](retrospectives.html) |
+| 做参数剖面或向前投影 | [评估工作流](assessment-workflows.html) |
+| 拟合季度调查 | [年度与季度时间步](case-studies.html) |
+| 让拟合更快 | [速度设置](speed.html) |
