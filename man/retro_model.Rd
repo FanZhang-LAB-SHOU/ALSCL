@@ -53,7 +53,8 @@ retro_model(
   polish = TRUE,
   zero_action = c("missing", "error"),
   control = list(),
-  nstarts = 1
+  nstarts = 1,
+  model = NULL
 )
 }
 \arguments{
@@ -182,6 +183,9 @@ or reject them with "error". NA is always missing; negative/infinite values fail
 
 \item{nstarts}{Positive integer. Number of independent starts per full/peel
 fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.}
+
+\item{model}{Same as model_type, accepted for consistency with the other
+workflow functions. Supply one of the two.}
 }
 \value{
 A list containing \code{results}, \code{rho_text}, \code{last_points}, \code{model_type},

@@ -26,9 +26,9 @@
 #'   jitter free parameters only, identically for sequential and parallel fits.
 #' @param silent Suppress fitting progress messages when TRUE.
 #' @param growth_step Time between consecutive ages, in years. Use 0.25 for quarters.
+#'   NULL uses rec.age when it is below one, otherwise one.
 #'   Numeric time-column labels must have this spacing. Keep missing periods as
 #'   NA survey columns, with weights and maturity supplied for every period.
-#'   ACL infers rec.age when below one, otherwise one, if this argument is NULL.
 #' @param zero_action Exclude zero observations as missing (historical behavior),
 #'   or reject them with "error". NA is always missing; negative/infinite values fail.
 #' @param control A named list of nlminb control settings.
@@ -101,7 +101,7 @@
 #' @details ALSCL tracks joint length-age abundance and F at length; FA summarizes
 #'   effective cohort survival. log_t0 represents a positive t0 below rec.age.
 run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
-                      growth_step = 1, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
+                      growth_step = NULL, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,
                       output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
                       zero_action = c("missing", "error"), control = list(), nstarts = ncores,

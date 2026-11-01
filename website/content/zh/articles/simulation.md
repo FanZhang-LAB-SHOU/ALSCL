@@ -130,4 +130,4 @@ stopifnot(all(sm0$CN == 0), all(sm0$CB == 0))
 
 ## 直接从评估拟合生成模拟数据
 
-`simulate_fit(fit, process = "conditional")` 在拟合状态下改变观测；`process = "resample"` 重新抽取拟合模型的补充、F 及初始状态偏差。两种模式均固定标量参数，保留可直接再拟合的输入列表与真值，与上面的操作模型模拟用途不同。完整步骤见[拟合模型模拟与预测验证案例](case-model-validation.md)。现有模拟批次也支持 `nstarts`，在每个重复内部依次运行；`ncores` 控制同时运行的重复数。
+`simulate_fit(fit, process = "conditional")` 在拟合状态下改变观测；`process = "resample"` 重新抽取拟合模型的补充、F 及初始状态偏差。两种模式均固定标量参数，保留可直接再拟合的输入列表与真值，与上面的操作模型模拟用途不同。完整步骤见[拟合模型模拟与预测验证案例](case-model-validation.html)。现有模拟批次也支持 `nstarts`，在每个重复内部依次运行；`ncores` 控制同时运行的重复数。

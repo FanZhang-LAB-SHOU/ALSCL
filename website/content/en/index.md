@@ -2,7 +2,16 @@
 
 **ALSCL** is an R package for fitting population models to fishery-independent survey length data using [Template Model Builder (TMB)](https://github.com/kaskr/adcomp). It provides the age-structured catch-at-length model (**ACL**) and the age- and length-structured statistical catch-at-length model (**ALSCL**), together with simulation, diagnostics, model comparison and plotting tools.
 
-Start with a [worked example](articles/first-model.html), browse the [basic functions](#contents) and [worked case studies](articles/index.html), or look up a function in the [reference](reference/index.html). The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673).
+The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673). Choose a starting point below; the Contents lists all basic guides, and Articles contains worked cases.
+
+<div class="reading-paths">
+<p>Where would you like to start?</p>
+<ol>
+<li><a href="articles/getting-started.html">Try ALSCL for the first time</a><br>Install the package, fit the bundled example, and check the result.</li>
+<li><a href="articles/data-preparation.html">Fit your own survey data</a><br>Prepare three aligned tables, choose biological inputs and inspect which parameters will be estimated.</li>
+<li><a href="articles/case-model-validation.html">Check a model with simulation or future observations</a><br>Generate repeat datasets, or assess predictions for periods left out of fitting.</li>
+</ol>
+</div>
 
 <h2 id="contents">Contents</h2>
 
@@ -16,7 +25,7 @@ Start with a [worked example](articles/first-model.html), browse the [basic func
 
 <h2 id="installation">Installation</h2>
 
-Install the current version (<span class="current-version">{{VERSION}}</span>) from GitHub:
+Install the latest development source, based on <span class="current-version">{{VERSION}}</span>, from GitHub:
 
 ```r
 install.packages("remotes")
@@ -25,6 +34,8 @@ library(ALSCL)
 ```
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
+
+The website describes ALSCL 2.3.0; see [News](news/index.html) for the changes in each release.
 
 <h2 id="models">Two model structures</h2>
 
@@ -44,16 +55,17 @@ The bundled `YTF_example` contains synthetic yellowtail-flounder-style data, bio
 ```r
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-
 # Fit both models to the same observations and biological settings
 a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 
+# Inspect both numerical screens before interpreting the estimates
+a$diagnostics
+b$diagnostics
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-Since ALSCL 2.2.0, `run_acl(x)` and `run_alscl(x)` accept input bundles directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+`run_acl(x)` and `run_alscl(x)` read the same input bundle and select the corresponding model settings. Follow [your first fit](articles/first-model.html) for a step-by-step explanation of the code and outputs. See [fitting controls](articles/fitting-controls.html) for overrides and the original separate-argument or `do.call()` interfaces, and [speed settings](articles/speed.html) for parallel execution.
 
 ![ACL and ALSCL biomass, spawning biomass and recruitment estimates from the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
 

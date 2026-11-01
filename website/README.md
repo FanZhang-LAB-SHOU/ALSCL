@@ -32,6 +32,15 @@ Use the equivalent virtual-environment Python path on Windows. The build install
 
 When changing a public API, update its descriptions in the reference Markdown and editorial notes. The build fails if documented argument names and actual formals disagree. Keep English and Chinese article structure aligned so same-section language switching remains meaningful. Existing figures illustrate synthetic datasets and conditional fits; do not relabel them as new or empirical results.
 
+Keep the basic-guide order in `articles.json` aligned with the homepage groups:
+first fit, own data, fitting choices, diagnostics, plots, simulation and reproducibility.
+Introduce the objects a page needs before its first code block, state which output to
+inspect, and place optional technical detail after the corresponding operation.
+Worked cases remain under Articles. When reorganizing a page, retain its existing
+section IDs and use matching explicit IDs for new English and Chinese sections.
+Small screens have a collapsible table of contents; reference examples display
+their preparation code by default.
+
 ## Validation
 
 `check.py` verifies every generated local link, asset, anchor and translation counterpart; public-function and argument coverage; English-language separation; and syntax of all displayed R blocks. It also checks explicitly named arguments to direct public-function calls. This is documentation validation, not a rerun of expensive model fits or a statistical validation of the models. The repository's R-CMD-check workflow remains the package check.

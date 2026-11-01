@@ -13,7 +13,7 @@ run_alscl(
   M,
   sel_L50,
   sel_L95,
-  growth_step = 1,
+  growth_step = NULL,
   parameters = NULL,
   parameters.L = NULL,
   parameters.U = NULL,
@@ -51,9 +51,9 @@ named input bundle such as YTF_example; see Details.}
 \item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
 
 \item{growth_step}{Time between consecutive ages, in years. Use 0.25 for quarters.
+NULL uses rec.age when it is below one, otherwise one.
 Numeric time-column labels must have this spacing. Keep missing periods as
-NA survey columns, with weights and maturity supplied for every period.
-ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
+NA survey columns, with weights and maturity supplied for every period.}
 
 \item{parameters}{Named list of initial fixed-effect values.}
 

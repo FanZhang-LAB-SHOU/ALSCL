@@ -6,7 +6,7 @@
 \alias{ALSCL-package}
 \title{ALSCL: Age- and Length-Structured Statistical Catch-at-Length Models}
 \description{
-Fits two stock assessment models to fishery-independent survey abundance indices at length using Template Model Builder (TMB). The age-structured catch-at-length (ACL) model tracks abundance at age and converts it to abundance at length using the probability of length given age. The age- and length-structured statistical catch-at-length (ALSCL) model tracks abundance by length, age and model time step. Length-specific mortality determines survival, and a separate growth transition matrix moves survivors between length groups. The package provides multistart optimization with optional parallel computation, simulation-estimation experiments, retrospective analysis with Mohn's rho, diagnostic plots and comparisons of model configurations.
+Fits two stock assessment models to fishery-independent survey abundance indices at length using Template Model Builder (TMB). The age-structured catch-at-length (ACL) model tracks abundance at age and converts it to abundance at length using the probability of length given age. The age- and length-structured statistical catch-at-length (ALSCL) model tracks abundance by length, age and model time step. Length-specific mortality determines survival, and a separate growth transition matrix moves survivors between length groups. The package provides multistart optimization with optional parallel computation, data preparation and checks, sensitivity scenarios, likelihood profiles, deterministic projections, fitted-model simulation, hindcast validation, retrospective analysis with Mohn's rho, portable assessment archives, diagnostic plots and comparisons of model configurations.
 }
 \seealso{
 Useful links:

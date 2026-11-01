@@ -89,7 +89,7 @@ test_that("sim_acl fits actual replicates on the requested socket workers", {
     expect_equal(vapply(fits, function(z) z$opt$objective, numeric(1)),
                  setNames(rep(m$opt$objective, 4), names(fits)), tolerance = 1e-8)
     pids <- vapply(fits, function(z) z$start_diagnostics$pid, integer(1))
-    expect_length(unique(pids), workers)
+    expect_length(unique(pids), min(workers, ALSCL:::.acl_core_limit()))
     if (workers > 1) expect_false(Sys.getpid() %in% pids)
   }
 })

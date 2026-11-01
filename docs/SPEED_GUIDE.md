@@ -132,7 +132,7 @@ In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfis
 
 ![Fit time before and after the speed settings](figures/speed/timing.png)
 
-With the default settings every result was identical to the original code; the figure below shows all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit.
+In that benchmark, made with the code of ALSCL 2.0.0 before the 2.2.2 refinement, every result was identical to the original code; the figure below shows all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit.
 
 ![Estimates and standard errors before and after the speed settings](figures/speed/agreement.png)
 

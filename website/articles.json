@@ -12,6 +12,30 @@
     }
   },
   {
+    "slug": "first-model",
+    "title": {
+      "en": "Your first fit",
+      "zh": "完成第一个拟合"
+    },
+    "source": "docs/wiki/04-Built-in-YTF.md",
+    "description": {
+      "en": "Fit run_acl() and run_alscl() to the bundled synthetic YTF example and learn the fitted objects, settings and data provenance.",
+      "zh": "对内置模拟 YTF 示例运行 run_acl() 与 run_alscl()，了解拟合对象、参数设置与数据来源。"
+    }
+  },
+  {
+    "slug": "data-preparation",
+    "title": {
+      "en": "Prepare your own data",
+      "zh": "准备自己的数据"
+    },
+    "source": "docs/wiki/03-Data-and-Excel.md",
+    "description": {
+      "en": "Align the survey-number, mean-weight and maturity tables by length bin and time. Import Excel or CSV files and distinguish missing observations from genuine zeros.",
+      "zh": "按体长组和时间对齐调查数量、平均个体重量与成熟比例三张表。导入 Excel 或 CSV，并区分缺失观测与真实零值。"
+    }
+  },
+  {
     "slug": "model-theory",
     "title": {
       "en": "Model principles",
@@ -24,42 +48,6 @@
     }
   },
   {
-    "slug": "data-preparation",
-    "title": {
-      "en": "Data and observations",
-      "zh": "数据、Excel 与实测导入"
-    },
-    "source": "docs/wiki/03-Data-and-Excel.md",
-    "description": {
-      "en": "Align the survey-number, mean-weight and maturity tables by length bin and time. Import Excel or CSV files and distinguish missing observations from genuine zeros.",
-      "zh": "按体长组和时间对齐调查数量、平均个体重量与成熟比例三张表。导入 Excel 或 CSV，并区分缺失观测与真实零值。"
-    }
-  },
-  {
-    "slug": "first-model",
-    "title": {
-      "en": "Built-in YTF",
-      "zh": "内置数据与首个拟合"
-    },
-    "source": "docs/wiki/04-Built-in-YTF.md",
-    "description": {
-      "en": "Fit run_acl() and run_alscl() to the bundled synthetic YTF example and learn the fitted objects, settings and data provenance.",
-      "zh": "对内置模拟 YTF 示例运行 run_acl() 与 run_alscl()，了解拟合对象、参数设置与数据来源。"
-    }
-  },
-  {
-    "slug": "simulation",
-    "title": {
-      "en": "Simulation",
-      "zh": "模拟与批量实验"
-    },
-    "source": "docs/wiki/05-Simulation.md",
-    "description": {
-      "en": "Choose between simulate_example_data() for simple annual tables and initialize_params(), sim_cal() and sim_data() for full operating-model simulations.",
-      "zh": "选择 simulate_example_data() 生成简化年度表，或用 initialize_params()、sim_cal() 与 sim_data() 运行完整操作模型模拟。"
-    }
-  },
-  {
     "slug": "fitting-controls",
     "title": {
       "en": "Fitting controls",
@@ -69,6 +57,18 @@
     "description": {
       "en": "Set starting values, bounds, fixed parameters, time steps and successive optimization passes for run_acl() and run_alscl().",
       "zh": "为 run_acl() 与 run_alscl() 设置初值、边界、固定参数、时间步和连续优化轮数。"
+    }
+  },
+  {
+    "slug": "estimation-parameters",
+    "title": {
+      "en": "Estimation parameter lists",
+      "zh": "估计参数列表"
+    },
+    "source": "docs/FUNCTION_REFERENCE.md",
+    "description": {
+      "en": "Review all scalar estimation keys, their optimizer-scale transformations, initial values and lower and upper bounds.",
+      "zh": "查阅全部标量估计参数、优化尺度变换、初值以及上下界。"
     }
   },
   {
@@ -96,30 +96,6 @@
     }
   },
   {
-    "slug": "population-plots",
-    "title": {
-      "en": "Survey and population plots",
-      "zh": "调查与种群图"
-    },
-    "source": "docs/wiki/08-Population-Plots.md",
-    "description": {
-      "en": "Plot survey numbers, abundance, biomass, spawning biomass, recruitment and catch with the population plotting functions.",
-      "zh": "使用种群绘图函数展示调查数量、丰度、生物量、产卵生物量、补充量与捕获量。"
-    }
-  },
-  {
-    "slug": "growth-mortality",
-    "title": {
-      "en": "Growth, mortality and residuals",
-      "zh": "生长、死亡与残差图"
-    },
-    "source": "docs/wiki/09-Growth-and-Mortality.md",
-    "description": {
-      "en": "Inspect growth curves, age–length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
-      "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄—体长概率、捕捞死亡率与残差结构。"
-    }
-  },
-  {
     "slug": "model-comparison",
     "title": {
       "en": "Model comparisons",
@@ -144,15 +120,39 @@
     }
   },
   {
-    "slug": "case-studies",
+    "slug": "assessment-workflows",
     "title": {
-      "en": "Annual and quarterly time steps",
-      "zh": "年度与季度时间步"
+      "en": "Assessment workflows",
+      "zh": "评估工作流"
     },
-    "source": "docs/wiki/12-Case-Studies.md",
+    "source": "docs/ASSESSMENT_WORKFLOWS.md",
     "description": {
-      "en": "Understand how annual flatfish and quarterly tuna presets differ in time steps, biology and operating-model structure. Both examples are simulated.",
-      "zh": "理解年度鲽鱼与季度金枪鱼预设在时间步、生物参数和操作模型结构上的差异。两组示例均为模拟数据。"
+      "en": "Prepare inputs, inspect maps, extract and save results, check residuals, run sensitivity/profile analyses, project conditional scenarios and summarize simulations.",
+      "zh": "整理输入、检查 map、提取和保存结果、检查残差、运行敏感性与剖面、投影条件情景并汇总模拟表现。"
+    }
+  },
+  {
+    "slug": "population-plots",
+    "title": {
+      "en": "Survey and population plots",
+      "zh": "调查与种群图"
+    },
+    "source": "docs/wiki/08-Population-Plots.md",
+    "description": {
+      "en": "Plot survey numbers, abundance, biomass, spawning biomass, recruitment and catch with the population plotting functions.",
+      "zh": "使用种群绘图函数展示调查数量、丰度、生物量、产卵生物量、补充量与捕获量。"
+    }
+  },
+  {
+    "slug": "growth-mortality",
+    "title": {
+      "en": "Growth, mortality and residuals",
+      "zh": "生长、死亡与残差图"
+    },
+    "source": "docs/wiki/09-Growth-and-Mortality.md",
+    "description": {
+      "en": "Inspect growth curves, age–length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
+      "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄—体长概率、捕捞死亡率与残差结构。"
     }
   },
   {
@@ -168,6 +168,30 @@
     }
   },
   {
+    "slug": "simulation",
+    "title": {
+      "en": "Simulation",
+      "zh": "模拟与批量实验"
+    },
+    "source": "docs/wiki/05-Simulation.md",
+    "description": {
+      "en": "Choose simple teaching data, operating-model experiments, or simulation from a fitted assessment. Keep the generating assumptions and truth with each replicate.",
+      "zh": "选择简单教学数据、操作模型实验或从拟合结果生成数据；每个重复保留生成假设与真值。"
+    }
+  },
+  {
+    "slug": "case-studies",
+    "title": {
+      "en": "Annual and quarterly time steps",
+      "zh": "年度与季度时间步"
+    },
+    "source": "docs/wiki/12-Case-Studies.md",
+    "description": {
+      "en": "Understand how annual flatfish and quarterly tuna presets differ in time steps, biology and operating-model structure. Both examples are simulated.",
+      "zh": "理解年度鲽鱼与季度金枪鱼预设在时间步、生物参数和操作模型结构上的差异。两组示例均为模拟数据。"
+    }
+  },
+  {
     "slug": "reproducibility",
     "title": {
       "en": "Reproducibility",
@@ -177,30 +201,6 @@
     "description": {
       "en": "Record assumptions, software versions and fit diagnostics; manage compilation caches and distinguish saved summaries from live TMB objects.",
       "zh": "记录假设、软件版本与拟合诊断；管理编译缓存，并区分保存的汇总结果与当前会话中的 TMB 对象。"
-    }
-  },
-  {
-    "slug": "estimation-parameters",
-    "title": {
-      "en": "Estimation parameter lists",
-      "zh": "估计参数列表"
-    },
-    "source": "docs/FUNCTION_REFERENCE.md",
-    "description": {
-      "en": "Review all scalar estimation keys, their optimizer-scale transformations, initial values and lower and upper bounds.",
-      "zh": "查阅全部标量估计参数、优化尺度变换、初值以及上下界。"
-    }
-  },
-  {
-    "slug": "assessment-workflows",
-    "title": {
-      "en": "Assessment workflows",
-      "zh": "评估工作流"
-    },
-    "source": "docs/ASSESSMENT_WORKFLOWS.md",
-    "description": {
-      "en": "Prepare inputs, inspect maps, extract and save results, check residuals, run sensitivity/profile analyses, project conditional scenarios and summarize simulations.",
-      "zh": "整理输入、检查 map、提取和保存结果、检查残差、运行敏感性与剖面、投影条件情景并汇总模拟表现。"
     }
   }
 ]

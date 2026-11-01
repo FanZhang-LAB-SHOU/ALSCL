@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
 ```r
 # 删除最后 1、2、3 个时间步后分别重拟合 / Refit after peeling 1, 2 and 3 steps
@@ -65,24 +65,7 @@ Compare each peeled estimate with the full fit at that peel's terminal period, t
 Positive rho means shorter fits tend to be higher at their terminal periods; signs can cancel. Inspect individual trajectories and fits. A zero full-fit denominator makes the relative difference undefined.
 
 
-## 43. ACL 回溯分析 / ACL retrospective analysis
-
-```r
-# 绘制本图 / Draw this figure
-plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
-```
-
-[![ACL 回溯分析 / ACL retrospective analysis](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=920438715eb7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=920438715eb7)
-
-
-
-逐步删除末端观测并重拟合；各颜色代表不同截止期。 / Successively peel terminal observations and refit; colors indicate different terminal periods.
-
-[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
-
-
-
-## 44. ALSCL 回溯分析 / ALSCL retrospective analysis
+## 43. ALSCL 回溯分析 / ALSCL retrospective analysis
 
 ```r
 # 绘制本图 / Draw this figure
@@ -97,6 +80,39 @@ plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
 
+
+
+## 44. 模拟真值与条件估计 / Simulation truth and conditional estimates
+
+```r
+# 将生成真值与报告中的估计对齐 / Align truth and fitted reports
+years <- a$year
+truth <- data.frame(Year=rep(years,3),
+  Quantity=rep(c("B","SSB","Rec"),each=length(years)),
+  Truth=c(x$truth$TB,x$truth$SSB,x$truth$Rec))
+estimates <- rbind(
+  data.frame(Year=rep(years,3),Quantity=truth$Quantity,
+    Value=c(a$report$B,a$report$SSB,a$report$Rec),Model="ACL"),
+  data.frame(Year=rep(years,3),Quantity=truth$Quantity,
+    Value=c(b$report$B,b$report$SSB,b$report$Rec),Model="ALSCL"))
+```
+
+```r
+# 绘制本图 / Draw this figure
+ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_manual(values = setNames(acl_theme("compare_colors"),
+    c("ACL", "ALSCL"))) + geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
+    facet_wrap(~Quantity, scales = "free_y", ncol = 1) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + labs(y = NULL)
+```
+
+[![模拟真值与条件估计 / Simulation truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/truth.png?raw=true&v=a10cc16cca33)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/truth.png?raw=true&v=a10cc16cca33)
+
+黑虚线为生成真值；固定生物参数，且模拟与拟合的补充过程不同。
+
+Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.
+
+调查拟合图标题表示调查指数，山脊图标题表示调查体长组成，两者都不是渔业捕获量估计。过程偏差图在 `log = TRUE` 时标为对数偏差（参照值 0），在 `log = FALSE` 时标为乘数（参照值 1）。取指数只改变尺度，不改变已拟合的过程；两者都不是似然偏差统计量。
+
+Survey-fit titles refer to survey indices, and ridge titles refer to survey length compositions; neither is a fishery catch estimate. In process-deviation plots, `log = TRUE` labels log deviations (reference value 0), while `log = FALSE` labels multiplicative factors (reference value 1). Exponentiation changes the scale, not the underlying fitted process; neither quantity is a likelihood deviance statistic.
 
 
 ---

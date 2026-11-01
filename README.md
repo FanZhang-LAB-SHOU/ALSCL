@@ -1,6 +1,6 @@
 ## Laboratory / 實驗室
 
-[Oceanic Fisheries Ecosystem Laboratory](https://github.com/FanZLAB-SHOU),
+[Oceanic Fisheries Ecosystem Laboratory](https://github.com/FanZhang-LAB-SHOU),
 Shanghai Ocean University.
 
 # ALSCL <img src="ALSCLlogo.png" align="right" height="140" />
@@ -27,11 +27,9 @@ ALSCL 提供独立的在线文档网站，包含安装说明、17 项基本功�
 
 **Age-structured and joint age–length stock assessment using survey length data**
 
-**Latest release: 2.2.9 · 简体中文 / English**
+**Latest release: 2.3.0 · 简体中文 / English**
 
-The latest `main` source also contains the additions listed under [Unreleased](NEWS.md#unreleased); these are not part of the 2.2.9 release tag. / 最新 `main` 源码还包含 [Unreleased](NEWS.md#unreleased) 中的新增功能，早先的 2.2.9 发布标签不含这些接口。
-
-**2.2.9:** 统一绘图设置与坐标，保留批量失败记录，验证模拟数据坐标，并同步中英文说明。 / Apply global plotting controls, preserve failed replicate records, validate simulation coordinates and synchronize bilingual documentation. [Changes](NEWS.md) · [2.2.9 validation](docs/RELEASE_2.2.9.md).
+**2.3.0:** 发布 19 个评估工作流函数（共 64 个），统一工作流默认设置，并修正说明书与网站。 / Release the 19 assessment-workflow functions (64 in all), align workflow defaults and correct the manuals and website. [Changes](NEWS.md).
 
 
 ALSCL 是基于 TMB（Template Model Builder）的 R 包，用于通过渔业独立调查数据拟合统计体长模型。完整双语手册见 [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)，理论基础见以下论文。
@@ -90,12 +88,12 @@ Estimation is performed via maximum likelihood with the objective function calcu
 | 完整学习资源 / Learning resource | 内容 / Contents |
 |---|---|
 | **[在线文档网站 / Documentation website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 基本功能、专题案例和函数参考；支持英文与简体中文 / Basic functions, worked cases and function reference in English and Simplified Chinese |
-| **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 16 章、目录、前后页导航 / 16 chapters with navigation |
+| **[Wiki 双语书籍 / Wiki book](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)** | 17 章、目录、前后页导航 / 17 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
 | [模型模拟与预测验证 / Model validation](docs/MODEL_VALIDATION.md) | 从拟合模型模拟、重新估计及时间留出检验 / Fitted-model simulation, refitting and time-held-out checks |
 | [64 个函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) | 签名、默认值、所有参数 / Signatures and every argument |
-| [45 张 YTF 图谱 / YTF gallery](docs/PLOT_GALLERY.md) | 22 个绘图函数及主要类型 / All plotting families |
+| [44 张 YTF 图谱 / YTF gallery](docs/PLOT_GALLERY.md) | 22 个绘图函数及主要类型 / All plotting families |
 | [两个完整案例 / Case studies](docs/CASE_STUDIES.md) | 年度 flatfish、季度 tuna 和 7 张图 / Annual and quarterly examples |
 | [Excel 填表示例 / Workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) | 三表及行列示意 / Three input sheets and instructions |
 
@@ -307,7 +305,7 @@ ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_exa
 
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
-**自己的正式数据 / Your own observations:** 2.2.9 提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
+**自己的正式数据 / Your own observations:** 仓库提供[完整 CSV → x → 双模型脚本](scripts/fit_own_data_example.R)，覆盖读取、检查、拟合、配图与保存。先用内附模拟数据运行，再修改自己的数据和生物假设。 / The complete script covers import, validation, both fits, plots and saved results; replace the teaching data and assumptions before an empirical assessment. [简体中文案例](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-fit-survey.html) · [English case](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-fit-survey.html).
 
 ![YTF 模型比较 / Model comparison](docs/figures/ytf/compare_ts.png)
 
@@ -344,10 +342,13 @@ The first column labels bins; remaining columns are ordered equally spaced perio
 ![Excel 行列示例 / Worksheet layout](docs/figures/excel_CatL.png)
 
 ```r
-# 导入自己的表；辅助函数由仓库脚本提供 / Import helpers are repository scripts
-source("scripts/real_data_workflow.R", encoding="UTF-8")
+# 导入自己的表并在编译前检查 / Import your tables and check them before compiling
+library(ALSCL)
 your_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
-validate_survey_tables(your_inputs, growth_step=1)
+# 或 / or: your_inputs <- read_survey_csv("my_data")
+x <- prepare_alscl_data(your_inputs, fit_args = list(rec.age = 1, nage = 15, M = 0.2,
+  sel_L50 = 15, sel_L95 = 20, growth_step = 1))  # 示例生物参数 / example biology
+check_alscl_data(x, "acl")$summary
 ```
 
 ### 2. 编译与拟合 / Compile and fit
@@ -444,7 +445,7 @@ The full reference documents every public argument and the inner estimation para
 <a id="plots"></a>
 ## 全部绘图功能 / Visualization functions
 
-每图均有可运行 R 代码、双语解读和调整参数。这里列出用途、主要类型及代表图；[完整图谱](docs/PLOT_GALLERY.md) 展示所有 45 张图。以下使用快速开始得到的 `a`、`b`。
+每图均有可运行 R 代码、双语解读和调整参数。这里列出用途、主要类型及代表图；[完整图谱](docs/PLOT_GALLERY.md) 展示所有 44 张图。以下使用快速开始得到的 `a`、`b`。
 
 Each function has runnable examples and interpretation in the gallery. This section introduces each plotting family and its main controls.
 

@@ -24,11 +24,9 @@ The flatfish preset uses survey SD 0.20, while `YTF_example` retains YTF's 0.10.
 
 ```r
 # Read the supplied cases
-source("scripts/real_data_workflow.R", encoding="UTF-8")
-flatfish_inputs <- read_survey_csv("docs/data/cases/flatfish")
+library(ALSCL)
+flatfish_inputs <- read_survey_csv("docs/data/cases/flatfish")  # tables are checked on reading
 tuna_inputs <- read_survey_csv("docs/data/cases/tuna")
-validate_survey_tables(flatfish_inputs, growth_step=1)
-validate_survey_tables(tuna_inputs, growth_step=.25)
 pa <- readRDS("docs/data/cases/tuna/truth.rds")$parameters
 str(pa)
 # Regenerate inputs
@@ -78,4 +76,4 @@ Tuna is generated with length-based dynamics and fitted with an explicit quarter
 
 Use multiple seeds and vary observation noise, M, q, binning or series length systematically. Retain failed fits before summarizing bias, RMSE, coverage and retrospectives; averaging only successful fits introduces selection bias.
 
-[Four-fit convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv)。
+[Four-fit convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv).

@@ -89,7 +89,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     .acl_save_simulation_result(result, file.path(output_dir, paste0("result_rep_", iter)))
     result
   }
-  ncores <- min(ncores, length(iter_range))
+  ncores <- .acl_workers(min(ncores, length(iter_range)))
   if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
     cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
     .acl_initialize_workers(cl, cache = cache, settings = .acl_worker_options())

@@ -2,7 +2,16 @@
 
 **ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构 catch-at-length 模型 **ACL**，以及年龄—体长联合结构统计 catch-at-length 模型 **ALSCL**（age- and length-structured statistical catch-at-length），并提供模拟、诊断、模型比较和绘图工具。
 
-可以从 [完整拟合示例](articles/first-model.html) 开始，从 [首页目录](#contents) 查阅基本功能，阅读 [专题案例](articles/index.html)，或通过 [函数参考](reference/index.html) 查找具体用法。模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。
+模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。先选择下面适合自己的入口；首页目录列出基本使用方法，专题案例展示解决具体问题的完整过程。
+
+<div class="reading-paths">
+<p>你想从哪里开始？</p>
+<ol>
+<li><a href="articles/getting-started.html">第一次使用 ALSCL</a><br>安装软件包，拟合内置示例，再检查结果。</li>
+<li><a href="articles/data-preparation.html">拟合自己的调查数据</a><br>准备三张对齐的表，选择生物学输入，并检查哪些参数会被估计。</li>
+<li><a href="articles/case-model-validation.html">用模拟或未来观测检查模型</a><br>生成重复数据，或评估未参与拟合时期的预测表现。</li>
+</ol>
+</div>
 
 <h2 id="contents">目录</h2>
 
@@ -16,7 +25,7 @@
 
 <h2 id="installation">安装</h2>
 
-从 GitHub 安装当前版本（<span class="current-version">{{VERSION}}</span>）：
+从 GitHub 安装基于 <span class="current-version">{{VERSION}}</span> 的最新开发源码：
 
 ```r
 install.packages("remotes")
@@ -25,6 +34,8 @@ library(ALSCL)
 ```
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
+
+网站对应 ALSCL 2.3.0；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 
@@ -44,16 +55,17 @@ library(ALSCL)
 ```r
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-
 # 使用相同观测与生物设置拟合两个模型
 a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 
+# 解释估计值前，先查看两个模型的数值检查结果
+a$diagnostics
+b$diagnostics
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-从 ALSCL 2.2.0 起，支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+`run_acl(x)` 和 `run_alscl(x)` 读取同一输入列表，选择对应的模型设置。[完成第一个拟合](articles/first-model.html)逐步解释这些代码与输出；覆盖参数以及原有逐项传参、`do.call()` 接口见[拟合设置](articles/fitting-controls.html)，并行计算见[速度设置](articles/speed.html)。
 
 ![模拟 YTF 示例中 ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](assets/manual/figures/ytf/compare_ts.png)
 

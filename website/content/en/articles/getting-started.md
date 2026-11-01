@@ -1,25 +1,16 @@
 # Getting started
 
-Install ALSCL 2.2.1 to use the bundled data, fit models and create plots. Run the following in R.
+Set up R, install ALSCL, then run the bundled example. You do not need your own survey files for the first fit.
 
-## Install from GitHub
+| Step | What you will have |
+|---|---|
+| Prepare the compiler | The tools needed to compile the models on your computer |
+| Install and check the package | ALSCL loaded in R and the example data available |
+| Run the first example | A fitted model, numerical diagnostics and a plot |
 
-```r
-# Install ALSCL
-install.packages("remotes")
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
-library(ALSCL)
-packageVersion("ALSCL")
-data("YTF_example")
-str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
-```
+<h2 id="section-2">1. Prepare the compiler</h2>
 
-
-The first fit needs an R-compatible C++ toolchain. Dependencies are installed automatically; Excel examples additionally use readxl. Run examples containing `source("scripts/...")` from the downloaded repository root.
-
-[Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md) · [Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
-
-## Prepare the compiler
+Model fitting requires an R-compatible C++ toolchain. Install the tools for your platform before the first fit.
 
 | Platform | Requirement |
 |---|---|
@@ -27,12 +18,38 @@ The first fit needs an R-compatible C++ toolchain. Dependencies are installed au
 | macOS | Install the Xcode Command Line Tools; use the R distribution's recommended compiler configuration. |
 | Linux | Install a C++ compiler, make and the development tools required by your R distribution. |
 
-The fitting functions compile the bundled C++ templates into a writable session cache. You do not need to compile the models manually or write into the installed package directory. The first fit may take longer than later fits.
+The fitting functions compile the bundled C++ templates into a writable session cache. They manage compilation automatically. The first fit may take longer than later fits.
 
-## Package examples and repository scripts
+<h2 id="section-1">2. Install from GitHub</h2>
 
-Functions such as `run_acl()` and `plot_SSB()` are available after `library(ALSCL)`. Examples that call `source("scripts/...")` additionally require a downloaded copy of the repository. Open that repository as your R working directory so the paths to scripts, input worksheets and example CSV files resolve correctly.
+Run the installation commands once, and repeat them when you want to update. This installs the current `main` source, including additions listed under **Unreleased** in the [changelog](../news/index.html). An earlier release tag may not contain those functions.
 
-## Your first analysis
+```r
+install.packages("remotes")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
+```
 
-Continue to the [worked YTF example](first-model.html) to fit both models and inspect their outputs. For your own data, follow [data preparation](data-preparation.html) before fitting. The function reference includes a complete argument list and example setup for each public function.
+<h2 id="check-installation">3. Check that the package and data load</h2>
+
+Start each new analysis session by loading the package. The following check reads the bundled data without compiling or fitting a model.
+
+```r
+library(ALSCL)
+packageVersion("ALSCL")
+data("YTF_example")
+str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
+```
+
+You should see the installed version and three tables with matching length bins and time columns. Package dependencies are installed automatically. Excel import additionally requires `readxl`; install it when you reach the [data preparation guide](data-preparation.html).
+
+<h2 id="section-4">4. Run your first analysis</h2>
+
+Continue to the [first fit with the bundled YTF example](first-model.html). It creates the `x`, `a` and `b` objects used throughout the tutorials, then shows what to check before interpreting the plots.
+
+Once that example works, follow [data preparation](data-preparation.html) to organize your own observations. Use the [function reference](../reference/index.html) when you need a complete argument list. Installation or compilation problems are covered in [troubleshooting](reproducibility.html).
+
+<h2 id="section-3">When do I need the repository files?</h2>
+
+Ordinary package calls, such as `run_acl()` and `plot_SSB()`, work after `library(ALSCL)`. The first-fit tutorial uses only bundled data.
+
+Examples containing `source("scripts/...")` or a `docs/data/...` path also need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL). Open its root directory as your R working directory before running those examples. The [Excel workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx) can also be downloaded separately.

@@ -129,15 +129,24 @@ print.alscl_speed_info <- function(x, ...) {
                            blas = tryCatch(extSoftVersion()[["BLAS"]], error = function(e) ""))
   identical(.acl_fork_reason(os, gui, front_ends, blas), .acl_fork_ok)
 
+# R CMD check limits a package to two simultaneous processes when
+# _R_CHECK_LIMIT_CORES_ is set (parallel's .check_ncores()). Every worker
+# count passes through this limit, so checks never fail on it.
+.acl_core_limit <- function(check = Sys.getenv("_R_CHECK_LIMIT_CORES_", "")) {
+  check <- tolower(check)
+  if (nzchar(check) && check != "false") 2L else .Machine$integer.max
+}
+.acl_workers <- function(n) as.integer(min(n, .acl_core_limit()))
+
 # Resolve a core request to an integer. "auto" uses up to four physical cores
 # and keeps one free.
 .acl_cores <- function(x = getOption("ALSCL.sd_cores", "auto")) {
   .acl_check_cores(x, "sd_cores")
-  if (!identical(x, "auto")) return(as.integer(x))
+  if (!identical(x, "auto")) return(.acl_workers(x))
   n <- parallel::detectCores(logical = FALSE)
   if (is.na(n)) n <- parallel::detectCores()
   if (is.na(n)) return(1L)
-  as.integer(max(1L, min(4L, n - 1L)))
+  .acl_workers(max(1L, min(4L, n - 1L)))
 }
 
 # How standard errors run in parallel: "fork" (forked processes for the

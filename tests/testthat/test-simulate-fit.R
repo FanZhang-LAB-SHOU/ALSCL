@@ -25,6 +25,9 @@ test_that("fitted-model simulation preserves conditional reports and refittable 
         expect_identical(one$x$data.wgt, fit$recipe$args$data.wgt)
         expect_identical(one$x$data.mat, fit$recipe$args$data.mat)
         expect_true(check_alscl_data(one$x, tolower(model))$valid)
+        expect_false(any(c("output", "ncores", "silent") %in%
+          names(one$x$fit_config[[tolower(model)]])))
+        expect_identical(one$x$fit_config[[tolower(model)]]$nstarts, fit$recipe$args$nstarts)
         expect_true(all(one$observations > 0))
       }
       expect_false(identical(simulated$simulations[[1]]$observations,

@@ -63,8 +63,7 @@ str(inputs)
 The converter returns three data frames with length-bin labels in the first column. Validate them before passing them to an estimator. Use the full preset’s actual length midpoints when drawing the heatmap.
 
 ```r
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
-validate_survey_tables(inputs, growth_step = pa$growth_step, zero_action = "error")
+inputs <- prepare_alscl_data(inputs)  # checks alignment and values; biology is added later
 library(ggplot2)
 years <- as.numeric(names(inputs$data.CatL)[-1])
 observations <- data.frame(

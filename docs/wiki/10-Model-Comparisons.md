@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/09-Growth-and-Mortality) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -13,7 +13,7 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
-## 34. 种群时间序列比较 / Population time series comparison
+## 33. 种群时间序列比较 / Population time series comparison
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -34,7 +34,7 @@ Compare common quantities over the same time window. Free y axes preclude amplit
 
 
 
-## 35. 死亡率矩阵比较 / Fishing mortality matrices
+## 34. 死亡率矩阵比较 / Fishing mortality matrices
 
 ```r
 # 绘制本图 / Draw this figure
@@ -51,7 +51,7 @@ ACL uses age and ALSCL length on the vertical axis; cells do not correspond one 
 
 
 
-## 36. 残差联合诊断 / Combined residual diagnostics
+## 35. 残差联合诊断 / Combined residual diagnostics
 
 **2.2.9 修订 / Changes in 2.2.9.** `plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
 
@@ -72,7 +72,7 @@ Includes histograms, QQ plots, annual residuals and length-bin boxplots. Annual 
 
 
 
-## 37. 生长与外部参照接口 / Growth and reference-data interface
+## 36. 生长与外部参照接口 / Growth and reference-data interface
 
 参考数据与排版辅助函数 / Reference data and layout helper:
 
@@ -106,7 +106,7 @@ The reference curve uses synthetic Age and Length data, not empirical measuremen
 
 
 
-## 38. 两模型调查拟合 / Survey fits from both models
+## 37. 两模型调查拟合 / Survey fits from both models
 
 **2.2.9 修订 / Changes in 2.2.9.** `plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
 
@@ -127,7 +127,7 @@ Four selected years are shown. Omit years to show all periods. Points are observ
 
 
 
-## 39. 拟合指标比较 / Fit metric comparison
+## 38. 拟合指标比较 / Fit metric comparison
 
 ```r
 # 绘制本图 / Draw this figure
@@ -145,7 +145,7 @@ The generating model is age based. This comparison cannot establish universal su
 
 
 
-## 40. 固定调查可捕性 / Fixed survey catchability
+## 39. 固定调查可捕性 / Fixed survey catchability
 
 ```r
 # 绘制本图 / Draw this figure
@@ -162,7 +162,7 @@ This function connects the input survey q; it does not estimate fishery selectiv
 
 
 
-## 41. 总体 F 比较 apical / Summary F comparison apical
+## 40. 总体 F 比较 apical / Summary F comparison apical
 
 ```r
 # 绘制本图 / Draw this figure
@@ -180,7 +180,7 @@ Apical is the maximum; mean is an unweighted group average. Despite its name, th
 
 
 
-## 42. 总体 F 比较 mean / Summary F comparison mean
+## 41. 总体 F 比较 mean / Summary F comparison mean
 
 ```r
 # 绘制本图 / Draw this figure
@@ -198,7 +198,7 @@ Apical is the maximum; mean is an unweighted group average. Despite its name, th
 
 
 
-## 45. 模拟真值与条件估计 / Simulation truth and conditional estimates
+## 44. 模拟真值与条件估计 / Simulation truth and conditional estimates
 
 ```r
 # 将生成真值与报告中的估计对齐 / Align truth and fitted reports

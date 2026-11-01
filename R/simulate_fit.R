@@ -111,11 +111,13 @@
 #'   is their conditional arithmetic mean. Numeric overflow or underflow to zero
 #'   raises an error rather than changing the generating distribution or mask.
 #'
-#'   Each returned x retains the original fitting configuration for the same
-#'   model. It can be passed to run_acl(x) or run_alscl(x), as appropriate, to
-#'   conduct simulation-estimation experiments. This function does not refit
-#'   models or compute bootstrap intervals. Passing a numerical screen does not
-#'   establish model adequacy or parameter identifiability.
+#'   Each returned x retains the fitting configuration of the same model,
+#'   except the session settings output, ncores and silent, which are chosen
+#'   when the bundle is fitted. It can be passed to run_acl(x) or run_alscl(x),
+#'   as appropriate, to conduct simulation-estimation experiments. This
+#'   function does not refit models or compute bootstrap intervals. Passing a
+#'   numerical screen does not establish model adequacy or parameter
+#'   identifiability.
 #' @return A list with simulations and metadata. Each simulations element has
 #'   replicate, x (a complete input bundle), observations (length by time) and
 #'   truth (population quantities including year, SSB, Rec, NL and group-specific
@@ -217,8 +219,10 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
     tables <- setup$recipe$args[table_names]
     tables$data.CatL <- as.data.frame(tables$data.CatL, stringsAsFactors = FALSE, check.names = FALSE)
     tables$data.CatL[-1L] <- as.data.frame(observations, check.names = FALSE)
-    tables$fit_config <- stats::setNames(list(setup$recipe$args[setdiff(names(setup$recipe$args), table_names)]),
-      setup$recipe$model)
+    # Session settings are not part of the model: output, ncores and silent
+    # are chosen when the simulated bundle is fitted.
+    kept <- setdiff(names(setup$recipe$args), c(table_names, "output", "ncores", "silent"))
+    tables$fit_config <- stats::setNames(list(setup$recipe$args[kept]), setup$recipe$model)
     list(replicate = i, x = tables, observations = observations, truth = truth)
   })
   names(simulations) <- paste0("sim_", seq_len(nsim))

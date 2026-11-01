@@ -31,7 +31,7 @@ def fix_url(url,source):
  dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
  return ']('+dest+('#'+anchor if sep else '')+')'
-# Map the gallery's 45 numbered sections, keeping function anchors and executable code.
+# Map the gallery's 44 numbered sections, keeping function anchors and executable code.
 gallery=read('PLOT_GALLERY.md'); marks=list(re.finditer(r'(?m)^## (\d+)\. ',gallery));blocks={}
 for i,m in enumerate(marks):
  block=gallery[m.start():marks[i+1].start() if i+1<len(marks) else len(gallery)]
@@ -40,9 +40,9 @@ for i,m in enumerate(marks):
  blocks[int(m[1])]=block
 intro=f'''# 开始使用 · Getting started
 
-安装 ALSCL {version} 后即可使用内置数据、拟合模型和绘图。以下代码在 R 中运行。
+安装 ALSCL {version} 后即可使用本手册中的函数。以下代码在 R 中运行。
 
-Install ALSCL {version} to use the bundled data, fit models and create plots. Run the following in R.
+Install ALSCL {version} to use the functions in this manual. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -94,8 +94,8 @@ chapters=[
 ('06-Fitting','初值、边界与拟合 · Fitting controls',no_title(sections['fitting'])),
 ('07-Diagnostics','诊断与结果解读 · Diagnostics',no_title(sections['diagnostics'])),
 ('08-Population-Plots','调查与种群图 · Survey and population plots',plot_context+'\n\n'.join(blocks[i] for i in range(1,19))),
-('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,34))),
-('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(34,43))+[45])),
+('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,33))),
+('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(33,42))+[44])),
 ('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])+rho+'\n\n'+blocks[43]+'\n\n'+blocks[44]),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
@@ -129,11 +129,25 @@ home=f'''# ALSCL 完整使用手册 · Complete user manual
 
 **ALSCL {version} · 简体中文与英文 · {len(chapters)} 章 / chapters**
 
-本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图、案例图及 6 张评估工作流图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL {version}。
 
-This manual covers model principles, data, simulation, fitting, diagnostics, plotting and retrospectives, with bilingual R examples, input worksheets, 45 YTF figures, case-study figures and six assessment-workflow figures. Plots use ggsci colors; ridges use an ordered viridis gradient.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL {version}.
 
 [开始使用 · Getting started]({base}/wiki/01-Start) · [仓库主页 · Repository]({base}/tree/main) · [单页书稿 · Single-page book]({base}/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook]({base}/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
+
+## 选择阅读路线 · Choose a reading path
+
+| 你的任务 / Your task | 建议顺序 / Suggested order |
+|---|---|
+| 第一次使用 / First run | [安装 / Install]({base}/wiki/01-Start) → [内置拟合 / First fit]({base}/wiki/04-Built-in-YTF) → [诊断 / Diagnostics]({base}/wiki/07-Diagnostics) |
+| 拟合自己的数据 / Your own data | [准备数据 / Prepare data]({base}/wiki/03-Data-and-Excel) → [参数与 map / Parameters and maps]({base}/wiki/06-Fitting) → [诊断 / Diagnostics]({base}/wiki/07-Diagnostics) |
+| 整理和评估拟合结果 / Work with fitted results | [结果、敏感性与情景 / Results, sensitivity and scenarios]({base}/wiki/16-Assessment-Workflows) |
+| 模拟或检验未来预测 / Simulation or prediction checks | [模型验证完整案例 / Model-validation case]({base}/wiki/17-Model-Validation) |
+| 选择图形与导出 / Plot and export | [种群图 / Population plots]({base}/wiki/08-Population-Plots) → [配色和导出 / Style and export]({base}/wiki/13-Colors-and-Export) |
+
+这些是按任务选择的入口，不必按章节编号从头读起。需要逐项查参数时使用第 14 章；想用单一语言连续阅读时，访问 [English website](https://fanzhang-lab-shou.github.io/ALSCL/) 或 [简体中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
+
+Use these task-based entry points without reading every chapter in numerical order. Chapter 14 is an argument reference. The website provides continuous reading in either language.
 
 ## 目录 · Contents
 

@@ -57,8 +57,17 @@ test_that("standard errors fork where it is safe and use socket workers elsewher
   expect_identical(ALSCL:::.acl_sd_backend(TRUE, "socket"), "socket")
   expect_identical(ALSCL:::.acl_sd_backend(FALSE, "fork"),
                    if (.Platform$OS.type == "unix") "fork" else "socket")
-  expect_identical(ALSCL:::.acl_cores(3), 3L)
+  expect_identical(ALSCL:::.acl_cores(3), min(3L, ALSCL:::.acl_core_limit()))
   expect_true(ALSCL:::.acl_cores("auto") >= 1L)
+  # R CMD check's two-process limit applies to every worker count.
+  expect_identical(ALSCL:::.acl_core_limit(""), .Machine$integer.max)
+  expect_identical(ALSCL:::.acl_core_limit("false"), .Machine$integer.max)
+  expect_identical(ALSCL:::.acl_core_limit("TRUE"), 2L)
+  withr::with_envvar(c(`_R_CHECK_LIMIT_CORES_` = "true"), {
+    expect_identical(ALSCL:::.acl_cores(4), 2L)
+    expect_identical(ALSCL:::.acl_workers(3), 2L)
+    expect_true(ALSCL:::.acl_cores("auto") <= 2L)
+  })
   info <- alscl_speed_info()
   expect_s3_class(info, "data.frame")
   expect_identical(names(info), c("item", "value"))

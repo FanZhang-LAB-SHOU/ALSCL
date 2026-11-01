@@ -113,7 +113,7 @@ See the [full bilingual report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/
 
 ## Speed settings for one fit
 
-`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. The default settings give results identical to ALSCL 2.0.0: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in GUI front-ends such as RStudio). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
+`alscl_speed()` sets how every later fit computes standard errors and which automatic-differentiation library TMB uses. With the default settings, the parallel standard errors match the sequential calculation at the same fitted parameters: the fixed-effect Hessian and the delta-method standard errors are computed on several cores (`sd_cores = "auto"`: up to four; forked processes on macOS and Linux, socket workers for the delta method on Windows and in GUI front-ends such as RStudio). `framework = "TMBad"` compiles the model with TMB's TMBad library, which is faster, but its estimates differ slightly from the default (by up to 2.7e-8, relative, in the fits tested).
 
 ```r
 # Defaults: identical results, parallel standard errors
