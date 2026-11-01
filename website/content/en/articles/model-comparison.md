@@ -17,12 +17,9 @@ plot_compare_ts(a, b, se = TRUE, ncol = 2)
 
 [![Population time series comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
-
 Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_ts)
-
-
 
 ## Fishing mortality matrices
 
@@ -33,12 +30,9 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 [![Fishing mortality matrices](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true)
 
-
 ACL uses age and ALSCL length on the vertical axis; cells do not correspond one to one.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_F)
-
-
 
 ## Combined residual diagnostics
 
@@ -49,12 +43,9 @@ plot_compare_residuals(a, b, dat)
 
 [![Combined residual diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true)
 
-
 Includes histograms, QQ plots, annual residuals and length-bin boxplots. Annual error bars represent SD, not confidence intervals.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_residuals)
-
-
 
 ## Growth and reference-data interface
 
@@ -82,12 +73,9 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 [![Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)
 
-
 The reference curve uses synthetic Age and Length data, not empirical measurements from the paper.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_growth)
-
-
 
 ## Survey fits from both models
 
@@ -98,14 +86,11 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
 
 [![Survey fits from both models](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true)
 
-
 Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians.
 
 Single-model and comparison survey-fit plots use the survey-index label rather than the fishery-catch label. Set `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` to label both consistently. When `survey` is unset, a customized legacy `ylab$abundance` still applies; otherwise the default is “Survey index”. Single-model log plots add a “Log” prefix, and their explicit `ylab` remains authoritative. `ylab$catch` continues to describe actual catch plots and does not relabel survey indices.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_CatL)
-
-
 
 ## Fit metric comparison
 
@@ -117,14 +102,11 @@ plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansio
 
 [![Fit metric comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true)
 
-
 The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.
 
 The metric bars now use the same calculation as `diagnostic_metrics()`: only finite positive observations contribute, so missing and zero observations do not turn every error metric into `NA`. Nonfinite predictions at observed cells and mismatched dimensions are errors. Undefined measures, such as R-squared for constant observations, remain `NA`. The figure is descriptive; use `compare_models()` to check comparability and numerical eligibility before interpreting differences.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_metrics)
-
-
 
 ## Fixed survey catchability
 
@@ -135,12 +117,9 @@ plot_compare_selectivity(a, b)
 
 [![Fixed survey catchability](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true)
 
-
 This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_selectivity)
-
-
 
 ## Summary F comparison apical
 
@@ -152,12 +131,9 @@ plot_compare_annual_F(a, b, method = "apical") +
 
 [![Summary F comparison apical](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true)
 
-
 Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_annual_F)
-
-
 
 ## Summary F comparison mean
 
@@ -169,12 +145,9 @@ plot_compare_annual_F(a, b, method = "mean") +
 
 [![Summary F comparison mean](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true)
 
-
 Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_annual_F)
-
-
 
 ## Simulation truth and conditional estimates
 
@@ -200,37 +173,4 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 
 [![Simulation truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/truth.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/truth.png?raw=true)
 
-
 Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.
-
-## Comparing two configurations in 2.2.4
-
-Comparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.
-
-```r
-a_group <- run_acl(x, F_structure = "group_year", silent = TRUE)
-a_shared <- run_acl(x, F_structure = "year", silent = TRUE)
-plot_compare_ts(a_group, a_shared, quantities = "SSB")
-plot_compare_annual_F(a_group, a_shared)
-plot_compare_F(a_group, a_shared)
-```
-
-### Matching fitted data in 2.2.5
-
-`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
-
-Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
-
-### Consistency corrections
-
-Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
-
-`plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_annual_F(a, b, method = "apical")` or `method = "mean"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.
-
-Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
-
-### Changes in 2.2.9
-
-`plot_compare_residuals()` and `plot_compare_CatL()` verify known observations and their positive-observation mask as well as time and length metadata. Pass the original fitting table; changing its values or turning a missing cell into an observation is an error. Older fits without stored observations remain usable, but their observation alignment cannot be fully verified. Zero and NA observations are omitted from the comparison points, consistently with fitting; prediction curves remain available at those positions.
-
-When `ref_data` is supplied, `ref_name` must be one nonempty string and differ from both model names. The name identifies a separate reference curve; duplicate names are rejected before fitting the reference.

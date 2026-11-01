@@ -1,153 +1,131 @@
-# 进阶、复现与故障处理
+# 复现结果与排除故障
 
-先完成 [YTF 拟合示例](first-model.html)。以下代码使用其中的 `x`、`inputs`、`a`（ACL）和 `b`（ALSCL）对象。
+读完[理解第一次拟合](first-model.html)之后，你已经有了输入列表 `x` 和拟合好的 ACL 模型 `a`。本页教你记录拟合依赖的内容、在以后的会话中重建拟合、并行运行拟合、在会话之间保留编译好的模型，以及查找常见错误。
 
-## 固定参数敏感性
-
-改变 M、q 或固定 CV 可能明显改变绝对丰度与 SSB。一次改变一个有科学依据的假设，使用同一观测，保留数值诊断和全过程设置，而不是只寻找最小 AIC。
-
+<h2 id="record">1. 记录拟合依赖的内容</h2>
 
 ```r
-# 使用指南中的 inputs、x
-sensitivity <- lapply(c(.15, .20, .25), function(M_value) {
-  fit <- run_alscl(x, M = M_value, train_times = 2, silent = TRUE)
-  list(M=M_value, diagnostics=diagnose_model(x$data.CatL, fit), fit=fit)
-})
-# 确认每个诊断后比较
-lapply(sensitivity, function(z) z$diagnostics)
-plot_compare_ts(sensitivity[[1]]$fit, sensitivity[[3]]$fit,
-                model1_name="M = 0.15", model2_name="M = 0.25")
+save_assessment(a, "ytf_acl.rds", overwrite = TRUE)
+packageVersion("ALSCL")
+a$recipe$versions
+a$recipe$implementation$source$revision
+writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
-释放参数前先检查上下界和映射：`generate_map(list(t0=NULL))` 释放 ACL 默认固定的 t0；ALSCL 使用 `log_t0`，不能直接套同一列表。对自由参数可使用多个合理起点，比较目标函数、梯度与派生量。
+`save_assessment()` 保存拟合结果，不含当前会话的 TMB 对象 `a$obj`，并附上记录拟合全部依赖内容的配方：
 
-
-## 并行与编译
-
-```r
-# CPU 数量未知时回退单进程
-cores <- parallel::detectCores()
-workers <- if (is.na(cores)) 1L else max(1L, min(4L, cores - 1L))
-# 在原拟合中替换 ncores，不重复传参
-multi <- run_acl(x, ncores=workers, nstarts=4, train_times=2, silent=TRUE)
-```
-
-|入口| ncores=1 | ncores>1 |
-|---|---|---|
-| `run_acl`, `run_alscl` |依次完成 nstarts 个起点|最多 min(ncores, nstarts) 个 socket 进程|
-| `sim_acl` |依序拟合重复|按重复分工|
-| `retro_model`, `retro_acl`, `retro_alscl` |依序删除末期|按回溯拟合分工|
-
-对 `retro_acl(x)` 和 `retro_alscl(x)`，输入中原拟合的 `ncores` 不会自动用于回溯；请在回溯调用中显式指定 `ncores`，控制截短拟合的并行数。`nstarts` 仍控制每次拟合的起点总数，内部依序执行。解读 `rho_text` 前查看 `fit_diagnostics`；必要拟合未通过检查时，不报告通过筛查的 rho。
-
-多起点的目标是稳健性，墙钟时间仍受最慢起点及进程开销影响。避免外层重复与内层多起点同时占满 CPU。Windows、macOS、Linux 均使用可移植 socket 路径。
-
-
-编译由 `run_*()` 自动完成，源文件随包分发，缓存键含模板、头文件、R/TMB/RcppEigen 版本和编译选项。`compile_and_load_acl()` 是内部辅助函数；开启编译选项本身不保证模板的似然计算自动并行。
-
-
-```r
-# 仅在默认缓存不合适时设置
-options(ALSCL.tmb.cache=file.path(tempdir(), "alscl_tmb_cache"))
-```
-
-macOS 需要配套命令行 C++ 工具链，Windows 使用匹配 R 版本的 Rtools，Linux 需要 C++/make。依赖安装失败应先解决编译工具和依赖，再重新拟合；不应通过关闭检查掩盖问题。
-
-
-## 保存可移植结果
-
-```r
-# obj 含当前会话的外部指针
-portable <- function(fit) fit[setdiff(names(fit), "obj")]
-saveRDS(portable(b), "alscl_report.rds")
-capture.output(sessionInfo(), file="sessionInfo.txt")
-saved <- readRDS("alscl_report.rds")
-saved$report$SSB
-# 这些图只需已保存报告
-plot_SSB(saved)
-```
-
-保存了观测与拟合报告的结果可直接使用 `plot_ridges()`，不需要活跃 TMB 对象。未保存观测的旧结果仍需原会话对象或重新拟合。记录包版本、提交号、随机种子、数据来源、三表单位、固定参数、边界、时间步和诊断；RDS 不保存可跨会话执行的编译模型。
-
-
-## 常见问题
-
-
-|现象|处理|
+| 内容 | 在保存的拟合结果中的位置 |
 |---|---|
-| `YTF$data.CatL` 是 NULL |载入 `YTF_example`；YTF 是参数列表|
-| Excel 年份变成 X2000 |用指南读取函数或 `check.names=FALSE`|
-| 长度边界不连续 |核对真实测量定义，不要自动消除间隙|
-| 出现零调查值 |判断真实零还是缺失编码，再明确 `zero_action`|
-| 体重/成熟缺失 |依据可靠资料补全并记录方法|
-| 优化码非 0、梯度大、Hessian 非正定 |检查尺度、边界、初值和可识别性；不能只增加次数|
-| 季度 F 看起来偏小 |输出是每步瞬时率；`annual_F` 名称不意味着自动年化|
-| ACL 的 F 图 `type="length"` |当前兼容分支仍输出年龄曲线；真正长度别 F 用 ALSCL|
-| 生长区间退化为线 |本例固定生长参数，属于预期行为|
+| 数据表、设置、参数初值、边界、`map`、`nstarts` 和调用的其他参数 | `recipe$args` |
+| ALSCL、TMB 和 R 的版本 | `recipe$versions` |
+| 模型源文件的 MD5 值、已知时的 Git 修订号、平台、BLAS、LAPACK、Matrix 和 RcppEigen | `recipe$implementation` |
+| 速度设置，`framework` 和 `sd_cores` | `recipe$settings` |
 
-本文的可执行脚本和实际数值结果随仓库发布；所有图应结合模型假设与数据来源解释。
+`sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。拟合模型模拟还依赖随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
 
+当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或旧拟合没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
 
-固定 `nstarts` 后再比较 `ncores`，才能保证工作量相同。为兼容旧调用，`nstarts` 默认等于 `ncores`；只改变 `ncores` 也会改变总工作量。`multi$start_diagnostics` 记录各起点的 PID、起止时间、CPU 时间、目标函数和优化码。串行和并行使用相同的确定性初值扰动。结果仍按最低有限目标函数选择，需要另行检查梯度与 Hessian。数据准备、最终报告和标准误计算仍有串行部分，因此不保证线性加速。
-
-## 并行性能实测
-
-2026 年 10 月 7 日，在 Apple M2 Pro（32 GiB）上实际运行 ACL 和 ALSCL。每次均固定 **4 个相同初始点，每个起点连续优化 2 轮**，使用模拟数据 `YTF_example` 前 10 年、23 个体长组及 15 个年龄组。每项重复 3 次；不计编译及预热，但包含工作进程创建、拟合、报告和标准误计算。
-
-| 模型 | 并行进程数 | 中位耗时（秒） | 范围（秒） | 加速比 |
-|---|---:|---:|---:|---:|
-| ACL | 1 | 4.23 | 4.18–4.44 | 1.00× |
-| ACL | 2 | 3.50 | 3.27–3.90 | 1.21× |
-| ACL | 4 | 3.08 | 2.93–3.14 | 1.38× |
-| ALSCL | 1 | 71.38 | 71.28–72.35 | 1.00× |
-| ALSCL | 2 | 45.03 | 44.55–51.00 | 1.59× |
-| ALSCL | 4 | 33.23 | 31.21–33.95 | 2.15× |
-
-![并行拟合总耗时实测](../../../docs/figures/parallel/timing.png)
-
-圆点为全部测量，折线为中位数，误差线为最小至最大值。测试时有其他分析共用电脑，结果只代表该环境和工作负载；小任务可能因启动开销变慢，串行报告阶段也限制加速比。
-
-![真实工作进程的执行时间重叠](../../../docs/figures/parallel/worker-timeline.png)
-
-第一轮四进程测试记录了 4 个不同 PID，执行时间重叠且有实际 CPU 使用。全部 18 次计时拟合、72 个起点通过检查；不同并行数使用相同初值，逐起点目标函数一致，最终模型通过优化码、Hessian、梯度及边界检查。各工作进程调用同一 C++ 似然模型；单个起点内部仍是串行运算。
-
-参见[完整双语报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md)、[全部耗时记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv)、[逐起点证据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/starts.csv)及[复现脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R)。报告另外保留原版测试，并明确区分功能验证和相同工作量的速度比较。
-
-## 单次拟合的速度设置
-
-`alscl_speed()` 设置之后每次拟合如何计算标准误，以及 TMB 使用哪个自动微分库。默认设置下并行标准误与同一拟合参数处的顺序计算一致：固定效应 Hessian 和 delta 方法标准误在多个核上计算（`sd_cores = "auto"`：最多 4 核；macOS 与 Linux 用分叉进程，Windows 与 RStudio 等图形界面用 socket 进程计算 delta 方法）。`framework = "TMBad"` 改用 TMB 的 TMBad 库编译模型，速度更快，但估计值与默认设置略有差异（在已测试的拟合中相对差最大 2.7e-8）。
+<h2 id="reproduce">2. 在以后重现拟合</h2>
 
 ```r
-# 默认：结果不变，并行计算标准误
-alscl_speed()
-b <- run_alscl(x, silent = TRUE)
-# 更快的选项；结果与默认设置不完全相同
-alscl_speed(framework = "TMBad")
-# 顺序计算标准误，例如在自己的并行循环中
-alscl_speed(sd_cores = 1)
+saved <- read_assessment("ytf_acl.rds")
+refit <- refit_model(saved)
+max(abs(refit$opt$par - saved$opt$par))
+all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-2026 年 10 月 12 日的基准测试共 90 次拟合（ACL 与 ALSCL 分别拟合 `YTF_example`、flatfish 与 tuna 案例，各运行 3 次，Apple M2 Pro，测试期间有其他任务）。与原版相比，默认设置使拟合快 1.13-1.24 倍，`framework = "TMBad"` 快 1.25-1.68 倍。
+`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`refit_model()` 重新拟合配方，返回带有可执行对象的拟合结果；命名参数会覆盖配方，`map` 这类列表会整体替换保存的列表。
 
-| 模型 | 原版（秒） | 默认（秒） | TMBad（秒） |
-|---|---:|---:|---:|
-| ACL，YTF_example | 8.6 | 7.7（1.13×） | 6.6（1.31×） |
-| ALSCL，YTF_example | 140.9 | 118.8（1.19×） | 83.9（1.68×） |
-| ALSCL，flatfish | 107.8 | 86.9（1.24×） | 78.8（1.37×） |
-| ALSCL，tuna（季度） | 217.4 | 180.9（1.20×） | 141.3（1.54×） |
+在同一台电脑上使用相同版本的 ALSCL、TMB 和 R 时，标量参数逐位相同，`all.equal()` 返回 `TRUE`。不同机器或不同软件包版本之间末位数字的差异来自浮点运算和优化器的停止规则；大到足以改变结论的差异，说明数据、设置或软件包版本不同。
 
-![速度设置前后的拟合耗时](../../../docs/figures/speed/timing.png)
+`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与配方不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果没有配方；按第 1 步用 `x` 重新保存。
 
-默认设置下，六个组合的全部估计值、目标函数及 `summary(sdreport)` 的每一行都与原版逐位相同；`R CMD check` 在 Linux、macOS 和 Windows 上均通过。
+<h2 id="parallel">3. 并行运行拟合</h2>
 
-![速度设置前后的估计值与标准误](../../../docs/figures/speed/agreement.png)
+```r
+a4 <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+a4$start_diagnostics
+a4$workers
+```
 
-[速度设置](speed.html)一文详细说明每项设置、怎样检查本会话的实际情况，以及在 Windows 和 RStudio 中如何使用 socket 进程。另见[速度报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文）、[全部耗时记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/speed/runs.csv)及[基准测试脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_speed.R)。
+`ncores` 决定一个函数启动多少个 socket 进程，即新的 R 进程。每个进程运行完整的初值或完整的拟合，因此结果与顺序运行相同。
 
-### 2.2.5 的并行安装库一致性
+| 函数 | 分配给进程的工作 | 每次拟合的初值个数 |
+|---|---|---|
+| `run_acl()`、`run_alscl()` | 各个初值，最多 `min(ncores, nstarts)` 个进程 | `nstarts`，默认等于 `ncores` |
+| `retro_model()`、`retro_acl()`、`retro_alscl()` | 回溯分析的各轮 | 输入列表或调用中明确给出的 `nstarts`，否则为一个，依次运行 |
+| `fit_scenarios()`、`hindcast_model()` | 各项任务：每个情景或每个训练折 | 同上 |
+| `sim_model()`、`sim_acl()`、`sim_alscl()` | 各个重复 | `nstarts`，默认为一个 |
 
-多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
+由于 `nstarts` 默认等于 `ncores`，比较耗时时请同时设置两者。后续初值加上固定的扰动，最后选出目标函数最小的初值，因此无论 `ncores` 为多少，结果都相同；`a4$start_diagnostics` 记录每个初值。其他函数不使用输入列表中的 `ncores`，每次拟合只用一个进程并顺序计算标准误。
 
-### 一致性修正
+一次拟合内部计算标准误所用的核数是另一项设置，`alscl_speed(sd_cores = ...)`，结果与顺序计算完全相同；[速度设置](speed.html)有说明。
 
-安装模式的 socket 工作进程继续加载与主进程相同的包安装。在 `pkgload::load_all()` 或 `testthat::test_local()` 下，工作进程改为用 pkgload 加载同一源码目录；该开发流程需要可选依赖 pkgload。CI 同时运行源码模式并行测试和完整安装包检查。
+2026 年 10 月 7 日的基准测试（Apple M2 Pro，R 4.6.0，TMB 1.9.21）用 `YTF_example` 的前 10 年拟合两个模型，每次使用相同的四个初值，每种进程数重复三次；不计编译，计入进程启动。
+
+| 模型 | 进程数 | 中位数（秒） | 范围（秒） | 加速比 |
+|---|---:|---:|---:|---:|
+| ACL | 1 | 4.23 | 4.18-4.44 | 1.00x |
+| ACL | 2 | 3.50 | 3.27-3.90 | 1.21x |
+| ACL | 4 | 3.08 | 2.93-3.14 | 1.38x |
+| ALSCL | 1 | 71.4 | 71.3-72.4 | 1.00x |
+| ALSCL | 2 | 45.0 | 44.6-51.0 | 1.59x |
+| ALSCL | 4 | 33.2 | 31.2-34.0 | 2.15x |
+
+![一、二、四个进程的拟合耗时实测](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/parallel/timing.png?raw=true)
+
+圆点是三次测量，折线是中位数，误差线是范围。测试时电脑与其他分析共用，结果只在该负载和该机器的条件下成立。参见[基准测试报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PARALLEL_BENCHMARK.md)、[原始耗时](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/parallel/runs.csv)和[基准测试脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/benchmark_parallel.R)。
+
+<h2 id="compile">4. 编译与缓存</h2>
+
+```r
+options(ALSCL.tmb.cache = tools::R_user_dir("ALSCL", "cache"))
+a <- run_acl(x, silent = TRUE)
+list.files(getOption("ALSCL.tmb.cache"))
+```
+
+每个模型的第一次拟合把它的 C++ 模板编译到缓存的一个文件夹中，文件夹名是一个键，由模型源文件和头文件的 MD5 值、R、TMB 和 RcppEigen 版本、OpenMP 标志以及 `framework` 计算得到；键相同的拟合直接加载库，不再编译。默认缓存位于 `tempdir()` 之下，R 在会话结束时删除它。在第一次拟合之前设置 `ALSCL.tmb.cache`，例如写在 `.Rprofile` 中，编译好的模型就能在会话之间保留；socket 进程加载会话编译好的库。
+
+编译需要 C++ 编译器：
+
+| 系统 | 编译器 |
+|---|---|
+| Windows | 与 R 版本对应的 Rtools |
+| macOS | Xcode Command Line Tools（`xcode-select --install`） |
+| Linux | C++ 编译器和 `make`，例如 `build-essential` |
+
+[安装 ALSCL 并完成第一次拟合](getting-started.html#compiler)说明安装方法；编译错误中会出现 `TMB::compile`、`make` 或编译器的名字。
+
+<h2 id="troubleshoot">5. 故障排除</h2>
+
+错误信息按软件包打印的原文引用。
+
+| 现象 | 常见原因 | 处理方法 |
+|---|---|---|
+| `YTF$data.CatL` 是 `NULL` | `YTF` 存放参数，不是数据表 | 使用 `YTF_example` |
+| 年份标签读成 `X2000`，或 `must match data.CatL length labels and time columns` | `read.csv()` 给列名加上 `X`，各表不一致 | 用 `check.names = FALSE` 读取全部表 |
+| `Length intervals must have positive widths and be contiguous` | 体长组标签重叠或有空隙 | 改正标签，或提供 `len_mid` 和 `len_border` |
+| `Time columns must have increasing numeric labels` 或 `Time column spacing must equal growth_step` | 缺少时间步，或 `growth_step` 不对 | 缺失的时间步保留为 NA 列，并设置 `growth_step` |
+| 调查表中有零 | 零按缺失处理（`zero_action = "missing"`） | 拟合前判断零是否真实 |
+| 体重表或成熟比例表有空白单元格 | 两张表必须完整 | 补全并记录来源 |
+| 收敛码不是 0、梯度大或 Hessian 不正定 | 优化器提前停止，或某个参数得不到信息 | 见[理解第一次拟合](first-model.html#checks) |
+| 季度 F 看起来偏小 | F 按时间步计，从不年化 | 按时间步报告 F |
+| 对 ACL 拟合调用 `plot_fishing_mortality(a, type = "length")` 给出警告 | ACL 没有按体长的 F；`"length"` 等同 `"age"` | 用 `type = "age"`，或拟合 ALSCL |
+| `plot_VB()` 只画出一条线，没有区间 | 生长参数被固定 | 属于预期；用 `map` 释放 |
+| 第一次拟合报错，信息中出现 `TMB::compile`、`make`、`g++` 或 `clang` | 没有编译器，或 Rtools 对应另一个 R 版本 | 安装编译器（第 4 步），重启 R |
+| `Install RcppEigen to compile model templates` 或 `Model sources are missing` | 缺少 RcppEigen，或安装损坏 | 安装 RcppEigen 或重新安装 ALSCL |
+| `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中较旧的副本 | 只保留一个安装，或用 `ncores = 1` |
+| Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` | 新的 R 进程无法启动 | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` |
+| 回溯分析后 `rho_text$Rho` 是 `NA` | 某次拟合未通过数值检查 | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 |
+| `The current implementation differs from the saved assessment` | 保存之后软件包、TMB 或模型源文件变了 | 预期末位有差异，或安装记录的版本 |
+| `A complete fit recipe is required` | 拟合没有配方 | 重新拟合，或带 `x = x` 保存 |
+
+<h2 id="next">下一步</h2>
+
+| 想做什么 | 阅读 |
+|---|---|
+| 检验估计值对固定值的敏感性 | [判断拟合是否可用](diagnostics.html#sensitivity) |
+| 选择速度设置并检查本会话的实际情况 | [速度设置](speed.html) |
+| 运行回溯分析并解读 Mohn's rho | [回溯分析](retrospectives.html) |
+| 从拟合模型模拟，或检验对留出时期的预测 | [模型验证](case-model-validation.html) |
+| 比较情景、做参数剖面和投影 | [评估工作流](assessment-workflows.html) |

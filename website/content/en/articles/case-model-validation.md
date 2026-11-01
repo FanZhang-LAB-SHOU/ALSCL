@@ -7,10 +7,10 @@ Use this case to generate survey data from a fitted model, check estimates again
 | What would you like to check? | Where to start |
 |---|---|
 | Repeated observations at the same fitted population states | [Step 2: conditional simulation](#section-2) |
-| New population trajectories and how well they can be estimated | [Steps 2–3: resample processes and refit](#section-2) |
+| New population trajectories and how well they can be estimated | [Steps 2-3: resample processes and refit](#section-2) |
 | Predictions of later survey observations | [Step 4: leave out future periods](#section-4) |
 
-Start with step 1 to load `x`. For simulation, also fit `b` and continue through steps 2–3. For prediction checks only, go from `x` directly to step 4. Step 5 explains the prediction scores and saved records.
+Start with step 1 to load `x`. For simulation, also fit `b` and continue through steps 2-3. For prediction checks only, go from `x` directly to step 4. Step 5 explains the prediction scores and saved records.
 
 <h2 id="section-1">1. Prepare the example and check its fit</h2>
 
@@ -159,7 +159,7 @@ Scores use natural-log survey indices. Zero and missing validation observations 
 
 For MASE, each absolute log error is divided by that length bin's mean absolute difference between consecutive positive training log observations. Missing periods are not compressed. A zero or unavailable scale excludes that cell from the scaled score; when no eligible cells remain, the score is `NA`. Check `n_scaled` before interpreting it.
 
-In the executed example, both models scored the same 46 positive observations from 2018–2019. All four training fits passed the numerical screen, and both comparisons used the same persistence baseline.
+In the executed example, both models scored the same 46 positive observations from 2018-2019. All four training fits passed the numerical screen, and both comparisons used the same persistence baseline.
 
 | Prediction | Scored observations | Log RMSE | Log MAE | Log MASE |
 |---|---:|---:|---:|---:|

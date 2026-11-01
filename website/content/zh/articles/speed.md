@@ -1,10 +1,10 @@
 # 速度设置
 
-本文说明 `run_acl()` 与 `run_alscl()` 如何使用多个核、拟合能快多少、怎样确认本机的实际情况，以及什么时候需要修改设置。每项改动的测试方法见[技术记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文），各项检查见[审查报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_REPORT.md)（英文）。
+本文说明 `run_acl()` 与 `run_alscl()` 如何使用多个核、拟合能快多少、怎样确认本机的实际情况，以及什么时候需要修改设置。每项改动的测试方法见[技术记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文），各项检查见[审查报告](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md)（英文）。
 
 ## 1. 概要
 
-不需要修改任何设置。支持的环境下默认用多个核计算标准误，相同拟合参数处的并行标准误与顺序计算一致。2.2.2 默认新增优化收尾，因此完整拟合不承诺与旧版逐位相同。以下基准记录旧优化流程；`polish = FALSE` 可跳过新收尾。这由两项设置控制，均通过 `alscl_speed()` 设定：
+不需要修改任何设置。支持的环境下默认用多个核计算标准误，相同拟合参数处的并行标准误与顺序计算一致。优化收尾步骤（`polish = TRUE`）可能在数值精度上改变估计值，因此完整拟合不保证与旧版本逐位相同；以下基准在该步骤加入之前测得。这由两项设置控制，均通过 `alscl_speed()` 设定：
 
 | 设置 | 默认值 | 结果 | 速度 | 何时修改 |
 |---|---|---|---|---|
@@ -163,11 +163,3 @@ max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标�
 | `options(ALSCL.tmb.cache = path)` | 存放已编译模型的文件夹 |
 
 恢复默认，例如 `options(ALSCL.sd_backend = NULL)`。
-
-### 2.2.5 的并行安装库一致性
-
-多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
-
-### 2.2.9 修订
-
-已验证的 TMB 版本为 1.9.21 和 1.9.25。现有 Windows、macOS、Linux 检查已在 1.9.25 上通过两模型、两种 AD 框架的严格并行一致性测试，不允许用单核回退代替通过；Windows 使用 socket，并跳过 Unix fork 测试。其他 TMB 版本继续使用顺序计算保护。这扩大了可启用加速的版本范围，不保证小模型也会提速；实际方法请看 `fit$sd_info`。

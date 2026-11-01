@@ -1,87 +1,100 @@
-# 回溯分析
+# 运行回溯分析
 
-先完成 [YTF 拟合示例](first-model.html)。以下代码使用其中的 `x`、`inputs`、`a`（ACL）和 `b`（ALSCL）对象。
+读完本页，你会得到每个模型的 Mohn rho（生物量、产卵生物量、补充量和丰度）、重拟合序列的图和每次重拟合的数值检查。你需要[理解第一次拟合](first-model.html)中的输入列表 `x` 和 ALSCL 拟合结果 `b`。
+
+回溯分析从三张表中去掉最后一个时间步并重拟合模型，再去掉一个，再拟合，依此类推；每次截短重拟合称为一轮。把各轮与完整拟合比较，就能看出加入后来的观测后近期估计改变了多少；每一轮都朝同一方向移动的估计很可能再次被修订。
+
+<h2 id="run">1. 运行分析</h2>
 
 ```r
-# 删除最后 1、2、3 个时间步后分别重拟合
-ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
-rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+ra <- retro_acl(x, nyear = 3, silent = TRUE)
+rb <- retro_alscl(x, nyear = 3, silent = TRUE)
+```
+
+`retro_acl()` 使用 ACL 模型，`retro_alscl()` 使用 ALSCL 模型。每次调用先用完整的数据表拟合模型，再运行 `nyear` 轮：第 1 轮去掉最后一个时间步并重拟合，第 2 轮去掉最后两个，依此类推。`nyear` 以时间步计数，季度数据一年有四个时间步。
+
+每次拟合都使用输入列表中保存的设置，与 `run_acl(x)` 相同，初值个数为列表中显式保存的 `nstarts`，没有保存时为一个；调用时给出的参数会对每次拟合覆盖保存的值。`ncores` 让各轮在工作进程上运行；输入列表中保存的拟合用 `ncores` 会被忽略，一次拟合内部的多个初值依次运行。`silent = FALSE` 时控制台每次拟合打印一行。
+
+有两种错误会在任何拟合开始之前终止调用：调查指数表的时间列必须带有递增的数字标签（[准备调查数据](data-preparation.html)），并且每一轮都必须至少保留两个时间步，所以 `nyear` 最多为时间步数减二。某一轮在优化器内部失败时会记录在下一步的表中，分析继续进行。
+
+<h2 id="tables">2. 读返回的表</h2>
+
+```r
 rb$fit_diagnostics
 rb$rho_by_peel
 rb$rho_text
+rb$raw_rho_text
+rb$errors
 ```
 
-这里 `nyear` 是删除的**末端时间步数**，季度数据中 4 步才是一年。保留至少两个观测期，各次回溯使用一致的生物假设与固定参数。Mohn's rho 衡量末端修订方向和幅度，不是未来预测准确率，也不能替代检查每次拟合的数值状态。
+返回值是一个由表组成的列表，`ra` 的元素与 `rb` 相同：
 
+| 元素 | 每行对应 | 内容 |
+|---|---|---|
+| `fit_diagnostics` | 一次拟合 | `Peel`（0 是完整拟合）、`RetrospectiveYear`（保留的最后一个时间步）、`elapsed`、数值检查及其汇总 `numerical_ok` 和未通过的项目 `issues`，以及拟合中止时的错误信息 `error` |
+| `rho_by_peel` | 一轮和一个量 | `RawRho`，该轮末端估计与完整拟合在该时间步估计的相对差；`Rho`，两次拟合都通过数值检查且参考值有限、非零时等于 `RawRho`，否则为 `NA`；`Valid` |
+| `rho_text` | 一个量 | Mohn rho，即各轮 `Rho` 的平均值，附 `Valid`、`ValidPeels` 和 `RequestedPeels`；`Year` 只是标签位置 |
+| `raw_rho_text` | 一个量 | 不经检查的 `RawRho` 平均值，仅供诊断；任一比较缺失时为 `NA` |
+| `errors` | 一次失败的拟合 | `Peel`、`RetrospectiveYear` 和错误信息；所有拟合都运行完成时为零行 |
+
+这些量是总生物量 `B`、补充量 `Rec`、产卵生物量 `SSB` 和丰度 `N`；完整序列在 `rb$results` 中。当完整拟合或任一轮未通过数值检查，或某个末端比较缺失时，`rho_text$Rho` 为 `NA` 并发出警告，因为把一次停在错误解上的拟合算进平均会把优化器的失败和真实的修订混在一起。请在 `fit_diagnostics$issues` 和 `errors` 中找到失败的拟合，按[判断拟合是否可用](diagnostics.html)修复它并重新运行；`raw_rho_text` 只用来看可用差值的大小。
+
+<h2 id="plot">3. 绘制重拟合序列</h2>
 
 ```r
-# 从仓库根目录重建图、结果 CSV 和会话记录
-source("scripts/ytf_workflow.R", encoding = "UTF-8")
-result <- run_ytf_guide(out = "my_ytf_guide", npeels = 3)
-# 已保存的观测和拟合报告即可用于这张图
-plot_ridges(result$alscl)
+plot_retro(rb, facet_col = 2, rho_digits = 3)
 ```
 
-`plot_ridges()` 需要已保存的观测和拟合报告，不依赖活跃 TMB 对象；移除 `obj` 后仍可绘图。这不代表需要计算编译模型的其他操作也可以脱离活跃对象。
+![示例的 ALSCL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
-默认输出目录为 `docs`，会覆盖同名图和结果文件；使用自己的目录可保留仓库版本。工作流依赖 `ggplot2`、`patchwork`、`jsonlite`。首次 TMB 编译需要编译器，回溯要执行多次优化。可设置 `options(ALSCL.tmb.cache="可写路径")`；保存 `.rds` 不能保证其中 TMB 外部指针跨会话有效，重新打开 R 后应重拟合依赖活跃 `obj` 的操作。
+`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板，`facet_col = 2` 把它们排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分（图例「Retrospective Year」）：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。空心点标出每次拟合的末端估计，也就是 rho 与完整拟合比较的那个值；面板标签给出保留 `rho_digits` 位小数的 Mohn rho。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
-2.2.3 可直接使用与拟合函数相同的输入：`retro_acl(x, nyear = 3)` 和 `retro_alscl(x, nyear = 3)`。通用写法为 `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`。各次拟合依次使用共用设置、模型专用设置及调用时显式覆盖值；显式 `map`、`parameters` 和 `control` 会整体替换对应列表。`zero_action`、`control`、`nstarts`、`F_structure` 和 `polish` 都传给每次拟合。`x` 内用于拟合的 `ncores` 不用于回溯：请在回溯调用中显式设置 `ncores`，控制同时运行的截短拟合数。每个截短拟合内部依序运行 `nstarts` 个起点。
+![示例的 ACL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
-`fit_diagnostics` 保存完整拟合（`Peel = 0`）和每个请求的截短拟合，包含耗时、原始优化状态、梯度、Hessian、边界与错误。`rho_by_peel` 包含筛查后的 `Rho`、诊断用的 `RawRho` 及 `Valid`。只有完整拟合和所有请求的截短拟合都通过数值筛查，且所有末端比较有限、参考值非零时，才在 `rho_text$Rho` 中报告该指标的 rho；否则返回 `NA` 并警告，不会悄悄删除失败的截短结果。`raw_rho_text` 是未经筛查的诊断汇总，不能替代正式报告值；若任一末端比较缺失，它仍为 `NA`。可用轨迹保留在 `results` 中供检查。
+像两张图这样，截短的线在大部分序列上与完整拟合重合，只在最后几年分开，说明加入观测只修订了近期估计。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各时期的颜色（`palette`、`colors`）见 [ggsci 配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
 
-## Mohn rho 的含义
+<h2 id="rho">4. 解释 Mohn rho</h2>
 
-对每个删除末端数据的拟合，在其最后保留期与完整拟合同期的估计比较，再取相对差的平均：
+Mohn rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：
 
 ```math
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-正值表示较短序列在这些终点总体偏高，负值表示偏低；正负可能互相抵消。检查每条曲线与每次拟合，而不只报告单个 rho 数字。全长基准为零时相对差没有定义，应检查数据与结果。
+`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；第 `k` 轮止于 `T-k`。rho 为正表示较短的拟合止于完整拟合之上，即加入观测后近期估计下调；为负则相反；rho 为 0.03 表示平均修订 3%。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度，不是预测准确度；预测准确度由[预测检验](case-model-validation.html)来检验。在各轮和各模型中符号相同的修订，比它的具体大小更值得注意。
 
-
-## ACL 回溯分析
-
-```r
-# 绘制本图
-plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
-```
-
-[![ACL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
-
-
-
-逐步删除末端观测并重拟合；各颜色代表不同截止期。
-
-[参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
-
-
-
-## ALSCL 回溯分析
+<h2 id="adapt">5. 用于自己的评估</h2>
 
 ```r
-# 绘制本图
-plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
+rb2 <- retro_alscl(x, nyear = 3, nstarts = 2, ncores = 3, silent = TRUE)
+rb2$fit_diagnostics
 ```
 
-[![ALSCL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
+用你报告的那次拟合的设置运行分析，这样各轮之间的差异只来自去掉的观测。调用中的参数会传给每次拟合：`nstarts = 2` 让每次拟合运行两个初值并保留目标函数值较低的那个，`ncores = 3` 同时拟合三轮（工作进程最多 `nyear` 个），`map`、`parameters` 或 `control` 参数会整体替换保存的列表（[选择拟合设置](fitting-controls.html)）。对自己的输入列表有四条规则：
 
+- `dev_log_R` 和 `dev_log_F`（补充量和捕捞死亡率的过程偏差）的 map 必须覆盖完整数据表的全部时间步，先排一个时间步的所有组再排下一个（`F_structure = "year"` 时只有一组）；每一轮保留它所保留的时间步及其固定值和绑定关系，长度不符的 map 会终止分析。
+- 使用与主拟合相同的 F 结构：保存的 `F_structure` 会被使用，调用中显式给出的则作用于每次拟合。
+- 最短的一轮至少保留两个观测时间步，序列较短时要保留更多，因为较短的一轮要用更少的观测估计同样多的参数。
+- 按时间步而不是按年计数：季度数据中 `nyear = 4` 去掉一年，`RetrospectiveYear` 显示保留的最后一个时间步。
 
+<h2 id="record">6. 记录结果</h2>
 
-逐步删除末端观测并重拟合；各颜色代表不同截止期。
+```r
+save_assessment(b, "ytf_alscl.rds")
+saveRDS(rb, "ytf_alscl_retro.rds")
+plot_retro(readRDS("ytf_alscl_retro.rds"), facet_col = 2, rho_digits = 3)
+```
 
-[参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)
+回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果：它把 `b` 连同配方存为保存的拟合结果，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](reproducibility.html)说明如何记录软件包版本和会话。
 
-## 全部拟合失败时保留诊断
+<h2 id="next">下一步</h2>
 
-当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
-
-### 2.2.5 的并行安装库一致性
-
-多起点拟合、回溯和模拟批次的 socket 进程先接收主会话的库路径，再加载 ALSCL；通过 `.libPaths()` 选择新安装版本时也适用。所有工作进程必须加载与主进程相同的 ALSCL 安装。比较核数时保持 `nstarts` 相同，标准误并行继续由 `alscl_speed()` 控制。
-
-### 一致性修正
-
-回溯子拟合会随保留时期同步截短 `map$dev_log_R` 与 `map$dev_log_F`。请提供完整数据长度的映射：补充量每期一项；F 按组别×时期矩阵的列顺序排列，ACL 使用年龄组、ALSCL 使用体长组，`F_structure = "year"` 只有一组。因子共享关系和固定的 NA 项会保留；完整映射长度错误会明确报错。标量映射及 `dev_log_N0` 不随回溯截短。
+| 想做什么 | 阅读 |
+|---|---|
+| 完整做一遍案例 | [移除近期数据后，估计结果会怎样变化？](case-retrospective-bias.html) |
+| 修复失败的一轮 | [判断拟合是否可用](diagnostics.html) |
+| 更改 map、F 结构或初值 | [选择拟合设置](fitting-controls.html) |
+| 检验对后来时间步的预测 | [模型能重现观测并预测留出时期吗？](case-model-validation.html) |
+| 用更多核心运行各轮 | [速度设置](speed.html) |
+| 更改颜色和标签 | [ggsci 配色与导出](plot-customization.html) |
+| 查阅全部参数 | [retro_model](../reference/retro_model.html)、[retro_acl](../reference/retro_acl.html)、[retro_alscl](../reference/retro_alscl.html)、[plot_retro](../reference/plot_retro.html) |

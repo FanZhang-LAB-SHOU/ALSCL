@@ -25,7 +25,7 @@
 
 <h2 id="installation">安装</h2>
 
-从 GitHub 安装基于 <span class="current-version">{{VERSION}}</span> 的最新开发源码：
+从 GitHub 安装 ALSCL <span class="current-version">{{VERSION}}</span>：
 
 ```r
 install.packages("remotes")
@@ -55,17 +55,14 @@ library(ALSCL)
 ```r
 data("YTF_example")
 x <- YTF_example
-# 使用相同观测与生物设置拟合两个模型
-a <- run_acl(x, train_times = 2, silent = TRUE)
-b <- run_alscl(x, train_times = 2, silent = TRUE)
-
-# 解释估计值前，先查看两个模型的数值检查结果
-a$diagnostics
-b$diagnostics
+a <- run_acl(x, silent = TRUE)    # 年龄结构模型
+b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型
+diagnose_model(x$data.CatL, a)    # 读任何估计值前先看数值检查
+diagnose_model(x$data.CatL, b)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-`run_acl(x)` 和 `run_alscl(x)` 读取同一输入列表，选择对应的模型设置。[完成第一个拟合](articles/first-model.html)逐步解释这些代码与输出；覆盖参数以及原有逐项传参、`do.call()` 接口见[拟合设置](articles/fitting-controls.html)，并行计算见[速度设置](articles/speed.html)。
+`run_acl(x)` 和 `run_alscl(x)` 读取同一个输入列表 `x`（三张表加设置），各自选择保存的配置。[理解第一次拟合](articles/first-model.html)逐步解释拟合结果、检查和估计值；[选择拟合设置](articles/fitting-controls.html)说明可以修改什么，[速度设置](articles/speed.html)说明如何使用多核。
 
 ![模拟 YTF 示例中 ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](assets/manual/figures/ytf/compare_ts.png)
 
@@ -80,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-分别检查优化状态、最大绝对梯度、Hessian 及参数是否触及边界，再检查残差结构和对固定假设的敏感性。优化器显示成功，不能单独证明推断可靠。详见 [诊断](articles/diagnostics.html) 与 [模型比较](articles/model-comparison.html)。
+先读数值检查（收敛码、梯度、Hessian、边界），再看残差规律，然后看对自然死亡率等固定值的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较图](articles/model-comparison.html)展示比较图形。
 
 <h2 id="learn-more">基本功能</h2>
 

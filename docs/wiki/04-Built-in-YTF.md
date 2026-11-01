@@ -1,46 +1,174 @@
-# 04 内置数据与首个拟合 · Built-in YTF
+# 04 理解第一次拟合 · Understand your first fit
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation)
 
 **ALSCL 2.3.0 · 简体中文 / English**
 
+[安装软件包](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)之后，你已经有了输入列表 `x` 和拟合好的 ACL 模型 `a`。本页说明拟合结果包含什么、怎样判断它可用、怎样读估计值，以及第二个模型 ALSCL 与它有何不同。请在同一个 R 会话中按步骤运行；后面的页面会继续使用 `x`、`a` 和 `b`。
+
+After [installing the package](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start) you have the input bundle `x` and a fitted ACL model `a`. On this page you learn what a fitted object contains, how to judge whether a fit can be used, how to read its estimates, and how the second model, ALSCL, compares with it. Run the steps in one R session; later pages reuse `x`, `a` and `b`.
+
+`YTF_example` 是模拟数据：23 个体长组、20 个年份，由一个已知的种群生成。它保存的设置固定了生长参数和部分过程参数，因此你看到的不确定性区间是在这些固定值之下得到的。先用它熟悉流程，再为自己的种群选择假设。
+
+`YTF_example` is synthetic: 23 length bins and 20 years generated from a known population. Its stored settings fix growth and some process parameters, so the uncertainty intervals you will see are conditional on those fixed values. Use it to learn the workflow before choosing assumptions for your own stock.
+
+<a id="first-model-fit"></a>
+
+### 1. 拟合两个模型 / Fit the two models
+
 ```r
-install.packages("remotes")
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
-# 检查维度与来源 / Inspect dimensions and provenance
-str(inputs)
-x$provenance
-# 两模型使用相同观测及条件设置 / Same observations and conditional settings
-a <- run_acl(x, train_times = 2, silent = TRUE)
-b <- run_alscl(x, train_times = 2, silent = TRUE)
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+a <- run_acl(x, silent = TRUE)
+b <- run_alscl(x, silent = TRUE)
 ```
 
-ALSCL 2.2.0 支持直接使用 `run_acl(x)` 和 `run_alscl(x)`。对于 `YTF_example`，函数自动选择对应模型的 `fit_config`，显式传参可覆盖已有设置。原来的逐项传参和 `do.call()` 写法继续有效。两种写法共用内置加速，可查看 `a$sd_info` 或 `b$sd_info` 确认实际执行方式。
+ALSCL 为同一套调查数据提供两个模型。ACL（`run_acl()`）追踪每个年龄的尾数，用年龄—体长概率矩阵把年龄换算成体长。ALSCL（`run_alscl()`）追踪每个体长和年龄的尾数，用生长转移矩阵把存活个体在体长组之间推进，适合难以鉴定年龄的种群。本例 ACL 拟合约二十秒，ALSCL 约两分钟，不含每个模型只做一次的编译。
 
-ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
+ALSCL offers two models of the same survey data. ACL (`run_acl()`) follows the number of fish at each age and converts ages to lengths with an age-length probability matrix. ALSCL (`run_alscl()`) follows the number of fish at each length and age and moves survivors between length bins with a growth transition matrix, which suits stocks that are hard to age. The ACL fit takes about twenty seconds for this example and the ALSCL fit about two minutes, after the one-time compilation of each model.
 
-![模型比较 / Model comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=92c7a56eb1fb)
+两次调用读取同一个 `x`：三张表、`x$fit_args` 中两个模型共用的生物学设置（补充年龄、年龄组数、自然死亡率 `M`、调查可捕性 `sel_L50` 和 `sel_L95`、体长组和时间步），以及 `x$fit_config$acl` 或 `x$fit_config$alscl` 中各模型自己的初值和 `map`。本页最后一节详细说明输入列表。
 
-| 对象 / Object | 内容和适用方式 / Contents and use |
+Both calls read the same `x`: the three tables, the shared biology in `x$fit_args` (recruitment age, number of ages, natural mortality `M`, survey catchability `sel_L50` and `sel_L95`, length bins and time step) and the model's own starting values and `map` in `x$fit_config$acl` or `x$fit_config$alscl`. The last section of this page explains the bundle in detail.
+
+<a id="first-model-checks"></a>
+
+### 2. 读数值检查 / Read the numerical checks
+
+```r
+diagnose_model(x$data.CatL, a)
+a$diagnostics$numerical_ok
+a$diagnostics$issues
+```
+
+看任何估计值之前先读数值检查。`diagnose_model()` 打印优化器收敛码（0 表示正常结束）、解处的最大绝对梯度（优化器真正到达极小值时小于 0.001）、Hessian 是否正定（计算标准误的前提）、是否有参数落在边界上，以及是否有方差或相关系数估计到了自然尺度的极限。`Numerical screen` 汇总以上各项，与 `a$diagnostics$numerical_ok` 相同；`a$diagnostics$issues` 给出未通过的项目。
+
+Read the numerical checks before any estimate. `diagnose_model()` prints the optimizer convergence code (0 means it finished normally), the maximum absolute gradient at the solution (below 0.001 when the optimizer really reached a minimum), whether the Hessian is positive definite (needed for standard errors), whether a parameter sits on a bound, and whether a variance or correlation was estimated at its natural limit. `Numerical screen` summarizes all of them; it is the same value as `a$diagnostics$numerical_ok`, and `a$diagnostics$issues` names any check that failed.
+
+| 未通过的检查 / Failed check | 常见原因 / Usual cause | 可以尝试 / What to try |
+|---|---|---|
+| 收敛码不是 0，或梯度很大 / Convergence code is not 0, or the gradient is large | 优化器提前停止，或目标函数面很平 / The optimizer stopped early or the surface is flat | 多用几个初值，`run_acl(x, nstarts = 4, ncores = 2)`，在 `a$start_diagnostics` 中比较各初值的目标函数值 / Run more starts, `run_acl(x, nstarts = 4, ncores = 2)`, and compare their objectives in `a$start_diagnostics` |
+| Hessian 不正定 / Hessian not positive definite | 某个参数得不到数据的信息 / A parameter is not informed by the data | 用 `map` 固定该参数，或用 `F_structure = "year"` 让各组共用 F（[拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)） / Fix that parameter with `map` or share F across groups with `F_structure = "year"` ([Fitting controls](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)) |
+| 参数落在边界上 / Parameter on a bound | 边界或初值不适合这个种群 / A bound or starting value is wrong for this stock | 用 `inspect_parameters(x, "acl")` 查看初值和边界并调整 / Inspect starts and bounds with `inspect_parameters(x, "acl")` and adjust them |
+| 自然尺度边界 / Natural-scale boundary | 标准差接近 0 或相关系数接近 1 / A standard deviation near 0 or a correlation near 1 | 把该参数固定在有依据的值，或简化 F 结构 / Fix the parameter at a supported value, or simplify the F structure |
+| 检查通过但残差有规律 / Checks pass but residuals show patterns | 模型漏掉了数据中的某种特征 / The model misses a feature of the data | 继续阅读[诊断](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) / Continue with [Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) |
+
+<a id="first-model-estimates"></a>
+
+### 3. 读估计值 / Read the estimates
+
+```r
+estimates <- extract_estimates(a)
+head(estimates)
+subset(estimates, quantity == "SSB")
+extract_parameters(a)
+plot_SSB(a, se = TRUE)
+```
+
+`extract_estimates()` 把种群量整理成一张表：产卵生物量 `SSB`、补充量 `Rec`、总生物量 `B`、丰度 `N`、捕获尾数 `CN` 和捕捞死亡率 `F`，每行有年份、该量所在的年龄或体长（如有）、估计值、标准误和 95% 区间。`extract_parameters()` 列出标量参数的状态（估计或固定）和自然尺度上的估计值。`plot_SSB()` 画出产卵生物量及其区间，其他绘图函数用法相同。
+
+`extract_estimates()` returns one table for the population quantities: spawning biomass `SSB`, recruitment `Rec`, total biomass `B`, abundance `N`, catch numbers `CN` and fishing mortality `F`, with the year, the age or length where the quantity has one, the estimate, its standard error and a 95% interval. `extract_parameters()` lists the scalar parameters with their status (estimated or fixed) and estimates on the natural scale. `plot_SSB()` draws spawning biomass with its interval; the other plot functions follow the same pattern.
+
+区间只来自被估计参数的标准误；`x$fit_config` 中固定的值不贡献不确定性。表格背后的原始数组在 `a$report` 中（例如 `a$report$SSB`），`a$sd_info` 记录标准误的计算方式。
+
+The intervals come from the standard errors of the estimated parameters only; the fixed values in `x$fit_config` contribute no uncertainty. The raw arrays behind the table are in `a$report` (for example `a$report$SSB`), and `a$sd_info` records how the standard errors were computed.
+
+<a id="first-model-fit-to-data"></a>
+
+### 4. 检查对观测的拟合 / Check the fit to the observations
+
+```r
+plot_CatL(a, type = "year", facet_ncol = 5)
+plot_residuals(a, type = "year", facet_ncol = 5)
+```
+
+`plot_CatL()` 按年份分面，画出各体长组的观测调查指数（点）和拟合指数（线）。`plot_residuals()` 画同样分面的对数残差，即对数尺度上观测减拟合。可用的拟合在每个面板中残差都围绕 0 散布。若同一年相邻体长组的残差同号成串，或同一体长组多年同号成串，说明模型漏掉了数据中的某种特征，例如一个队列穿过调查范围，或实际选择性与假设不同；[诊断](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)说明如何检查这类规律。
+
+`plot_CatL()` shows the observed survey index (points) and the fitted index (line) across length bins, one panel per year. `plot_residuals()` shows the log residuals, observed minus fitted on the log scale, for the same panels. A usable fit has residuals scattered around zero in every panel. A run of residuals with the same sign across neighbouring lengths in one year, or across years in one length bin, means the model misses a feature of the data, such as a cohort passing through the survey or a selectivity that differs from the assumed one; [Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) shows how to examine such patterns.
+
+<a id="first-model-compare"></a>
+
+### 5. 比较 ACL 与 ALSCL / Compare ACL and ALSCL
+
+```r
+plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+comparison <- compare_models(a, b, x$data.CatL)
+comparison$comparison
+comparison$fit_diagnostics
+```
+
+![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计 / ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=92c7a56eb1fb)
+
+图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；尺度上持续的差异通常来自两个模型在年龄与体长之间换算方式的不同。
+
+The figure shows total biomass, spawning biomass and recruitment from both models with their intervals. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale usually comes from how each model converts between age and length.
+
+`compare_models()` 先核对两次拟合使用的观测相同，再打印 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的假设是否适合这个种群，是另一个需要用生物学知识回答的问题。
+
+`compare_models()` first verifies that both fits used the same observations, then prints AIC, BIC and fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible) and any `issues`. A lower AIC supports a model statistically on these data; whether its assumptions suit the stock is a separate, biological decision.
+
+<a id="first-model-save"></a>
+
+### 6. 保存拟合结果 / Save the fit
+
+```r
+save_assessment(a, "ytf_acl.rds")
+saved <- read_assessment("ytf_acl.rds")
+plot_SSB(saved, se = TRUE)
+```
+
+`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并记录配方（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。
+
+`save_assessment()` writes everything in the fit except the live TMB object `a$obj`, which is a pointer valid only in the current session, and stores the recipe (the tables, settings and package version) so that `refit_model(saved)` can rebuild the live object later. Plots and the extraction functions work directly on the saved fit.
+
+<a id="first-model-next"></a>
+
+### 下一步 / What next
+
+| 想做什么 / What you want to do | 阅读 / Read |
 |---|---|
-| `YTF` | 原有 26 项参数列表，无 `data.CatL` / Original 26-element biological parameter list, no survey table |
-| `YTF_example` | 23 个体长组 × 20 期；三张表、参数、模拟真值、拟合设置、来源 / 23 bins × 20 periods, three tables, parameters, truth, fit settings and provenance |
-| `example_data` | 从原 ALSCL 保留的 9 组 × 21 年三张表；来源待核实 / Legacy ALSCL tables, 9 bins × 21 years, provenance unverified |
+| 把示例换成自己的数据表 / Replace the example with your own tables | [准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel) / [Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel) |
+| 决定哪些参数固定、哪些估计 / Decide which parameters to fix or estimate | [拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) / [Fitting controls](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) |
+| 检查残差、比较不同设置 / Examine residuals and compare configurations | [诊断](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) / [Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) |
+| 绘制某个种群量 / Plot a particular quantity | [调查与种群图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) / [Survey and population plots](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) |
+| 做敏感性分析、参数剖面和投影 / Test sensitivity, profile a parameter, project forward | [评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) / [Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) |
+| 从拟合模型模拟，或检验对未来年份的预测 / Simulate from the fit or test predictions of future years | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
 
-`YTF_example` 复用 `YTF` 的共有参数，特别是调查对数 SD = 0.1；其余采用 flatfish 模拟预设。随机种子 4，预热 80 年、保留 20 年；2000–2019 仅为示意年份。教学单位约定为 cm、kg，数据不是论文实测样本。调用 [data-raw/YTF_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) 可重建 `.rda`，脚本恢复调用者的随机状态。
+<a id="first-model-bundle"></a>
 
-`YTF_example` reuses shared YTF parameters, including survey log SD 0.1, with remaining flatfish defaults. Seed 4, 80 burn-in years and 20 retained years are used. Dates are illustrative; cm and kg are teaching conventions. These are not empirical paper data. The data-raw script rebuilds the object and restores the caller's RNG state.
+### run_acl(x) 如何读取输入列表 / How run_acl(x) reads the input bundle
 
-`x$fit_config` 固定已知生长、部分过程误差及相关参数，让示例聚焦工作流程。区间是在这些固定参数条件下的近似区间，不包含全部生物不确定性。这种教学拟合不能证明同时估计所有参数时可识别。
+输入列表 `x` 是一个命名列表。三张表 `data.CatL`、`data.wgt` 和 `data.mat` 存放观测。`x$fit_args` 存放两个模型共用的设置：`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`len_mid`、`len_border` 和 `growth_step`。`x$fit_config$acl` 和 `x$fit_config$alscl` 存放各模型的初值（`parameters`）和 `map`。其他元素，例如 `YTF_example` 中的模拟真值 `truth` 和来源 `provenance`，拟合函数不会读取。
 
-`x$fit_config` fixes known growth and selected process/correlation parameters. Intervals are conditional on these assumptions and omit their uncertainty. The example does not establish identifiability when all parameters are estimated together.
+The input bundle `x` is a named list. Its three tables `data.CatL`, `data.wgt` and `data.mat` hold the observations. `x$fit_args` holds the settings both models share: `rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `len_mid`, `len_border` and `growth_step`. `x$fit_config$acl` and `x$fit_config$alscl` hold the starting values (`parameters`) and the `map` of each model. Other elements, such as the simulation `truth` and `provenance` of `YTF_example`, are ignored by the fitting functions.
 
-这仅指内置 `YTF_example` 的教学配置。第 5 节的正式数据导入脚本使用较少固定项的模型默认 map，勿混淆两者。 / This refers only to the bundled `YTF_example` teaching configuration. The own-data import script in section 5 uses the less restrictive model-default maps.
+设置按这个顺序读取：数据表，然后 `fit_args`，然后所选模型的 `fit_config`，最后是调用时给出的参数。因此调用中的参数会覆盖保存的值，而 `map` 这类列表参数会整体替换保存的列表。
+
+Settings are read in this order: the tables, then `fit_args`, then the `fit_config` entry of the chosen model, then the arguments of the call. An argument in the call therefore overrides the stored value, and a list argument such as `map` replaces the stored list completely.
+
+```r
+# 两个工作进程运行四个初值；保存的 M 仅在本次调用中换成 0.25 / Four starts on two workers; the stored M is replaced by 0.25 for this call only
+a4 <- run_acl(x, nstarts = 4, ncores = 2, M = 0.25)
+```
+
+也可以把每张表和每项设置作为单独参数传入，旧脚本常用 `do.call(run_acl, args)`；两种写法使用同一套拟合代码。只包含三张表和 `rec.age`、`nage`、`M`、`sel_L50`、`sel_L95` 的扁平命名列表同样可以作为输入列表。
+
+You can also pass every table and setting as a separate argument, as older scripts do with `do.call(run_acl, args)`; both forms use the same fitting code. A flat named list with the three tables, `rec.age`, `nage`, `M`, `sel_L50` and `sel_L95` is accepted as a bundle too.
+
+<a id="first-model-data-provenance"></a>
+
+### 内置数据说明 / About the bundled data
+
+| 对象 / Object | 内容 / Contents |
+|---|---|
+| `YTF_example` | 三张表（23 个体长组、20 个年份）、`fit_args`、`fit_config`、生成真值 `truth` 和来源 `provenance` / The three tables (23 bins by 20 years), `fit_args`, `fit_config`, the generating `truth` and `provenance` |
+| `YTF` | 原有的 26 项生物参数列表，不含调查表 / The original list of 26 biological parameters, without survey tables |
+| `example_data` | 三张较早的 ALSCL 数据表（9 个体长组，2001-2021），来源未核实，为兼容保留 / Three older ALSCL tables (9 bins, 2001-2021) of unverified origin, kept for compatibility |
+
+`YTF_example` 由包内模拟器生成（种子 4，预热 80 年，保留 20 年，调查对数 SD 0.1），不是论文的实测数据。[生成脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R)可以重建它。
+
+`YTF_example` was generated with the package simulator (seed 4, 80 burn-in years, 20 retained years, survey log SD 0.1) and is not the empirical dataset of the paper. The [generation script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) rebuilds it.
 
 ---
 

@@ -1,150 +1,66 @@
-# How do I organize my own data into x?
+# How do I fit my own survey data?
 
-## The input bundle
+On this page you go from three survey tables in CSV or Excel files to two fitted models, ACL and ALSCL, with their numerical checks, plots and saved results. The page follows the script [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R), which runs the whole sequence on the bundled teaching data; you then replace its values with yours. You need the package installed ([Install ALSCL](getting-started.html)), your tables laid out as in [Prepare your survey data](data-preparation.html), and the biological values listed in step 1.
 
-ALSCL includes a complete [executable example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R): read CSV or Excel tables, build `x`, call `run_acl(x)` and `run_alscl(x)`, inspect diagnostics, draw plots and save results. The demonstration uses the bundled synthetic YTF observations. **For your stock, replace the data and review the biological inputs, parameter bounds and fixed assumptions in steps 1–3. Changing only the file path is insufficient.**
-
-|Field in x|Contents|
-|---|---|
-|`data.CatL`|Survey numbers or a consistently standardized number index by length and time|
-|`data.wgt`|Mean individual weight, not total catch weight|
-|`data.mat`|Mature proportion, between zero and one|
-|`fit_args`|Shared biology, time step, length bins and fitting controls|
-|`fit_config$acl`|ACL initial parameters, optional bounds and map|
-|`fit_config$alscl`|ALSCL initial parameters, optional bounds and map|
-
-Both functions read the same tables and shared settings, then select their own model configuration. Explicit call arguments have highest priority. List-valued overrides replace the whole stored list; see [input lists and overrides](first-model.html).
-
-## Prepare the three tables
-
-Put `data.CatL.csv`, `data.wgt.csv` and `data.mat.csv` in one folder. Each needs the same `LengthBin` first column, numeric time headers, dimensions and ordering. The example uses numeric length midpoints as labels. Keep all periods in a regular annual or quarterly sequence. Missing survey values are `NA`; weights and maturity must be complete. Do not substitute zeros for missing observations.
-
-Alternatively, use the [Excel template](../assets/manual/data/ALSCL_Data_Entry_Example.xlsx) with sheets named `data.CatL`, `data.wgt` and `data.mat`. Record species, index standardization, units, bin definitions and the meaning of zeros separately.
-
-![Survey numbers: synthetic workbook layout](../assets/manual/figures/excel_CatL.png)
-
-![Mean individual weight: synthetic workbook layout](../assets/manual/figures/excel_wgt.png)
-
-![Maturity proportions: synthetic workbook layout](../assets/manual/figures/excel_mat.png)
-
-These images illustrate the bundled synthetic data, not empirical observations from your stock. Length and weight units must be consistent throughout the analysis.
-
-## Inputs you must supply
-
-`parameters` supplies starting values, or the values of parameters fixed by `map`. **Supplying a number does not itself fix a parameter.** The input data and biological settings below are not estimated by either fitting function.
-
-|Input|What you must provide|
-|---|---|
-|`data.CatL`|Survey numbers or a consistently standardized number index by length and time; not total catch weight|
-|`data.wgt`, `data.mat`|Aligned mean individual weights and mature proportions; these are treated as supplied values|
-|`M`|Natural mortality per model step, supported by external information; annual instantaneous M multiplied by `growth_step`|
-|`rec.age`, `nage`, `growth_step`|Recruitment age in years, number of age classes including the plus group, and years per step|
-|`sel_L50`, `sel_L95`|Locations of the fixed survey catchability curve, with L95 greater than L50; not estimated fishery selectivity|
-|`len_mid`, `len_border`|Actual bin midpoints and internal boundaries; verify any values inferred from labels|
-
-Changing `map` cannot make `M`, survey catchability or the age/bin definitions estimable: they are model inputs, not entries in the current parameter vector. Their uncertainty is not propagated automatically. Record sources, units and sensitivity scenarios. The script's biological values are illustrative, not estimates for your stock.
-
-## Parameters the models can estimate
-
-Every scalar parameter below can be estimated if its map allows it. Unspecified starting values and bounds use package defaults, with some starts adapted to the data. Check their suitability for your species. `log_` values use `log(value)` and correlation starts use `qlogis(rho)` for `0 < rho < 1`; the current models restrict these correlations to positive values.
-
-|Meaning|ACL name|ALSCL name|
-|---|---|---|
-|Initial total mortality setting the initial age structure|`log_init_Z`|`log_init_Z`|
-|Initial log-number deviation SD|`log_std_log_N0`|`log_sigma_log_N0`|
-|Log recruitment location|`mean_log_R`|`mean_log_R`|
-|Recruitment process SD scale|`log_std_log_R`|`log_sigma_log_R`|
-|Recruitment time correlation|`logit_log_R`|`logit_log_R`|
-|Log fishing-mortality location|`mean_log_F`|`mean_log_F`|
-|Fishing-mortality process SD scale|`log_std_log_F`|`log_sigma_log_F`|
-|Fishing-mortality time correlation|`logit_log_F_y`|`logit_log_F_y`|
-|Fishing-mortality age / length correlation|`logit_log_F_a`|`logit_log_F_l`|
-|Asymptotic length and annual VB growth k|`log_Linf`, `log_vbk`|`log_Linf`, `log_vbk`|
-|VB t0|`t0` (untransformed)|`log_t0` (log scale)|
-|Length-at-age CV|`log_cv_len`|`log_cv_len`|
-|Growth-increment CV|Not present|`log_cv_grow`|
-|Log survey observation SD|`log_std_index`|`log_sigma_index`|
-
-`log_init_Z` is distinct from the supplied natural mortality `M`. Exponentiating a log-process location is not the unconditional arithmetic mean. ACL allows negative `t0`; ALSCL currently requires `0 < t0 < rec.age`. Do not replace a negative external t0 by its absolute value. Starts and `parameters.L` / `parameters.U` use the optimizer scale; equal bounds are rejected, so use a map to fix a parameter.
-
-The models also infer random effects `dev_log_R`, `dev_log_F` and `dev_log_N0`. Their dimensions are constructed from the data; do not add them to the scalar starting-value list. F varies over ages and years in ACL, and lengths and years in ALSCL. These random effects are not listed in `fit$opt$par`.
-
-## Set map without fixing everything
-
-|Setting|Effect|
-|---|---|
-|`parameters = list(log_Linf = log(60))`|A starting value if free; a fixed value only if the map fixes it|
-|`map = list(log_Linf = factor(NA))`|Fix Linf at the supplied value, or its model default when omitted|
-|`map = list(log_std_log_F = NULL)`|Release this default-fixed ACL parameter; keep other model defaults|
-|`map = NULL` or `map = list()`|Apply model defaults, not an all-free model|
-|Omit `map` in `run_acl(x)` / `run_alscl(x)`|Use the map stored in the selected `x$fit_config`, if present|
-
-|Model|Default-fixed scalar parameters|Other free scalar parameters|
-|---|---|---|
-|ACL|`log_std_log_F`, `logit_log_F_y`, `logit_log_F_a`, `t0`|10|
-|ALSCL|`log_sigma_log_F`, `log_t0`|13|
-
-The complete script below uses `map_acl <- list()` and `map_alscl <- list()`: **it removes the previous teaching-only fixes on growth, initial-number variability and recruitment correlation**, while retaining the documented model defaults. All fixed values still require review. The defaults are a reproducible baseline, not proof of identifiability for every dataset.
-
-The remaining fixed scalar values in this script are F-process SD 0.2 and t0 = 1/60 in both models, plus F correlations 0.75 across years and ages in ACL (the package starting values for those two fixed correlations). These numbers must also be reviewed for your stock. The script uses two successive optimization passes (`train_times = 2`); this is not two independent starts.
-
-To remove an older bundle's extra fixed assumptions without editing it:
-
-```r
-fit_acl <- run_acl(x, map = NULL)
-fit_alscl <- run_alscl(x, map = NULL)
-```
-
-To fix only t0 and estimate all remaining scalar parameters, explicitly release the other defaults. Save the maps in `x` to retain the direct-call syntax:
-
-```r
-x$fit_config$acl$map <- list(
-  t0 = factor(NA), log_std_log_F = NULL,
-  logit_log_F_y = NULL, logit_log_F_a = NULL)
-x$fit_config$alscl$map <- list(
-  log_t0 = factor(NA), log_sigma_log_F = NULL)
-# Review the t0 / log_t0 values already stored in parameters first.
-fit_acl <- run_acl(x)
-fit_alscl <- run_alscl(x)
-# 13 free scalar parameters in ACL; 14 in ALSCL.
-```
-
-This more flexible configuration is an option, not the baseline used for the figures. If t0 should also be estimated, preserve an explicit named NULL:
-
-```r
-x$fit_config$acl$map["t0"] <- list(NULL)
-x$fit_config$alscl$map["log_t0"] <- list(NULL)
-# All 14 / 15 scalar parameters are now free on the next fit.
-```
-
-Do not use `map$t0 <- NULL` to release default-fixed t0: it deletes the entry and the default will fix it again. Pass release lists directly to `run_*()` or store them in `x`. `generate_map()` is ACL-specific and removes NULL entries from its result; feeding that result back into `run_acl()` re-applies absent defaults and can undo a release.
-
-Explicit `map` arguments replace the whole map stored in `x`, after which model defaults are applied. To change one stored entry while preserving the rest, use `x$fit_config$acl$map["log_Linf"] <- list(NULL)`, for example. Do not generate a map by applying `factor(NA)` to every supplied start for an empirical assessment.
-
-After fitting, inspect the actual free parameters and diagnostics:
-
-```r
-names(fit_acl$opt$par)
-fit_acl$par_low_up
-names(fit_alscl$opt$par)
-fit_alscl$par_low_up
-diagnose_model(x$data.CatL, fit_acl)
-diagnose_model(x$data.CatL, fit_alscl)
-```
-
-Check the optimizer code, gradient, Hessian, boundary hits, uncertainty and residuals together. Release parameter groups in separate, saved configurations and compare diagnostics; increasing optimizer iterations or the number of starts does not make weakly identified parameters identifiable. The more flexible map may expose problems that a heavily fixed teaching fit hid. Report those problems rather than silently fixing additional parameters to obtain a favorable diagnostic.
-
-## Run the complete example
-
-The legacy workflow below runs from a downloaded repository root and sources its helper script. The current development version also offers public read_survey_csv(), read_survey_excel(), prepare_alscl_data() and check_alscl_data() without sourcing that script; see [the complete workflow](assessment-workflows.html). CSV import needs no additional reader. Excel import uses optional `readxl`.
+<h2 id="bundle">1. Prepare and check the input bundle</h2>
 
 ```r
 library(ALSCL)
-packageVersion("ALSCL")
-source("scripts/fit_own_data_example.R", encoding = "UTF-8")
+tables <- read_survey_csv("my_data")
+x <- prepare_alscl_data(tables, fit_args = list(
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1, len_mid = seq(6, 50, 2), len_border = seq(7, 49, 2)))
+check <- check_alscl_data(x, "acl")
+check$valid
+check$summary
 ```
 
-This creates `x`, `a` (ACL) and `b` (ALSCL), and writes inputs, portable result summaries, two PNG figures and session information to `output/own-data-example`. Change that output directory when setting up your assessment. The complete code follows; copy it into an R script or edit the supplied file.
+Both models read the input bundle `x`: the survey index table `data.CatL`, the weight table `data.wgt` and the maturity table `data.mat`, with the length bins as rows and the time steps as columns, plus the settings in `x$fit_args` that describe your stock and survey. `read_survey_csv()` reads the three files from one folder and `read_survey_excel()` the three sheets of one workbook; [Prepare your survey data](data-preparation.html) explains the layout, the time grid and the treatment of blanks and zeros. The settings below are inputs that the models use as given; supply each one for your stock and note its source. The numbers in the code are those of the teaching data.
+
+| Setting | Meaning | Where the value comes from |
+|---|---|---|
+| `rec.age` | Age of the youngest age class, in years | Age at which fish first appear in the survey |
+| `nage` | Number of age classes; the last is a plus group | Oldest age worth tracking, divided by `growth_step` |
+| `M` | Natural mortality per time step | Literature or life-history methods; annual value times `growth_step` |
+| `sel_L50`, `sel_L95` | Lengths at 50% and 95% survey catchability; `sel_L95` is the larger | Gear selectivity studies or the length distribution of the catch |
+| `growth_step` | Years per time step: 1 annual, 0.25 quarterly | The spacing of your time labels |
+| `len_mid` | Midpoint of each length bin, one per row | Your survey design |
+| `len_border` | Internal boundaries between bins, one fewer than the rows | Your survey design; halfway between midpoints only for equal-width bins |
+
+`check_alscl_data()` prepares the data as a fit would, without compiling anything. `check$valid` should be `TRUE` and `check$summary` should show the numbers of bins and time steps you expect, the count of positive observations and `free_fixed`, the number of scalar parameters that will be estimated. When `check$valid` is `FALSE`, `check$errors` names the table, time column or setting to correct; `check$warnings` points to time steps or bins without any observation. Repeat the check with `"alscl"` before fitting that model.
+
+<h2 id="map">2. Decide the starting values and the map</h2>
+
+```r
+plan <- inspect_parameters(x, "acl")
+plan[, c("parameter", "status", "map_source", "natural_start")]
+inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
+```
+
+`inspect_parameters()` lists the parameters of a model with their starting value on the natural scale and their status, `free` (estimated), `fixed` or `tied`; `map_source` says whether a fixed status comes from the model default or from your `map`. By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0` and estimates the other 10 scalar parameters; ALSCL fixes `log_sigma_log_F` and `log_t0` and estimates 13. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects and are always estimated.
+
+| Meaning | ACL parameter | ALSCL parameter |
+|---|---|---|
+| Initial total mortality (initial age structure) | `log_init_Z` | `log_init_Z` |
+| SD of the initial abundance deviations | `log_std_log_N0` | `log_sigma_log_N0` |
+| Mean log recruitment | `mean_log_R` | `mean_log_R` |
+| SD of the recruitment deviations | `log_std_log_R` | `log_sigma_log_R` |
+| Correlation of recruitment across time | `logit_log_R` | `logit_log_R` |
+| Mean log fishing mortality | `mean_log_F` | `mean_log_F` |
+| SD of the F deviations | `log_std_log_F` | `log_sigma_log_F` |
+| Correlation of F across time | `logit_log_F_y` | `logit_log_F_y` |
+| Correlation of F across ages or lengths | `logit_log_F_a` | `logit_log_F_l` |
+| Asymptotic length and annual growth rate | `log_Linf`, `log_vbk` | `log_Linf`, `log_vbk` |
+| Age at zero length | `t0` (untransformed) | `log_t0` (log scale) |
+| Spread of length at age | `log_cv_len` | `log_cv_len` |
+| Growth increment CV | none | `log_cv_grow` |
+| Survey observation SD | `log_std_index` | `log_sigma_index` |
+
+Starting values go in `x$fit_config$acl$parameters` or `x$fit_config$alscl$parameters` on the optimizer scale: `log_Linf = log(60)` for an asymptotic length of 60 cm, `logit_log_R = qlogis(0.1)` for a correlation of 0.1; ALSCL uses `log_t0`, so its `t0` must lie between 0 and `rec.age`. A starting value does not fix a parameter: only `factor(NA)` in the model's `map` does, and a named `NULL` entry releases a parameter that the model fixes by default. Fix a parameter when an external study gives a better value than the fit could, or when the checks of step 5 show that the data cannot inform it, and record the source of every fixed value. [Fitting controls](fitting-controls.html) gives the rules for `map`, bounds and species presets; [Estimation parameter lists](estimation-parameters.html) gives every transformation.
+
+<h2 id="run">3. Run the complete example</h2>
+
+The script below runs every step on the teaching data: it reads the three CSV files in `docs/data`, collects the biology in `bio`, derives the bin midpoints and boundaries from the row labels, sets the starting values and maps of both models, builds and checks `x`, fits ACL (`a`) and ALSCL (`b`), prints their numerical checks, draws the residual and spawning biomass plots of `b`, and saves the bundle, portable copies of both fits, the two figures and the session information to `output/own-data-example`. Run it from the root of a downloaded copy of the repository, because it sources `scripts/plot_helpers.R` and reads `docs/data`: `source("scripts/fit_own_data_example.R", encoding = "UTF-8")`.
 
 ```r
 # ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
@@ -270,70 +186,86 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 # b <- run_alscl(x)
 ```
 
-## Replace the demonstration with your observations
+While the script runs, `check$summary` is printed for both models; with the teaching data it shows 23 length bins, 20 time steps, 460 positive observations, no zeros or blanks, and 10 (ACL) or 13 (ALSCL) free scalar parameters. `diagnose_model()` then prints the numerical checks of each fit, which step 5 explains. In the recorded run ([own-data-example-checks.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)) both fits ended with convergence code 0, a positive definite Hessian, no parameter on a bound and a maximum gradient near 3e-9. The script saved these two figures:
 
-1. **Files:** change `data_dir` to your CSV folder, such as `"my_data"`. For Excel, replace the reader with `read_survey_excel("my_survey.xlsx")`. Preserve original numeric time headers; the helpers avoid R's automatic `X2000` renaming.
-2. **Biology and units:** replace `bio`. `rec.age` is in years; `nage` is the number of age classes including the plus group. Annual time labels use `growth_step = 1`; regular quarterly labels such as `2020`, `2020.25`, `2020.5`, `2020.75` use `0.25`. The script converts annual instantaneous natural mortality to per-step `M` by multiplication. Growth `vbk` remains annual. `sel_L50` and `sel_L95` set survey catchability, not estimated fishery selectivity.
-3. **Length groups:** replace `len_mid` and `len_border` with the actual definitions. The example's midpoint-based boundary calculation is only for its contiguous equal-width bins. There must be one fewer internal boundary than bins; the model handles the outer tails. Interval labels such as `"5-7"` need an explicit midpoint vector in this script.
-4. **Model assumptions:** review `p_acl`, `p_alscl` and both maps. The example now uses model-default maps, with 10 free scalar parameters in ACL and 13 in ALSCL. Growth and the other released parameters are estimated; the remaining default-fixed values require external justification and sensitivity checks. Supplying an initial value alone does not fix a parameter. Use a named `NULL` map entry to release a parameter, including one fixed by model defaults; `map["name"] <- list(NULL)` preserves the entry. Unspecified parameters, bounds and maps follow package defaults. Add `parameters.L` and `parameters.U` inside the corresponding `fit_config` entry if needed.
-5. **Zeros and missing data:** this script uses `zero_action = "error"`, so it stops on zero survey indices. Decide what zeros mean before selecting another treatment; `"missing"` excludes them from the likelihood. Do not add arbitrary small constants. See [data preparation](data-preparation.html).
+![ALSCL residuals by year from the complete example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true)
 
-ACL uses raw `t0`; ALSCL uses `log_t0` and currently requires a positive `t0` below `rec.age`. Do not take the logarithm or absolute value of a negative external estimate to force compatibility. ACL and ALSCL also use different names for several variance parameters; do not interchange their complete parameter lists.
+![ALSCL spawning biomass from the complete example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true)
 
-## Fit directly and check acceleration
+Residuals scattered around zero in every year, and a spawning biomass series with a narrow interval, are what a usable fit of these synthetic data looks like; the interval is conditional on the fixed values. If the script stops at `stopifnot(packageVersion("ALSCL") >= "2.3.0")`, install the current version ([Install ALSCL](getting-started.html)); if it cannot find `scripts/plot_helpers.R` or `docs/data`, your working directory is not the repository root; if `check_alscl_data()` reports an error, step 1 explains the messages; if a fit ends with the warning "Review fit diagnostics", step 5 says what to change.
 
-After building your own `x`, the calls remain short:
+<h2 id="replace">4. Replace the demonstration with your observations</h2>
+
+```r
+data_dir <- "my_data"
+bio <- list(rec.age = 2, nage = 12, M_annual = 0.25,
+            growth_step = 1, sel_L50 = 22, sel_L95 = 30,
+            Linf = 80, vbk = 0.15, t0 = 0.5,
+            cv_len = 0.15, cv_grow = 0.15)
+len_mid <- c(8, 11, 14, 17, 20, 24, 28, 33, 39, 46)
+len_border <- c(9.5, 12.5, 15.5, 18.5, 22, 26, 30.5, 36, 42.5)
+map_acl <- list(log_Linf = factor(NA), log_vbk = factor(NA))
+map_alscl <- list(log_Linf = factor(NA), log_vbk = factor(NA))
+# Then run the prepare_alscl_data() call of the script and confirm:
+for (model in c("acl", "alscl")) {
+  check <- check_alscl_data(x, model)
+  print(check$valid); print(check$warnings); print(check$summary)
+  print(inspect_parameters(x, model)[, c("parameter", "status", "map_source")])
+}
+```
+
+The values above are placeholders that show the shape of each entry, not estimates for any stock. Keep the names `inputs`, `x`, `a` and `b` so that the rest of the script runs unchanged.
+
+| Lines in the script | Replace with | Keep in mind |
+|---|---|---|
+| `data_dir <- "docs/data"` | Your CSV folder, or `inputs <- read_survey_excel("my_survey.xlsx")` | Three files or sheets with exactly these names; blank cells for missing survey values |
+| `bio <- list(...)` | The values of your stock | `M_annual` is per year and is multiplied by `growth_step`; `vbk` stays per year; ALSCL needs `0 < t0 < rec.age` |
+| `len_mid <- ...`, `len_border <- ...` | The midpoints and internal boundaries of your bins | Delete the equal-width `stopifnot()` and the midpoint formula when your bins differ in width |
+| `p_acl`, `p_alscl` | Starting values on the optimizer scale | ACL takes `t0`, ALSCL `log(t0)` |
+| `map_acl`, `map_alscl` | The parameters you fix or release | An empty list keeps the model defaults; list every fix each time |
+| `zero_action = "error"` | `"missing"` to treat zeros as missing values instead of stopping | Zeros then drop out of the likelihood |
+| `output_dir` | A folder for this assessment | The script overwrites the files in it |
+
+After editing, run the script down to the check loop. `check$valid` must be `TRUE` for both models, `check$summary` must show your numbers of bins and time steps, and `inspect_parameters()` must show `fixed` with `map_source` equal to `explicit` for exactly the parameters you fixed. A warning such as "No positive observations in periods: 2004" means that a time step has no survey values and is treated as unobserved; the warning about excluded zeros appears when `zero_action = "missing"` and the survey table contains zeros. Decide what each warning means for your survey before you fit.
+
+<h2 id="fit">5. Fit directly and read the results</h2>
 
 ```r
 a <- run_acl(x)
 b <- run_alscl(x)
-# Same total work, up to two workers for four independent starts:
-a_multi <- run_acl(x, nstarts = 4, ncores = 2)
-b_multi <- run_alscl(x, nstarts = 4, ncores = 2)
-# The actual standard-error method and core count:
-a$sd_info
-b$sd_info
+diagnose_model(x$data.CatL, a)
+diagnose_model(x$data.CatL, b)
+b$diagnostics$issues
+estimates <- extract_estimates(b)
+subset(estimates, quantity == "SSB")
+extract_parameters(b)
+plot_CatL(b, type = "year", facet_ncol = 5)
+plot_residuals(b, type = "year", facet_ncol = 5)
+plot_SSB(b, se = TRUE)
 ```
 
-The existing `alscl_speed()` settings apply automatically. `ncores` controls independent optimization starts; `sd_cores` controls standard-error computation within a fit. The default AD framework remains CppAD. More workers do not guarantee a faster small job. See [speed settings](speed.html).
+Once `x` holds your tables and settings, each fit is one call; the `train_times = 2` and `nstarts = 1` that the script stores in `x$fit_args` apply, and an argument in the call, such as `run_acl(x, nstarts = 4, ncores = 2)`, overrides the stored value for that call only. Read the numerical checks before any estimate: convergence code 0, maximum gradient below 0.001, a positive definite Hessian, no parameter on a bound and `Numerical screen: TRUE`; `b$diagnostics$issues` names any check that failed. `extract_estimates()` returns one table with `quantity`, `year`, the `age` or `length` where the quantity has one, `estimate`, `std_error` and the interval `conf_low` to `conf_high`; `extract_parameters()` lists every scalar parameter on the natural scale with its status, `estimated` or `fixed`. `plot_CatL()`, `plot_residuals()` and `plot_SSB()` draw the fit to the observations, the log residuals and the spawning biomass with its interval, as in [Understand your first fit](first-model.html).
 
-## Inspect the results
+When a check fails, change one thing at a time and refit: more starts (`nstarts = 4, ncores = 2`) when the code is not 0 or the gradient is large; when the Hessian is not positive definite, fix the parameter that `b$diagnostics$high_correlations` or a correlation estimated near 1 points to, or share F across groups with `F_structure = "year"` ([Fitting controls](fitting-controls.html)). Residuals with the same sign across neighbouring lengths or years mean that the model misses a feature of the data even when the checks pass; [Diagnostics](diagnostics.html) shows how to examine such patterns and the sensitivity to `M` and the other fixed values.
 
-Check convergence code, maximum gradient, Hessian status, boundary hits and residual patterns separately. A completed fit is not sufficient evidence of identifiability or suitable assumptions. The full synthetic CSV workflow was run for both models: convergence code 0, positive-definite Hessian, no boundary hits and maximum gradients below 0.001. These checks validate the example workflow, not an unseen empirical assessment.
-
-The updated script was rerun with the model-default maps and two successive optimization passes. The recorded [diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv) are:
-
-|Model|Free scalars|Convergence code|Maximum gradient|Positive-definite Hessian|Boundary hit|
-|---|---|---|---|---|---|
-|ACL|10|0|2.62e-9|Yes|No|
-|ALSCL|13|0|2.59e-9|Yes|No|
-
-The 2.2.2 run used four cores for standard errors and the default safeguarded refinement. These are numerical checks of synthetic data, not validation of an unseen stock assessment. Before refinement was added (2.2.1), the t0-only ALSCL fit could return false convergence at an unchanged optimum. Version 2.2.2 retains the successful earlier pass and refines its gradient to about 5.37e-9. The t0-only ACL with the original F structure still has an age-correlation boundary and fails the numerical screen; choosing shared F is a separate biological model decision, described below.
-
-The following plots were generated by this script using the synthetic CSV inputs.
-
-![ALSCL residuals by year from the complete CSV example](../assets/manual/figures/own-data-example/residuals.png)
-
-![ALSCL spawning biomass from the complete CSV example](../assets/manual/figures/own-data-example/SSB.png)
-
-The spawning-biomass intervals are conditional on the fixed model assumptions. Inspect your own figures and assess sensitivity to supported alternative values of M, catchability and fixed biological parameters.
-
-## Save and reuse x
-
-The script saves `inputs_x.rds`, `assessment_summary.rds`, `residuals.png`, `SSB.png` and `sessionInfo.txt`. The portable summary excludes `obj`, whose TMB pointers belong to the current R session. To refit in a new session:
+<h2 id="save">6. Save and reuse the results</h2>
 
 ```r
-library(ALSCL)
-x <- readRDS("output/own-data-example/inputs_x.rds")
-a <- run_acl(x)
-b <- run_alscl(x)
+dir.create("output/my-assessment", recursive = TRUE, showWarnings = FALSE)
+saveRDS(x, "output/my-assessment/inputs_x.rds")
+save_assessment(a, "output/my-assessment/acl.rds")
+save_assessment(b, "output/my-assessment/alscl.rds")
+# In a later session
+x <- readRDS("output/my-assessment/inputs_x.rds")
+saved <- read_assessment("output/my-assessment/alscl.rds")
+summary(saved)
+plot_SSB(saved, se = TRUE)
+b2 <- refit_model(saved)
 ```
 
-Keep the original data, configuration, provenance and package version together. The older `fit_survey_tables()` helper, separate-argument calls and `do.call()` remain supported.
+`x` is a plain list, so `saveRDS()` keeps the tables and settings and `readRDS()` brings them back. `save_assessment()` writes a saved fit: everything in the fit except the live TMB object `b$obj`, a pointer valid only in the current session, together with the recipe (tables, settings, map, bounds and package versions). `read_assessment()` reads it back, and `summary()`, the extraction functions and the plots work on it directly; `refit_model()` rebuilds a live fit from the recipe, accepts overrides such as `refit_model(saved, nstarts = 4)`, and warns when the package or TMB version differs from the recorded one. The folder must exist, and an existing file is replaced only with `overwrite = TRUE`. The script instead stores `assessment_summary.rds`, both fits without `obj`, with the two figures and `sessionInfo.txt`. Keep the data files, the saved bundle and the saved fits together.
 
-## Continue with comparison and retrospectives
-
-Both fitting functions check the time grid directly: consecutive numeric column labels must differ by `growth_step`. For annual data, `2000, 2001, 2003` is rejected because 2002 is absent. Keep 2002 as an all-`NA` survey column, and provide complete weight and maturity columns for that period. Quarterly labels such as `2000, 2000.25, 2000.5` require `growth_step = 0.25`. The model does not interpolate missing periods or reinterpret irregular intervals.
+<h2 id="continue">7. Continue with comparison and retrospectives</h2>
 
 ```r
 comparison <- compare_models(a, b, x$data.CatL)
@@ -347,72 +279,17 @@ rb$rho_text
 plot_fishing_mortality(b, type = "length", se = TRUE)
 ```
 
-`compare_models()` checks both fits against the supplied survey table: time labels, length-bin labels and order, positive observed values and their observation mask must agree. A known mismatch is an error. Older saved results without enough metadata remain readable, but automatic preference is withheld. If either fit fails the numerical screen, the function warns and retains raw AIC/BIC and fit statistics for inspection without declaring a preferred model. Read `comparison$fit_diagnostics` and `comparison$comparison` (`data_verified`, `eligible`, `preferred`, `issues`). A passed screen permits a conditional comparison; you must still assess likelihood comparability and biological assumptions.
+`compare_models()` first verifies that both fits used the same survey table, then compares AIC, BIC and the fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible) and `issues`. A lower AIC supports a model statistically on these data; whether its structure suits the stock is a biological decision. [Model comparisons](model-comparison.html) draws the comparison figures.
 
-`fit_diagnostics` includes the full fit (`Peel = 0`) and every requested peel, with elapsed time, raw optimizer status, gradient, Hessian, boundaries and errors. `rho_by_peel` contains screened `Rho`, diagnostic `RawRho` and `Valid`. A quantity receives a reported value in `rho_text$Rho` only if the full fit and all requested peels pass the numerical screen and all terminal comparisons are finite with a nonzero reference. Otherwise it is `NA`, with a warning; failed peels are never silently dropped. `raw_rho_text` is an unscreened diagnostic summary, not a replacement for the screened result. It remains `NA` when a terminal comparison is missing. Available trajectories remain in `results` for inspection.
+The retrospective analysis refits a model after removing the last one, two and three time steps (`nyear` counts time steps, so four peels equal one year of quarterly data). It reads the bundle, so the stored settings apply to every peel; set `ncores` on the retrospective call to run peels in parallel. `rb$fit_diagnostics` lists the full fit (`Peel = 0`) and every peel with its numerical status, `rb$rho_by_peel` gives Mohn's rho per quantity and peel, and `rb$rho_text$Rho` reports the mean only when the full fit and all peels pass the checks, otherwise `NA` with a warning. `plot_retro(rb)` draws the peeled trajectories ([Run a retrospective analysis](retrospectives.html)); `plot_fishing_mortality(b, type = "length")` draws the fishing mortality at length estimated by ALSCL.
 
-## Optimizer refinement and F shared within each time step
+<h2 id="next">What next</h2>
 
-`run_acl(x)` and `run_alscl(x)` now finish the selected fit with up to five safeguarded Newton steps (`polish = TRUE`). Each step requires a positive-definite numerical Hessian, parameters strictly inside their bounds, a smaller maximum absolute gradient, and an objective increase no greater than `1e-8` for floating-point roundoff. Refinement stops if a condition fails; it cannot repair insufficient information or an inappropriate model. Set `polish = FALSE` to skip it. This can change estimates at numerical precision, so 2.2.2 does not promise bitwise equality with older fits.
-
-Repeated optimizer passes retain their raw parameters, objective, code and message in `fit$optimizer_history`. An unchanged failed restart no longer overwrites an earlier successful pass. `fit$raw_opt` records the selected result before refinement; `fit$refinement` records accepted steps and before/after gradients. `convergence_code` remains the selected raw optimizer code, not an invented success code after refinement. Multistart selection still uses the lowest finite objective before refinement; `starts` and `start_diagnostics` describe those unrefined starts.
-
-`fit$diagnostics` adds a separate numerical screen: maximum gradient below `1e-3`, positive-definite Hessian and covariance, no optimizer boundary and no natural-scale boundary. Free correlations within `1e-4` of 0 or 1 and free process/observation SDs at or below `1e-4` are flagged. These are screening thresholds, not statistical tests. `high_correlations` lists parameter pairs with absolute correlation at least 0.95; this warrants investigation but does not alone prove non-identifiability. The covariance condition number depends on parameter scaling. `diagnose_model()` prints the raw optimizer status and numerical screen separately; inspect residuals, alternative starts, profiles and sensitivity as well.
-
-### Choose the F structure explicitly
-
-The default `F_structure = "group_year"` preserves the original age × time (ACL) or length × time (ALSCL) separable AR(1) field. The optional `F_structure = "year"` assumes **the same instantaneous F for all ages or lengths within each time step**. For quarterly data, this is one F per quarter, not one per calendar year. This biological assumption is appropriate only when supported by the fishery; it is not an automatic cure for non-convergence.
-
-In the shared structure, `log(F[y]) = mean_log_F + u[y]`, with a stationary one-dimensional AR(1): `u[1]` has SD `sigma_F`, and later innovations have SD `sigma_F * sqrt(1 - rho_y^2)`. There are Y random F effects instead of A × Y or L × Y. The C++ likelihood includes exactly one normalized AR(1) density. It does not tie together cells of a two-dimensional density. The unused age/length correlation is automatically fixed, excluded from free parameters and omitted from the fitted report, even if its map entry is NULL. Other map defaults remain unchanged. `report$dev_log_F` is 1 × Y; `report$F` (ACL) or `report$FL` (ALSCL) retains its full group × Y shape, and F-deviation plots show one shared series.
-
-The following example assumes `x` contains your validated input tables, biology and starting values from the complete survey example. It fixes only t0 among the **active** scalar parameters; the unused group correlation is structurally absent:
-
-```r
-map_acl_t0 <- list(t0 = factor(NA), log_std_log_F = NULL,
-                   logit_log_F_y = NULL, logit_log_F_a = NULL)
-map_alscl_t0 <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
-a_year <- run_acl(x, map = map_acl_t0, F_structure = "year")
-b_year <- run_alscl(x, map = map_alscl_t0, F_structure = "year")
-a_year$optimizer_history
-a_year$refinement
-b_year$diagnostics
-b_year$sd_info
-diagnose_model(x$data.CatL, b_year)
-plot_deviance(a_year, type = "F", se = TRUE)
-plot_fishing_mortality(b_year, se = TRUE)
-# Store the choice to continue using the shortest syntax:
-x$fit_config$acl$map <- map_acl_t0
-x$fit_config$alscl$map <- map_alscl_t0
-x$fit_args$F_structure <- "year"
-a_year <- run_acl(x)
-b_year <- run_alscl(x)
-```
-
-Original separate-argument and `do.call()` calls remain valid. `retro_model()` (including its wrappers) and `sim_acl()` also accept `F_structure` and `polish`; pass the same structure to all retrospective peels. Parallel standard errors and multistart workers continue to use the existing speed settings. In `sim_data()`, F innovation SD is not the same as the marginal SD in the fitting AR(1); for one-dimensional stationary AR(1), marginal SD equals innovation SD divided by `sqrt(1 - rho_y^2)`.
-
-The earlier t0-only ACL failure on the synthetic YTF data was associated with age correlation approaching 1; those data were generated with shared F across ages. The shared-F alternative addresses that mismatch. The t0-only ALSCL false-convergence case instead benefits from numerical refinement. Neither finding establishes that all parameters are identifiable in your own observations. See the [2.2.2 reproducible validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/RELEASE_2.2.2.md) for measured results and limitations.
-
-![2.2.2 convergence checks](../assets/manual/figures/convergence-2.2.2.png)
-
-### Matching fitted data in 2.2.5
-
-`diagnostic_metrics()`, `diagnose_model()` and `compare_models()` check known time labels, length labels, the positive-observation mask and the observations stored with the fit. A table with reordered years or length bins is an error even when its dimensions match. Pass the original fitting table, for example `diagnose_model(x$data.CatL, b)`; these are in-sample diagnostics, not an interface for held-out prediction. Older results without metadata still support raw metrics, but cannot establish verified model comparability.
-
-Comparison tables and metric plots share the same calculations: only finite positive observations contribute, R-squared is `NA` for constant observations, and nonfinite original-scale predictions at observed cells cause an error. Missing or zero observations remain excluded. Passing these checks does not establish model adequacy.
-
-### Length-bin limits in 2.2.7
-
-The first and last model bins absorb the distribution tails. `len_border` contains only the internal boundaries; `len_mid` contains one increasing midpoint per bin. For ALSCL, omit `len_lower` and `len_upper` to derive these bounds, or supply `c(-Inf, len_border)` and `c(len_border, Inf)`. Explicit finite outer endpoints are rejected: they do not implement a truncated length distribution. Finite labels such as `0-20` remain accepted as labels under the existing tail-bin convention.
-
-```r
-# x is the aligned input bundle from the survey example.
-borders <- x$fit_args$len_border
-if (!is.null(borders)) {
-  fit <- run_alscl(x, len_lower = c(-Inf, borders),
-                  len_upper = c(borders, Inf))
-}
-```
-
-### Consistency corrections
-
-Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
+| What you want to do | Read |
+|---|---|
+| Change a setting that a check pointed to, or the F structure | [Fitting controls](fitting-controls.html) |
+| Examine residual patterns and the sensitivity to the fixed values | [Diagnostics](diagnostics.html) |
+| Run a retrospective analysis and read Mohn's rho | [Run a retrospective analysis](retrospectives.html) |
+| Profile a parameter or project the stock forward | [Assessment workflows](assessment-workflows.html) |
+| Fit a quarterly survey | [Annual and quarterly time steps](case-studies.html) |
+| Make fits faster | [Speed settings](speed.html) |

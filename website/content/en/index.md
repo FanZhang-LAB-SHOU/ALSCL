@@ -25,7 +25,7 @@ The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111
 
 <h2 id="installation">Installation</h2>
 
-Install the latest development source, based on <span class="current-version">{{VERSION}}</span>, from GitHub:
+Install ALSCL <span class="current-version">{{VERSION}}</span> from GitHub:
 
 ```r
 install.packages("remotes")
@@ -42,7 +42,7 @@ The website describes ALSCL 2.3.0; see [News](news/index.html) for the changes i
 | | ACL | ALSCL |
 |---|---|---|
 | Population state | Numbers by age and time | Numbers by length, age and time |
-| Length and growth representation | Age–length probability matrix | Age–length probability matrix for recruitment and initialization; growth transition matrix for survivors |
+| Length and growth representation | Age-length probability matrix | Age-length probability matrix for recruitment and initialization; growth transition matrix for survivors |
 | Fishing mortality | Estimated by age | Estimated by length; age-specific F is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 
@@ -55,17 +55,14 @@ The bundled `YTF_example` contains synthetic yellowtail-flounder-style data, bio
 ```r
 data("YTF_example")
 x <- YTF_example
-# Fit both models to the same observations and biological settings
-a <- run_acl(x, train_times = 2, silent = TRUE)
-b <- run_alscl(x, train_times = 2, silent = TRUE)
-
-# Inspect both numerical screens before interpreting the estimates
-a$diagnostics
-b$diagnostics
+a <- run_acl(x, silent = TRUE)    # age-structured model
+b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
+diagnose_model(x$data.CatL, a)    # numerical checks, before reading any estimate
+diagnose_model(x$data.CatL, b)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-`run_acl(x)` and `run_alscl(x)` read the same input bundle and select the corresponding model settings. Follow [your first fit](articles/first-model.html) for a step-by-step explanation of the code and outputs. See [fitting controls](articles/fitting-controls.html) for overrides and the original separate-argument or `do.call()` interfaces, and [speed settings](articles/speed.html) for parallel execution.
+`run_acl(x)` and `run_alscl(x)` read the same input bundle `x` (three tables plus settings) and each selects its own stored configuration. [Understand your first fit](articles/first-model.html) explains the fitted object, the checks and the estimates step by step; [Choose the fitting settings](articles/fitting-controls.html) explains what you can change, and [Speed settings](articles/speed.html) how to use several cores.
 
 ![ACL and ALSCL biomass, spawning biomass and recruitment estimates from the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
 
@@ -80,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-Check the optimizer status, maximum absolute gradient, Hessian and parameter boundaries separately. Then inspect residual patterns and sensitivity to fixed assumptions. A successful optimizer message alone does not establish reliable inference. See [diagnostics](articles/diagnostics.html) and [model comparison](articles/model-comparison.html).
+Read the numerical checks first (convergence code, gradient, Hessian, bounds), then the residual patterns, then the sensitivity to the fixed values such as natural mortality. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
 
 <h2 id="learn-more">Basic functions</h2>
 
@@ -92,11 +89,11 @@ Use the [GitHub issue tracker](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues
 
 <h2 id="citation">Citation</h2>
 
-Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, **23**(5), 1121–1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673).
+Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, **23**(5), 1121-1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673).
 
 <h3 id="krill-paper">Related application: Antarctic krill</h3>
 
-Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1–22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
+Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1-22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
 
 This study applies ACL and ALSCL to Antarctic krill to examine how length-dependent growth and mortality within cohorts affect assessment results.
 

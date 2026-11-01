@@ -17,7 +17,7 @@ The keys below apply to starting values and bounds. Transformations map optimize
 | `log_Linf` | `log_Linf` | exp |Asymptotic length|
 | `t0` | `log_t0` |Identity vs exp|ALSCL restricts t0 to positive values|
 | `log_cv_len` | `log_cv_len` | exp |Length-at-age CV|
-| — | `log_cv_grow` | exp |Growth-increment CV|
+| none | `log_cv_grow` | exp |Growth-increment CV|
 | `log_std_index` | `log_sigma_index` | exp |Log survey observation SD|
 
 
@@ -45,4 +45,3 @@ Fits construct random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` from dat
 
 **Starting values are not fixed values.** See [required inputs and map examples](case-fit-survey.html) for default fixes, explicit named NULL releases and a complete CSV-to-assessment script.
 
-`create_parameters(species = "krill", model_type = "acl")` supplies a Linf start of 90 and bounds, but does not fix Linf or change M, nage or the time step. To fix it, explicitly pass `map = list(log_Linf = factor(NA))` with the chosen starting value. Biological settings still belong in the fitting arguments.

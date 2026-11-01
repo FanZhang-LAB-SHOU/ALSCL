@@ -6,9 +6,9 @@
 
 ALSCL 包提供 ACL（年龄结构）和 ALSCL（年龄—体长联合结构）两个调查体长评估模型。下式采用 Zhang & Cadigan (2022) 的模型框架，并明确本包的时间单位和随机效应参数化。
 
-The ALSCL package provides an age-structured model (ACL) and a joint age–length model (ALSCL) for survey catch-at-length assessment. The framework follows [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673), with time units and random-effect parameterization stated explicitly below.
+The ALSCL package provides an age-structured model (ACL) and a joint age-length model (ALSCL) for survey catch-at-length assessment. The framework follows [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673), with time units and random-effect parameterization stated explicitly below.
 
-### 种群动态 / Population dynamics
+#### 种群动态 / Population dynamics
 
 令 $`i=1,\ldots,A`$ 为年龄组索引，$`a_i=a_{rec}+(i-1)\Delta t`$ 为实际年龄，$`t`$ 为模型时间步。ACL 在年龄维度推进存活；补充量进入第一组，最大年龄组为加组：
 
@@ -30,7 +30,7 @@ N_{A,t+1}=N_{A-1,t}\exp(-Z_{A-1,t})+N_{A,t}\exp(-Z_{A,t}).
 
 M and F are instantaneous rates **per model step**. A quarterly model uses `growth_step=0.25` and quarterly mortality rates; growth parameter $`k`$ is annual.
 
-### 捕捞死亡率 / Fishing mortality structure
+#### 捕捞死亡率 / Fishing mortality structure
 
 ACL 按年龄估计 F，ALSCL 按体长估计 F。以 $`s`$ 表示相应的年龄或体长组，两个模型均使用可分离的 AR(1) × AR(1) 对数 F 偏差：
 
@@ -45,7 +45,7 @@ F_{s,t}=\exp(\mu_F+d_{s,t}),\qquad
 
 Here $`\sigma_F`$ is the **marginal SD** in TMB's scaled, separable AR(1) density. The correlation parameters describe dependence across groups and time. Innovation-variance parameterizations use a different scaling; dividing this expression again by two $`1-\phi^2`$ factors would be incorrect. Natural mortality M is supplied as known.
 
-### 补充量 / Recruitment
+#### 补充量 / Recruitment
 
 拟合模型用 AR(1) 对数偏差描述补充量。下面写成与边际标准差 $`\sigma_R`$ 一致的平稳形式：
 
@@ -60,9 +60,9 @@ r_{t+1}=\phi_R r_t+\eta_t,\quad
 
 $`\exp(\mu_R)`$ 是补充量的中位尺度，不是包含随机变异后的算术均值。完整模拟器 `sim_data()` 使用 Beverton–Holt 亲体补充关系及随机偏差；模拟器与拟合器的补充过程应分别理解。
 
-$`\exp(\mu_R)`$ is the median recruitment scale, not the arithmetic mean including stochastic variation. The full `sim_data()` operating model uses Beverton–Holt stock–recruitment with random deviations; its recruitment process differs from the fitted model.
+$`\exp(\mu_R)`$ is the median recruitment scale, not the arithmetic mean including stochastic variation. The full `sim_data()` operating model uses Beverton-Holt stock-recruitment with random deviations; its recruitment process differs from the fitted model.
 
-### 初始条件 / Initial conditions
+#### 初始条件 / Initial conditions
 
 第一期最小年龄组由 $`R_1`$ 给定，其余年龄组按初始死亡率与逐组扰动递推：
 
@@ -76,9 +76,9 @@ u_{i-1}\sim N(0,\sigma_{N0}^2).
 
 因此 $`\log N_{i,1}=\log R_1-(i-1)Z_{init}+\sum_{j=1}^{i-1}u_j`$。扰动沿年龄组累积；不能把每个年龄的总扰动误当作相互独立。ALSCL 再用初始年龄—体长概率分配这些个体。
 
-Thus the initial log abundance contains the cumulative sum of earlier class deviations. The total deviations at different ages are not independent. ALSCL allocates these initial numbers across length using age–length probabilities.
+Thus the initial log abundance contains the cumulative sum of earlier class deviations. The total deviations at different ages are not independent. ALSCL allocates these initial numbers across length using age-length probabilities.
 
-### 年龄—体长转换 / Age-to-length conversion (ACL)
+#### 年龄—体长转换 / Age-to-length conversion (ACL)
 
 给定年龄的长度服从均值由 von Bertalanffy 曲线决定的正态分布：
 
@@ -97,9 +97,9 @@ N_{l,t}=\sum_i p_{l|i}N_{i,t}.
 
 `pla` 表示这个年龄—体长概率矩阵，`plot_pla()` 用热图展示。实现使用支持自动微分的正态 CDF 差，并通过右尾对称计算和归一化处理数值稳定性。长度边界必须与调查分组一致。论文 Appendix S1 给出的固定阶 Taylor 近似是另一种积分近似，本包使用上述 CDF 实现。
 
-`pla` is the age–length probability matrix shown by `plot_pla()`. Differentiable normal CDF differences, symmetric right-tail calculations and normalization provide the implemented numerical treatment. Boundaries must match survey bins. Appendix S1 describes a fixed-order Taylor approximation; the package uses the CDF formulation above.
+`pla` is the age-length probability matrix shown by `plot_pla()`. Differentiable normal CDF differences, symmetric right-tail calculations and normalization provide the implemented numerical treatment. Boundaries must match survey bins. Appendix S1 describes a fixed-order Taylor approximation; the package uses the CDF formulation above.
 
-### 生长转移矩阵 / Growth transition matrix (ALSCL)
+#### 生长转移矩阵 / Growth transition matrix (ALSCL)
 
 ALSCL 保留 $`N_{l,i,t}`$ 的体长、年龄、时间三个维度。$`G_{j,l}`$ 表示从源体长组 $`l`$ 转入目的体长组 $`j`$ 的概率。普通年龄组的存活与增长为：
 
@@ -126,7 +126,7 @@ Growth increments use the following smooth decreasing mean, with SD $`CV_G\mu_{\
 
 This is not the exact arbitrary-step VB increment $`(L_\infty-L)(1-e^{-k\Delta t})`$. `pla` describes length given age, while G describes a one-step transition given source length. They are not interchangeable. `FL` is length-specific F; `FA` is derived from original-cohort survival.
 
-### 派生量 / Derived quantities
+#### 派生量 / Derived quantities
 
 输入的平均个体重量 $`w_{l,t}`$ 和成熟比例 $`m_{l,t}`$ 用于计算体长别生物量、成熟生物量及总量：
 
@@ -141,7 +141,7 @@ B_t=\sum_l b_{l,t},\qquad SSB_t=\sum_l sb_{l,t}.
 
 `CN` and `CB` are derived fishery catch numbers and biomass, distinct from the input survey number index. Biomass units depend on weight units and the abundance scale.
 
-### 调查观测 / Survey observations
+#### 调查观测 / Survey observations
 
 令 $`I_{l,t}`$ 为调查数量指数，$`N_{l,t}`$ 为种群尾数。调查观测使用对数正态模型：
 
@@ -160,33 +160,26 @@ q_l=\left[1+\exp\!\left(-\log(19)\frac{L_l-L_{50}}{L_{95}-L_{50}}\right)\right]^
 
 `sel_L50` and `sel_L95` fix survey catchability at 0.5 and 0.95 at the specified lengths; they are not estimated fishery selectivity. Absolute abundance depends on q, M and related assumptions. `exp(report$Elog_index)` is the original-scale median; the arithmetic mean also includes $`\exp(\sigma_I^2/2)`$.
 
-### 估计与区间 / Estimation and uncertainty
+#### 估计与区间 / Estimation and uncertainty
 
 TMB 用自动微分计算目标函数及导数，对随机效应采用 Laplace 近似；R 的 `nlminb()` 优化固定效应。`sdreport()` 使用局部曲率及 delta 方法给出近似标准误。绘图中的约 95% 区间是逐点区间；固定参数不贡献估计不确定性。
 
 TMB uses automatic differentiation and a Laplace approximation for random effects; R's `nlminb()` optimizes fixed effects. `sdreport()` obtains approximate standard errors from local curvature and the delta method. Plotted 95% intervals are pointwise, and parameters held fixed do not contribute estimation uncertainty.
 
-## 从隐状态到调查观测 · From latent state to survey observation
+### 从隐状态到调查观测 / From latent state to survey observation
 
-```mermaid
-flowchart LR
- R["补充 Recruitment"] --> N["种群状态 Population state"]
- F["自然与捕捞死亡 M and F"] --> N
- G["生长 Growth"] --> N
- N --> L["长度别尾数 N at length"]
- Q["固定调查可捕性 Survey q"] --> I["预期调查指数 Expected index"]
- L --> I
- I --> O["观测误差 Observation error"]
- O --> D["三表中的调查数据 Survey table"]
- N --> B["生物量与 SSB Biomass and SSB"]
- W["体重与成熟 Weight and maturity"] --> B
-```
+| 过程 / Process | 作用 / Role |
+|---|---|
+| 补充、存活与生长 / Recruitment, survival and growth | 更新种群状态 / Update the population state |
+| 体长别尾数 × 调查可捕性 / Numbers at length × survey catchability | 预测调查指数 / Predict the survey index |
+| 观测误差 / Observation error | 将预测与调查观测联系起来 / Relates predictions to survey observations |
+| 尾数 × 个体重量 × 成熟比例 / Numbers × weight × maturity | 推导生物量与产卵生物量 / Derive biomass and spawning biomass |
 
 模型用调查数量数据约束隐含种群状态，再结合体重、成熟与生存计算派生量。渔业捕获 `CN` 不等于调查输入；`plot_CatL()` 展示调查观测与拟合值。
 
 Survey numbers constrain latent population states; weights, maturity and survival define derived quantities. Fishery catch `CN` is not the survey input. `plot_CatL()` shows observations and fitted survey indices.
 
-## 两种概率矩阵不可混用 · Two different probability matrices
+### 两种概率矩阵不可混用 / Two different probability matrices
 
 | 矩阵 / Matrix | 条件与方向 / Meaning | 检查 / Check |
 |---|---|---|
@@ -210,7 +203,7 @@ stopifnot(all(G >= 0), max(abs(colSums(G) - 1)) < 1e-8)
 
 Growth can remain within the same bin; this is bin retention, not zero individual growth. The largest bin absorbs the right tail. Changing bin boundaries changes both matrices and state interpretation.
 
-## 不确定性与参数可识别性 · Uncertainty and identifiability
+### 不确定性与参数可识别性 / Uncertainty and identifiability
 
 TMB 的 `sdreport` 通过局部曲率和 delta 方法得到近似标准误。图示为约 95% 逐点区间，不是同时置信带；生长区间描述平均曲线的参数不确定性，不是单尾鱼长度的预测范围。
 
@@ -220,7 +213,7 @@ YTF 教学例固定了生长和部分随机过程参数，因此生长区间可�
 
 YTF fixes growth and selected process parameters. Its growth interval can collapse to a line, and other intervals are conditional on these fixed values. Investigate Hessian, bounds and gradients before interpreting intervals.
 
-## 年度、季度与死亡率 · Annual and quarterly units
+### 年度、季度与死亡率 / Annual and quarterly units
 
 年龄格点为 $`a_i=a_{rec}+(i-1)\Delta t`$。季度设 `growth_step=.25`；`k` 始终按年，`M` 和 F 为每个模型时间步的瞬时率。若已知年 M = 0.8，则季度 M = 0.8 × 0.25 = 0.2。生存概率是 $`\exp[-(M+F)]`$，不是直接从数量减去 M 和 F。
 
@@ -239,6 +232,10 @@ F_annual <- sum(F_quarter)
 `plot_compare_annual_F()` 不会将季度输出自动年化；`method="apical"` 是每期组间最大值，`"mean"` 是非加权平均。不同模型的原生 F 维度不同，不能把同一颜色的热图单元当成相同年龄长度群。
 
 `plot_compare_annual_F()` does not annualize quarterly values. Apical is a within-step group maximum; mean is unweighted. Native F dimensions differ between models.
+
+两个编译模型在极小总死亡率下稳定计算 Baranov 渔获比例，与模拟器一致，避免相减抵消为零；普通量级结果仅可能在浮点精度上变化。
+
+Both compiled models evaluate the Baranov catch fraction stably for very small total mortality, consistently with the simulator. This prevents cancellation to zero at extreme values; ordinary-scale results may differ only at floating-point precision.
 
 ---
 

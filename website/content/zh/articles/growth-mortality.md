@@ -23,10 +23,7 @@ plot_VB(b, se = TRUE)
 
 曲线和区间均继承 `ylab$growth` 及所选字体。无论是否显示区间，都保留 Linf/k 标注，并遵守 `text_size`、`text_color`；显式 `ylab` 覆盖全局标签。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_VB)
-
-
 
 ## 年龄长度转换
 
@@ -39,10 +36,7 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_pla)
-
-
 
 ## ACL 捕捞死亡率 year
 
@@ -58,10 +52,7 @@ plot_fishing_mortality(a, type = "year",
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
 
 ## ACL 捕捞死亡率 age
 
@@ -75,10 +66,7 @@ plot_fishing_mortality(a, type = "age",
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
 
 ## ALSCL 捕捞死亡率 year
 
@@ -92,10 +80,7 @@ plot_fishing_mortality(b, type = "year",
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
 
 ## ALSCL 捕捞死亡率 age
 
@@ -109,14 +94,11 @@ plot_fishing_mortality(b, type = "age",
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
 
 ## ALSCL 捕捞死亡率 length
 
-2.2.3 的 `type = "length"` 以真实数值 `b$len_mid` 为横轴，每个时期一个面板；不等宽体长组保留实际横轴间距，置信带和误差棒与同一体长—时间单元对应。`type = "year"` 仍以时间为横轴、按体长组分面。
+`type = "length"` 以真实数值 `b$len_mid` 为横轴，每个时期一个面板；不等宽体长组保留实际横轴间距，置信带和误差棒与同一体长—时间单元对应。`type = "year"` 仍以时间为横轴、按体长组分面。
 
 ```r
 # 绘制本图
@@ -128,10 +110,7 @@ plot_fishing_mortality(b, type = "length",
 
 年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
 
 ## 对数残差 length
 
@@ -145,10 +124,7 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
 
 观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
-
-
 
 ## 对数残差 year
 
@@ -162,10 +138,7 @@ plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
 
 观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
-
-
 
 ## 对数过程偏差 R
 
@@ -180,10 +153,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
-
-
 
 ## 过程乘数 R
 
@@ -198,10 +168,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
-
-
 
 ## 对数过程偏差 F
 
@@ -216,10 +183,7 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
 
 对数过程偏差以 0 为参照。这不是似然偏差统计量。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
-
-
 
 ## 过程乘数 F
 
@@ -234,10 +198,7 @@ plot_deviance(b, type = "F", log = FALSE, se = TRUE,
 
 指数转换后以 1 为参照，区间不对称。这不是原尺度残差。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
-
-
 
 ## 长度组成山脊图
 
@@ -250,34 +211,4 @@ plot_ridges(b) # 默认 viridis 渐变
 
 每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。保留 observations 的保存结果无需活跃 obj。
 
-
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_ridges)
-
-## 2.2.4 的缺测与保存结果绘图
-
-`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
-
-```r
-portable <- b
-portable$obj <- NULL
-plot_residuals(portable)
-plot_ridges(portable)
-```
-
-### 2.2.7 的生长图设置
-
-`plot_VB()` 在仅绘制曲线和绘制区间时均遵守 `ylab`。如果 `se = TRUE` 但协方差不可用，会提示并仅绘制曲线，同时保留指定的标签、字号、刻度、基础主题和标注设置。
-
-```r
-plot_VB(b, se = FALSE, ylab = "Length (cm)",
-        axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
-        age_range = c(1, 15), text_size = 4)
-```
-
-### 一致性修正
-
-捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。
-
-每个分面按自身有效观测的不同横坐标数量选择趋势：少于 2 个不画平滑线，2–5 个使用线性趋势，至少 6 个使用 loess；需要时仅增加该分面的 span，以包含至少 5 个邻近点。稀疏尾部体长组不会删除或改变其他分面的趋势。
-
-调查拟合图标题表示调查指数，山脊图标题表示调查体长组成，两者都不是渔业捕获量估计。过程偏差图在 `log = TRUE` 时标为对数偏差（参照值 0），在 `log = FALSE` 时标为乘数（参照值 1）。取指数只改变尺度，不改变已拟合的过程；两者都不是似然偏差统计量。

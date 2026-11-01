@@ -11,7 +11,6 @@ g=read('USER_GUIDE.md')
 sections={}
 parts=re.split(r'<a id="([a-z]+)"></a>\n',g)
 for i in range(1,len(parts),2):sections[parts[i]]=parts[i+1]
-sections['retrospective'],trouble=sections['retrospective'].split('## 10. 常见问题 / Troubleshooting',1)
 # Strip just the chapter heading; leave code comments and subsections intact.
 def no_title(s):return re.sub(r'^#{1,2} [^\n]+\n','',s.strip(),count=1).strip()
 def linkify(s,source='docs/USER_GUIDE.md'):
@@ -38,42 +37,6 @@ for i,m in enumerate(marks):
  # trailing anchors belong to the next page and are redundant in the Wiki.
  block=re.sub(r'<a id="[^"]+"></a>\s*','',block)
  blocks[int(m[1])]=block
-intro=f'''# 开始使用 · Getting started
-
-安装 ALSCL {version} 后即可使用本手册中的函数。以下代码在 R 中运行。
-
-Install ALSCL {version} to use the functions in this manual. Run the following in R.
-
-```r
-# 安装 ALSCL / Install ALSCL
-install.packages("remotes")
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
-library(ALSCL)
-packageVersion("ALSCL")
-data("YTF_example")
-str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
-```
-
-首次拟合需要与 R 匹配的 C++ 工具链。安装程序自动处理依赖；读取 Excel 示例另需 `readxl`。包含 `source("scripts/...")` 的示例请从下载的仓库根目录执行。
-
-The first fit needs an R-compatible C++ toolchain. Dependencies are installed automatically; Excel examples additionally use readxl. Run examples containing `source("scripts/...")` from the downloaded repository root.
-
-[仓库主页 / Repository](../README.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
-'''
-# Extra rho definition imported from the original book's retrospective lesson.
-rho=r'''
-## Mohn rho 的含义 · Meaning of Mohn's rho
-
-对每个删除末端数据的拟合，在其最后保留期与完整拟合同期的估计比较，再取相对差的平均：
-Compare each peeled estimate with the full fit at that peel's terminal period, then average relative differences:
-
-```math
-\rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
-```
-
-正值表示较短序列在这些终点总体偏高，负值表示偏低；正负可能互相抵消。检查每条曲线与每次拟合，而不只报告单个 rho 数字。全长基准为零时相对差没有定义，应检查数据与结果。
-Positive rho means shorter fits tend to be higher at their terminal periods; signs can cancel. Inspect individual trajectories and fits. A zero full-fit denominator makes the relative difference undefined.
-'''
 # Keep plot chapters independently runnable after the fitting chapter.
 plot_context='''先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -86,23 +49,24 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 '''
 chapters=[
-('01-Start','开始使用 · Getting started',no_title(intro)),
-('02-Theory','模型原理与时间尺度 · Model principles',no_title(sections['theory'])+'\n\n'+no_title(read('BOOK_THEORY_NOTES.md'))),
-('03-Data-and-Excel','数据、Excel 与实测导入 · Data and observations',no_title(sections['excel'])+'\n\n'+sections['observations']),
-('04-Built-in-YTF','内置数据与首个拟合 · Built-in YTF',no_title(sections['builtin'])),
+('01-Start','安装与第一次拟合 · Install and run a first fit',no_title(sections['start'])),
+('02-Theory','模型原理与时间尺度 · Model principles',no_title(sections['theory'])),
+('03-Data-and-Excel','准备调查数据 · Prepare your survey data',no_title(sections['excel'])),
+('04-Built-in-YTF','理解第一次拟合 · Understand your first fit',no_title(sections['builtin'])),
 ('05-Simulation','模拟与批量实验 · Simulation',no_title(sections['simulation'])),
-('06-Fitting','初值、边界与拟合 · Fitting controls',no_title(sections['fitting'])),
-('07-Diagnostics','诊断与结果解读 · Diagnostics',no_title(sections['diagnostics'])),
+('06-Fitting','选择拟合设置 · Choose the fitting settings',no_title(sections['fitting'])),
+('07-Diagnostics','判断拟合是否可用 · Judge whether a fit can be used',no_title(sections['diagnostics'])),
 ('08-Population-Plots','调查与种群图 · Survey and population plots',plot_context+'\n\n'.join(blocks[i] for i in range(1,19))),
 ('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,33))),
 ('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(33,42))+[44])),
-('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])+rho+'\n\n'+blocks[43]+'\n\n'+blocks[44]),
+('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
 ('14-Function-Reference','全部函数与参数 · Complete function reference',no_title(read('FUNCTION_REFERENCE.md'))),
-('15-Reproducibility','进阶、复现与故障处理 · Reproducibility',no_title(read('ADVANCED_WORKFLOWS.md'))+'\n\n## 常见问题 · Troubleshooting\n'+trouble),
+('15-Reproducibility','复现与故障处理 · Reproducibility and troubleshooting',no_title(read('ADVANCED_WORKFLOWS.md'))),
 ('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md'))),
-('17-Model-Validation','模型模拟与预测验证 · Model simulation and prediction checks',no_title(read('MODEL_VALIDATION.md')))]
+('17-Model-Validation','模型模拟与预测验证 · Model simulation and prediction checks',no_title(read('MODEL_VALIDATION.md'))),
+('18-Worked-Cases','工作案例 · Worked cases',no_title(read('CASES.md')))]
 # Internal anchor links inherited from a source refer to that source if not on this chapter.
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)

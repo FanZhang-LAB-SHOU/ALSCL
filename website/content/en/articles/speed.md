@@ -1,10 +1,10 @@
 # Speed settings
 
-This guide explains how `run_acl()` and `run_alscl()` use several cores, how much faster fits become, how to check what your session does, and when to change the settings. The [technical record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested, and the [review report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_REPORT.md) lists the checks.
+This guide explains how `run_acl()` and `run_alscl()` use several cores, how much faster fits become, how to check what your session does, and when to change the settings. The [technical record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) explains how each change was tested, and the [review report](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md) lists the checks.
 
 ## 1. Summary
 
-You do not need to change anything. Default fits use several cores for standard errors when supported. Parallel standard errors match the sequential calculation at the same fitted parameters. Version 2.2.2 also refines the optimum by default, so complete fits need not be bitwise identical to older releases. Benchmarks below measured the earlier optimization path; `polish = FALSE` skips the new refinement. Two settings, both set with `alscl_speed()`, control this:
+You do not need to change anything. Default fits use several cores for standard errors when supported. Parallel standard errors match the sequential calculation at the same fitted parameters. The optimizer finishing step (`polish = TRUE`) can change estimates at numerical precision, so complete fits are not guaranteed to be identical to those of older releases; the benchmarks below were made before that step existed. Two settings, both set with `alscl_speed()`, control this:
 
 | Setting | Default | Results | Speed | When to change it |
 |---|---|---|---|---|
@@ -163,11 +163,3 @@ These options are for testing and special cases; the defaults suit normal use.
 | `options(ALSCL.tmb.cache = path)` | Folder for compiled models |
 
 Reset an option with, for example, `options(ALSCL.sd_backend = NULL)`.
-
-### Consistent package libraries in 2.2.5
-
-Multistart fits, retrospective peels and simulation batches initialize socket workers with the parent session's library paths before loading ALSCL. This also applies when a newer installation is selected with `.libPaths()`. All workers must load the same ALSCL installation as the parent. Keep `nstarts` fixed when comparing worker counts; standard-error parallelism continues to use `alscl_speed()`.
-
-### Changes in 2.2.9
-
-The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.

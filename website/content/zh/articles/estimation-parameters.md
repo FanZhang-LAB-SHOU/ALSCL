@@ -45,4 +45,3 @@ fixed_index <- list(log_sigma_index = factor(NA))
 
 **提供初值不等于固定参数。**[必需输入与 map 示例](case-fit-survey.html)列明默认固定项、具名 NULL 的解除方法，以及从 CSV 到拟合的完整脚本。
 
-`create_parameters(species = "krill", model_type = "acl")` 提供 Linf 初值 90 和边界，不会自动固定 Linf，也不更改 M、nage 或时间步长。需要固定时，显式传入 `map = list(log_Linf = factor(NA))` 和选定初值；生物设置仍需在拟合参数中提供。
