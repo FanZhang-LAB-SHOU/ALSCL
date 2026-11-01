@@ -123,8 +123,7 @@ simulate_example_data <- function(years      = 2000:2025,
   if (!is.numeric(bin_breaks) || length(bin_breaks) < 3L ||
       any(!is.finite(bin_breaks)))
     stop("bin_breaks must contain at least three finite boundaries.", call. = FALSE)
-  if (!is.logical(save_csv) || length(save_csv) != 1L || is.na(save_csv))
-    stop("save_csv must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(save_csv, "save_csv")
   if (save_csv && (!is.character(output_dir) || length(output_dir) != 1L ||
                    is.na(output_dir) || !nzchar(output_dir)))
     stop("output_dir must be one nonempty path.", call. = FALSE)

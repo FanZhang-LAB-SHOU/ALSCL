@@ -1,6 +1,6 @@
 # Estimation parameter lists
 
-The keys below apply to starting values and bounds. Transformations map optimizer values to the natural scale; enter starts and bounds on the optimizer scale. The constructor's three named components match the corresponding fit arguments.
+On this page you see every scalar parameter of both models, its transformation to the natural scale, and the starts and bounds of a preset. The keys are the entries of `parameters`, `parameters.L` and `parameters.U`, on the optimizer scale.
 
 | ACL key | ALSCL key | Transform to natural scale | Meaning |
 |---|---|---|---|
@@ -15,16 +15,14 @@ The keys below apply to starting values and bounds. Transformations map optimize
 | `logit_log_F_a` | `logit_log_F_l` | plogis |Age/length F correlation|
 | `log_vbk` | `log_vbk` | exp |Annual VB k|
 | `log_Linf` | `log_Linf` | exp |Asymptotic length|
-| `t0` | `log_t0` |Identity vs exp|ALSCL restricts t0 to positive values|
+| `t0` | `log_t0` |Identity (ACL); exp (ALSCL)|VB t0; ALSCL restricts it to positive values|
 | `log_cv_len` | `log_cv_len` | exp |Length-at-age CV|
 | none | `log_cv_grow` | exp |Growth-increment CV|
 | `log_std_index` | `log_sigma_index` | exp |Log survey observation SD|
 
-
-Exponentiating a log location does not give the unconditional arithmetic mean when random deviations are present. Both templates currently restrict AR(1) correlations to positive values. See the theory section for SD conventions in correlated processes.
+<h2 id="inspect">1. Inspect a preset</h2>
 
 ```r
-# Inspect all starts and bounds for a preset
 p <- create_parameters(model_type = "alscl", species = "flatfish")
 keys <- names(p$parameters)
 parameter_table <- data.frame(
@@ -33,15 +31,16 @@ parameter_table <- data.frame(
   Lower = unlist(p$parameters.L[keys]),
   Upper = unlist(p$parameters.U[keys]))
 parameter_table
-# Change a start and upper bound
 p$parameters$log_sigma_index <- log(0.15)
 p$parameters.U$log_sigma_index <- log(0.5)
-# Explicit map fixes the value
 fixed_index <- list(log_sigma_index = factor(NA))
 ```
 
+`create_parameters()` returns the three lists for the model and preset. A changed start or bound leaves the parameter free; only a `map` entry such as `fixed_index` fixes it. The random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` have no key above.
 
-Fits construct random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` from data dimensions. These are not ordinary scalar entries above. Generator names such as `std_logR` and `F_mean` are not estimator keys.
+<h2 id="next">What next</h2>
 
-**Starting values are not fixed values.** See [required inputs and map examples](case-fit-survey.html) for default fixes, explicit named NULL releases and a complete CSV-to-assessment script.
-
+| What you want to do | Read |
+|---|---|
+| Fix or release parameters in the bundle | [Choose the fitting settings](fitting-controls.html) |
+| See the default fixes and releases in a complete script | [How do I fit my own survey data?](case-fit-survey.html) |

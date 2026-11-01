@@ -1,9 +1,8 @@
 #' Plot Recruitment over the years
 #'
-#' This function visualizes the recruitment of a population over a period of time.
-#' Recruitment is a key parameter in population dynamics, representing the amount of new individuals added to a population,
-#' either by birth or immigration, over a specific time frame. The resulting plot is a line graph, with the option to add a
-#' ribbon that illustrates the standard error, if the `se` argument is set to TRUE.
+#' Plot the estimated recruitment, the number of fish entering the youngest
+#' age class, in each time step. With `se = TRUE` a ribbon shows the 95%
+#' interval from the standard errors.
 #'
 #' @param model_result A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
@@ -70,7 +69,7 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
     # Plot recruitment over the years using ggplot2
     p <- ggplot2::ggplot(recruitment, aes(x = Year, y = recruitment)) +
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), title = if (!is.null(title)) title else .acl_title("Rec")) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), title = if (!is.null(title)) title else .acl_title("Rec")) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
@@ -98,7 +97,7 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
           ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
         else
           ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = 0.3) } +
-      ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), title = if (!is.null(title)) title else .acl_title("Rec_se")) +
+      ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), title = if (!is.null(title)) title else .acl_title("Rec_se")) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 

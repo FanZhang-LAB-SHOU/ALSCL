@@ -3,12 +3,18 @@
 - Rewrite the website tutorials as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history is kept in this file only. The English and Chinese pages share one block structure.
 - Generate the bilingual manuals (`docs/USER_GUIDE.md`, `ASSESSMENT_WORKFLOWS.md`, `MODEL_VALIDATION.md`, `CASE_STUDIES.md`, `PLOT_STYLE.md`, `SPEED_GUIDE.md`, `ADVANCED_WORKFLOWS.md` and the new `CASES.md`), the book and the Wiki from the article pairs with `scripts/build_manual.py`, so every tutorial is written once per language. Remove `MATHEMATICAL_FRAMEWORK.md`, `BOOK_THEORY_NOTES.md` and the `RELEASE_2.2.x.md` notes, whose content is in the theory page and in this file.
 - Shorten `README.md` to an entry page: what the package does, documentation links, installation, a ten-line example and the citation.
+- Example figures: every plotting function's reference page, and the reference entries of `check_fit()`, `fit_scenarios()`, `profile_model()`, `project_model()`, `hindcast_model()`, `simulate_fit()`, `sim_data()` and the retrospective functions, show the figure their example produces. `acl_theme_set()` shows the five palettes with the role of each colour (`docs/figures/palettes/`, drawn by `scripts/palette_swatches.R`), and the colours page shows the same plot under every palette.
+- Plot labels name each quantity the same way everywhere: "Spawning biomass (SSB)", "Catch numbers (CN)", "Abundance"; `plot_recruitment()` labels its axis "Recruitment". The gallery figures are regenerated with these labels and every figure description says what the figure shows, when to use it and what a pattern means.
+- Tidy the fitting code without changing results: one helper runs batches on socket workers for scenarios, profiles, hindcasts, retrospective peels and simulation replicates; one helper saves and restores the random-number state; one helper checks TRUE/FALSE arguments. `retro_model()` reports progress through `message()` so `suppressMessages()` silences it, and `profile_model()` runs its grid fits silently. Core input errors omit the internal call and the survey-index message names the survey index.
 
 ### 未发布 · 简体中文
 
 - 网站教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本文件中。中英文页面采用相同的段落结构。
 - 双语手册（`docs/USER_GUIDE.md`、`ASSESSMENT_WORKFLOWS.md`、`MODEL_VALIDATION.md`、`CASE_STUDIES.md`、`PLOT_STYLE.md`、`SPEED_GUIDE.md`、`ADVANCED_WORKFLOWS.md` 和新增的 `CASES.md`）、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。删除 `MATHEMATICAL_FRAMEWORK.md`、`BOOK_THEORY_NOTES.md` 和 `RELEASE_2.2.x.md`，其内容已在模型原理页和本文件中。
 - `README.md` 精简为入口页：软件包功能、文档链接、安装、十行示例和引用。
+- 示例图：每个绘图函数的参考页，以及 `check_fit()`、`fit_scenarios()`、`profile_model()`、`project_model()`、`hindcast_model()`、`simulate_fit()`、`sim_data()` 和回溯函数的参考条目，都展示示例代码生成的图。`acl_theme_set()` 展示五种色板及各颜色的用途（`docs/figures/palettes/`，由 `scripts/palette_swatches.R` 生成），配色页展示同一张图在每种色板下的效果。
+- 绘图标签对同一个量使用同一名称："Spawning biomass (SSB)"、"Catch numbers (CN)"、"Abundance"；`plot_recruitment()` 的坐标轴标为 "Recruitment"。图谱按新标签重新生成，每张图的说明都写明图中内容、何时使用和图形规律的含义。
+- 整理拟合代码，结果不变：情景、剖面、预测检验、回溯各轮和模拟重复共用一个 socket 批处理函数；随机数状态的保存与恢复、TRUE/FALSE 参数检查各用一个辅助函数。`retro_model()` 改用 `message()` 报告进度，`suppressMessages()` 可以关闭；`profile_model()` 的网格拟合不再打印进度。核心输入错误不再显示内部调用，调查指数的错误信息改为指明调查指数。
 
 # ALSCL 2.3.0
 

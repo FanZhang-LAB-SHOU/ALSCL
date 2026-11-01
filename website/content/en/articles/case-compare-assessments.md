@@ -1,12 +1,8 @@
 # Do ACL and ALSCL give different answers?
 
-## The problem
+On this page you fit ACL and ALSCL to the same synthetic YTF observations and see where the two population structures agree and where they differ. You need the package installed ([Install ALSCL](getting-started.html)); `YTF_example` supplies the tables, the biology and the fixed parameters of both models, so the comparison is conditional on those teaching values. At the end you have comparison tables, four figures and a saved folder.
 
-You want to determine whether changing population structure changes the assessment. Fit ACL and ALSCL to the same synthetic YTF observations while preserving the supplied biological settings. This is a conditional comparison, not a test that one model is universally better.
-
-## Fit the same observations
-
-The bundled data are simulated. Known growth and selected process parameters are fixed by the example configuration; their uncertainty is omitted from the fitted intervals.
+<h2 id="fit">1. Fit both models to the same observations</h2>
 
 ```r
 library(ALSCL)
@@ -17,7 +13,9 @@ a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 ```
 
-## Check whether the fits are interpretable
+Both fits read the input bundle `x`, so they share the tables, `M`, survey catchability and time grid, and each model takes its starting values and `map` from `x$fit_config`; the fixed growth and process values contribute no uncertainty to the intervals. Give both models the same tables and biology, so that every difference below comes from the model structure.
+
+<h2 id="checks">2. Check both fits and compare the fit statistics</h2>
 
 ```r
 diagnose_model(x$data.CatL, a)
@@ -29,17 +27,13 @@ comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-Inspect numerical status and residual patterns before comparing fitted trajectories. Compare likelihood-based criteria only when the observation data and likelihood definitions are comparable. Do not rank a numerically unreliable fit by its objective value alone.
+Read the numerical checks first ([Understand your first fit](first-model.html#checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the lower AIC, given only when both are eligible) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.7. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
 ![Synthetic YTF: residual comparison for ACL and ALSCL](../assets/manual/figures/ytf/compare_residuals.png)
 
-The panels compare residual distributions and patterns by time and length. Annual error bars describe dispersion, not confidence intervals. A model can follow biomass trends while retaining systematic observation residuals.
+The four panels show the residual histogram, the QQ plot, the mean residual by year (error bars: one standard deviation) and the absolute residual by length bin; [Judge whether a fit can be used](diagnostics.html#residuals) explains the patterns.
 
-`compare_models()` checks both fits against the supplied survey table: time labels, length-bin labels and order, positive observed values and their observation mask must agree. A known mismatch is an error. Older saved results without enough metadata remain readable, but automatic preference is withheld. If either fit fails the numerical screen, the function warns and retains raw AIC/BIC and fit statistics for inspection without declaring a preferred model. Read `comparison$fit_diagnostics` and `comparison$comparison` (`data_verified`, `eligible`, `preferred`, `issues`). A passed screen permits a conditional comparison; you must still assess likelihood comparability and biological assumptions.
-
-## Compare the fitted survey observations
-
-Select the same years in both models and inspect the observations that constrain each fit.
+<h2 id="survey">3. Compare the fit to the survey observations</h2>
 
 ```r
 plot_compare_CatL(a, b, x$data.CatL,
@@ -48,9 +42,9 @@ plot_compare_CatL(a, b, x$data.CatL,
 
 ![Synthetic YTF: observed survey indices and fitted medians in four years](../assets/manual/figures/ytf/compare_CatL.png)
 
-Points are observations and curves are fitted medians. Compare the fitted shape, especially sparse larger-length bins, before discussing differences in derived abundance. The figure uses the bundled synthetic fit.
+Points are the observations and curves the fitted medians in the four selected years. Compare the fitted shapes, in particular in the sparse larger length bins, before reading differences in abundance.
 
-## Compare population estimates
+<h2 id="estimates">4. Compare the population estimates</h2>
 
 ```r
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
@@ -58,11 +52,9 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![Conditional population estimates from the synthetic YTF example](../assets/manual/figures/ytf/compare_ts.png)
 
-Look for differences in timing, trend and scale. The displayed figure is a bundled illustration; your installed version and numerical settings determine the new fit. Agreement does not establish identifiability, and this single example cannot establish general superiority.
+Look for differences in timing, trend and scale; `se = TRUE` adds the intervals from the standard errors. Overlapping intervals mean close conditional estimates on this dataset; one dataset gives no general ranking of the two structures.
 
-## Check the scale of fishing mortality
-
-ACL represents fishing mortality by age; ALSCL represents it by length. The coordinates therefore differ, and individual cells in these panels do not correspond one to one.
+<h2 id="mortality">5. Compare fishing mortality</h2>
 
 ```r
 plot_compare_F(a, b)
@@ -70,9 +62,9 @@ plot_compare_F(a, b)
 
 ![Synthetic YTF: age-based and length-based fishing mortality](../assets/manual/figures/ytf/compare_F.png)
 
-Compare time patterns while accounting for the different state variables. If using `plot_compare_annual_F()`, its name does not mean that quarterly values are automatically annualized.
+ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_annual_F()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
 
-## Save a comparison that can be reviewed
+<h2 id="save">6. Save the comparison for review</h2>
 
 ```r
 dir.create("my_model_comparison", showWarnings = FALSE)
@@ -88,15 +80,14 @@ saveRDS(list(inputs = inputs, fit_args = x$fit_args, fit_config = x$fit_config,
 writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 ```
 
-|Observation|What it supports|What it does not establish|
-|---|---|---|
-|Both numerical fits are acceptable|A comparison of fitted outputs is worth examining|That all assumptions are correct|
-|Residual patterns differ|The models explain observed patterns differently|That one is universally better|
-|Biomass or recruitment differs|Assessment conclusions depend on population structure or associated assumptions|Which estimate is true for an empirical stock|
-|Intervals overlap|The conditional estimates are not clearly separated by those intervals|Equivalence or identical management consequences|
+The folder holds the CSV tables, the population figure, an RDS with the inputs, settings, comparison and both reports, and the session information. Report with it the time window, fixed biology, zero treatment and sensitivity to the fixed values.
 
-For your own observations, replace both models’ inputs together and review model-specific parameter names. Do not compare an ACL fit to one dataset with an ALSCL fit to another while attributing all differences to model structure. Report time window, fixed biology, zero handling, numerical diagnostics and sensitivity results.
+<h2 id="next">What next</h2>
 
-## Follow up the differences
-
-Review fixed biological assumptions, residual structure and sensitivity to starting values. Use the [comparison plotting guide](model-comparison.html) for survey fits, mortality and growth; use [retrospective analysis](case-retrospective-bias.html) to examine revisions when terminal observations are removed.
+| What you want to do | Read |
+|---|---|
+| Draw the other comparison figures | [Model comparisons](model-comparison.html) |
+| Examine the residual patterns of one fit | [Judge whether a fit can be used](diagnostics.html) |
+| Remove recent time steps and refit | [Do estimates change when recent data are removed?](case-retrospective-bias.html) |
+| Test the sensitivity to M and the F structure | [How sensitive is the assessment, and what happens under future F?](case-sensitivity-projection.html) |
+| Fit both models to your own tables | [How do I fit my own survey data?](case-fit-survey.html) |

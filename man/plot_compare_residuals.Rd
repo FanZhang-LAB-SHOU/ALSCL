@@ -55,7 +55,7 @@ A single unified color legend is displayed (default: bottom center).
 \details{
 These are in-sample residuals. Known time labels, length labels,
 positive-observation values and missing-data masks must match both fitted
-results. Zeros and NA are excluded as in fitting. Older results without
+results. Zeros and NA are excluded as in fitting. Saved fits without
 stored observation metadata remain usable, but their original-data alignment
 cannot be fully verified. Data frames, matrices and tibbles use the same
 numeric conversion as the fitting functions.

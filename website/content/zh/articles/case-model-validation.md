@@ -1,44 +1,23 @@
-# 模型能重现观测并预测留出时期吗？
+# 模型能重现观测并预测留出时间步吗？
 
-本案例带你从已拟合模型生成调查数据、将重新估计的结果与模拟真值比较，并检验模型能否预测未参与拟合的后续观测。
+本页从两个方面检验一个拟合好的模型。拟合模型模拟从拟合中生成新的调查数据并重新拟合，看估计值能否找回已知值；预测检验用较早的时间步拟合，再把留出的后续时间步的预测与观测对照打分。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）；代码使用模拟的 `YTF_example`，总共约需十五分钟，因为第 3、4 步要多次重新拟合模型。只做预测检验时，运行第 1 步后直接到第 4 步。结束时你会有带真值的模拟数据集、偏差、RMSE 和区间覆盖率表、两个模型相对于持平基准的预测评分，以及保存的拟合结果。
 
-**开始前：**这些函数需要 ALSCL 2.3.0 或更高版本。请安装该版本，或在下载的仓库根目录运行 `pkgload::load_all(".")`。
-
-| 你想检查什么？ | 从哪里开始 |
-|---|---|
-| 相同拟合种群状态下，重复调查会有什么变化？ | [第 2 步：条件模拟](#section-2) |
-| 生成新的种群轨迹后，模型能否估计出对应真值？ | [第 2–3 步：重抽过程并重新拟合](#section-2) |
-| 模型能否预测后续调查观测？ | [第 4 步：留出未来时期](#section-4) |
-
-先在第 1 步读取 `x`。若要做模拟，再拟合 `b` 并继续第 2–3 步；若只检查预测，可从 `x` 直接进入第 4 步。第 5 步解释预测评分与结果保存。
-
-<h2 id="section-1">1. 准备示例并检查拟合</h2>
-
-本案例使用**模拟的** `YTF_example` 数据。先读取一次，得到输入列表 `x`：
+<h2 id="section-1">1. 读取示例并拟合源模型</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-```
-
-若要做模拟，用下面的代码拟合源模型 `b`。若已拟合同一示例，可复用结果并检查诊断。若只检查预测，可以跳过这次拟合，直接进入[第 4 步](#section-4)，由函数自行建立训练拟合。
-
-```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-`numerical_ok` 为 `TRUE` 时继续。若为 `FALSE`，先根据诊断处理问题，再生成模拟；参见[拟合诊断](diagnostics.html)。这一步检查数值拟合，残差与假设敏感性仍需另外评估。
+`x` 是输入列表，`b` 是第 2 步模拟的起点 ALSCL 拟合；第 4 步的预测检验只读取 `x`。`b$diagnostics` 的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](diagnostics.html)修好拟合再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](fitting-controls.html)），在模拟研究中固定 `mean_log_R` 时，把它的值写在 `parameters` 里，使每份模拟数据都用同一个值，而不是各自由数据推出的值。
 
-教学示例通过 `map` 固定了部分生物学参数。正式评估应采用有依据的种群生物学设置，并用[数据与参数检查](assessment-workflows.html)确认哪些参数固定、哪些参与估计。若在模拟实验中固定 `mean_log_R`，请在 `parameters` 中明确提供数值，避免依据每份模拟数据重新计算固定值。
-
-<h2 id="section-2">2. 生成调查观测</h2>
+<h2 id="section-2">2. 从拟合生成调查观测</h2>
 
 <h3 id="conditional-draws">保留拟合的种群状态</h3>
-
-`process = "conditional"` 保持拟合种群不变，只改变观测误差。想先看看相同状态下的重复调查，可以从这里开始。
 
 ```r
 conditional <- simulate_fit(b, nsim = 3, seed = 20261101,
@@ -47,9 +26,9 @@ conditional$metadata
 conditional$simulations[[1]]$observations[1:3, 1:3]
 ```
 
-<h3 id="process-draws">生成新的种群轨迹</h3>
+`process = "conditional"` 保持拟合的种群不变，只重新抽取观测误差，是查看同一状态下重复调查的最短路径。`metadata` 记录模型、过程、种子、原始观测掩码、源拟合的状态和假设 `parameter_uncertainty = "none"`。
 
-`process = "resample"` 在拟合标量参数值下，重新抽取补充量、捕捞死亡率及初始种群偏差。第 3 步用这些重复数据进行重新拟合。
+<h3 id="process-draws">生成新的种群轨迹</h3>
 
 ```r
 resampled <- simulate_fit(b, nsim = 3, seed = 20261101,
@@ -58,33 +37,13 @@ resampled$simulations[[1]]$truth$SSB
 simulated_x <- resampled$simulations[[1]]$x
 ```
 
-`$simulations` 中的每个重复都包含：
-
-| 字段 | 内容 |
-|---|---|
-| `$observations` | 模拟调查数值，行为体长组、列为时间 |
-| `$x` | 可直接交给对应 `run_acl()` 或 `run_alscl()` 的输入列表 |
-| `$truth` | 生成数据时的种群量、标量参数与预期调查指数 |
-
-默认保留原始缺失和零值位置。设置 `preserve_missing = FALSE` 可生成完整的正值调查数据。显式提供种子可复现抽样，函数结束后会恢复调用者的随机数状态。
+`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差：补充量和 F 遵循拟合的平稳 AR(1) 过程（`F_structure = "year"` 时每个时间步一个 F 序列），初始丰度偏差是独立正态抽样，C++ 种群模型把这些抽样变成新的种群。两种模式都围绕拟合的 `Elog_index`、按拟合的观测标准差抽取对数观测，所以 `exp(Elog_index)` 是中位数；标量参数、生物学设置和调查可捕性保持固定，因此两种模式都没有参数不确定性。`$simulations` 的每个元素包含 `observations`（体长组 × 时间步）、`truth`（种群量、标量参数和所用的偏差）和 `x`，后者是可交给 `run_alscl()` 的输入列表，保留 `b` 的拟合配置，但 `output`、`ncores` 和 `silent` 除外，由你在拟合时指定。原始调查的缺失和零值单元保持原样，除非 `preserve_missing = FALSE`；种子让抽样可以重复，结束后恢复调用者的随机数状态。固定或绑定过程偏差的 `map` 会使重抽模式终止，条件抽样仍可使用。若要用有自己补充量假设的操作模型，见[模拟调查数据](simulation.html)。
 
 ![给定状态或重新抽取过程后生成的 ALSCL 调查观测](../assets/manual/figures/workflows/fitted-simulation.png)
 
-图中为若干体长组在两种模式下各生成的三条调查序列。虚线是原拟合的对数观测中位数。条件模拟围绕相同拟合状态变化，过程重抽样还改变种群轨迹。曲线表示单次模拟实现，不是置信带。
+图中为三个体长组在两种模式下各三次抽样；虚线是拟合的对数中位数。条件抽样围绕相同的拟合状态散布，重抽过程的抽样还会移动轨迹。每条曲线是一次抽样，是生成分布的一个例子。
 
-<h3 id="simulation-assumptions">理解模拟假设</h3>
-
-两种模式均使用拟合的对数正态观测模型：对数观测的均值为 `Elog_index`，标准差为拟合观测标准差。因此，`exp(Elog_index)` 是观测中位数。两种模式都保持标量参数固定，不包含参数估计不确定性。
-
-重抽过程时，补充量遵循平稳 AR(1) 过程；F 使用可分离的组别／时间 AR(1) 场，`F_structure = "year"` 时使用单个时间过程。过程标准差为边际标准差，时间创新标准差等于边际标准差乘以 `sqrt(1 - phi^2)`。初始丰度偏差来自独立正态分布。C++ 种群模型利用这些抽样计算种群状态，保留末龄加组和 ALSCL 生长转移。
-
-重抽过程模式不支持固定或绑定随机效应的 map，会明确报错；条件模拟仍可使用。明确失败的源拟合默认被拒绝，`allow_failed_fit = TRUE` 可在警告后用于探索。若需要采用另有补充量假设的独立操作模型，参见[操作模型模拟流程](simulation.html)。
-
-<h2 id="section-3">3. 重新拟合并与真值比较</h2>
-
-本步为三份重抽过程数据分别使用两个初值进行拟合，比生成观测更耗时。若只想检查预测表现，可直接进入[第 4 步](#section-4)。
-
-每个重复都支持直接输入：本例 ALSCL 模拟使用 `run_alscl(s$x)`；来自 ACL 拟合的模拟使用 `run_acl(s$x)`。下面的循环保留报错记录，使失败重复也进入汇总。
+<h2 id="section-3">3. 重新拟合重复数据并与真值比较</h2>
 
 ```r
 replicate_fits <- lapply(resampled$simulations, function(s) {
@@ -98,20 +57,9 @@ performance$replicates
 performance$summary
 ```
 
-先读 `$replicates` 检查拟合状态，再读 `$summary` 中的偏差、RMSE、覆盖率及分母。三个重复用于演示接口；研究偏差或区间覆盖率需要足够的重复，并报告失败拟合数与可用区间数。参数自助法还需明确重抽样设计、重新拟合协议和区间构造方法；`simulate_fit()` 提供数据生成步骤。
+每次重新拟合都是对模拟输入列表的普通拟合，这里用 `run_alscl(s$x)`，来自 ACL 拟合的抽样用 `run_acl(s$x)`，各用两个初值；`tryCatch()` 保留失败重复的报错信息，使它留在汇总中。`summarize_simulations()` 按重复名和年份把拟合与真值对齐，返回 `replicates`（每次拟合的数值检查、耗时和报错）和 `summary`（每个量的失败率、偏差、相对偏差、RMSE 和区间覆盖率及其分母）；偏差和 RMSE 使用通过检查的拟合，覆盖率只使用标准误有限的区间（[模拟调查数据](simulation.html#fit)解释了这些分母）。在记录运行中三次重新拟合都通过检查，每次约需三分钟，60 对数值的覆盖率为产卵生物量 1.0、补充量 0.95（[simulation-performance.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/simulation-performance.csv)）。三个重复只演示流程；研究偏差或覆盖率需要足够多的重复，失败率才有意义，参数自助法还需要写明重新拟合的规程和区间构造方法，`simulate_fit()` 只提供生成数据这一步。磁盘上已有的重复数据可用 `sim_model()` 批量拟合（[模拟调查数据](simulation.html#fit)）。
 
-**如果已有磁盘上的模拟批次：**`sim_model(..., nstarts = 3, ncores = 2)` 每个重复使用三个初值，最多同时运行两个重复。初值和标准误在各工作进程内顺序计算；`train_times` 控制每个初值的优化轮数，各拟合保留 `start_diagnostics`。这一批量流程另见[模拟与批量实验](simulation.html)。
-
-<h2 id="section-4">4. 预测未参与拟合的时期</h2>
-
-`hindcast_model()` 读取 `x` 并自行建立训练拟合，不复用 `b` 或模拟数据。本例中，每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
-
-| 设置 | 在本年度示例中的含义 |
-|---|---|
-| `horizon = 1` | 向前预测一个模型时期 |
-| `nfolds = 2` | 使用最后两个合格的训练终点 |
-| `min_train = 8` | 要求至少保留八个训练时期 |
-| `ncores = 2` | 最多并行运行两个训练折 |
+<h2 id="section-4">4. 预测未参与拟合的时间步</h2>
 
 ```r
 acl_validation <- hindcast_model(x, model = "acl", horizon = 1,
@@ -120,58 +68,48 @@ alscl_validation <- hindcast_model(x, model = "alscl", horizon = 1,
   nfolds = 2, min_train = 8, nstarts = 1, ncores = 2)
 acl_validation$diagnostics
 alscl_validation$diagnostics
-```
-
-逐折查看 `numerical_ok`、`prediction_ok`、警告与报错。失败或数值状态无法确认的训练拟合保留在 `$diagnostics` 中，不产生预测或参与评分。理解这些记录后，再看评分与逐个观测单元的预测：
-
-```r
 acl_validation$scores
 alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
+`hindcast_model()` 就是预测检验：它用截至某个训练起点的时间步拟合每个模型，预测随后 `horizon` 步的调查指数，起点取最后 `nfolds` 个合格起点，每次拟合都从 `x` 和保存的配置重新开始。本例中每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
+
+| 设置 | 在本年度示例中的含义 |
+|---|---|
+| `horizon = 1` | 向前预测一个时间步 |
+| `nfolds = 2` | 使用最后两个合格的训练起点 |
+| `min_train = 8` | 要求至少八个训练时间步 |
+| `ncores = 2` | 最多并行运行两个训练折；一折内的初值依次运行 |
+
+`horizon` 和 `min_train` 都按时间步计（季度数据就是季度）；每一折截短三张表和随时间变化的 map，固定或绑定过程偏差随时间变化的 `map` 会使调用终止。先读 `$diagnostics`：每折一行，含 `origin`、数值检查、`prediction_ok`、警告和报错；失败的折留在表中，但不产生预测和评分。`$predictions` 列出每个留出单元的观测、预测和持平基准的对数指数，以及是否纳入的标志。
+
 ![留出的调查指数与模型预测及持平基准](../assets/manual/figures/workflows/hindcast-predictions.png)
 
-图中比较留出期的对数调查指数、模型预测及持平基准。持平基准将相同体长组最近一次正训练观测保持不变。第 5 步在相同合格观测单元上比较两种预测的误差。
+图中比较三个体长组留出的对数调查指数、模型预测和持平基准，持平基准是同一体长组最近一次正训练观测保持不变。预测规则是：补充量和 F 的过程偏差从训练末期沿拟合的 AR(1) 条件均值延伸（最后一个偏差乘以 phi 的预测期数次方），种群方程推进丰度，拟合的调查可捕性把它变成调查指数；训练末期的体重和成熟比例只在计算生物量时重复使用。这些是沿条件过程路径的代入式点预测，没有未来扰动、参数抽样或区间。固定值和初值的选择都应在不看留出数据的前提下确定，比较模型时使用相同的起点、预测期数和单元。
 
-<h3 id="forecast-design">调整验证设计</h3>
+<h2 id="section-5">5. 读评分并保存分析</h2>
 
-`horizon` 与 `min_train` 都按模型时期计数；季度数据的一步为一季度。函数使用最后 `nfolds` 个合格起点，每折截短三张输入表和支持的时间映射，再使用提供的拟合配置。初值不会取自完整序列的拟合结果。生物学假设、固定值和手动初值都应在不参照留出数据调参的前提下确定；比较模型时，使用相同起点、期距与观测单元。
-
-<h3 id="forecast-assumptions">理解预测规则</h3>
-
-未来对数补充量及对数 F 偏差沿训练末期出发的 AR(1) 条件均值路径延伸。种群方程推进丰度，再用给定调查可捕性转为指数。计算中沿用训练末期的体重与成熟比例，不读取未来实际生物学资料。
-
-这是沿条件对数过程路径的代入式点预测，不抽取未来随机扰动或参数，也不提供预测分布或区间。固定或绑定随时间变化的补充／F 偏差的非恒等 map 会被拒绝，因为其未来约束尚未定义。
-
-<h2 id="section-5">5. 解读评分并保存分析</h2>
-
-<h3 id="prediction-scores">同时查看误差与样本数</h3>
-
-评分使用自然对数调查指数，排除验证数据中的零值与缺失值。模型与持平基准都只对两种预测均可取得的相同单元计算误差。
+<h3 id="prediction-scores">把评分和样本数放在一起读</h3>
 
 | 输出 | 读法 |
 |---|---|
-| `n_positive`、`n_prediction`、`n` | 正的留出观测数、其中有模型预测的数量，以及模型和持平基准共同评分的数量 |
-| `log_RMSE`、`log_MAE` | 对数指数尺度上的预测误差；对这些单元而言，越小表示误差越小 |
-| `naive_log_RMSE`、`naive_log_MAE` | 同一批单元上持平基准的对应误差 |
+| `n_positive`、`n_prediction`、`n` | 正的留出观测数、其中有模型预测的数量，以及模型和持平基准共同评分的单元数 |
+| `log_RMSE`、`log_MAE` | 对数指数尺度上的预测误差；在这些单元上越小越好 |
+| `naive_log_RMSE`、`naive_log_MAE` | 同一批单元上持平基准的误差 |
 | `log_MASE`、`naive_log_MASE`、`n_scaled` | 缩放后的绝对误差，以及训练期尺度可用的单元数 |
 
-MASE 将每个绝对对数误差除以该体长组训练期内相邻正观测的平均绝对对数差。缺失时期不会被压缩。尺度为零或不可用时，该单元不进入缩放评分；没有合格单元时评分为 `NA`。解释结果前应查看 `n_scaled`。
+评分使用自然对数调查指数；留出观测中的零值和缺失值被排除，模型和持平基准的误差使用相同的单元。MASE 把每个绝对对数误差除以该体长组训练期内相邻正观测的平均绝对变化；没有这样一对观测的体长组没有缩放评分，所以读它之前先看 `n_scaled`。在记录运行中，两个模型对 2018-2019 年相同的 46 个正观测评分，四个训练拟合都通过检查（[hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)）：
 
-实际执行本例时，两个模型对相同的 2018–2019 年共 46 个正观测评分。四个训练拟合均通过数值检查，两次比较使用同一个持平基准。
-
-| 预测方法 | 评分观测数 | 对数 RMSE | 对数 MAE | 对数 MASE |
+| 预测 | 评分观测数 | 对数 RMSE | 对数 MAE | 对数 MASE |
 |---|---:|---:|---:|---:|
-| ACL | 46 | 0.0963 | 0.0802 | 0.4213 |
-| ALSCL | 46 | 0.2583 | 0.1951 | 1.0655 |
-| 持平基准 | 46 | 0.1722 | 0.1467 | 0.7356 |
+| ACL | 46 | 0.096 | 0.080 | 0.42 |
+| ALSCL | 46 | 0.26 | 0.20 | 1.07 |
+| 持平基准 | 46 | 0.17 | 0.15 | 0.74 |
 
-在这份模拟数据、教学 map 和两个起点的设计下，ACL 优于持平基准，ALSCL 没有优于基准。即使两者优化均收敛，这个差异也值得研究。两个验证时期不能确立普遍模型排名。三组过程模拟数据的重新拟合也都通过数值检查，但三个重复不足以确定覆盖率。
+在这份模拟数据、教学 map 和两个起点下，ACL 的预测好于持平基准，ALSCL 差于基准，尽管两者的优化都收敛了：这个差异值得追查，而两个检验时间步给不出模型的一般排序。
 
-<h3 id="save-record">保存可移植的拟合结果</h3>
-
-若已完成模拟步骤，可用下面的代码保存源拟合 `b`。保存的评估文件可在新的 R 会话中读取，并在没有活跃 TMB 指针的情况下用于模拟：
+<h3 id="save-record">保存源拟合和检验结果</h3>
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -180,26 +118,19 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-```
-
-正式分析时，将临时路径换成永久文件名，并在拟合结果旁保存模拟对象和真值。第 4 步的验证结果可将两个模型一起保存：
-
-```r
 validation_file <- tempfile(fileext = ".rds")
 saveRDS(list(acl = acl_validation, alscl = alscl_validation),
   validation_file)
 ```
 
-正式分析时，同样将这里的临时路径换成永久文件名。评估配方保留可取得的源码提交、核心／R 源码摘要及运行环境。源码 HEAD 本身不能证明工作区没有修改；`refit_model()` 会提示已知实现或依赖变化，旧结果无法恢复的来源保持未知。
+`save_assessment()` 写出没有活动 TMB 对象的保存的拟合结果，`simulate_fit()` 接受 `read_assessment()` 读回的对象，所以新会话可以直接模拟而无需重新拟合；相同的种子给出相同的抽样。`saved$recipe$implementation` 记录软件包版本、源码提交和模型源码的摘要，`refit_model()` 会把它们与当前安装比较，不同时发出警告。检验结果是普通列表，`saveRDS()` 可以把两个模型一起保存。把临时路径换成永久文件，并把模拟对象和真值放在拟合结果旁边。
 
-<h3 id="next-steps">选择下一项检查</h3>
+<h2 id="next">下一步</h2>
 
-用[残差诊断](diagnostics.html)查看观测模式，用[回溯分析](retrospectives.html)检查历史估计的修订，或用[敏感性场景](case-sensitivity-projection.html)检查给定假设的影响。这些检查回答的问题与留出预测不同。
-
-要重新生成本案例的图和 CSV 结果，请在下载的仓库根目录运行下面的代码。这会重新执行完整拟合流程；绘图辅助程序在保存前逐面板检查网格线。
-
-```r
-pkgload::load_all(".")
-source("scripts/model_validation.R")
-run_model_validation_guide()
-```
+| 想做什么 | 阅读 |
+|---|---|
+| 检查源拟合的残差规律 | [判断拟合是否可用](diagnostics.html) |
+| 看去掉近期时间步后估计如何变化 | [移除近期数据后，估计结果会怎样变化？](case-retrospective-bias.html) |
+| 检验对固定值的敏感性 | [评估对假设有多敏感，未来 F 情景会怎样改变结果？](case-sensitivity-projection.html) |
+| 批量拟合多次模拟重复 | [模拟调查数据](simulation.html#fit) |
+| 重新生成本页的图和表 | 在仓库根目录运行 `pkgload::load_all("."); source("scripts/model_validation.R"); run_model_validation_guide()` |

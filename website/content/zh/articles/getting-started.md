@@ -1,6 +1,6 @@
 # 安装 ALSCL 并完成第一次拟合
 
-本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；现在还不需要自己的调查数据。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
+本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
 
 | 步骤 | 完成后得到什么 |
 |---|---|
@@ -55,7 +55,9 @@ diagnose_model(x$data.CatL, a)
 
 `run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟；拟合本身约二十秒。`silent = TRUE` 不显示进度信息。
 
-`diagnose_model()` 打印这次拟合的数值检查：优化器收敛码（0 表示正常结束）、解处的最大绝对梯度（应小于 0.001）、Hessian 是否正定（`TRUE` 表示可以计算标准误）、是否有参数落在边界上（`FALSE`）。`Numerical screen: TRUE` 一行是这些检查的汇总，同一结果也保存在 `a$diagnostics$numerical_ok`。若为 `FALSE`，`a$diagnostics$issues` 会给出未通过的项目，[理解第一次拟合](first-model.html)解释每项检查的含义和处理办法。
+`diagnose_model()` 打印这次拟合的数值检查：优化器收敛码（0 表示正常结束）、解处的最大绝对梯度（应小于 0.001）、Hessian 是否正定（`TRUE` 表示可以计算标准误）、是否有参数落在边界上（`FALSE`）。打印的 `Numerical checks: TRUE` 一行是这些检查的汇总，同一结果也保存在 `a$diagnostics$numerical_ok`。若为 `FALSE`，`a$diagnostics$issues` 会给出未通过的项目，[理解第一次拟合](first-model.html)解释每项检查的含义和处理办法。
+
+本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
 
 <h2 id="next">下一步</h2>
 
@@ -64,5 +66,3 @@ diagnose_model(x$data.CatL, a)
 | 了解拟合结果包含什么、如何判断它可用 | [理解第一次拟合](first-model.html) |
 | 拟合自己的调查数据 | [准备调查数据](data-preparation.html) |
 | 解决安装或编译问题 | [复现与故障处理](reproducibility.html) |
-
-本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。

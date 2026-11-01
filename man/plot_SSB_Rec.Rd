@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_SSB_Rec.R
 \name{plot_SSB_Rec}
 \alias{plot_SSB_Rec}
-\title{Plot the Relationship between Spawning Stock Biomass (SSB) and Recruitment (Rec)}
+\title{Plot spawning biomass against recruitment}
 \usage{
 plot_SSB_Rec(
   model_result,
@@ -71,8 +71,8 @@ or defaults to 1 year when no time metadata are available.}
 A ggplot object representing the scatter plot of SSB versus Recruitment.
 }
 \description{
-This function takes the model result as an input and creates a scatter plot to visualize the relationship between
-Spawning Stock Biomass (SSB) and Recruitment (Rec). These metrics are fundamental in the context of fishery stock assessment.
+Scatter plot of spawning biomass against the recruitment it
+produced, paired by the recruitment age.
 }
 \examples{
 \dontrun{

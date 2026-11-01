@@ -88,11 +88,11 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 The code is the same; four settings change their meaning. `growth_step = 0.25` makes each column one quarter, so the time labels must be spaced 0.25 apart. `M` and fishing mortality are per time step: an annual M of 0.8 is entered as `M = 0.2`, while `vbk` stays per year. `rec.age` is in years, so 0.25 means recruitment at one quarter, and `nage = 20` counts quarter-age classes from 0.25 to 5 years, the last one the plus group; `t0` must stay below `rec.age`.
 
-`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks; ALSCL takes about two minutes. If the labels are not spaced by `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
+`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks; ALSCL takes about two minutes. If the label spacing differs from `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
 
 ![Tuna synthetic survey](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
 
-The heat map now has four columns per year. The index is largest at 30-70 cm and smallest in the 122.5 cm bin, which the growth curve reaches only after age 4.
+The heat map has four columns per year. The index is largest at 30-70 cm and smallest in the 122.5 cm bin, which the growth curve reaches only after age 4.
 
 ![Tuna growth, maturity and survey catchability](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_biology.png?raw=true)
 
@@ -100,7 +100,7 @@ Growth runs from 13 cm at age 0.25 to 129 cm at age 5 (`vbk` 0.38 per year); mat
 
 ![Tuna generating truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-Recruitment is now per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case was generated with length-based dynamics, the structure ALSCL assumes; one replicate cannot rank the two models.
+Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case was generated with length-based dynamics, the structure ALSCL assumes; one replicate cannot rank the two models.
 
 <h2 id="simulation">4. Extend to a simulation study</h2>
 
@@ -123,4 +123,4 @@ For a study, raise `iter_range` for more replicates, vary one setting at a time 
 | Read the numerical checks, estimates and residuals of a fit | [Understand your first fit](first-model.html) |
 | Decide which parameters to fix or estimate | [Fitting controls](fitting-controls.html) |
 | Generate survey data and fit replicates in batch | [Simulation](simulation.html) |
-| Simulate from a fitted model or predict held-out years | [Model validation](case-model-validation.html) |
+| Simulate from a fitted model or predict withheld years | [Model validation](case-model-validation.html) |

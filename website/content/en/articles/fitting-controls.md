@@ -2,7 +2,7 @@
 
 On this page you decide which parameters the models estimate, which are fixed, how fishing mortality is structured, and how the optimizer runs. You need an input bundle `x` ([Prepare your survey data](data-preparation.html)) and you should have read [Understand your first fit](first-model.html), whose checks tell you whether a setting needs changing.
 
-The settings fall into three groups: the biology and data settings in `x$fit_args`, which [Prepare your survey data](data-preparation.html) explains; the model configuration (starting values, bounds, `map`, F structure), chosen separately for ACL and ALSCL; and the optimizer settings (starts, workers, passes), which change how the answer is found but not the model.
+The settings fall into three groups: the biology and data settings in `x$fit_args`, which [Prepare your survey data](data-preparation.html) explains; the model configuration (starting values, bounds, `map`, F structure), chosen separately for ACL and ALSCL; and the optimizer settings (starts, workers, passes), which change how the answer is found and leave the model unchanged.
 
 <h2 id="settings">1. Know the settings and where they live</h2>
 
@@ -19,7 +19,7 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 | `control` | `nlminb()` controls such as `iter.max` | The call |
 | `silent`, `output` | Hide progress messages; write diagnostics and plots to `output/` | The call |
 
-Values in the call override the stored ones for that call only. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcasts) should use it; step 7 shows how.
+Values in the call override the stored ones for that call only. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcast validation) should use it; step 7 shows how.
 
 <h2 id="parameters">2. See which parameters are estimated</h2>
 
@@ -29,7 +29,7 @@ plan[, c("parameter", "kind", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 ```
 
-`inspect_parameters()` lists the scalar parameters of the chosen model with their starting value on the natural scale and their status: `free` (estimated), `fixed` or `tied`. `map_source` tells whether a fixed status comes from the model default or from your `map`. Run it after every change below; it does not compile or fit anything.
+`inspect_parameters()` lists the scalar parameters of the chosen model with their starting value on the natural scale and their status: `free` (estimated), `fixed` or `tied`. `map_source` tells whether a fixed status comes from the model default or from your `map`. Run it after every change below; it compiles and fits nothing.
 
 | Meaning | ACL parameter | ALSCL parameter |
 |---|---|---|
@@ -41,7 +41,7 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 | Correlation of recruitment across time | `logit_log_R` | `logit_log_R` |
 | Initial total mortality; survey observation SD | `log_init_Z`, `log_std_index` | `log_init_Z`, `log_sigma_index` |
 
-By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more (the growth parameters and two process SDs) because its teaching configuration was chosen to run quickly; your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects created from the data dimensions and are always estimated.
+By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more (the growth parameters and two process SDs) so that its teaching configuration runs quickly; your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects created from the data dimensions and are always estimated.
 
 <h2 id="map">3. Fix or release parameters with map</h2>
 
@@ -54,7 +54,7 @@ extract_parameters(a_map)
 x$fit_config$acl$map <- my_map
 ```
 
-`factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Fix a parameter when the data cannot inform it (a Hessian that is not positive definite or a correlation estimated near 1 are the usual signs) or when an external study gives a better value than the fit could; record the source of every fixed value with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`.
+`factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Fix a parameter when the data leave it undetermined (a Hessian that is not positive definite or a correlation estimated near 1 are the usual signs) or when an external study gives a better value than the fit could; record the source of every fixed value with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`.
 
 <h2 id="starts">4. Set starting values and bounds</h2>
 
@@ -71,7 +71,7 @@ Starting values and bounds are entered on the optimizer scale: `log_Linf = log(6
 
 <h2 id="f-structure">5. Choose the F structure</h2>
 
-With the default `F_structure = "group_year"`, fishing mortality has one value for every age (ACL) or length bin (ALSCL) in every time step, with deviations correlated across time and across ages or lengths. With `F_structure = "year"`, all ages or lengths share one F in each time step: one value per quarter for quarterly data. Choose `"year"` when the fishery acts on all sizes alike, or when the data cannot separate age- or length-specific F, which shows as a correlation across groups estimated near 1 or a Hessian that is not positive definite.
+With the default `F_structure = "group_year"`, fishing mortality has one value for every age (ACL) or length bin (ALSCL) in every time step, with deviations correlated across time and across ages or lengths. With `F_structure = "year"`, all ages or lengths share one F in each time step: one value per quarter for quarterly data. Choose `"year"` when the fishery acts on all sizes alike, or when age- or length-specific F is undetermined by the data, which shows as a correlation across groups estimated near 1 or a Hessian that is not positive definite.
 
 ```r
 a_year <- run_acl(x, F_structure = "year", silent = TRUE)
@@ -90,7 +90,7 @@ a4$start_diagnostics
 a4$refinement$status
 ```
 
-`nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the fit with the lowest objective is kept. `start_diagnostics` lists every start with its objective and convergence code; starts that end at different objectives mean the surface has several minima and the best one deserves a closer look. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
+`nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the lowest objective is kept. `start_diagnostics` lists every start with its objective and convergence code; starts that end at different objectives mean the surface has several minima and the best one deserves a closer look. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
 
 <h2 id="record">7. Record your choices</h2>
 

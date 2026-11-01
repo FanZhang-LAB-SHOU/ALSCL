@@ -92,7 +92,7 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![金枪鱼模拟调查](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
 
-热图现在每年有四列。指数在 30-70 cm 最大，在 122.5 cm 组最小，生长曲线要到 4 龄以后才到达这个体长。
+热图每年有四列。指数在 30-70 cm 最大，在 122.5 cm 组最小，生长曲线要到 4 龄以后才到达这个体长。
 
 ![金枪鱼的生长、成熟与调查可捕性](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_biology.png?raw=true)
 
@@ -100,7 +100,7 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![金枪鱼的生成真值与条件估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-补充量现在按季度计。ALSCL 的生物量和产卵生物量跟随真值；ACL 的生物量低于真值，2000-2001 年的产卵生物量起点过低，并高估了多数季度的补充量。该案例由体长型动态生成，这正是 ALSCL 假设的结构；单个重复不能给两个模型排名。
+补充量按季度计。ALSCL 的生物量和产卵生物量跟随真值；ACL 的生物量低于真值，2000-2001 年的产卵生物量起点过低，并高估了多数季度的补充量。该案例由体长型动态生成，这正是 ALSCL 假设的结构；单个重复不能给两个模型排名。
 
 <h2 id="simulation">4. 扩展为模拟实验</h2>
 

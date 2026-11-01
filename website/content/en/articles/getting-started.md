@@ -1,6 +1,6 @@
 # Install ALSCL and run a first fit
 
-On this page you install the package, confirm that it loads, and fit one model to the bundled example. You need R 4.1 or later and an internet connection; you do not need survey data of your own yet. Allow about fifteen minutes, most of it for the one-time compilation in step 4.
+On this page you install the package, confirm that it loads, and fit one model to the bundled example. You need R 4.1 or later and an internet connection; the example data are included. Allow about fifteen minutes, most of it for the one-time compilation in step 4.
 
 | Step | What you will have afterwards |
 |---|---|
@@ -55,7 +55,9 @@ diagnose_model(x$data.CatL, a)
 
 `run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about twenty seconds. `silent = TRUE` hides the progress messages.
 
-`diagnose_model()` prints the numerical checks of the fit: the optimizer convergence code (0 means it finished normally), the maximum absolute gradient at the solution (below 0.001), whether the Hessian is positive definite (`TRUE`, so standard errors can be computed) and whether a parameter sits on a bound (`FALSE`). The line `Numerical screen: TRUE` summarizes them; the same value is stored in `a$diagnostics$numerical_ok`. If it is `FALSE`, `a$diagnostics$issues` names the failed check, and [Understand your first fit](first-model.html) explains each check and what to do about it.
+`diagnose_model()` prints the numerical checks of the fit: the optimizer convergence code (0 means it finished normally), the maximum absolute gradient at the solution (below 0.001), whether the Hessian is positive definite (`TRUE`, so standard errors can be computed) and whether a parameter sits on a bound (`FALSE`). The line `Numerical checks: TRUE` summarizes the checks; the same value is stored in `a$diagnostics$numerical_ok`. If it is `FALSE`, `a$diagnostics$issues` names the failed check, and [Understand your first fit](first-model.html) explains each check and what to do about it.
+
+Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 
 <h2 id="next">What next</h2>
 
@@ -64,5 +66,3 @@ diagnose_model(x$data.CatL, a)
 | See what the fitted object contains and how to judge it | [Understand your first fit](first-model.html) |
 | Fit your own survey tables | [Prepare your survey data](data-preparation.html) |
 | Fix an installation or compilation problem | [Reproducibility and troubleshooting](reproducibility.html) |
-
-Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.

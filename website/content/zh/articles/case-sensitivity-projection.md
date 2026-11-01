@@ -1,12 +1,8 @@
 # 评估对假设有多敏感，未来 F 情景会怎样改变结果？
 
-## 要回答的问题
+本页对同一个拟合好的评估（模拟 YTF 示例）提出三个问题：固定的自然死亡率或 F 结构改变时估计值移动多少，数据对一个被估计的参数能确定到什么程度，以及确定性的未来 F 情景意味着什么。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）；代码从第 1 步的拟合开始按顺序运行，需要几分钟。结束时你会有情景表和图、一个参数剖面和两个投影，各自带有数值检查。
 
-改变外部输入 M、改变 F 结构、指定未来 F，回答的是不同问题。本案例对同一份模拟 YTF 数据分别检查：相同观测下的假设敏感性、自由 F 参数的信息，以及条件未来轨迹。下列代码完整，可按顺序运行。
-
-内置生物学输入与固定参数 map 是教学假设。使用真实种群时，按[评估工作流](assessment-workflows.html)整理三张表，并提供独立依据的生物学输入；不要只为促使收敛而复制 YTF 固定规则。
-
-## 拟合同一份数据
+<h2 id="fit">1. 拟合参考模型</h2>
 
 ```r
 library(ALSCL)
@@ -23,21 +19,9 @@ summary(a)
 summary(b)
 ```
 
-## 区分假设敏感性与参数剖面
+ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合约需二十秒；ALSCL 拟合 `b` 用于投影。`summary()` 打印时间步、F 结构、数值检查（`numerical_ok` 应为 `TRUE`）和自然尺度上的标量参数。`YTF_example` 把生长、体长 CV、两个过程标准差和补充量相关系数固定在教学值上，`M` 为每个年度时间步 0.20，F 结构为默认的 `F_structure = "group_year"`；你自己的输入列表需要有依据的生物学设置（[选择拟合设置](fitting-controls.html)）。若检查未通过，先修好拟合再做任何情景（[判断拟合是否可用](diagnostics.html)）。
 
-`fit_scenarios()` 保持相同三张观测输入表，只应用具名设置变化。这里使用 ACL 缩短示例运行时间；改为 `model = "alscl"` 即选取相应 ALSCL 设置，参数名和 map 必须与模型匹配。M = 0.15 只是围绕 YTF 输入的示例扰动，不是生物学建议。
-
-三套 ACL 配置使用相同调查表、生长输入、提供的初值和 map，仅改变下表列出的设置。`YTF_example` 的 M 为每年度时间步 0.20，默认 F 结构为 `"group_year"`。
-
-| 情景 ID | 每时间步 M | F 结构 | 相对参考配置的改变 |
-|---|---:|---|---|
-| `reference` | 0.20 | `group_year`：年龄 × 时间 | 无 |
-| `low_M` | 0.15 | `group_year`：年龄 × 时间 | 外部提供的自然死亡率 |
-| `shared_F` | 0.20 | `year`：每时间步内各年龄共用 F | F 结构；不使用的年龄相关参数变为 inactive |
-
-季度数据的 `"year"` 仍表示每模型时间步一个 F，即每季度一个，并非每日历年一个。后面的两套 ALSCL 未来情景另比较每时间步 F = 0.10 和 F = 0.25，补充量、体重、成熟比例及 M 均相同。
-
-比较轨迹前先检查 `status` 的每一行，包括警告和失败拟合；函数不自动排名。`F_summary = "mean"` 是未加权组间均值，`"apical"` 是最大值，两者含义不同，也都不把季度 F 转为年率。`ncores` 并行运行独立情景；内层拟合和标准误使用单个 worker，并保留指定的 `nstarts`。列表覆盖整体替换，map 也不逐项深度合并。
+<h2 id="scenarios">2. 拟合敏感性情景</h2>
 
 ```r
 scenarios <- fit_scenarios(x, list(
@@ -55,13 +39,21 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
+`fit_scenarios()` 在模型照原样使用的输入发生具名改变时，重新拟合同样的三张表：每个情景是一个替换 `x` 设置的参数列表，空列表是参考情景，`map` 这样的列表会整体替换保存的列表。`low_M` 把每个时间步的自然死亡率从 0.20 降到 0.15；`shared_F` 设置 `F_structure = "year"`，每个时间步所有年龄共用一个 F（季度数据就是每季度一个），年龄间的相关系数随之变为 inactive。`ncores` 在独立的工作进程上运行各情景，每次拟合使用一个工作进程和输入列表或调用中的 `nstarts`（两者都未设置时用一个初值）；`F_summary = "mean"` 对每个时间步的各年龄取 F 的均值，`"apical"` 取最大值。先读 `scenarios$status`：每个情景一行，含耗时、警告、报错和数值检查。未通过检查的情景保留在 `scenarios$estimates` 中并标为 `numerical_ok = FALSE`，报错终止的情景没有估计值。
+
 ![ACL 对输入 M 与共享 F 结构的敏感性](../assets/manual/figures/workflows/scenario-SSB.png)
 
-## 对实际参与估计的参数做剖面
+在记录运行中三个拟合都通过检查（[scenario-status.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-status.csv)），最后一个时间步（2019 年）的结果如下（[scenario-estimates.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-estimates.csv)）：
 
-参数剖面将一个自由标量依次固定在网格值上，重新估计其他自由标量与随机效应。YTF 示例固定了 `log_Linf`，因此这里不能对它做剖面。`mean_log_F` 参与估计，下面三个点演示自然基准尺度的接口；有科学意义的剖面通常需要更密、理由明确的范围及各点成功拟合。
+| 情景 | 2019 年产卵生物量 | 每时间步平均 F |
+|---|---:|---:|
+| `reference` | 75.7 | 0.318 |
+| `low_M` | 75.6 | 0.369 |
+| `shared_F` | 74.3 | 0.331 |
 
-`delta_nll` 相对于原始拟合计算。负值表示网格拟合找到更低的目标函数，应重新检查原始最优点；不会截成零。失败点保留。函数不自动推导置信区间或似然比阈值。M 和调查可捕性等外部输入应使用敏感性情景，而不是标量参数剖面。
+较低的 M 抬高了估计的 F，而末期产卵生物量几乎没变，三条曲线几乎重合；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
+
+<h2 id="profile">3. 对一个被估计的参数做剖面</h2>
 
 ```r
 profile_values <- exp(a$opt$par[["mean_log_F"]]) * c(0.9, 1, 1.1)
@@ -74,15 +66,13 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
+`profile_model()` 把一个被估计的标量参数依次固定在网格值上，重新拟合其余标量参数和过程偏差；参数名必须在 `names(a$opt$par)` 中，所以 `YTF_example` 中固定的 `log_Linf` 会报错终止，而 `mean_log_F` 是被估计的。`scale = "natural"` 时网格在自然尺度上，这里是拟合基准值的 0.9、1 和 1.1 倍，并且必须在优化器边界之内。`profile_F$grid` 给出每个值及其目标函数、`delta_nll`（相对于原始拟合的负对数似然增量）和该次重新拟合的数值检查；失败的点保留可见。负的 `delta_nll` 会保留并触发警告，因为网格拟合找到了比原始拟合更好的最优点，原始拟合随后需要更多初值。`M` 和调查可捕性这类固定输入属于第 2 步。
+
 ![自由 F 过程基准水平的示例剖面](../assets/manual/figures/workflows/profile-F.png)
 
-## 投影假设明确的未来情景
+在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.281、0.312 和 0.344 三个点的增量分别为 0.93、约 0（-8e-11，舍入误差）和 0.76，全部通过检查：基准 F 改变 10% 要付出 0.8 到 0.9 个单位。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
 
-`project_model()` 根据提供的未来 F、补充量、体重和成熟比例推进保存的种群状态。下面**明确选择**将末次观测的体重／成熟比例及末期拟合补充量延续四期；这是示例假设，不是函数自动决定的默认值。生长保持拟合的年龄—体长键，ALSCL 还保持拟合的生长转移矩阵。未来 M 默认使用原始记录输入，也可显式指定。
-
-状态、B 和 SSB 表示每个未来时期的**期初**。第一未来状态先经历末期拟合 F 与原始 M，再加入第一期补充；未来 F[t] 影响当期渔获及存活到 t+1 的数量。因此两个情景的第一期未来 SSB 相同，但第一期渔获不同，后续 SSB 才出现响应。M 和 F 均为每个模型时间步的瞬时率，季度模型也一样。
-
-这只是确定性的条件情景，没有不确定性区间、估计的亲体补充关系、MSY 或 TAC 计算。结果用于检视明确假设，不能表示确定的预测或管理建议。
+<h2 id="project">4. 投影未来 F 情景</h2>
 
 ```r
 h <- 4L
@@ -107,29 +97,17 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
+`project_model()` 在你提供的数值下把最后拟合的种群推进到未来时间步：`F`（每步一个值、所有组共用，或组 × 步矩阵）、`recruitment`（其长度决定投影期数），以及每个未来步一列的完整 `weight` 和 `maturity` 矩阵；`M` 保持拟合值，除非你另行传入。函数不会替你延续任何值：代码把最后观测的体重和成熟比例列以及末期拟合的补充量重复四步，这是要在报告中写明的选择。`summary` 的每一行描述一个时间步的期初：第一个未来状态是最后拟合的种群经过末期拟合的 F 和 M 存活后，加上第一个提供的补充量；未来的 `F[t]` 决定第 `t` 步的渔获和进入第 `t + 1` 步的存活，所以两个情景的第一个未来产卵生物量相同，从第二步起才分开，但第一步的渔获已经不同。投影是确定性的、以拟合为条件的，没有区间、亲体补充关系或参考点；`low_F$assumptions` 记录每一项选择。未通过数值检查的拟合会被拒绝，除非 `allow_failed_fit = TRUE`，此时会记录这一覆盖。
+
 ![显式保持未来生物学输入的 ALSCL 条件 SSB 情景](../assets/manual/figures/workflows/projection-SSB.png)
 
-## 本次实际运行显示什么
+在记录运行（[projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)）中，两个情景 2020 年都从产卵生物量 65.0 开始；2023 年在 F = 0.10 下为 115，在 F = 0.25 下为 73.3，单位由示例的体重决定，并以保持不变的补充量和生物学设置为条件。
 
-记录中的基准、低 M、共享 F 三个 ACL 拟合，以及三个剖面点，都通过数值检查。最后拟合时期（2019 年）的结果为：
+<h2 id="next">下一步</h2>
 
-| 情景 | SSB | 每模型时间步的平均 F |
-|---|---:|---:|
-| 基准 | 75.655 | 0.3184 |
-| M = 0.15 | 75.579 | 0.3694 |
-| 共享 F | 74.292 | 0.3308 |
-
-本例降低输入 M 后，估计 F 增加，末期 SSB 变化很小。这只是同一模拟数据及其条件生物假设下的敏感性，不是一般可辨识结论，也不证明哪个结构更优。表中 F 是未加权的年龄组均值。
-
-F 基准水平的剖面点约为 0.2811、0.3123、0.3436，负对数似然变化分别为 0.9321、接近零、0.7623。中点约 −7.7e−11 的微小负值是数值舍入差异。三个点只演示方法，并不定义置信区间。
-
-两个 ALSCL 投影在 2020 年均从 SSB 65.032 开始，因为第一未来状态由末期拟合死亡率产生。在显式固定的未来补充量和生物学输入下，2023 年 SSB 在 F = 0.10 时为 114.631，在 F = 0.25 时为 73.311；首期渔获已经不同。单位由示例重量决定，不能把这些数值当作真实种群预测。
-
-完整记录表：[情景状态](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-status.csv)、[情景估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-estimates.csv)、[参数剖面](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)、[未来投影](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)。
-
-## 保留诊断与假设
-
-逐个检查警告、错误、梯度、Hessian 和边界。通过数值检查不代表残差没有结构，也不证明模型适当。[完整工作流](assessment-workflows.html)还介绍条件残差诊断、可移植记录及模拟失败率／覆盖率汇总。
-
-
-明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。
+| 想做什么 | 阅读 |
+|---|---|
+| 把情景、剖面和投影记录与拟合一起保存 | [评估工作流](assessment-workflows.html#save-workflow) |
+| 在相信投影之前检查残差规律 | [判断拟合是否可用](diagnostics.html) |
+| 去掉近期时间步后重新拟合 | [移除近期数据后，估计结果会怎样变化？](case-retrospective-bias.html) |
+| 从拟合模拟并给留出时间步的预测打分 | [模型能重现观测并预测留出时间步吗？](case-model-validation.html) |

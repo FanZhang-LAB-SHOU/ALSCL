@@ -41,9 +41,9 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 
 `sessionInfo()` adds the operating system, the BLAS and LAPACK libraries and the loaded packages; keep its output next to the saved file. A fitted-model simulation also depends on its seed, which `simulate_fit()` records in `metadata$seed`.
 
-当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或旧拟合没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
+当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或拟合结果没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
 
-`save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when an older fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
+`save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when a fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
 
 <a id="reproducibility-reproduce"></a>
 
@@ -80,7 +80,7 @@ a4$workers
 
 `ncores` 决定一个函数启动多少个 socket 进程，即新的 R 进程。每个进程运行完整的初值或完整的拟合，因此结果与顺序运行相同。
 
-`ncores` sets how many socket workers, new R processes, a function starts. Each worker runs whole starts or whole fits, so the results are the same as in a sequential run.
+`ncores` sets how many socket workers, new R processes, a function starts. Each worker runs whole starts or whole fits, so the results equal a sequential run.
 
 | 函数 / Function | 分配给进程的工作 / What runs on the workers | 每次拟合的初值个数 / Starts in each fit |
 |---|---|---|
@@ -161,12 +161,12 @@ Error messages are quoted as the package prints them.
 | 调查表中有零 / Zeros in the survey table | 零按缺失处理（`zero_action = "missing"`） / Zeros count as missing (`zero_action = "missing"`) | 拟合前判断零是否真实 / Decide whether a zero is real before fitting |
 | 体重表或成熟比例表有空白单元格 / Blank cells in the weight or maturity table | 两张表必须完整 / Both tables must be complete | 补全并记录来源 / Fill them and record the source |
 | 收敛码不是 0、梯度大或 Hessian 不正定 / Convergence code not 0, large gradient or Hessian not positive definite | 优化器提前停止，或某个参数得不到信息 / The optimizer stopped early or a parameter is not informed | 见[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks) / See [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks) |
-| 季度 F 看起来偏小 / Quarterly F looks small | F 按时间步计，从不年化 / F is per time step, never annualized | 按时间步报告 F / Report F per time step |
+| 季度 F 看起来偏小 / Quarterly F looks small | F 在所有输出中都按时间步计 / Every output gives F per time step | 按时间步报告 F / Report F per time step |
 | 对 ACL 拟合调用 `plot_fishing_mortality(a, type = "length")` 给出警告 / `plot_fishing_mortality(a, type = "length")` warns on an ACL fit | ACL 没有按体长的 F；`"length"` 等同 `"age"` / ACL has no F by length; `"length"` means `"age"` | 用 `type = "age"`，或拟合 ALSCL / Use `type = "age"` or fit ALSCL |
 | `plot_VB()` 只画出一条线，没有区间 / `plot_VB()` draws a line without an interval | 生长参数被固定 / The growth parameters are fixed | 属于预期；用 `map` 释放 / Expected; release them with `map` |
 | 第一次拟合报错，信息中出现 `TMB::compile`、`make`、`g++` 或 `clang` / The first fit names `TMB::compile`, `make`, `g++` or `clang` | 没有编译器，或 Rtools 对应另一个 R 版本 / No compiler, or Rtools for another R version | 安装编译器（第 4 步），重启 R / Install the compiler (step 4), restart R |
 | `Install RcppEigen to compile model templates` 或 `Model sources are missing` / `Install RcppEigen to compile model templates` or `Model sources are missing` | 缺少 RcppEigen，或安装损坏 / RcppEigen absent, or a damaged installation | 安装 RcppEigen 或重新安装 ALSCL / Install RcppEigen or reinstall ALSCL |
-| `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中较旧的副本 / A worker found an older copy in another library | 只保留一个安装，或用 `ncores = 1` / Keep one installation, or use `ncores = 1` |
+| `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中的副本 / A worker found another copy in a different library | 只保留一个安装，或用 `ncores = 1` / Keep one installation, or use `ncores = 1` |
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` / Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | 新的 R 进程无法启动 / The new R processes could not start | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` / Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
 | 回溯分析后 `rho_text$Rho` 是 `NA` / `rho_text$Rho` is `NA` after a retrospective analysis | 某次拟合未通过数值检查 / A fit failed the numerical checks | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 / Read `fit_diagnostics` and `rho_by_peel`, fix that fit |
 | `The current implementation differs from the saved assessment` | 保存之后软件包、TMB 或模型源文件变了 / Package, TMB or model source changed since the save | 预期末位有差异，或安装记录的版本 / Expect last-digit differences, or install the recorded versions |
@@ -181,7 +181,7 @@ Error messages are quoted as the package prints them.
 | 检验估计值对固定值的敏感性 / Test the sensitivity of the estimates to the fixed values | [判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity) / [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity) |
 | 选择速度设置并检查本会话的实际情况 / Choose the speed settings and check what your session does | [速度设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) / [Speed settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) |
 | 运行回溯分析并解读 Mohn's rho / Run a retrospective analysis and read Mohn's rho | [回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospective) / [Retrospectives](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospective) |
-| 从拟合模型模拟，或检验对留出时期的预测 / Simulate from the fit or test predictions of withheld periods | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
+| 从拟合模型模拟，或检验对留出时间步的预测 / Simulate from the fit or test predictions of withheld time steps | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
 | 比较情景、做参数剖面和投影 / Compare scenarios, profile a parameter, project forward | [评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) / [Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) |
 
 ---

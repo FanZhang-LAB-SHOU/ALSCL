@@ -1,5 +1,5 @@
 utils::globalVariables(c("LengthGroup", "Count"))
-#' @title Plot Spawning Stock Biomass (SSB), SBL, or SBA Over Years
+#' @title Plot spawning biomass (SSB), SBL or SBA over time
 #'
 #' @description Plots SSB, spawning biomass at length (SBL), or spawning biomass
 #' at age (SBA) from ACL or ALSCL model results.
@@ -34,7 +34,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
                      se = FALSE, se_color = NULL, se_alpha = NULL,
                      type = c("SSB", "SBL", "SBA"), facet_ncol = NULL, facet_scales = "free",
                      return_data = FALSE) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")

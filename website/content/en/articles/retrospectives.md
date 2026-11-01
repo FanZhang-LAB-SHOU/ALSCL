@@ -51,7 +51,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3)
 
 ![ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
-Peeled lines that lie on the full fit for most of the series and split only in the last years, as in both figures, show that adding observations revises the recent estimates only. When rho is `NA` the panel reads `rho unavailable: check diagnostics`; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the period colors (`palette`, `colors`) follow [Colors and export](plot-customization.html); every argument is in the [plot_retro reference](../reference/plot_retro.html).
+Peeled lines that lie on the full fit for most of the series and split only in the last years, as in both figures, show that adding observations revises the recent estimates only. When rho is `NA` the panel reads `rho unavailable: check diagnostics`; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](plot-customization.html); every argument is in the [plot_retro reference](../reference/plot_retro.html).
 
 <h2 id="rho">4. Interpret Mohn's rho</h2>
 
@@ -61,7 +61,7 @@ Mohn's rho averages, over the peels, the relative difference between the termina
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-`K` is `nyear` and `T` the last time step of the full fit; peel `k` ends at `T-k`. A positive rho means that the shorter fits ended above the full fit, so adding observations lowered the recent estimates, a negative rho the opposite, and a rho of 0.03 an average revision of 3%. Terms of opposite sign cancel, so read `rho_by_peel` as well; a full-fit estimate of zero leaves its term undefined. Mohn's rho measures the revision of terminal estimates when later observations are added; it does not measure forecast accuracy, which [hindcast validation](case-model-validation.html) tests. A revision with the same sign across peels and models matters more than its exact size.
+`K` is `nyear` and `T` the last time step of the full fit; peel `k` ends at `T-k`. A positive rho means that the shorter fits ended above the full fit, so adding observations lowered the recent estimates, a negative rho the opposite, and a rho of 0.03 an average revision of 3%. Terms of opposite sign cancel, so read `rho_by_peel` as well; a full-fit estimate of zero leaves its term undefined. Mohn's rho measures the revision of terminal estimates when later observations are added; forecast accuracy is the question of [hindcast validation](case-model-validation.html). A revision with the same sign across peels and models matters more than its exact size.
 
 <h2 id="adapt">5. Adapt the analysis to your assessment</h2>
 
@@ -94,7 +94,7 @@ The retrospective result holds tables only, with no live TMB object, so `saveRDS
 | Work through the case | [Do estimates change when recent data are removed?](case-retrospective-bias.html) |
 | Repair a failed peel | [Judge whether a fit can be used](diagnostics.html) |
 | Change the map, F structure or starts | [Choose the fitting settings](fitting-controls.html) |
-| Test predictions of later time steps | [Can the fitted model reproduce observations and predict withheld periods?](case-model-validation.html) |
+| Test predictions of later time steps | [Model validation](case-model-validation.html) |
 | Run the peels on more cores | [Speed settings](speed.html) |
 | Change colors and labels | [Colors and export](plot-customization.html) |
 | Read every argument | [retro_model](../reference/retro_model.html), [retro_acl](../reference/retro_acl.html), [retro_alscl](../reference/retro_alscl.html), [plot_retro](../reference/plot_retro.html) |

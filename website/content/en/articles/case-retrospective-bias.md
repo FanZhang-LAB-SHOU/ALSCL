@@ -1,71 +1,39 @@
 # Do estimates change when recent data are removed?
 
-## The problem
+On this page you run a retrospective analysis of ACL and ALSCL on the synthetic YTF example: each model is refitted after removing the last one, two and three time steps, each peel is compared with the full fit, and Mohn's rho summarizes the revisions. You need the package installed ([Install ALSCL](getting-started.html)); each analysis runs four fits, and [Run a retrospective analysis](retrospectives.html) explains the function and its tables. At the end you have both results, their figures and a saved folder.
 
-An assessment may revise historical biomass or recruitment as new observations arrive. A retrospective analysis asks how estimates differ when the terminal observations are removed and the same model is refitted. It does not measure forecast accuracy.
-
-## Refit shorter series
-
-This complete setup uses the synthetic YTF example and its conditional biological settings. It requires a working compiler and performs multiple fits.
+<h2 id="run">1. Run the ALSCL retrospective analysis</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
-inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+rb$fit_diagnostics
 rb$rho_text
+plot_retro(rb, facet_col = 2, rho_digits = 3)
 ```
 
-## Inspect trajectories and Mohn’s rho
+`retro_alscl()` reads the input bundle `x` as `run_alscl(x)` does, fits the full series and then three peels: peel 1 removes the last time step, peel 2 the last two, peel 3 the last three. `nyear` counts time steps (quarters for quarterly data) and every peel must keep at least two. Arguments in the call reach every fit, and `ncores` on this call runs the peels in parallel ([Run a retrospective analysis](retrospectives.html#run)). Read `rb$fit_diagnostics` first: one row per fit (`Peel` 0 is the full fit) with the numerical checks and any error. `rb$rho_text$Rho` gives Mohn's rho per quantity only when the full fit and all peels passed the checks and every terminal comparison is finite with a nonzero reference; otherwise it is `NA` with a warning, `rb$errors` lists the failed fits and `rb$raw_rho_text` keeps the unchecked mean for diagnosis. With the teaching data the four fits take about six minutes and all pass ([retro_diagnostics_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/retro_diagnostics_ALSCL.csv)).
 
 ![Bundled ALSCL retrospective example](../assets/manual/figures/ytf/retro_ALSCL.png)
 
-Compare each peel with the full fit at the peel’s final period. Positive rho means shortened fits tend to be higher at those terminal periods; negative rho indicates the opposite. Opposing deviations can cancel, so inspect individual curves and the numerical status of each fit. A zero reference estimate makes its relative difference undefined.
+Each line is one fit, coloured by its last time step; the open point marks the terminal estimate that rho compares with the full fit at the same time step. Lines on the full fit for most of the series that split only in the last years, as here, mean that new observations revise the recent estimates only. In the recorded run rho is 0.033 for biomass, 0.017 for spawning biomass, 0.027 for abundance and 0.0018 for recruitment ([rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)); a positive value means that the shorter fits ended above the full fit. Terms of opposite sign cancel in the mean, so read `rb$rho_by_peel` as well. If no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`.
 
-## Compare the ACL retrospective
-
-Use the same observations and peel count, but keep ACL’s own parameter names and maps.
+<h2 id="acl">2. Run the ACL analysis and compare the two models</h2>
 
 ```r
 ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
-plot_retro(ra, facet_col = 2, rho_digits = 3)
+ra$fit_diagnostics
 ra$rho_text
+plot_retro(ra, facet_col = 2, rho_digits = 3)
 ```
 
 ![Synthetic YTF: ACL retrospective trajectories](../assets/manual/figures/ytf/retro_ACL.png)
 
-The two model figures are bundled examples. Compare revisions within each model before comparing rho between models; inspect the same quantity and terminal periods. Different y scales can exaggerate or hide apparent differences.
+The same observations and peel count, with ACL's starting values and `map` from `x$fit_config$acl`. Compare the revisions within each model first, then rho between models for the same quantity; the y scales differ. In the recorded run ACL's values are smaller: 0.0069 for biomass, 0.0079 for spawning biomass, -0.010 for recruitment and -0.00025 for abundance ([rho_ACL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv)). A revision with the same sign across peels and models matters more than its size; rho names no cause, so a repeated directional revision calls for checks of the inputs, fixed values and F structure ([Judge whether a fit can be used](diagnostics.html)).
 
-## Inspect the returned tables
-
-```r
-head(rb$results)
-rb$last_points
-rb$rho_text
-names(rb)
-```
-
-`fit_diagnostics` includes the full fit (`Peel = 0`) and every requested peel, with elapsed time, raw optimizer status, gradient, Hessian, boundaries and errors. `rho_by_peel` contains screened `Rho`, diagnostic `RawRho` and `Valid`. A quantity receives a reported value in `rho_text$Rho` only if the full fit and all requested peels pass the numerical screen and all terminal comparisons are finite with a nonzero reference. Otherwise it is `NA`, with a warning; failed peels are never silently dropped. `raw_rho_text` is an unscreened diagnostic summary, not a replacement for the screened result. It remains `NA` when a terminal comparison is missing. Available trajectories remain in `results` for inspection.
-
-### Inspect every fit without repeating the analysis
-
-```r
-rb$fit_diagnostics
-rb$rho_by_peel
-rb$rho_text
-rb$raw_rho_text
-rb$errors
-```
-
-`retro_acl(x, nyear = 3)` and `retro_alscl(x, nyear = 3)` accept the same input bundle as the fitting functions. The general form is `retro_model(data.CatL = x, model_type = "alscl", nyear = 3)`. Shared settings, then model-specific settings, then explicit call arguments determine each fit; explicit `map`, `parameters` and `control` replace their complete stored lists. `zero_action`, `control`, `nstarts`, `F_structure` and `polish` reach every fit. A fitting `ncores` stored in `x` is ignored: set `ncores` on the retrospective call for parallel peels. Within each peel, optimization starts run sequentially, with their number controlled by `nstarts`.
-
-## Adapt the analysis to your assessment
-
-Replace the inputs and biology with the same configuration used for your full-data fit. Keep fixed parameters, observation handling and time units consistent. `nyear` counts removed terminal steps: three quarterly steps are not three years. Retain sufficient observations in each peel; see [the function guide](retrospectives.html).
-
-## Export the retrospective record
+<h2 id="save">3. Save the record</h2>
 
 ```r
 dir.create("my_retrospective", showWarnings = FALSE)
@@ -82,18 +50,13 @@ saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,
 writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ```
 
-|Symptom|Interpretation or check|
+The results are tables without a live TMB object, so `saveRDS()` keeps them whole and `plot_retro()` redraws them in a new session. The folder records every fit's series, rho per quantity and peel, the numerical checks, the figure, the settings of `x` and the session information. For your own assessment, run the analysis with the settings of the fit you report, so that the peels differ from the full fit only in the removed observations; with quarterly data `nyear = 4` removes one year.
+
+<h2 id="next">What next</h2>
+
+| What you want to do | Read |
 |---|---|
-|Too few time steps after peeling|Reduce peel count; every fit must retain at least two time steps|
-|Opposite-signed terminal deviations|Inspect individual peels; average rho can hide cancellation|
-|Quarterly analysis interpreted as years|Convert removed steps to duration using `growth_step`|
-|A custom `zero_action` is required|Set `zero_action` in `x$fit_args` or pass it explicitly to `retro_alscl(x, ...)`; every fit uses the same setting|
-|A short fit is unstable|Inspect its diagnostics before interpreting its terminal revision|
-
-## Decide what to investigate next
-
-A repeated directional revision motivates checks of input changes, model assumptions and parameter sensitivity. Rho alone does not identify a cause or supply a correction factor. Record the full fit, each peel’s diagnostics and its terminal period before drawing conclusions.
-
-## Retaining diagnostics when every fit fails
-
-When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
+| Read every returned table and the rho formula | [Run a retrospective analysis](retrospectives.html) |
+| Repair a peel that failed the numerical checks | [Judge whether a fit can be used](diagnostics.html) |
+| Score predictions of the withheld time steps | [Can the fitted model reproduce observations and predict withheld time steps?](case-model-validation.html) |
+| Run the peels on more cores | [Speed settings](speed.html) |

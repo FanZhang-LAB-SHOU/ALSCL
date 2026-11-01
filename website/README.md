@@ -15,6 +15,8 @@ Rscript -e 'install.packages("jsonlite", repos="https://cloud.r-project.org")'
 python3 -m http.server 8765 --directory _site
 ```
 
+Figure scripts (`scripts/ytf_workflow.R`, `scripts/refresh_manual_figures.R`) load the installed package, so install this checkout first (`R CMD build . && R CMD INSTALL ALSCL_*.tar.gz`) before regenerating figures; they stop when an older installation is loaded.
+
 After editing a tutorial pair, regenerate the manuals, book and Wiki:
 
 ```sh

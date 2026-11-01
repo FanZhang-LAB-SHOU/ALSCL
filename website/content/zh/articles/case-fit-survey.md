@@ -1,6 +1,6 @@
 # 如何拟合自己的调查数据？
 
-本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）、按[准备调查数据](data-preparation.html)排好的三张表，以及第 1 步列出的生物学数值。
+本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）、按[准备调查数据](data-preparation.html)排好的三张表，以及你的种群的生物学数值（`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border`），[该页第 4 步](data-preparation.html#bundle)逐项解释了它们。
 
 <h2 id="bundle">1. 准备并检查输入列表</h2>
 
@@ -15,17 +15,7 @@ check$valid
 check$summary
 ```
 
-两个模型都读取输入列表 `x`：调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，行是体长组，列是时间步；再加上 `x$fit_args` 中描述你的种群和调查的设置。`read_survey_csv()` 从一个文件夹读取三个文件，`read_survey_excel()` 读取一个工作簿中的三张工作表；表格布局、时间网格以及空白和零值的处理见[准备调查数据](data-preparation.html)。下表中的设置是模型照原样使用的输入；请为你的种群逐项提供，并记下来源。代码中的数值是教学数据的设置。
-
-| 设置 | 含义 | 数值来源 |
-|---|---|---|
-| `rec.age` | 最小年龄组的年龄（年） | 鱼首次出现在调查中的年龄 |
-| `nage` | 年龄组数；最后一组是加组 | 值得追踪的最大年龄除以 `growth_step` |
-| `M` | 每个时间步的自然死亡率 | 文献或生活史方法；年值乘以 `growth_step` |
-| `sel_L50`、`sel_L95` | 调查可捕性达到 50% 和 95% 的体长；`sel_L95` 较大 | 渔具选择性研究或渔获体长分布 |
-| `growth_step` | 每个时间步的年数：年度为 1，季度为 0.25 | 时间标签的间隔 |
-| `len_mid` | 每个体长组的中点，每行一个 | 调查设计 |
-| `len_border` | 相邻体长组之间的内部边界，比行数少一个 | 调查设计；只有等宽体长组才取相邻中点的中间值 |
+两个模型都读取输入列表 `x`：调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，行是体长组，列是时间步；再加上 `x$fit_args` 中描述你的种群和调查的设置。`read_survey_csv()` 从一个文件夹读取三个文件，`read_survey_excel()` 读取一个工作簿中的三张工作表；表格布局、时间网格以及空白和零值的处理见[准备调查数据](data-preparation.html)。这些设置是模型照原样使用的输入；请为你的种群逐项提供，并记下来源。代码中的数值是教学数据的设置。
 
 `check_alscl_data()` 按拟合时的方式准备数据，但不编译任何东西。`check$valid` 应为 `TRUE`，`check$summary` 应显示你预期的体长组数和时间步数、正观测数，以及将被估计的标量参数个数 `free_fixed`。若 `check$valid` 为 `FALSE`，`check$errors` 会指出要修改的表、时间列或设置；`check$warnings` 提示没有任何观测的时间步或体长组。拟合 ALSCL 之前，用 `"alscl"` 再检查一遍。
 
@@ -37,30 +27,13 @@ plan[, c("parameter", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
 ```
 
-`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态：`free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 是随机效应，总是被估计。
+`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态：`free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 是随机效应，总是被估计。[选择拟合设置](fitting-controls.html#parameters)列出了两个模型的全部标量参数。
 
-| 含义 | ACL 参数 | ALSCL 参数 |
-|---|---|---|
-| 初始总死亡率（决定初始年龄结构） | `log_init_Z` | `log_init_Z` |
-| 初始丰度偏差的标准差 | `log_std_log_N0` | `log_sigma_log_N0` |
-| 平均对数补充量 | `mean_log_R` | `mean_log_R` |
-| 补充量偏差的标准差 | `log_std_log_R` | `log_sigma_log_R` |
-| 补充量在时间上的相关 | `logit_log_R` | `logit_log_R` |
-| 平均对数捕捞死亡率 | `mean_log_F` | `mean_log_F` |
-| F 偏差的标准差 | `log_std_log_F` | `log_sigma_log_F` |
-| F 在时间上的相关 | `logit_log_F_y` | `logit_log_F_y` |
-| F 在年龄或体长之间的相关 | `logit_log_F_a` | `logit_log_F_l` |
-| 渐近体长和年生长速率 | `log_Linf`、`log_vbk` | `log_Linf`、`log_vbk` |
-| 体长为零时的年龄 | `t0`（原尺度） | `log_t0`（对数尺度） |
-| 年龄别体长的离散程度 | `log_cv_len` | `log_cv_len` |
-| 生长增量 CV | 无 | `log_cv_grow` |
-| 调查观测标准差 | `log_std_index` | `log_sigma_index` |
-
-初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，因此它的 `t0` 必须在 0 和 `rec.age` 之间。填写初值不会固定参数：只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法提供某个参数的信息时，固定该参数，并记录每个固定值的来源。[拟合设置](fitting-controls.html)给出 `map`、边界和物种预设的规则；[估计参数清单](estimation-parameters.html)给出全部变换方式。
+初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，因此它的 `t0` 必须在 0 和 `rec.age` 之间。填写初值不会固定参数：只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法确定某个参数时，固定该参数，并记录每个固定值的来源。[选择拟合设置](fitting-controls.html)给出 `map`、边界和物种预设的规则；[估计参数列表](estimation-parameters.html)给出全部变换方式。
 
 <h2 id="run">3. 运行完整示例</h2>
 
-下面的脚本用教学数据完整运行每一步：读取 `docs/data` 中的三个 CSV 文件，把生物学设置收在 `bio` 中，由行标签推出体长组中点和边界，设置两个模型的初值和 map，组装并检查 `x`，拟合 ACL（`a`）和 ALSCL（`b`），打印它们的数值检查，绘制 `b` 的残差图和产卵生物量图，并把输入列表、两个拟合的可移植副本、两张图和会话信息保存到 `output/own-data-example`。请在下载的仓库根目录运行，因为脚本要加载 `scripts/plot_helpers.R` 并读取 `docs/data`：`source("scripts/fit_own_data_example.R", encoding = "UTF-8")`。
+下面的脚本用教学数据完整运行每一步：读取 `docs/data` 中的三个 CSV 文件，把生物学设置收在 `bio` 中，由行标签推出体长组中点和边界，设置两个模型的初值和 map，组装并检查 `x`，拟合 ACL（`a`）和 ALSCL（`b`），打印它们的数值检查，绘制 `b` 的残差图和产卵生物量图，并把输入列表、去掉 TMB 对象的两个拟合、两张图和会话信息保存到 `output/own-data-example`。请在下载的仓库根目录运行，因为脚本要加载 `scripts/plot_helpers.R` 并读取 `docs/data`：`source("scripts/fit_own_data_example.R", encoding = "UTF-8")`。
 
 ```r
 # ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
@@ -205,7 +178,7 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 
 ![完整示例的 ALSCL 产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true)
 
-每一年的残差都围绕 0 散布，产卵生物量序列的区间较窄，这就是这组模拟数据上可用拟合的样子；区间以固定值为条件。若脚本停在 `stopifnot(packageVersion("ALSCL") >= "2.3.0")`，安装当前版本（[安装 ALSCL](getting-started.html)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明工作目录不是仓库根目录；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
+每一年的残差都围绕 0 散布，产卵生物量序列的区间较窄，这就是这组模拟数据上可用拟合的样子；区间以固定值为条件。若脚本停在 `stopifnot(packageVersion("ALSCL") >= "2.3.0")`，安装当前版本（[安装 ALSCL](getting-started.html)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明 R 运行在仓库根目录之外；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
 
 <h2 id="replace">4. 换成自己的观测数据</h2>
 
@@ -227,7 +200,7 @@ for (model in c("acl", "alscl")) {
 }
 ```
 
-上面的数值只是说明每一项的形式，不是任何种群的估计值。保留 `inputs`、`x`、`a` 和 `b` 这些名字，脚本的其余部分就不用改。
+上面的数值只是说明每一项的形式；请把每一项都换成你的种群的数值。保留 `inputs`、`x`、`a` 和 `b` 这些名字，脚本的其余部分就不用改。
 
 | 脚本中的行 | 改成 | 注意 |
 |---|---|---|
@@ -257,9 +230,9 @@ plot_residuals(b, type = "year", facet_ncol = 5)
 plot_SSB(b, se = TRUE)
 ```
 
-`x` 装好你的表和设置后，每个模型的拟合就是一次调用；脚本存入 `x$fit_args` 的 `train_times = 2` 和 `nstarts = 1` 随之生效，调用中给出的参数，例如 `run_acl(x, nstarts = 4, ncores = 2)`，只在本次调用中覆盖保存的值。看任何估计值之前先读数值检查：收敛码 0、最大梯度小于 0.001、Hessian 正定、没有参数落在边界上，以及 `Numerical screen: TRUE`；`b$diagnostics$issues` 给出未通过的项目。`extract_estimates()` 返回一张表，包含 `quantity`、`year`、该量所在的 `age` 或 `length`（如有）、`estimate`、`std_error` 和区间 `conf_low` 到 `conf_high`；`extract_parameters()` 列出每个标量参数在自然尺度上的值及其状态 `estimated` 或 `fixed`。`plot_CatL()`、`plot_residuals()` 和 `plot_SSB()` 分别画出对观测的拟合、对数残差和带区间的产卵生物量，与[理解第一次拟合](first-model.html)中相同。
+`x` 装好你的表和设置后，每个模型的拟合就是一次调用；脚本存入 `x$fit_args` 的 `train_times = 2` 和 `nstarts = 1` 随之生效，调用中给出的参数，例如 `run_acl(x, nstarts = 4, ncores = 2)`，只在本次调用中覆盖保存的值。看任何估计值之前先读数值检查：收敛码 0、最大梯度小于 0.001、Hessian 正定、没有参数落在边界上，以及 `numerical_ok` 为 `TRUE`；`b$diagnostics$issues` 给出未通过的项目。`extract_estimates()` 返回一张表，包含 `quantity`、`year`、该量所在的 `age` 或 `length`（如有）、`estimate`、`std_error` 和区间 `conf_low` 到 `conf_high`；`extract_parameters()` 列出每个标量参数在自然尺度上的值及其状态 `estimated`、`fixed` 或 `inactive`（共用 F 结构用不到的相关系数）。`plot_CatL()`、`plot_residuals()` 和 `plot_SSB()` 分别画出对观测的拟合、对数残差和带区间的产卵生物量，与[理解第一次拟合](first-model.html)中相同。
 
-检查未通过时，每次只改一处再重新拟合：收敛码不是 0 或梯度很大时，多用几个初值（`nstarts = 4, ncores = 2`）；Hessian 不正定时，固定 `b$diagnostics$high_correlations` 或接近 1 的相关系数所指向的参数，或用 `F_structure = "year"` 让各组共用 F（[拟合设置](fitting-controls.html)）。即使检查通过，相邻体长或相邻年份的残差同号成串也说明模型漏掉了数据中的某种特征；[诊断](diagnostics.html)说明如何检查这类规律，以及对 `M` 和其他固定值的敏感性。
+检查未通过时，每次只改一处再重新拟合：收敛码不是 0 或梯度很大时，多用几个初值（`nstarts = 4, ncores = 2`）；Hessian 检查未通过时，固定一个参数或改用 `F_structure = "year"`；[理解第一次拟合](first-model.html#checks)中的表把每项未通过的检查对应到常见原因。即使检查通过，相邻体长或相邻年份的残差同号成串也说明模型漏掉了数据中的某种特征；[判断拟合是否可用](diagnostics.html)说明如何检查这类规律，以及对 `M` 和其他固定值的敏感性。
 
 <h2 id="save">6. 保存并复用结果</h2>
 
@@ -292,17 +265,18 @@ rb$rho_text
 plot_fishing_mortality(b, type = "length", se = TRUE)
 ```
 
-`compare_models()` 先核对两次拟合使用了同一张调查表，再比较 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的结构是否适合这个种群，要用生物学知识判断。[模型比较图](model-comparison.html)绘制各种比较图。
+`compare_models()` 先核对两次拟合使用了同一张调查表，再比较 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的结构是否适合这个种群，要用生物学知识判断。[ACL 与 ALSCL 的评估结果有什么不同？](case-compare-assessments.html)用图继续这一比较。
 
-回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 以时间步计，季度数据四轮等于一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值状态，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的轨迹（[回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
+回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 以时间步计，季度数据四轮等于一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值检查，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的序列（[运行回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
 
 <h2 id="next">下一步</h2>
 
 | 想做什么 | 阅读 |
 |---|---|
-| 修改检查指出的设置，或更换 F 结构 | [拟合设置](fitting-controls.html) |
-| 检查残差规律和对固定值的敏感性 | [诊断](diagnostics.html) |
-| 运行回溯分析并读 Mohn's rho | [回溯分析](retrospectives.html) |
+| 修改检查指出的设置，或更换 F 结构 | [选择拟合设置](fitting-controls.html) |
+| 检查残差规律和对固定值的敏感性 | [判断拟合是否可用](diagnostics.html) |
+| 用图比较两个拟合 | [ACL 与 ALSCL 的评估结果有什么不同？](case-compare-assessments.html) |
+| 运行回溯分析并读 Mohn's rho | [运行回溯分析](retrospectives.html) |
 | 做参数剖面或向前投影 | [评估工作流](assessment-workflows.html) |
 | 拟合季度调查 | [年度与季度时间步](case-studies.html) |
 | 让拟合更快 | [速度设置](speed.html) |

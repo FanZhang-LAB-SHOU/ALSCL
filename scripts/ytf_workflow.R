@@ -2,6 +2,9 @@
 # 从仓库根目录运行 / Run from the repository root:
 # Rscript scripts/ytf_workflow.R
 library(ALSCL)
+# The figures must come from this checkout: stop when an older installation is loaded.
+if (packageVersion("ALSCL") < read.dcf("DESCRIPTION", "Version")[[1]])
+  stop("Installed ALSCL ", packageVersion("ALSCL"), " is older than this checkout; run R CMD INSTALL . first.")
 library(ggplot2)
 library(patchwork)
 source("scripts/plot_helpers.R")

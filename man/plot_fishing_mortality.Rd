@@ -62,7 +62,7 @@ F_year, F_age or F_length title, with _se appended for interval plots.}
 
 \item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
 year, age or length label. Uncustomized age axes are labeled Age Group
-because the plotted coordinates are group positions, not calendar ages.}
+because the plotted coordinates are group positions.}
 
 \item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.}
 
@@ -84,7 +84,7 @@ This function takes the output from \code{run_acl} or \code{run_alscl}
 and plots fishing mortality over years, ages, or length-bin midpoints using ggplot2.
 For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
-F-at-age (FA: (A-1) x (Y-1)) is an emergent property.
+F-at-age (FA: (A-1) x (Y-1)) is derived from F at length.
 }
 \details{
 Matrix positions are matched to fitted time and group metadata;

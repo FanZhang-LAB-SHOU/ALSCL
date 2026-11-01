@@ -31,7 +31,7 @@ Enter the survey numbers at length, or a consistently standardized index of them
 
 <h3 id="weight-table">Weight table data.wgt</h3>
 
-Enter the mean weight of one fish in each bin and time step, in one unit throughout (the example uses kg). Every cell needs a value, because the model multiplies numbers by weight to obtain biomass. If you have a length-weight relationship rather than yearly measurements, fill all time steps with its values and say so when you report the assessment.
+Enter the mean weight of one fish in each bin and time step, in one unit throughout (the example uses kg). Every cell needs a value, because the model multiplies numbers by weight to obtain biomass. If you have a length-weight relationship instead of yearly measurements, fill all time steps with its values and say so when you report the assessment.
 
 ![Weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
 
@@ -56,7 +56,7 @@ The length bins need their midpoints (`len_mid`, one per row) and the internal b
 
 <h2 id="import">3. Read the files into R</h2>
 
-Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables do not match.
+Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables differ.
 
 ```r
 library(ALSCL)
@@ -75,7 +75,7 @@ str(tables)
 
 <h2 id="bundle">4. Add the biology and build the input bundle</h2>
 
-`prepare_alscl_data()` combines the three tables with the settings both models share, `fit_args`, into the input bundle `x`. The settings describe your stock and your survey; the models do not estimate them.
+`prepare_alscl_data()` combines the three tables with the settings both models share, `fit_args`, into the input bundle `x`. The settings describe your stock and your survey; the models take them as given.
 
 | Setting | Meaning | Where the value comes from |
 |---|---|---|
@@ -112,6 +112,10 @@ plan[, c("parameter", "status", "natural_start", "n_free")]
 
 If `check$valid` is `FALSE`, the messages in `check$errors` name the table, column or setting to correct; warnings point to things worth a look, such as many zeros or an unobserved time step. When the check passes, fit with `run_acl(x)` or `run_alscl(x)` and continue as in [Understand your first fit](first-model.html).
 
+<h2 id="legacy">Repository script and compatibility data</h2>
+
+Scripts that call `validate_survey_tables()` or `fit_survey_tables()` from `scripts/real_data_workflow.R` in the repository still work; the script's readers call the package functions above. The package also ships `example_data`, three ALSCL tables with 9 bins and the years 2001-2021 whose species, units and bin boundaries are undocumented; use it only to try the functions.
+
 <h2 id="next">What next</h2>
 
 | What you want to do | Read |
@@ -120,7 +124,3 @@ If `check$valid` is `FALSE`, the messages in `check$errors` name the table, colu
 | Decide which parameters to fix or estimate, choose the F structure | [Fitting controls](fitting-controls.html) |
 | Follow a complete own-data example from CSV to saved results | [How do I fit my own survey data?](case-fit-survey.html) |
 | Check the time grid of a quarterly survey | [Annual and quarterly time steps](case-studies.html) |
-
-<h2 id="legacy">Older helper script and data</h2>
-
-Scripts written before version 2.2.9 may call `validate_survey_tables()` or `fit_survey_tables()` from `scripts/real_data_workflow.R` in the repository. That script still works; its readers now call the package functions above. The package also ships `example_data`, three older ALSCL tables with 9 bins and the years 2001-2021 whose species, units and bin boundaries are not documented; use it only to try the functions, not as an assessment dataset.

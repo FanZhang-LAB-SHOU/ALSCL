@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_residuals.R
 \name{plot_residuals}
 \alias{plot_residuals}
-\title{Plot conditional log residuals from an ACL or ALSCL fit}
+\title{Plot log residuals of the survey index from an ACL or ALSCL fit}
 \usage{
 plot_residuals(
   model_result,
@@ -99,7 +99,7 @@ The type argument selects the layout of these same residuals:
 \item "year" plots residuals over length, with one facet per model time step.
 Missing and zero observations
 are excluded using the fit's stored observations, including saved fits without
-a live TMB object. Older fits use the observation mask in the TMB data.
+a live TMB object. Saved fits use the observation mask in the TMB data.
 }
 }
 \examples{

@@ -7,7 +7,7 @@
 #' remain missing, and a wholly unobserved period has no observed ridge. Predicted
 #' compositions use all length bins. Normalization is stable for large or small
 #' finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
-#' a live TMB object; older fits use the observation mask in the TMB data.
+#' a live TMB object; saved fits use the observation mask in the TMB data.
 #'
 #' @param model_result A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year.
 #' @param ridges_alpha Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.

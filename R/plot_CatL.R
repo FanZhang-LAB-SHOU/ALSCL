@@ -77,7 +77,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
                       title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
                       title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                       strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
-  # NULL 继承全局色板 / NULL inherits the global palette.
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_size1)) line_size1 <- 1.2 * acl_theme("line_size")
   if (is.null(line_size2)) line_size2 <- (2 / 3) * acl_theme("line_size")
@@ -88,8 +88,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
 
 
 
-  if (!is.logical(exp_transform) || length(exp_transform) != 1L || is.na(exp_transform))
-    stop("exp_transform must be TRUE or FALSE.", call. = FALSE)
+  .acl_check_flag(exp_transform, "exp_transform")
   type <- match.arg(type)
   if (is.null(ylab)) ylab <- .acl_survey_label(log = !exp_transform)
   Elog_index <- model_result$report$Elog_index

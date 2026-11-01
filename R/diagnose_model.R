@@ -25,7 +25,7 @@ diagnose_model <- function(data.CatL, model_result) {
                             Value=c(bound,if(is.na(code)) NA else code==0L,gradient,hessian)))
   if (!is.null(model_result$diagnostics)) {
     d <- model_result$diagnostics
-    cat("Numerical screen:", d$numerical_ok, "\nNatural-scale boundary:",
+    cat("Numerical checks:", d$numerical_ok, "\nNatural-scale boundary:",
         d$natural_boundary, "\nRefinement:", model_result$refinement$status, "\n")
     result <- rbind(result, data.frame(Metric = c("Numerical Screen Passed",
       "Natural Scale Boundary", "Covariance Condition", "Highly Correlated Pairs"),

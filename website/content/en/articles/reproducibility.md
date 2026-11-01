@@ -23,7 +23,7 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 
 `sessionInfo()` adds the operating system, the BLAS and LAPACK libraries and the loaded packages; keep its output next to the saved file. A fitted-model simulation also depends on its seed, which `simulate_fit()` records in `metadata$seed`.
 
-`save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when an older fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
+`save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when a fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
 
 <h2 id="reproduce">2. Reproduce a fit later</h2>
 
@@ -48,7 +48,7 @@ a4$start_diagnostics
 a4$workers
 ```
 
-`ncores` sets how many socket workers, new R processes, a function starts. Each worker runs whole starts or whole fits, so the results are the same as in a sequential run.
+`ncores` sets how many socket workers, new R processes, a function starts. Each worker runs whole starts or whole fits, so the results equal a sequential run.
 
 | Function | What runs on the workers | Starts in each fit |
 |---|---|---|
@@ -109,12 +109,12 @@ Error messages are quoted as the package prints them.
 | Zeros in the survey table | Zeros count as missing (`zero_action = "missing"`) | Decide whether a zero is real before fitting |
 | Blank cells in the weight or maturity table | Both tables must be complete | Fill them and record the source |
 | Convergence code not 0, large gradient or Hessian not positive definite | The optimizer stopped early or a parameter is not informed | See [Understand your first fit](first-model.html#checks) |
-| Quarterly F looks small | F is per time step, never annualized | Report F per time step |
+| Quarterly F looks small | Every output gives F per time step | Report F per time step |
 | `plot_fishing_mortality(a, type = "length")` warns on an ACL fit | ACL has no F by length; `"length"` means `"age"` | Use `type = "age"` or fit ALSCL |
 | `plot_VB()` draws a line without an interval | The growth parameters are fixed | Expected; release them with `map` |
 | The first fit names `TMB::compile`, `make`, `g++` or `clang` | No compiler, or Rtools for another R version | Install the compiler (step 4), restart R |
 | `Install RcppEigen to compile model templates` or `Model sources are missing` | RcppEigen absent, or a damaged installation | Install RcppEigen or reinstall ALSCL |
-| `Socket worker loaded a different ALSCL installation` | A worker found an older copy in another library | Keep one installation, or use `ncores = 1` |
+| `Socket worker loaded a different ALSCL installation` | A worker found another copy in a different library | Keep one installation, or use `ncores = 1` |
 | Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | The new R processes could not start | Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
 | `rho_text$Rho` is `NA` after a retrospective analysis | A fit failed the numerical checks | Read `fit_diagnostics` and `rho_by_peel`, fix that fit |
 | `The current implementation differs from the saved assessment` | Package, TMB or model source changed since the save | Expect last-digit differences, or install the recorded versions |
@@ -127,5 +127,5 @@ Error messages are quoted as the package prints them.
 | Test the sensitivity of the estimates to the fixed values | [Judge whether a fit can be used](diagnostics.html#sensitivity) |
 | Choose the speed settings and check what your session does | [Speed settings](speed.html) |
 | Run a retrospective analysis and read Mohn's rho | [Retrospectives](retrospectives.html) |
-| Simulate from the fit or test predictions of withheld periods | [Model validation](case-model-validation.html) |
+| Simulate from the fit or test predictions of withheld time steps | [Model validation](case-model-validation.html) |
 | Compare scenarios, profile a parameter, project forward | [Assessment workflows](assessment-workflows.html) |

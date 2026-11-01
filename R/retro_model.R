@@ -56,11 +56,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
   diagnostics <- cbind(data.frame(Peel = peel,
     RetrospectiveYear = tail(years, 1L), elapsed = elapsed,
     error = if (is.null(error)) "" else error), .acl_fit_status(fit, error))
-  if (!silent) cat(sprintf("  %s: %.1f sec%s\n",
+  if (!silent) message(sprintf("  %s: %.1f sec%s",
     if (peel == 0L) "Full model" else paste("Peel", peel), elapsed,
     if (is.null(error)) "" else paste0(" (failed: ", error, ")")))
   list(peel = peel, year = years, diagnostics = diagnostics,
-       variables = list(B = fit$report$B, Rec = fit$report$R %||% fit$report$Rec,
+       variables = list(B = fit$report$B, Rec = fit$report$Rec,
                         SSB = fit$report$SSB, N = fit$report$N))
 }
 
@@ -235,23 +235,19 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   if (nyear > ncol(fit_args$data.CatL) - 3L)
     stop("Every retrospective peel must retain at least two time steps.", call. = FALSE)
 
-  progress <- function(...) if (!silent) cat(...)
+  progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()
-  progress(sprintf("Fitting full %s model...\n", toupper(model_type)))
+  progress(sprintf("Fitting full %s model...", toupper(model_type)))
   full <- .acl_retro_fit(0L, fit_args, model_type, silent)
   ncores_use <- .acl_workers(min(ncores, nyear))
   if (ncores_use == 1L) {
-    progress(sprintf("Running %d retrospective peels sequentially...\n", nyear))
+    progress(sprintf("Running %d retrospective peels sequentially...", nyear))
     peels <- lapply(seq_len(nyear), .acl_retro_fit, fit_args = fit_args,
                     model_type = model_type, silent = silent)
   } else {
-    progress(sprintf("Running %d retrospective peels on %d socket workers...\n",
+    progress(sprintf("Running %d retrospective peels on %d socket workers...",
                      nyear, ncores_use))
-    cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
-    cl <- parallel::makeCluster(ncores_use)
-    on.exit(parallel::stopCluster(cl), add = TRUE)
-    .acl_initialize_workers(cl, cache = cache, settings = .acl_worker_options())
-    peels <- parallel::parLapply(cl, seq_len(nyear), .acl_retro_fit,
+    peels <- .acl_cluster_lapply(seq_len(nyear), .acl_retro_fit, ncores_use, model_type,
                                  fit_args = fit_args, model_type = model_type,
                                  silent = silent)
   }
@@ -318,7 +314,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   if (any(!rho_text$Valid))
     warning("Mohn's rho is unavailable for one or more quantities: a full/peel fit failed the numerical screen or a terminal estimate is missing. Inspect fit_diagnostics, errors and rho_by_peel; raw_rho_text is descriptive only.",
             call. = FALSE)
-  progress(sprintf("Retrospective analysis complete: %.1f sec.\n",
+  progress(sprintf("Retrospective analysis complete: %.1f sec.",
                    (proc.time() - t_grand)[["elapsed"]]))
   output <- list(results = results, rho_text = rho_text, last_points = last_points,
                  model_type = model_type, fit_diagnostics = fit_diagnostics,
@@ -466,7 +462,7 @@ plot_retro <- function(retro_result,
     stop("No retrospective estimates are available to plot; inspect fit_diagnostics and errors.",
          call. = FALSE)
 
-  # 截止期排序固定颜色映射 / Stable color mapping by terminal period.
+  # Stable color mapping by terminal period.
   periods <- sort(unique(as.character(results$RetrospectiveYear)), decreasing = TRUE)
   numeric_periods <- suppressWarnings(as.numeric(periods))
   if (all(is.finite(numeric_periods))) periods <- periods[order(numeric_periods, decreasing = TRUE)]

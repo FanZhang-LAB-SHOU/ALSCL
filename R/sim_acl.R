@@ -54,8 +54,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   old <- options(ALSCL.sd_cores = 1L)
   on.exit(options(old), add = TRUE)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  info <- .acl_compile(toupper(model))
-  cache <- dirname(dirname(info$cpp_path))
+  .acl_compile(toupper(model)) # compile once in the parent before any worker starts
   # Force caller expressions before serializing the closure to socket workers.
   # Global variables referenced by promises are not exported by parLapply().
   force(sim_data_path)
@@ -89,12 +88,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     .acl_save_simulation_result(result, file.path(output_dir, paste0("result_rep_", iter)))
     result
   }
-  ncores <- .acl_workers(min(ncores, length(iter_range)))
-  if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
-    cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
-    .acl_initialize_workers(cl, cache = cache, settings = .acl_worker_options())
-    results <- parallel::parLapply(cl, iter_range, fit_one)
-  }
+  results <- .acl_cluster_lapply(iter_range, fit_one, ncores, model)
   names(results) <- paste0("result_rep_", iter_range)
   results
 }

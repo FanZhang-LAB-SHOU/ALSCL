@@ -51,7 +51,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3)
 
 ![示例的 ACL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
-像两张图这样，截短的线在大部分序列上与完整拟合重合，只在最后几年分开，说明加入观测只修订了近期估计。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各时期的颜色（`palette`、`colors`）见 [ggsci 配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
+像两张图这样，截短的线在大部分序列上与完整拟合重合，只在最后几年分开，说明加入观测只修订了近期估计。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见 [ggsci 配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
 
 <h2 id="rho">4. 解释 Mohn rho</h2>
 
@@ -61,7 +61,7 @@ Mohn rho 把每一轮的末端估计与完整拟合在同一时间步的估计�
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；第 `k` 轮止于 `T-k`。rho 为正表示较短的拟合止于完整拟合之上，即加入观测后近期估计下调；为负则相反；rho 为 0.03 表示平均修订 3%。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度，不是预测准确度；预测准确度由[预测检验](case-model-validation.html)来检验。在各轮和各模型中符号相同的修订，比它的具体大小更值得注意。
+`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；第 `k` 轮止于 `T-k`。rho 为正表示较短的拟合止于完整拟合之上，即加入观测后近期估计下调；为负则相反；rho 为 0.03 表示平均修订 3%。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](case-model-validation.html)来回答。在各轮和各模型中符号相同的修订，比它的具体大小更重要。
 
 <h2 id="adapt">5. 用于自己的评估</h2>
 
@@ -94,7 +94,7 @@ plot_retro(readRDS("ytf_alscl_retro.rds"), facet_col = 2, rho_digits = 3)
 | 完整做一遍案例 | [移除近期数据后，估计结果会怎样变化？](case-retrospective-bias.html) |
 | 修复失败的一轮 | [判断拟合是否可用](diagnostics.html) |
 | 更改 map、F 结构或初值 | [选择拟合设置](fitting-controls.html) |
-| 检验对后来时间步的预测 | [模型能重现观测并预测留出时期吗？](case-model-validation.html) |
+| 检验对后来时间步的预测 | [模型验证](case-model-validation.html) |
 | 用更多核心运行各轮 | [速度设置](speed.html) |
 | 更改颜色和标签 | [ggsci 配色与导出](plot-customization.html) |
 | 查阅全部参数 | [retro_model](../reference/retro_model.html)、[retro_acl](../reference/retro_acl.html)、[retro_alscl](../reference/retro_alscl.html)、[plot_retro](../reference/plot_retro.html) |

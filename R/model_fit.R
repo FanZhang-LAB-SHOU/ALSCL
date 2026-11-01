@@ -1,18 +1,18 @@
 .acl_map <- function(parameters, map, model) {
   if (!is.null(map) && (!is.list(map) || (length(map) &&
       (is.null(names(map)) || any(!nzchar(names(map))) || anyDuplicated(names(map))))))
-    stop("map must be a named list.")
+    stop("map must be a named list.", call. = FALSE)
   defaults <- if (model == "ACL") generate_map(map) else {
     out <- list(log_sigma_log_F = factor(NA), log_t0 = factor(NA))
     if (!is.null(map)) for (nm in names(map)) out[nm] <- map[nm]
     out[!vapply(out, is.null, logical(1))]
   }
-  if (length(setdiff(names(defaults), names(parameters)))) stop("Unknown map parameter: ", paste(setdiff(names(defaults), names(parameters)), collapse = ", "))
+  if (length(setdiff(names(defaults), names(parameters)))) stop("Unknown map parameter: ", paste(setdiff(names(defaults), names(parameters)), collapse = ", "), call. = FALSE)
   for (nm in names(defaults)) {
     value <- defaults[[nm]]
     if (length(value) == 1L && is.na(value)) defaults[[nm]] <- value <- factor(NA)
-    if (!is.factor(value)) stop("map entries must be factors (factor(NA) fixes a parameter), or NULL to unfix.")
-    if (length(value) != length(parameters[[nm]])) stop("Map length does not match parameter ", nm)
+    if (!is.factor(value)) stop("map entries must be factors (factor(NA) fixes a parameter), or NULL to unfix.", call. = FALSE)
+    if (length(value) != length(parameters[[nm]])) stop("Map length does not match parameter ", nm, call. = FALSE)
   }
   defaults
 }
@@ -22,10 +22,10 @@
     lo <- config$parameters.L[[nm]]; hi <- config$parameters.U[[nm]]
     if (is.null(lo)) lo <- -Inf
     if (is.null(hi)) hi <- Inf
-    if (length(lo) != 1L || length(hi) != 1L || is.na(lo) || is.na(hi) || lo >= hi) stop("Invalid bounds for ", nm)
+    if (length(lo) != 1L || length(hi) != 1L || is.na(lo) || is.na(hi) || lo >= hi) stop("Invalid bounds for ", nm, call. = FALSE)
     lower[nm] <- lo; upper[nm] <- hi
   }
-  if (any(!is.finite(par))) stop("Initial free parameters must be finite.")
+  if (any(!is.finite(par))) stop("Initial free parameters must be finite.", call. = FALSE)
   list(lower = lower, upper = upper, start = pmax(lower, pmin(upper, par)))
 }
 .acl_optimize <- function(obj, start, lower, upper, train_times, control) {
@@ -61,15 +61,8 @@
   # Identical starting points regardless of worker count, without changing the
   # caller's random-number stream during sequential multistart fits.
   if (i > 1L) {
-    previous_kind <- RNGkind()
-    had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    if (had_seed) previous_seed <- get(".Random.seed", envir = .GlobalEnv)
-    on.exit({
-      do.call(RNGkind, as.list(previous_kind))
-      if (had_seed) assign(".Random.seed", previous_seed, envir = .GlobalEnv)
-      else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
-        rm(".Random.seed", envir = .GlobalEnv)
-    }, add = TRUE)
+    restore_rng <- .acl_preserve_rng()
+    on.exit(restore_rng(), add = TRUE)
   }
   start <- bounds$start
   if (i > 1L) {
@@ -118,7 +111,7 @@
   t0_name <- if (model == "ACL") "t0" else "log_t0"
   t0_upper <- if (model == "ACL") min(d$age)*(1-1e-6) else log(min(d$age)*(1-1e-6))
   config$parameters.U[[t0_name]] <- min(config$parameters.U[[t0_name]], t0_upper)
-  if ((if (model == "ACL") p$t0 else exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.")
+  if ((if (model == "ACL") p$t0 else exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.", call. = FALSE)
   p$dev_log_R <- rep(0, d$Y)
   p$dev_log_F <- array(0, c(if (F_structure == "year") 1L else if (model == "ACL") d$A else d$L, d$Y))
   p$dev_log_N0 <- rep(0, d$A-1L)
@@ -167,7 +160,7 @@
   make_obj <- function() TMB::MakeADFun(d, p, random = random, map = mapping,
     DLL = info$dll_name, inner.control = list(trace = FALSE, maxit = 500), silent = TRUE)
   obj <- make_obj(); bounds <- .acl_bounds(obj$par, config)
-  if (!length(obj$par)) stop("At least one fixed-effect parameter must remain free.")
+  if (!length(obj$par)) stop("At least one fixed-effect parameter must remain free.", call. = FALSE)
   control <- utils::modifyList(list(iter.max = 2000L, eval.max = 10000L), control)
   if (!silent) message("Fitting ", model, " with ", nstarts, " start(s) on ", workers, " worker(s).")
   if (workers == 1L) {
@@ -185,13 +178,12 @@
     cl <- NULL
   }
   values <- vapply(starts, function(x) if (is.finite(x$objective)) x$objective else Inf, numeric(1))
-  if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "))
+  if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "), call. = FALSE)
   opt <- starts[[which.min(values)]]
   start_diagnostics <- do.call(rbind, lapply(starts, function(s) data.frame(
     start_id = s$start_id, pid = s$pid, started_at = s$started_at, finished_at = s$finished_at,
     elapsed = s$elapsed, cpu_seconds = s$cpu_seconds, objective = s$objective,
     convergence = s$convergence)))
-  if (!is.finite(opt$objective)) stop("Optimization produced a non-finite objective.")
   raw_opt <- opt
   refined <- .acl_polish(obj, opt$par, bounds$lower, bounds$upper, enabled = polish)
   opt$par <- refined$par
