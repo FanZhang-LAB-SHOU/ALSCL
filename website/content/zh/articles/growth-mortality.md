@@ -80,23 +80,6 @@ plot_fishing_mortality(a, type = "age",
 
 
 
-## ACL 捕捞死亡率 length
-
-```r
-# 绘制本图
-plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
-```
-
-[![ACL 捕捞死亡率 length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)
-
-ACL 不估计体长别 F；这里明确用 `type = "age"` 绘制年龄曲线。旧 `type = "length"` 调用仍返回年龄曲线并发出警告，不会把年龄别 F 转换为体长别 F。
-
-
-[参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
-
 ## ALSCL 捕捞死亡率 year
 
 ```r

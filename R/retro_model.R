@@ -73,12 +73,6 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
   if (anyNA(extra_names) || anyDuplicated(extra_names[named]))
     stop("Named additional retrospective arguments must be unique.", call. = FALSE)
   args[extra_names[named]] <- extra[named]
-  bundled <- (is.list(args$nyear) && !is.data.frame(args$nyear)) ||
-    (is.list(args$data.CatL) && !is.data.frame(args$data.CatL))
-  # Preserve the historical ALSCL wrapper default for separate arguments;
-  # a bundle supplies its own growth step and must not be overwritten.
-  if (model == "alscl" && !bundled && !"growth_step" %in% names(args))
-    args$growth_step <- 1
   args$model_type <- model
   do.call(retro_model, c(args, unname(extra[!named])))
 }
@@ -102,6 +96,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param sel_L50 Length at 50 percent survey catchability.
 #' @param sel_L95 Length at 95 percent survey catchability.
 #' @param model_type Character. Model to use: `"acl"` (default) or `"alscl"`.
+#' @param model Same as model_type, accepted for consistency with the other
+#'   workflow functions. Supply one of the two.
 #' @param growth_step Time step in years. NULL uses recruitment age when below 1, otherwise 1.
 #' @param parameters Optional custom starting parameter list.
 #' @param parameters.L Optional lower bounds for parameters.
@@ -197,7 +193,13 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
                         F_structure = c("group_year", "year"), polish = TRUE,
-                        zero_action = c("missing", "error"), control = list(), nstarts = 1) {
+                        zero_action = c("missing", "error"), control = list(), nstarts = 1,
+                        model = NULL) {
+  if (!is.null(model)) {
+    if (!missing(model_type))
+      stop("Supply either model or model_type, not both.", call. = FALSE)
+    model_type <- model
+  }
   model_type <- match.arg(model_type)
   supplied <- names(as.list(match.call())[-1L])
   if (is.list(nyear) && !is.data.frame(nyear)) {
@@ -237,7 +239,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   t_grand <- proc.time()
   progress(sprintf("Fitting full %s model...\n", toupper(model_type)))
   full <- .acl_retro_fit(0L, fit_args, model_type, silent)
-  ncores_use <- min(ncores, nyear)
+  ncores_use <- .acl_workers(min(ncores, nyear))
   if (ncores_use == 1L) {
     progress(sprintf("Running %d retrospective peels sequentially...\n", nyear))
     peels <- lapply(seq_len(nyear), .acl_retro_fit, fit_args = fit_args,
@@ -391,16 +393,15 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' @param M Natural mortality per model time step.
 #' @param sel_L50 Length at 50 percent survey catchability.
 #' @param sel_L95 Length at 95 percent survey catchability.
-#' @param growth_step Numeric. Growth transition time step. Defaults to 1 for
-#'   separate arguments; bundled calls retain the bundle's setting or infer it
-#'   as in [run_alscl()].
+#' @param growth_step Time step in years. NULL uses rec.age when it is below
+#'   one, otherwise one, as in [run_alscl()]; a bundle supplies its own value.
 #' @param ... Additional arguments passed to [retro_model()].
 #' @return A list. See [retro_model()].
 #' @seealso [retro_model()], [retro_acl()], [plot_retro()]
 #' @export
 retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
-                        growth_step = 1, ...) {
+                        growth_step = NULL, ...) {
   .acl_retro_wrapper(match.call(expand.dots = FALSE), environment(), "alscl")
 }
 

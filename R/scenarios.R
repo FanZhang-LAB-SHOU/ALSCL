@@ -18,7 +18,7 @@
 }
 
 .acl_batch_apply <- function(settings, model, ncores) {
-  ncores <- min(.acl_positive_integer(ncores, "ncores"), length(settings))
+  ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(settings)))
   if (ncores == 1L) return(lapply(settings, .acl_batch_fit, model = model))
   # Compile in the parent to avoid multiple workers writing the same cache.
   info <- .acl_compile(toupper(model))
@@ -72,7 +72,7 @@
 #'   overrides the common settings, including complete parameters/map lists.
 #'   A named NULL is preserved. An empty list defines the reference scenario.
 #'   Data tables cannot be changed: compare scenarios on the same observations.
-#' @param model Model to fit, "alscl" or "acl".
+#' @param model Model to fit, "acl" (default) or "alscl".
 #' @param ncores Maximum number of independent socket workers.
 #' @param F_summary Group summary for F at each model time step: "mean" is the
 #'   unweighted mean over ages (ACL) or lengths (ALSCL); "apical" is the maximum.
@@ -82,8 +82,10 @@
 #' @return A list with named portable fits (including error records), resolved
 #'   settings, status, batch elapsed time, estimates and model. The estimates
 #'   table retains failed numerical screens rather than silently discarding them.
-#' @details Inner fitting uses one worker and sequential standard errors, while
-#'   retaining the requested number of starts. Warnings are recorded in status.
+#' @details Inner fitting uses one worker and sequential standard errors. Each
+#'   scenario runs the nstarts of the bundle or of the call; when neither sets
+#'   it, one start is used, the rule of hindcast_model() and retro_model().
+#'   Warnings are recorded in status.
 #'   Results omit session-specific obj pointers in both serial and parallel modes;
 #'   use refit_model() when a live TMB objective is needed. No ranking is applied.
 #' @examples
@@ -95,7 +97,7 @@
 #' z$estimates
 #' }
 #' @export
-fit_scenarios <- function(x, scenarios, model = c("alscl", "acl"), ncores = 1,
+fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,
                           F_summary = c("mean", "apical"), ...) {
   model <- match.arg(model)
   F_summary <- match.arg(F_summary)
@@ -104,12 +106,15 @@ fit_scenarios <- function(x, scenarios, model = c("alscl", "acl"), ncores = 1,
       is.null(names(scenarios)) || anyNA(names(scenarios)) ||
       any(!nzchar(trimws(names(scenarios)))) || anyDuplicated(names(scenarios)))
     stop("scenarios must be a nonempty list with unique, nonempty names.", call. = FALSE)
-  common <- .acl_resolved_args(x, model, list(...))
+  # One fitting worker per scenario, so a bundle without nstarts uses one
+  # start, as in hindcast_model() and retro_model(); explicit nstarts is kept.
+  overrides <- .acl_input_list(list(...), "Fitting overrides")
+  overrides[c("ncores", "output")] <- list(1L, FALSE)
+  common <- .acl_resolved_args(x, model, overrides)
   settings <- lapply(scenarios, function(changes) {
     if (any(c("data.CatL", "data.wgt", "data.mat") %in% names(changes)))
       stop("Scenarios must retain the common data tables.", call. = FALSE)
     args <- .acl_resolved_args(common, model, changes)
-    # Resolve nstarts before ncores is reduced; preserve explicit NULL maps.
     args$ncores <- 1L
     args$output <- FALSE
     args
@@ -123,5 +128,5 @@ fit_scenarios <- function(x, scenarios, model = c("alscl", "acl"), ncores = 1,
   list(fits = fits, settings = settings, status = status,
     elapsed = unname(proc.time()[["elapsed"]] - started),
     estimates = .acl_scenario_estimates(fits, status, F_summary),
-    model = model, F_summary = F_summary, workers = min(ncores, length(settings)))
+    model = model, F_summary = F_summary, workers = .acl_workers(min(ncores, length(settings))))
 }

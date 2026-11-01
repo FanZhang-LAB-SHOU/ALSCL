@@ -155,7 +155,7 @@
   train_times <- .acl_positive_integer(train_times, "train_times")
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
-  workers <- min(ncores, nstarts)
+  workers <- .acl_workers(min(ncores, nstarts))
   started <- proc.time()[["elapsed"]]
   setup <- .acl_model_setup(model, prepared, parameters, parameters.L,
                             parameters.U, map, F_structure)

@@ -27,11 +27,9 @@ The flatfish preset uses survey SD 0.20, while `YTF_example` retains YTF's 0.10.
 
 ```r
 # 读取已有案例 / Read the supplied cases
-source("scripts/real_data_workflow.R", encoding="UTF-8")
-flatfish_inputs <- read_survey_csv("docs/data/cases/flatfish")
+library(ALSCL)
+flatfish_inputs <- read_survey_csv("docs/data/cases/flatfish")  # 读取时检查表格 / tables are checked on reading
 tuna_inputs <- read_survey_csv("docs/data/cases/tuna")
-validate_survey_tables(flatfish_inputs, growth_step=1)
-validate_survey_tables(tuna_inputs, growth_step=.25)
 pa <- readRDS("docs/data/cases/tuna/truth.rds")$parameters
 str(pa)
 # 重新产生数据 / Regenerate inputs

@@ -63,8 +63,7 @@ str(inputs)
 转换器返回三张数据框，第一列为体长组标签。将其交给估计模型前先做验证。热图使用完整预设中的实际体长中点。
 
 ```r
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
-validate_survey_tables(inputs, growth_step = pa$growth_step, zero_action = "error")
+inputs <- prepare_alscl_data(inputs)  # 检查对齐与数值；生物参数之后再加入
 library(ggplot2)
 years <- as.numeric(names(inputs$data.CatL)[-1])
 observations <- data.frame(

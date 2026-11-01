@@ -12,7 +12,7 @@
 
 完成拟合后，可按需要选择：[保存结果](#workflow-results)、[检查残差](#workflow-diagnostics)、[检验假设敏感性](#workflow-sensitivity)、[投影未来情景](#workflow-projections)、[汇总模拟重复](#workflow-simulations)或[验证预测](#workflow-validation)。敏感性、参数剖面和模拟批次会进行额外拟合，可按分析目的选做。
 
-**版本与环境。** 这些工作流需要 GitHub 最新 `main` 源码，早先的 2.2.9 发布标签不含这些接口。拟合前请安装最新源码，并准备可用的 TMB 编译工具。所有示例图均保持无网格样式。
+**版本与环境。** 这些工作流需要 ALSCL 2.3.0 或更高版本。拟合前请安装软件包，并准备可用的 TMB 编译工具。所有示例图均保持无网格样式。
 
 <h3 id="load-teaching-data">加载教学数据</h3>
 

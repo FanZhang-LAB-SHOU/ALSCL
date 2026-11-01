@@ -1,4 +1,20 @@
-# Unreleased
+# ALSCL 2.3.0
+
+- Release the nineteen assessment-workflow functions added since 2.2.9 (data preparation and checks, result extraction and archives, sensitivity scenarios, profiles, projections, fitted-model simulation and hindcast validation): 64 exported functions.
+- `run_alscl()` and `retro_alscl()` infer `growth_step` like `run_acl()`: NULL uses rec.age when it is below one, otherwise one. Pass `growth_step = 1` explicitly for annual ALSCL data with rec.age below one.
+- `fit_scenarios()` defaults to `model = "acl"`, like the other workflow functions, and uses one start per scenario unless the bundle or the call sets `nstarts`, the rule of `hindcast_model()` and `retro_model()`. `retro_model()` accepts `model` as well as `model_type`.
+- Simulated bundles from `simulate_fit()` no longer carry the source fit's `output`, `ncores` and `silent` settings; choose them when the bundle is fitted.
+- Every worker count respects the two-process limit of `R CMD check` (`_R_CHECK_LIMIT_CORES_`), so checks no longer fail or fall back on it.
+- The example script uses the exported `read_survey_csv()`, `prepare_alscl_data()` and `check_alscl_data()`; the legacy helper script now calls the exported readers instead of masking them. The gallery lists 44 figures: the ACL F-at-length entry duplicated the F-at-age figure. Stale statements in the speed documents, the user guide's gradient values and chapter count, the function reference index and argument tables, and four website pages are corrected.
+
+### 2.3.0 · 简体中文
+
+- 正式发布 2.2.9 之后新增的 19 个评估工作流函数（数据准备与检查、结果提取与存档、敏感性情景、剖面、投影、拟合模型模拟与留出预测检验），共 64 个导出函数。
+- `run_alscl()` 和 `retro_alscl()` 与 `run_acl()` 一样推断 `growth_step`：NULL 时 rec.age 小于 1 取 rec.age，否则取 1。年度 ALSCL 数据若 rec.age 小于 1，请显式传入 `growth_step = 1`。
+- `fit_scenarios()` 默认 `model = "acl"`，与其他工作流函数一致；每个情景只用一个初值，除非 x 或调用设置了 `nstarts`，与 `hindcast_model()`、`retro_model()` 规则相同。`retro_model()` 同时接受 `model` 和 `model_type`。
+- `simulate_fit()` 生成的输入列表不再携带源拟合的 `output`、`ncores` 和 `silent` 设置；在拟合时自行指定。
+- 所有工作进程数都遵守 `R CMD check` 的两进程限制（`_R_CHECK_LIMIT_CORES_`），检查不再因此失败或回退。
+- 示例脚本改用导出的 `read_survey_csv()`、`prepare_alscl_data()` 和 `check_alscl_data()`；旧辅助脚本的读取函数改为调用包函数，不再遮蔽它们。图谱改为 44 张：ACL 体长别 F 条目与年龄别 F 图重复。修正速度文档中的过时表述、使用指南的梯度数值和章节数、函数参考索引和参数表，以及四个网页。
 
 - Add fitted-model survey simulation with conditional observations or resampled stationary process deviations, retained truth and directly reusable input bundles. Add expanding-window time-held-out survey prediction checks with numerical screening, paired persistence baselines, log-scale scores and explicit denominators. Document both in a new bilingual worked case with grid-free figures.
 
@@ -43,6 +59,18 @@
 - All SSB, biomass, abundance and catch plot modes inherit global titles, axis labels, breaks and expansion, including interval variants.
 - Process-deviation labels distinguish log deviations from multiplicative factors; survey-index and composition titles describe the plotted quantities.
 - Bilingual examples define the retrospective result before use and use the effective year-profile line-width arguments. Manual figures are regenerated with no gridlines.
+
+### 既有功能修正 · 简体中文
+
+- 生长曲线图默认使用拟合年龄范围，并拒绝显式的 t0 之前区间，避免负体长外推和区间反向；有无区间时的参数标注、字体和生长坐标轴标签一致。
+- 捕捞死亡率图继承全局标题、坐标轴标签、刻度和扩展；主题名称和已有主题对象都可使用，面板不带网格。
+- 调查比较图的坐标轴使用调查指数标签，与渔业捕获量无关；新的调查标签优先，同时保留旧的自定义丰度标签。
+- 回溯教程正确说明：已保存的观测和报告无需活跃 TMB 对象即可绘制山脊图。
+- 生长参照标签必须非空且与两个模型标签不同，避免把无关曲线连在一起。
+- 残差平滑曲线在每个分面内独立选择方法和跨度；稀疏分组不再删除或改变其他分组的趋势。
+- SSB、生物量、丰度和捕获量的所有绘图模式（含区间变体）继承全局标题、坐标轴标签、刻度和扩展。
+- 过程偏差标签区分对数偏差与乘数；调查指数和组成图的标题描述所绘数量。
+- 双语示例在使用前先定义回溯结果，并使用有效的年份剖面线宽参数；手册图形重新生成，不带网格线。
 
 # ALSCL 2.2.9
 

@@ -12,7 +12,7 @@ Use this guide to prepare an assessment, inspect its results and choose follow-u
 
 After fitting, choose the task you need: [save results](#workflow-results), [check residuals](#workflow-diagnostics), [test assumptions](#workflow-sensitivity), [project a scenario](#workflow-projections), [evaluate simulation replicates](#workflow-simulations), or [validate predictions](#workflow-validation). Sensitivity, profiles and simulation batches perform additional fits; they are optional analyses.
 
-**Version and setup.** These workflows require the latest `main` source on GitHub; they are not included in the earlier 2.2.9 release tag. Install that source and prepare a working TMB compiler before fitting. All example plots use grid-free panels.
+**Version and setup.** These workflows require ALSCL 2.3.0 or later. Install the package and prepare a working TMB compiler before fitting. All example plots use grid-free panels.
 
 <h3 id="load-teaching-data">Load the teaching data</h3>
 

@@ -2,11 +2,11 @@
 
 [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
-安装最新 main 开发源码后即可使用本手册中的函数。源码基于 ALSCL 2.2.9；较早的发布标签不含全部新增接口。以下代码在 R 中运行。
+安装 ALSCL 2.3.0 后即可使用本手册中的函数。以下代码在 R 中运行。
 
-Install the latest main development source to use the functions in this manual. It is based on ALSCL 2.2.9; the earlier release tag does not contain every new interface. Run the following in R.
+Install ALSCL 2.3.0 to use the functions in this manual. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL

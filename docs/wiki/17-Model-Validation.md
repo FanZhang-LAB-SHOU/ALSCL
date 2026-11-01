@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
 [简体中文](#validation-zh) · [English](#validation-en)
 
@@ -11,7 +11,7 @@
 
 本案例带你从已拟合模型生成调查数据、将重新估计的结果与模拟真值比较，并检验模型能否预测未参与拟合的后续观测。
 
-**开始前：**这些函数位于 GitHub 最新 `main` 源码中，早先的 2.2.9 发布标签不包含它们。请使用已包含这些函数的安装版本，或在下载的仓库根目录运行 `pkgload::load_all(".")`。
+**开始前：**这些函数需要 ALSCL 2.3.0 或更高版本。请安装该版本，或在下载的仓库根目录运行 `pkgload::load_all(".")`。
 
 | 你想检查什么？ | 从哪里开始 |
 |---|---|
@@ -231,7 +231,7 @@ run_model_validation_guide()
 
 Use this case to generate survey data from a fitted model, check estimates against known simulated values, or test predictions against observations withheld from fitting.
 
-**Before you start:** these functions are in the latest GitHub `main` source, beyond the 2.2.9 release tag. Use an installation containing them, or run `pkgload::load_all(".")` from the downloaded repository root.
+**Before you start:** these functions require ALSCL 2.3.0 or later. Install that version, or run `pkgload::load_all(".")` from the downloaded repository root.
 
 | What would you like to check? | Where to start |
 |---|---|

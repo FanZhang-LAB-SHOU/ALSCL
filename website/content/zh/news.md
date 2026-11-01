@@ -1,4 +1,11 @@
-## 未发布
+## ALSCL 2.3.0
+
+- 正式发布 2.2.9 之后新增的 19 个评估工作流函数（数据准备与检查、结果提取与存档、敏感性情景、剖面、投影、拟合模型模拟与留出预测检验），共 64 个导出函数。
+- `run_alscl()` 和 `retro_alscl()` 与 `run_acl()` 一样推断 `growth_step`：NULL 时 rec.age 小于 1 取 rec.age，否则取 1。年度 ALSCL 数据若 rec.age 小于 1，请显式传入 `growth_step = 1`。
+- `fit_scenarios()` 默认 `model = "acl"`；每个情景只用一个初值，除非 x 或调用设置了 `nstarts`，与 `hindcast_model()`、`retro_model()` 规则相同。`retro_model()` 同时接受 `model` 和 `model_type`。
+- `simulate_fit()` 生成的输入列表不再携带源拟合的 `output`、`ncores` 和 `silent` 设置。
+- 所有工作进程数都遵守 `R CMD check` 的两进程限制。
+- 示例脚本改用导出的 `read_survey_csv()`、`prepare_alscl_data()` 和 `check_alscl_data()`；旧辅助脚本的读取函数改为调用包函数。图谱改为 44 张；修正速度文档的过时表述、指南数值、函数参考及四个网页。
 
 - 新增 `simulate_fit()`：给定拟合状态或重新抽取平稳过程后生成调查数据；新增 `hindcast_model()`：用扩展时间窗口进行调查预测检验，并提供配对持平基准。保留真值、失败诊断、评分分母及无网格案例图。
 - 投影默认拒绝已知失败拟合；模拟批次新增 `nstarts`；评估配方记录可取得的源码提交、核心／R 摘要和运行环境，重新拟合时提示变化。

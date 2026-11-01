@@ -5,7 +5,7 @@ Complete the [worked YTF example](first-model.html) first. The examples below us
 |Setting|Meaning and effect|
 |---|---|
 | `rec.age`, `nage` |Recruitment age and number of age classes|
-| `growth_step` |Years per step. ACL NULL uses rec.age if below 1, otherwise 1; ALSCL defaults to 1. Set 0.25 explicitly for quarterly data.|
+| `growth_step` |Years per step. NULL uses rec.age if below 1, otherwise 1, in both models. Set 0.25 explicitly for quarterly data.|
 | `M` |Instantaneous natural mortality per model step|
 | `sel_L50`, `sel_L95` |Fixed survey catchability locations|
 | `len_mid`, `len_border` |Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞|

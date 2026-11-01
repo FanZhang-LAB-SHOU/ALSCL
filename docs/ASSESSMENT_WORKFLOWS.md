@@ -18,7 +18,7 @@ Use this guide to prepare an assessment, inspect its results and choose follow-u
 
 After fitting, choose the task you need: [save results](#assessment-en-results), [check residuals](#assessment-en-diagnostics), [test assumptions](#assessment-en-sensitivity), [project a scenario](#assessment-en-projections), [evaluate simulation replicates](#assessment-en-simulations), or [validate predictions](#assessment-en-validation). Sensitivity, profiles and simulation batches perform additional fits; they are optional analyses.
 
-**Version and setup.** These workflows require the latest `main` source on GitHub; they are not included in the earlier 2.2.9 release tag. Install that source and prepare a working TMB compiler before fitting. All example plots use grid-free panels.
+**Version and setup.** These workflows require ALSCL 2.3.0 or later. Install the package and prepare a working TMB compiler before fitting. All example plots use grid-free panels.
 
 #### Load the teaching data
 
@@ -342,7 +342,7 @@ Use `simulate_fit()` to generate data from the fitted process and observation mo
 
 完成拟合后，可按需要选择：[保存结果](#assessment-zh-results)、[检查残差](#assessment-zh-diagnostics)、[检验假设敏感性](#assessment-zh-sensitivity)、[投影未来情景](#assessment-zh-projections)、[汇总模拟重复](#assessment-zh-simulations)或[验证预测](#assessment-zh-validation)。敏感性、参数剖面和模拟批次会进行额外拟合，可按分析目的选做。
 
-**版本与环境。** 这些工作流需要 GitHub 最新 `main` 源码，早先的 2.2.9 发布标签不含这些接口。拟合前请安装最新源码，并准备可用的 TMB 编译工具。所有示例图均保持无网格样式。
+**版本与环境。** 这些工作流需要 ALSCL 2.3.0 或更高版本。拟合前请安装软件包，并准备可用的 TMB 编译工具。所有示例图均保持无网格样式。
 
 #### 加载教学数据
 

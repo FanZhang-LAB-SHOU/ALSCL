@@ -13,8 +13,6 @@ years <- sub('.*; ([0-9]+) years.*', '\\1', grep('^Data:', meta, value = TRUE))
 cpu <- sub('^CPU: ', '', grep('^CPU:', meta, value = TRUE))
 if (!length(cpu)) cpu <- 'shared computer'
 render <- function(name, draw, width = 10, height = 5) {
-  svg(file.path(figures, paste0(name, '.svg')), width = width, height = height,
-      family = 'sans', bg = 'white'); draw(); dev.off()
   png(file.path(figures, paste0(name, '.png')), width = width * 160, height = height * 160,
       res = 160, type = 'cairo', bg = 'white'); draw(); dev.off()
 }

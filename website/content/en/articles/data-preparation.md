@@ -103,7 +103,7 @@ For your data, provide recruitment age, number of age classes, natural mortality
 
 <h2 id="legacy-workflows">Earlier script-based workflows</h2>
 
-Existing scripts that use `validate_survey_tables()` or `fit_survey_tables()` remain supported. These helpers require the [repository helper script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R), unlike the public readers above. Run this optional example from the repository root:
+Older scripts that use `validate_survey_tables()` or `fit_survey_tables()` from the [repository helper script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R) still run; its readers now call the exported functions, so sourcing it does not change how tables are read. New analyses use the exported functions above and do not need the script. Run this optional example from the repository root:
 
 ```r
 source("scripts/real_data_workflow.R", encoding = "UTF-8")

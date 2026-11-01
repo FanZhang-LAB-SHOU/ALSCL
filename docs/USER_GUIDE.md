@@ -2,9 +2,9 @@
 
 **从模拟案例到自己的调查体长数据。From simulation examples to your own survey length data.**
 
-本指南随基于 ALSCL 2.2.9 的 `main` 开发源码更新。先安装最新源码并加载软件包；只有使用 `source("scripts/...")` 或仓库示例文件的代码才需要从仓库根目录执行。拟合配图使用内置模拟数据 `YTF_example`。
+本指南对应 ALSCL 2.3.0。先安装并加载软件包；只有使用 `source("scripts/...")` 或仓库示例文件的代码才需要从仓库根目录执行。拟合配图使用内置模拟数据 `YTF_example`。
 
-This guide follows the development source on `main`, based on ALSCL 2.2.9. Install the latest source and load the package first. Only examples using `source("scripts/...")` or repository files require the repository root as the working directory. Fitted-model figures use the synthetic `YTF_example`.
+This guide describes ALSCL 2.3.0. Install and load the package first. Only examples using `source("scripts/...")` or repository files require the repository root as the working directory. Fitted-model figures use the synthetic `YTF_example`.
 
 第一次使用，先完成[内置案例](#builtin)，再看[诊断](#diagnostics)；需要了解公式时再查[模型原理](#theory)。准备正式数据时，按[整理三张表](#excel) → [导入与检查](#observations) → [参数与 map](#fitting)的顺序阅读。实测数据使用自己的生物学依据，YTF 的教学固定规则不应直接照搬。
 
@@ -17,11 +17,11 @@ For a first run, follow the [built-in example](#builtin), then [diagnostics](#di
 | 从拟合模型模拟数据，或预测留出的时期 / Simulate from a fit or predict held-out periods | [模型模拟与时间留出验证 / Model validation](MODEL_VALIDATION.md) |
 | 查找一个参数或绘图选项 / Look up an argument or plot option | [函数参考 / Function reference](FUNCTION_REFERENCE.md) |
 
-新增评估接口需要最新开发源码，较早的 2.2.9 发布标签不包含全部功能。网站可选择单一语言连续阅读：[English](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
+网站可选择单一语言连续阅读：[English](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)。
 
-The new assessment interfaces require the latest development source; the earlier 2.2.9 release tag does not include all of them. For continuous reading in one language, use the [English](https://fanzhang-lab-shou.github.io/ALSCL/) or [Simplified Chinese](https://fanzhang-lab-shou.github.io/ALSCL/zh/) website.
+For continuous reading in one language, use the [English](https://fanzhang-lab-shou.github.io/ALSCL/) or [Simplified Chinese](https://fanzhang-lab-shou.github.io/ALSCL/zh/) website.
 
-[首页 / Home](../README.md) · [64 个函数及参数 / API](FUNCTION_REFERENCE.md) · [45 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
+[首页 / Home](../README.md) · [64 个函数及参数 / API](FUNCTION_REFERENCE.md) · [44 张示例图 / Gallery](PLOT_GALLERY.md) · [Excel 示例 / Workbook](data/ALSCL_Data_Entry_Example.xlsx)
 
 | 学习模块 / Module | 你会完成什么 / Outcome |
 |---|---|
@@ -448,19 +448,22 @@ The example uses midpoints 6:50 by 2 and 22 explicit internal boundaries 7:49. S
 <a id="observations"></a>
 ## 5. 导入自己的实测数据 / Importing your observations
 
-下面保留旧的 [real_data_workflow.R](../scripts/real_data_workflow.R) 脚本工作流，其 `validate_survey_tables()` 和 `fit_survey_tables()` 仍需 `source()`。当前开发版本另提供公开的 `read_survey_csv()`、`read_survey_excel()`、`prepare_alscl_data()` 和 `check_alscl_data()`，无需加载仓库脚本；完整用法见[评估工作流](ASSESSMENT_WORKFLOWS.md)。Excel 读取需要可选的 `readxl`，保留时间表头并显式转换数字文本。
+用包函数读取三表并在编译前检查。`read_survey_csv()` 读取目录中的三个 CSV，`read_survey_excel()` 读取工作簿的三个工作表（需要可选的 `readxl`），两者保留时间表头并显式转换数字文本；`prepare_alscl_data()` 组装输入列表，`check_alscl_data()` 在不编译的情况下检查数据、时间网格和参数设置。完整用法见[评估工作流](ASSESSMENT_WORKFLOWS.md)。旧脚本 [real_data_workflow.R](../scripts/real_data_workflow.R) 的 `validate_survey_tables()` 和 `fit_survey_tables()` 仍可 `source()` 使用，其读取函数已改为调用包函数。
 
-The legacy script workflow below remains supported; its validate_survey_tables() and fit_survey_tables() helpers require source(). The current development version additionally exports read_survey_csv(), read_survey_excel(), prepare_alscl_data() and check_alscl_data(), with no repository script required; see [assessment workflows](ASSESSMENT_WORKFLOWS.md). Excel import requires optional readxl and preserves time headers while converting numeric text explicitly.
+Read the three tables with the package functions and check them before compiling. `read_survey_csv()` reads the three CSV files in a directory and `read_survey_excel()` the three sheets of a workbook (optional `readxl`); both keep the time headers and convert numeric text explicitly. `prepare_alscl_data()` assembles the input bundle and `check_alscl_data()` checks data, time grid and settings without compiling; see [assessment workflows](ASSESSMENT_WORKFLOWS.md). The `validate_survey_tables()` and `fit_survey_tables()` helpers of the older script [real_data_workflow.R](../scripts/real_data_workflow.R) can still be sourced; its readers now call the package functions.
 
 ```r
 install.packages("readxl") # 只需安装一次 / Install once
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
+library(ALSCL)
 # 先用附带工作簿练习 / Start with the supplied workbook
 my_inputs <- read_survey_excel("docs/data/ALSCL_Data_Entry_Example.xlsx")
-validate_survey_tables(my_inputs, growth_step = 1, zero_action = "error")
 # CSV 也可以，目录内需有三张同名 CSV / Three named CSV files also work
 csv_inputs <- read_survey_csv("docs/data")
 str(csv_inputs)
+# 组装并检查；生物参数是示例值 / Assemble and check; the biology values are examples
+x <- prepare_alscl_data(my_inputs, fit_args = list(rec.age = 1, nage = 15, M = 0.2,
+  sel_L50 = 15, sel_L95 = 20, growth_step = 1, zero_action = "error"))
+check_alscl_data(x, "acl")$summary
 ```
 
 导入步骤只检查三表，不自动套用内置 YTF 的固定参数。完整的 x、参数分类、map 和双模型拟合见本节下方 5.2–5.3。 / Importing checks the three tables without applying the bundled YTF fixed-parameter configuration. Sections 5.2–5.3 below provide the complete x, parameter classification, maps and both fits.
@@ -717,15 +720,15 @@ source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 以下为完整脚本 / Complete script:
 
 ```r
-# ALSCL 2.2.2: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-stopifnot(packageVersion("ALSCL") >= "2.2.2")
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
+source('scripts/plot_helpers.R')
+stopifnot(packageVersion("ALSCL") >= "2.3.0")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
 # 正式数据改成 "my_data"，其中放以下三个 CSV：
@@ -753,7 +756,6 @@ stopifnot(all(is.finite(len_mid)), all(diff(len_mid) > 0))
 # This midpoint formula is only used for the equal-width demonstration bins.
 stopifnot(max(abs(diff(len_mid) - diff(len_mid)[1])) < 1e-8)
 len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
-validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
 
 # 3. 各模型拟合设置 / Model-specific settings ------------------------------
 # 生长和多数过程参数作为初值，不再自动固定每个提供的参数。
@@ -785,11 +787,8 @@ map_alscl <- list()
 # map_acl["t0"] <- list(NULL)
 # map_alscl["log_t0"] <- list(NULL)
 
-# 4. 组装 x / Assemble the input bundle -----------------------------------
-x <- list(
-  data.CatL = inputs$data.CatL,
-  data.wgt = inputs$data.wgt,
-  data.mat = inputs$data.mat,
+# 4. 组装并检查 x / Assemble and check the input bundle --------------------
+x <- prepare_alscl_data(inputs,
   fit_args = list(
     rec.age = bio$rec.age, nage = bio$nage,
     M = bio$M_annual * bio$growth_step,
@@ -801,6 +800,12 @@ x <- list(
   fit_config = list(
     acl = list(parameters = p_acl, map = map_acl),
     alscl = list(parameters = p_alscl, map = map_alscl)))
+# 不编译即可检查数据、时间网格和参数设置 / Check data, time grid and settings without compiling.
+for (model in c("acl", "alscl")) {
+  check <- check_alscl_data(x, model)
+  if (!check$valid) stop(paste(check$errors, collapse = "\n"))
+  print(check$summary)
+}
 
 # 5. 直接拟合 / Fit directly ----------------------------------------------
 # 内置加速使用当前 alscl_speed() 设置，无需额外包装。
@@ -838,9 +843,9 @@ print(ssb_plot)
 portable <- function(fit) fit[setdiff(names(fit), "obj")]
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-ggplot2::ggsave(file.path(output_dir, "residuals.png"), residual_plot,
+save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot,
                 width = 10, height = 8, dpi = 150)
-ggplot2::ggsave(file.path(output_dir, "SSB.png"), ssb_plot,
+save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot,
                 width = 8, height = 5, dpi = 150)
 saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
@@ -886,7 +891,7 @@ The 2.2.2 run used four cores for standard errors and the default safeguarded re
 | 设置 / Setting | 怎么调整及影响 / Meaning and effect |
 |---|---|
 | `rec.age`, `nage` | 起始年龄（年）和年龄组数；年龄网格为 rec.age + (0:nage-1) × growth_step / Recruitment age and number of age classes |
-| `growth_step` | 每步多少年；ACL 的 NULL 按 rec.age<1 时取 rec.age、否则取 1，ALSCL 默认 1，季度应显式设 0.25 / Years per step; specify 0.25 for quarterly ALSCL |
+| `growth_step` | 每步多少年；NULL 时 rec.age<1 取 rec.age、否则取 1，两个模型相同，季度应显式设 0.25 / Years per step; NULL uses rec.age when below 1, otherwise 1, in both models; set 0.25 explicitly for quarterly data |
 | `M` | 每模型步长自然死亡瞬时率；年率转季度需相应换算 / Instantaneous natural mortality per model step |
 | `sel_L50`, `sel_L95` | 固定调查 q 的位置和斜率，L95 必须大于 L50 / Fixed survey catchability locations |
 | `len_mid`, `len_border` | 组中心及内部边界；ALSCL 外端点必须为 −∞/+∞ / Midpoints and internal boundaries; ALSCL outer endpoints must be −∞/+∞ |
@@ -1107,9 +1112,9 @@ plot_residuals(b, type = "length", facet_ncol = 4)
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-本次 YTF 主拟合的优化码均为 0，最大绝对梯度约为 ACL `1.22e-4`、ALSCL `5.75e-9`，Hessian 均正定，没有检测到边界命中。结果记录见 [convergence.csv](results/convergence.csv)。梯度 < 0.001 是本教学流程的数值筛查阈值，不是适用于所有模型的科学有效性标准。
+本次 YTF 主拟合的优化码均为 0，最大绝对梯度约为 ACL `2.8e-10`、ALSCL `5.75e-9`，Hessian 均正定，没有检测到边界命中。结果记录见 [convergence.csv](results/convergence.csv)。梯度 < 0.001 是本教学流程的数值筛查阈值，不是适用于所有模型的科学有效性标准。
 
-Both example fits returned code 0, positive-definite Hessians and no detected bound hits. Maximum absolute gradients were about `1.22e-4` and `5.75e-9`. The tutorial's 0.001 screening threshold is not a universal validity criterion.
+Both example fits returned code 0, positive-definite Hessians and no detected bound hits. Maximum absolute gradients were about `2.8e-10` and `5.75e-9`. The tutorial's 0.001 screening threshold is not a universal validity criterion.
 
 ### 7.2 残差与生物假设 / Residuals and biological assumptions
 
@@ -1178,7 +1183,7 @@ plot_compare_F(a_group, a_shared)
 
 默认采用 ggsci NPG；[色板、覆盖优先级和导出示例 / Palettes, overrides and export](PLOT_STYLE.md)。
 
-[完整图谱](PLOT_GALLERY.md) 包含 45 张实际生成的图、22 个公开绘图函数及主要类型。每张图有中英文解读及具体调用；全部使用同一 YTF 数据，外部生长参照点也是明确标注的模拟值。
+[完整图谱](PLOT_GALLERY.md) 包含 44 张实际生成的图、22 个公开绘图函数及主要类型。每张图有中英文解读及具体调用；全部使用同一 YTF 数据，外部生长参照点也是明确标注的模拟值。
 
 The gallery contains 45 rendered figures covering all 22 public plotting functions and major variants, with calls and bilingual interpretation. All use the same YTF inputs; external growth reference points are explicitly synthetic.
 

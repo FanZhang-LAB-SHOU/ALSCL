@@ -31,7 +31,7 @@ def fix_url(url,source):
  dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
  return ']('+dest+('#'+anchor if sep else '')+')'
-# Map the gallery's 45 numbered sections, keeping function anchors and executable code.
+# Map the gallery's 44 numbered sections, keeping function anchors and executable code.
 gallery=read('PLOT_GALLERY.md'); marks=list(re.finditer(r'(?m)^## (\d+)\. ',gallery));blocks={}
 for i,m in enumerate(marks):
  block=gallery[m.start():marks[i+1].start() if i+1<len(marks) else len(gallery)]
@@ -40,9 +40,9 @@ for i,m in enumerate(marks):
  blocks[int(m[1])]=block
 intro=f'''# 开始使用 · Getting started
 
-安装最新 main 开发源码后即可使用本手册中的函数。源码基于 ALSCL {version}；较早的发布标签不含全部新增接口。以下代码在 R 中运行。
+安装 ALSCL {version} 后即可使用本手册中的函数。以下代码在 R 中运行。
 
-Install the latest main development source to use the functions in this manual. It is based on ALSCL {version}; the earlier release tag does not contain every new interface. Run the following in R.
+Install ALSCL {version} to use the functions in this manual. Run the following in R.
 
 ```r
 # 安装 ALSCL / Install ALSCL
@@ -94,8 +94,8 @@ chapters=[
 ('06-Fitting','初值、边界与拟合 · Fitting controls',no_title(sections['fitting'])),
 ('07-Diagnostics','诊断与结果解读 · Diagnostics',no_title(sections['diagnostics'])),
 ('08-Population-Plots','调查与种群图 · Survey and population plots',plot_context+'\n\n'.join(blocks[i] for i in range(1,19))),
-('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,34))),
-('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(34,43))+[45])),
+('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,33))),
+('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(33,42))+[44])),
 ('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])+rho+'\n\n'+blocks[43]+'\n\n'+blocks[44]),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
@@ -129,9 +129,9 @@ home=f'''# ALSCL 完整使用手册 · Complete user manual
 
 **ALSCL {version} · 简体中文与英文 · {len(chapters)} 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。说明随 main 开发源码更新；较早的 {version} 发布标签不包含全部新增接口。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL {version}。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual follows main; the earlier {version} release tag does not contain every new interface.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL {version}.
 
 [开始使用 · Getting started]({base}/wiki/01-Start) · [仓库主页 · Repository]({base}/tree/main) · [单页书稿 · Single-page book]({base}/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook]({base}/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 

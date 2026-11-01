@@ -9,7 +9,7 @@ The work had four steps:
 3. Make the default the change that leaves results identical; offer the change that alters them slightly as an option; reject the rest (section 4).
 4. Benchmark the original code against both changes on six model and data combinations (section 5), and check fits that estimate more fixed effects.
 
-With the default settings (parallel standard errors, CppAD), results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in the benchmark. With `framework = "TMBad"` fits were 1.25-1.68 times faster, but results are not identical: estimates differed from the original code by up to 2.3e-11 (relative) when 5 fixed effects were estimated and by up to 2.7e-8 when 10 were estimated. Both changes are set with `alscl_speed()`:
+With the default settings (parallel standard errors, CppAD), results were identical to those of ALSCL 2.0.0 in the benchmark made at that time, and fits were 1.13-1.24 times faster. Since 2.2.2 the default optimizer refinement can change estimates, so complete fits are not identical across versions; parallel standard errors still match the sequential calculation at the same parameters. With `framework = "TMBad"` fits were 1.25-1.68 times faster, but results are not identical: estimates differed from the original code by up to 2.3e-11 (relative) when 5 fixed effects were estimated and by up to 2.7e-8 when 10 were estimated. Both changes are set with `alscl_speed()`:
 
 ```r
 library(ALSCL)

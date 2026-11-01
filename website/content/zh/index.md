@@ -35,7 +35,7 @@ library(ALSCL)
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
 
-网站与 `main` 分支同步，包含[未发布更新](news/index.html)中的功能；较早的 2.2.9 发布标签不包含这里介绍的全部接口。
+网站对应 ALSCL 2.3.0；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 

@@ -42,6 +42,29 @@ test_that("scenarios preserve settings and failures and use actual socket worker
   }
 })
 
+test_that("scenarios use the bundle's nstarts or one start, and default to ACL", {
+  z <- batch_recipe_fixture()
+  seen <- list()
+  local_mocked_bindings(.acl_batch_apply = function(settings, model, ncores) {
+    seen <<- c(seen, list(list(settings = settings, model = model)))
+    lapply(settings, function(s) list(fit = list(converge = "FAILED", error = "mock"),
+      elapsed = 0, pid = Sys.getpid(), warnings = character()))
+  }, .package = "ALSCL")
+  x <- z$args[setdiff(names(z$args), "nstarts")]
+  x$ncores <- 3L
+  default <- fit_scenarios(x, list(reference = list()))
+  expect_identical(seen[[1]]$model, "acl")
+  expect_identical(default$settings$reference$nstarts, 1L)
+  expect_identical(default$settings$reference$ncores, 1L)
+  x$nstarts <- 2L
+  bundled <- fit_scenarios(x, list(reference = list(), more = list(nstarts = 4L)))
+  expect_identical(bundled$settings$reference$nstarts, 2L)
+  expect_identical(bundled$settings$more$nstarts, 4L)
+  explicit <- fit_scenarios(x, list(reference = list()), nstarts = 3L, ncores = 2)
+  expect_identical(explicit$settings$reference$nstarts, 3L)
+  expect_identical(explicit$settings$reference$ncores, 1L)
+})
+
 test_that("scenario input checks retain named NULL and reject changed tables", {
   z <- batch_recipe_fixture()
   expect_error(fit_scenarios(z$args, list(list())), "unique, nonempty")

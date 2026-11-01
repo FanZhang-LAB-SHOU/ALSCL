@@ -1,8 +1,8 @@
 # YTF 绘图图谱 · YTF plot gallery
 
-**45 张图，覆盖 22 个公开绘图函数及主要类型。45 figures covering all 22 public plotting functions and major variants.**
+**44 张图，覆盖 22 个公开绘图函数及主要类型。44 figures covering all 22 public plotting functions and major variants.**
 
-全部 45 张图使用当前绘图函数重新生成，保留 2.2.5 建立的内置教学拟合及无网格默认样式；BL/SBL 图包含实际可用的标准误区间。 / All 45 figures are regenerated with the current plotting functions from the teaching fits established in 2.2.5. Defaults remain grid-free, including the available BL/SBL intervals.
+全部 44 张图使用当前绘图函数重新生成，保留 2.2.5 建立的内置教学拟合及无网格默认样式；BL/SBL 图包含实际可用的标准误区间。 / All 44 figures are regenerated with the current plotting functions from the teaching fits established in 2.2.5. Defaults remain grid-free, including the available BL/SBL intervals.
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
@@ -43,29 +43,28 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [20. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
 - [21. ACL 捕捞死亡率 year / ACL fishing mortality year](#F_ACL_year)
 - [22. ACL 捕捞死亡率 age / ACL fishing mortality age](#F_ACL_age)
-- [23. ACL 捕捞死亡率 length / ACL fishing mortality length](#F_ACL_length)
-- [24. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](#F_ALSCL_year)
-- [25. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](#F_ALSCL_age)
-- [26. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](#F_ALSCL_length)
-- [27. 对数残差 length / Log residuals length](#residuals_length)
-- [28. 对数残差 year / Log residuals year](#residuals_year)
-- [29. 对数过程偏差 R / Log process deviations R](#deviation_R_TRUE)
-- [30. 过程乘数 R / Process multipliers R](#deviation_R_FALSE)
-- [31. 对数过程偏差 F / Log process deviations F](#deviation_F_TRUE)
-- [32. 过程乘数 F / Process multipliers F](#deviation_F_FALSE)
-- [33. 长度组成山脊图 / Length composition ridges](#ridges)
-- [34. 种群时间序列比较 / Population time series comparison](#compare_ts)
-- [35. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
-- [36. 残差联合诊断 / Combined residual diagnostics](#compare_residuals)
-- [37. 生长与外部参照接口 / Growth and reference-data interface](#compare_growth)
-- [38. 两模型调查拟合 / Survey fits from both models](#compare_CatL)
-- [39. 拟合指标比较 / Fit metric comparison](#compare_metrics)
-- [40. 固定调查可捕性 / Fixed survey catchability](#compare_selectivity)
-- [41. 总体 F 比较 apical / Summary F comparison apical](#compare_F_apical)
-- [42. 总体 F 比较 mean / Summary F comparison mean](#compare_F_mean)
-- [43. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
-- [44. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
-- [45. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
+- [23. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](#F_ALSCL_year)
+- [24. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](#F_ALSCL_age)
+- [25. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](#F_ALSCL_length)
+- [26. 对数残差 length / Log residuals length](#residuals_length)
+- [27. 对数残差 year / Log residuals year](#residuals_year)
+- [28. 对数过程偏差 R / Log process deviations R](#deviation_R_TRUE)
+- [29. 过程乘数 R / Process multipliers R](#deviation_R_FALSE)
+- [30. 对数过程偏差 F / Log process deviations F](#deviation_F_TRUE)
+- [31. 过程乘数 F / Process multipliers F](#deviation_F_FALSE)
+- [32. 长度组成山脊图 / Length composition ridges](#ridges)
+- [33. 种群时间序列比较 / Population time series comparison](#compare_ts)
+- [34. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
+- [35. 残差联合诊断 / Combined residual diagnostics](#compare_residuals)
+- [36. 生长与外部参照接口 / Growth and reference-data interface](#compare_growth)
+- [37. 两模型调查拟合 / Survey fits from both models](#compare_CatL)
+- [38. 拟合指标比较 / Fit metric comparison](#compare_metrics)
+- [39. 固定调查可捕性 / Fixed survey catchability](#compare_selectivity)
+- [40. 总体 F 比较 apical / Summary F comparison apical](#compare_F_apical)
+- [41. 总体 F 比较 mean / Summary F comparison mean](#compare_F_mean)
+- [42. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
+- [43. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
+- [44. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
 
 <a id="plot_CatL"></a>
 
@@ -517,25 +516,8 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
-<a id="F_ACL_length"></a>
-## 23. ACL 捕捞死亡率 length / ACL fishing mortality length
-
-```r
-# 绘制本图 / Draw this figure
-plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
-```
-
-[![ACL 捕捞死亡率 length / ACL fishing mortality length](figures/ytf/F_ACL_length.png)](figures/ytf/F_ACL_length.png)
-
-ACL 没有独立长度别 F；示例明确使用 age。旧 length 别名保留并警告，仍表示年龄别 F。
-
-ACL has no independent F-at-length. Use age explicitly; the legacy length alias warns and still returns this age-specific plot.
-
-[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
 <a id="F_ALSCL_year"></a>
-## 24. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year
+## 23. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year
 
 ```r
 # 绘制本图 / Draw this figure
@@ -552,7 +534,7 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_age"></a>
-## 25. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age
+## 24. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age
 
 ```r
 # 绘制本图 / Draw this figure
@@ -569,7 +551,7 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_length"></a>
-## 26. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length
+## 25. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length
 
 ```r
 # 绘制本图 / Draw this figure
@@ -588,7 +570,7 @@ Since 2.2.3, the horizontal axis uses actual length midpoints, with one panel pe
 <a id="plot_residuals"></a>
 
 <a id="residuals_length"></a>
-## 27. 对数残差 length / Log residuals length
+## 26. 对数残差 length / Log residuals length
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 
@@ -609,7 +591,7 @@ Observed minus fitted log index, without standardization. Smooth curves reveal s
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
 <a id="residuals_year"></a>
-## 28. 对数残差 year / Log residuals year
+## 27. 对数残差 year / Log residuals year
 
 ```r
 # 绘制本图 / Draw this figure
@@ -628,7 +610,7 @@ Observed minus fitted log index, without standardization. Smooth curves reveal s
 <a id="plot_deviance"></a>
 
 <a id="deviation_R_TRUE"></a>
-## 29. 对数过程偏差 R / Log process deviations R
+## 28. 对数过程偏差 R / Log process deviations R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -646,7 +628,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_R_FALSE"></a>
-## 30. 过程乘数 R / Process multipliers R
+## 29. 过程乘数 R / Process multipliers R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -664,7 +646,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_TRUE"></a>
-## 31. 对数过程偏差 F / Log process deviations F
+## 30. 对数过程偏差 F / Log process deviations F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -682,7 +664,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_FALSE"></a>
-## 32. 过程乘数 F / Process multipliers F
+## 31. 过程乘数 F / Process multipliers F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -702,7 +684,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 <a id="plot_ridges"></a>
 
 <a id="ridges"></a>
-## 33. 长度组成山脊图 / Length composition ridges
+## 32. 长度组成山脊图 / Length composition ridges
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 
@@ -724,7 +706,7 @@ Each period is normalized separately: observations left, fit right. This does no
 <a id="plot_compare_ts"></a>
 
 <a id="compare_ts"></a>
-## 34. 种群时间序列比较 / Population time series comparison
+## 33. 种群时间序列比较 / Population time series comparison
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -746,7 +728,7 @@ Compare common quantities over the same time window. Free y axes preclude amplit
 <a id="plot_compare_F"></a>
 
 <a id="compare_F"></a>
-## 35. 死亡率矩阵比较 / Fishing mortality matrices
+## 34. 死亡率矩阵比较 / Fishing mortality matrices
 
 ```r
 # 绘制本图 / Draw this figure
@@ -764,7 +746,7 @@ ACL uses age and ALSCL length on the vertical axis; cells do not correspond one 
 <a id="plot_compare_residuals"></a>
 
 <a id="compare_residuals"></a>
-## 36. 残差联合诊断 / Combined residual diagnostics
+## 35. 残差联合诊断 / Combined residual diagnostics
 
 **2.2.9 修订 / Changes in 2.2.9.** `plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
 
@@ -786,7 +768,7 @@ Includes histograms, QQ plots, annual residuals and length-bin boxplots. Annual 
 <a id="plot_compare_growth"></a>
 
 <a id="compare_growth"></a>
-## 37. 生长与外部参照接口 / Growth and reference-data interface
+## 36. 生长与外部参照接口 / Growth and reference-data interface
 
 参考数据与排版辅助函数 / Reference data and layout helper:
 
@@ -821,7 +803,7 @@ The reference curve uses synthetic Age and Length data, not empirical measuremen
 <a id="plot_compare_CatL"></a>
 
 <a id="compare_CatL"></a>
-## 38. 两模型调查拟合 / Survey fits from both models
+## 37. 两模型调查拟合 / Survey fits from both models
 
 **2.2.9 修订 / Changes in 2.2.9.** `plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
 
@@ -843,7 +825,7 @@ Four selected years are shown. Omit years to show all periods. Points are observ
 <a id="plot_compare_metrics"></a>
 
 <a id="compare_metrics"></a>
-## 39. 拟合指标比较 / Fit metric comparison
+## 38. 拟合指标比较 / Fit metric comparison
 
 ```r
 # 绘制本图 / Draw this figure
@@ -862,7 +844,7 @@ The generating model is age based. This comparison cannot establish universal su
 <a id="plot_compare_selectivity"></a>
 
 <a id="compare_selectivity"></a>
-## 40. 固定调查可捕性 / Fixed survey catchability
+## 39. 固定调查可捕性 / Fixed survey catchability
 
 ```r
 # 绘制本图 / Draw this figure
@@ -880,7 +862,7 @@ This function connects the input survey q; it does not estimate fishery selectiv
 <a id="plot_compare_annual_F"></a>
 
 <a id="compare_F_apical"></a>
-## 41. 总体 F 比较 apical / Summary F comparison apical
+## 40. 总体 F 比较 apical / Summary F comparison apical
 
 ```r
 # 绘制本图 / Draw this figure
@@ -897,7 +879,7 @@ Apical is the maximum; mean is an unweighted group average. Despite its name, th
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_annual_F)
 
 <a id="compare_F_mean"></a>
-## 42. 总体 F 比较 mean / Summary F comparison mean
+## 41. 总体 F 比较 mean / Summary F comparison mean
 
 ```r
 # 绘制本图 / Draw this figure
@@ -916,7 +898,7 @@ Apical is the maximum; mean is an unweighted group average. Despite its name, th
 <a id="plot_retro"></a>
 
 <a id="retro_ACL"></a>
-## 43. ACL 回溯分析 / ACL retrospective analysis
+## 42. ACL 回溯分析 / ACL retrospective analysis
 
 ```r
 # 绘制本图 / Draw this figure
@@ -932,7 +914,7 @@ plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
 <a id="retro_ALSCL"></a>
-## 44. ALSCL 回溯分析 / ALSCL retrospective analysis
+## 43. ALSCL 回溯分析 / ALSCL retrospective analysis
 
 ```r
 # 绘制本图 / Draw this figure
@@ -948,7 +930,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
 <a id="truth"></a>
-## 45. 模拟真值与条件估计 / Simulation truth and conditional estimates
+## 44. 模拟真值与条件估计 / Simulation truth and conditional estimates
 
 ```r
 # 将生成真值与报告中的估计对齐 / Align truth and fitted reports

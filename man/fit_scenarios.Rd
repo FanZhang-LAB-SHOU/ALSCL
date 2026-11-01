@@ -7,7 +7,7 @@
 fit_scenarios(
   x,
   scenarios,
-  model = c("alscl", "acl"),
+  model = c("acl", "alscl"),
   ncores = 1,
   F_summary = c("mean", "apical"),
   ...
@@ -21,7 +21,7 @@ overrides the common settings, including complete parameters/map lists.
 A named NULL is preserved. An empty list defines the reference scenario.
 Data tables cannot be changed: compare scenarios on the same observations.}
 
-\item{model}{Model to fit, "alscl" or "acl".}
+\item{model}{Model to fit, "acl" (default) or "alscl".}
 
 \item{ncores}{Maximum number of independent socket workers.}
 
@@ -42,8 +42,10 @@ Apply explicitly named changes to an input bundle. This is sensitivity to
 assumptions, not a profile likelihood or an automatic model ranking.
 }
 \details{
-Inner fitting uses one worker and sequential standard errors, while
-retaining the requested number of starts. Warnings are recorded in status.
+Inner fitting uses one worker and sequential standard errors. Each
+scenario runs the nstarts of the bundle or of the call; when neither sets
+it, one start is used, the rule of hindcast_model() and retro_model().
+Warnings are recorded in status.
 Results omit session-specific obj pointers in both serial and parallel modes;
 use refit_model() when a live TMB objective is needed. No ranking is applied.
 }

@@ -17,8 +17,6 @@ cols <- c(original = '#8a8984', cppad_par = '#2a78d6', tmbad_par = '#eb6834')
 pchs <- c(original = 21, cppad_par = 22, tmbad_par = 24)
 ink <- '#0b0b0b'; muted <- '#52514e'; reference <- '#e6e5e1'
 render <- function(name, draw, width = 10, height = 5) {
-  svg(file.path(figures, paste0(name, '.svg')), width = width, height = height,
-      family = 'sans', bg = 'white'); draw(); dev.off()
   png(file.path(figures, paste0(name, '.png')), width = width * 160, height = height * 160,
       res = 160, type = 'cairo', bg = 'white'); draw(); dev.off()
 }

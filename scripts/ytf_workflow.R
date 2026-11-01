@@ -82,6 +82,7 @@ render('SSB_Rec','亲体与补充关系','Spawning biomass and recruitment',plot
 render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,se=TRUE),note_zh='生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。',note_en='Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.')
 render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。',note_en='Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.')
 for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
+ if(model=='ACL' && typ=='length') next # ACL has no F at length; type = 'length' is an alias of 'age'
  fit<-if(model=='ACL')a else b
  render(paste('F',model,typ,sep='_'),paste(model,'捕捞死亡率',typ),paste(model,'fishing mortality',typ),plot_fishing_mortality(fit,type=if(model=="ACL" && typ=="length")"age" else typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
  note_zh=if(model=='ACL' && typ=='length')'当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。' else '年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。',

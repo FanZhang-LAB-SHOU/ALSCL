@@ -1,4 +1,11 @@
-## Unreleased
+## ALSCL 2.3.0
+
+- Release the nineteen assessment-workflow functions added since 2.2.9 (data preparation and checks, result extraction and archives, sensitivity scenarios, profiles, projections, fitted-model simulation and hindcast validation): 64 exported functions.
+- `run_alscl()` and `retro_alscl()` infer `growth_step` like `run_acl()`: NULL uses rec.age when it is below one, otherwise one. Pass `growth_step = 1` explicitly for annual ALSCL data with rec.age below one.
+- `fit_scenarios()` defaults to `model = "acl"` and uses one start per scenario unless the bundle or the call sets `nstarts`, the rule of `hindcast_model()` and `retro_model()`. `retro_model()` accepts `model` as well as `model_type`.
+- Simulated bundles from `simulate_fit()` no longer carry the source fit's `output`, `ncores` and `silent` settings.
+- Every worker count respects the two-process limit of `R CMD check`.
+- The example script uses the exported `read_survey_csv()`, `prepare_alscl_data()` and `check_alscl_data()`; the legacy helper script calls the exported readers. The gallery lists 44 figures; stale statements in the speed documents, guide values, the function reference and four website pages are corrected.
 
 - Add `simulate_fit()` for observations conditional on fitted states or resampled stationary processes, and `hindcast_model()` for expanding-window survey prediction checks with paired persistence baselines. Retain truth, failure diagnostics, actual scoring denominators and grid-free worked figures.
 - Guard projections against known failed fits; add `nstarts` to simulation batches; record available source revisions, core/R hashes and runtime metadata in assessment recipes, with change warnings during refitting.

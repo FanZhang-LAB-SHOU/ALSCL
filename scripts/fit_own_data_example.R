@@ -1,4 +1,4 @@
-# ALSCL 2.2.9: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
 # 从仓库根目录运行 / Run from the repository root:
 # source("scripts/fit_own_data_example.R", encoding = "UTF-8")
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
@@ -6,8 +6,7 @@
 
 library(ALSCL)
 source('scripts/plot_helpers.R')
-stopifnot(packageVersion("ALSCL") >= "2.2.9")
-source("scripts/real_data_workflow.R", encoding = "UTF-8")
+stopifnot(packageVersion("ALSCL") >= "2.3.0")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
 # 正式数据改成 "my_data"，其中放以下三个 CSV：
@@ -35,7 +34,6 @@ stopifnot(all(is.finite(len_mid)), all(diff(len_mid) > 0))
 # This midpoint formula is only used for the equal-width demonstration bins.
 stopifnot(max(abs(diff(len_mid) - diff(len_mid)[1])) < 1e-8)
 len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
-validate_survey_tables(inputs, growth_step = bio$growth_step, zero_action = "error")
 
 # 3. 各模型拟合设置 / Model-specific settings ------------------------------
 # 生长和多数过程参数作为初值，不再自动固定每个提供的参数。
@@ -67,11 +65,8 @@ map_alscl <- list()
 # map_acl["t0"] <- list(NULL)
 # map_alscl["log_t0"] <- list(NULL)
 
-# 4. 组装 x / Assemble the input bundle -----------------------------------
-x <- list(
-  data.CatL = inputs$data.CatL,
-  data.wgt = inputs$data.wgt,
-  data.mat = inputs$data.mat,
+# 4. 组装并检查 x / Assemble and check the input bundle --------------------
+x <- prepare_alscl_data(inputs,
   fit_args = list(
     rec.age = bio$rec.age, nage = bio$nage,
     M = bio$M_annual * bio$growth_step,
@@ -83,6 +78,12 @@ x <- list(
   fit_config = list(
     acl = list(parameters = p_acl, map = map_acl),
     alscl = list(parameters = p_alscl, map = map_alscl)))
+# 不编译即可检查数据、时间网格和参数设置 / Check data, time grid and settings without compiling.
+for (model in c("acl", "alscl")) {
+  check <- check_alscl_data(x, model)
+  if (!check$valid) stop(paste(check$errors, collapse = "\n"))
+  print(check$summary)
+}
 
 # 5. 直接拟合 / Fit directly ----------------------------------------------
 # 内置加速使用当前 alscl_speed() 设置，无需额外包装。

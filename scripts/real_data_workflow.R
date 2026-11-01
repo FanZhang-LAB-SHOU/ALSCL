@@ -1,41 +1,15 @@
-# 实测数据导入与验证 / Import and validate your own survey observations.
+# 旧脚本的辅助函数 / Helpers kept for older scripts.
 # source("scripts/real_data_workflow.R", encoding="UTF-8")
-# 这些是指南辅助函数，不属于 ACL 的公开 API / Guide helpers, not ACL exports.
+# 新分析请直接使用包函数 read_survey_csv()、read_survey_excel()、
+# prepare_alscl_data() 和 check_alscl_data()，不需要本文件。
+# New analyses use the exported read_survey_csv(), read_survey_excel(),
+# prepare_alscl_data() and check_alscl_data() and do not need this file.
+# The two readers below call the exported functions, so sourcing this
+# file does not change how tables are read.
 
-.numeric_survey_columns <- function(d, name) {
-  if (ncol(d) < 3L || nrow(d) < 2L)
-    stop(name, ": need a label column, two time columns and two length bins.")
-  d <- as.data.frame(d, stringsAsFactors=FALSE, check.names=FALSE)
-  if (names(d)[1L] != "LengthBin") stop(name, ": first header must be LengthBin.")
-  d[[1L]] <- as.character(d[[1L]])
-  for (i in 2:ncol(d)) {
-    old <- trimws(as.character(d[[i]]))
-    old[is.na(old) | old %in% c("", "NA")] <- NA_character_
-    value <- suppressWarnings(as.numeric(old))
-    if (any(is.na(value) & !is.na(old)))
-      stop(name, ": nonnumeric cell in column ", names(d)[i])
-    d[[i]] <- value
-  }
-  d
-}
+read_survey_excel <- function(file) ALSCL::read_survey_excel(file)
 
-read_survey_excel <- function(file) {
-  if (!requireNamespace("readxl", quietly=TRUE))
-    stop("Install the optional reader with install.packages('readxl').")
-  sheets <- c("data.CatL", "data.wgt", "data.mat")
-  if (!all(sheets %in% readxl::excel_sheets(file)))
-    stop("Workbook requires data.CatL, data.wgt and data.mat sheets.")
-  setNames(lapply(sheets, function(s) .numeric_survey_columns(
-    readxl::read_excel(file, sheet=s, col_types="text", na=c("", "NA"),
-      .name_repair="minimal"), s)), sheets)
-}
-
-read_survey_csv <- function(folder) {
-  sheets <- c("data.CatL", "data.wgt", "data.mat")
-  setNames(lapply(sheets, function(s) .numeric_survey_columns(
-    utils::read.csv(file.path(folder,paste0(s,".csv")),check.names=FALSE,
-      colClasses="character",na.strings=c("", "NA")), s)), sheets)
-}
+read_survey_csv <- function(folder) ALSCL::read_survey_csv(folder)
 
 validate_survey_tables <- function(inputs, growth_step=1, zero_action=c("error","missing")) {
   zero_action <- match.arg(zero_action)

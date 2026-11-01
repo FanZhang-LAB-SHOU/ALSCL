@@ -14,7 +14,7 @@ retro_alscl(
   M,
   sel_L50,
   sel_L95,
-  growth_step = 1,
+  growth_step = NULL,
   ...
 )
 }
@@ -38,9 +38,8 @@ retro_alscl(
 
 \item{sel_L95}{Length at 95 percent survey catchability.}
 
-\item{growth_step}{Numeric. Growth transition time step. Defaults to 1 for
-separate arguments; bundled calls retain the bundle's setting or infer it
-as in \code{\link[=run_alscl]{run_alscl()}}.}
+\item{growth_step}{Time step in years. NULL uses rec.age when it is below
+one, otherwise one, as in \code{\link[=run_alscl]{run_alscl()}}; a bundle supplies its own value.}
 
 \item{...}{Additional arguments passed to \code{\link[=retro_model]{retro_model()}}.}
 }

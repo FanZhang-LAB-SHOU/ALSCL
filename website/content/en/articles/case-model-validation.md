@@ -2,7 +2,7 @@
 
 Use this case to generate survey data from a fitted model, check estimates against known simulated values, or test predictions against observations withheld from fitting.
 
-**Before you start:** these functions are in the latest GitHub `main` source, beyond the 2.2.9 release tag. Use an installation containing them, or run `pkgload::load_all(".")` from the downloaded repository root.
+**Before you start:** these functions require ALSCL 2.3.0 or later. Install that version, or run `pkgload::load_all(".")` from the downloaded repository root.
 
 | What would you like to check? | Where to start |
 |---|---|

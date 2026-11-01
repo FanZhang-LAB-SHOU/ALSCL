@@ -1,15 +1,15 @@
 # Speed-up of ALSCL model fitting: change and results report
 
-Report date: 12 October 2026 (revised after two reviews). These changes are released as ALSCL 2.1.0. Branch: [`dev`](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/dev), compared with `main` at ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). Full diff: [main...dev](https://github.com/FanZhang-LAB-SHOU/ALSCL/compare/main...dev); changes since the first review: [54f1350...dev](https://github.com/FanZhang-LAB-SHOU/ALSCL/compare/54f1350...dev). This report summarises the change for review; the detailed record is [docs/SPEED.md](SPEED.md).
+Report date: 12 October 2026 (revised after two reviews). These changes were released as ALSCL 2.1.0 and compared with ALSCL 2.0.0 (commit [`4dc1fc3`](https://github.com/FanZhang-LAB-SHOU/ALSCL/commit/4dc1fc3a69b5140c898b61a57a8c023cdbcbba6b)). This report summarises the change as reviewed at that time; the detailed record is [docs/SPEED.md](SPEED.md). Since 2.2.2 the default optimizer refinement can change estimates, so the cross-version identity reported here no longer applies to complete fits; parallel standard errors still match the sequential calculation at the same parameters.
 
 ## 1. Summary
 
 The aim was to make `run_acl()` and `run_alscl()` faster without changing their results. Two changes are set with the new exported function `alscl_speed()`:
 
-1. **Standard errors on several cores** (`sd_cores`, default `"auto"`). The fixed-effect Hessian and the delta-method standard errors of the ADREPORT quantities are computed in forked processes. The result is identical (`identical()`) to the sequential `TMB::sdreport()`. `"auto"` uses up to four physical cores and keeps one free, and one core on Windows, in GUI or embedded front-ends and with Apple's Accelerate BLAS.
+1. **Standard errors on several cores** (`sd_cores`, default `"auto"`). The fixed-effect Hessian and the delta-method standard errors of the ADREPORT quantities are computed in forked processes. The result is identical (`identical()`) to the sequential `TMB::sdreport()`. `"auto"` uses up to four physical cores and keeps one free. Where forking is unavailable or discouraged (Windows, GUI or embedded front-ends, Apple's Accelerate BLAS), the delta method runs on socket workers and the Hessian in the main process (section 7).
 2. **TMBad automatic differentiation** (`framework = "TMBad"`, an option). The default remains CppAD, the library used by ALSCL 2.0.0. TMBad is faster but its results are not identical.
 
-With the default settings, results are identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 457 tests pass (256 existing and 201 in `test-speed.R`). After the first merge (pull request #3), standard errors also run in parallel on Windows and in GUI front-ends such as RStudio, using socket workers for the delta method (section 7).
+With the default settings, results were identical to ALSCL 2.0.0 and fits were 1.13-1.24 times faster in a benchmark of 90 fits (six model and data combinations, five settings, three repeats). With TMBad, fits were 1.25-1.68 times faster; estimates differed from the original code by up to 2.3e-11 (relative) in the six combinations, which estimate 5 fixed effects, and by up to 2.7e-8 in an ACL fit that estimates 10. All 457 tests pass (256 existing and 201 in `test-speed.R`). After the first merge (pull request #3), standard errors also run in parallel on Windows and in GUI front-ends such as RStudio, using socket workers for the delta method (section 7).
 
 ## 2. Commits
 
@@ -53,7 +53,7 @@ Points that make the result identical rather than nearly equal:
 - With random effects, every gradient call starts the inner Newton optimisation from `obj$env$last.par.best`, which only objective-function calls update. So each column starts from the same point in the sequential and the parallel calculation.
 - The sparse solve must be `Matrix::solve()`. Inside the package namespace, `solve()` dispatched to base R, which made the matrix dense and changed the standard errors by about 1e-16.
 
-The sequential `TMB::sdreport()` is used for one core, for TMB versions other than 1.9.21, and, with a warning, after any failure of the parallel calculation, including a failure to fork.
+The sequential `TMB::sdreport()` is used for one core, for TMB versions other than the checked ones (1.9.21 and 1.9.25), and, with a warning, after any failure of the parallel calculation, including a failure to fork.
 
 ## 5. Results
 
@@ -122,7 +122,7 @@ The first version (`54f1350`) was reviewed externally. Every finding was reprodu
 | Test count "300 + 44" | The 300 already included the 44 new tests | Corrected; the suite had 322 tests after `243469b` and has 353 after `23d1cc2` (97 in `test-speed.R`) |
 | TMBad differences larger with 10 fixed effects | Estimates 2.7e-8 (relative), standard errors 3.5e-8 | TMBad is no longer the default (Table 2) |
 | TMB version guard too wide | All TMB 1.9.x versions were allowed; only 1.9.21 was checked | Only the checked versions use the parallel delta method; the identity test runs the parallel code with any installed TMB (`check_version = FALSE`), so a new version can be added once it passes |
-| Forking in unsuitable environments | `?parallel::mclapply` discourages forking in GUI or embedded front-ends and with multithreaded libraries | `"auto"` uses one core in R.app, RGui, RStudio and Positron and with Apple's Accelerate BLAS; an explicit number of cores is used as given (tested) |
+| Forking in unsuitable environments | `?parallel::mclapply` discourages forking in GUI or embedded front-ends and with multithreaded libraries | In R.app, RGui, RStudio and Positron and with Apple's Accelerate BLAS, the delta method runs on socket workers and the Hessian in the main process (section 7); tested |
 
 The revised version (`2b7d418`) was reviewed a second time. The review confirmed the fixes above (322 tests and the website check passed, `Inf` was rejected, a failure to fork kept the standard errors) and found two problems in the tests, both reproduced and fixed in `23d1cc2`:
 
@@ -151,7 +151,7 @@ The first version computed standard errors on one core wherever forking is unava
 |---|---|---|
 | Socket workers (`.acl_delta_socket()` in `R/speed.R`) | In those sessions, socket workers compute the delta method when it would take more than about 3 seconds; the Hessian stays in the main session, because each new process would first spend 14 s (CppAD) to 42 s (TMBad) building the sparse Hessian tape for the 20-year ALSCL example. Workers receive the joint mode, the fixed-effect covariance and the random-effect Hessian, rebuild only the gradient tape and the ADREPORT object, and check that their ADREPORT values are identical to the main session's. | Identical to `TMB::sdreport()` for ACL and ALSCL with CppAD and TMBad, on every system including Windows (tests force all quantities onto the workers); fallback when workers cannot start; no workers when the work is small |
 | `fit$sd_info` and fit messages | Records the method, cores, seconds and the reason for a sequential calculation; printed when `silent = FALSE` | Tests for every method and for the message text |
-| `alscl_speed_info()` | Reports before a fit the cores, method, reason, AD library and whether results are identical to ALSCL 2.0.0 | Tests for the environment rules (Windows, GUI front-ends, Accelerate BLAS) |
+| `alscl_speed_info()` | Reports before a fit the cores, method, reason, AD library and the cross-version identity note | Tests for the environment rules (Windows, GUI front-ends, Accelerate BLAS) |
 | User guide `docs/SPEED_GUIDE.md` and website article "Speed settings" (English and Chinese) | Explains every setting, how to check and record them, choosing the number of cores, the TMBad option, measured speed-up and troubleshooting | Website builds (140 pages, 45 functions); `website/check.py` passes |
 
 Measured on the 20-year ALSCL example: the delta method took 6.5 s on four socket workers instead of 13.9 s; in a simulated RStudio session (`RSTUDIO=1`) the standard errors took 25.4 s instead of 28.3 s and the fit 114.9 s instead of 120.4 s, with identical results. The gain is smaller than with forked processes because the Hessian, about half of the standard-error time, stays in the main session; `options(ALSCL.sd_backend = "fork")` gives forked processes in RStudio on macOS and Linux at the user's own risk.

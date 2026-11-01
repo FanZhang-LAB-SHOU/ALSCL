@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
 ### 7.1 数值状态 / Numerical status
 
@@ -19,9 +19,9 @@ plot_residuals(b, type = "length", facet_ncol = 4)
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-本次 YTF 主拟合的优化码均为 0，最大绝对梯度约为 ACL `1.22e-4`、ALSCL `5.75e-9`，Hessian 均正定，没有检测到边界命中。结果记录见 [convergence.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/convergence.csv)。梯度 < 0.001 是本教学流程的数值筛查阈值，不是适用于所有模型的科学有效性标准。
+本次 YTF 主拟合的优化码均为 0，最大绝对梯度约为 ACL `2.8e-10`、ALSCL `5.75e-9`，Hessian 均正定，没有检测到边界命中。结果记录见 [convergence.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/convergence.csv)。梯度 < 0.001 是本教学流程的数值筛查阈值，不是适用于所有模型的科学有效性标准。
 
-Both example fits returned code 0, positive-definite Hessians and no detected bound hits. Maximum absolute gradients were about `1.22e-4` and `5.75e-9`. The tutorial's 0.001 screening threshold is not a universal validity criterion.
+Both example fits returned code 0, positive-definite Hessians and no detected bound hits. Maximum absolute gradients were about `2.8e-10` and `5.75e-9`. The tutorial's 0.001 screening threshold is not a universal validity criterion.
 
 ### 7.2 残差与生物假设 / Residuals and biological assumptions
 

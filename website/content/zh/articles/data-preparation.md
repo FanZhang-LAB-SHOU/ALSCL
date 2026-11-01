@@ -103,7 +103,7 @@ parameter_plan[, c("parameter", "status", "start", "n_free")]
 
 <h2 id="legacy-workflows">已有脚本工作流</h2>
 
-使用 `validate_survey_tables()` 或 `fit_survey_tables()` 的已有脚本仍可运行。这些辅助函数需要[仓库脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R)，与上面的公开读取函数不同。以下为可选的旧接口示例，需从仓库根目录运行：
+使用[仓库脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/real_data_workflow.R)中 `validate_survey_tables()` 或 `fit_survey_tables()` 的旧脚本仍可运行；脚本里的读取函数已改为调用包函数，`source()` 后读取方式不变。新的分析直接使用上面的包函数，不需要该脚本。以下为可选的旧接口示例，需从仓库根目录运行：
 
 ```r
 source("scripts/real_data_workflow.R", encoding = "UTF-8")

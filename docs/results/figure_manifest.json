@@ -219,16 +219,6 @@
     "warnings": [],
     "status": "PASS"
   },
-  "F_ACL_length": {
-    "id": "F_ACL_length",
-    "zh": "ACL 捕捞死亡率 length",
-    "en": "ACL fishing mortality length",
-    "code": "plot_fishing_mortality(fit, type = if (model == \"ACL\" && typ == \"length\") \"age\" else typ, se = TRUE, \n    facet_ncol = 4, line_size = 0.6)",
-    "note_zh": "当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。",
-    "note_en": "In this version, ACL length is an alias of age; the output is still age-specific F.",
-    "warnings": [],
-    "status": "PASS"
-  },
   "F_ALSCL_year": {
     "id": "F_ALSCL_year",
     "zh": "ALSCL 捕捞死亡率 year",

@@ -80,23 +80,6 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 
 
-## ACL fishing mortality length
-
-```r
-# Draw this figure
-plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
-```
-
-[![ACL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true)
-
-
-ACL does not estimate length-specific F. The figure is an age-specific curve, now drawn explicitly with `type = "age"`. Legacy `type = "length"` calls still produce the age curve with a warning; they do not convert age-specific F to length-specific F.
-
-[Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
-
 ## ALSCL fishing mortality year
 
 ```r

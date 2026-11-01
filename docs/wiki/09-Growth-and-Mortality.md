@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons)
 
-**ALSCL 2.2.9 · 简体中文 / English**
+**ALSCL 2.3.0 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
 First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
@@ -83,25 +83,7 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 
 
-## 23. ACL 捕捞死亡率 length / ACL fishing mortality length
-
-```r
-# 绘制本图 / Draw this figure
-plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
-```
-
-[![ACL 捕捞死亡率 length / ACL fishing mortality length](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=fdd297ac4b33)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_length.png?raw=true&v=fdd297ac4b33)
-
-ACL 没有独立长度别 F；示例明确使用 age。旧 length 别名保留并警告，仍表示年龄别 F。
-
-ACL has no independent F-at-length. Use age explicitly; the legacy length alias warns and still returns this age-specific plot.
-
-[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
-
-
-
-## 24. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year
+## 23. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year
 
 ```r
 # 绘制本图 / Draw this figure
@@ -119,7 +101,7 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 
 
-## 25. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age
+## 24. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age
 
 ```r
 # 绘制本图 / Draw this figure
@@ -137,7 +119,7 @@ F is an instantaneous rate per model step. Native F dimensions differ between th
 
 
 
-## 26. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length
+## 25. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length
 
 ```r
 # 绘制本图 / Draw this figure
@@ -155,7 +137,7 @@ Since 2.2.3, the horizontal axis uses actual length midpoints, with one panel pe
 
 
 
-## 27. 对数残差 length / Log residuals length
+## 26. 对数残差 length / Log residuals length
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 
@@ -177,7 +159,7 @@ Observed minus fitted log index, without standardization. Smooth curves reveal s
 
 
 
-## 28. 对数残差 year / Log residuals year
+## 27. 对数残差 year / Log residuals year
 
 ```r
 # 绘制本图 / Draw this figure
@@ -195,7 +177,7 @@ Observed minus fitted log index, without standardization. Smooth curves reveal s
 
 
 
-## 29. 对数过程偏差 R / Log process deviations R
+## 28. 对数过程偏差 R / Log process deviations R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -214,7 +196,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 
 
 
-## 30. 过程乘数 R / Process multipliers R
+## 29. 过程乘数 R / Process multipliers R
 
 ```r
 # 绘制本图 / Draw this figure
@@ -233,7 +215,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 
 
 
-## 31. 对数过程偏差 F / Log process deviations F
+## 30. 对数过程偏差 F / Log process deviations F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -252,7 +234,7 @@ Log process deviations use zero as reference; these are not likelihood deviance 
 
 
 
-## 32. 过程乘数 F / Process multipliers F
+## 31. 过程乘数 F / Process multipliers F
 
 ```r
 # 绘制本图 / Draw this figure
@@ -271,7 +253,7 @@ Exponentiated deviations use one as reference and asymmetric intervals; these ar
 
 
 
-## 33. 长度组成山脊图 / Length composition ridges
+## 32. 长度组成山脊图 / Length composition ridges
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 

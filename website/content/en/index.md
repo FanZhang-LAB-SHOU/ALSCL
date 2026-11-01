@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website follows `main`, including the additions under [Unreleased](news/index.html). The earlier 2.2.9 release tag does not include every function described here.
+The website describes ALSCL 2.3.0; see [News](news/index.html) for the changes in each release.
 
 <h2 id="models">Two model structures</h2>
 
