@@ -84,6 +84,27 @@ for language in ['','zh/']:
     for entry in search:
         if not (SITE/language/entry['url']).exists():errors.append('Invalid search entry '+entry['url'])
 
+# The reference index, the counts quoted in the manuals and the version strings.
+reference=(ROOT/'docs/FUNCTION_REFERENCE.md').read_text()
+gallery=(ROOT/'docs/PLOT_GALLERY.md').read_text()
+deprecated=re.findall(r'(\w+) *= *"',re.search(r'\.acl_deprecated_functions *<- *c\((.*?)\)',(ROOT/'R/deprecations.R').read_text(),re.S)[1])
+for f in functions:
+    if f'- [{f["name"]}](#{f["name"]})' not in reference:errors.append(f'docs/FUNCTION_REFERENCE.md: index lacks {f["name"]}')
+n_functions=len(functions)
+n_plots=len([f for f in functions if f['name'].startswith('plot_') and f['name'] not in deprecated])
+n_figures=len(re.findall(r'^## \d+\. ',gallery,re.M))
+quoted=[('docs/FUNCTION_REFERENCE.md',reference,[f'对应 ALSCL {version}，覆盖 **{n_functions} 个公开函数**',f'All **{n_functions} exported functions** of ALSCL {version}']),
+        ('README.md',(ROOT/'README.md').read_text(),[f'Latest release: {version}',f'{n_functions} 个函数的参考',f'all {n_functions} functions',f'{n_figures} 张示例图',f'{n_figures} figures with their code']),
+        ('docs/PLOT_GALLERY.md',gallery,[f'**{n_figures} 张图，覆盖 {n_plots} 个公开绘图函数及主要类型。{n_figures} figures covering all {n_plots} public plotting functions and major variants.**']),
+        ('website/content/en/index.md',(ROOT/'website/content/en/index.md').read_text(),[f'ALSCL {version}']),
+        ('website/content/zh/index.md',(ROOT/'website/content/zh/index.md').read_text(),[f'ALSCL {version}'])]
+for name,text,needles in quoted:
+    for needle in needles:
+        if needle not in text:errors.append(f'{name}: expected {needle.strip()!r}')
+for name,pattern in [('NEWS.md',r'^# ALSCL (\S+)'),('website/content/en/news.md',r'^## ALSCL (\S+)'),('website/content/zh/news.md',r'^## ALSCL (\S+)')]:
+    first=re.search(pattern,(ROOT/name).read_text(),re.M)
+    if not first or first[1]!=version:errors.append(f'{name}: the first release entry is not {version}')
+
 # Parse all displayed code and verify explicitly named arguments to direct
 # public-function calls. This does not execute expensive models or file writes.
 with tempfile.TemporaryDirectory(prefix='alscl-doc-code-') as directory:
@@ -174,4 +195,4 @@ for md in markdown:
             errors.append(f'{md.relative_to(ROOT)}: missing anchor {target}')
 if errors:
     print('\n'.join(errors));raise SystemExit(f'{len(errors)} documentation check(s) failed')
-print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed, direct named calls and former names checked; {link_count} Markdown manual links resolved.')
+print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed, direct named calls and former names checked; {link_count} Markdown manual links resolved; reference index, quoted counts and version strings verified.')

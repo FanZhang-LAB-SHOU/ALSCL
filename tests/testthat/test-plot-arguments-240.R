@@ -129,3 +129,38 @@ test_that("time-step panels are labelled by year or quarter in every plot", {
   compare <- plot_compare_CatL(quarterly, quarterly, catl_240(quarterly))
   expect_equal(levels(compare$data$year_fct), c("2000 Q1", "2000 Q2", "2000 Q3"))
 })
+
+test_that("every single-model plot takes the same label and typography arguments", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  style_args <- c("title", "xlab", "ylab", "font_family", "title_size", "axis_title_size", "axis_text_size",
+                  "strip_text_size", "legend_text_size", "x_breaks", "base_theme", "title_hjust")
+  singles <- c("plot_SSB", "plot_biomass", "plot_abundance", "plot_catch", "plot_deviance", "plot_fishing_mortality",
+               "plot_recruitment", "plot_VB", "plot_CatL", "plot_residuals", "plot_ridges", "plot_pla",
+               "plot_SSB_Rec", "plot_retro")
+  for (name in singles)
+    expect_true(all(style_args %in% names(formals(get(name, asNamespace("ALSCL"))))), label = name)
+  fit <- fixture_240()
+  fit$report$B <- fit$report$SSB * 2
+  fit$report$N <- fit$report$SSB * 3
+  fit$report$CN <- fit$report$SSB / 2
+  draw <- list(plot_SSB = function(...) plot_SSB(fit, ...), plot_biomass = function(...) plot_biomass(fit, ...),
+               plot_abundance = function(...) plot_abundance(fit, ...), plot_catch = function(...) plot_catch(fit, ...),
+               plot_deviance = function(...) plot_deviance(fit, type = "R", ...),
+               plot_fishing_mortality = function(...) plot_fishing_mortality(fit, ...))
+  for (name in names(draw)) {
+    p <- draw[[name]](title = "Custom title", xlab = "Custom x", ylab = "Custom y", title_size = 21, title_hjust = 0,
+                      axis_text_size = 7, x_breaks = c(2000, 2002), base_theme = "minimal")
+    expect_identical(p$labels$title, "Custom title", label = name)
+    expect_identical(p$labels$x, "Custom x", label = name)
+    expect_identical(p$labels$y, "Custom y", label = name)
+    built <- ggplot2::ggplot_build(p)
+    expect_equal(ggplot2::calc_element("plot.title", built$plot$theme)$size, 21, label = name)
+    expect_equal(ggplot2::calc_element("plot.title", built$plot$theme)$hjust, 0, label = name)
+    expect_equal(ggplot2::calc_element("axis.text", built$plot$theme)$size, 7, label = name)
+    breaks <- built$layout$panel_params[[1]]$x$breaks
+    expect_equal(breaks[is.finite(breaks)], c(2000, 2002), label = name)
+    defaults <- ggplot2::ggplot_build(draw[[name]]())
+    expect_false(identical(defaults$plot$labels$title, "Custom title"), label = name)
+    expect_equal(ggplot2::calc_element("plot.title", defaults$plot$theme)$size, 14, label = name)
+  }
+})

@@ -31,12 +31,17 @@
 #'   year, age or length label. Uncustomized age axes are labeled Age group
 #'   because the plotted coordinates are group positions.
 #' @param ylab Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
-#' @param font_family Character. Font family for text elements.
-#' @param title_size Numeric. Title text size.
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
+#' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
+#' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
+#' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
+#' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
+#' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
+#' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @param base_theme A ggplot2 theme object, a supported theme name such as
 #'   "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 #'   settings in theme objects are retained; typography follows the global
-#'   settings and explicit font_family/title_size arguments. Major and minor
+#'   settings and the explicit typography arguments. Major and minor
 #'   grids are removed for every base theme.
 #'
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
@@ -50,7 +55,9 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
                                    facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = "ribbon",
                                    type = c("year", "age", "length"), return_data = FALSE,
                                    x_breaks = NULL, title = NULL, xlab = NULL, ylab = NULL,
-                                   font_family = NULL, title_size = NULL, base_theme = NULL) {
+                                   font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+                                   strip_text_size = NULL, legend_text_size = NULL, base_theme = NULL,
+                                   title_hjust = NULL) {
   # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -90,7 +97,9 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
        is.na(base_theme) || !nzchar(base_theme)))
     stop("base_theme must be a ggplot2 theme object, a theme name, or NULL.", call. = FALSE)
   common_theme <- .acl_base_theme(font_family = font_family, title_size = title_size,
-    base_theme = if (theme_object) "bw" else base_theme)
+    axis_title_size = axis_title_size, axis_text_size = axis_text_size,
+    strip_text_size = strip_text_size, legend_text_size = legend_text_size,
+    base_theme = if (theme_object) "bw" else base_theme, title_hjust = title_hjust)
   current_theme <- if (theme_object) list(base_theme, common_theme[[2L]]) else common_theme
   if (theme_object) {
     text_elements <- names(base_theme)[vapply(base_theme, inherits, logical(1), "element_text")]
