@@ -118,7 +118,7 @@ test_that("stored singleton F results retain dimensions and validate plot inputs
 test_that("comparison requests cannot silently lose quantities or F panels", {
   m <- plot_review_fixture()
   for (quantities in list("F", c("SSB", "F"), "f"))
-    expect_error(plot_compare_ts(m, m, quantities = quantities), "plot_compare_annual_F")
+    expect_error(plot_compare_ts(m, m, quantities = quantities), "plot_compare_F_ts")
   for (quantities in list(character(), NA_character_, 1, c("SSB", "typo")))
     expect_error(plot_compare_ts(m, m, quantities = quantities), "quantities")
   expect_error(plot_compare_ts(m, m, quantities = "B"), "Quantity 'B'.*unavailable")
@@ -138,7 +138,7 @@ test_that("residual plot labels and title alignment honor explicit and global se
   m <- list(year = 2001:2003, len_mid = c(5, 10, 15), len_label = c("5", "10", "15"),
             observations = matrix(10, 3L, 3L), report = list(resid_index = matrix((1:9) / 100, 3L)))
   for (type in c("length", "year")) {
-    p <- plot_residuals(m, type = type, title = "Study title", xlab = "Study x",
+    p <- plot_residuals(m, facet_by = type, title = "Study title", xlab = "Study x",
                         ylab = "Study y", title_hjust = 0)
     expect_equal(p$labels$title, "Study title")
     expect_equal(p$labels$x, "Study x")

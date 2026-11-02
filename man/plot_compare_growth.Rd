@@ -12,7 +12,7 @@ plot_compare_growth(
   model2_name = NULL,
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL,
+  line_size = NULL,
   ref_data = NULL,
   ref_name = "Observed VB",
   ref_color = "grey30",
@@ -20,7 +20,8 @@ plot_compare_growth(
   show_points = TRUE,
   point_size = NULL,
   point_alpha = 0.4,
-  nls_start = NULL
+  nls_start = NULL,
+  ...
 )
 }
 \arguments{
@@ -36,7 +37,7 @@ plot_compare_growth(
 
 \item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
 
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
 \item{ref_data}{Optional data.frame with columns \code{Age} and \code{Length}
 containing observed age-length measurements (e.g. from otolith readings).
@@ -58,6 +59,8 @@ from both model labels when ref_data is supplied. Default "Observed VB".}
 
 \item{nls_start}{Named list. Starting values for nls. Default attempts
 auto-detection from data range.}
+
+\item{...}{The former argument name linewidth, accepted with a warning.}
 }
 \value{
 A ggplot object.

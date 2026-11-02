@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/06-Fitting) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots)
 
-**ALSCL 2.3.0 · 简体中文 / English**
+**ALSCL 2.4.0 · 简体中文 / English**
 
 本页从四个方面检查一次拟合：优化器的数值检查、残差规律、与其他设置的比较，以及对固定值的敏感性。你需要[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)中的对象：输入列表 `x`、ACL 拟合 `a` 和 ALSCL 拟合 `b`。代码以 `b` 为例，对 `a` 用法相同。
 
@@ -33,8 +33,8 @@ When a check fails, change one thing at a time: run more starts (`nstarts = 4`),
 ### 2. 残差规律 / Residual patterns
 
 ```r
-plot_residuals(b, type = "year", facet_ncol = 5)
-plot_residuals(b, type = "length", facet_ncol = 4)
+plot_residuals(b, facet_by = "year", facet_ncol = 5)
+plot_residuals(b, facet_by = "length", facet_ncol = 4)
 checks <- check_fit(b, max_lag = 4)
 checks$plots$heatmap
 checks$plots$lag
@@ -42,9 +42,9 @@ checks$plots$qq
 checks$lag_correlations
 ```
 
-残差是观测的对数调查指数减去拟合值。`type = "year"` 按年份分面画残差随体长的变化；`type = "length"` 按体长组分面画残差随年份的变化。`check_fit()` 把残差标准化，并增加三种视图：年份乘体长的热图，同色成块说明模型漏掉了某个队列或某段体长；同一体长组残差相隔 1 到 `max_lag` 个时间步的相关系数，短滞后处明显偏离 0 说明模型漏掉了年份效应；QQ 图，尾部偏离说明存在异常值或观测误差偏离对数正态。
+残差是观测的对数调查指数减去拟合值。`facet_by = "year"` 按年份分面画残差随体长的变化；`facet_by = "length"` 按体长组分面画残差随年份的变化。`check_fit()` 把残差标准化，并增加三种视图：年份乘体长的热图，同色成块说明模型漏掉了某个队列或某段体长；同一体长组残差相隔 1 到 `max_lag` 个时间步的相关系数，短滞后处明显偏离 0 说明模型漏掉了年份效应；QQ 图，尾部偏离说明存在异常值或观测误差偏离对数正态。
 
-The residual is the observed log survey index minus the fitted one. `type = "year"` draws the residuals against length for each year; `type = "length"` draws them against year for each length bin. `check_fit()` standardizes the residuals and adds three views: a heatmap of year by length, where blocks of the same colour show a cohort or a size range the model misses; the correlation between residuals of the same length bin one to `max_lag` time steps apart, where values far from zero at short lags show year effects missing from the model; and a QQ plot, where heavy tails point to outliers or to observation errors that depart from the lognormal.
+The residual is the observed log survey index minus the fitted one. `facet_by = "year"` draws the residuals against length for each year; `facet_by = "length"` draws them against year for each length bin. `check_fit()` standardizes the residuals and adds three views: a heatmap of year by length, where blocks of the same colour show a cohort or a size range the model misses; the correlation between residuals of the same length bin one to `max_lag` time steps apart, where values far from zero at short lags show year effects missing from the model; and a QQ plot, where heavy tails point to outliers or to observation errors that depart from the lognormal.
 
 把这些视图当作修改方向的提示，而不是检验：残差以拟合的过程偏差为条件，没有附带显著性水平。只出现在最小体长组的规律多半与调查选择性有关（`sel_L50`、`sel_L95`）；在热图上沿对角线移动的规律与生长有关。
 

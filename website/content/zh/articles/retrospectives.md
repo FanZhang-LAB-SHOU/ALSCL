@@ -42,12 +42,12 @@ rb$errors
 <h2 id="plot">3. 绘制重拟合序列</h2>
 
 ```r
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
 ![示例的 ALSCL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
-`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板，`facet_col = 2` 把它们排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分（图例「Retrospective Year」）：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。空心点标出每次拟合的末端估计，也就是 rho 与完整拟合比较的那个值；面板标签给出保留 `rho_digits` 位小数的 Mohn rho。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
+`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板，`facet_ncol = 2` 把它们排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分（图例「Retrospective Year」）：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。空心点标出每次拟合的末端估计，也就是 rho 与完整拟合比较的那个值；面板标签给出保留 `rho_digits` 位小数的 Mohn rho。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
 ![示例的 ACL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
@@ -82,7 +82,7 @@ rb2$fit_diagnostics
 ```r
 save_assessment(b, "ytf_alscl.rds")
 saveRDS(rb, "ytf_alscl_retro.rds")
-plot_retro(readRDS("ytf_alscl_retro.rds"), facet_col = 2, rho_digits = 3)
+plot_retro(readRDS("ytf_alscl_retro.rds"), facet_ncol = 2, rho_digits = 3)
 ```
 
 回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果：它把 `b` 连同配方存为保存的拟合结果，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](reproducibility.html)说明如何记录软件包版本和会话。

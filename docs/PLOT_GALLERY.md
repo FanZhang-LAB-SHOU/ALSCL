@@ -73,7 +73,7 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
@@ -92,7 +92,7 @@ One panel per length bin, time on the horizontal axis and the log survey index o
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, type = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
@@ -111,7 +111,7 @@ The same panels on the original scale: the navy curve is `exp(Elog_index)`, the 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
@@ -132,7 +132,7 @@ One panel per time step, length on the horizontal axis and the log survey index 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
@@ -489,9 +489,9 @@ A heat map of the age length probability matrix `pla`: one column per age class,
 <a id="F_ACL_year"></a>
 ## 21. ACL 捕捞死亡率 year / ACL fishing mortality year
 
-`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age Group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
+`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
 
-`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal coordinate is the position of the age class, so the default label reads Age Group unless you set `xlab$age`; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
+`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal coordinate is the position of the age class, so the default label reads Age group unless you set `xlab$age`; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
 
 ```r
 # 绘制本图 / Draw this figure
@@ -518,9 +518,9 @@ plot_fishing_mortality(a, type = "age",
 
 [![ACL 捕捞死亡率 age / ACL fishing mortality age](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
 
-同一组 `F` 按年龄排列：每个时间步一个面板，横轴为年龄组序号（标为 Age Group，因为坐标是组的位置），带 95% 区间。用它读每个时间步渔业的选择模式；本例近乎水平的线说明 ACL 拟合对各年龄施加相近的死亡率，若呈穹形或斜坡则显示渔具主要捕哪些年龄。
+同一组 `F` 按年龄排列：每个时间步一个面板，横轴为年龄组序号（标为 Age group，因为坐标是组的位置），带 95% 区间。用它读每个时间步渔业的选择模式；本例近乎水平的线说明 ACL 拟合对各年龄施加相近的死亡率，若呈穹形或斜坡则显示渔具主要捕哪些年龄。
 
-The same `F` values arranged by age: one panel per time step, the age class index on the horizontal axis (labelled Age Group because the coordinate is the class position), with the 95% band. Use it to read the selection pattern of the fishery at each time step; a flat line, as here, means the ACL fit applies similar mortality to all ages, and a dome or ramp would show which ages the gear takes.
+The same `F` values arranged by age: one panel per time step, the age class index on the horizontal axis (labelled Age group because the coordinate is the class position), with the 95% band. Use it to read the selection pattern of the fishery at each time step; a flat line, as here, means the ACL fit applies similar mortality to all ages, and a dome or ramp would show which ages the gear takes.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -582,7 +582,7 @@ The same `FL` values arranged by length: one panel per time step, the length bin
 
 ```r
 # 绘制本图 / Draw this figure
-plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
@@ -599,7 +599,7 @@ Log residuals, the observed minus the fitted log survey index, one panel per len
 
 ```r
 # 绘制本图 / Draw this figure
-plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(10, 30, 50))
 ```
 
@@ -710,7 +710,7 @@ Length compositions of the survey index, one ridge per time step (earliest at th
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_ts(a, b, se = TRUE, ncol = 2)
+plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 ```
 
 [![种群时间序列比较 / Population time series comparison](figures/ytf/compare_ts.png)](figures/ytf/compare_ts.png)
@@ -799,7 +799,7 @@ Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion d
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
+plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
 [![两模型调查拟合 / Survey fits from both models](figures/ytf/compare_CatL.png)](figures/ytf/compare_CatL.png)
@@ -821,7 +821,7 @@ The vertical label comes from `ylab$survey` and reads Survey index by default; s
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
+plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
     0.3)))
 ```
 
@@ -855,14 +855,14 @@ Survey catchability `q` at length from the input of each fit (`sel_L50`, `sel_L9
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_selectivity)
 
-<a id="plot_compare_annual_F"></a>
+<a id="plot_compare_F_ts"></a>
 
 <a id="compare_F_apical"></a>
 ## 40. 总体 F 比较 apical / Summary F comparison apical
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_annual_F(a, b, method = "apical") +
+plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
@@ -872,14 +872,14 @@ plot_compare_annual_F(a, b, method = "apical") +
 
 Apical fishing mortality, the maximum of `F` over the groups at each time step, for both fits (ACL navy solid, ALSCL vermilion dashed, a point at each time step); the `labs(title = ...)` call replaces the default title. Use it to compare overall fishing pressure between an age-based and a length-based fit on one axis; ALSCL is higher here because its maximum sits in the most selected length bins, and despite the function name a quarterly fit keeps quarterly rates, because the summary is taken within each time step.
 
-[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_annual_F)
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 <a id="compare_F_mean"></a>
 ## 41. 总体 F 比较 mean / Summary F comparison mean
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_annual_F(a, b, method = "mean") +
+plot_compare_F_ts(a, b, method = "mean") +
   labs(title = "Mean fishing mortality")
 ```
 
@@ -889,7 +889,7 @@ plot_compare_annual_F(a, b, method = "mean") +
 
 Mean fishing mortality, the unweighted average of `F` over the groups at each time step, for both fits in the same styling. Use it when the whole selection pattern matters more than its peak; the mean depends on how many low-F groups a model has (15 ages against 23 length bins here), so read the time pattern, which both fits share with a 2008 peak, rather than the level.
 
-[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_annual_F)
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 <a id="plot_retro"></a>
 
@@ -898,7 +898,7 @@ Mean fishing mortality, the unweighted average of `F` over the groups at each ti
 
 ```r
 # 绘制本图 / Draw this figure
-plot_retro(ra, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
+plot_retro(ra, facet_ncol = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
 [![ACL 回溯分析 / ACL retrospective analysis](figures/ytf/retro_ACL.png)](figures/ytf/retro_ACL.png)
@@ -914,7 +914,7 @@ Retrospective analysis of the ACL fit: one panel per quantity (`B`, `N`, `Rec`, 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_retro(rb, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
 [![ALSCL 回溯分析 / ALSCL retrospective analysis](figures/ytf/retro_ALSCL.png)](figures/ytf/retro_ALSCL.png)

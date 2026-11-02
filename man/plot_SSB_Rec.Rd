@@ -7,7 +7,7 @@
 plot_SSB_Rec(
   model_result,
   age_at_recruitment = 1,
-  point_size = 2,
+  point_size = NULL,
   point_color = NULL,
   point_shape = 16,
   return_data = FALSE,
@@ -35,7 +35,7 @@ fits). A value of 0 pairs SSB and recruitment in the same period. For older
 fits without \code{growth_step}, the time step is inferred from \code{year},
 or defaults to 1 year when no time metadata are available.}
 
-\item{point_size}{Numeric. The size of the points in the scatter plot. Default is 2.}
+\item{point_size}{Numeric or NULL. NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_color}{Character or NULL. NULL inherits the global point_color setting.}
 

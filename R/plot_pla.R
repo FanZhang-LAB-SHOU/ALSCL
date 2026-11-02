@@ -11,7 +11,7 @@
 #'
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
-#' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
+#' @param ylab Character or NULL. Custom y-axis label. If NULL, uses the global ylab$length setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
@@ -38,7 +38,7 @@
 #' plot_pla(model_result, "white", "steelblue")
 #' }
 plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+  # NULL inherits the global palette.
   if (is.null(low_col)) low_col <- acl_theme("low_col")
   if (is.null(high_col)) high_col <- acl_theme("high_col")
 
@@ -69,7 +69,7 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
     ggplot2::scale_x_discrete(breaks = age_breaks, drop = FALSE) +
     ggplot2::scale_fill_gradient(low = low_col, high = high_col) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("x", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
 
   return(p)
 }

@@ -11,7 +11,7 @@
 #'   fits without \code{growth_step}, the time step is inferred from \code{year},
 #'   or defaults to 1 year when no time metadata are available.
 #' @param point_color Character or NULL. NULL inherits the global point_color setting.
-#' @param point_size Numeric. The size of the points in the scatter plot. Default is 2.
+#' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle).
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #'
@@ -44,8 +44,9 @@
 #' }
 #' @export
 plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
-                         point_size=2,point_color = NULL,point_shape=16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+                         point_size = NULL, point_color = NULL, point_shape = 16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+  # NULL inherits the global palette.
+  if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(point_color)) point_color <- acl_theme("point_color")
 
 

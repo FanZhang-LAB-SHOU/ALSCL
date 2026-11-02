@@ -38,7 +38,7 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 ## ACL 捕捞死亡率 year
 
-`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age Group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
+`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
 
 ```r
 # 绘制本图
@@ -62,7 +62,7 @@ plot_fishing_mortality(a, type = "age",
 
 [![ACL 捕捞死亡率 age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)
 
-同一组 `F` 按年龄排列：每个时间步一个面板，横轴为年龄组序号（标为 Age Group，因为坐标是组的位置），带 95% 区间。用它读每个时间步渔业的选择模式；本例近乎水平的线说明 ACL 拟合对各年龄施加相近的死亡率，若呈穹形或斜坡则显示渔具主要捕哪些年龄。
+同一组 `F` 按年龄排列：每个时间步一个面板，横轴为年龄组序号（标为 Age group，因为坐标是组的位置），带 95% 区间。用它读每个时间步渔业的选择模式；本例近乎水平的线说明 ACL 拟合对各年龄施加相近的死亡率，若呈穹形或斜坡则显示渔具主要捕哪些年龄。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -112,7 +112,7 @@ plot_fishing_mortality(b, type = "length",
 
 ```r
 # 绘制本图
-plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
@@ -126,7 +126,7 @@ plot_residuals(b, type = "length", facet_ncol = 4, line_size = 0.6,
 
 ```r
 # 绘制本图
-plot_residuals(b, type = "year", facet_ncol = 4, line_size = 0.6,
+plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(10, 30, 50))
 ```
 

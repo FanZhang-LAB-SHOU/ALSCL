@@ -10,7 +10,7 @@ rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
 
 # 一次设置，随后重新创建图
 acl_theme_set(palette = "npg", base_theme = "theme_bw", font_family = "sans")
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 plot_compare_ts(a, b, se = TRUE)
 
 # 可选期刊色板
@@ -34,8 +34,8 @@ plot_abundance(b, type = "NL", facet_ncol = 3)
 | `compare_colors` | 模型对，可按模型名称匹配 |
 | `low_col`、`high_col` | 连续热图的端点 |
 | `font_family`、`title_size`、`axis_text_size`、`strip_text_size` | 字体与字号 |
-| `line_size` / `linewidth` | 各函数自己的线宽参数 |
-| `facet_ncol` / `facet_col` / `ncol` | 各函数自己的分面列数参数 |
+| `line_size`、`point_size` | 单模型图的线宽和点大小；比较图读取 `compare_line_size` 和 `compare_point_size` |
+| `facet_ncol`、`facet_nrow`、`facet_scales` | 分面布局，所有图使用相同的参数名 |
 
 <h2 id="override">2. 为单张图覆盖颜色</h2>
 
@@ -69,7 +69,7 @@ acl_theme_reset()
 acl_theme_set(palette="npg", title_size=16, axis_title_size=12,
               axis_text_size=10, strip_text_size=10, title_hjust=0,
               compare_legend_pos="bottom", compare_linetypes=c("solid","dashed"))
-p <- plot_retro(rb, facet_col=2, point_size=1.8, line_size=.8)
+p <- plot_retro(rb, facet_ncol = 2, point_size=1.8, line_size=.8)
 ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # 显式保存并恢复设置
@@ -105,9 +105,9 @@ plot_SSB(b, se = TRUE)
 acl_theme_reset()
 ```
 
-`plot_SSB()`、`plot_biomass()`、`plot_abundance()` 和 `plot_catch()` 的总量、年龄和体长模式，无论是否显示区间，都继承全局 `titles`、`xlab`、`ylab`、`x_breaks` 和 `x_expand`。SSB 的纵轴使用 `ylab$ssb`；标题使用数量键，区间版本加 `_se`。这些设置只改变标签和显示范围，网格线保持隐藏。
+`plot_SSB()`、`plot_biomass()`、`plot_abundance()` 和 `plot_catch()` 的总量、年龄和体长模式，无论是否显示区间，都继承全局 `titles`、`xlab`、`ylab`、`x_breaks` 和 `x_expand`。SSB 的纵轴使用 `ylab$ssb`；标题使用数量键，区间版本加 `_se`。这些设置只改变标签和显示范围，网格线保持隐藏。调用中给出的 `title`、`xlab`、`ylab` 替换主题标签，字体参数（`font_family`、`title_size`、`axis_title_size`、`axis_text_size`、`strip_text_size`、`legend_text_size`、`base_theme`、`title_hjust`）替换对应的主题设置，与其他单模型图一致；`plot_deviance()` 也接受这些参数。
 
-`plot_fishing_mortality()` 继承同样的设置，标题键为 `F_year`、`F_age` 和 `F_length`（区间版本加 `_se`），横轴使用 `xlab$year`、`xlab$age` 或 `xlab$length`，纵轴使用 `ylab$F`。年龄模式的坐标是组序号，所以在你设置 `xlab$age` 之前默认标签是“Age Group”；ACL 的 `type = "length"` 别名使用年龄模式的设置。单次调用中指定的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等名称、`ggplot2::theme_bw()` 等主题对象，或 `NULL` 表示全局设置。
+`plot_fishing_mortality()` 继承同样的设置，标题键为 `F_year`、`F_age` 和 `F_length`（区间版本加 `_se`），横轴使用 `xlab$year`、`xlab$age` 或 `xlab$length`，纵轴使用 `ylab$F`。年龄模式的坐标是组序号，所以在你设置 `xlab$age` 之前默认标签是“Age group”；ACL 的 `type = "length"` 别名使用年龄模式的设置。单次调用中指定的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等名称、`ggplot2::theme_bw()` 等主题对象，或 `NULL` 表示全局设置。
 
 单模型与比较的调查拟合图使用 `ylab$survey`；未设置时，自定义的 `ylab$abundance` 生效，否则为“Survey index”。对数图加“Log”前缀，显式 `ylab` 优先，`ylab$catch` 只用于捕获量图。
 

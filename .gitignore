@@ -14,3 +14,5 @@ website/.build/
 website/__pycache__/
 website/assets/katex/
 .venv-docs/
+tests/testthat/_problems/
+tests/testthat/testthat-problems.rds

@@ -13,14 +13,15 @@ plot_compare_CatL(
   model2_name = NULL,
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL,
-  ncol = 4,
-  scales = "free_y",
+  line_size = NULL,
+  facet_ncol = 4,
+  facet_scales = "free_y",
   obs_color = "grey40",
   obs_size = 1.5,
   obs_alpha = 0.6,
   obs_shape = 16,
-  legend_pos = NULL
+  legend_pos = NULL,
+  ...
 )
 }
 \arguments{
@@ -39,11 +40,11 @@ Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 
 \item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
 
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
-\item{ncol}{Integer. Facet columns. Default 4.}
+\item{facet_ncol}{Integer. Facet columns. Default 4.}
 
-\item{scales}{Character. Facet scales. Default "free_y".}
+\item{facet_scales}{Character. Facet scales. Default "free_y".}
 
 \item{obs_color}{Character. Color for observed points. Default "grey40".}
 
@@ -54,6 +55,9 @@ Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 \item{obs_shape}{Integer. Shape of observed points. Default 16.}
 
 \item{legend_pos}{Character. Legend position. NULL = use global theme.}
+
+\item{...}{Former argument names, accepted with a warning: linewidth for
+line_size, ncol for facet_ncol and scales for facet_scales.}
 }
 \value{
 A ggplot object.
@@ -84,6 +88,6 @@ plot_compare_CatL(result_acl, result_alscl, data.CatL,
 
 # Customize layout
 plot_compare_CatL(result_acl, result_alscl, data.CatL,
-  ncol = 5, obs_color = "black", obs_size = 2)
+  facet_ncol = 5, obs_color = "black", obs_size = 2)
 }
 }

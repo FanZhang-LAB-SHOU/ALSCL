@@ -7,12 +7,12 @@
 .acl_compare_defaults(
   colors = NULL,
   linetypes = NULL,
-  linewidth = NULL,
+  line_size = NULL,
   point_size = NULL,
   se_alpha = NULL,
   legend_pos = NULL,
-  ncol = NULL,
-  scales = NULL,
+  facet_ncol = NULL,
+  facet_scales = NULL,
   m1 = "Model 1",
   m2 = "Model 2"
 )
@@ -22,7 +22,7 @@
 
 \item{linetypes}{Per-call override.}
 
-\item{linewidth}{Per-call override.}
+\item{line_size}{Per-call override.}
 
 \item{point_size}{Per-call override.}
 
@@ -30,9 +30,9 @@
 
 \item{legend_pos}{Per-call override.}
 
-\item{ncol}{Per-call override.}
+\item{facet_ncol}{Per-call override.}
 
-\item{scales}{Per-call override.}
+\item{facet_scales}{Per-call override.}
 
 \item{m1}{Model 1 name.}
 

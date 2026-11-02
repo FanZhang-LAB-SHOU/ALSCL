@@ -15,6 +15,18 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #' @param facet_ncol Integer. Columns in facet_wrap. Default is NULL.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
+#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
+#' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
+#' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
+#' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
+#' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
+#' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
+#' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #'
 #' @details ALSCL reports B, BL and BA with standard errors. ACL reports B with
 #'   standard errors and BL estimates only; BA is unavailable. A missing quantity
@@ -28,12 +40,17 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'   append \code{_se} for interval plots.
 #'   Axis labels use \code{xlab$year} and \code{ylab$biomass}.
 #'
+#' @details A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
+#'   theme label, and the typography arguments replace the corresponding theme settings.
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
                          se = FALSE, se_color = NULL, se_alpha = NULL,
                          type = c("B", "BL", "BA"), facet_ncol = NULL, facet_scales = "free",
-                         return_data = FALSE) {
+                         return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL,
+                         font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+                         strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+                         title_hjust = NULL) {
   # NULL 继承全局色板 / NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -45,7 +62,9 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
   quantity <- .acl_plot_population_data(model_result, type, c("B", "BL", "BA"), se)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
-  current_theme <- .acl_plot_theme()
+  current_theme <- .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
+                                   strip_text_size, legend_text_size, base_theme = base_theme,
+                                   title_hjust = title_hjust)
 
   # ==========================
   # Type = "B": Total biomass
@@ -150,9 +169,10 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
   }
 
   title_key <- if (se) paste0(type, "_se") else type
-  p <- p + ggplot2::labs(x = .acl_lab("x", "year"),
-                         y = .acl_lab("y", "biomass"), title = .acl_title(title_key)) +
-    .acl_scale_x(n_breaks = 5) + current_theme
+  p <- p + ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
+                         y = if (!is.null(ylab)) ylab else .acl_lab("y", "biomass"),
+                         title = if (!is.null(title)) title else .acl_title(title_key)) +
+    .acl_scale_x(x_breaks, n_breaks = 5) + current_theme
 
   if (return_data) {
     return(list(plot = p, data = data_out))

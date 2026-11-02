@@ -12,7 +12,7 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ```r
 # 绘制本图
-plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
@@ -28,7 +28,7 @@ plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, type = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
@@ -44,7 +44,7 @@ plot_CatL(b, type = "length", exp_transform = TRUE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
@@ -52,7 +52,7 @@ plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
 
 [![调查拟合 year 对数尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
 
-`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`type = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`facet_by = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
 
 每个时间步一个面板，横轴为体长，纵轴为对数调查指数：细朱红线为观测对数指数随体长的变化，粗深蓝线为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
 
@@ -62,7 +62,7 @@ plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
@@ -70,7 +70,7 @@ plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
 
 [![调查拟合 year 原尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
 
-`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`type = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
+`line_size1 = 0.6` 控制拟合线，`line_size2 = 0.4` 控制观测线。`facet_by = "year"` 应使用这两个参数，而不是体长模式的 `line_size` 和 `point_size`。
 
 同样的面板改为原尺度，曲线为 `exp(Elog_index)` 中位数与观测指数。用它看每个时间步的指数主要来自哪些体长；峰的位置和高度显示调查捕到的主要体长，观测峰偏离深蓝线的时间步值得再看残差图。
 

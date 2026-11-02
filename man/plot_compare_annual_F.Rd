@@ -2,42 +2,19 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_annual_F}
 \alias{plot_compare_annual_F}
-\title{Compare Fishing Mortality by Time Step}
+\title{Former name of plot_compare_F_ts()}
 \usage{
-plot_compare_annual_F(
-  model1,
-  model2,
-  model1_name = NULL,
-  model2_name = NULL,
-  method = c("apical", "mean"),
-  colors = NULL,
-  linetypes = NULL,
-  linewidth = NULL
-)
+plot_compare_annual_F(...)
 }
 \arguments{
-\item{model1}{First model result (reference).}
-
-\item{model2}{Second model result (alternative).}
-
-\item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
-
-\item{method}{Character. How to summarize F across age/length groups each model
-time step. Quarterly fits remain quarterly; no annual aggregation is performed.
-\code{"apical"} (default): maximum F across groups, comparable across
-age-based and length-based models.
-\code{"mean"}: arithmetic mean across all groups, which can mislead when
-models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).}
-
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
-
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
-
-\item{linewidth}{Numeric. NULL = use global theme.}
+\item{...}{Arguments passed to \code{plot_compare_F_ts()}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Compare Fishing Mortality by Time Step
+Deprecated. \code{plot_compare_annual_F()} summarizes F per model time step
+and never annualized quarterly values, so it is now called
+\code{\link{plot_compare_F_ts}()}. This alias warns once per session and
+will be removed in a later release.
 }

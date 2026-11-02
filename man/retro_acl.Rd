@@ -22,11 +22,11 @@ retro_acl(
   len_border = NULL,
   plot = FALSE,
   line_size = NULL,
-  point_size = 3,
+  point_size = NULL,
   point_shape = 21,
   facet_scales = "free",
-  facet_col = NULL,
-  facet_row = NULL,
+  facet_ncol = NULL,
+  facet_nrow = NULL,
   train_times = 1,
   title = NULL,
   xlab = NULL,
@@ -90,15 +90,15 @@ fit_diagnostics and errors remain available.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
-\item{point_size}{Numeric. Point size for endpoints. Default is 3.}
+\item{point_size}{Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_shape}{Numeric. Point shape for endpoints. Default is 21.}
 
 \item{facet_scales}{Character. Facet scales argument. Default is "free".}
 
-\item{facet_col}{Integer or NULL. Number of facet columns.}
+\item{facet_ncol}{Integer or NULL. Number of facet columns.}
 
-\item{facet_row}{Integer or NULL. Number of facet rows.}
+\item{facet_nrow}{Integer or NULL. Number of facet rows.}
 
 \item{train_times}{Positive integer. Number of consecutive optimization passes
 per start. Default is 1; nstarts controls the number of independent starts.}

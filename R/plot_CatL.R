@@ -8,25 +8,28 @@
 #'
 #' @param model_result A fitted result with report$Elog_index, observed survey data
 #'   and time/length metadata.
-#' @param line_size Numeric or NULL. Line thickness for type="length"; NULL inherits global line_size.
+#' @param line_size Numeric or NULL. Line thickness for facet_by = "length"; NULL inherits global line_size.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
-#' @param line_type Character. Line type for type="length" plot. Default is "solid".
-#' @param line_size1 Numeric or NULL. Estimated-line thickness for type="year"; NULL uses 1.2 times global line_size (default 1.8).
+#' @param line_type Character. Line type for facet_by = "length" plot. Default is "solid".
+#' @param line_size1 Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (default 1.8).
 #' @param line_color1 Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type1 Character. Line type for estimated line. Default is "solid".
 #' @param line_alpha1 Numeric. Transparency for estimated line (0-1). Default is 1.
-#' @param line_size2 Numeric or NULL. Observed-line thickness for type="year"; NULL uses two-thirds of global line_size (default 1.0).
+#' @param line_size2 Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (default 1.0).
 #' @param line_color2 Character or NULL. NULL inherits the global observed_color setting.
 #' @param line_type2 Character. Line type for observed line. Default is "solid".
 #' @param line_alpha2 Numeric. Transparency for observed line (0-1). Default is 0.6.
 #' @param point_color Character or NULL. NULL inherits the global observed_color setting.
-#' @param point_size Numeric. Specifies the size of the point in the plot. Default is 2.5.
+#' @param point_size Numeric or NULL. Point size for facet_by = "length"; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.
 #' @param facet_ncol Integer. Specifies the number of columns in the facet_wrap. Default is NULL.
 #' @param facet_scales Character. Specifies scales for facet_wrap. Default is "free".
-#' @param type Character. It specifies whether the Elog_index is plotted across "length" or "year". Default is "length".
+#' @param facet_by Character. "length" (default) draws one panel per length bin
+#'   with time on the x axis; "year" draws one panel per time step with length
+#'   on the x axis.
 #' @param exp_transform Logical. Specifies whether to apply the exponential function to the data before plotting. If TRUE, the exponential of the data values is plotted. Default is FALSE.
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
+#' @param ... The former argument name type, accepted with a warning.
 #'
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
@@ -56,28 +59,32 @@
 #' model_result <- run_acl(...)
 #'
 #' # Plot Elog_index across lengths
-#' plot_CatL(model_result, type = "length")
+#' plot_CatL(model_result, facet_by = "length")
 #'
 #' # Plot Elog_index over years
-#' plot_CatL(model_result, type = "year")
+#' plot_CatL(model_result, facet_by = "year")
 #'
 #' # With exp_transform set to TRUE
 #' model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
-#' plot_CatL(model_result, type = "year", exp_transform = TRUE)
+#' plot_CatL(model_result, facet_by = "year", exp_transform = TRUE)
 #' }
 #'
 #' @export
 
-plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_shape=16,
+plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point_shape = 16,
                       line_size = NULL, line_color = NULL, line_type = "solid",
                       line_size1 = NULL, line_color1 = NULL, line_type1 = "solid", line_alpha1 = 1,
                       line_size2 = NULL, line_color2 = NULL, line_type2 = "solid", line_alpha2 = 0.6,
-                      facet_ncol = NULL, facet_scales = "free", type = c("length","year"),
+                      facet_ncol = NULL, facet_scales = "free", facet_by = c("length", "year"),
                       exp_transform = FALSE, return_data = FALSE,
                       title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
                       title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-                      strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+                      strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {
+  renamed <- .acl_renamed(list(...), "plot_CatL")
+  if (missing(facet_by) && !is.null(renamed$facet_by)) facet_by <- renamed$facet_by
+  facet_by <- match.arg(facet_by)
   # NULL inherits the global palette.
+  if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_size1)) line_size1 <- 1.2 * acl_theme("line_size")
   if (is.null(line_size2)) line_size2 <- (2 / 3) * acl_theme("line_size")
@@ -89,7 +96,6 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
 
 
   .acl_check_flag(exp_transform, "exp_transform")
-  type <- match.arg(type)
   if (is.null(ylab)) ylab <- .acl_survey_label(log = !exp_transform)
   Elog_index <- model_result$report$Elog_index
   if (is.data.frame(Elog_index)) Elog_index <- as.matrix(Elog_index)
@@ -108,7 +114,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
   if (any(!is.finite(Elog_index)) || any(is.infinite(logN_at_len)))
     stop("Exponential transformation produced nonfinite abundance; use exp_transform = FALSE.", call. = FALSE)
 
-  if (type == "length") {
+  if (facet_by == "length") {
     len_label <- model_result$len_label
     if (length(len_label) != nrow(Elog_index) || anyNA(len_label) ||
         any(!nzchar(as.character(len_label))) || anyDuplicated(len_label))
@@ -125,7 +131,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
       ggplot2::geom_point(logN_at_len_long, mapping=aes(x = Year, y = Count),size= point_size, color= point_color,shape=point_shape) +
       ggplot2::geom_line(Elog_index_long,  mapping=aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_year")) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_by_length")) +
       .acl_scale_x(x_breaks, n_breaks = 10) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
@@ -137,7 +143,7 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
     }
   }
 
-  if(type=="year"){
+  if (facet_by == "year") {
     len_mid <- model_result$len_mid
     year <- Year
     if (!is.numeric(len_mid) || length(len_mid) != nrow(Elog_index) ||
@@ -157,16 +163,16 @@ plot_CatL <- function(model_result, point_size=2.5, point_color = NULL, point_sh
     df_long1 <- df1 %>%
       tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
 
-    year_levels <- paste("Year", year)
-    df_long1$year <- factor(paste("Year", df_long1$year), levels = year_levels)
+    year_levels <- .acl_time_labels(year)
+    df_long1$year <- factor(year_levels[match(as.numeric(df_long1$year), year)], levels = year_levels)
 
     df_long2 <- df2 %>%
       tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
 
-    df_long2$year <- factor(paste("Year", df_long2$year), levels = year_levels)
+    df_long2$year <- factor(year_levels[match(as.numeric(df_long2$year), year)], levels = year_levels)
 
     # Plot the data using ggplot2
-    auto_title <- .acl_title("CatL_year_dist")
+    auto_title <- .acl_title("CatL_by_year")
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_line(data=df_long2, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size2,color=line_color2,linetype=line_type2,alpha=line_alpha2) +

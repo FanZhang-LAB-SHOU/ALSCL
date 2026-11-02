@@ -161,7 +161,7 @@ for (fit in list(a, b)) {
       !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
-residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
+residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
 # 实际自由参数及边界 / Actual free scalars and bounds / Omit SE intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
@@ -248,8 +248,8 @@ b$diagnostics$issues
 estimates <- extract_estimates(b)
 subset(estimates, quantity == "SSB")
 extract_parameters(b)
-plot_CatL(b, type = "year", facet_ncol = 5)
-plot_residuals(b, type = "year", facet_ncol = 5)
+plot_CatL(b, facet_by = "year", facet_ncol = 5)
+plot_residuals(b, facet_by = "year", facet_ncol = 5)
 plot_SSB(b, se = TRUE)
 ```
 
@@ -374,7 +374,7 @@ The four panels show the residual histogram, the QQ plot, the mean residual by y
 
 ```r
 plot_compare_CatL(a, b, x$data.CatL,
-                  years = c(2000, 2005, 2010, 2015), ncol = 2)
+                  years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
 ![模拟 YTF：四个年份的调查观测及拟合中位数 / Synthetic YTF: observed survey indices and fitted medians in four years](figures/ytf/compare_CatL.png)
@@ -407,9 +407,9 @@ plot_compare_F(a, b)
 
 ![模拟 YTF：年龄别与体长别捕捞死亡率 / Synthetic YTF: age-based and length-based fishing mortality](figures/ytf/compare_F.png)
 
-ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_annual_F()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
+ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_F_ts()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
-ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_annual_F()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
+ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_F_ts()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
 
 <a id="case-compare-assessments-save"></a>
 
@@ -463,7 +463,7 @@ x <- YTF_example
 rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
 rb$fit_diagnostics
 rb$rho_text
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
 `retro_alscl()` 像 `run_alscl(x)` 一样读取输入列表 `x`，先拟合完整序列，再做三轮：第 1 轮去掉最后一个时间步，第 2 轮去掉最后两个，第 3 轮去掉最后三个。`nyear` 以时间步计（季度数据就是季度），每一轮至少要保留两个。调用中的参数对每次拟合都生效，本次调用的 `ncores` 让各轮并行运行（[运行回溯分析](USER_GUIDE.md#retrospectives-run)）。先读 `rb$fit_diagnostics`：每次拟合一行（`Peel` 为 0 是完整拟合），含数值检查和报错信息。只有完整拟合和所有轮次都通过检查、每个末端比较都有限且参考值非零时，`rb$rho_text$Rho` 才给出每个量的 Mohn's rho；否则为 `NA` 并警告，`rb$errors` 列出失败的拟合，`rb$raw_rho_text` 保留未经检查的均值供诊断。教学数据的四次拟合约需六分钟，全部通过（[retro_diagnostics_ALSCL.csv](results/retro_diagnostics_ALSCL.csv)）。
@@ -484,7 +484,7 @@ Each line is one fit, coloured by its last time step; the open point marks the t
 ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
 ra$fit_diagnostics
 ra$rho_text
-plot_retro(ra, facet_col = 2, rho_digits = 3)
+plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 ```
 
 ![模拟 YTF：ACL 回溯轨迹 / Synthetic YTF: ACL retrospective trajectories](figures/ytf/retro_ACL.png)
@@ -504,7 +504,7 @@ write.csv(rb$rho_text, "my_retrospective/alscl_rho.csv", row.names = FALSE)
 write.csv(rb$fit_diagnostics, "my_retrospective/fit_diagnostics.csv", row.names = FALSE)
 write.csv(rb$rho_by_peel, "my_retrospective/rho_by_peel.csv", row.names = FALSE)
 write.csv(ra$rho_text, "my_retrospective/acl_rho.csv", row.names = FALSE)
-p_retro <- plot_retro(rb, facet_col = 2, rho_digits = 3)
+p_retro <- plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ggplot2::ggsave("my_retrospective/alscl.png", p_retro,
                width = 10, height = 7, dpi = 300)
 saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,

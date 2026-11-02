@@ -106,7 +106,7 @@ test_that("comparison line types reach data layers and displayed legends", {
       model1_name = "First", model2_name = "Second"), extra))
     panels <- style_panels_229(p)
     panels <- panels[vapply(panels, function(x)
-      x$labels$title %in% c("QQ Plot", "Mean Residual by Year"), logical(1))]
+      x$labels$title %in% c("QQ plot", "Mean residual by year"), logical(1))]
     expect_length(panels, 2L)
     for (panel in panels) {
       layer <- ggplot2::ggplot_build(panel)$data[[2L]]

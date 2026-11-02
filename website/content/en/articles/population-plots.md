@@ -12,7 +12,7 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ```r
 # Draw this figure
-plot_CatL(b, type = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
@@ -28,7 +28,7 @@ One panel per length bin, time on the horizontal axis and the log survey index o
 
 ```r
 # Draw this figure
-plot_CatL(b, type = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
   point_size = 1, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
@@ -44,7 +44,7 @@ The same panels on the original scale: the navy curve is `exp(Elog_index)`, the 
 
 ```r
 # Draw this figure
-plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
@@ -52,7 +52,7 @@ plot_CatL(b, type = "year", exp_transform = FALSE, facet_ncol = 4,
 
 [![Survey fit year log scale](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
 
-`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `type = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
+`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `facet_by = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
 
 One panel per time step, length on the horizontal axis and the log survey index on the vertical axis: the thin vermilion curve is the observed log index across lengths and the thick navy curve is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the navy curve misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
 
@@ -62,7 +62,7 @@ One panel per time step, length on the horizontal axis and the log survey index 
 
 ```r
 # Draw this figure
-plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
   line_size1 = 0.6, line_size2 = 0.4,
   x_breaks = c(10, 30, 50),
   ylab = "Survey index")
@@ -70,7 +70,7 @@ plot_CatL(b, type = "year", exp_transform = TRUE, facet_ncol = 4,
 
 [![Survey fit year original scale](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
 
-`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `type = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
+`line_size1 = 0.6` controls fitted curves; `line_size2 = 0.4` controls observed curves. In `facet_by = "year"`, use these two parameters instead of the length-mode `line_size` and `point_size`.
 
 The same panels on the original scale, with the curves as `exp(Elog_index)` medians and the observed index. Use it to see which lengths carry the index in each time step; the position and height of the peak show where the survey catches most fish, and a time step whose observed peak sits off the navy curve is worth checking in the residual figures.
 

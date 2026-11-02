@@ -5,12 +5,12 @@
 #' For ALSCL, F deviations are at the length level (L x Y).
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param se Logical, whether to draw the standard error bar.
+#' @param se Logical. Whether to draw 95% intervals from the standard errors. Default is FALSE.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character, the line type.
 #' @param point_color Character. The color of the point. Default is "white".
-#' @param point_size Numeric. The size of the point. Default is 3.
+#' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the point. Default is 21.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_width Numeric, the width of the standard error.
@@ -19,6 +19,18 @@
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
 #' @param facet_scales Scales for facet wrap. Default is "free".
 #' @param type Character. "R" for recruitment deviation, "F" for fishing mortality deviation.
+#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
+#' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
+#' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
+#' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
+#' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
+#' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
+#' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #'
 #' @details With se = FALSE, estimates come from report$dev_log_R or
 #'   report$dev_log_F without requiring a standard-error table. Older saved
@@ -28,13 +40,19 @@
 #'   must match the model metadata, including the single group for shared F.
 #'   Titles and y-axis labels use the global dev_R/dev_F keys on the log
 #'   scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
+#'   A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
+#'   theme label, and the typography arguments replace the corresponding theme settings.
 #' @return A ggplot2 object.
 #' @export
-plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color = "white",
+plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_color = "white",
                           point_shape = 21, line_size = NULL, line_color = NULL,
                           line_type = "solid", se_color = NULL, se_width = 0.5,
                           facet_ncol = NULL, facet_scales = "free", log = TRUE,
-                          type = c("R", "F")) {
+                          type = c("R", "F"), title = NULL, xlab = NULL, ylab = NULL,
+                          font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+                          strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
+                          title_hjust = NULL) {
+  if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
@@ -87,7 +105,7 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
       labels <- .acl_fix_len_labels(labels, prefix = "Length")
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     } else {
-      labels <- paste0("Age group ", seq_len(n_groups))
+      labels <- paste("Age bin", seq_len(n_groups))
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     }
     ci <- ci[c("Group", "Year", "estimate", "lower", "upper")]
@@ -101,10 +119,12 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
   plot <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
     ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
     ggplot2::geom_point(size = point_size, fill = point_color, shape = point_shape) +
-    ggplot2::labs(y = .acl_lab("y", label_key), x = .acl_lab("x", "year"),
-      title = .acl_title(label_key)) +
-    .acl_scale_x(n_breaks = 5) +
-    .acl_plot_theme()
+    ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", label_key),
+      x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
+      title = if (!is.null(title)) title else .acl_title(label_key)) +
+    .acl_scale_x(x_breaks, n_breaks = 5) +
+    .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
+                    legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
   if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = facet_scales)
   if (se) plot <- plot +
     ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, width = se_width) +

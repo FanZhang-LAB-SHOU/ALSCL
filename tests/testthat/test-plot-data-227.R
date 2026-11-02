@@ -72,7 +72,7 @@ test_that("single-period and single-group plots retain SE dimensions", {
       expect_equal(p$data$upper - p$data$lower, .0392, ignore_attr = TRUE)
     }
     expect_equal(as.character(plot_deviance(m, type = "F")$data$Group),
-      if (shared) "Shared F" else if (model == "ALSCL") "Length 10" else "Age group 1")
+      if (shared) "Shared F" else if (model == "ALSCL") "Length 10" else "Age bin 1")
   }
 })
 

@@ -23,7 +23,12 @@ plot_fishing_mortality(
   ylab = NULL,
   font_family = NULL,
   title_size = NULL,
-  base_theme = NULL
+  axis_title_size = NULL,
+  axis_text_size = NULL,
+  strip_text_size = NULL,
+  legend_text_size = NULL,
+  base_theme = NULL,
+  title_hjust = NULL
 )
 }
 \arguments{
@@ -47,10 +52,12 @@ plot_fishing_mortality(
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
-\item{type}{Character. "year" (faceted by group), "age" (faceted by year),
-or "length" (ALSCL: faceted by year showing F vs numeric length-bin
-midpoints in \code{model_result$len_mid}; ACL: legacy alias for "age", with
-a warning). Default is "year".}
+\item{type}{Character. Which dimension of F runs along the x axis: "year"
+(one panel per age or length group), "age" (one panel per time step) or
+"length" (ALSCL only: one panel per time step with the numeric length-bin
+midpoints in \code{model_result$len_mid} on the x axis; for ACL a legacy
+alias for "age", with a warning). Default is "year". Time-step panels are
+labelled "Year 2000", or "2000 Q2" for quarterly fits.}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
@@ -61,20 +68,30 @@ the global x_breaks setting. Expansion follows global x_expand.}
 F_year, F_age or F_length title, with _se appended for interval plots.}
 
 \item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
-year, age or length label. Uncustomized age axes are labeled Age Group
+year, age or length label. Uncustomized age axes are labeled Age group
 because the plotted coordinates are group positions.}
 
 \item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.}
 
-\item{font_family}{Character. Font family for text elements.}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
-\item{title_size}{Numeric. Title text size.}
+\item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
+
+\item{axis_title_size}{Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).}
+
+\item{axis_text_size}{Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).}
+
+\item{strip_text_size}{Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).}
+
+\item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
 \item{base_theme}{A ggplot2 theme object, a supported theme name such as
 "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 settings in theme objects are retained; typography follows the global
-settings and explicit font_family/title_size arguments. Major and minor
+settings and the explicit typography arguments. Major and minor
 grids are removed for every base theme.}
+
+\item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }
 \value{
 A ggplot object, or a list with plot and data if return_data = TRUE.

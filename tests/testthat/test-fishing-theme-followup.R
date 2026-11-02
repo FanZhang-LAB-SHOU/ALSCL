@@ -116,7 +116,7 @@ test_that("F age coordinates remain group positions and the ACL alias remains su
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   fit <- fishing_theme_fixture("ACL")
   a <- plot_fishing_mortality(fit, type = "age", return_data = TRUE)
-  expect_equal(a$plot$labels$x, "Age Group")
+  expect_equal(a$plot$labels$x, "Age group")
   expect_warning(b <- plot_fishing_mortality(fit, type = "length", return_data = TRUE),
     "legacy alias")
   expect_equal(a$data, b$data)

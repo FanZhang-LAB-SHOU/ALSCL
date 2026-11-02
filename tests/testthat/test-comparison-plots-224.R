@@ -35,7 +35,7 @@ comparison_panel_data_224 <- function(p) {
 comparison_plot_calls_224 <- function(m1, m2, data, extra = list()) {
   functions <- list(plot_compare_ts, plot_compare_F, plot_compare_residuals,
                     plot_compare_growth, plot_compare_CatL, plot_compare_metrics,
-                    plot_compare_selectivity, plot_compare_annual_F)
+                    plot_compare_selectivity, plot_compare_F_ts)
   lapply(seq_along(functions), function(i) {
     args <- c(list(model1 = m1, model2 = m2), extra)
     if (i %in% c(3L, 5L, 6L)) args$data.CatL <- data
@@ -80,7 +80,7 @@ test_that("all comparison plots keep same-model fits in distinct groups", {
   expect_length(unique(ggplot2::ggplot_build(ts$plot)$data[[1L]]$group), 2L)
   heatmap <- plot_compare_F(m1, m2)
   expect_length(unique(ggplot2::ggplot_build(heatmap)$layout$layout$Model), 2L)
-  for (fun in list(plot_compare_ts, plot_compare_F, plot_compare_annual_F)) {
+  for (fun in list(plot_compare_ts, plot_compare_F, plot_compare_F_ts)) {
     expect_error(fun(m1, m2, model1_name = "Same", model2_name = "Same"),
                  "must be distinct")
   }
@@ -100,8 +100,8 @@ test_that("time-series and F plots preserve each fit's calendar and dimensions",
   expect_silent(ggplot2::ggplot_build(ts$plot))
 
   for (method in c("mean", "apical")) {
-    p <- plot_compare_annual_F(m1, m2, method = method)
-    expect_equal(p$labels$title, "Fishing Mortality by Time Step")
+    p <- plot_compare_F_ts(m1, m2, method = method)
+    expect_equal(p$labels$title, "Fishing mortality by time step")
     expect_equal(p$data$Year, c(m1$year, m2$year))
     summary <- function(m) if (method == "mean") colMeans(m$report$FL)
                            else apply(m$report$FL, 2L, max)
@@ -114,7 +114,7 @@ test_that("time-series and F plots preserve each fit's calendar and dimensions",
   expect_silent(ggplot2::ggplot_build(heatmap))
 
   m2$year <- m2$year[-1L]
-  expect_error(plot_compare_annual_F(m1, m2), "dimensions do not match.*year")
+  expect_error(plot_compare_F_ts(m1, m2), "dimensions do not match.*year")
   expect_error(plot_compare_F(m1, m2), "dimensions do not match.*year")
   m2$year[1L] <- NA_real_
   expect_error(plot_compare_ts(m1, m2), "finite, increasing year")

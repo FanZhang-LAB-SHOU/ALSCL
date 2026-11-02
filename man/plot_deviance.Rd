@@ -6,8 +6,8 @@
 \usage{
 plot_deviance(
   model_result,
-  se = TRUE,
-  point_size = 3,
+  se = FALSE,
+  point_size = NULL,
   point_color = "white",
   point_shape = 21,
   line_size = NULL,
@@ -18,15 +18,27 @@ plot_deviance(
   facet_ncol = NULL,
   facet_scales = "free",
   log = TRUE,
-  type = c("R", "F")
+  type = c("R", "F"),
+  title = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  font_family = NULL,
+  title_size = NULL,
+  axis_title_size = NULL,
+  axis_text_size = NULL,
+  strip_text_size = NULL,
+  legend_text_size = NULL,
+  x_breaks = NULL,
+  base_theme = NULL,
+  title_hjust = NULL
 )
 }
 \arguments{
 \item{model_result}{A list from \code{run_acl} or \code{run_alscl}.}
 
-\item{se}{Logical, whether to draw the standard error bar.}
+\item{se}{Logical. Whether to draw 95\% intervals from the standard errors. Default is FALSE.}
 
-\item{point_size}{Numeric. The size of the point. Default is 3.}
+\item{point_size}{Numeric or NULL. NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_color}{Character. The color of the point. Default is "white".}
 
@@ -50,6 +62,30 @@ plot_deviance(
 exponentiated multiplicative factors. These are not likelihood deviances.}
 
 \item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.}
+
+\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+
+\item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
+
+\item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
+
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
+
+\item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
+
+\item{axis_title_size}{Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).}
+
+\item{axis_text_size}{Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).}
+
+\item{strip_text_size}{Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).}
+
+\item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
+
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+
+\item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }
 \value{
 A ggplot2 object.
@@ -68,4 +104,6 @@ and finite nonnegative standard errors is required. Groups and periods
 must match the model metadata, including the single group for shared F.
 Titles and y-axis labels use the global dev_R/dev_F keys on the log
 scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
+A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
+theme label, and the typography arguments replace the corresponding theme settings.
 }

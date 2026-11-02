@@ -34,7 +34,7 @@ and length-group metadata.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
-\item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
+\item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses the global ylab$length setting.}
 
 \item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 

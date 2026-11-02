@@ -53,8 +53,8 @@ plot_SSB(a, se = TRUE)
 <h2 id="fit-to-data">4. 检查对观测的拟合</h2>
 
 ```r
-plot_CatL(a, type = "year", facet_ncol = 5)
-plot_residuals(a, type = "year", facet_ncol = 5)
+plot_CatL(a, facet_by = "year", facet_ncol = 5)
+plot_residuals(a, facet_by = "year", facet_ncol = 5)
 ```
 
 `plot_CatL()` 按年份分面，画出各体长组的观测调查指数（点）和拟合指数（线）。`plot_residuals()` 画同样分面的对数残差，即对数尺度上观测减拟合。可用的拟合在每个面板中残差都围绕 0 散布。若同一年相邻体长组的残差同号成串，或同一体长组多年同号成串，说明模型漏掉了数据中的某种特征，例如一个队列穿过调查范围，或实际选择性与假设不同；[诊断](diagnostics.html)说明如何检查这类规律。

@@ -11,7 +11,7 @@ x <- YTF_example
 rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE)
 rb$fit_diagnostics
 rb$rho_text
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
 `retro_alscl()` 像 `run_alscl(x)` 一样读取输入列表 `x`，先拟合完整序列，再做三轮：第 1 轮去掉最后一个时间步，第 2 轮去掉最后两个，第 3 轮去掉最后三个。`nyear` 以时间步计（季度数据就是季度），每一轮至少要保留两个。调用中的参数对每次拟合都生效，本次调用的 `ncores` 让各轮并行运行（[运行回溯分析](retrospectives.html#run)）。先读 `rb$fit_diagnostics`：每次拟合一行（`Peel` 为 0 是完整拟合），含数值检查和报错信息。只有完整拟合和所有轮次都通过检查、每个末端比较都有限且参考值非零时，`rb$rho_text$Rho` 才给出每个量的 Mohn's rho；否则为 `NA` 并警告，`rb$errors` 列出失败的拟合，`rb$raw_rho_text` 保留未经检查的均值供诊断。教学数据的四次拟合约需六分钟，全部通过（[retro_diagnostics_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/retro_diagnostics_ALSCL.csv)）。
@@ -26,7 +26,7 @@ plot_retro(rb, facet_col = 2, rho_digits = 3)
 ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE)
 ra$fit_diagnostics
 ra$rho_text
-plot_retro(ra, facet_col = 2, rho_digits = 3)
+plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 ```
 
 ![模拟 YTF：ACL 回溯轨迹](../assets/manual/figures/ytf/retro_ACL.png)
@@ -42,7 +42,7 @@ write.csv(rb$rho_text, "my_retrospective/alscl_rho.csv", row.names = FALSE)
 write.csv(rb$fit_diagnostics, "my_retrospective/fit_diagnostics.csv", row.names = FALSE)
 write.csv(rb$rho_by_peel, "my_retrospective/rho_by_peel.csv", row.names = FALSE)
 write.csv(ra$rho_text, "my_retrospective/acl_rho.csv", row.names = FALSE)
-p_retro <- plot_retro(rb, facet_col = 2, rho_digits = 3)
+p_retro <- plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ggplot2::ggsave("my_retrospective/alscl.png", p_retro,
                width = 10, height = 7, dpi = 300)
 saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,

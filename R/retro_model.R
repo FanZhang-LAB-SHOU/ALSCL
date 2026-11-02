@@ -128,11 +128,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
-#' @param point_size Numeric. Point size for endpoints. Default is 3.
+#' @param point_size Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape for endpoints. Default is 21.
 #' @param facet_scales Character. Facet scales argument. Default is "free".
-#' @param facet_col Integer or NULL. Number of facet columns.
-#' @param facet_row Integer or NULL. Number of facet rows.
+#' @param facet_ncol Integer or NULL. Number of facet columns.
+#' @param facet_nrow Integer or NULL. Number of facet rows.
 #' @param title Character or NULL. Custom plot title.
 #' @param xlab Character or NULL. Custom x-axis label.
 #' @param ylab Character or NULL. Custom y-axis label.
@@ -148,6 +148,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param rho_digits Integer. Decimal places for Mohn's rho display. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
+#' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @inheritParams run_acl
 #' @details Bundle settings use the same precedence as [run_acl()]: shared
 #'   fit_args, selected fit_config, then explicit call arguments. Explicit map,
@@ -184,8 +185,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         len_lower = NULL, len_upper = NULL,
                         train_times = 1, ncores = 1, silent = FALSE,
                         plot = FALSE,
-                        line_size = NULL, point_size = 3, point_shape = 21,
-                        facet_scales = "free", facet_col = NULL, facet_row = NULL,
+                        line_size = NULL, point_size = NULL, point_shape = 21,
+                        facet_scales = "free", facet_ncol = NULL, facet_nrow = NULL,
                         title = NULL, xlab = NULL, ylab = NULL,
                         font_family = NULL, title_size = NULL,
                         axis_title_size = NULL, axis_text_size = NULL,
@@ -194,7 +195,10 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
-                        model = NULL) {
+                        model = NULL, ...) {
+  renamed <- .acl_renamed(list(...), "retro_model")
+  if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
+  if (is.null(facet_nrow)) facet_nrow <- renamed$facet_nrow
   if (!is.null(model)) {
     if (!missing(model_type))
       stop("Supply either model or model_type, not both.", call. = FALSE)
@@ -332,7 +336,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                     rho_digits = rho_digits, rho_position = rho_position, rho_size = rho_size,
                     line_size = line_size, point_size = point_size,
                     point_shape = point_shape, facet_scales = facet_scales,
-                    facet_col = facet_col, facet_row = facet_row,
+                    facet_ncol = facet_ncol, facet_nrow = facet_nrow,
                     title = title, xlab = xlab, ylab = ylab, font_family = font_family,
                     title_size = title_size, axis_title_size = axis_title_size,
                     axis_text_size = axis_text_size, strip_text_size = strip_text_size,
@@ -369,7 +373,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
                       parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, plot = FALSE,
-                      line_size = NULL, point_size=3,point_shape=21,facet_scales = "free", facet_col = NULL, facet_row = NULL,train_times=1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
+                      line_size = NULL, point_size = NULL, point_shape = 21, facet_scales = "free", facet_ncol = NULL, facet_nrow = NULL, train_times = 1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
   .acl_retro_wrapper(match.call(expand.dots = FALSE), environment(), "acl")
 }
 
@@ -412,11 +416,11 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
-#' @param point_size Numeric. Point size. Default is 3.
+#' @param point_size Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape. Default is 21.
 #' @param facet_scales Character. Facet scales. Default is "free".
-#' @param facet_col Integer or NULL. Number of facet columns.
-#' @param facet_row Integer or NULL. Number of facet rows.
+#' @param facet_ncol Integer or NULL. Number of facet columns.
+#' @param facet_nrow Integer or NULL. Number of facet rows.
 #' @param title Character or NULL. Custom plot title.
 #' @param xlab Character or NULL. Custom x-axis label.
 #' @param ylab Character or NULL. Custom y-axis label.
@@ -434,6 +438,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #'   Native colors are interpolated when there are more peels than colors.
 #' @param colors Character vector or NULL. Explicit period colors, ordered by
 #'   descending terminal period or named by terminal period. Overrides palette.
+#' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @export
 #' @examples
 #' \dontrun{
@@ -446,15 +451,19 @@ plot_retro <- function(retro_result,
                        rho_digits = 4,
                        rho_position = "top_right",
                        rho_size = 3.5,
-                       line_size = NULL, point_size = 3, point_shape = 21,
-                       facet_scales = "free", facet_col = NULL, facet_row = NULL,
+                       line_size = NULL, point_size = NULL, point_shape = 21,
+                       facet_scales = "free", facet_ncol = NULL, facet_nrow = NULL,
                        title = NULL, xlab = NULL, ylab = NULL,
                        font_family = NULL, title_size = NULL,
                        axis_title_size = NULL, axis_text_size = NULL,
                        strip_text_size = NULL, legend_text_size = NULL,
-                       x_breaks = NULL, base_theme = NULL, title_hjust = NULL, palette = NULL, colors = NULL) {
+                       x_breaks = NULL, base_theme = NULL, title_hjust = NULL, palette = NULL, colors = NULL, ...) {
 
+  renamed <- .acl_renamed(list(...), "plot_retro")
+  if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
+  if (is.null(facet_nrow)) facet_nrow <- renamed$facet_nrow
   if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(point_size)) point_size <- acl_theme("point_size")
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points
@@ -501,9 +510,9 @@ plot_retro <- function(retro_result,
   }
 
   auto_title <- if (!is.null(retro_result$model_type)) {
-    paste0("Retrospective Analysis (", toupper(retro_result$model_type), ")")
+    paste0(.acl_title("retro"), " (", toupper(retro_result$model_type), ")")
   } else {
-    "Retrospective Analysis"
+    .acl_title("retro")
   }
 
   p <- ggplot2::ggplot(results, ggplot2::aes(x = Year, y = Value,
@@ -512,7 +521,7 @@ plot_retro <- function(retro_result,
     ggplot2::geom_line(linewidth = line_size) +
     ggplot2::scale_color_manual(values = colors, breaks = periods) +
     ggplot2::geom_point(data = last_points, size = point_size, shape = point_shape) +
-    ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_col, nrow = facet_row) +
+    ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_ncol, nrow = facet_nrow) +
     .acl_scale_x(x_breaks, n_breaks = 10) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
                     strip_text_size, legend_text_size,

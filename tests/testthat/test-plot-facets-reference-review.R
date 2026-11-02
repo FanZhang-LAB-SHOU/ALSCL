@@ -32,7 +32,7 @@ test_that("sparse residual facets cannot change another facet's trend", {
   for (type in c("length", "year")) {
     fit <- facet_reference_fixture()
     facet <- if (type == "length") "LengthGroup" else "Year"
-    baseline <- plot_residuals(fit, type = type)
+    baseline <- plot_residuals(fit, facet_by = type)
     baseline_trend <- facet_reference_trends(baseline, facet)
     if (type == "length") {
       fit$observations[1, ] <- NA_real_
@@ -45,7 +45,7 @@ test_that("sparse residual facets cannot change another facet's trend", {
       fit$observations[-(1:3), 3] <- NA_real_
       fit$observations[-(1:6), 4] <- NA_real_
     }
-    plot <- plot_residuals(fit, type = type)
+    plot <- plot_residuals(fit, facet_by = type)
     expect_silent(actual <- facet_reference_trends(plot, facet))
     labels <- levels(plot$data[[facet]])
     expect_false(any(actual$facet %in% labels[1:2]))
@@ -67,7 +67,7 @@ test_that("sparse residual facets cannot change another facet's trend", {
                    tolerance = 1e-10)
     }
     # return_data still returns the masked residual observations, not smoothed values.
-    returned <- plot_residuals(fit, type = type, return_data = TRUE)
+    returned <- plot_residuals(fit, facet_by = type, return_data = TRUE)
     expect_equal(returned$data, plot$data)
     expect_equal(sum(is.finite(returned$data$residual)), 8 * 12 + 1 + 3 + 6)
   }
@@ -77,7 +77,7 @@ test_that("entirely missing residual facets yield no smoothing errors", {
   fit <- facet_reference_fixture()
   fit$observations[,] <- NA_real_
   for (type in c("length", "year")) {
-    p <- plot_residuals(fit, type = type)
+    p <- plot_residuals(fit, facet_by = type)
     facet <- if (type == "length") "LengthGroup" else "Year"
     expect_silent(trends <- facet_reference_trends(p, facet))
     expect_equal(nrow(trends), 0L)

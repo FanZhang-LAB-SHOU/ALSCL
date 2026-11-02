@@ -12,7 +12,7 @@
 #' # Change just one thing
 #' acl_theme_set(font_family = "Times New Roman")
 #' acl_theme_set(base_theme = "theme_classic")
-#' acl_theme_set(compare_linewidth = 2)
+#' acl_theme_set(compare_line_size = 2)
 #'
 #' # ACL vs ALSCL comparison style
 #' acl_theme_set(
@@ -113,6 +113,7 @@ NULL
   # --- Default colors and line sizes (single-model plots) ------------------
   line_color  = .acl_palette_roles("npg")$line_color,
   line_size   = 1.5,
+  point_size  = 2.5,
   se_color    = .acl_palette_roles("npg")$se_color,
   se_alpha    = 0.2,
 
@@ -125,7 +126,7 @@ NULL
   #   c("M=0" = "steelblue", "M=0.5" = "tomato")   custom names
   compare_colors     = .acl_palette_roles("npg")$compare_colors,
   compare_linetypes  = c("solid", "dashed"),
-  compare_linewidth  = 1.2,
+  compare_line_size  = 1.2,
   compare_point_size = 2,
   compare_se_alpha   = 0.15,
   compare_legend_pos = "bottom",
@@ -135,32 +136,32 @@ NULL
   # --- Titles --------------------------------------------------------------
   titles = list(
     # plot_abundance
-    N       = "Estimated Total Abundance (N)",
-    N_se    = "Estimated Total Abundance (N) with 95% CI",
-    NA_     = "Estimated Abundance-at-Age",
-    NA_se   = "Estimated Abundance-at-Age with 95% CI",
-    NL      = "Estimated Abundance-at-Length",
-    NL_se   = "Estimated Abundance-at-Length with 95% CI",
+    N       = "Estimated total abundance (N)",
+    N_se    = "Estimated total abundance (N) with 95% CI",
+    NA_     = "Estimated abundance at age",
+    NA_se   = "Estimated abundance at age with 95% CI",
+    NL      = "Estimated abundance at length",
+    NL_se   = "Estimated abundance at length with 95% CI",
 
     # plot_biomass
-    B       = "Estimated Total Biomass (B)",
-    B_se    = "Estimated Total Biomass (B) with 95% CI",
-    BL      = "Estimated Biomass-at-Length",
-    BL_se   = "Estimated Biomass-at-Length with 95% CI",
-    BA      = "Estimated Biomass-at-Age",
-    BA_se   = "Estimated Biomass-at-Age with 95% CI",
+    B       = "Estimated total biomass (B)",
+    B_se    = "Estimated total biomass (B) with 95% CI",
+    BL      = "Estimated biomass at length",
+    BL_se   = "Estimated biomass at length with 95% CI",
+    BA      = "Estimated biomass at age",
+    BA_se   = "Estimated biomass at age with 95% CI",
 
     # plot_SSB
     SSB     = "Estimated spawning biomass (SSB)",
     SSB_se  = "Estimated spawning biomass (SSB) with 95% CI",
-    SBL     = "Estimated SSB-at-Length",
-    SBL_se  = "Estimated SSB-at-Length with 95% CI",
-    SBA     = "Estimated SSB-at-Age",
-    SBA_se  = "Estimated SSB-at-Age with 95% CI",
+    SBL     = "Estimated spawning biomass at length",
+    SBL_se  = "Estimated spawning biomass at length with 95% CI",
+    SBA     = "Estimated spawning biomass at age",
+    SBA_se  = "Estimated spawning biomass at age with 95% CI",
 
     # plot_recruitment
-    Rec     = "Estimated Recruitment (R)",
-    Rec_se  = "Estimated Recruitment (R) with 95% CI",
+    Rec     = "Estimated recruitment (R)",
+    Rec_se  = "Estimated recruitment (R) with 95% CI",
 
     # plot_SSB_Rec
     SSB_Rec = "Spawning biomass and recruitment",
@@ -168,56 +169,56 @@ NULL
     # plot_catch
     CN      = "Estimated catch numbers (CN)",
     CN_se   = "Estimated catch numbers (CN) with 95% CI",
-    CNA     = "Estimated Catch-at-Age",
-    CNA_se  = "Estimated Catch-at-Age with 95% CI",
-    CNL     = "Estimated Catch-at-Length",
-    CNL_se  = "Estimated Catch-at-Length with 95% CI",
+    CNA     = "Estimated catch numbers at age",
+    CNA_se  = "Estimated catch numbers at age with 95% CI",
+    CNL     = "Estimated catch numbers at length",
+    CNL_se  = "Estimated catch numbers at length with 95% CI",
 
     # plot_fishing_mortality
-    F_year     = "Estimated Fishing Mortality by Year (F)",
-    F_year_se  = "Estimated Fishing Mortality by Year (F) with 95% CI",
-    F_age      = "Estimated Fishing Mortality-at-Age (F)",
-    F_age_se   = "Estimated Fishing Mortality-at-Age (F) with 95% CI",
-    F_length   = "Estimated Fishing Mortality-at-Length (F)",
-    F_length_se = "Estimated Fishing Mortality-at-Length (F) with 95% CI",
+    F_year     = "Estimated fishing mortality (F) over time",
+    F_year_se  = "Estimated fishing mortality (F) over time with 95% CI",
+    F_age      = "Estimated fishing mortality (F) at age",
+    F_age_se   = "Estimated fishing mortality (F) at age with 95% CI",
+    F_length   = "Estimated fishing mortality (F) at length",
+    F_length_se = "Estimated fishing mortality (F) at length with 95% CI",
 
     # plot_deviance
-    dev_R   = "Log Recruitment Deviations Over Time",
-    dev_F   = "Log Fishing Mortality Deviations Over Time",
-    dev_R_multiplier = "Recruitment Multipliers Over Time",
-    dev_F_multiplier = "Fishing Mortality Multipliers Over Time",
+    dev_R   = "Log recruitment deviations over time",
+    dev_F   = "Log fishing mortality deviations over time",
+    dev_R_multiplier = "Recruitment multipliers over time",
+    dev_F_multiplier = "Fishing mortality multipliers over time",
 
     # plot_VB
-    VB      = "Von Bertalanffy Growth Curve",
-
-    # plot_CatL
-    CatL_obs_length = "Observed Survey Length Composition Over Time",
-    CatL_est_length = "Fitted Survey Length Composition Over Time",
-    CatL_year       = "Fitted (Line) and Observed (Point) Survey Indices Over Time",
-    CatL_year_dist  = "Fitted and Observed Survey Indices at Length",
-
-    # plot_residuals
-    resid_length = "Residuals by Length Bins",
-    resid_year   = "Residuals by Year",
+    VB      = "Von Bertalanffy growth curve",
 
     # plot_ridges
-    ridges   = "Observed and Fitted Survey Length Compositions",
+    CatL_obs_length = "Observed survey length composition over time",
+    CatL_est_length = "Fitted survey length composition over time",
+    ridges   = "Observed and fitted survey length compositions",
 
-    # retro_acl
-    retro    = "Retrospective Analysis",
+    # plot_CatL: one panel per length bin, or one panel per time step
+    CatL_by_length = "Fitted (line) and observed (point) survey indices over time",
+    CatL_by_year   = "Fitted and observed survey indices at length",
+
+    # plot_residuals
+    resid_length = "Residuals by length bin",
+    resid_year   = "Residuals by year",
+
+    # plot_retro; the model type is appended in parentheses
+    retro    = "Retrospective analysis",
 
     # plot_pla
-    pla      = "Age-Length Probability Matrix",
+    pla      = "Age-length probability matrix",
 
     # Comparison plot titles
     compare_ts      = "{m1} vs {m2}",
-    compare_F       = "Fishing Mortality Comparison",
-    compare_resid   = "Residual Diagnostics: {m1} vs {m2}",
-    compare_growth  = "Growth Comparison",
-    compare_CatL    = "Observed and Fitted Survey Indices at Length",
-    compare_metrics = "Model Fit Comparison: {m1} vs {m2}",
-    compare_sel     = "Survey Catchability at Length",
-    compare_annualF = "Fishing Mortality by Time Step"
+    compare_F       = "Fishing mortality comparison",
+    compare_resid   = "Residual diagnostics: {m1} vs {m2}",
+    compare_growth  = "Growth comparison",
+    compare_CatL    = "Observed and fitted survey indices at length",
+    compare_metrics = "Model fit comparison: {m1} vs {m2}",
+    compare_sel     = "Survey catchability at length",
+    compare_F_ts    = "Fishing mortality by time step"
   ),
 
   # --- Axis labels ---------------------------------------------------------
@@ -237,13 +238,13 @@ NULL
     catch     = "Catch numbers",
     survey    = NULL, # NULL preserves legacy custom abundance labels for survey plots.
     F         = "Fishing mortality",
-    deviance  = "Deviance",
     dev_R     = "Log recruitment deviation",
     dev_F     = "Log fishing mortality deviation",
     dev_R_multiplier = "Recruitment multiplier",
     dev_F_multiplier = "Fishing mortality multiplier",
     residual  = "Residual",
-    growth    = "Length"
+    growth    = "Length",
+    length    = "Length"
   )
 )
 
@@ -268,6 +269,11 @@ NULL
 acl_theme <- function(what = NULL) {
   current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
   if (is.null(what)) return(current)
+  if (identical(what, "compare_linewidth")) {
+    .acl_deprecated_message("theme.compare_linewidth",
+      "Theme setting 'compare_linewidth' is deprecated and will be removed; use 'compare_line_size' instead.")
+    what <- "compare_line_size"
+  }
   current[[what]]
 }
 
@@ -291,6 +297,8 @@ acl_theme <- function(what = NULL) {
 #' @param line_color Character. Default line color for single-model plots.
 #' @param line_size Numeric. Default line width for single-model plots (1.5).
 #'   Plot arguments set to NULL inherit this value; explicit widths take priority.
+#' @param point_size Numeric. Default point size for single-model plots (2.5).
+#'   Plot arguments set to NULL inherit this value; explicit sizes take priority.
 #' @param se_color Character. Default CI color.
 #' @param se_alpha Numeric. Default CI transparency (0.2).
 #'   Plot arguments set to NULL inherit this value; explicit alpha takes priority.
@@ -299,7 +307,7 @@ acl_theme <- function(what = NULL) {
 #'   Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 #'   \code{c("M=0" = "steelblue", "M=0.5" = "tomato")}.
 #' @param compare_linetypes Character vector of 2 linetypes. Same rules as colors.
-#' @param compare_linewidth Numeric. Line width for comparison plots.
+#' @param compare_line_size Numeric. Line width for comparison plots (1.2).
 #' @param compare_point_size Numeric. Point size for comparison plots.
 #' @param compare_se_alpha Numeric. CI ribbon alpha for comparison plots.
 #' @param compare_legend_pos Character. Legend position for comparison plots.
@@ -312,18 +320,21 @@ acl_theme <- function(what = NULL) {
 #' @param point_color,observed_color,smooth_color,hline_color Character or NULL.
 #'   Default point, observation, smoother and reference-line colors.
 #' @param low_col,high_col Character or NULL. Continuous heatmap endpoints.
-#' @param titles Named list. Override specific titles.
+#' @param titles Named list. Override specific titles. The keys are listed in
+#'   \code{acl_theme("titles")}; the former keys CatL_year, CatL_year_dist and
+#'   compare_annualF are accepted with a warning.
 #' @param xlab Named list. Override specific x-axis labels.
 #' @param ylab Named list. Override specific y-axis labels. The survey key
 #'   labels survey indices independently of catch abundance; when unset,
 #'   survey plots retain a legacy customized abundance label or use Survey index.
+#' @param ... The former argument name compare_linewidth, accepted with a warning.
 #' @return Invisible previous settings.
 #' @export
 #' @examples
 #' # --- Set just one thing ---
 #' acl_theme_set(base_theme = "theme_classic")
 #' acl_theme_set(font_family = "Times New Roman")
-#' acl_theme_set(compare_linewidth = 2)
+#' acl_theme_set(compare_line_size = 2)
 #'
 #' # --- Compare ACL vs ALSCL (default) ---
 #' acl_theme_set(
@@ -348,19 +359,22 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
                           axis_title_size = NULL, axis_text_size = NULL,
                           strip_text_size = NULL, legend_text_size = NULL,
                           x_breaks = NULL, x_expand = NULL,
-                          line_color = NULL, line_size = NULL,
+                          line_color = NULL, line_size = NULL, point_size = NULL,
                           se_color = NULL, se_alpha = NULL,
                           compare_colors = NULL, compare_linetypes = NULL,
-                          compare_linewidth = NULL, compare_point_size = NULL,
+                          compare_line_size = NULL, compare_point_size = NULL,
                           compare_se_alpha = NULL, compare_legend_pos = NULL,
                           compare_facet_ncol = NULL, compare_facet_scales = NULL,
                           titles = NULL, xlab = NULL, ylab = NULL,
                           palette = NULL, point_color = NULL, observed_color = NULL,
                           smooth_color = NULL, hline_color = NULL,
-                          low_col = NULL, high_col = NULL) {
+                          low_col = NULL, high_col = NULL, ...) {
 
   current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
   old <- current
+  renamed <- .acl_renamed(list(...), "acl_theme_set")
+  if (is.null(compare_line_size)) compare_line_size <- renamed$compare_line_size
+  if (!is.null(titles)) titles <- .acl_renamed_titles(titles)
   if (!is.null(palette)) {
     palette <- match.arg(tolower(palette), c("npg", "aaas", "nejm", "lancet", "jama"))
     current <- utils::modifyList(current, .acl_palette_roles(palette))
@@ -382,11 +396,12 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!is.null(x_expand))            current$x_expand             <- x_expand
   if (!is.null(line_color))           current$line_color           <- line_color
   if (!is.null(line_size))            current$line_size            <- line_size
+  if (!is.null(point_size))           current$point_size           <- point_size
   if (!is.null(se_color))             current$se_color             <- se_color
   if (!is.null(se_alpha))             current$se_alpha             <- se_alpha
   if (!is.null(compare_colors))       current$compare_colors       <- compare_colors
   if (!is.null(compare_linetypes))    current$compare_linetypes    <- compare_linetypes
-  if (!is.null(compare_linewidth))    current$compare_linewidth    <- compare_linewidth
+  if (!is.null(compare_line_size))    current$compare_line_size    <- compare_line_size
   if (!is.null(compare_point_size))   current$compare_point_size   <- compare_point_size
   if (!is.null(compare_se_alpha))     current$compare_se_alpha     <- compare_se_alpha
   if (!is.null(compare_legend_pos))   current$compare_legend_pos   <- compare_legend_pos
@@ -539,20 +554,20 @@ acl_theme_reset <- function() {
 #'
 #' @param colors Per-call override. Named or unnamed vector of 2.
 #' @param linetypes Per-call override.
-#' @param linewidth Per-call override.
+#' @param line_size Per-call override.
 #' @param point_size Per-call override.
 #' @param se_alpha Per-call override.
 #' @param legend_pos Per-call override.
-#' @param ncol Per-call override.
-#' @param scales Per-call override.
+#' @param facet_ncol Per-call override.
+#' @param facet_scales Per-call override.
 #' @param m1 Model 1 name.
 #' @param m2 Model 2 name.
 #' @return A named list of resolved settings.
 #' @keywords internal
 .acl_compare_defaults <- function(colors = NULL, linetypes = NULL,
-                                  linewidth = NULL, point_size = NULL,
+                                  line_size = NULL, point_size = NULL,
                                   se_alpha = NULL, legend_pos = NULL,
-                                  ncol = NULL, scales = NULL,
+                                  facet_ncol = NULL, facet_scales = NULL,
                                   m1 = "Model 1", m2 = "Model 2") {
 
   # Helper: resolve a 2-element vector (color or linetype) to named c(m1=..., m2=...)
@@ -575,12 +590,12 @@ acl_theme_reset <- function() {
   list(
     colors     = resolve_pair(colors,    "compare_colors",    .acl_defaults$compare_colors),
     linetypes  = resolve_pair(linetypes, "compare_linetypes", c("solid", "dashed")),
-    linewidth  = if (!is.null(linewidth))  linewidth  else (acl_theme("compare_linewidth")  %||% 1.2),
+    line_size  = if (!is.null(line_size))  line_size  else (acl_theme("compare_line_size")  %||% 1.2),
     point_size = if (!is.null(point_size)) point_size else (acl_theme("compare_point_size") %||% 2),
     se_alpha   = if (!is.null(se_alpha))   se_alpha   else (acl_theme("compare_se_alpha")   %||% 0.15),
     legend_pos = if (!is.null(legend_pos)) legend_pos else (acl_theme("compare_legend_pos") %||% "bottom"),
-    ncol       = if (!is.null(ncol))       ncol       else (acl_theme("compare_facet_ncol") %||% 2),
-    scales     = if (!is.null(scales))     scales     else (acl_theme("compare_facet_scales") %||% "free_y")
+    facet_ncol = if (!is.null(facet_ncol)) facet_ncol else (acl_theme("compare_facet_ncol") %||% 2),
+    facet_scales = if (!is.null(facet_scales)) facet_scales else (acl_theme("compare_facet_scales") %||% "free_y")
   )
 }
 
@@ -600,6 +615,26 @@ acl_theme_reset <- function() {
     if (length(last_parts)  == 2) LengthGroup[n_bins] <- paste0(">", last_parts[1])
   }
   paste(prefix, LengthGroup)
+}
+
+
+# Facet strips for time steps: "Year 2000" for annual labels, "2000 Q2" for
+# quarterly labels, otherwise the time label itself.
+.acl_time_labels <- function(times) {
+  times <- as.numeric(times)
+  if (all(abs(times - round(times)) < 1e-8))
+    return(paste("Year", format(round(times), trim = TRUE)))
+  quarters <- (times - floor(times + 1e-8)) / 0.25
+  on_grid <- all(abs(quarters - round(quarters)) < 1e-6)
+  if (on_grid && any(abs(round(quarters) - 1) < 1e-6 | abs(round(quarters) - 3) < 1e-6))
+    return(sprintf("%d Q%d", as.integer(floor(times + 1e-8)), as.integer(round(quarters)) + 1L))
+  as.character(times)
+}
+
+# Factor of time-step labels in time order, for facet_wrap().
+.acl_period_factor <- function(values, times = sort(unique(values))) {
+  labels <- .acl_time_labels(times)
+  factor(labels[match(values, times)], levels = labels)
 }
 
 

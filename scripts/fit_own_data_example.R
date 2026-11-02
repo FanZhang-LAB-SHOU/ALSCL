@@ -111,7 +111,7 @@ for (fit in list(a, b)) {
       !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
-residual_plot <- plot_residuals(b, type = "year", facet_ncol = 4,
+residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
 # 非正定 Hessian 时不展示标准误区间 / Omit SE intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))

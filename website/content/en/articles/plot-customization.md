@@ -10,7 +10,7 @@ rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
 
 # Set once, then recreate plots
 acl_theme_set(palette = "npg", base_theme = "theme_bw", font_family = "sans")
-plot_retro(rb, facet_col = 2, rho_digits = 3)
+plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 plot_compare_ts(a, b, se = TRUE)
 
 # Alternative journal palettes
@@ -34,8 +34,8 @@ The figure shows the five palettes `acl_theme_set()` accepts. In each row the fi
 | `compare_colors` | Model pair, optionally matched by name |
 | `low_col`, `high_col` | Sequential heatmap endpoints |
 | `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | Typography |
-| `line_size` / `linewidth` | Function-specific line width |
-| `facet_ncol` / `facet_col` / `ncol` | Function-specific facet layout |
+| `line_size`, `point_size` | Line width and point size of single-model plots; comparison plots read `compare_line_size` and `compare_point_size` |
+| `facet_ncol`, `facet_nrow`, `facet_scales` | Facet layout, with the same argument names in every plot |
 
 <h2 id="override">2. Override colors for one plot</h2>
 
@@ -69,7 +69,7 @@ Explicit colors in a call override the theme and a palette passed with them; `NU
 acl_theme_set(palette="npg", title_size=16, axis_title_size=12,
               axis_text_size=10, strip_text_size=10, title_hjust=0,
               compare_legend_pos="bottom", compare_linetypes=c("solid","dashed"))
-p <- plot_retro(rb, facet_col=2, point_size=1.8, line_size=.8)
+p <- plot_retro(rb, facet_ncol = 2, point_size=1.8, line_size=.8)
 ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # Preserve settings explicitly
@@ -105,9 +105,9 @@ plot_SSB(b, se = TRUE)
 acl_theme_reset()
 ```
 
-The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit the global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants. These settings change labels and display ranges only, and the gridlines stay hidden.
+The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit the global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants. These settings change labels and display ranges only, and the gridlines stay hidden. A `title`, `xlab` or `ylab` given in the call replaces the theme label, and the typography arguments (`font_family`, `title_size`, `axis_title_size`, `axis_text_size`, `strip_text_size`, `legend_text_size`, `base_theme`, `title_hjust`) replace the corresponding settings, as in every other single-model plot; `plot_deviance()` takes the same arguments.
 
-`plot_fishing_mortality()` inherits the same settings with the title keys `F_year`, `F_age` and `F_length` (plus `_se`), the horizontal label `xlab$year`, `xlab$age` or `xlab$length` and the vertical label `ylab$F`. Age-mode coordinates are group indices, so the default label is "Age Group" until you set `xlab$age`; the ACL `type = "length"` alias uses the age settings. Per-call labels and breaks take precedence. `base_theme` accepts a name such as `"theme_bw"` or `"bw"`, a theme object such as `ggplot2::theme_bw()`, or `NULL` for the global setting.
+`plot_fishing_mortality()` inherits the same settings with the title keys `F_year`, `F_age` and `F_length` (plus `_se`), the horizontal label `xlab$year`, `xlab$age` or `xlab$length` and the vertical label `ylab$F`. Age-mode coordinates are group indices, so the default label is "Age group" until you set `xlab$age`; the ACL `type = "length"` alias uses the age settings. Per-call labels and breaks take precedence. `base_theme` accepts a name such as `"theme_bw"` or `"bw"`, a theme object such as `ggplot2::theme_bw()`, or `NULL` for the global setting.
 
 Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is unset, a customized `ylab$abundance` applies, otherwise "Survey index". Log plots add a "Log" prefix, an explicit `ylab` wins, and `ylab$catch` labels the catch plots only.
 

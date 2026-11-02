@@ -12,7 +12,7 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ```r
 # Draw this figure
-plot_compare_ts(a, b, se = TRUE, ncol = 2)
+plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 ```
 
 [![Population time series comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
@@ -81,7 +81,7 @@ Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion d
 
 ```r
 # Draw this figure
-plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)
+plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
 [![Survey fits from both models](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true)
@@ -96,7 +96,7 @@ The vertical label comes from `ylab$survey` and reads Survey index by default; s
 
 ```r
 # Draw this figure
-plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
+plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
     0.3)))
 ```
 
@@ -125,7 +125,7 @@ Survey catchability `q` at length from the input of each fit (`sel_L50`, `sel_L9
 
 ```r
 # Draw this figure
-plot_compare_annual_F(a, b, method = "apical") +
+plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
@@ -133,13 +133,13 @@ plot_compare_annual_F(a, b, method = "apical") +
 
 Apical fishing mortality, the maximum of `F` over the groups at each time step, for both fits (ACL navy solid, ALSCL vermilion dashed, a point at each time step); the `labs(title = ...)` call replaces the default title. Use it to compare overall fishing pressure between an age-based and a length-based fit on one axis; ALSCL is higher here because its maximum sits in the most selected length bins, and despite the function name a quarterly fit keeps quarterly rates, because the summary is taken within each time step.
 
-[Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_annual_F)
+[Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 ## Summary F comparison mean
 
 ```r
 # Draw this figure
-plot_compare_annual_F(a, b, method = "mean") +
+plot_compare_F_ts(a, b, method = "mean") +
   labs(title = "Mean fishing mortality")
 ```
 
@@ -147,7 +147,7 @@ plot_compare_annual_F(a, b, method = "mean") +
 
 Mean fishing mortality, the unweighted average of `F` over the groups at each time step, for both fits in the same styling. Use it when the whole selection pattern matters more than its peak; the mean depends on how many low-F groups a model has (15 ages against 23 length bins here), so read the time pattern, which both fits share with a 2008 peak, rather than the level.
 
-[Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_annual_F)
+[Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 ## Simulation truth and conditional estimates
 

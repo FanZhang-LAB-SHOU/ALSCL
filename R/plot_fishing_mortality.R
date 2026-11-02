@@ -16,25 +16,32 @@
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
 #' @param facet_ncol Integer. The number of columns in facet_wrap.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
-#' @param type Character. "year" (faceted by group), "age" (faceted by year),
-#'   or "length" (ALSCL: faceted by year showing F vs numeric length-bin
-#'   midpoints in \code{model_result$len_mid}; ACL: legacy alias for "age", with
-#'   a warning). Default is "year".
+#' @param type Character. Which dimension of F runs along the x axis: "year"
+#'   (one panel per age or length group), "age" (one panel per time step) or
+#'   "length" (ALSCL only: one panel per time step with the numeric length-bin
+#'   midpoints in \code{model_result$len_mid} on the x axis; for ACL a legacy
+#'   alias for "age", with a warning). Default is "year". Time-step panels are
+#'   labelled "Year 2000", or "2000 Q2" for quarterly fits.
 #' @param return_data Logical. Whether to return data alongside the plot. Default is FALSE.
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks; NULL inherits
 #'   the global x_breaks setting. Expansion follows global x_expand.
 #' @param title Character or NULL. Custom plot title; NULL inherits the global
 #'   F_year, F_age or F_length title, with _se appended for interval plots.
 #' @param xlab Character or NULL. Custom x-axis label; NULL inherits the global
-#'   year, age or length label. Uncustomized age axes are labeled Age Group
+#'   year, age or length label. Uncustomized age axes are labeled Age group
 #'   because the plotted coordinates are group positions.
 #' @param ylab Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
-#' @param font_family Character. Font family for text elements.
-#' @param title_size Numeric. Title text size.
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
+#' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
+#' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
+#' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
+#' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
+#' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
+#' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @param base_theme A ggplot2 theme object, a supported theme name such as
 #'   "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 #'   settings in theme objects are retained; typography follows the global
-#'   settings and explicit font_family/title_size arguments. Major and minor
+#'   settings and the explicit typography arguments. Major and minor
 #'   grids are removed for every base theme.
 #'
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
@@ -48,8 +55,10 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
                                    facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = "ribbon",
                                    type = c("year", "age", "length"), return_data = FALSE,
                                    x_breaks = NULL, title = NULL, xlab = NULL, ylab = NULL,
-                                   font_family = NULL, title_size = NULL, base_theme = NULL) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+                                   font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
+                                   strip_text_size = NULL, legend_text_size = NULL, base_theme = NULL,
+                                   title_hjust = NULL) {
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
@@ -88,7 +97,9 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
        is.na(base_theme) || !nzchar(base_theme)))
     stop("base_theme must be a ggplot2 theme object, a theme name, or NULL.", call. = FALSE)
   common_theme <- .acl_base_theme(font_family = font_family, title_size = title_size,
-    base_theme = if (theme_object) "bw" else base_theme)
+    axis_title_size = axis_title_size, axis_text_size = axis_text_size,
+    strip_text_size = strip_text_size, legend_text_size = legend_text_size,
+    base_theme = if (theme_object) "bw" else base_theme, title_hjust = title_hjust)
   current_theme <- if (theme_object) list(base_theme, common_theme[[2L]]) else common_theme
   if (theme_object) {
     text_elements <- names(base_theme)[vapply(base_theme, inherits, logical(1), "element_text")]
@@ -129,10 +140,11 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       FL_long <- reshape2::melt(FL)
       colnames(FL_long) <- c("Group", "YearIdx", "F")
       FL_long$Year <- Year[FL_long$YearIdx]
+      FL_long$Period <- .acl_period_factor(FL_long$Year, Year)
       if (type == "length") FL_long$Length <- len_mid[FL_long$Group]
       FL_long$Group <- GroupLabels[FL_long$Group]
 
-      facet_by <- if (type == "length") ~Year else ~Group
+      facet_by <- if (type == "length") ~Period else ~Group
 
       if (!se) {
         mapping <- if (type == "length") ggplot2::aes(x = Length, y = F) else ggplot2::aes(x = Year, y = F)
@@ -156,6 +168,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
           upper    = ss_fl[, "Estimate"] + 1.96 * ss_fl[, "Std. Error"]
         )
         if (type == "length") ci$Length <- rep(len_mid, times = ncol(FL))
+        ci$Period <- .acl_period_factor(ci$Year, Year)
 
         mapping <- if (type == "length") ggplot2::aes(x = Length, y = estimate) else ggplot2::aes(x = Year, y = estimate)
         p <- ggplot2::ggplot(ci, mapping) +
@@ -178,12 +191,13 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       FA_long <- reshape2::melt(FA)
       colnames(FA_long) <- c("AgeGroup", "YearIdx", "F")
       FA_long$Year <- fa_years[FA_long$YearIdx]
+      FA_long$Period <- .acl_period_factor(FA_long$Year, fa_years)
 
 
       if (!se) {
         p <- ggplot2::ggplot(FA_long, ggplot2::aes(x = AgeGroup, y = F)) +
           ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-          ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
+          ggplot2::facet_wrap(~Period, ncol = facet_ncol, scales = facet_scales)
         data_out <- FA_long
       } else {
         ss_fa <- .acl_plot_estimates(model_result, "FA", length(FA))
@@ -196,6 +210,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
           upper    = ss_fa[, "Estimate"] + 1.96 * ss_fa[, "Std. Error"]
         )
         ci$AgeGroup <- as.numeric(ci$AgeGroup)
+        ci$Period <- .acl_period_factor(ci$Year)
 
         p <- ggplot2::ggplot(ci, ggplot2::aes(x = AgeGroup, y = estimate)) +
           ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
@@ -205,7 +220,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
         } else {
           p <- p + ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = 0.3)
         }
-        p <- p + ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
+        p <- p + ggplot2::facet_wrap(~Period, ncol = facet_ncol, scales = facet_scales)
         data_out <- ci
       }
     }
@@ -223,6 +238,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       F_long <- reshape2::melt(Fmat)
       colnames(F_long) <- c("AgeGroup", "Year", "F")
       F_long$Year <- Year[as.numeric(F_long$Year)]
+      F_long$Period <- .acl_period_factor(F_long$Year, Year)
       F_long$AgeGroup <- AgeGroup[as.numeric(F_long$AgeGroup)]
 
 
@@ -259,12 +275,13 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       F_long <- reshape2::melt(Fmat)
       colnames(F_long) <- c("AgeGroup", "Year", "F")
       F_long$Year <- Year[as.numeric(F_long$Year)]
+      F_long$Period <- .acl_period_factor(F_long$Year, Year)
 
 
       if (!se) {
         p <- ggplot2::ggplot(F_long, ggplot2::aes(x = AgeGroup, y = F)) +
           ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-          ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
+          ggplot2::facet_wrap(~Period, ncol = facet_ncol, scales = facet_scales)
         data_out <- F_long
       } else {
         ss_f <- .acl_plot_estimates(model_result, "F", length(Fmat))
@@ -277,6 +294,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
           upper    = ss_f[, "Estimate"] + 1.96 * ss_f[, "Std. Error"]
         )
         ci$AgeGroup <- as.numeric(ci$AgeGroup)
+        ci$Period <- .acl_period_factor(ci$Year)
 
         p <- ggplot2::ggplot(ci, ggplot2::aes(x = AgeGroup, y = estimate)) +
           ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
@@ -286,7 +304,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
         } else {
           p <- p + ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = 0.3)
         }
-        p <- p + ggplot2::facet_wrap(~Year, ncol = facet_ncol, scales = facet_scales)
+        p <- p + ggplot2::facet_wrap(~Period, ncol = facet_ncol, scales = facet_scales)
         data_out <- ci
       }
     }
@@ -296,7 +314,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   title_key <- paste0("F_", type, if (se) "_se" else "")
   axis_label <- .acl_lab("x", type)
   if (type == "age" && identical(axis_label, .acl_defaults$xlab$age))
-    axis_label <- "Age Group"
+    axis_label <- "Age group"
   p <- p +
     ggplot2::labs(
       title = if (!is.null(title)) title else .acl_title(title_key),

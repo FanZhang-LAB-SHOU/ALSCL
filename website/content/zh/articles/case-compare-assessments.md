@@ -37,7 +37,7 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 ```r
 plot_compare_CatL(a, b, x$data.CatL,
-                  years = c(2000, 2005, 2010, 2015), ncol = 2)
+                  years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
 ![模拟 YTF：四个年份的调查观测及拟合中位数](../assets/manual/figures/ytf/compare_CatL.png)
@@ -62,7 +62,7 @@ plot_compare_F(a, b)
 
 ![模拟 YTF：年龄别与体长别捕捞死亡率](../assets/manual/figures/ytf/compare_F.png)
 
-ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_annual_F()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
+ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_F_ts()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
 <h2 id="save">6. 保存比较结果供复核</h2>
 

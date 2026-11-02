@@ -1,5 +1,9 @@
-## 未发布
+## ALSCL 2.4.0
 
+- 绘图函数统一参数名：分面布局用 `facet_ncol`、`facet_nrow` 和 `facet_scales`，线宽用 `line_size`（主题键 `compare_linewidth` 改为 `compare_line_size`），`point_size = NULL` 继承新的主题键 `point_size`（2.5），所有图默认 `se = FALSE`，包括 `plot_deviance()`。`plot_CatL()` 和 `plot_residuals()` 用 `facet_by`（"length" 或 "year"）选择布局，不再用 `type`。旧参数名仍可用，每个会话警告一次。
+- 种群图 `plot_SSB()`、`plot_biomass()`、`plot_abundance()`、`plot_catch()` 和 `plot_deviance()` 与其他单模型图一样接受 `title`、`xlab`、`ylab` 和字体参数，`plot_fishing_mortality()` 补上缺少的五个字体参数。调用中给出的值替换主题设置。
+- `plot_compare_annual_F()` 更名为 `plot_compare_F_ts()`：它按模型时间步汇总 F，从未把季度值年化。
+- 图标题改为句首大写。标题键 `CatL_by_length`、`CatL_by_year` 取代 `CatL_year`、`CatL_year_dist`；`compare_F_ts` 取代 `compare_annualF`；`plot_retro()` 使用 `retro` 键；`plot_pla()` 使用新增的 `ylab$length`。时间步面板在所有图中标为 "Year 2000"，季度拟合标为 "2000 Q2"；年龄面板统一标为 "Age bin"。
 - 教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本页。
 - 示例图：每个绘图函数的参考页，以及 `check_fit()`、`fit_scenarios()`、`profile_model()`、`project_model()`、`hindcast_model()`、`simulate_fit()`、`sim_data()` 和回溯函数的参考条目，都展示示例代码生成的图。`acl_theme_set()` 展示五种色板及各颜色的用途（`docs/figures/palettes/`，由 `scripts/palette_swatches.R` 生成），配色页展示同一张图在每种色板下的效果。
 - 绘图标签对同一个量使用同一名称："Spawning biomass (SSB)"、"Catch numbers (CN)"、"Abundance"；`plot_recruitment()` 的坐标轴标为 "Recruitment"。图谱按新标签重新生成，每张图的说明都写明图中内容、何时使用和图形规律的含义。

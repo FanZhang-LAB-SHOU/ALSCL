@@ -19,8 +19,8 @@ When a check fails, change one thing at a time: run more starts (`nstarts = 4`),
 <h2 id="residuals">2. Residual patterns</h2>
 
 ```r
-plot_residuals(b, type = "year", facet_ncol = 5)
-plot_residuals(b, type = "length", facet_ncol = 4)
+plot_residuals(b, facet_by = "year", facet_ncol = 5)
+plot_residuals(b, facet_by = "length", facet_ncol = 4)
 checks <- check_fit(b, max_lag = 4)
 checks$plots$heatmap
 checks$plots$lag
@@ -28,7 +28,7 @@ checks$plots$qq
 checks$lag_correlations
 ```
 
-The residual is the observed log survey index minus the fitted one. `type = "year"` draws the residuals against length for each year; `type = "length"` draws them against year for each length bin. `check_fit()` standardizes the residuals and adds three views: a heatmap of year by length, where blocks of the same colour show a cohort or a size range the model misses; the correlation between residuals of the same length bin one to `max_lag` time steps apart, where values far from zero at short lags show year effects missing from the model; and a QQ plot, where heavy tails point to outliers or to observation errors that depart from the lognormal.
+The residual is the observed log survey index minus the fitted one. `facet_by = "year"` draws the residuals against length for each year; `facet_by = "length"` draws them against year for each length bin. `check_fit()` standardizes the residuals and adds three views: a heatmap of year by length, where blocks of the same colour show a cohort or a size range the model misses; the correlation between residuals of the same length bin one to `max_lag` time steps apart, where values far from zero at short lags show year effects missing from the model; and a QQ plot, where heavy tails point to outliers or to observation errors that depart from the lognormal.
 
 Treat these views as guides to what to change, not as tests: the residuals are conditional on the fitted process deviations, so no significance level is attached to them. A pattern confined to the smallest bins often reflects survey selectivity (`sel_L50`, `sel_L95`); a pattern that moves diagonally through the heatmap reflects growth.
 
