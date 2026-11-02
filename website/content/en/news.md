@@ -7,7 +7,7 @@
 - The tutorials are rewritten as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history stays on this page.
 - Example figures: every plotting function's reference page, and the reference entries of `check_fit()`, `fit_scenarios()`, `profile_model()`, `project_model()`, `hindcast_model()`, `simulate_fit()`, `sim_data()` and the retrospective functions, show the figure their example produces. `acl_theme_set()` shows the five palettes with the role of each colour (`docs/figures/palettes/`, drawn by `scripts/palette_swatches.R`), and the colours page shows the same plot under every palette.
 - Plot labels name each quantity the same way everywhere: "Spawning biomass (SSB)", "Catch numbers (CN)", "Abundance"; `plot_recruitment()` labels its axis "Recruitment". The gallery figures are regenerated with these labels and every figure description says what the figure shows, when to use it and what a pattern means.
-- The bilingual manuals, the book and the Wiki are generated from the article pairs with `scripts/build_manual.py`, so each tutorial is written once per language. `README.md` is now an entry page.
+- The bilingual manuals, the book and the Wiki are generated from the article pairs with `scripts/build_manual.py`, so each tutorial is written once per language. `README.md` is now an English entry page, with the Chinese version in `README.zh-CN.md`.
 
 ## ALSCL 2.3.0
 

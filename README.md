@@ -1,87 +1,114 @@
-## Laboratory / 實驗室
+<p align="right"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 
-[Oceanic Fisheries Ecosystem Laboratory](https://github.com/FanZhang-LAB-SHOU),
-Shanghai Ocean University.
+# ALSCL <img src="ALSCLlogo.png" align="right" height="140" alt="ALSCL logo" />
 
-# ALSCL <img src="ALSCLlogo.png" align="right" height="140" />
+> Age-structured and age- and length-structured statistical catch-at-length models for stock assessment from survey length data
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions)
-[![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![R-CMD-check](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions/workflows/R-CMD-check.yaml)
+[![Documentation](https://github.com/FanZhang-LAB-SHOU/ALSCL/actions/workflows/documentation.yaml/badge.svg?branch=main)](https://fanzhang-lab-shou.github.io/ALSCL/)
+[![Latest release](https://img.shields.io/github/v/release/FanZhang-LAB-SHOU/ALSCL?label=release&color=1f6feb)](https://github.com/FanZhang-LAB-SHOU/ALSCL/releases/latest)
+[![License: GPL-3](https://img.shields.io/badge/license-GPL--3-blue.svg)](LICENSE.md)
+[![Model paper](https://img.shields.io/badge/paper-Fish%20and%20Fisheries%202022-6f42c1.svg)](https://doi.org/10.1111/faf.12673)
 <!-- badges: end -->
 
-**利用调查体长数据的年龄结构与年龄—体长联合结构资源评估模型**
+ALSCL is an R package for stock assessment from fishery-independent survey data at length. It fits two population models written in [TMB](https://github.com/kaskr/adcomp): the age-structured catch-at-length model **ACL** and the age- and length-structured statistical catch-at-length model **ALSCL** of [Zhang and Cadigan (2022)](https://doi.org/10.1111/faf.12673). Neither model needs age data, so both suit stocks whose ages are unavailable or unreliable, such as Antarctic krill.
 
-**Age-structured and joint age-length stock assessment using survey length data**
+Around the two models the package provides data preparation and checks, multistart fitting on parallel workers, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, portable assessment archives and 22 plotting functions.
 
-ALSCL 是一个 R 包，用渔业独立调查的体长数据拟合两个种群模型：年龄结构 catch-at-length 模型 **ACL**，以及年龄与体长联合结构的统计 catch-at-length 模型 **ALSCL**（Zhang & Cadigan 2022）。模型用 TMB 编写；软件包提供数据准备与检查、拟合、诊断、模型比较、回溯分析、敏感性情景、参数剖面、投影、拟合模型模拟、预测检验、结果存档和 22 个绘图函数。
+**Latest release: 2.4.0** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
 
-ALSCL is an R package that fits two population models to fishery-independent survey length data: the age-structured catch-at-length model **ACL** and the age- and length-structured statistical catch-at-length model **ALSCL** (Zhang & Cadigan 2022). The models are written in TMB. The package provides data preparation and checks, fitting, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, saved assessments and 22 plotting functions.
+## What you can do
 
-**Latest release: 2.4.0 · 简体中文 / English** · [Changes / 更新记录](NEWS.md)
+- **Prepare and check the data.** Read the three survey tables from Excel or CSV with `read_survey_excel()` or `read_survey_csv()`, combine them with the biological settings into one input bundle with `prepare_alscl_data()`, and confirm with `check_alscl_data()` and `inspect_parameters()` that the bundle can be fitted and which parameters will be estimated. Annual and quarterly time steps are supported.
+- **Fit two model structures to the same tables.** `run_acl()` tracks numbers at age and converts them to numbers at length with an age-length probability matrix. `run_alscl()` tracks numbers by length and age, with length-specific mortality and a growth transition matrix. Both can run independent optimizer starts on parallel workers (`nstarts`, `ncores`) and finish the best start with checked Newton steps (`polish`).
+- **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and QQ plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
+- **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`) and hindcast validation on withheld time steps (`hindcast_model()`).
+- **Keep and share the results.** `save_assessment()` stores a fit with its complete recipe, `read_assessment()` and `refit_model()` bring it back and refit it, and `extract_estimates()` returns the estimates with their standard errors.
+- **Plot everything with one argument set.** The 22 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 44 figures with their code.
 
-## 文档 / Documentation
-
-说明按任务组织：每一页先说明目的，再给出要运行的代码、应看到的结果和出错时的处理。
-
-The documentation is organized by task: each page states its purpose, the code to run, what to expect and what to do when it fails.
-
-| 入口 / Entry | 内容 / Contents |
-|---|---|
-| **[在线文档（英文）/ Website, English](https://fanzhang-lab-shou.github.io/ALSCL/)** · **[简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个工作案例，65 个函数的参考 / Install, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 65 functions |
-| [Wiki 双语手册 / Bilingual Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿 / Single-page book](docs/BOOK.md) | 同一内容的中英对照版本，18 章 / The same content with both languages side by side, 18 chapters |
-| [使用指南 / User guide](docs/USER_GUIDE.md) | 安装到回溯分析的双语手册 / The bilingual manual from installation to retrospectives |
-| [评估工作流 / Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证 / Model validation](docs/MODEL_VALIDATION.md) · [工作案例 / Worked cases](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 / Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |
-| [函数参考 / Function reference](docs/FUNCTION_REFERENCE.md) · [图谱 / Plot gallery](docs/PLOT_GALLERY.md) | 全部参数与默认值；44 张示例图及其代码 / Every argument and default; 44 figures with their code |
-| [Excel 填表示例 / Example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) | 三张输入表的格式 / The layout of the three input tables |
-
-## 安装 / Installation
+## Installation
 
 ```r
 install.packages("remotes")
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # development version (main)
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.0")   # a specific release
 ```
 
-第一次拟合会在本机编译模型，需要与 R 匹配的 C++ 编译器（Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make）。详见[安装并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
+ALSCL needs R 3.5.0 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
 
-The first fit compiles the models on your computer and needs a C++ compiler that matches R (Rtools on Windows, the Xcode Command Line Tools on macOS, a C++ compiler and make on Linux). See [Install and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
-
-## 快速开始 / Quick start
+## Quick start
 
 ```r
 library(ALSCL)
-data("YTF_example")              # 内置模拟数据 / bundled synthetic example
-x <- YTF_example                 # 三张表加设置 / three tables plus settings
-a <- run_acl(x, silent = TRUE)   # 年龄结构模型 / age-structured model
-b <- run_alscl(x, silent = TRUE) # 年龄与体长联合结构模型 / age- and length-structured model
-diagnose_model(x$data.CatL, a)   # 读估计值前先看数值检查 / numerical checks first
-extract_estimates(a)             # SSB、补充量等估计值及标准误 / estimates with standard errors
+data("YTF_example")               # bundled synthetic example: three tables plus settings
+x <- YTF_example
+a <- run_acl(x, silent = TRUE)    # age-structured model
+b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
+diagnose_model(x$data.CatL, a)    # numerical checks before reading any estimate
+extract_estimates(a)              # estimates with standard errors
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 save_assessment(a, "ytf_acl.rds")
 ```
 
-![ACL 与 ALSCL 的生物量、产卵生物量和补充量 / ACL and ALSCL biomass, spawning biomass and recruitment](docs/figures/ytf/compare_ts.png)
+![ACL and ALSCL biomass, spawning biomass and recruitment](docs/figures/ytf/compare_ts.png)
+
+`YTF_example` is a synthetic data set with known simulation truth, made for teaching; it is not the empirical data set of the paper. To fit your own survey, start with [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html).
+
+<p align="center">
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/CatL_length_TRUE.png" width="32%" alt="Fitted and observed survey indices by length bin"></a>
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/residuals_year.png" width="32%" alt="Log residuals by year"></a>
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/ridges.png" width="32%" alt="Observed and fitted length composition by year"></a>
+</p>
+
+Survey fit by length bin, residuals by year, and observed and fitted length composition by year: three of the figures in the [plot gallery](docs/PLOT_GALLERY.md).
+
+## Two models, one input format
 
 | | ACL | ALSCL |
 |---|---|---|
-| 种群状态 / Population state | 年龄 × 时间的尾数 / Numbers by age and time | 体长 × 年龄 × 时间的尾数 / Numbers by length, age and time |
-| 体长 / Length | 年龄—体长概率矩阵 / Age-length probability matrix | 补充和初始状态用概率矩阵，存活个体按生长转移矩阵推进 / Probability matrix for recruits and initial numbers; growth transition matrix for survivors |
-| 捕捞死亡率 / Fishing mortality | 按年龄估计 / By age | 按体长估计，年龄别 F 由模型推导 / By length; F at age is derived |
-| 拟合函数 / Fitting function | `run_acl()` | `run_alscl()` |
+| Population state | Numbers by age and time | Numbers by length, age and time |
+| Length and growth | Age-length probability matrix | Probability matrix for recruits and initial numbers; growth transition matrix for survivors |
+| Fishing mortality | Estimated by age | Estimated by length; F at age is derived |
+| Fitting function | `run_acl()` | `run_alscl()` |
 
-两个模型使用相同的三张输入表：体长别调查指数、体长别平均体重和体长别成熟比例。要拟合自己的数据，先读[准备调查数据](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/data-preparation.html)。
+Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
 
-Both models read the same three input tables: survey index, mean weight and maturity at length. To fit your own data, start with [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html).
+## Documentation
 
-## 获取帮助 / Getting help
+Where to start:
 
-通过 [GitHub Issues](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues) 报告问题，请附最小可复现示例、包版本、输入维度和 `sessionInfo()` 输出。常见问题见[复现结果与排除故障](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/reproducibility.html)。
+1. [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html): install the package, fit the bundled example and check the result.
+2. [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html): lay out the three tables, choose the biological settings and see which parameters will be estimated.
+3. [Can the fitted model reproduce observations and predict withheld time steps?](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-model-validation.html): simulation and hindcast validation.
 
-Report problems in the [GitHub issue tracker](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues) with a small reproducible example, the package version, the input dimensions and the output of `sessionInfo()`. Common problems are covered in [Reproduce results and fix problems](https://fanzhang-lab-shou.github.io/ALSCL/articles/reproducibility.html).
+Every page states its purpose, the code to run, what to expect and what to do when it fails.
 
-## 引用 / Citation
+| Entry | Contents |
+|---|---|
+| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 65 functions |
+| [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Single-page book](docs/BOOK.md) | The same content with Chinese and English side by side, 18 chapters |
+| [User guide](docs/USER_GUIDE.md) | From installation to retrospectives |
+| [Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [Model validation](docs/MODEL_VALIDATION.md) · [Worked cases](docs/CASES.md) | Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |
+| [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md) | Every argument and default; 44 figures with their code |
+| [Speed guide](docs/SPEED_GUIDE.md) | Standard errors on parallel workers and the TMBad option with `alscl_speed()` |
 
-Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, 23(5), 1121-1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)
+## Getting help
+
+Report problems in the [issue tracker](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues) with a small reproducible example, the package version, the input dimensions and the output of `sessionInfo()`. Common problems are covered in [Reproduce results and fix problems](https://fanzhang-lab-shou.github.io/ALSCL/articles/reproducibility.html).
+
+## Citation
+
+Cite the model paper, and the package with `citation("ALSCL")`:
+
+Zhang, F. and Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, 23(5), 1121-1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)
+
+Application to Antarctic krill, where length-dependent growth and mortality within cohorts change the assessment results:
+
+Dong, S., Zhang, F. and Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, 769, 1-22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923)
+
+<details>
+<summary>BibTeX</summary>
 
 ```bibtex
 @article{zhang2022age,
@@ -90,17 +117,7 @@ Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical cat
   journal={Fish and Fisheries}, volume={23}, number={5},
   pages={1121--1135}, year={2022}, doi={10.1111/faf.12673}
 }
-```
 
-### 南极磷虾应用 / Antarctic krill application
-
-Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, 769, 1-22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923)
-
-该研究将 ACL 与 ALSCL 应用于南极磷虾，考察同一队列内体长相关的生长和死亡率差异如何影响资源评估结果。
-
-This study applies ACL and ALSCL to Antarctic krill to examine how length-dependent growth and mortality within cohorts affect assessment results.
-
-```bibtex
 @article{dong2025length,
   title={Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill Euphausia superba},
   author={Dong, Sisong and Zhang, Fan and Zhu, Guoping},
@@ -109,17 +126,12 @@ This study applies ACL and ALSCL to Antarctic krill to examine how length-depend
 }
 ```
 
-```r
-citation("ALSCL")      # 包引用 / package citation
-packageVersion("ALSCL")
-```
+</details>
 
-包作者 Hongyu Lin、Fan Zhang 和 Sisong Dong；报告分析时记录包版本和提交号。
+## Authors
 
-Authors: Hongyu Lin, Fan Zhang and Sisong Dong. Record the package version and Git commit with every analysis.
+ALSCL is developed at the [Oceanic Fisheries Ecosystem Laboratory](https://github.com/FanZhang-LAB-SHOU), Shanghai Ocean University, by Hongyu Lin ([ORCID 0000-0001-6226-179X](https://orcid.org/0000-0001-6226-179X)), Fan Zhang ([ORCID 0000-0003-0214-1790](https://orcid.org/0000-0003-0214-1790)) and Sisong Dong. Record the package version (`packageVersion("ALSCL")`) and the Git commit with every analysis.
 
-ORCID: [Hongyu Lin, 0000-0001-6226-179X](https://orcid.org/0000-0001-6226-179X) · [Fan Zhang, 0000-0003-0214-1790](https://orcid.org/0000-0003-0214-1790).
+## License
 
-## 许可 / License
-
-[GPL-3](LICENSE.md). 问题反馈 / Issues: [GitHub Issues](https://github.com/FanZhang-LAB-SHOU/ALSCL/issues).
+[GPL-3](LICENSE.md)

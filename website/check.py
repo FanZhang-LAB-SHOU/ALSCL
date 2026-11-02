@@ -94,7 +94,8 @@ n_functions=len(functions)
 n_plots=len([f for f in functions if f['name'].startswith('plot_') and f['name'] not in deprecated])
 n_figures=len(re.findall(r'^## \d+\. ',gallery,re.M))
 quoted=[('docs/FUNCTION_REFERENCE.md',reference,[f'对应 ALSCL {version}，覆盖 **{n_functions} 个公开函数**',f'All **{n_functions} exported functions** of ALSCL {version}']),
-        ('README.md',(ROOT/'README.md').read_text(),[f'Latest release: {version}',f'{n_functions} 个函数的参考',f'all {n_functions} functions',f'{n_figures} 张示例图',f'{n_figures} figures with their code']),
+        ('README.md',(ROOT/'README.md').read_text(),[f'Latest release: {version}',f'all {n_functions} functions',f'{n_figures} figures with their code']),
+        ('README.zh-CN.md',(ROOT/'README.zh-CN.md').read_text(),[f'最新版本：{version}',f'{n_functions} 个函数的参考',f'{n_figures} 张示例图']),
         ('docs/PLOT_GALLERY.md',gallery,[f'**{n_figures} 张图，覆盖 {n_plots} 个公开绘图函数及主要类型。{n_figures} figures covering all {n_plots} public plotting functions and major variants.**']),
         ('website/content/en/index.md',(ROOT/'website/content/en/index.md').read_text(),[f'ALSCL {version}']),
         ('website/content/zh/index.md',(ROOT/'website/content/zh/index.md').read_text(),[f'ALSCL {version}'])]
@@ -171,7 +172,7 @@ def slug(text):
     text = re.sub(r'`|\*|\[|\]|\(.*?\)', '', text).strip().lower()
     text = re.sub(r'[^\w\u3000-\u9fff\- ]', '', text)
     return text.replace(' ', '-')
-markdown = [p for p in (ROOT/'docs').glob('*.md')] + [ROOT/'README.md', ROOT/'NEWS.md']
+markdown = [p for p in (ROOT/'docs').glob('*.md')] + [ROOT/'README.md', ROOT/'README.zh-CN.md', ROOT/'NEWS.md']
 anchors = {}
 for md in markdown:
     text = md.read_text()
