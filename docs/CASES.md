@@ -323,6 +323,10 @@ plot_fishing_mortality(b, type = "length", se = TRUE)
 
 The retrospective analysis refits a model after removing the last one, two and three time steps (`nyear` counts time steps, so four peels equal one year of quarterly data). It reads the bundle, so the stored settings apply to every peel; set `ncores` on the retrospective call to run peels in parallel. `rb$fit_diagnostics` lists the full fit (`Peel = 0`) and every peel with its numerical checks, `rb$rho_by_peel` gives Mohn's rho per quantity and peel, and `rb$rho_text$Rho` reports the mean only when the full fit and all peels pass the checks, otherwise `NA` with a warning. `plot_retro(rb)` draws the peeled series ([Run a retrospective analysis](USER_GUIDE.md#retrospective)); `plot_fishing_mortality(b, type = "length")` draws the fishing mortality at length estimated by ALSCL.
 
+这组自由参数较多的正式数据示例在[记录运行](results/own-data-retrospective.csv)中，完整拟合与所有截断拟合均通过数值筛查。两次 ALSCL 截断拟合仍保留原始优化器码 1，尽管最大梯度低于 `2e-8`、Hessian 正定且没有触碰边界。因此，`numerical_ok = TRUE` 不表示原始优化器一定返回 0。应结合梯度、Hessian、边界列读取 `fit_diagnostics$issues`；在解释评估结果前，使用不同初值或有依据的参数约束检查非零退出码和强参数相关。原始退出码始终保留。
+
+In the [recorded run](results/own-data-retrospective.csv) of this more flexible own-data example, every full and peeled fit passed the numerical screen. Two ALSCL peels retained a raw optimizer code of 1, despite maximum gradients below `2e-8`, positive-definite Hessians and no boundaries. `numerical_ok = TRUE` therefore does not mean that the raw optimizer returned code 0. Read `fit_diagnostics$issues` alongside the gradient, Hessian and boundary columns; investigate nonzero codes and strong parameter correlations with alternative starts or supported parameter constraints before interpreting an assessment. The original codes remain visible.
+
 <a id="case-fit-survey-next"></a>
 
 ### 下一步 / What next
