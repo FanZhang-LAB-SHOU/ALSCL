@@ -12,6 +12,7 @@
 ^scripts$
 ^LICENSE$
 ^ALSCLlogo\.png$
+^README\.zh-CN\.md$
 ^website$
 ^_site$
 ^\.venv-docs$

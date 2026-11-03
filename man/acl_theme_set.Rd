@@ -67,8 +67,9 @@ acl_theme_set(
 \item{line_size}{Numeric. Default line width for single-model plots (1.5).
 Plot arguments set to NULL inherit this value; explicit widths take priority.}
 
-\item{point_size}{Numeric. Default point size for single-model plots (2.5).
-Plot arguments set to NULL inherit this value; explicit sizes take priority.}
+\item{point_size}{Numeric. Default point size for all point plots (2.5).
+Plot arguments set to NULL inherit this value unless a comparison-specific
+override is set. Explicit per-call sizes take priority.}
 
 \item{se_color}{Character. Default CI color.}
 
@@ -84,7 +85,10 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 
 \item{compare_line_size}{Numeric. Line width for comparison plots (1.2).}
 
-\item{compare_point_size}{Numeric. Point size for comparison plots.}
+\item{compare_point_size}{Numeric or NULL. Optional point-size override for
+comparison plots. The default NULL inherits point_size. Existing explicit
+values remain supported; a plot's point_size argument takes priority.
+Pass NULL explicitly to clear a comparison-specific override.}
 
 \item{compare_se_alpha}{Numeric. CI ribbon alpha for comparison plots.}
 

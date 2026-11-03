@@ -4,11 +4,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.4.0 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.4.1 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.0。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.1。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.0.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.1.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -112,9 +112,9 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 Every session starts with `library(ALSCL)`. `YTF_example` is a synthetic dataset shaped like a yellowtail flounder survey: a survey index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length bins in rows and 20 years in columns. The first column holds the length-bin labels; the other columns are the years.
 
-你应看到 2.3.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
+你应看到 2.4.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
 
-You should see version 2.3.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
 <a id="getting-started-first-fit"></a>
 
@@ -936,9 +936,9 @@ plan[, c("parameter", "kind", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 ```
 
-`inspect_parameters()` 列出所选模型的标量参数、自然尺度上的初值及状态：`free`（估计）、`fixed`（固定）或 `tied`（共享）。`map_source` 说明固定状态来自模型默认还是你的 `map`。下面每做一次修改都可以再运行它；它只读取输入列表，既不编译也不拟合。
+`inspect_parameters()` 列出所选模型的标量参数和过程偏差块、初值及状态，例如 `free`（估计）、`fixed`（固定）或 `tied`（共享）。`map_source` 说明固定状态来自模型默认还是你的 `map`。下面每做一次修改都可以再运行它；它只读取输入列表，既不编译也不拟合。
 
-`inspect_parameters()` lists the scalar parameters of the chosen model with their starting value on the natural scale and their status: `free` (estimated), `fixed` or `tied`. `map_source` tells whether a fixed status comes from the model default or from your `map`. Run it after every change below; it compiles and fits nothing.
+`inspect_parameters()` lists the scalar parameters and process-deviation blocks of the chosen model, with their starting values and status, including `free` (estimated), `fixed` or `tied`. `map_source` tells whether a fixed status comes from the model default or from your `map`. Run it after every change below; it compiles and fits nothing.
 
 | 含义 / Meaning | ACL 参数 / ACL parameter | ALSCL 参数 / ALSCL parameter |
 |---|---|---|
@@ -950,9 +950,9 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 | 补充量在时间上的相关 / Correlation of recruitment across time | `logit_log_R` | `logit_log_R` |
 | 初始总死亡率；调查观测 SD / Initial total mortality; survey observation SD | `log_init_Z`、`log_std_index` / `log_init_Z`, `log_std_index` | `log_init_Z`、`log_sigma_index` / `log_init_Z`, `log_sigma_index` |
 
-默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，其余都估计。`YTF_example` 固定得更多（生长参数和两个过程 SD），因为它的教学配置以运行快为目标；你自己的输入列表从默认设置开始。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 是按数据维度生成的随机效应，总是被估计。
+默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，其余都估计。`YTF_example` 固定得更多（生长参数和两个过程 SD），因为它的教学配置以运行快为目标；你自己的输入列表从默认设置开始。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 按数据维度生成，默认作为随机效应估计。它们的 `map` 可以固定某些偏差，或让多个偏差共享一个估计值；查看 `n_free`、`n_fixed` 和 `n_tied`，确认每个块中还有多少自由值。
 
-By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more (the growth parameters and two process SDs) so that its teaching configuration runs quickly; your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects created from the data dimensions and are always estimated.
+By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more (the growth parameters and two process SDs) so that its teaching configuration runs quickly; your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are created from the data dimensions and estimated as random effects by default. Their `map` entries can fix individual deviations or tie them together; inspect `n_free`, `n_fixed` and `n_tied` to see how many remain free in each block.
 
 <a id="fitting-controls-map"></a>
 
@@ -970,6 +970,10 @@ x$fit_config$acl$map <- my_map
 `factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。当数据无法确定某个参数（常见迹象是 Hessian 不正定或相关系数估计到接近 1），或外部研究给出的值比拟合更可靠时，就固定该参数；每个固定值的来源都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。
 
 `factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Fix a parameter when the data leave it undetermined (a Hessian that is not positive definite or a correlation estimated near 1 are the usual signs) or when an external study gives a better value than the fit could; record the source of every fixed value with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`.
+
+对过程偏差块，提供与偏差数量相同的因子：`NA` 将对应偏差固定在初值（零），重复的因子水平让对应偏差共享一个估计值。`simulate_fit(process = "resample")` 要求过程偏差不受这类限制；条件模拟也支持固定或共享的 map。`hindcast_model()` 要求随时间变化的 `dev_log_R` 和 `dev_log_F` 不受这类限制，但支持固定或共享的静态 `dev_log_N0`。在验证研究中使用这些限制前，见[拟合模型模拟与预测检验](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md)。
+
+For a process-deviation block, supply a factor with one entry per deviation: `NA` fixes that entry at its starting value (zero), and repeated factor levels tie entries to one estimated value. `simulate_fit(process = "resample")` requires unrestricted process deviations; conditional simulation also supports fixed or tied maps. `hindcast_model()` requires unrestricted time-varying `dev_log_R` and `dev_log_F` maps, but supports fixed or tied static `dev_log_N0` values. See [Simulate and validate a fitted model](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) before using these restrictions in a validation study.
 
 <a id="fitting-controls-starts"></a>
 
@@ -1924,7 +1928,7 @@ Heat maps of fishing mortality, one per fit, time on the horizontal axis and the
 plot_compare_residuals(a, b, dat)
 ```
 
-[![残差联合诊断 / Combined residual diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=804c4ad59892)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=804c4ad59892)
+[![残差联合诊断 / Combined residual diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
 
 两组拟合的样本内对数残差四联图：直方图、对正态分布的 QQ 图、各时间步的平均残差及加减一个标准差的误差棒（不是置信区间）、各体长组绝对残差的箱线图；ACL 为深蓝，ALSCL 为朱红。用它判断哪组拟合留下的结构更少：直方图更宽、QQ 点偏离直线表示残差更大（本例的 ALSCL），高箱体标出该拟合偏差大的体长组（本例 ALSCL 的 16 组和 50 组）。
 
@@ -1958,7 +1962,7 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-[![生长与外部参照接口 / Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e8141d09b3dd)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e8141d09b3dd)
+[![生长与外部参照接口 / Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=df436a02744c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=df436a02744c)
 
 左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，纵轴为体长组序号。用它看两个模型是否假设相同的生长，以及它们与独立年龄体长数据的差距；本例两条曲线重合，因为生长固定为相同值，参照数据由上面的代码生成，是模拟值而非实测。
 
@@ -1975,7 +1979,7 @@ Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion d
 plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
-[![两模型调查拟合 / Survey fits from both models](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=02ba211827d0)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=02ba211827d0)
+[![两模型调查拟合 / Survey fits from both models](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=06278fecb8b7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=06278fecb8b7)
 
 所选时间步（`years`，省略则显示全部）的调查指数随体长变化，每个时间步一个面板：灰点为观测指数，深蓝实线为 ACL 拟合，朱红虚线为 ALSCL 拟合，均为 `exp(Elog_index)` 中位数，零值和缺失观测不画点。用它看哪个模型跟得上观测的体长组成；本例两者都跟上 20 附近的峰，ALSCL 曲线起伏更多，因为它的 F 按体长组变化。
 
@@ -2018,7 +2022,7 @@ The bars use the same calculation as `diagnostic_metrics()`: only finite positiv
 plot_compare_selectivity(a, b)
 ```
 
-[![固定调查可捕性 / Fixed survey catchability](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=1a218cab463c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=1a218cab463c)
+[![固定调查可捕性 / Fixed survey catchability](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=8910454b5721)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=8910454b5721)
 
 各拟合输入的体长别调查可捕性 `q`（`sel_L50`、`sel_L95`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。
 
@@ -2036,7 +2040,7 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-[![总体 F 比较 apical / Summary F comparison apical](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=a22655e57f3c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=a22655e57f3c)
+[![总体 F 比较 apical / Summary F comparison apical](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)
 
 两组拟合的顶点捕捞死亡率，即每个时间步各组 `F` 的最大值（ACL 深蓝实线，ALSCL 朱红虚线，每个时间步一点）；`labs(title = ...)` 替换默认标题。用它在同一坐标上比较年龄模型与体长模型的总体捕捞压力；本例 ALSCL 更高，因为它的最大值落在选择性最强的体长组；函数名虽含 annual，但汇总在每个时间步内进行，季度拟合显示的仍是季度率。
 
@@ -2054,7 +2058,7 @@ plot_compare_F_ts(a, b, method = "mean") +
   labs(title = "Mean fishing mortality")
 ```
 
-[![总体 F 比较 mean / Summary F comparison mean](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=7ebefc35c147)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=7ebefc35c147)
+[![总体 F 比较 mean / Summary F comparison mean](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=25c951b5bd17)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=25c951b5bd17)
 
 两组拟合的平均捕捞死亡率，即每个时间步各组 `F` 的非加权平均，样式同上。当关心整个选择模式而不是其峰值时用它；平均值取决于模型有多少低 F 的组（本例 15 个年龄组对 23 个体长组），所以看时间模式（两者都在 2008 年达峰）而不是水平高低。
 
@@ -2466,7 +2470,8 @@ The figure shows the five palettes `acl_theme_set()` accepts. In each row the fi
 | `compare_colors` | 模型对，可按模型名称匹配 / Model pair, optionally matched by name |
 | `low_col`、`high_col` / `low_col`, `high_col` | 连续热图的端点 / Sequential heatmap endpoints |
 | `font_family`、`title_size`、`axis_text_size`、`strip_text_size` / `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | 字体与字号 / Typography |
-| `line_size`、`point_size` / `line_size`, `point_size` | 单模型图的线宽和点大小；比较图读取 `compare_line_size` 和 `compare_point_size` / Line width and point size of single-model plots; comparison plots read `compare_line_size` and `compare_point_size` |
+| `line_size`、`point_size` / `line_size`, `point_size` | 单模型图的线宽和所有图的默认点大小（2.5）；比较图线宽使用 `compare_line_size` / Single-model line width and the default point size for all plots (2.5); comparison line widths use `compare_line_size` |
+| `compare_point_size` | 可选的比较图点大小；设为 `NULL` 清除覆盖，恢复继承全局 `point_size` / Optional comparison-only point size; `NULL` clears it and restores global `point_size` inheritance |
 | `facet_ncol`、`facet_nrow`、`facet_scales` / `facet_ncol`, `facet_nrow`, `facet_scales` | 分面布局，所有图使用相同的参数名 / Facet layout, with the same argument names in every plot |
 
 <a id="plot-customization-override"></a>
@@ -2493,6 +2498,10 @@ plot_ridges(b, palette = c("#E8F1FA", "#3C5488"))
 # 恢复默认 / Restore defaults
 acl_theme_reset()
 ```
+
+设置 `acl_theme_set(point_size = 3)` 可统一单模型图和比较图的点大小。调用中的 `point_size` 优先级最高。在 `plot_compare_CatL()` 中，其次是显式传入的旧参数 `obs_size`，再是显式设置的主题 `compare_point_size`，最后是全局 `point_size`。其他含点的比较图遵守相同顺序，但不使用 `obs_size`。用 `acl_theme_set(compare_point_size = NULL)` 清除仅针对比较图的覆盖。
+
+Set `acl_theme_set(point_size = 3)` to change points across single-model and comparison plots. A per-call `point_size` has highest priority. In `plot_compare_CatL()`, an explicit legacy `obs_size` comes next, followed by an explicit `compare_point_size` theme setting and then the global `point_size`. The other point-drawing comparison plots follow the same order without `obs_size`. Use `acl_theme_set(compare_point_size = NULL)` to remove a comparison-only override.
 
 调用中显式给出的颜色优先于主题，也优先于同时传入的 `palette`；`NULL` 继承主题。`se_color` 要与 `line_color` 一起指定，否则它仍取主题值。回溯图的命名颜色必须覆盖每个末端时间步；无名称的颜色按同样的顺序对应。轮数超过色板颜色数时，颜色由插值得到。山脊图使用按输入年份顺序取色的 viridis 渐变，观测与拟合两侧共用，与全局色板无关；`NULL` 也使用 viridis，可改为 `cividis`、`plasma`、`ocean` 或一组颜色。
 
@@ -2575,9 +2584,9 @@ Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is uns
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.4.0，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.1，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **65 exported functions** of ALSCL 2.4.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **65 exported functions** of ALSCL 2.4.1 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -2750,13 +2759,13 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `x_expand` | `NULL` | 横轴留白设置，长度 2 的数值向量。 | Numeric vector of length 2. X-axis expansion. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character. Default line color for single-model plots. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `point_size` | `NULL` | 单模型图的默认点大小（2.5）；绘图参数为 NULL 时继承。 | Numeric. Default point size for single-model plots (2.5); plot arguments set to NULL inherit it. |
+| `point_size` | `NULL` | 所有含点图的默认点大小（2.5）；比较图可单独覆盖。 | Default point size for all point-drawing plots (2.5); comparison plots can override it. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character. Default CI color. |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `compare_colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Character vector of 2 colors. Can be unnamed (positional) or named. The first color is always model1, second is model2. Examples: c("blue", "red"), c(ACL = "blue", ALSCL = "red"), c("M=0" = "steelblue", "M=0.5" = "tomato"). |
 | `compare_linetypes` | `NULL` | 按模型顺序提供两种线型。 | Character vector of 2 linetypes. Same rules as colors. |
 | `compare_line_size` | `NULL` | 比较图全局线宽。 | Numeric. Line width for comparison plots. |
-| `compare_point_size` | `NULL` | 比较图全局点大小。 | Numeric. Point size for comparison plots. |
+| `compare_point_size` | `NULL` | 可选的比较图点大小；显式 NULL 清除覆盖，恢复继承 point_size。 | Optional comparison point-size override; explicit NULL clears it and restores point_size inheritance. |
 | `compare_se_alpha` | `NULL` | 比较图区间透明度。 | Numeric. CI ribbon alpha for comparison plots. |
 | `compare_legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position for comparison plots. |
 | `compare_facet_ncol` | `NULL` | 比较图全局分面列数。 | Integer. Default facet columns in comparison plots. |
@@ -3325,9 +3334,9 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
 
 调查拟合 length 对数尺度 / Survey fit length log scale
 
-标题明确标为调查指数。`type = "year"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `type = "length"`。按年份分面时也遵守全局 `CatL_year_dist` 标题。
+标题明确标为调查指数。`facet_by = "year"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `facet_by = "length"`。按年份分面时也遵守全局 `CatL_by_year` 标题。
 
-Titles identify survey indices. In `type = "year"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `type = "length"`. The global `CatL_year_dist` title now applies to year facets.
+Titles identify survey indices. In `facet_by = "year"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `facet_by = "length"`. The global `CatL_by_year` title now applies to year facets.
 
 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
 
@@ -3439,8 +3448,8 @@ plot_compare_F_ts(a, b, method = "apical")
 ```r
 plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, model2_name = NULL,
     colors = NULL, linetypes = NULL, line_size = NULL, facet_ncol = 4, facet_scales = "free_y",
-    obs_color = "grey40", obs_size = 1.5, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL,
-    ...)
+    obs_color = "grey40", obs_size = NULL, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL,
+    ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -3457,11 +3466,12 @@ plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, 
 | `facet_ncol` | `4` | 分面排列的列数。 | Integer. Facet columns. Default 4. |
 | `facet_scales` | `"free_y"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet facet_scales. Default "free_y". |
 | `obs_color` | `"grey40"` | 观测点颜色。 | Character. Color for observed points. Default "grey40". |
-| `obs_size` | `1.5` | 观测点大小。 | Numeric. Size of observed points. Default 1.5. |
+| `obs_size` | `NULL` | 旧的观测点大小设置；NULL 继承主题。显式 point_size 优先于此值。 | Legacy observed-point size; NULL inherits the theme. An explicit point_size takes priority. |
 | `obs_alpha` | `0.6` | 观测点透明度。 | Numeric. Transparency of observed points. Default 0.6. |
 | `obs_shape` | `16` | 观测点形状。 | Integer. Shape of observed points. Default 16. |
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth、ncol、scales，仍可使用但会给出警告。 | The former argument names linewidth, ncol and scales, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 先使用显式 obs_size，再继承比较图覆盖值或全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL uses an explicit obs_size first, then a comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -3478,7 +3488,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
-![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=02ba211827d0)
+![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=06278fecb8b7)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_CatL)。
 
@@ -3525,7 +3535,7 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical",
-    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ...)
+    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -3539,6 +3549,7 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -3556,7 +3567,7 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=a22655e57f3c)
+![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F_ts)。
 
@@ -3591,7 +3602,7 @@ plot_compare_growth (model1, model2, age_range = c(1, 20), model1_name = NULL, m
 | `ref_color` | `"grey30"` | 参考曲线颜色。 | Character. Color for reference curve/points. Default "grey30". |
 | `ref_linetype` | `"dotdash"` | 参考曲线线型。 | Character. Linetype for reference curve. Default "dotdash". |
 | `show_points` | `TRUE` | 是否显示参考数据点。 | Logical. Show raw data points from ref_data. Default TRUE. |
-| `point_size` | `NULL` | 点大小。 | Numeric. Size of data points. NULL = use global theme. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 | `point_alpha` | `0.4` | 点透明度，0–1。 | Numeric. Transparency of data points. Default 0.4. |
 | `nls_start` | `NULL` | 参考数据 VB 非线性回归初值：Linf、k、t0。 | Named list. Starting values for nls. Default attempts auto-detection from data range. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
@@ -3612,7 +3623,7 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e8141d09b3dd)
+![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=df436a02744c)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
 
@@ -3686,7 +3697,7 @@ plot_compare_residuals (model1, model2, data.CatL, model1_name = NULL, model2_na
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
-| `point_size` | `NULL` | 点大小。 | Numeric. Point size. NULL = use global theme. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme (default "bottom"). |
 | `bins` | `35` | 残差直方图分箱数量。 | Integer. Histogram bins. Default 35. |
 | `qq_alpha` | `0.6` | QQ 图点的透明度。 | Numeric. QQ point transparency. Default 0.6. |
@@ -3708,7 +3719,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_residuals(a, b, dat)
 ```
 
-![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=804c4ad59892)
+![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_residuals)。
 
@@ -3719,7 +3730,7 @@ plot_compare_residuals(a, b, dat)
 
 ```r
 plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL,
-    linetypes = NULL, line_size = NULL, ...)
+    linetypes = NULL, line_size = NULL, ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -3732,6 +3743,7 @@ plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -3748,7 +3760,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_selectivity(a, b)
 ```
 
-![示例图 / Example figure: `plot_compare_selectivity(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=1a218cab463c)
+![示例图 / Example figure: `plot_compare_selectivity(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true&v=8910454b5721)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_selectivity)。
 
@@ -3894,8 +3906,8 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
     facet_ncol = NULL, facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL,
     se_type = "ribbon", type = c("year", "age", "length"), return_data = FALSE, x_breaks = NULL,
     title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
-    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
-    base_theme = NULL, title_hjust = NULL)
+    base_theme = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -3918,11 +3930,11 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character. Custom y-axis label. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for text elements. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Title text size. |
+| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
 | `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
-| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
@@ -5676,7 +5688,7 @@ simulate_fit (fit, nsim = 1, seed = NULL, process = c("conditional", "resample")
     allow_failed_fit = FALSE)
 ```
 
-| 参数 / Argument | 默认值 / Default | 中文说明 | English description |
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `fit` | `必填 / required` | 带完整配方及报告的 ACL／ALSCL 拟合，可为可移植存档读取结果。 | ACL/ALSCL fit with a complete recipe and report, including a portable saved fit. |
 | `nsim` | `1` | 正整数模拟重复数。 | Positive integer number of replicate datasets. |
@@ -5692,6 +5704,10 @@ simulations contains named replicates with x, observations and truth; metadata r
 条件模式固定拟合状态，只改变对数正态观测误差。过程重抽样使用平稳 AR(1) 补充、可分离组别／时间 AR(1) F（或仅时间共用 F）及独立初始年龄偏差，再调用现有 C++ 种群方程，无须优化。过程尺度为边际标准差。标量参数、生物学和可捕性保持固定；重抽样拒绝固定／绑定随机效应的 map，不加入参数不确定性或自助法区间。显式种子会恢复调用者随机数状态；默认保留原 NA／零位置。已知失败拟合须显式覆盖并警告。支持读取后的可移植拟合。
 
 Conditional simulation holds fitted states fixed and varies lognormal observation errors. Resampling draws stationary AR(1) recruitment, separable group/time AR(1) F (or shared time-only F) and independent initial-age deviations, then evaluates the existing C++ population equations without optimization. Scales are marginal SDs. Scalar parameters, biology and catchability remain fixed. Fixed/tied random-effect maps are rejected for resampling; no parameter uncertainty or bootstrap intervals are added. Explicit seeds restore caller RNG state; original NA/zero cells are preserved by default. Known failed fits require an explicit warned override. Portable saved fits are supported.
+
+模拟返回的输入列表显式保存源拟合的实际固定标量值；重新拟合不会根据新观测改变这些固定值。自由参数保留原初值策略。新 ALSCL 拟合的条件真值含 dev_log_N0，保存并读取后也保留；缺少该字段的旧存档仍返回 NULL。
+
+Returned input bundles explicitly retain the source fit’s effective fixed scalar values, so refitting does not derive different fixed values from new observations. Free parameters keep their original starting-value strategy. Conditional truth from new ALSCL fits retains dev_log_N0 after saving and reading; older archives without that field still return NULL.
 
 **示例 / Example:**
 
@@ -6203,24 +6219,35 @@ On this page you check a fitted model from two sides. Fitted-model simulation dr
 
 <a id="case-model-validation-section-1"></a>
 
-### 1. 读取示例并拟合源模型 / Load the example and fit the source model
+### 1. 读取输入列表 / Load the input bundle
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
+```
+
+`x` 包含三张调查表和模型设置。只做预测检验时，直接到[第 4 步](#case-model-validation-section-4)：它从 `x` 拟合各个训练窗口，不需要全数据拟合。需要模拟时，继续第 2 步。
+
+`x` contains the three survey tables and the model settings. For hindcast validation alone, continue directly to [step 4](#case-model-validation-section-4): it fits the training windows from `x` and requires no full-data fit. For simulation, continue to step 2.
+
+<a id="case-model-validation-section-2"></a>
+
+### 2. 从拟合生成调查观测 / Generate survey observations from the fit
+
+<a id="case-model-validation-source-fit"></a>
+
+#### 拟合用于模拟的源模型 / Fit the source model for simulation
+
+```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-`x` 是输入列表，`b` 是第 2 步模拟的起点 ALSCL 拟合；第 4 步的预测检验只读取 `x`。`b$diagnostics` 的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)修好拟合再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)），在模拟研究中固定 `mean_log_R` 时，把它的值写在 `parameters` 里，使每份模拟数据都用同一个值，而不是各自由数据推出的值。
+`b` 是模拟的起点 ALSCL 拟合。它的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)处理再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)）。每份模拟 `x` 都保留源拟合实际采用的固定标量值，包括由原始数据推得的 `mean_log_R`。要自行选择某个固定值，在拟合源模型时将它写入 `parameters`。
 
-`x` is the input bundle and `b` the ALSCL fit that the simulations of step 2 start from; hindcast validation in step 4 reads `x` only. `b$diagnostics` must show `numerical_ok` equal to `TRUE`, because `simulate_fit()` refuses a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, repair the fit as on [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biology ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)), and when you fix `mean_log_R` for a simulation study give its value in `parameters`, so that every simulated dataset uses the same value instead of one derived from its own data.
-
-<a id="case-model-validation-section-2"></a>
-
-### 2. 从拟合生成调查观测 / Generate survey observations from the fit
+`b` is the ALSCL fit that the simulations start from. Its `numerical_ok` must be `TRUE`, because `simulate_fit()` rejects a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, follow [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biological settings ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)). Each simulated `x` preserves the source fit's effective fixed scalar values, including `mean_log_R` when its value was derived from the original data. To choose a particular fixed value yourself, provide it in `parameters` when fitting the source model.
 
 <a id="case-model-validation-conditional-draws"></a>
 
@@ -6346,7 +6373,25 @@ On this synthetic dataset, with the teaching maps and two origins, ACL predicts 
 
 <a id="case-model-validation-save-record"></a>
 
-#### 保存源拟合和检验结果 / Save the source fit and the validation
+#### 保存预测检验结果 / Save the validation results
+
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
+
+预测检验结果是普通列表，`saveRDS()` 将两个模型的结果保存在一起。将临时路径换成永久文件即可。只做预测检验的操作到此完成。
+
+The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary path with a permanent file. This completes the hindcast-only route.
+
+<a id="case-model-validation-simulation-archive"></a>
+
+#### 模拟后保存源拟合 / Save the source fit after simulation
+
+若在第 2 步拟合了 `b`，运行下面的代码。只做了预测检验时，继续到[下一步](#case-model-validation-next)。
+
+Run this block if you fitted `b` in step 2. If you only ran hindcast validation, continue to [What next](#case-model-validation-next).
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -6355,14 +6400,11 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-validation_file <- tempfile(fileext = ".rds")
-saveRDS(list(acl = acl_validation, alscl = alscl_validation),
-  validation_file)
 ```
 
-`save_assessment()` 写出没有活动 TMB 对象的保存的拟合结果，`simulate_fit()` 接受 `read_assessment()` 读回的对象，所以新会话可以直接模拟而无需重新拟合；相同的种子给出相同的抽样。`saved$recipe$implementation` 记录软件包版本、源码提交和模型源码的摘要，`refit_model()` 会把它们与当前安装比较，不同时发出警告。检验结果是普通列表，`saveRDS()` 可以把两个模型一起保存。把临时路径换成永久文件，并把模拟对象和真值放在拟合结果旁边。
+`save_assessment()` 保存拟合结果时去掉只在当前会话有效的 TMB 对象，`simulate_fit()` 接受 `read_assessment()` 读回的结果，所以新会话无需重新拟合即可模拟；相同种子给出相同抽样。`saved$recipe$implementation` 记录包版本、源码修订和模型源码哈希，`refit_model()` 会与当前安装比较，有差异就警告。把模拟对象和真值与这个拟合一起永久保存。
 
-`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary paths with permanent files and keep the simulation objects and the truth beside the fit.
+`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. Keep the simulation objects and truth beside this fit in permanent files.
 
 <a id="case-model-validation-next"></a>
 
@@ -6385,9 +6427,9 @@ saveRDS(list(acl = acl_validation, alscl = alscl_validation),
 
 ## 如何拟合自己的调查数据？ / How do I fit my own survey data?
 
-本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装的软件包（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）、按[准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel)排好的三张表，以及你的种群的生物学数值（`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border`），[该页第 4 步](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle)逐项解释了它们。
+本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装 ALSCL 2.4.0 或更高版本（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）、按[准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel)排好的三张表，以及你的种群的生物学数值（`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border`），[该页第 4 步](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle)逐项解释了它们。
 
-On this page you go from three survey tables in CSV or Excel files to two fitted models, ACL and ALSCL, with their numerical checks, plots and saved results. The page follows the script [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R), which runs the whole sequence on the bundled teaching data; you then replace its values with yours. You need the package installed ([Install ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)), your tables laid out as in [Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel), and the biological values of your stock (`rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border`), which [step 4 of that page](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle) explains one by one.
+On this page you go from three survey tables in CSV or Excel files to two fitted models, ACL and ALSCL, with their numerical checks, plots and saved results. The page follows the script [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R), which runs the whole sequence on the bundled teaching data; you then replace its values with yours. You need ALSCL 2.4.0 or later installed ([Install ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)), your tables laid out as in [Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel), and the biological values of your stock (`rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border`), which [step 4 of that page](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle) explains one by one.
 
 <a id="case-fit-survey-bundle"></a>
 
@@ -6422,9 +6464,9 @@ plan[, c("parameter", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
 ```
 
-`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态：`free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 是随机效应，总是被估计。[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-parameters)列出了两个模型的全部标量参数。
+`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态，例如 `free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 默认作为随机效应估计；`map` 可以固定某些偏差，或让它们共享一个估计值。修改 map 后，用 `inspect_parameters()` 检查它们的 `n_free`、`n_fixed` 和 `n_tied` 数量。[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-parameters)列出了两个模型的全部标量参数。
 
-`inspect_parameters()` lists the parameters of a model with their starting value on the natural scale and their status, `free` (estimated), `fixed` or `tied`; `map_source` says whether a fixed status comes from the model default or from your `map`. By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0` and estimates the other 10 scalar parameters; ALSCL fixes `log_sigma_log_F` and `log_t0` and estimates 13. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects and are always estimated. [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-parameters) names every scalar parameter of both models.
+`inspect_parameters()` lists the parameters of a model with their starting value on the natural scale and their status, such as `free` (estimated), `fixed` or `tied`; `map_source` says whether a fixed status comes from the model default or from your `map`. By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0` and estimates the other 10 scalar parameters; ALSCL fixes `log_sigma_log_F` and `log_t0` and estimates 13. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are estimated as random effects by default; `map` can fix individual deviations or tie them together. Check their `n_free`, `n_fixed` and `n_tied` counts with `inspect_parameters()` after changing a map. [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-parameters) names every scalar parameter of both models.
 
 初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，因此它的 `t0` 必须在 0 和 `rec.age` 之间。填写初值不会固定参数：只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法确定某个参数时，固定该参数，并记录每个固定值的来源。[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)给出 `map`、边界和物种预设的规则；[估计参数列表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)给出全部变换方式。
 
@@ -6445,8 +6487,9 @@ The script below runs every step on the teaching data: it reads the three CSV fi
 # 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。 / The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
+if (packageVersion("ALSCL") < "2.4.0")
+  stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
-stopifnot(packageVersion("ALSCL") >= "2.3.0")
 
 # Read the three aligned tables -------------------------------
 # 1. 读取三表 / Read the three aligned tables ------------------------------- / data.CatL.csv, data.wgt.csv, data.mat.csv.
@@ -6570,9 +6613,9 @@ While the script runs, `check$summary` is printed for both models; with the teac
 
 ![完整示例的 ALSCL 产卵生物量 / ALSCL spawning biomass from the complete example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true&v=72263b7e8ee0)
 
-每一年的残差都围绕 0 散布，产卵生物量序列的区间较窄，这就是这组模拟数据上可用拟合的样子；区间以固定值为条件。若脚本停在 `stopifnot(packageVersion("ALSCL") >= "2.3.0")`，安装当前版本（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明 R 运行在仓库根目录之外；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
+每一年的残差都围绕 0 散布，产卵生物量序列的区间较窄，这就是这组模拟数据上可用拟合的样子；区间以固定值为条件。若脚本提示 "This example requires ALSCL >= 2.4.0"，安装当前版本（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明 R 运行在仓库根目录之外；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
 
-Residuals scattered around zero in every year, and a spawning biomass series with a narrow interval, are what a usable fit of these synthetic data looks like; the interval is conditional on the fixed values. If the script stops at `stopifnot(packageVersion("ALSCL") >= "2.3.0")`, install the current version ([Install ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)); if it fails to find `scripts/plot_helpers.R` or `docs/data`, R is running outside the repository root; if `check_alscl_data()` reports an error, step 1 explains the messages; if a fit ends with the warning "Review fit diagnostics", step 5 says what to change.
+Residuals scattered around zero in every year, and a spawning biomass series with a narrow interval, are what a usable fit of these synthetic data looks like; the interval is conditional on the fixed values. If the script reports "This example requires ALSCL >= 2.4.0", install the current version ([Install ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)); if it fails to find `scripts/plot_helpers.R` or `docs/data`, R is running outside the repository root; if `check_alscl_data()` reports an error, step 1 explains the messages; if a fit ends with the warning "Review fit diagnostics", step 5 says what to change.
 
 <a id="case-fit-survey-replace"></a>
 
@@ -6741,7 +6784,7 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 Read the numerical checks first ([Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the lower AIC, given only when both are eligible) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.7. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
-![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=804c4ad59892)
+![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
 
 四个面板分别是残差直方图、QQ 图、逐年平均残差（误差线为一个标准差）和按体长组的绝对残差；[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-residuals)解释这些规律。
 
@@ -6756,7 +6799,7 @@ plot_compare_CatL(a, b, x$data.CatL,
                   years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
-![模拟 YTF：四个年份的调查观测及拟合中位数 / Synthetic YTF: observed survey indices and fitted medians in four years](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=02ba211827d0)
+![模拟 YTF：四个年份的调查观测及拟合中位数 / Synthetic YTF: observed survey indices and fitted medians in four years](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=06278fecb8b7)
 
 点是观测，曲线是选定四个年份的拟合中位数。读丰度差异之前，先比较拟合形状，特别是观测稀疏的较大体长组。
 

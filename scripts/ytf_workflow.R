@@ -65,11 +65,11 @@ run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
 for(typ in c('length','year')) for(ex in c(FALSE,TRUE)) {
  if (typ == 'length') {
   render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
-   plot_CatL(b,type='length',exp_transform=ex,facet_ncol=4,x_breaks=c(2000,2010,2015),point_size=1,line_size=.6,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
+   plot_CatL(b,facet_by='length',exp_transform=ex,facet_ncol=4,x_breaks=c(2000,2010,2015),point_size=1,line_size=.6,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
    note_zh=if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '点为观测对数，曲线为拟合的 Elog_index。',note_en=if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Points are log observations; curves show fitted Elog_index.')
  } else {
   render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
-   plot_CatL(b,type='year',exp_transform=ex,facet_ncol=4,x_breaks=c(10,30,50),line_size1=.6,line_size2=.4,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
+   plot_CatL(b,facet_by='year',exp_transform=ex,facet_ncol=4,x_breaks=c(10,30,50),line_size1=.6,line_size2=.4,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
    note_zh=paste(if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '朱红色为观测对数，深蓝色为拟合的 Elog_index。','line_size1 = 0.6 控制拟合线，line_size2 = 0.4 控制观测线。'),
    note_en=paste(if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Vermilion curves are log observations; navy curves show fitted Elog_index.','line_size1 = 0.6 controls fitted curves; line_size2 = 0.4 controls observations.'))
  }
@@ -91,7 +91,7 @@ for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
  note_zh=if(model=='ACL' && typ=='length')'当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。' else '年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。',
  note_en=if(model=='ACL' && typ=='length')'In this version, ACL length is an alias of age; the output is still age-specific F.' else 'F is an instantaneous rate per model step. Native F dimensions differ between the models.')
 }
-for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残差',typ),paste('Log residuals',typ),plot_residuals(b,type=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。逐分面按有效横坐标数量选择趋势：少于 2 个不画，2–5 个用直线，至少 6 个用 loess，并单独调整 span。平滑线不是显著性检验。',note_en='Observed minus fitted log index, without standardization. Each facet selects its trend from its own distinct observed x values: fewer than two omit smoothing, two to five use a line, and six or more use loess with a facet-specific span. These are not significance tests.')
+for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残差',typ),paste('Log residuals',typ),plot_residuals(b,facet_by=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。逐分面按有效横坐标数量选择趋势：少于 2 个不画，2–5 个用直线，至少 6 个用 loess，并单独调整 span。平滑线不是显著性检验。',note_en='Observed minus fitted log index, without standardization. Each facet selects its trend from its own distinct observed x values: fewer than two omit smoothing, two to five use a line, and six or more use loess with a facet-specific span. These are not significance tests.')
 for(typ in c('R','F'))for(lg in c(TRUE,FALSE))render(paste0('deviation_',typ,'_',lg),paste(if(lg)'对数过程偏差' else '过程乘数',typ),paste(if(lg)'Log process deviations' else 'Process multipliers',typ),plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
 note_zh=if(lg)'对数过程偏差以 0 为参照。这不是似然偏差统计量。' else '指数转换后以 1 为参照，区间不对称。这不是原尺度残差。',note_en=if(lg)'Log process deviations use zero as reference; these are not likelihood deviance statistics.' else 'Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.')
 render('ridges','长度组成山脊图','Length composition ridges',plot_ridges(b),height=8.5,note_zh='每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。',note_en='Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported.')
@@ -116,14 +116,11 @@ survey_q_plot <- function() {
   if (is.null(fits)) return(plot_compare_selectivity(a,b))
   q <- exp(plogis(log(19)*(a$len_mid-x$fit_args$sel_L50)/
                     (x$fit_args$sel_L95-x$fit_args$sel_L50),log.p=TRUE))
-  d <- data.frame(Length=rep(a$len_mid,2),Selectivity=rep(q,2),
-                  Model=rep(c('ACL','ALSCL'),each=length(q)))
-  ggplot(d,aes(Length,Selectivity,color=Model,linetype=Model))+
-    geom_line(linewidth=.8)+geom_point(size=2)+
-    scale_color_manual(values=setNames(acl_theme('compare_colors'),c('ACL','ALSCL')))+
-    scale_linetype_manual(values=c(ACL='solid',ALSCL='dashed'))+
-    labs(title='Survey catchability: ACL vs ALSCL',x='Length',y='Survey catchability (q)')+
-    ALSCL:::acl_get_theme()+theme(legend.position='bottom')
+  # Rebuild only the fixed survey input required by this plotting helper.
+  # No serialized TMB objective is executed.
+  plot_a <- a; plot_b <- b
+  plot_a$obj <- plot_b$obj <- list(env = list(data = list(log_q = log(q))))
+  plot_compare_selectivity(plot_a, plot_b)
 }
 render('compare_selectivity','固定调查可捕性','Fixed survey catchability',survey_q_plot(),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
 for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_F_ts(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。季度拟合按季度汇总，不做年化。',note_en='Apical is the maximum; mean is an unweighted group average. Quarterly fits are summarized per quarter; nothing is annualized.')

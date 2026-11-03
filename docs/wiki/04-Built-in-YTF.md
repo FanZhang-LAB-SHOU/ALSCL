@@ -2,7 +2,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation)
 
-**ALSCL 2.4.0 · 简体中文 / English**
+**ALSCL 2.4.1 · 简体中文 / English**
 
 [安装软件包](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)之后，你已经有了输入列表 `x` 和拟合好的 ACL 模型 `a`。本页说明拟合结果包含什么、怎样判断它可用、怎样读估计值，以及第二个模型 ALSCL 与它有何不同。请在同一个 R 会话中按步骤运行；后面的页面会继续使用 `x`、`a` 和 `b`。
 

@@ -2,20 +2,27 @@
 
 On this page you check a fitted model from two sides. Fitted-model simulation draws new survey data from the fit and refits them, to see whether the estimates recover the known values; hindcast validation fits on the earlier time steps and scores the predictions of the withheld later ones against the observations. You need the package installed ([Install ALSCL](getting-started.html)); the code uses the synthetic `YTF_example` and takes about fifteen minutes in total, because steps 3 and 4 refit the models several times. For hindcast validation alone, run step 1 and go to step 4. At the end you have simulated datasets with their truth, a table of bias, RMSE and interval coverage, the prediction scores of both models against a persistence baseline, and a saved fit.
 
-<h2 id="section-1">1. Load the example and fit the source model</h2>
+<h2 id="section-1">1. Load the input bundle</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
+```
+
+`x` contains the three survey tables and the model settings. For hindcast validation alone, continue directly to [step 4](#section-4): it fits the training windows from `x` and requires no full-data fit. For simulation, continue to step 2.
+
+<h2 id="section-2">2. Generate survey observations from the fit</h2>
+
+<h3 id="source-fit">Fit the source model for simulation</h3>
+
+```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-`x` is the input bundle and `b` the ALSCL fit that the simulations of step 2 start from; hindcast validation in step 4 reads `x` only. `b$diagnostics` must show `numerical_ok` equal to `TRUE`, because `simulate_fit()` refuses a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, repair the fit as on [Judge whether a fit can be used](diagnostics.html) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biology ([Choose the fitting settings](fitting-controls.html)), and when you fix `mean_log_R` for a simulation study give its value in `parameters`, so that every simulated dataset uses the same value instead of one derived from its own data.
-
-<h2 id="section-2">2. Generate survey observations from the fit</h2>
+`b` is the ALSCL fit that the simulations start from. Its `numerical_ok` must be `TRUE`, because `simulate_fit()` rejects a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, follow [Judge whether a fit can be used](diagnostics.html) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biological settings ([Choose the fitting settings](fitting-controls.html)). Each simulated `x` preserves the source fit's effective fixed scalar values, including `mean_log_R` when its value was derived from the original data. To choose a particular fixed value yourself, provide it in `parameters` when fitting the source model.
 
 <h3 id="conditional-draws">Keep the fitted population states</h3>
 
@@ -109,7 +116,19 @@ Scores use natural-log survey indices; zero and missing withheld observations ar
 
 On this synthetic dataset, with the teaching maps and two origins, ACL predicts better than persistence and ALSCL worse, although both optimizations converged: a difference worth investigating, while two validation time steps give no general ranking of the models.
 
-<h3 id="save-record">Save the source fit and the validation</h3>
+<h3 id="save-record">Save the validation results</h3>
+
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
+
+The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary path with a permanent file. This completes the hindcast-only route.
+
+<h3 id="simulation-archive">Save the source fit after simulation</h3>
+
+Run this block if you fitted `b` in step 2. If you only ran hindcast validation, continue to [What next](#next).
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -118,12 +137,9 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-validation_file <- tempfile(fileext = ".rds")
-saveRDS(list(acl = acl_validation, alscl = alscl_validation),
-  validation_file)
 ```
 
-`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary paths with permanent files and keep the simulation objects and the truth beside the fit.
+`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. Keep the simulation objects and truth beside this fit in permanent files.
 
 <h2 id="next">What next</h2>
 

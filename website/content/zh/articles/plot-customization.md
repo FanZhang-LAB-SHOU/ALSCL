@@ -34,7 +34,8 @@ plot_abundance(b, type = "NL", facet_ncol = 3)
 | `compare_colors` | 模型对，可按模型名称匹配 |
 | `low_col`、`high_col` | 连续热图的端点 |
 | `font_family`、`title_size`、`axis_text_size`、`strip_text_size` | 字体与字号 |
-| `line_size`、`point_size` | 单模型图的线宽和点大小；比较图读取 `compare_line_size` 和 `compare_point_size` |
+| `line_size`、`point_size` | 单模型图的线宽和所有图的默认点大小（2.5）；比较图线宽使用 `compare_line_size` |
+| `compare_point_size` | 可选的比较图点大小；设为 `NULL` 清除覆盖，恢复继承全局 `point_size` |
 | `facet_ncol`、`facet_nrow`、`facet_scales` | 分面布局，所有图使用相同的参数名 |
 
 <h2 id="override">2. 为单张图覆盖颜色</h2>
@@ -59,6 +60,8 @@ plot_ridges(b, palette = c("#E8F1FA", "#3C5488"))
 # 恢复默认
 acl_theme_reset()
 ```
+
+设置 `acl_theme_set(point_size = 3)` 可统一单模型图和比较图的点大小。调用中的 `point_size` 优先级最高。在 `plot_compare_CatL()` 中，其次是显式传入的旧参数 `obs_size`，再是显式设置的主题 `compare_point_size`，最后是全局 `point_size`。其他含点的比较图遵守相同顺序，但不使用 `obs_size`。用 `acl_theme_set(compare_point_size = NULL)` 清除仅针对比较图的覆盖。
 
 调用中显式给出的颜色优先于主题，也优先于同时传入的 `palette`；`NULL` 继承主题。`se_color` 要与 `line_color` 一起指定，否则它仍取主题值。回溯图的命名颜色必须覆盖每个末端时间步；无名称的颜色按同样的顺序对应。轮数超过色板颜色数时，颜色由插值得到。山脊图使用按输入年份顺序取色的 viridis 渐变，观测与拟合两侧共用，与全局色板无关；`NULL` 也使用 viridis，可改为 `cividis`、`plasma`、`ocean` 或一组颜色。
 

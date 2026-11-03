@@ -5,8 +5,9 @@
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
+if (packageVersion("ALSCL") < "2.4.0")
+  stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
-stopifnot(packageVersion("ALSCL") >= "2.3.0")
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
 # 正式数据改成 "my_data"，其中放以下三个 CSV：

@@ -93,7 +93,7 @@ Glossary (one term per concept):
 
 ## Validation
 
-`check.py` verifies every generated local link, asset, anchor and translation counterpart; public-function and argument coverage; English-language separation; and syntax of all displayed R blocks. It also checks explicitly named arguments to direct public-function calls. This is documentation validation, not a rerun of expensive model fits or a statistical validation of the models. The repository's R-CMD-check workflow remains the package check.
+`check.py` verifies every generated local link, asset, anchor and translation counterpart; public-function and argument coverage; English-language separation; and syntax of all displayed R blocks. It also checks explicitly named arguments to direct public-function calls. The documentation workflow also verifies that generated manuals and Wiki files are current, and runs `scripts/test_tutorial_workflows.R` to check the early package-version gate and the hindcast-only route with recording stubs. This is documentation validation, not a rerun of expensive model fits or a statistical validation of the models. The repository's R-CMD-check workflow remains the package check.
 
 ## GitHub Pages
 

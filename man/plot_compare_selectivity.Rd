@@ -12,7 +12,8 @@ plot_compare_selectivity(
   colors = NULL,
   linetypes = NULL,
   line_size = NULL,
-  ...
+  ...,
+  point_size = NULL
 )
 }
 \arguments{
@@ -29,6 +30,9 @@ plot_compare_selectivity(
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
 \item{...}{The former argument name linewidth, accepted with a warning.}
+
+\item{point_size}{Numeric or NULL. Point size. NULL inherits the comparison
+point-size override, if set, or the global point_size setting.}
 }
 \value{
 A ggplot object.

@@ -1,6 +1,6 @@
 # How do I fit my own survey data?
 
-On this page you go from three survey tables in CSV or Excel files to two fitted models, ACL and ALSCL, with their numerical checks, plots and saved results. The page follows the script [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R), which runs the whole sequence on the bundled teaching data; you then replace its values with yours. You need the package installed ([Install ALSCL](getting-started.html)), your tables laid out as in [Prepare your survey data](data-preparation.html), and the biological values of your stock (`rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border`), which [step 4 of that page](data-preparation.html#bundle) explains one by one.
+On this page you go from three survey tables in CSV or Excel files to two fitted models, ACL and ALSCL, with their numerical checks, plots and saved results. The page follows the script [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R), which runs the whole sequence on the bundled teaching data; you then replace its values with yours. You need ALSCL 2.4.0 or later installed ([Install ALSCL](getting-started.html)), your tables laid out as in [Prepare your survey data](data-preparation.html), and the biological values of your stock (`rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border`), which [step 4 of that page](data-preparation.html#bundle) explains one by one.
 
 <h2 id="bundle">1. Prepare and check the input bundle</h2>
 
@@ -27,7 +27,7 @@ plan[, c("parameter", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
 ```
 
-`inspect_parameters()` lists the parameters of a model with their starting value on the natural scale and their status, `free` (estimated), `fixed` or `tied`; `map_source` says whether a fixed status comes from the model default or from your `map`. By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0` and estimates the other 10 scalar parameters; ALSCL fixes `log_sigma_log_F` and `log_t0` and estimates 13. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are random effects and are always estimated. [Choose the fitting settings](fitting-controls.html#parameters) names every scalar parameter of both models.
+`inspect_parameters()` lists the parameters of a model with their starting value on the natural scale and their status, such as `free` (estimated), `fixed` or `tied`; `map_source` says whether a fixed status comes from the model default or from your `map`. By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0` and estimates the other 10 scalar parameters; ALSCL fixes `log_sigma_log_F` and `log_t0` and estimates 13. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are estimated as random effects by default; `map` can fix individual deviations or tie them together. Check their `n_free`, `n_fixed` and `n_tied` counts with `inspect_parameters()` after changing a map. [Choose the fitting settings](fitting-controls.html#parameters) names every scalar parameter of both models.
 
 Starting values go in `x$fit_config$acl$parameters` or `x$fit_config$alscl$parameters` on the optimizer scale: `log_Linf = log(60)` for an asymptotic length of 60 cm, `logit_log_R = qlogis(0.1)` for a correlation of 0.1; ALSCL uses `log_t0`, so its `t0` must lie between 0 and `rec.age`. A starting value does not fix a parameter: only `factor(NA)` in the model's `map` does, and a named `NULL` entry releases a parameter that the model fixes by default. Fix a parameter when an external study gives a better value than the fit could, or when the checks of step 5 show that the data leave it undetermined, and record the source of every fixed value. [Choose the fitting settings](fitting-controls.html) gives the rules for `map`, bounds and species presets; [Estimation parameter lists](estimation-parameters.html) gives every transformation.
 
@@ -42,8 +42,9 @@ The script below runs every step on the teaching data: it reads the three CSV fi
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
+if (packageVersion("ALSCL") < "2.4.0")
+  stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
-stopifnot(packageVersion("ALSCL") >= "2.3.0")
 
 # Read the three aligned tables -------------------------------
 # data.CatL.csv, data.wgt.csv, data.mat.csv.
@@ -165,7 +166,7 @@ While the script runs, `check$summary` is printed for both models; with the teac
 
 ![ALSCL spawning biomass from the complete example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true)
 
-Residuals scattered around zero in every year, and a spawning biomass series with a narrow interval, are what a usable fit of these synthetic data looks like; the interval is conditional on the fixed values. If the script stops at `stopifnot(packageVersion("ALSCL") >= "2.3.0")`, install the current version ([Install ALSCL](getting-started.html)); if it fails to find `scripts/plot_helpers.R` or `docs/data`, R is running outside the repository root; if `check_alscl_data()` reports an error, step 1 explains the messages; if a fit ends with the warning "Review fit diagnostics", step 5 says what to change.
+Residuals scattered around zero in every year, and a spawning biomass series with a narrow interval, are what a usable fit of these synthetic data looks like; the interval is conditional on the fixed values. If the script reports "This example requires ALSCL >= 2.4.0", install the current version ([Install ALSCL](getting-started.html)); if it fails to find `scripts/plot_helpers.R` or `docs/data`, R is running outside the repository root; if `check_alscl_data()` reports an error, step 1 explains the messages; if a fit ends with the warning "Review fit diagnostics", step 5 says what to change.
 
 <h2 id="replace">4. Replace the demonstration with your observations</h2>
 

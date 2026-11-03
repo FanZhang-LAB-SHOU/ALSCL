@@ -1,9 +1,16 @@
 """Build the bilingual Wiki book from versioned Markdown. Python standard library only.
 从仓库根目录运行 / Run from repo root: python3 scripts/build_wiki.py
+Use --check to compare the generated text without writing files.
 """
 from pathlib import Path
-import re,json,posixpath,hashlib
-root=Path(__file__).resolve().parents[1]; docs=root/'docs'; out=docs/'wiki';out.mkdir(exist_ok=True)
+import re,json,posixpath,hashlib,argparse,sys
+root=Path(__file__).resolve().parents[1]; docs=root/'docs'; out=docs/'wiki'
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check', action='store_true', help='Fail on stale outputs without writing files.')
+check_only=parser.parse_args().check if __name__ == '__main__' else False
+outputs={}
+def write_output(path,text):
+ outputs[path]=text
 base='https://github.com/FanZhang-LAB-SHOU/ALSCL'
 version=re.search(r'^Version: (.+)$', (root/'DESCRIPTION').read_text(), re.M)[1]
 read=lambda name:(docs/name).read_text()
@@ -83,7 +90,7 @@ for i,(slug,title,body) in enumerate(chapters):
  if i<len(chapters)-1:nav.append(f'[下一章 · Next →]({base}/wiki/{chapters[i+1][0]})')
  navigation=' · '.join(nav)
  content=f'# {i+1:02d} {title}\n\n{navigation}\n\n**ALSCL {version} · 简体中文 / English**\n\n'+body+'\n\n---\n\n'+navigation+'\n'
- (out/(slug+'.md')).write_text(content)
+ write_output(out/(slug+'.md'),content)
 contents='\n'.join(f'| {i+1:02d} | [{title}]({base}/wiki/{slug}) |' for i,(slug,title,_) in enumerate(chapters))
 home=f'''# ALSCL 完整使用手册 · Complete user manual
 
@@ -134,9 +141,9 @@ Use these task-based entry points without reading every chapter in numerical ord
 
 理论来源 / Reference: Zhang & Cadigan (2022), *Fish and Fisheries* 23,1121–1135. [Paper and Appendix S1](https://doi.org/10.1111/faf.12673).
 '''
-(out/'Home.md').write_text(home)
-(out/'_Sidebar.md').write_text('**ALSCL · 使用手册 / Manual**\n\n'+f'[首页与目录 · Home]({base}/wiki)\n\n'+'\n'.join(f'- [{i+1:02d} {title}]({base}/wiki/{slug})' for i,(slug,title,_) in enumerate(chapters))+f'\n\n[代码与数据 · Code and data]({base}/tree/main)\n')
-(out/'_Footer.md').write_text(f'[目录 · Contents]({base}/wiki) · [代码 · Code]({base}/tree/main) · [问题反馈 · Issues]({base}/issues)\n\nALSCL {version} · 简体中文 / English · [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673)\n')
+write_output(out/'Home.md',home)
+write_output(out/'_Sidebar.md','**ALSCL · 使用手册 / Manual**\n\n'+f'[首页与目录 · Home]({base}/wiki)\n\n'+'\n'.join(f'- [{i+1:02d} {title}]({base}/wiki/{slug})' for i,(slug,title,_) in enumerate(chapters))+f'\n\n[代码与数据 · Code and data]({base}/tree/main)\n')
+write_output(out/'_Footer.md',f'[目录 · Contents]({base}/wiki) · [代码 · Code]({base}/tree/main) · [问题反馈 · Issues]({base}/issues)\n\nALSCL {version} · 简体中文 / English · [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673)\n')
 book=[home.split('## 目录 · Contents')[0], '## 全书目录 · Book contents','']
 book+= [f'- [{i+1:02d} {title}](#chapter-{i+1:02d})' for i,(_,title,_) in enumerate(chapters)]
 for i,(slug,title,body) in enumerate(chapters):
@@ -145,7 +152,19 @@ for i,(slug,title,body) in enumerate(chapters):
  body=linkify(body)
  body=re.sub(r']\(#(theory|builtin|simulation|excel|observations|fitting|diagnostics|plotting|retrospective)\)', lambda m: ']('+base+'/blob/main/docs/USER_GUIDE.md#'+m[1]+')', body)
  book+=['',f'<a id="chapter-{i+1:02d}"></a>',f'## {i+1:02d} {title}','',body]
-(docs/'BOOK.md').write_text('\n'.join(book)+'\n')
-for p in [docs/'BOOK.md', *out.glob('*.md')]:
- p.write_text('\n'.join(line.rstrip() for line in p.read_text().splitlines()).rstrip()+'\n')
-print('Built',len(chapters),'chapters plus Home, sidebar and footer.')
+write_output(docs/'BOOK.md','\n'.join(book)+'\n')
+# Preserve the normal generation behavior for any additional Wiki pages too.
+for p in out.glob('*.md'):
+ outputs.setdefault(p,p.read_text(encoding='utf-8'))
+stale=[]
+if not check_only:out.mkdir(exist_ok=True)
+for p,text in outputs.items():
+ text='\n'.join(line.rstrip() for line in text.splitlines()).rstrip()+'\n'
+ if check_only:
+  if not p.is_file() or p.read_text(encoding='utf-8') != text:stale.append(p.relative_to(root))
+ else:p.write_text(text,encoding='utf-8')
+if stale:
+ print('Stale generated book/Wiki files: '+', '.join(map(str,stale)),file=sys.stderr)
+ print('Run python3 scripts/build_wiki.py to regenerate them.',file=sys.stderr)
+ sys.exit(1)
+print('Checked' if check_only else 'Built',len(chapters),'chapters plus Home, sidebar and footer.')

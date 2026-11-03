@@ -1,6 +1,6 @@
 Package: ALSCL
 Title: Age- and Length-Structured Statistical Catch-at-Length Models
-Version: 2.4.0
+Version: 2.4.1
 Authors@R: c(person("Hongyu", "Lin", role = c("aut", "cre"), email = "linbojun99@gmail.com",
            comment = c(ORCID = "0000-0001-6226-179X")),
              person("Fan", "Zhang", role = "aut", email = "f-zhang@shou.edu.cn",
@@ -25,7 +25,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends:
-    R (>= 3.5.0)
+    R (>= 4.1.0)
 Imports:
     stats,
     utils,

@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.4.0，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.1，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **65 exported functions** of ALSCL 2.4.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **65 exported functions** of ALSCL 2.4.1 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -175,13 +175,13 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `x_expand` | `NULL` | 横轴留白设置，长度 2 的数值向量。 | Numeric vector of length 2. X-axis expansion. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character. Default line color for single-model plots. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `point_size` | `NULL` | 单模型图的默认点大小（2.5）；绘图参数为 NULL 时继承。 | Numeric. Default point size for single-model plots (2.5); plot arguments set to NULL inherit it. |
+| `point_size` | `NULL` | 所有含点图的默认点大小（2.5）；比较图可单独覆盖。 | Default point size for all point-drawing plots (2.5); comparison plots can override it. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character. Default CI color. |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `compare_colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Character vector of 2 colors. Can be unnamed (positional) or named. The first color is always model1, second is model2. Examples: c("blue", "red"), c(ACL = "blue", ALSCL = "red"), c("M=0" = "steelblue", "M=0.5" = "tomato"). |
 | `compare_linetypes` | `NULL` | 按模型顺序提供两种线型。 | Character vector of 2 linetypes. Same rules as colors. |
 | `compare_line_size` | `NULL` | 比较图全局线宽。 | Numeric. Line width for comparison plots. |
-| `compare_point_size` | `NULL` | 比较图全局点大小。 | Numeric. Point size for comparison plots. |
+| `compare_point_size` | `NULL` | 可选的比较图点大小；显式 NULL 清除覆盖，恢复继承 point_size。 | Optional comparison point-size override; explicit NULL clears it and restores point_size inheritance. |
 | `compare_se_alpha` | `NULL` | 比较图区间透明度。 | Numeric. CI ribbon alpha for comparison plots. |
 | `compare_legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position for comparison plots. |
 | `compare_facet_ncol` | `NULL` | 比较图全局分面列数。 | Integer. Default facet columns in comparison plots. |
@@ -750,9 +750,9 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
 
 调查拟合 length 对数尺度 / Survey fit length log scale
 
-标题明确标为调查指数。`type = "year"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `type = "length"`。按年份分面时也遵守全局 `CatL_year_dist` 标题。
+标题明确标为调查指数。`facet_by = "year"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `facet_by = "length"`。按年份分面时也遵守全局 `CatL_by_year` 标题。
 
-Titles identify survey indices. In `type = "year"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `type = "length"`. The global `CatL_year_dist` title now applies to year facets.
+Titles identify survey indices. In `facet_by = "year"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `facet_by = "length"`. The global `CatL_by_year` title now applies to year facets.
 
 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
 
@@ -864,8 +864,8 @@ plot_compare_F_ts(a, b, method = "apical")
 ```r
 plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, model2_name = NULL, 
     colors = NULL, linetypes = NULL, line_size = NULL, facet_ncol = 4, facet_scales = "free_y", 
-    obs_color = "grey40", obs_size = 1.5, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL, 
-    ...)
+    obs_color = "grey40", obs_size = NULL, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL,
+    ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -882,11 +882,12 @@ plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, 
 | `facet_ncol` | `4` | 分面排列的列数。 | Integer. Facet columns. Default 4. |
 | `facet_scales` | `"free_y"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet facet_scales. Default "free_y". |
 | `obs_color` | `"grey40"` | 观测点颜色。 | Character. Color for observed points. Default "grey40". |
-| `obs_size` | `1.5` | 观测点大小。 | Numeric. Size of observed points. Default 1.5. |
+| `obs_size` | `NULL` | 旧的观测点大小设置；NULL 继承主题。显式 point_size 优先于此值。 | Legacy observed-point size; NULL inherits the theme. An explicit point_size takes priority. |
 | `obs_alpha` | `0.6` | 观测点透明度。 | Numeric. Transparency of observed points. Default 0.6. |
 | `obs_shape` | `16` | 观测点形状。 | Integer. Shape of observed points. Default 16. |
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth、ncol、scales，仍可使用但会给出警告。 | The former argument names linewidth, ncol and scales, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 先使用显式 obs_size，再继承比较图覆盖值或全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL uses an explicit obs_size first, then a comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -950,7 +951,7 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical", 
-    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ...)
+    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -964,6 +965,7 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -1016,7 +1018,7 @@ plot_compare_growth (model1, model2, age_range = c(1, 20), model1_name = NULL, m
 | `ref_color` | `"grey30"` | 参考曲线颜色。 | Character. Color for reference curve/points. Default "grey30". |
 | `ref_linetype` | `"dotdash"` | 参考曲线线型。 | Character. Linetype for reference curve. Default "dotdash". |
 | `show_points` | `TRUE` | 是否显示参考数据点。 | Logical. Show raw data points from ref_data. Default TRUE. |
-| `point_size` | `NULL` | 点大小。 | Numeric. Size of data points. NULL = use global theme. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 | `point_alpha` | `0.4` | 点透明度，0–1。 | Numeric. Transparency of data points. Default 0.4. |
 | `nls_start` | `NULL` | 参考数据 VB 非线性回归初值：Linf、k、t0。 | Named list. Starting values for nls. Default attempts auto-detection from data range. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
@@ -1111,7 +1113,7 @@ plot_compare_residuals (model1, model2, data.CatL, model1_name = NULL, model2_na
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
-| `point_size` | `NULL` | 点大小。 | Numeric. Point size. NULL = use global theme. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme (default "bottom"). |
 | `bins` | `35` | 残差直方图分箱数量。 | Integer. Histogram bins. Default 35. |
 | `qq_alpha` | `0.6` | QQ 图点的透明度。 | Numeric. QQ point transparency. Default 0.6. |
@@ -1144,7 +1146,7 @@ plot_compare_residuals(a, b, dat)
 
 ```r
 plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL, 
-    linetypes = NULL, line_size = NULL, ...)
+    linetypes = NULL, line_size = NULL, ..., point_size = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1157,6 +1159,7 @@ plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -1319,8 +1322,8 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
     facet_ncol = NULL, facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, 
     se_type = "ribbon", type = c("year", "age", "length"), return_data = FALSE, x_breaks = NULL, 
     title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, 
-    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, 
-    base_theme = NULL, title_hjust = NULL)
+    base_theme = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, title_hjust = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1343,11 +1346,11 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character. Custom y-axis label. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for text elements. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Title text size. |
+| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
 | `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
-| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
@@ -3101,7 +3104,7 @@ simulate_fit (fit, nsim = 1, seed = NULL, process = c("conditional", "resample")
     allow_failed_fit = FALSE)
 ```
 
-| 参数 / Argument | 默认值 / Default | 中文说明 | English description |
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `fit` | `必填 / required` | 带完整配方及报告的 ACL／ALSCL 拟合，可为可移植存档读取结果。 | ACL/ALSCL fit with a complete recipe and report, including a portable saved fit. |
 | `nsim` | `1` | 正整数模拟重复数。 | Positive integer number of replicate datasets. |
@@ -3117,6 +3120,10 @@ simulations contains named replicates with x, observations and truth; metadata r
 条件模式固定拟合状态，只改变对数正态观测误差。过程重抽样使用平稳 AR(1) 补充、可分离组别／时间 AR(1) F（或仅时间共用 F）及独立初始年龄偏差，再调用现有 C++ 种群方程，无须优化。过程尺度为边际标准差。标量参数、生物学和可捕性保持固定；重抽样拒绝固定／绑定随机效应的 map，不加入参数不确定性或自助法区间。显式种子会恢复调用者随机数状态；默认保留原 NA／零位置。已知失败拟合须显式覆盖并警告。支持读取后的可移植拟合。
 
 Conditional simulation holds fitted states fixed and varies lognormal observation errors. Resampling draws stationary AR(1) recruitment, separable group/time AR(1) F (or shared time-only F) and independent initial-age deviations, then evaluates the existing C++ population equations without optimization. Scales are marginal SDs. Scalar parameters, biology and catchability remain fixed. Fixed/tied random-effect maps are rejected for resampling; no parameter uncertainty or bootstrap intervals are added. Explicit seeds restore caller RNG state; original NA/zero cells are preserved by default. Known failed fits require an explicit warned override. Portable saved fits are supported.
+
+模拟返回的输入列表显式保存源拟合的实际固定标量值；重新拟合不会根据新观测改变这些固定值。自由参数保留原初值策略。新 ALSCL 拟合的条件真值含 dev_log_N0，保存并读取后也保留；缺少该字段的旧存档仍返回 NULL。
+
+Returned input bundles explicitly retain the source fit’s effective fixed scalar values, so refitting does not derive different fixed values from new observations. Free parameters keep their original starting-value strategy. Conditional truth from new ALSCL fits retains dev_log_N0 after saving and reading; older archives without that field still return NULL.
 
 **示例 / Example:**
 

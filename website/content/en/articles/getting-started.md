@@ -43,7 +43,7 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 Every session starts with `library(ALSCL)`. `YTF_example` is a synthetic dataset shaped like a yellowtail flounder survey: a survey index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length bins in rows and 20 years in columns. The first column holds the length-bin labels; the other columns are the years.
 
-You should see version 2.3.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
 <h2 id="first-fit">4. Fit the example</h2>
 

@@ -41,9 +41,9 @@ for (name in names(aliases)) stopifnot(file.copy(
   file.path('docs/figures/ytf',paste0(aliases[[name]],'.png')),
   file.path('man/figures',paste0(name,'.png')),overwrite=TRUE))
 acl_plots <- list(
- readme_acl_catl=plot_CatL(a,type='year',exp_transform=TRUE,facet_ncol=4),
+ readme_acl_catl=plot_CatL(a,facet_by='year',exp_transform=TRUE,facet_ncol=4),
  readme_acl_pla=plot_pla(a),readme_acl_recruitment=plot_recruitment(a,se=TRUE),
- readme_acl_residuals=plot_residuals(a,type='year',facet_ncol=4),
+ readme_acl_residuals=plot_residuals(a,facet_by='year',facet_ncol=4),
  readme_acl_ridges=plot_ridges(a),readme_acl_ssb=plot_SSB(a,se=TRUE),
  readme_acl_vb=plot_VB(a,age_range=c(1,15),se=TRUE))
 for (name in names(acl_plots)) save_plot(file.path('man/figures',paste0(name,'.png')),acl_plots[[name]])
@@ -61,6 +61,6 @@ stopifnot(setequal(expected,actual))
 # Preserve the fitted estimates; only create fresh plots with the current theme.
 own <- readRDS(ownfile)$ALSCL
 save_plot('docs/figures/own-data-example/residuals.png',
-          plot_residuals(own,type='year',facet_ncol=4,x_breaks=pretty(own$len_mid,n=4)),width=10,height=8)
+          plot_residuals(own,facet_by='year',facet_ncol=4,x_breaks=pretty(own$len_mid,n=4)),width=10,height=8)
 save_plot('docs/figures/own-data-example/SSB.png',plot_SSB(own,se=isTRUE(own$pdHess)),width=8,height=5)
 cat('Refreshed',length(expected),'legacy help figures and two own-data figures.\n')

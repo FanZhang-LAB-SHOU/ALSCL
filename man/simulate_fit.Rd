@@ -70,9 +70,13 @@ conditional median, and expected_index = exp(Elog_index + sigma^2 / 2)
 is their conditional arithmetic mean. Numeric overflow or underflow to zero
 raises an error rather than changing the generating distribution or mask.
 
-Each returned x retains the fitting configuration of the same model,
-except the session settings output, ncores and silent, which are chosen
-when the bundle is fitted. It can be passed to run_acl(x) or run_alscl(x),
+Each returned x retains the fitting configuration of the same model.
+Effective fixed scalar values are written explicitly into parameters,
+including values originally derived from the source data, so refitting
+cannot change these assumptions when the observations change. Free scalar
+parameters retain their original starting-value settings. The session
+settings output, ncores and silent are chosen when the bundle is fitted.
+It can be passed to run_acl(x) or run_alscl(x),
 as appropriate, to conduct simulation-estimation experiments. This
 function does not refit models or compute bootstrap intervals. Passing a
 numerical screen does not establish model adequacy or parameter

@@ -364,6 +364,7 @@ Type objective_function<Type>::operator()()
 
 	REPORT(init_Z);
 	REPORT(sigma_log_N0);
+		REPORT(dev_log_N0);
 
 	// ==================== ADREPORT for sdreport ====================
 	ADREPORT(Rec);

@@ -111,9 +111,13 @@
 #'   is their conditional arithmetic mean. Numeric overflow or underflow to zero
 #'   raises an error rather than changing the generating distribution or mask.
 #'
-#'   Each returned x retains the fitting configuration of the same model,
-#'   except the session settings output, ncores and silent, which are chosen
-#'   when the bundle is fitted. It can be passed to run_acl(x) or run_alscl(x),
+#'   Each returned x retains the fitting configuration of the same model.
+#'   Effective fixed scalar values are written explicitly into parameters,
+#'   including values originally derived from the source data, so refitting
+#'   cannot change these assumptions when the observations change. Free scalar
+#'   parameters retain their original starting-value settings. The session
+#'   settings output, ncores and silent are chosen when the bundle is fitted.
+#'   It can be passed to run_acl(x) or run_alscl(x),
 #'   as appropriate, to conduct simulation-estimation experiments. This
 #'   function does not refit models or compute bootstrap intervals. Passing a
 #'   numerical screen does not establish model adequacy or parameter
@@ -187,6 +191,15 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
   rng_kind <- RNGkind()
   random_names <- c("dev_log_R", "dev_log_F", "dev_log_N0")
   table_names <- c("data.CatL", "data.wgt", "data.mat")
+  # Freeze effective fixed values before replacing the observations. Free
+  # parameters keep the source recipe's explicit or data-derived start rule.
+  kept <- setdiff(names(setup$recipe$args), c(table_names, "output", "ncores", "silent"))
+  refit_config <- setup$recipe$args[kept]
+  fixed <- names(setup$scalar_parameters)[vapply(names(setup$scalar_parameters), function(nm) {
+    mapping <- setup$preflight$setup$map[[nm]]
+    !is.null(mapping) && all(is.na(mapping))
+  }, logical(1))]
+  if (length(fixed)) refit_config$parameters[fixed] <- setup$scalar_parameters[fixed]
   simulations <- lapply(seq_len(nsim), function(i) {
     report <- fit$report
     random_effects <- stats::setNames(lapply(random_names, function(nm) report[[nm]]), random_names)
@@ -214,8 +227,7 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
     tables$data.CatL[-1L] <- as.data.frame(observations, check.names = FALSE)
     # Session settings are not part of the model: output, ncores and silent
     # are chosen when the simulated bundle is fitted.
-    kept <- setdiff(names(setup$recipe$args), c(table_names, "output", "ncores", "silent"))
-    tables$fit_config <- stats::setNames(list(setup$recipe$args[kept]), setup$recipe$model)
+    tables$fit_config <- stats::setNames(list(refit_config), setup$recipe$model)
     list(replicate = i, x = tables, observations = observations, truth = truth)
   })
   names(simulations) <- paste0("sim_", seq_len(nsim))

@@ -2,7 +2,7 @@
 
 [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.4.0 · 简体中文 / English**
+**ALSCL 2.4.1 · 简体中文 / English**
 
 本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
 
@@ -65,9 +65,9 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 Every session starts with `library(ALSCL)`. `YTF_example` is a synthetic dataset shaped like a yellowtail flounder survey: a survey index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length bins in rows and 20 years in columns. The first column holds the length-bin labels; the other columns are the years.
 
-你应看到 2.3.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
+你应看到 2.4.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
 
-You should see version 2.3.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
 <a id="getting-started-first-fit"></a>
 

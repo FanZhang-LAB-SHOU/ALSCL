@@ -12,6 +12,7 @@ output/
 _site/
 website/.build/
 website/__pycache__/
+scripts/__pycache__/
 website/assets/katex/
 .venv-docs/
 tests/testthat/_problems/
