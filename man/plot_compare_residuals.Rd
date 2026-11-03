@@ -36,7 +36,8 @@ plot_compare_residuals(
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
-\item{point_size}{Numeric. Point size. NULL = use global theme.}
+\item{point_size}{Numeric or NULL. Size of QQ and mean-residual points.
+NULL inherits the comparison point-size override, if set, or global point_size.}
 
 \item{legend_pos}{Character. Legend position. NULL = use global theme (default "bottom").}
 

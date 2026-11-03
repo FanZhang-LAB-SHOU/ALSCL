@@ -55,8 +55,9 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
                                    facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = "ribbon",
                                    type = c("year", "age", "length"), return_data = FALSE,
                                    x_breaks = NULL, title = NULL, xlab = NULL, ylab = NULL,
-                                   font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
-                                   strip_text_size = NULL, legend_text_size = NULL, base_theme = NULL,
+                                   font_family = NULL, title_size = NULL, base_theme = NULL,
+                                   axis_title_size = NULL, axis_text_size = NULL,
+                                   strip_text_size = NULL, legend_text_size = NULL,
                                    title_hjust = NULL) {
   # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")

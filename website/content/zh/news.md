@@ -1,3 +1,15 @@
+## ALSCL 2.4.1
+
+- README 提供英文入口页和独立的简体中文版，包含安装、示例及任务教程链接。
+- `simulate_fit()` 返回的输入列表保存实际固定的标量参数值，包括未显式提供、由数据计算后固定的 `mean_log_R`。模拟数据重新拟合时保持相同固定假设，自由参数仍使用原来的初值策略。
+- 新 ALSCL 报告保存 `dev_log_N0`，使条件模拟保留三组过程偏差，保存和读取评估后也可使用。缺少该偏差的旧报告仍能读取。
+- 补齐比较图的 `point_size`。未设置时继承全局值（2.5）；显式设置的旧参数 `obs_size` 和 `compare_point_size` 仍有效，调用中的 `point_size` 优先。重新生成受影响的配图，继续保持无网格线。
+- 将新增字体参数放在原参数之后，保留 `plot_fishing_mortality()` 按位置传入 `base_theme` 的旧写法。
+- 正式数据示例在拟合前检查 ALSCL 至少为 2.4.0；软件包声明和安装说明统一要求 R 4.1 或更高版本。
+- 说明过程偏差默认参与估计，也可通过 `map` 固定或绑定，并列出过程重抽样和预测检验对此的限制。
+- 模型验证教程拆开数据加载与源模型拟合，仅做预测检验时只需 `x`，不再要求完整数据拟合通过。新增教程路径和提前版本检查的回归测试。
+
+
 ## ALSCL 2.4.0
 
 - 绘图函数统一参数名：分面布局用 `facet_ncol`、`facet_nrow` 和 `facet_scales`，线宽用 `line_size`（主题键 `compare_linewidth` 改为 `compare_line_size`），`point_size = NULL` 继承新的主题键 `point_size`（2.5），所有图默认 `se = FALSE`，包括 `plot_deviance()`。`plot_CatL()` 和 `plot_residuals()` 用 `facet_by`（"length" 或 "year"）选择布局，不再用 `type`。旧参数名仍可用，每个会话警告一次。
@@ -7,7 +19,7 @@
 - 教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本页。
 - 示例图：每个绘图函数的参考页，以及 `check_fit()`、`fit_scenarios()`、`profile_model()`、`project_model()`、`hindcast_model()`、`simulate_fit()`、`sim_data()` 和回溯函数的参考条目，都展示示例代码生成的图。`acl_theme_set()` 展示五种色板及各颜色的用途（`docs/figures/palettes/`，由 `scripts/palette_swatches.R` 生成），配色页展示同一张图在每种色板下的效果。
 - 绘图标签对同一个量使用同一名称："Spawning biomass (SSB)"、"Catch numbers (CN)"、"Abundance"；`plot_recruitment()` 的坐标轴标为 "Recruitment"。图谱按新标签重新生成，每张图的说明都写明图中内容、何时使用和图形规律的含义。
-- 双语手册、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。`README.md` 改为英文入口页，中文版见 `README.zh-CN.md`。
+- 双语手册、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。
 
 ## ALSCL 2.3.0
 

@@ -5,7 +5,12 @@ test_that("fitted-model simulation preserves conditional reports and refittable 
     z <- fit_fixture(model)
     for (structure in c("group_year", "year")) {
       fit <- if (structure == "year") refit_model(z$result, F_structure = "year") else z$result
-      fit$obj <- NULL
+      live_truth <- simulate_fit(fit, seed = 30)$simulations[[1]]$truth
+      path <- tempfile(fileext = ".rds")
+      withr::defer(unlink(path))
+      save_assessment(fit, path)
+      fit <- read_assessment(path)
+      expect_null(fit$obj)
       original <- fit
       simulated <- simulate_fit(fit, nsim = 2, seed = 30)
       expect_identical(fit, original)
@@ -20,6 +25,11 @@ test_that("fitted-model simulation preserves conditional reports and refittable 
         expect_equal(one$truth$expected_index,
           exp(fit$report$Elog_index + one$truth$observation_sd^2 / 2))
         expect_identical(one$truth$year, fit$year)
+        for (name in c("dev_log_R", "dev_log_F", "dev_log_N0")) {
+          expect_identical(one$truth$random_effects[[name]], fit$report[[name]])
+          expect_identical(one$truth$random_effects[[name]], live_truth$random_effects[[name]])
+        }
+        expect_length(one$truth$random_effects$dev_log_N0, length(fit$age) - 1L)
         expect_identical(names(one$x$data.CatL), names(fit$recipe$args$data.CatL))
         expect_identical(one$x$data.CatL[[1]], fit$recipe$args$data.CatL[[1]])
         expect_identical(one$x$data.wgt, fit$recipe$args$data.wgt)
@@ -28,6 +38,9 @@ test_that("fitted-model simulation preserves conditional reports and refittable 
         expect_false(any(c("output", "ncores", "silent") %in%
           names(one$x$fit_config[[tolower(model)]])))
         expect_identical(one$x$fit_config[[tolower(model)]]$nstarts, fit$recipe$args$nstarts)
+        # The fitted estimate must not replace an explicitly supplied free start.
+        expect_identical(one$x$fit_config[[tolower(model)]]$parameters$mean_log_R,
+          fit$recipe$args$parameters$mean_log_R)
         expect_true(all(one$observations > 0))
       }
       expect_false(identical(simulated$simulations[[1]]$observations,
@@ -38,6 +51,69 @@ test_that("fitted-model simulation preserves conditional reports and refittable 
       expect_identical(refit$F_structure, structure)
       expect_equal(refit$observations, simulated$simulations[[1]]$observations)
     }
+  }
+})
+
+test_that("simulated bundles retain effective fixed values when source starts were omitted", {
+  old <- options(ALSCL.sd_cores = 1L)
+  on.exit(options(old), add = TRUE)
+  for (model in c("ACL", "ALSCL")) {
+    args <- fit_fixture(model)$result$recipe$args
+    args$parameters$mean_log_R <- NULL
+    args$map$mean_log_R <- factor(NA)
+    args$map$mean_log_F <- NULL
+    fit <- do.call(if (model == "ACL") run_acl else run_alscl, args)
+    expect_true(fit$diagnostics$numerical_ok)
+    fit$obj <- NULL
+    original <- fit
+    source <- ALSCL:::.acl_preflight(fit$recipe$args, tolower(model))$setup
+    scalar_names <- names(source$config$parameters)
+    fixed <- scalar_names[vapply(scalar_names, function(nm)
+      !is.null(source$map[[nm]]) && all(is.na(source$map[[nm]])), logical(1))]
+    for (process in c("conditional", "resample")) {
+      one <- simulate_fit(fit, seed = 30, process = process)$simulations[[1]]
+      config <- one$x$fit_config[[tolower(model)]]
+      expect_identical(config$parameters[fixed], source$parameters[fixed])
+      expect_identical(config$parameters$mean_log_F, args$parameters$mean_log_F)
+      expect_identical(config$map, args$map)
+      prepared <- ALSCL:::.acl_preflight(one$x, tolower(model))$setup
+      expect_identical(prepared$parameters[fixed], source$parameters[fixed])
+      expect_identical(prepared$map, source$map)
+      expect_equal(prepared$parameters$mean_log_R, one$truth$parameters$mean_log_R)
+      refit <- if (model == "ACL") run_acl(one$x, silent = TRUE) else
+        run_alscl(one$x, silent = TRUE)
+      expect_true(is.finite(refit$opt$objective))
+      estimated <- extract_parameters(refit, scale = "internal")
+      row <- estimated[estimated$parameter == "mean_log_R", , drop = FALSE]
+      expect_identical(row$status, "fixed")
+      expect_equal(row$estimate, one$truth$parameters$mean_log_R)
+    }
+    expect_identical(fit, original)
+    expect_null(fit$recipe$args$parameters$mean_log_R)
+  }
+})
+
+test_that("simulated bundles preserve omitted free starts and older conditional reports", {
+  old <- options(ALSCL.sd_cores = 1L)
+  on.exit(options(old), add = TRUE)
+  for (model in c("ACL", "ALSCL")) {
+    args <- fit_fixture(model)$result$recipe$args
+    args$parameters$mean_log_R <- NULL
+    fit <- do.call(if (model == "ACL") run_acl else run_alscl, args)
+    for (process in c("conditional", "resample")) {
+      one <- simulate_fit(fit, seed = 30, process = process)$simulations[[1]]
+      expect_null(one$x$fit_config[[tolower(model)]]$parameters$mean_log_R)
+      prepared <- ALSCL:::.acl_preflight(one$x, tolower(model))$setup
+      expect_null(prepared$map$mean_log_R)
+      expect_equal(prepared$parameters$mean_log_R,
+        log(mean(colSums(one$observations))))
+    }
+    legacy <- fit
+    legacy$obj <- NULL
+    legacy$report$dev_log_N0 <- NULL
+    expect_no_warning(simulated <- simulate_fit(legacy, seed = 30))
+    expect_null(simulated$simulations[[1]]$truth$random_effects$dev_log_N0)
+    expect_equal(simulated$simulations[[1]]$truth$SSB, fit$report$SSB)
   }
 })
 

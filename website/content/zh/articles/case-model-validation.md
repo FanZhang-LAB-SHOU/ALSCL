@@ -2,20 +2,27 @@
 
 本页从两个方面检验一个拟合好的模型。拟合模型模拟从拟合中生成新的调查数据并重新拟合，看估计值能否找回已知值；预测检验用较早的时间步拟合，再把留出的后续时间步的预测与观测对照打分。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）；代码使用模拟的 `YTF_example`，总共约需十五分钟，因为第 3、4 步要多次重新拟合模型。只做预测检验时，运行第 1 步后直接到第 4 步。结束时你会有带真值的模拟数据集、偏差、RMSE 和区间覆盖率表、两个模型相对于持平基准的预测评分，以及保存的拟合结果。
 
-<h2 id="section-1">1. 读取示例并拟合源模型</h2>
+<h2 id="section-1">1. 读取输入列表</h2>
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
+```
+
+`x` 包含三张调查表和模型设置。只做预测检验时，直接到[第 4 步](#section-4)：它从 `x` 拟合各个训练窗口，不需要全数据拟合。需要模拟时，继续第 2 步。
+
+<h2 id="section-2">2. 从拟合生成调查观测</h2>
+
+<h3 id="source-fit">拟合用于模拟的源模型</h3>
+
+```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-`x` 是输入列表，`b` 是第 2 步模拟的起点 ALSCL 拟合；第 4 步的预测检验只读取 `x`。`b$diagnostics` 的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](diagnostics.html)修好拟合再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](fitting-controls.html)），在模拟研究中固定 `mean_log_R` 时，把它的值写在 `parameters` 里，使每份模拟数据都用同一个值，而不是各自由数据推出的值。
-
-<h2 id="section-2">2. 从拟合生成调查观测</h2>
+`b` 是模拟的起点 ALSCL 拟合。它的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](diagnostics.html)处理再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](fitting-controls.html)）。每份模拟 `x` 都保留源拟合实际采用的固定标量值，包括由原始数据推得的 `mean_log_R`。要自行选择某个固定值，在拟合源模型时将它写入 `parameters`。
 
 <h3 id="conditional-draws">保留拟合的种群状态</h3>
 
@@ -109,7 +116,19 @@ head(alscl_validation$predictions)
 
 在这份模拟数据、教学 map 和两个起点下，ACL 的预测好于持平基准，ALSCL 差于基准，尽管两者的优化都收敛了：这个差异值得追查，而两个检验时间步给不出模型的一般排序。
 
-<h3 id="save-record">保存源拟合和检验结果</h3>
+<h3 id="save-record">保存预测检验结果</h3>
+
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
+
+预测检验结果是普通列表，`saveRDS()` 将两个模型的结果保存在一起。将临时路径换成永久文件即可。只做预测检验的操作到此完成。
+
+<h3 id="simulation-archive">模拟后保存源拟合</h3>
+
+若在第 2 步拟合了 `b`，运行下面的代码。只做了预测检验时，继续到[下一步](#next)。
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -118,12 +137,9 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-validation_file <- tempfile(fileext = ".rds")
-saveRDS(list(acl = acl_validation, alscl = alscl_validation),
-  validation_file)
 ```
 
-`save_assessment()` 写出没有活动 TMB 对象的保存的拟合结果，`simulate_fit()` 接受 `read_assessment()` 读回的对象，所以新会话可以直接模拟而无需重新拟合；相同的种子给出相同的抽样。`saved$recipe$implementation` 记录软件包版本、源码提交和模型源码的摘要，`refit_model()` 会把它们与当前安装比较，不同时发出警告。检验结果是普通列表，`saveRDS()` 可以把两个模型一起保存。把临时路径换成永久文件，并把模拟对象和真值放在拟合结果旁边。
+`save_assessment()` 保存拟合结果时去掉只在当前会话有效的 TMB 对象，`simulate_fit()` 接受 `read_assessment()` 读回的结果，所以新会话无需重新拟合即可模拟；相同种子给出相同抽样。`saved$recipe$implementation` 记录包版本、源码修订和模型源码哈希，`refit_model()` 会与当前安装比较，有差异就警告。把模拟对象和真值与这个拟合一起永久保存。
 
 <h2 id="next">下一步</h2>
 

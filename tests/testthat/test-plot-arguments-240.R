@@ -164,3 +164,88 @@ test_that("every single-model plot takes the same label and typography arguments
     expect_equal(ggplot2::calc_element("plot.title", defaults$plot$theme)$size, 14, label = name)
   }
 })
+
+
+test_that("comparison point plots inherit the shared point size and keep legacy overrides", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  fit <- fixture_240()
+  fit$obj <- list(env = list(data = list(log_q = log(c(.2, .6, .9)))))
+  draws <- list(
+    F = function(...) plot_compare_F_ts(fit, fit, ...),
+    selectivity = function(...) plot_compare_selectivity(fit, fit, ...),
+    survey = function(...) plot_compare_CatL(fit, fit, catl_240(fit), ...))
+  layer <- c(F = 2L, selectivity = 2L, survey = 1L)
+  size_of <- function(p, layer) unique(ggplot2::ggplot_build(p)$data[[layer]]$size)
+  expect_null(acl_theme("compare_point_size"))
+  for (nm in names(draws)) {
+    expect_equal(size_of(draws[[nm]](), layer[[nm]]), 2.5, label = nm)
+    expect_equal(size_of(draws[[nm]](point_size = 4), layer[[nm]]), 4, label = nm)
+  }
+  acl_theme_set(point_size = 7)
+  for (nm in names(draws))
+    expect_equal(size_of(draws[[nm]](), layer[[nm]]), 7, label = nm)
+  acl_theme_set(compare_point_size = 3)
+  for (nm in names(draws)) {
+    expect_equal(size_of(draws[[nm]](), layer[[nm]]), 3, label = nm)
+    expect_equal(size_of(draws[[nm]](point_size = 4), layer[[nm]]), 4, label = nm)
+    p <- ggplot2::ggplot_build(draws[[nm]](point_size = 4))$plot
+    for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
+      expect_true(inherits(ggplot2::calc_element(grid, p$theme), "element_blank"), info = nm)
+  }
+  expect_equal(size_of(plot_CatL(fit), 1L), 7)
+  expect_equal(size_of(draws$survey(obs_size = 1), 1L), 1)
+  expect_equal(size_of(draws$survey(point_size = 4, obs_size = 1), 1L), 4)
+  # obs_size retains its original positional slot, and new options require names.
+  positional <- list(fit, fit, catl_240(fit), NULL, NULL, NULL, NULL, NULL, NULL,
+                     4, "free_y", "grey40", 1)
+  expect_equal(size_of(do.call(plot_compare_CatL, positional), 1L), 1)
+  expect_error(plot_compare_F_ts(fit, fit, NULL, NULL, "mean", NULL, NULL, NULL, 9),
+               "unused argument <unnamed>")
+})
+
+test_that("the residual comparison uses point_size for QQ and mean-residual points", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  fit <- fixture_240()
+  p <- plot_compare_residuals(fit, fit, catl_240(fit), point_size = 4)
+  qq <- p[[1L]][[2L]]
+  means <- p[[2L]][[1L]]
+  expect_equal(unique(ggplot2::ggplot_build(qq)$data[[1L]]$size), 4)
+  expect_equal(unique(ggplot2::ggplot_build(means)$data[[3L]]$size), 4)
+})
+
+test_that("fishing mortality retains the former positional base_theme argument", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  fit <- fixture_240()
+  args <- list(fit, NULL, NULL, "solid", NULL, "free", FALSE, NULL, NULL, "ribbon",
+               "year", FALSE, NULL, NULL, NULL, NULL, NULL, NULL, "minimal")
+  positional <- do.call(plot_fishing_mortality, args)
+  named <- plot_fishing_mortality(fit, base_theme = "minimal")
+  expect_equal(ggplot2::ggplot_build(positional)$data, ggplot2::ggplot_build(named)$data)
+  expect_equal(positional$theme, named$theme)
+  args$axis_title_size <- 19
+  styled <- ggplot2::ggplot_build(do.call(plot_fishing_mortality, args))$plot
+  expect_equal(ggplot2::calc_element("axis.title", styled$theme)$size, 19)
+  for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
+    expect_s3_class(ggplot2::calc_element(grid, styled$theme), "element_blank")
+})
+
+
+test_that("nullable comparison point overrides can be cleared and restored from snapshots", {
+  old_options <- options(acl.theme = NULL); on.exit(options(old_options), add = TRUE)
+  acl_theme_set(point_size = 7, line_size = 2)
+  snapshot <- acl_theme_set(compare_point_size = 4)
+  expect_true("compare_point_size" %in% names(snapshot))
+  expect_null(snapshot$compare_point_size)
+  expect_equal(ALSCL:::.acl_compare_defaults()$point_size, 4)
+  do.call(acl_theme_set, snapshot)
+  expect_null(acl_theme("compare_point_size"))
+  expect_equal(ALSCL:::.acl_compare_defaults()$point_size, 7)
+  expect_equal(acl_theme(), snapshot)
+  acl_theme_set(compare_point_size = 4)
+  acl_theme_set(line_size = 3)
+  expect_equal(acl_theme("compare_point_size"), 4)
+  acl_theme_set(compare_point_size = NULL)
+  expect_null(acl_theme("compare_point_size"))
+  expect_equal(ALSCL:::.acl_compare_defaults()$point_size, 7)
+  expect_true("compare_point_size" %in% names(acl_theme()))
+})

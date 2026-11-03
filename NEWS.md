@@ -1,3 +1,26 @@
+# ALSCL 2.4.1
+
+- `README.md` is an English entry page: what the package does, documentation links, installation, a ten-line example with figures and the citation. `README.zh-CN.md` is the Chinese version, and `website/check.py` verifies the counts and version strings in both files.
+- Preserve effective fixed scalar values in each `simulate_fit()` input bundle, including a data-derived `mean_log_R` that was fixed without an explicit value. Refit the simulated data under the same fixed assumptions while retaining the original starting-value strategy for free parameters.
+- Record `dev_log_N0` in new ALSCL reports so conditional simulations retain all three process-deviation arrays, including after saving and reading an assessment. Older saved reports with missing deviations remain readable.
+- Complete `point_size` support in comparison plots. Unset point sizes inherit the global value (2.5); explicit legacy `obs_size` and `compare_point_size` settings remain supported, and a per-call `point_size` takes priority. Refresh affected figures without gridlines.
+- Preserve positional `base_theme` calls to `plot_fishing_mortality()` by appending new typography arguments after the existing arguments.
+- Stop the own-data example before fitting when ALSCL is older than 2.4.0. Align the declared minimum R version and installation instructions at R 4.1.
+- Explain that process deviations are estimated by default but may be fixed or tied through `map`; document the restrictions for process resampling and hindcast validation.
+- Separate data loading from source-model fitting in the validation tutorial, so the hindcast-only route needs `x` and no full-data fit. Add regression checks for the tutorial route and early version gate.
+
+### 2.4.1 · 简体中文
+
+- `README.md` 改为英文入口页：软件包功能、文档链接、安装、带图的十行示例和引用。`README.zh-CN.md` 是中文版，`website/check.py` 核对两个文件中的数量和版本号。
+- `simulate_fit()` 返回的输入列表保存实际固定的标量参数值，包括未显式提供、由数据计算后固定的 `mean_log_R`。模拟数据重新拟合时保持相同固定假设，自由参数仍使用原来的初值策略。
+- 新 ALSCL 报告保存 `dev_log_N0`，使条件模拟保留三组过程偏差，保存和读取评估后也可使用。缺少该偏差的旧报告仍能读取。
+- 补齐比较图的 `point_size`。未设置时继承全局值（2.5）；显式设置的旧参数 `obs_size` 和 `compare_point_size` 仍有效，调用中的 `point_size` 优先。重新生成受影响的配图，继续保持无网格线。
+- 将新增字体参数放在原参数之后，保留 `plot_fishing_mortality()` 按位置传入 `base_theme` 的旧写法。
+- 正式数据示例在拟合前检查 ALSCL 至少为 2.4.0；软件包声明和安装说明统一要求 R 4.1 或更高版本。
+- 说明过程偏差默认参与估计，也可通过 `map` 固定或绑定，并列出过程重抽样和预测检验对此的限制。
+- 模型验证教程拆开数据加载与源模型拟合，仅做预测检验时只需 `x`，不再要求完整数据拟合通过。新增教程路径和提前版本检查的回归测试。
+
+
 # ALSCL 2.4.0
 
 - Plot functions share one set of argument names. The facet layout is `facet_ncol` and `facet_scales` in every plot (the comparison plots used `ncol` and `scales`; the retrospective plots used `facet_col` and `facet_row`, now `facet_nrow`). The line width is `line_size` everywhere (the comparison plots used `linewidth`; the theme key `compare_linewidth` is now `compare_line_size`). Every plot that draws points takes `point_size = NULL`, which inherits the new theme key `point_size` (2.5). `se = FALSE` is the default in every plot, including `plot_deviance()`. `plot_CatL()` and `plot_residuals()` choose their layout with `facet_by` ("length" or "year") instead of `type`, which names the plotted quantity in the other functions. The former names still work and warn once per session; a later release removes them.
@@ -7,7 +30,6 @@
 - `docs/SPEED.md` now also holds the change report of the 2.1.0 release (commits, files, cross-platform checks, open points, reproduction steps), so `SPEED_REPORT.md` is removed; `RELEASE_2.2.2.md` is removed as the other release notes were. The function reference no longer carries version subsections or dated notes. `website/check.py` also flags former argument names and deprecated functions in documented code, full-width punctuation on English pages and broken links in the Markdown manuals, and it verifies the reference index, the function and figure counts quoted in the manuals and the version strings.
 - Rewrite the website tutorials as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history is kept in this file only. The English and Chinese pages share one block structure.
 - Generate the bilingual manuals (`docs/USER_GUIDE.md`, `ASSESSMENT_WORKFLOWS.md`, `MODEL_VALIDATION.md`, `CASE_STUDIES.md`, `PLOT_STYLE.md`, `SPEED_GUIDE.md`, `ADVANCED_WORKFLOWS.md` and the new `CASES.md`), the book and the Wiki from the article pairs with `scripts/build_manual.py`, so every tutorial is written once per language. Remove `MATHEMATICAL_FRAMEWORK.md`, `BOOK_THEORY_NOTES.md` and the `RELEASE_2.2.x.md` notes, whose content is in the theory page and in this file.
-- `README.md` is an English entry page: what the package does, documentation links, installation, a ten-line example with figures and the citation. `README.zh-CN.md` is the Chinese version, and `website/check.py` verifies the counts and version strings in both files.
 - Example figures: every plotting function's reference page, and the reference entries of `check_fit()`, `fit_scenarios()`, `profile_model()`, `project_model()`, `hindcast_model()`, `simulate_fit()`, `sim_data()` and the retrospective functions, show the figure their example produces. `acl_theme_set()` shows the five palettes with the role of each colour (`docs/figures/palettes/`, drawn by `scripts/palette_swatches.R`), and the colours page shows the same plot under every palette.
 - Plot labels name each quantity the same way everywhere: "Spawning biomass (SSB)", "Catch numbers (CN)", "Abundance"; `plot_recruitment()` labels its axis "Recruitment". The gallery figures are regenerated with these labels and every figure description says what the figure shows, when to use it and what a pattern means.
 - Tidy the fitting code without changing results: one helper runs batches on socket workers for scenarios, profiles, hindcasts, retrospective peels and simulation replicates; one helper saves and restores the random-number state; one helper checks TRUE/FALSE arguments. `retro_model()` reports progress through `message()` so `suppressMessages()` silences it, and `profile_model()` runs its grid fits silently. Core input errors omit the internal call and the survey-index message names the survey index.
@@ -21,7 +43,6 @@
 - `docs/SPEED.md` 并入 2.1.0 发布时的改动报告（提交、文件、三平台检查、未决问题、复现步骤），删除 `SPEED_REPORT.md`；`RELEASE_2.2.2.md` 与其他发布说明一样删除。函数参考不再保留版本小节和带版本号的说明。`website/check.py` 还会检查文档代码中的旧参数名和已弃用函数、英文页面中的全角标点，以及 Markdown 手册中的失效链接，并核对参考索引、手册中引用的函数和图数量以及版本号。
 - 网站教程改写为任务页：每页先说明目的，再按编号步骤给出要运行的代码、原因、应看到的结果和出错时的处理，最后列出下一步。版本历史只保留在本文件中。中英文页面采用相同的段落结构。
 - 双语手册（`docs/USER_GUIDE.md`、`ASSESSMENT_WORKFLOWS.md`、`MODEL_VALIDATION.md`、`CASE_STUDIES.md`、`PLOT_STYLE.md`、`SPEED_GUIDE.md`、`ADVANCED_WORKFLOWS.md` 和新增的 `CASES.md`）、书稿和 Wiki 由 `scripts/build_manual.py` 从中英文章对生成，每篇教程每种语言只写一次。删除 `MATHEMATICAL_FRAMEWORK.md`、`BOOK_THEORY_NOTES.md` 和 `RELEASE_2.2.x.md`，其内容已在模型原理页和本文件中。
-- `README.md` 改为英文入口页：软件包功能、文档链接、安装、带图的十行示例和引用。`README.zh-CN.md` 是中文版，`website/check.py` 核对两个文件中的数量和版本号。
 - 示例图：每个绘图函数的参考页，以及 `check_fit()`、`fit_scenarios()`、`profile_model()`、`project_model()`、`hindcast_model()`、`simulate_fit()`、`sim_data()` 和回溯函数的参考条目，都展示示例代码生成的图。`acl_theme_set()` 展示五种色板及各颜色的用途（`docs/figures/palettes/`，由 `scripts/palette_swatches.R` 生成），配色页展示同一张图在每种色板下的效果。
 - 绘图标签对同一个量使用同一名称："Spawning biomass (SSB)"、"Catch numbers (CN)"、"Abundance"；`plot_recruitment()` 的坐标轴标为 "Recruitment"。图谱按新标签重新生成，每张图的说明都写明图中内容、何时使用和图形规律的含义。
 - 整理拟合代码，结果不变：情景、剖面、预测检验、回溯各轮和模拟重复共用一个 socket 批处理函数；随机数状态的保存与恢复、TRUE/FALSE 参数检查各用一个辅助函数。`retro_model()` 改用 `message()` 报告进度，`suppressMessages()` 可以关闭；`profile_model()` 的网格拟合不再打印进度。核心输入错误不再显示内部调用，调查指数的错误信息改为指明调查指数。

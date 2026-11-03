@@ -127,7 +127,7 @@ NULL
   compare_colors     = .acl_palette_roles("npg")$compare_colors,
   compare_linetypes  = c("solid", "dashed"),
   compare_line_size  = 1.2,
-  compare_point_size = 2,
+  compare_point_size = NULL,
   compare_se_alpha   = 0.15,
   compare_legend_pos = "bottom",
   compare_facet_ncol = 2,
@@ -268,6 +268,8 @@ NULL
 #' acl_theme("compare_colors")
 acl_theme <- function(what = NULL) {
   current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
+  # Retain the nullable override in snapshots passed back to acl_theme_set().
+  if (!"compare_point_size" %in% names(current)) current["compare_point_size"] <- list(NULL)
   if (is.null(what)) return(current)
   if (identical(what, "compare_linewidth")) {
     .acl_deprecated_message("theme.compare_linewidth",
@@ -297,8 +299,9 @@ acl_theme <- function(what = NULL) {
 #' @param line_color Character. Default line color for single-model plots.
 #' @param line_size Numeric. Default line width for single-model plots (1.5).
 #'   Plot arguments set to NULL inherit this value; explicit widths take priority.
-#' @param point_size Numeric. Default point size for single-model plots (2.5).
-#'   Plot arguments set to NULL inherit this value; explicit sizes take priority.
+#' @param point_size Numeric. Default point size for all point plots (2.5).
+#'   Plot arguments set to NULL inherit this value unless a comparison-specific
+#'   override is set. Explicit per-call sizes take priority.
 #' @param se_color Character. Default CI color.
 #' @param se_alpha Numeric. Default CI transparency (0.2).
 #'   Plot arguments set to NULL inherit this value; explicit alpha takes priority.
@@ -308,7 +311,10 @@ acl_theme <- function(what = NULL) {
 #'   \code{c("M=0" = "steelblue", "M=0.5" = "tomato")}.
 #' @param compare_linetypes Character vector of 2 linetypes. Same rules as colors.
 #' @param compare_line_size Numeric. Line width for comparison plots (1.2).
-#' @param compare_point_size Numeric. Point size for comparison plots.
+#' @param compare_point_size Numeric or NULL. Optional point-size override for
+#'   comparison plots. The default NULL inherits point_size. Existing explicit
+#'   values remain supported; a plot's point_size argument takes priority.
+#'   Pass NULL explicitly to clear a comparison-specific override.
 #' @param compare_se_alpha Numeric. CI ribbon alpha for comparison plots.
 #' @param compare_legend_pos Character. Legend position for comparison plots.
 #' @param compare_facet_ncol Integer. Default facet columns in comparison plots.
@@ -371,6 +377,8 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
                           low_col = NULL, high_col = NULL, ...) {
 
   current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
+  # Retain the nullable override in snapshots passed back to acl_theme_set().
+  if (!"compare_point_size" %in% names(current)) current["compare_point_size"] <- list(NULL)
   old <- current
   renamed <- .acl_renamed(list(...), "acl_theme_set")
   if (is.null(compare_line_size)) compare_line_size <- renamed$compare_line_size
@@ -402,7 +410,7 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!is.null(compare_colors))       current$compare_colors       <- compare_colors
   if (!is.null(compare_linetypes))    current$compare_linetypes    <- compare_linetypes
   if (!is.null(compare_line_size))    current$compare_line_size    <- compare_line_size
-  if (!is.null(compare_point_size))   current$compare_point_size   <- compare_point_size
+  if (!missing(compare_point_size))  current["compare_point_size"] <- list(compare_point_size)
   if (!is.null(compare_se_alpha))     current$compare_se_alpha     <- compare_se_alpha
   if (!is.null(compare_legend_pos))   current$compare_legend_pos   <- compare_legend_pos
   if (!is.null(compare_facet_ncol))   current$compare_facet_ncol   <- compare_facet_ncol
@@ -591,7 +599,7 @@ acl_theme_reset <- function() {
     colors     = resolve_pair(colors,    "compare_colors",    .acl_defaults$compare_colors),
     linetypes  = resolve_pair(linetypes, "compare_linetypes", c("solid", "dashed")),
     line_size  = if (!is.null(line_size))  line_size  else (acl_theme("compare_line_size")  %||% 1.2),
-    point_size = if (!is.null(point_size)) point_size else (acl_theme("compare_point_size") %||% 2),
+    point_size = point_size %||% acl_theme("compare_point_size") %||% acl_theme("point_size") %||% 2.5,
     se_alpha   = if (!is.null(se_alpha))   se_alpha   else (acl_theme("compare_se_alpha")   %||% 0.15),
     legend_pos = if (!is.null(legend_pos)) legend_pos else (acl_theme("compare_legend_pos") %||% "bottom"),
     facet_ncol = if (!is.null(facet_ncol)) facet_ncol else (acl_theme("compare_facet_ncol") %||% 2),

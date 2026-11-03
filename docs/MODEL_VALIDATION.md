@@ -12,24 +12,35 @@ On this page you check a fitted model from two sides. Fitted-model simulation dr
 
 <a id="case-model-validation-section-1"></a>
 
-### 1. 读取示例并拟合源模型 / Load the example and fit the source model
+### 1. 读取输入列表 / Load the input bundle
 
 ```r
 library(ALSCL)
 data("YTF_example")
 x <- YTF_example
+```
+
+`x` 包含三张调查表和模型设置。只做预测检验时，直接到[第 4 步](#case-model-validation-section-4)：它从 `x` 拟合各个训练窗口，不需要全数据拟合。需要模拟时，继续第 2 步。
+
+`x` contains the three survey tables and the model settings. For hindcast validation alone, continue directly to [step 4](#case-model-validation-section-4): it fits the training windows from `x` and requires no full-data fit. For simulation, continue to step 2.
+
+<a id="case-model-validation-section-2"></a>
+
+### 2. 从拟合生成调查观测 / Generate survey observations from the fit
+
+<a id="case-model-validation-source-fit"></a>
+
+#### 拟合用于模拟的源模型 / Fit the source model for simulation
+
+```r
 b <- run_alscl(x, silent = TRUE)
 b$diagnostics
 stopifnot(b$diagnostics$numerical_ok)
 ```
 
-`x` 是输入列表，`b` 是第 2 步模拟的起点 ALSCL 拟合；第 4 步的预测检验只读取 `x`。`b$diagnostics` 的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](USER_GUIDE.md#diagnostics)修好拟合再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](USER_GUIDE.md#fitting)），在模拟研究中固定 `mean_log_R` 时，把它的值写在 `parameters` 里，使每份模拟数据都用同一个值，而不是各自由数据推出的值。
+`b` 是模拟的起点 ALSCL 拟合。它的 `numerical_ok` 必须为 `TRUE`，因为除非 `allow_failed_fit = TRUE`，`simulate_fit()` 会拒绝未通过数值检查的拟合；若为 `FALSE`，先按[判断拟合是否可用](USER_GUIDE.md#diagnostics)处理再模拟。教学示例通过 `map` 固定了生长和若干过程参数；用自己的输入列表时，选择有依据的生物学设置（[选择拟合设置](USER_GUIDE.md#fitting)）。每份模拟 `x` 都保留源拟合实际采用的固定标量值，包括由原始数据推得的 `mean_log_R`。要自行选择某个固定值，在拟合源模型时将它写入 `parameters`。
 
-`x` is the input bundle and `b` the ALSCL fit that the simulations of step 2 start from; hindcast validation in step 4 reads `x` only. `b$diagnostics` must show `numerical_ok` equal to `TRUE`, because `simulate_fit()` refuses a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, repair the fit as on [Judge whether a fit can be used](USER_GUIDE.md#diagnostics) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biology ([Choose the fitting settings](USER_GUIDE.md#fitting)), and when you fix `mean_log_R` for a simulation study give its value in `parameters`, so that every simulated dataset uses the same value instead of one derived from its own data.
-
-<a id="case-model-validation-section-2"></a>
-
-### 2. 从拟合生成调查观测 / Generate survey observations from the fit
+`b` is the ALSCL fit that the simulations start from. Its `numerical_ok` must be `TRUE`, because `simulate_fit()` rejects a fit that failed the numerical checks unless `allow_failed_fit = TRUE`; if it is `FALSE`, follow [Judge whether a fit can be used](USER_GUIDE.md#diagnostics) before simulating. The teaching example fixes growth and several process parameters through `map`; with your own bundle choose supported biological settings ([Choose the fitting settings](USER_GUIDE.md#fitting)). Each simulated `x` preserves the source fit's effective fixed scalar values, including `mean_log_R` when its value was derived from the original data. To choose a particular fixed value yourself, provide it in `parameters` when fitting the source model.
 
 <a id="case-model-validation-conditional-draws"></a>
 
@@ -155,7 +166,25 @@ On this synthetic dataset, with the teaching maps and two origins, ACL predicts 
 
 <a id="case-model-validation-save-record"></a>
 
-#### 保存源拟合和检验结果 / Save the source fit and the validation
+#### 保存预测检验结果 / Save the validation results
+
+```r
+validation_file <- tempfile(fileext = ".rds")
+saveRDS(list(acl = acl_validation, alscl = alscl_validation),
+  validation_file)
+```
+
+预测检验结果是普通列表，`saveRDS()` 将两个模型的结果保存在一起。将临时路径换成永久文件即可。只做预测检验的操作到此完成。
+
+The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary path with a permanent file. This completes the hindcast-only route.
+
+<a id="case-model-validation-simulation-archive"></a>
+
+#### 模拟后保存源拟合 / Save the source fit after simulation
+
+若在第 2 步拟合了 `b`，运行下面的代码。只做了预测检验时，继续到[下一步](#case-model-validation-next)。
+
+Run this block if you fitted `b` in step 2. If you only ran hindcast validation, continue to [What next](#case-model-validation-next).
 
 ```r
 archive <- tempfile(fileext = ".rds")
@@ -164,14 +193,11 @@ saved <- read_assessment(archive)
 saved$recipe$implementation
 again <- simulate_fit(saved, nsim = 1, seed = 20261101,
   process = "conditional")
-validation_file <- tempfile(fileext = ".rds")
-saveRDS(list(acl = acl_validation, alscl = alscl_validation),
-  validation_file)
 ```
 
-`save_assessment()` 写出没有活动 TMB 对象的保存的拟合结果，`simulate_fit()` 接受 `read_assessment()` 读回的对象，所以新会话可以直接模拟而无需重新拟合；相同的种子给出相同的抽样。`saved$recipe$implementation` 记录软件包版本、源码提交和模型源码的摘要，`refit_model()` 会把它们与当前安装比较，不同时发出警告。检验结果是普通列表，`saveRDS()` 可以把两个模型一起保存。把临时路径换成永久文件，并把模拟对象和真值放在拟合结果旁边。
+`save_assessment()` 保存拟合结果时去掉只在当前会话有效的 TMB 对象，`simulate_fit()` 接受 `read_assessment()` 读回的结果，所以新会话无需重新拟合即可模拟；相同种子给出相同抽样。`saved$recipe$implementation` 记录包版本、源码修订和模型源码哈希，`refit_model()` 会与当前安装比较，有差异就警告。把模拟对象和真值与这个拟合一起永久保存。
 
-`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. The validation results are plain lists, so `saveRDS()` keeps both models together. Replace the temporary paths with permanent files and keep the simulation objects and the truth beside the fit.
+`save_assessment()` writes the saved fit without the live TMB object, and `simulate_fit()` accepts what `read_assessment()` returns, so a new session can simulate without refitting; the same seed gives the same draws. `saved$recipe$implementation` records the package versions, the source revision and the hashes of the model source, which `refit_model()` compares with the current installation, warning on a difference. Keep the simulation objects and truth beside this fit in permanent files.
 
 <a id="case-model-validation-next"></a>
 

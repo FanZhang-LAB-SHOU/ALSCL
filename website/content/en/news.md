@@ -1,3 +1,15 @@
+## ALSCL 2.4.1
+
+- The README now provides an English entry page and a separate Simplified Chinese version, with installation, examples and links to the task guides.
+- Preserve effective fixed scalar values in each `simulate_fit()` input bundle, including a data-derived `mean_log_R` that was fixed without an explicit value. Refit the simulated data under the same fixed assumptions while retaining the original starting-value strategy for free parameters.
+- Record `dev_log_N0` in new ALSCL reports so conditional simulations retain all three process-deviation arrays, including after saving and reading an assessment. Older saved reports with missing deviations remain readable.
+- Complete `point_size` support in comparison plots. Unset point sizes inherit the global value (2.5); explicit legacy `obs_size` and `compare_point_size` settings remain supported, and a per-call `point_size` takes priority. Refresh affected figures without gridlines.
+- Preserve positional `base_theme` calls to `plot_fishing_mortality()` by appending new typography arguments after the existing arguments.
+- Stop the own-data example before fitting when ALSCL is older than 2.4.0. Align the declared minimum R version and installation instructions at R 4.1.
+- Explain that process deviations are estimated by default but may be fixed or tied through `map`; document the restrictions for process resampling and hindcast validation.
+- Separate data loading from source-model fitting in the validation tutorial, so the hindcast-only route needs `x` and no full-data fit. Add regression checks for the tutorial route and early version gate.
+
+
 ## ALSCL 2.4.0
 
 - Plot functions share one set of argument names: `facet_ncol`, `facet_nrow` and `facet_scales` for the facet layout, `line_size` for the line width (the theme key `compare_linewidth` is now `compare_line_size`), `point_size = NULL` inheriting the new theme key `point_size` (2.5), and `se = FALSE` as the default everywhere, including `plot_deviance()`. `plot_CatL()` and `plot_residuals()` choose their layout with `facet_by` ("length" or "year") instead of `type`. The former names still work and warn once per session.
@@ -7,7 +19,7 @@
 - The tutorials are rewritten as task pages: each page states its goal, then numbered steps with the code to run, why, what to expect and what to do when it fails, and a closing table of next steps. Version history stays on this page.
 - Example figures: every plotting function's reference page, and the reference entries of `check_fit()`, `fit_scenarios()`, `profile_model()`, `project_model()`, `hindcast_model()`, `simulate_fit()`, `sim_data()` and the retrospective functions, show the figure their example produces. `acl_theme_set()` shows the five palettes with the role of each colour (`docs/figures/palettes/`, drawn by `scripts/palette_swatches.R`), and the colours page shows the same plot under every palette.
 - Plot labels name each quantity the same way everywhere: "Spawning biomass (SSB)", "Catch numbers (CN)", "Abundance"; `plot_recruitment()` labels its axis "Recruitment". The gallery figures are regenerated with these labels and every figure description says what the figure shows, when to use it and what a pattern means.
-- The bilingual manuals, the book and the Wiki are generated from the article pairs with `scripts/build_manual.py`, so each tutorial is written once per language. `README.md` is now an English entry page, with the Chinese version in `README.zh-CN.md`.
+- The bilingual manuals, the book and the Wiki are generated from the article pairs with `scripts/build_manual.py`, so each tutorial is written once per language.
 
 ## ALSCL 2.3.0
 

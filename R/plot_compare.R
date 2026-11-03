@@ -328,7 +328,8 @@ plot_compare_F <- function(model1, model2,
 #' @inheritParams plot_compare_ts
 #' @param data.CatL Catch-at-length data frame.
 #' @param bins Integer. Histogram bins. Default 35.
-#' @param point_size Numeric. Point size. NULL = use global theme.
+#' @param point_size Numeric or NULL. Size of QQ and mean-residual points.
+#'   NULL inherits the comparison point-size override, if set, or global point_size.
 #' @param legend_pos Character. Legend position. NULL = use global theme (default "bottom").
 #' @param qq_alpha Numeric. QQ point transparency. Default 0.6.
 #' @param errorbar_width Numeric. Error bar cap width. Default 0.3.
@@ -391,7 +392,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 
   # P2: QQ
   p2 <- ggplot2::ggplot(df, ggplot2::aes(sample = Residual, color = Model)) +
-    ggplot2::stat_qq(size = 0.8, alpha = qq_alpha) +
+    ggplot2::stat_qq(size = cfg$point_size, alpha = qq_alpha) +
     ggplot2::stat_qq_line(ggplot2::aes(linetype = Model)) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::scale_color_manual(values = cfg$colors) +
@@ -643,7 +644,11 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #' @param facet_ncol Integer. Facet columns. Default 4.
 #' @param facet_scales Character. Facet scales. Default "free_y".
 #' @param obs_color Character. Color for observed points. Default "grey40".
-#' @param obs_size Numeric. Size of observed points. Default 1.5.
+#' @param point_size Numeric or NULL. Size of observed points. NULL uses an
+#'   explicit obs_size first, then the comparison point-size override, if set,
+#'   or the global point_size setting.
+#' @param obs_size Numeric or NULL. Compatibility name for the observed point
+#'   size. An explicit point_size takes priority when both are supplied.
 #' @param obs_alpha Numeric. Transparency of observed points. Default 0.6.
 #' @param obs_shape Integer. Shape of observed points. Default 16.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
@@ -671,15 +676,15 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 #'
 #' # Customize layout
 #' plot_compare_CatL(result_acl, result_alscl, data.CatL,
-#'   facet_ncol = 5, obs_color = "black", obs_size = 2)
+#'   facet_ncol = 5, obs_color = "black", point_size = 2)
 #' }
 plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
                               model1_name = NULL, model2_name = NULL,
                               colors = NULL, linetypes = NULL, line_size = NULL,
                               facet_ncol = 4, facet_scales = "free_y",
-                              obs_color = "grey40", obs_size = 1.5,
+                              obs_color = "grey40", obs_size = NULL,
                               obs_alpha = 0.6, obs_shape = 16,
-                              legend_pos = NULL, ...) {
+                              legend_pos = NULL, ..., point_size = NULL) {
 
   renamed <- .acl_renamed(list(...), "plot_compare_CatL")
   if (is.null(line_size)) line_size <- renamed$line_size
@@ -688,8 +693,8 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               line_size = line_size, legend_pos = legend_pos,
-                               m1 = model1_name, m2 = model2_name)
+                               line_size = line_size, point_size = point_size %||% obs_size,
+                               legend_pos = legend_pos, m1 = model1_name, m2 = model2_name)
 
   grid <- .acl_plot_comparison_grid(list(model1, model2), data.CatL, midpoints = TRUE)
   year <- grid$year; len_mid <- model1$len_mid; observed <- grid$observed
@@ -726,7 +731,7 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Length, y = Value, color = Source)) +
     ggplot2::geom_point(data = df[df$Source == "Observed", ],
-                        size = obs_size, alpha = obs_alpha, shape = obs_shape) +
+                        size = cfg$point_size, alpha = obs_alpha, shape = obs_shape) +
     ggplot2::geom_line(data = df[df$Source != "Observed", ],
                         ggplot2::aes(linetype = Source), linewidth = cfg$line_size) +
     ggplot2::scale_color_manual(values = color_vals, breaks = legend_order) +
@@ -866,19 +871,22 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #' Connects the supplied catchability values directly, preserving their range.
 #' The values are fixed model inputs, not estimated fishery selectivity.
 #' @inheritParams plot_compare_ts
+#' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
+#'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
 #' @export
 plot_compare_selectivity <- function(model1, model2,
                                      model1_name = NULL, model2_name = NULL,
-                                     colors = NULL, linetypes = NULL, line_size = NULL, ...) {
+                                     colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL) {
 
   renamed <- .acl_renamed(list(...), "plot_compare_selectivity")
   if (is.null(line_size)) line_size <- renamed$line_size
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               line_size = line_size, m1 = model1_name, m2 = model2_name)
+                               line_size = line_size, point_size = point_size,
+                               m1 = model1_name, m2 = model2_name)
 
   q1 <- exp(model1$obj$env$data$log_q); q2 <- exp(model2$obj$env$data$log_q)
   df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
@@ -912,13 +920,15 @@ plot_compare_selectivity <- function(model1, model2,
 #'   age-based and length-based models.
 #'   \code{"mean"}: arithmetic mean across all groups, which can mislead when
 #'   models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).
+#' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
+#'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
 #' @export
 plot_compare_F_ts <- function(model1, model2,
                               model1_name = NULL, model2_name = NULL,
                               method = c("apical", "mean"),
-                              colors = NULL, linetypes = NULL, line_size = NULL, ...) {
+                              colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL) {
 
   renamed <- .acl_renamed(list(...), "plot_compare_F_ts")
   if (is.null(line_size)) line_size <- renamed$line_size
@@ -926,7 +936,8 @@ plot_compare_F_ts <- function(model1, model2,
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
-                               line_size = line_size, m1 = model1_name, m2 = model2_name)
+                               line_size = line_size, point_size = point_size,
+                               m1 = model1_name, m2 = model2_name)
 
   get_F <- function(m, mname) {
     Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report$F

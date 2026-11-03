@@ -7,13 +7,31 @@ import json
 import csv
 import re
 import subprocess
+import sys
 import tempfile
 from bs4 import BeautifulSoup
 
 ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'_site'
 errors=[]
+for command in [
+    [sys.executable, str(ROOT/'scripts/build_manual.py'), '--check'],
+    [sys.executable, str(ROOT/'scripts/build_wiki.py'), '--check'],
+    ['Rscript', str(ROOT/'scripts/test_tutorial_workflows.R')],
+]:
+    result=subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+    if result.returncode:
+        errors.append('Documentation workflow check failed: '+command[1]+'\n'+result.stdout+result.stderr)
+    elif result.stdout:
+        print(result.stdout.strip())
 version=re.search(r'^Version: (.+)$',(ROOT/'DESCRIPTION').read_text(),re.M)[1]
+minimum_r=re.search(r'R \(>= ([0-9.]+)\)',(ROOT/'DESCRIPTION').read_text())[1]
+minimum_r=minimum_r[:-2] if minimum_r.endswith('.0') else minimum_r
+for language,readme in [('en','README.md'),('zh','README.zh-CN.md')]:
+    for name in [readme,f'website/content/{language}/articles/getting-started.md']:
+        requirement=re.search(r'R ([0-9]+\.[0-9]+(?:\.[0-9]+)?)', (ROOT/name).read_text())
+        if not requirement or requirement[1]!=minimum_r:
+            errors.append(f'{name}: minimum R version must match DESCRIPTION ({minimum_r})')
 pages={p:BeautifulSoup(p.read_text(),'html.parser') for p in SITE.rglob('*.html')}
 functions=json.loads((ROOT/'website/.build/api/functions.json').read_text())
 # Cover legacy package-help images as well as the website's bundled figures.

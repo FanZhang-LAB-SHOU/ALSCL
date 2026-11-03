@@ -34,7 +34,8 @@ The figure shows the five palettes `acl_theme_set()` accepts. In each row the fi
 | `compare_colors` | Model pair, optionally matched by name |
 | `low_col`, `high_col` | Sequential heatmap endpoints |
 | `font_family`, `title_size`, `axis_text_size`, `strip_text_size` | Typography |
-| `line_size`, `point_size` | Line width and point size of single-model plots; comparison plots read `compare_line_size` and `compare_point_size` |
+| `line_size`, `point_size` | Single-model line width and the default point size for all plots (2.5); comparison line widths use `compare_line_size` |
+| `compare_point_size` | Optional comparison-only point size; `NULL` clears it and restores global `point_size` inheritance |
 | `facet_ncol`, `facet_nrow`, `facet_scales` | Facet layout, with the same argument names in every plot |
 
 <h2 id="override">2. Override colors for one plot</h2>
@@ -59,6 +60,8 @@ plot_ridges(b, palette = c("#E8F1FA", "#3C5488"))
 # Restore defaults
 acl_theme_reset()
 ```
+
+Set `acl_theme_set(point_size = 3)` to change points across single-model and comparison plots. A per-call `point_size` has highest priority. In `plot_compare_CatL()`, an explicit legacy `obs_size` comes next, followed by an explicit `compare_point_size` theme setting and then the global `point_size`. The other point-drawing comparison plots follow the same order without `obs_size`. Use `acl_theme_set(compare_point_size = NULL)` to remove a comparison-only override.
 
 Explicit colors in a call override the theme and a palette passed with them; `NULL` inherits the theme. Set `se_color` together with `line_color`; it stays at the theme value otherwise. Named retrospective colors must cover every terminal time step; unnamed colors follow the same order. With more peels than palette colors, the colors are interpolated. Ridges use a viridis gradient in input-year order, shared by the observed and fitted panels and independent of the global palette; `NULL` also selects viridis, and `cividis`, `plasma`, `ocean` or a vector of colors replace it.
 

@@ -17,11 +17,12 @@ plot_compare_CatL(
   facet_ncol = 4,
   facet_scales = "free_y",
   obs_color = "grey40",
-  obs_size = 1.5,
+  obs_size = NULL,
   obs_alpha = 0.6,
   obs_shape = 16,
   legend_pos = NULL,
-  ...
+  ...,
+  point_size = NULL
 )
 }
 \arguments{
@@ -48,7 +49,8 @@ Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 
 \item{obs_color}{Character. Color for observed points. Default "grey40".}
 
-\item{obs_size}{Numeric. Size of observed points. Default 1.5.}
+\item{obs_size}{Numeric or NULL. Compatibility name for the observed point
+size. An explicit point_size takes priority when both are supplied.}
 
 \item{obs_alpha}{Numeric. Transparency of observed points. Default 0.6.}
 
@@ -58,6 +60,10 @@ Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 
 \item{...}{Former argument names, accepted with a warning: linewidth for
 line_size, ncol for facet_ncol and scales for facet_scales.}
+
+\item{point_size}{Numeric or NULL. Size of observed points. NULL uses an
+explicit obs_size first, then the comparison point-size override, if set,
+or the global point_size setting.}
 }
 \value{
 A ggplot object.
@@ -88,6 +94,6 @@ plot_compare_CatL(result_acl, result_alscl, data.CatL,
 
 # Customize layout
 plot_compare_CatL(result_acl, result_alscl, data.CatL,
-  facet_ncol = 5, obs_color = "black", obs_size = 2)
+  facet_ncol = 5, obs_color = "black", point_size = 2)
 }
 }
