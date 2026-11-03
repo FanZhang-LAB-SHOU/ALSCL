@@ -1,3 +1,22 @@
+# ALSCL 2.4.3
+
+- Check that simulation biology matches the supplied parameters and arrays before drawing data or writing files. Reject inconsistent saved survey catchability before fitting; matching legacy simulation objects remain supported.
+- Correct the worked simulation cases to use the marginal F standard deviation implied by the operating model's innovation SD and temporal correlation. Regenerate the data, fitted results and figures, and explain the remaining differences between generating and fitted process assumptions.
+- Make the growth comparison reference example self-contained, with its reference data defined in the example. Execute the English and Chinese website examples in isolated environments.
+- Preserve the `alscl_fit` class when the own-data example saves results without the live TMB object, so `summary()` retains its diagnostic output after reading the file.
+- Apply the global comparison legend position to F heatmaps and growth probability panels, and the global point size to lag and QQ diagnostics. Refresh affected figures without gridlines.
+- Clarify that process resampling recomputes survey predictions from the new population states, and that shared F is one time series across groups. Add regression checks and execute the complete fitting and validation examples.
+
+### 2.4.3 · 简体中文
+
+- 在抽样或写文件前核对模拟生物学数组与参数的一致性；拟合前拒绝已保存调查可捕性与元数据不一致的模拟。内容匹配的旧模拟对象仍可使用。
+- 模拟案例的 F 标准差改为由操作模型的创新标准差和时间相关系数换算的边际标准差。重新生成数据、拟合结果和配图，并说明生成过程与拟合过程仍有哪些不同假设。
+- 生长比较函数的参考示例直接定义所需参考数据，可独立运行；在独立环境中执行中英文网站示例。
+- 正式数据示例去掉当前会话的 TMB 对象后仍保留 `alscl_fit` 类，使保存后读取的结果继续通过 `summary()` 输出诊断。
+- F 热图和生长概率面板统一采用全局比较图例位置，lag 和 QQ 诊断统一采用全局散点大小。重新生成受影响的配图，保持无网格线。
+- 说明过程重抽样会从新种群状态重新计算调查预测，共用 F 指各组共用一条时间序列。补充回归检查并实际执行完整拟合及验证示例。
+
+
 # ALSCL 2.4.2
 
 - Allow `plot_compare_selectivity()` to use saved assessments without refitting, recovering fixed survey catchability from the retained input recipe.

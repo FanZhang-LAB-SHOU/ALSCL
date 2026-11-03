@@ -40,6 +40,10 @@
 #'   parameters and maps must match the selected model. sim_acl() retains the
 #'   original ACL interface; sim_alscl()
 #'   provides the corresponding ALSCL convenience interface.
+#'   Recorded survey catchability must agree with its logistic metadata before
+#'   fitting. Older files with only valid logistic metadata remain supported;
+#'   if metadata are absent, a logistic curve is recovered from q_surv and
+#'   checked against the complete recorded vector.
 sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list(),
@@ -74,15 +78,10 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
       if (is.null(s)) stop("Simulation file does not contain sim.data.")
       step <- if (!is.null(s$growth_step)) s$growth_step else if(length(s$ages)>1) diff(s$ages)[1] else 1
       tables <- .acl_simulation_to_tables(s)
-      L50 <- s$q_surv_L50; L95 <- s$q_surv_L95
-      if (is.null(L50) || is.null(L95)) {
-        valid <- is.finite(s$q_surv) & s$q_surv > 0 & s$q_surv < 1
-        if (sum(valid)<2L) stop("Simulation requires logistic survey catchability metadata.")
-        coefficients <- stats::coef(stats::lm(stats::qlogis(s$q_surv[valid]) ~ s$len_mid[valid]))
-        L50 <- -coefficients[1]/coefficients[2]; L95 <- L50+log(19)/coefficients[2]
-      }
+      catchability <- .acl_simulation_catchability(s)
       do.call(if (model == "acl") run_acl else run_alscl,
-        c(tables, list(rec.age = s$ages[1], nage = s$nage, sel_L50 = unname(L50), sel_L95 = unname(L95),
+        c(tables, list(rec.age = s$ages[1], nage = s$nage,
+        sel_L50 = catchability$L50, sel_L95 = catchability$L95,
         len_mid = s$len_mid, len_border = s$len_border, growth_step = step), fit_args))
     }, error = function(e) list(converge = "FAILED", error = conditionMessage(e), iter = iter))
     result$iter <- iter
@@ -115,6 +114,38 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
 #' @return The named list of replicate fits or error records returned by sim_model().
 #' @export
 sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts = nstarts)
+
+.acl_simulation_catchability <- function(simulation) {
+  q <- simulation$q_surv
+  mid <- simulation$len_mid
+  if (!is.null(q) && (!is.numeric(q) || length(q) != length(mid) ||
+      any(!is.finite(q)) || any(q < 0 | q > 1)))
+    stop("Simulation q_surv must contain one probability per length bin.", call. = FALSE)
+  L50 <- simulation$q_surv_L50
+  L95 <- simulation$q_surv_L95
+  if (is.null(L50) || is.null(L95)) {
+    valid <- is.finite(q) & q > 0 & q < 1
+    # Rounded probabilities near one have inaccurate logits. Prefer the
+    # interior of the curve, then verify the recovered curve at every bin.
+    interior <- is.finite(q) & q > 1e-6 & q < 1 - 1e-6
+    if (sum(interior) >= 2L) valid <- interior
+    if (sum(valid) < 2L)
+      stop("Simulation requires logistic survey catchability metadata.", call. = FALSE)
+    coefficients <- stats::coef(stats::lm(stats::qlogis(q[valid]) ~ mid[valid]))
+    inferred50 <- unname(-coefficients[1] / coefficients[2])
+    inferred95 <- unname(inferred50 + log(19) / coefficients[2])
+    L50 <- L50 %||% inferred50
+    L95 <- L95 %||% inferred95
+  }
+  .acl_scalar(L50, "simulation q_surv_L50")
+  .acl_scalar(L95, "simulation q_surv_L95")
+  if (L95 <= L50)
+    stop("Simulation q_surv_L95 must exceed q_surv_L50.", call. = FALSE)
+  if (!is.null(q) && !.acl_simulation_probabilities_match(q, mat_func(L50, L95, mid)))
+    stop("Simulation q_surv does not match its logistic catchability metadata; ",
+         "regenerate the simulation with matching biological inputs.", call. = FALSE)
+  list(L50 = unname(L50), L95 = unname(L95))
+}
 
 # Shared by the repository tutorial and batch fitting; validate coordinates
 # before converting matrices to tables so rows can never be silently recycled.

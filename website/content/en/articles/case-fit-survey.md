@@ -144,7 +144,10 @@ residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)
-portable <- function(fit) fit[setdiff(names(fit), "obj")]
+portable <- function(fit) {
+  fit$obj <- NULL
+  fit
+}
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot,

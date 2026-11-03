@@ -32,14 +32,15 @@ Each case folder holds the three tables `data.CatL.csv`, `data.wgt.csv` and `dat
 
 ```r
 fix <- function(p) lapply(p, function(v) factor(NA))
+F_marginal_sd <- 0.2 / sqrt(1 - 0.75^2)
 known <- list(log_Linf = log(60), log_vbk = log(0.2), log_cv_len = log(0.2),
   logit_log_R = qlogis(0.1))
-acl_known <- c(known, list(t0 = 1/60, log_std_log_F = log(0.2), log_std_log_N0 = log(0.2)))
+acl_known <- c(known, list(t0 = 1/60, log_std_log_F = log(F_marginal_sd), log_std_log_N0 = log(0.2)))
 alscl_known <- c(known, list(log_t0 = log(1/60), log_cv_grow = log(0.2),
-  log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.2)))
+  log_sigma_log_F = log(F_marginal_sd), log_sigma_log_N0 = log(0.2)))
 x <- prepare_alscl_data(flatfish_inputs,
   fit_args = list(rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
-    growth_step = 1, silent = TRUE),
+    growth_step = 1, train_times = 2, ncores = 1, silent = TRUE),
   fit_config = list(acl = list(parameters = acl_known, map = fix(acl_known)),
     alscl = list(parameters = alscl_known, map = c(fix(alscl_known),
       list(logit_log_F_l = factor(NA), logit_log_F_y = factor(NA))))))
@@ -49,9 +50,11 @@ c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-`prepare_alscl_data()` builds the input bundle `x` from the three tables and the shared biology in `fit_args`; the length bins come from the row labels (midpoints 6 to 50 in steps of 2, borders halfway between). `fit_config` holds each model's starting values and `map`. The values that generated the survey are fixed with `factor(NA)`: growth, the length CVs, the process standard deviations and the recruitment correlation, plus the two F correlations in ALSCL. Each model then estimates five scalar parameters, conditional on known biology. This is the configuration of [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R), which drew the figures below.
+`prepare_alscl_data()` builds the input bundle `x` from the three tables and the shared biology in `fit_args`; the length bins come from the row labels (midpoints 6 to 50 in steps of 2, borders halfway between). `fit_config` holds each model's starting values and `map`. The mean growth parameters and CV of length at age are fixed to the preset values with `factor(NA)`. ALSCL's growth-increment CV is also fixed to its preset value; this parameter is used by the length-based generator, but not by the age-based flatfish generator. The F SD is converted from the operating model's innovation SD to the marginal SD used by the fitted models: `0.2 / sqrt(1 - 0.75^2)`, or 0.3023716. The initial-abundance SD, recruitment correlation and F correlations are also fixed as specified fitting assumptions, leaving five free scalar parameters in each model.
 
-After the one-time compilation of each model, ACL takes about twenty seconds and ALSCL about one and a half minutes. Expect `TRUE TRUE` from the numerical checks, as in the script's [convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv). If a check fails, run `diagnose_model(x$data.CatL, a)` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
+These are conditional fits: the operating model combines a shared time-varying F with selectivity, whereas the fitted models use a separable group-by-time F process (both F correlations are fixed at 0.75 here). The operating model also accumulates initial-abundance deviations across ages, whereas the fitted models use independent initial deviations. Matching a scalar SD does not match these process structures. This is the configuration of [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R), which drew the figures below.
+
+The first fit also compiles the model; later fitting times depend on the machine and optimization path. Expect `TRUE TRUE` from the numerical checks, as in the script's [convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv). If a check fails, run `diagnose_model(x$data.CatL, a)` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
 
 ![Flatfish synthetic survey](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_data.png?raw=true)
 
@@ -63,19 +66,19 @@ Growth runs from 11 cm at age 1 to 57 cm at age 15. Maturity (L50 35 cm), read f
 
 ![Flatfish generating truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_truth.png?raw=true)
 
-Dashed lines are the generating truth, solid lines the two conditional estimates. Both models follow the decline to 2010 and the rise after it; ALSCL sits below the truth for biomass and spawning biomass after 2014. `plot_compare_ts()` shows the same trajectories with intervals.
+Dashed lines are the generating truth, solid lines the two conditional estimates. For biomass and spawning biomass, both models follow the decline to 2010 and the rise after it; ALSCL sits below the truth for biomass and spawning biomass after 2014. `plot_compare_ts()` shows the same trajectories with intervals.
 
 <h2 id="quarterly">3. Fit the quarterly tuna case</h2>
 
 ```r
 known <- list(log_Linf = log(152), log_vbk = log(0.38), log_cv_len = log(0.2),
   logit_log_R = qlogis(0.1))
-acl_known <- c(known, list(t0 = 1/152, log_std_log_F = log(0.2), log_std_log_N0 = log(0.3)))
+acl_known <- c(known, list(t0 = 1/152, log_std_log_F = log(F_marginal_sd), log_std_log_N0 = log(0.3)))
 alscl_known <- c(known, list(log_t0 = log(1/152), log_cv_grow = log(0.3),
-  log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.3)))
+  log_sigma_log_F = log(F_marginal_sd), log_sigma_log_N0 = log(0.3)))
 xq <- prepare_alscl_data(tuna_inputs,
   fit_args = list(rec.age = 0.25, nage = 20, M = 0.2, sel_L50 = 30, sel_L95 = 50,
-    growth_step = 0.25, silent = TRUE),
+    growth_step = 0.25, train_times = 2, ncores = 1, silent = TRUE),
   fit_config = list(acl = list(parameters = acl_known, map = fix(acl_known)),
     alscl = list(parameters = alscl_known, map = c(fix(alscl_known),
       list(logit_log_F_l = factor(NA), logit_log_F_y = factor(NA))))))
@@ -88,7 +91,7 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 The code is the same; four settings change their meaning. `growth_step = 0.25` makes each column one quarter, so the time labels must be spaced 0.25 apart. `M` and fishing mortality are per time step: an annual M of 0.8 is entered as `M = 0.2`, while `vbk` stays per year. `rec.age` is in years, so 0.25 means recruitment at one quarter, and `nage = 20` counts quarter-age classes from 0.25 to 5 years, the last one the plus group; `t0` must stay below `rec.age`.
 
-`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks; ALSCL takes about two minutes. If the label spacing differs from `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
+`check_alscl_data()$time` prints the 20 quarters from 2000 to 2004.75: twenty time steps are five years here. Both fits pass the numerical checks in the regenerated case; use each result's `elapsed` field to record fitting time on your machine. If the label spacing differs from `growth_step`, fitting stops with `Time column spacing must equal growth_step`; keep every quarter as a column, with `NA` survey values for quarters without a survey and complete weights and maturity.
 
 ![Tuna synthetic survey](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
 
@@ -100,18 +103,18 @@ Growth runs from 13 cm at age 0.25 to 129 cm at age 5 (`vbk` 0.38 per year); mat
 
 ![Tuna generating truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case was generated with length-based dynamics, the structure ALSCL assumes; one replicate cannot rank the two models.
+Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case uses length-based growth transitions; the fitted process assumptions still differ from the operating model, so one replicate cannot rank the two models.
 
 <h2 id="simulation">4. Extend to a simulation study</h2>
 
 ```r
 source("scripts/simulation_workflow.R", encoding = "UTF-8")
-simulations <- run_simulation_examples(out = "my_simulations", fit_batch = FALSE)
+simulations <- run_simulation_examples(out = "my_cases/data/cases", fit_batch = FALSE)
 source("scripts/case_studies.R", encoding = "UTF-8")
-case_status <- run_case_studies(out = "docs")
+case_status <- run_case_studies(out = "my_cases")
 ```
 
-`run_simulation_examples()` regenerates both cases under `out`: the three CSV files, `truth.rds` and the replicate files of each preset; `fit_batch = TRUE` adds batch ACL fits of the flatfish replicates and writes `batch_checks.csv`, which keeps the failed fits. `run_case_studies()` refits both cases with the settings of steps 2 and 3 and writes the seven case figures and `results/case_convergence.csv` under `out`; it reads the truth from `out/data/cases`, so copy the two case folders there first when you choose another `out`.
+`run_simulation_examples()` regenerates both cases under `out`: the three CSV files, `truth.rds` and the replicate files of each preset; `fit_batch = TRUE` adds batch ACL fits of the flatfish replicates and writes `batch_checks.csv`, which keeps the failed fits. `run_case_studies()` refits both cases with the settings of steps 2 and 3 and writes the seven case figures and `results/case_convergence.csv` under `out`; it reads the truth from `out/data/cases`, so the example generates the cases directly under `my_cases/data/cases` before fitting them under `my_cases`.
 
 For a study, raise `iter_range` for more replicates, vary one setting at a time (survey log SD, `M`, catchability, bins, series length), and keep the failed fits in the summary of bias, RMSE and interval coverage; averaging only the successful fits is selection bias. [Simulation](simulation.html) describes the simulators and batch fitting.
 

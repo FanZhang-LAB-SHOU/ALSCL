@@ -27,11 +27,15 @@
 #'       column j give the probability of moving from length group j to i in
 #'       one model time step. Each column sums to one.}
 #'     \item{nlen, len_mid, len_lower, len_upper}{Length bin dimensions and coordinates}
+#'     \item{biology_inputs}{The biological parameters and age/length coordinates
+#'       used to construct these arrays. sim_data() checks them against params;
+#'       rerun sim_cal(params) after changing biological inputs.}
 #'   }
 #'
 #' @export
 sim_cal <- function(params) {
 
+  biology_inputs <- .acl_simulation_biology_inputs(params)
   bins <- .acl_simulation_bins(params$len_mid, params$len_border)
 
   # =========================================================================
@@ -50,8 +54,8 @@ sim_cal <- function(params) {
   q_surv_L50 <- params$q_surv_L50
   q_surv_L95 <- params$q_surv_L95
 
-  model_type <- if (!is.null(params$model_type)) params$model_type else "age_based"
-  growth_step <- if (!is.null(params$growth_step)) params$growth_step else 1
+  model_type <- biology_inputs$model_type
+  growth_step <- biology_inputs$growth_step
 
   # =========================================================================
   # Length bin setup
@@ -184,8 +188,39 @@ sim_cal <- function(params) {
     len_mid    = len_mid,
     len_lower  = len_lower,
     len_upper  = len_upper,
-    nlen       = nlen
+    nlen       = nlen,
+    biology_inputs = biology_inputs
   )
   .acl_simulation_biology(result, params, model_type)
   result
+}
+
+# Record only inputs that determine the biological arrays or their time scale.
+# Process scales, simulation duration, burn-in, labels and output controls can
+# change without rebuilding biology. Defaults match the simulation engines.
+.acl_simulation_biology_inputs <- function(params) {
+  model_type <- params$model_type %||% "age_based"
+  if (!is.character(model_type) || length(model_type) != 1L ||
+      !model_type %in% c("age_based", "length_based"))
+    stop("Unknown simulation model_type.", call. = FALSE)
+  nage <- .acl_positive_integer(params$nage, "nage", 2L)
+  step <- .acl_scalar(params$growth_step %||%
+    if (model_type == "length_based") 0.25 else 1, "growth_step", 0, TRUE)
+  rec_age <- .acl_scalar(params$rec.age, "rec.age", 0, TRUE)
+  ages <- params$ages
+  expected <- rec_age + seq.int(0L, nage - 1L) * step
+  if (!is.numeric(ages) || length(ages) != nage || any(!is.finite(ages)) ||
+      any(abs(ages - expected) > 1e-8 * pmax(1, abs(expected))))
+    stop("ages must equal rec.age + (0:(nage - 1)) * growth_step; ",
+         "update the age grid and rerun sim_cal(params).", call. = FALSE)
+  bins <- .acl_simulation_bins(params$len_mid, params$len_border)
+  sel_type <- params$sel_type %||% "flat"
+  fields <- c("Linf", "vbk", "t0", "cv_L", "a", "b", "mat_L50", "mat_L95",
+              "q_surv_L50", "q_surv_L95")
+  if (model_type == "length_based") fields <- c(fields, "cv_inc")
+  if (identical(sel_type, "dome"))
+    fields <- c(fields, "sel_L50_asc", "sel_L95_asc", "sel_L50_desc", "sel_L95_desc")
+  c(list(model_type = model_type, nage = nage, rec.age = rec_age, ages = ages,
+    growth_step = step, len_mid = bins$mid, len_border = c(-Inf, bins$border, Inf),
+    sel_type = if (identical(sel_type, "dome")) "dome" else "flat"), params[fields])
 }

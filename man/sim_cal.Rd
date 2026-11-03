@@ -29,6 +29,9 @@ length_based. Each age's probabilities sum to one.}
 column j give the probability of moving from length group j to i in
 one model time step. Each column sums to one.}
 \item{nlen, len_mid, len_lower, len_upper}{Length bin dimensions and coordinates}
+\item{biology_inputs}{The biological parameters and age/length coordinates
+used to construct these arrays. sim_data() checks them against params;
+rerun sim_cal(params) after changing biological inputs.}
 }
 }
 \description{

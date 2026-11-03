@@ -1,3 +1,13 @@
+## ALSCL 2.4.3
+
+- Check that simulation biology matches the supplied parameters and arrays before drawing data or writing files. Reject inconsistent saved survey catchability before fitting; matching legacy simulation objects remain supported.
+- Correct the worked simulation cases to use the marginal F standard deviation implied by the operating model's innovation SD and temporal correlation. Regenerate the data, fitted results and figures, and explain the remaining differences between generating and fitted process assumptions.
+- Make the growth comparison reference example self-contained, with its reference data defined in the example. Execute the English and Chinese website examples in isolated environments.
+- Preserve the `alscl_fit` class when the own-data example saves results without the live TMB object, so `summary()` retains its diagnostic output after reading the file.
+- Apply the global comparison legend position to F heatmaps and growth probability panels, and the global point size to lag and QQ diagnostics. Refresh affected figures without gridlines.
+- Clarify that process resampling recomputes survey predictions from the new population states, and that shared F is one time series across groups. Add regression checks and execute the complete fitting and validation examples.
+
+
 ## ALSCL 2.4.2
 
 - Allow `plot_compare_selectivity()` to use saved assessments without refitting, recovering fixed survey catchability from the retained input recipe.

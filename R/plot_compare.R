@@ -310,7 +310,8 @@ plot_compare_F <- function(model1, model2,
     ggplot2::labs(title = .acl_title("compare_F", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = "") +
     .acl_base_theme() + .acl_scale_x() +
-    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"))
+    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
+                   legend.position = acl_theme("compare_legend_pos"))
 
   return(p)
 }
@@ -674,7 +675,8 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
     ggplot2::geom_tile() + .acl_fill_continuous() +
     ggplot2::facet_wrap(~Model) +
     ggplot2::labs(title = "Length-at-age probability (pla)", x = "Age group", y = "Length bin") +
-    .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"))
+    .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
+                                    legend.position = cfg$legend_pos)
 
   if (requireNamespace("patchwork", quietly = TRUE)) {
     p <- patchwork::wrap_plots(p_vb, p_pla, ncol = 2)

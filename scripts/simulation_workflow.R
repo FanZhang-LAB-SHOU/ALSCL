@@ -35,9 +35,12 @@ run_simulation_examples <- function(out="simulation_examples",fit_batch=FALSE) {
   stopifnot(is.list(e$sim.data))
   if (fit_batch) {
     data(YTF_example,package="ALSCL")
+    cfg <- YTF_example$fit_config$acl
+    pa <- cases$flatfish$parameters
+    cfg$parameters$log_std_log_F <- log(pa$F_sd / sqrt(1 - pa$F_ar^2))
     batch <- do.call(sim_acl,c(list(iter_range=4:5,
       sim_data_path=file.path(out,"flatfish"),output_dir=file.path(out,"batch_acl"),
-      M=cases$flatfish$parameters$M,ncores=1,train_times=2),YTF_example$fit_config$acl))
+      M=cases$flatfish$parameters$M,ncores=1,train_times=2),cfg))
     # 保存失败原因；不能只计算成功重复的均值 / Retain failures in summaries.
     checks <- lapply(seq_along(batch),function(i) {
       f<-batch[[i]]

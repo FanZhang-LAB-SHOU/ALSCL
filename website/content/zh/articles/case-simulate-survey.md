@@ -65,12 +65,13 @@ ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 16
 <h2 id="fit">4. 对这次重复拟合两个模型</h2>
 
 ```r
+F_marginal_sd <- pa$F_sd / sqrt(1 - pa$F_ar^2)
 pA <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), t0 = pa$t0,
-           log_cv_len = log(pa$cv_L), log_std_log_F = log(pa$F_sd),
+           log_cv_len = log(pa$cv_L), log_std_log_F = log(F_marginal_sd),
            log_std_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
 pB <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), log_t0 = log(pa$t0),
            log_cv_len = log(pa$cv_L), log_cv_grow = log(pa$cv_inc),
-           log_sigma_log_F = log(pa$F_sd), log_sigma_log_N0 = log(pa$std_logN0),
+           log_sigma_log_F = log(F_marginal_sd), log_sigma_log_N0 = log(pa$std_logN0),
            logit_log_R = qlogis(pa$R_ar))
 mA <- lapply(pA, function(value) factor(NA))
 mB <- lapply(pB, function(value) factor(NA))
@@ -79,7 +80,7 @@ x <- prepare_alscl_data(inputs,
   fit_args = list(rec.age = pa$rec.age, nage = pa$nage, M = pa$M,
     sel_L50 = pa$q_surv_L50, sel_L95 = pa$q_surv_L95,
     len_mid = pa$len_mid, len_border = pa$len_border[-c(1, length(pa$len_border))],
-    growth_step = pa$growth_step, train_times = 2, silent = TRUE),
+    growth_step = pa$growth_step, train_times = 2, ncores = 1, silent = TRUE),
   fit_config = list(acl = list(parameters = pA, map = mA),
                     alscl = list(parameters = pB, map = mB)))
 for (model in c("acl", "alscl")) print(check_alscl_data(x, model)$summary)
@@ -90,7 +91,11 @@ checks <- list(ACL = diagnose_model(x$data.CatL, a),
 c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-输入列表 `x` 在 `fit_args` 中装入生成模型的生物学设置，在 `fit_config` 中按各模型自己的参数名装入初值和 `map`。生长、体长 CV、过程标准差和补充量相关系数固定在生成值上，ALSCL 还固定两个 F 相关系数，因此每个模型估计 5 个标量参数，与[年度与季度时间步](case-studies.html#annual)相同。`pa$len_border` 从 `-Inf` 到 `Inf`，去掉首尾剩下 22 个内部边界。两个模型的 `check_alscl_data()` 都应报告 23 个体长组、20 个时间步、460 个正观测和 `free_fixed` 为 5；编译后 ACL 约需 20 秒，ALSCL 约需 90 秒，最后一行应打印 `TRUE TRUE`。若检查未通过，按[理解第一次拟合](first-model.html#checks)运行 `diagnose_model()`，并用 `nstarts` 增加初值。
+输入列表 `x` 在 `fit_args` 中装入生成模型的生物学设置，在 `fit_config` 中按各模型自己的参数名装入初值和 `map`。平均生长参数和同龄体长 CV 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上，但年龄型 flatfish 生成器不使用这个参数。对于 F，`pa$F_sd` 是创新 SD，因此代码用 `pa$F_sd / sqrt(1 - pa$F_ar^2)` 换算成拟合模型的边际 SD（该预设为 0.3023716）。初始数量 SD 和补充量相关系数按指定的拟合假设固定，两个 F 相关系数均固定为 0.75。每个模型估计 5 个标量参数。
+
+这些条件拟合并没有重现全部生成假设：操作模型将各组共用、随时间变化的 F 与选择性相乘，并将初始数量偏差沿年龄累加；拟合模型则使用组别与时间可分离的 F 过程，以及独立的初始偏差。[年度与季度时间步](case-studies.html#annual)使用相同设置。
+
+`pa$len_border` 从 `-Inf` 到 `Inf`，去掉首尾剩下 22 个内部边界。两个模型的 `check_alscl_data()` 都应报告 23 个体长组、20 个时间步、460 个正观测和 `free_fixed` 为 5；最后一行应打印 `TRUE TRUE`。拟合耗时取决于机器和优化路径，`a$elapsed` 和 `b$elapsed` 会分别记录。若检查未通过，按[理解第一次拟合](first-model.html#checks)运行 `diagnose_model()`，并用 `nstarts` 增加初值。
 
 <h2 id="truth">5. 将估计值与生成真值比较</h2>
 
@@ -119,7 +124,7 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs, checks = checks,
 
 ![flatfish 第 4 次重复：生成真值与 ACL/ALSCL 条件估计](../assets/manual/figures/cases/flatfish_truth.png)
 
-虚线是真值，实线是两个条件估计；各面板的纵轴自由缩放，所以在同一面板内比较。两个模型都跟上了 2010 年前的下降和之后的回升，ALSCL 在 2014 年后的生物量和产卵生物量低于真值。这里只展示年龄结构生成模型的一次重复；要给模型排序，需要很多次重复并保留失败的拟合，[模拟调查数据](simulation.html#fit)用 `summarize_simulations()` 做汇总。
+虚线是真值，实线是两个条件估计；各面板的纵轴自由缩放，所以在同一面板内比较。对于生物量和产卵生物量，两个模型都跟上了 2010 年前的下降和之后的回升，ALSCL 在 2014 年后的生物量和产卵生物量低于真值。这里只展示年龄结构生成模型的一次重复；要给模型排序，需要很多次重复并保留失败的拟合，[模拟调查数据](simulation.html#fit)用 `summarize_simulations()` 做汇总。
 
 <h2 id="next">下一步</h2>
 

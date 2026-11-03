@@ -5,6 +5,26 @@ source('scripts/plot_helpers.R')
 library(ggplot2)
 library(patchwork)
 source('scripts/simulation_workflow.R', encoding='UTF-8')
+case_fit_bundle <- function(inputs,pa) {
+  # F_sd 是创新 SD；拟合模型使用边际 SD / F_sd is innovation SD; fits use marginal SD.
+  F_marginal_sd <- pa$F_sd / sqrt(1 - pa$F_ar^2)
+  # 固定生物学与指定的过程假设 / Fix biology and stated process assumptions.
+  pA <- list(log_Linf=log(pa$Linf),log_vbk=log(pa$vbk),t0=pa$t0,
+    log_cv_len=log(pa$cv_L),log_std_log_F=log(F_marginal_sd),
+    log_std_log_N0=log(pa$std_logN0),logit_log_R=qlogis(pa$R_ar))
+  pB <- list(log_Linf=log(pa$Linf),log_vbk=log(pa$vbk),log_t0=log(pa$t0),
+    log_cv_len=log(pa$cv_L),log_cv_grow=log(pa$cv_inc),log_sigma_log_F=log(F_marginal_sd),
+    log_sigma_log_N0=log(pa$std_logN0),logit_log_R=qlogis(pa$R_ar))
+  mA <- lapply(pA,function(v)factor(NA)); mB <- lapply(pB,function(v)factor(NA))
+  mB$logit_log_F_l <- mB$logit_log_F_y <- factor(NA)
+  prepare_alscl_data(inputs, fit_args=list(rec.age=pa$rec.age,nage=pa$nage,M=pa$M,
+    sel_L50=pa$q_surv_L50,sel_L95=pa$q_surv_L95,len_mid=pa$len_mid,
+    len_border=pa$len_border[-c(1,length(pa$len_border))],growth_step=pa$growth_step,
+    train_times=2,ncores=1,silent=TRUE),
+    fit_config=list(acl=list(parameters=pA,map=mA),
+      alscl=list(parameters=pB,map=mB)))
+}
+
 run_case_studies <- function(out='docs') {
   cache <- Sys.getenv('ALSCL_MANUAL_CACHE')
   if(nzchar(cache)) options(ALSCL.tmb.cache=cache)
@@ -21,21 +41,9 @@ run_case_studies <- function(out='docs') {
     # 历史内附案例使用 2000 年起始 / Historical bundled cases start in 2000.
     inp <- simulation_to_tables(sm,pa,first_year=if(is.null(sm$years)) 2000 else NULL)
     bio <- sim_cal(pa)
-    # 固定已知生物参数，保留条件估计 / Conditional estimation with known biology.
-    pA <- list(log_Linf=log(pa$Linf),log_vbk=log(pa$vbk),t0=pa$t0,
-      log_cv_len=log(pa$cv_L),log_std_log_F=log(pa$F_sd),
-      log_std_log_N0=log(pa$std_logN0),logit_log_R=qlogis(pa$R_ar))
-    pB <- list(log_Linf=log(pa$Linf),log_vbk=log(pa$vbk),log_t0=log(pa$t0),
-      log_cv_len=log(pa$cv_L),log_cv_grow=log(pa$cv_inc),log_sigma_log_F=log(pa$F_sd),
-      log_sigma_log_N0=log(pa$std_logN0),logit_log_R=qlogis(pa$R_ar))
-    mA <- lapply(pA,function(v)factor(NA)); mB <- lapply(pB,function(v)factor(NA))
-    mB$logit_log_F_l <- mB$logit_log_F_y <- factor(NA)
-    common <- c(inp,list(rec.age=pa$rec.age,nage=pa$nage,M=pa$M,
-      sel_L50=pa$q_surv_L50,sel_L95=pa$q_surv_L95,len_mid=pa$len_mid,
-      len_border=pa$len_border[-c(1,length(pa$len_border))],growth_step=pa$growth_step,
-      train_times=2,ncores=1,silent=TRUE))
-    a <- run_acl(common,parameters=pA,map=mA)
-    b <- run_alscl(common,parameters=pB,map=mB)
+    x <- case_fit_bundle(inp,pa)
+    a <- run_acl(x)
+    b <- run_alscl(x)
     status <- function(f,model) data.frame(Case=sp,Model=model,Code=f$convergence_code,
       MaxGradient=f$max_abs_gradient,pdHess=f$pdHess,Boundary=f$bound_hit)
     statuses[[sp]] <- rbind(status(a,'ACL'),status(b,'ALSCL'))
@@ -74,6 +82,7 @@ run_case_studies <- function(out='docs') {
     }
   }
   checks <- do.call(rbind,statuses);print(checks)
+  dir.create(file.path(out,'results'),recursive=TRUE,showWarnings=FALSE)
   write.csv(checks,file.path(out,'results','case_convergence.csv'),row.names=FALSE)
   stopifnot(all(checks$Code==0),all(checks$MaxGradient<.001),all(checks$pdHess),!any(checks$Boundary))
   invisible(checks)

@@ -189,6 +189,12 @@ check_plot_examples <- function(fits_file = NULL) {
     if (!isTRUE(ok)) stop(context, call. = FALSE)
   }
 
+  source("scripts/test_portable_example.R", local = environment())
+  check_portable_own_data_examples(fits)
+  source("scripts/test_simulation_case_examples.R", local = environment())
+  check_simulation_case_examples()
+  source("scripts/test_reference_examples.R", local = environment())
+  check_growth_reference_examples(fits$acl, fits$alscl, assert_grid_free_plot)
   check_reference_theme_examples(fits$alscl, assert_grid_free_plot)
   check_growth_fishing_examples(fits$acl, fits$alscl, assert_grid_free_plot)
 

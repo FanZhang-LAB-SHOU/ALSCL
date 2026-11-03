@@ -65,12 +65,13 @@ The upper panel is the growth curve, 11 cm at age 1 to 57 cm at age 15. The lowe
 <h2 id="fit">4. Fit both models to the replicate</h2>
 
 ```r
+F_marginal_sd <- pa$F_sd / sqrt(1 - pa$F_ar^2)
 pA <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), t0 = pa$t0,
-           log_cv_len = log(pa$cv_L), log_std_log_F = log(pa$F_sd),
+           log_cv_len = log(pa$cv_L), log_std_log_F = log(F_marginal_sd),
            log_std_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
 pB <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), log_t0 = log(pa$t0),
            log_cv_len = log(pa$cv_L), log_cv_grow = log(pa$cv_inc),
-           log_sigma_log_F = log(pa$F_sd), log_sigma_log_N0 = log(pa$std_logN0),
+           log_sigma_log_F = log(F_marginal_sd), log_sigma_log_N0 = log(pa$std_logN0),
            logit_log_R = qlogis(pa$R_ar))
 mA <- lapply(pA, function(value) factor(NA))
 mB <- lapply(pB, function(value) factor(NA))
@@ -79,7 +80,7 @@ x <- prepare_alscl_data(inputs,
   fit_args = list(rec.age = pa$rec.age, nage = pa$nage, M = pa$M,
     sel_L50 = pa$q_surv_L50, sel_L95 = pa$q_surv_L95,
     len_mid = pa$len_mid, len_border = pa$len_border[-c(1, length(pa$len_border))],
-    growth_step = pa$growth_step, train_times = 2, silent = TRUE),
+    growth_step = pa$growth_step, train_times = 2, ncores = 1, silent = TRUE),
   fit_config = list(acl = list(parameters = pA, map = mA),
                     alscl = list(parameters = pB, map = mB)))
 for (model in c("acl", "alscl")) print(check_alscl_data(x, model)$summary)
@@ -90,7 +91,11 @@ checks <- list(ACL = diagnose_model(x$data.CatL, a),
 c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-The input bundle `x` carries the generating biology in `fit_args` and each model's starting values and `map`, under its own parameter names, in `fit_config`. Growth, the length CVs, the process standard deviations and the recruitment correlation are fixed at the generating values, plus the two F correlations in ALSCL, so each model estimates five scalar parameters, as in [Annual and quarterly time steps](case-studies.html#annual). `pa$len_border` runs from `-Inf` to `Inf`; dropping its ends leaves the 22 internal boundaries. `check_alscl_data()` should report 23 length bins, 20 time steps, 460 positive observations and `free_fixed` 5 for both models; ACL takes about 20 seconds and ALSCL about 90 after compilation, and the last line should print `TRUE TRUE`. If a check fails, run `diagnose_model()` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
+The input bundle `x` carries the generating biology in `fit_args` and each model's starting values and `map`, under its own parameter names, in `fit_config`. The mean growth parameters and CV of length at age are fixed to the preset values. ALSCL's growth-increment CV is fixed to its preset value, although this parameter is not used by the age-based flatfish generator. For F, `pa$F_sd` is an innovation SD, so the code converts it to the fitted models' marginal SD with `pa$F_sd / sqrt(1 - pa$F_ar^2)` (0.3023716 for this preset). The initial-abundance SD and recruitment correlation are fixed as specified fitting assumptions; both F correlations are fixed at 0.75. Each model estimates five scalar parameters.
+
+These conditional fits do not reproduce every generating assumption: the operating model uses shared time-varying F multiplied by selectivity and accumulates initial-abundance deviations across ages, whereas the fitted models use a separable group-by-time F process and independent initial deviations. [Annual and quarterly time steps](case-studies.html#annual) uses the same settings.
+
+`pa$len_border` runs from `-Inf` to `Inf`; dropping its ends leaves the 22 internal boundaries. `check_alscl_data()` should report 23 length bins, 20 time steps, 460 positive observations and `free_fixed` 5 for both models; the last line should print `TRUE TRUE`. Fitting time depends on the machine and optimization path; `a$elapsed` and `b$elapsed` record it for each fit. If a check fails, run `diagnose_model()` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
 
 <h2 id="truth">5. Compare the estimates with the generating truth</h2>
 
@@ -119,7 +124,7 @@ The simulator calls total biomass `TB` and the fitted report calls it `B`; the c
 
 ![Flatfish replicate 4: generating truth and conditional ACL/ALSCL estimates](../assets/manual/figures/cases/flatfish_truth.png)
 
-Dashed lines are the truth, solid lines the two conditional estimates; the y scales are free, so compare within each panel. Both models follow the decline to 2010 and the rise after it, and ALSCL sits below the truth for biomass and spawning biomass after 2014. One replicate of an age-based generator is shown; ranking the models needs many replicates with the failed fits kept, which [Simulate survey data](simulation.html#fit) summarizes with `summarize_simulations()`.
+Dashed lines are the truth, solid lines the two conditional estimates; the y scales are free, so compare within each panel. For biomass and spawning biomass, both models follow the decline to 2010 and the rise after it, and ALSCL sits below the truth for biomass and spawning biomass after 2014. One replicate of an age-based generator is shown; ranking the models needs many replicates with the failed fits kept, which [Simulate survey data](simulation.html#fit) summarizes with `summarize_simulations()`.
 
 <h2 id="next">What next</h2>
 

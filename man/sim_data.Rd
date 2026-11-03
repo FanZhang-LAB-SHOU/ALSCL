@@ -68,6 +68,13 @@ may be zero; beta must be positive. These process inputs are checked before
 creating the output directory or drawing random numbers.
 Length geometry is checked against the fitted-model bin convention, and
 available biological-array coordinates must match the parameter list.
+Biological inputs and arrays must agree with params: after changing
+growth, ages, time step, length bins, catchability, weight, maturity or
+selectivity, rerun sim_cal(params). Older biological lists without input
+metadata are accepted when their arrays match the current parameters.
+Process settings (including mortality, recruitment and observation error),
+simulation duration and output controls can change without recalculating
+biology. These checks run before creating files or drawing random numbers.
 Survey observations retain true zeros and small positive values; no
 artificial positive floor is applied. Survey biomass equals survey
 abundance times weight at length. Fitting still treats zeros as missing

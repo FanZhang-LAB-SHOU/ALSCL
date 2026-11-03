@@ -91,4 +91,8 @@ start, whereas nstarts controls independent initial values. Model-specific
 parameters and maps must match the selected model. sim_acl() retains the
 original ACL interface; sim_alscl()
 provides the corresponding ALSCL convenience interface.
+Recorded survey catchability must agree with its logistic metadata before
+fitting. Older files with only valid logistic metadata remain supported;
+if metadata are absent, a logistic curve is recovered from q_surv and
+checked against the complete recorded vector.
 }

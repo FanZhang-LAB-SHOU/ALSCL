@@ -45,6 +45,13 @@
 #'   creating the output directory or drawing random numbers.
 #'   Length geometry is checked against the fitted-model bin convention, and
 #'   available biological-array coordinates must match the parameter list.
+#'   Biological inputs and arrays must agree with params: after changing
+#'   growth, ages, time step, length bins, catchability, weight, maturity or
+#'   selectivity, rerun sim_cal(params). Older biological lists without input
+#'   metadata are accepted when their arrays match the current parameters.
+#'   Process settings (including mortality, recruitment and observation error),
+#'   simulation duration and output controls can change without recalculating
+#'   biology. These checks run before creating files or drawing random numbers.
 #'   Survey observations retain true zeros and small positive values; no
 #'   artificial positive floor is applied. Survey biomass equals survey
 #'   abundance times weight at length. Fitting still treats zeros as missing
@@ -64,6 +71,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   # Determine model type from bio_vars (set by sim_cal).
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
   .acl_simulation_biology(bio_vars, params, model_type)
+  .acl_simulation_biology_matches(bio_vars, params)
   .acl_simulation_process(params, model_type)
   grid <- .acl_simulation_grid(params, sim_year, model_type)
   params$growth_step <- grid$step
@@ -576,6 +584,58 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       stop("Gij probabilities must sum to one in every source-length column.", call. = FALSE)
   }
   invisible(NULL)
+}
+
+# Shape checks alone cannot detect arrays generated under different growth,
+# catchability or age/time settings. Legacy lists have no input provenance, so
+# recompute deterministic arrays as well. This also detects edited arrays in
+# newer lists whose provenance was not updated. Never use RNG or touch files.
+.acl_simulation_biology_matches <- function(bio, params) {
+  inputs <- .acl_simulation_biology_inputs(params)
+  mismatch <- function(fields) stop("bio_vars do not match params (",
+    paste(fields, collapse = ", "), "); rerun sim_cal(params).", call. = FALSE)
+  if (!identical(bio$model_type %||% "age_based", inputs$model_type))
+    mismatch("model_type")
+  same <- function(x, y) isTRUE(all.equal(x, y, tolerance = 0, check.attributes = FALSE))
+  recorded <- bio$biology_inputs
+  if (!is.null(recorded)) {
+    if (!is.list(recorded)) mismatch("biology_inputs")
+    changed <- names(inputs)[!vapply(names(inputs), function(name)
+      same(recorded[[name]], inputs[[name]]), logical(1))]
+    if (length(changed)) mismatch(changed)
+  }
+  expected <- sim_cal(params)
+  fields <- c("W_at_len", "mat", "q_surv", "sel", "pla")
+  if (!is.null(bio$LatA)) fields <- c(fields, "LatA")
+  if (inputs$model_type == "length_based") fields <- c(fields, "Gij")
+  changed <- fields[!vapply(fields, function(name) {
+    if (name %in% c("q_surv", "mat", "sel"))
+      return(.acl_simulation_probabilities_match(bio[[name]], expected[[name]]))
+    if (name == "W_at_len")
+      return(.acl_simulation_nonnegative_match(bio[[name]], expected[[name]]))
+    isTRUE(all.equal(bio[[name]], expected[[name]], tolerance = 1e-12,
+                     check.attributes = FALSE))
+  }, logical(1))]
+  if (length(changed)) mismatch(changed)
+  invisible(NULL)
+}
+
+# Catchability, maturity, selectivity and weight enter model calculations
+# multiplicatively. Compare each cell on its own scale, allowing ordinary
+# relative rounding and a few subnormal steps at the underflow boundary.
+.acl_simulation_probabilities_match <- function(actual, expected) {
+  .acl_simulation_nonnegative_match(actual, expected) &&
+    all(actual <= 1 & expected <= 1)
+}
+
+.acl_simulation_nonnegative_match <- function(actual, expected) {
+  if (!is.numeric(actual) || !is.numeric(expected) ||
+      length(actual) != length(expected) || any(!is.finite(actual)) ||
+      any(!is.finite(expected)) || any(actual < 0) || any(expected < 0))
+    return(FALSE)
+  underflow_rounding <- 8 * .Machine$double.xmin * .Machine$double.eps
+  all(abs(actual - expected) <=
+        1e-10 * pmax(actual, expected) + underflow_rounding)
 }
 
 .acl_validate_simulated_result <- function(simulation, iter) {

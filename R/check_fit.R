@@ -133,13 +133,14 @@ check_fit <- function(fit, max_lag = 5) {
   lag_plot <- ggplot2::ggplot(lag_data,
       ggplot2::aes(x = lag, y = correlation, group = length_label)) +
     ggplot2::geom_hline(yintercept = 0, color = acl_theme("hline_color")) +
-    ggplot2::geom_point(na.rm = TRUE, color = acl_theme("point_color")) +
+    ggplot2::geom_point(na.rm = TRUE, color = acl_theme("point_color"),
+                        size = acl_theme("point_size")) +
     ggplot2::facet_wrap(~length_label) + ggplot2::scale_y_continuous(limits = c(-1, 1)) +
     ggplot2::labs(x = "Lag (model time steps)", y = "Paired residual correlation",
       title = "Residual time dependence") + .acl_plot_theme()
   qq_plot <- ggplot2::ggplot(qq, ggplot2::aes(x = theoretical, y = residual)) +
     ggplot2::geom_abline(intercept = 0, slope = 1, color = acl_theme("hline_color")) +
-    ggplot2::geom_point(color = acl_theme("point_color")) +
+    ggplot2::geom_point(color = acl_theme("point_color"), size = acl_theme("point_size")) +
     ggplot2::labs(x = "Standard-normal quantile", y = "Standardized log residual",
       title = "Conditional residual QQ plot") + .acl_plot_theme()
   list(residuals = residual, lag_correlations = correlations, qq_data = qq,
