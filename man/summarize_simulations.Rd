@@ -16,7 +16,9 @@ summarize_simulations(
 
 \item{truth}{Named list with exactly the same replicate names as fits. Each
 element supplies year and a finite vector for every requested quantity.
-Coordinates must match the fitted periods; values are never recycled.}
+Coordinates must match the fitted periods; values are never recycled.
+Time coordinates and quantity values must be numeric vectors, not matrices
+or arrays; grouped quantities must be aggregated explicitly before calling.}
 
 \item{quantities}{Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.}
 

@@ -81,6 +81,10 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 Peeled lines that lie on the full fit for most of the series and split only in the last years, as in both figures, show that adding observations revises the recent estimates only. When rho is `NA` the panel reads `rho unavailable: check diagnostics`; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md); every argument is in the [plot_retro reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro).
 
+`plot` 和 `silent` 都必须是单个 `TRUE` 或 `FALSE`，无效值会在任何拟合开始前报错。如果没有一行同时包含有限时间和有限估计值，`plot_retro()` 会停止并提示检查诊断；存在有效估计时，序列内部的缺失值继续保留为断点，不跨缺失处连接。
+
+`plot` and `silent` must each be a single `TRUE` or `FALSE`; invalid values stop before any fitting. If no stored row has both a finite time and a finite estimate, `plot_retro()` stops with a diagnostic message. With some valid estimates, missing interior values stay as gaps rather than being joined across.
+
 <a id="retrospectives-rho"></a>
 
 ### 4. 解释 Mohn rho / Interpret Mohn's rho

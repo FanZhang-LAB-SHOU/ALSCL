@@ -1,0 +1,5 @@
+"peel","terminal_year","run","convergence_code","selected_pass","objective","max_abs_gradient","pdHess","bound_hit","numerical_ok","refinement_steps","refinement_status"
+1,2018,"baseline",1,2,-224.545805218672,1.28396777654416e-08,TRUE,FALSE,TRUE,1,"gradient_tolerance"
+1,2018,"corrected",0,1,-224.545805218673,1.7700074295135e-08,TRUE,FALSE,TRUE,1,"gradient_tolerance"
+3,2016,"baseline",1,2,-201.023319366299,6.16245188211906e-09,TRUE,FALSE,TRUE,1,"gradient_tolerance"
+3,2016,"corrected",0,1,-201.023319366302,4.37107328110642e-09,TRUE,FALSE,TRUE,1,"gradient_tolerance"

@@ -273,7 +273,9 @@ plot_fishing_mortality(b, type = "length", se = TRUE)
 
 回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 以时间步计，季度数据四轮等于一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值检查，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的序列（[运行回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
 
-这组自由参数较多的正式数据示例在[记录运行](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，完整拟合与所有截断拟合均通过数值筛查。两次 ALSCL 截断拟合仍保留原始优化器码 1，尽管最大梯度低于 `2e-8`、Hessian 正定且没有触碰边界。因此，`numerical_ok = TRUE` 不表示原始优化器一定返回 0。应结合梯度、Hessian、边界列读取 `fit_diagnostics$issues`；在解释评估结果前，使用不同初值或有依据的参数约束检查非零退出码和强参数相关。原始退出码始终保留。
+在[2.4.3 的记录运行](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，所有拟合均通过数值筛查，但截至 2018 年和 2016 年的 ALSCL 截断拟合保留了优化器码 1。两次拟合的第一轮实际都返回了 0；第二轮将目标函数降低了不到 `8e-10`，却报告 `false convergence (8)`。由于参数向量存在微小差异，原来的选择规则保留了第二轮。开发中的修正会在目标函数和每个参数均数值等价时保留成功轮次，再进行通常的收尾和独立数值检查。重新拟合后，两次均返回码 0，最大梯度低于 `2e-8`；SSB 和 F 相对原结果的变化小于 `1.2e-11`。
+
+查看 `fit_diagnostics$optimizer_message`、`selected_pass`、`optimizer_codes` 和 `optimizer_messages`，区分所选结果与其他轮次。失败的重启仍保留在历史中，实际选中的非零码不会被改写。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关：解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
 
 <h2 id="next">下一步</h2>
 

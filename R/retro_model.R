@@ -33,6 +33,30 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
   mapping
 }
 
+# Retain the optimizer's explanation and finishing record without a live object.
+# Unknown fields in legacy or failed fits stay missing, not invented successes.
+.acl_retro_optimizer_details <- function(fit) {
+  scalar <- function(x, missing) {
+    if (length(x) == 1L && !is.na(x)) x else missing
+  }
+  history <- fit$optimizer_history %||% fit$raw_opt$optimizer_history
+  codes <- messages <- NA_character_
+  if (is.list(history) && length(history)) {
+    codes <- paste(vapply(history, function(x)
+      as.character(scalar(x$convergence, NA_integer_)), character(1)), collapse = "; ")
+    messages <- paste(vapply(history, function(x)
+      as.character(scalar(x$message, NA_character_)), character(1)), collapse = "; ")
+  }
+  data.frame(
+    optimizer_message = scalar(fit[["converge"]] %||% fit$opt$message, NA_character_),
+    selected_pass = scalar(fit$raw_opt$selected_pass %||% fit$opt$selected_pass, NA_integer_),
+    optimizer_codes = codes, optimizer_messages = messages,
+    refinement_status = scalar(fit$refinement$status, NA_character_),
+    refinement_steps = scalar(fit$refinement$steps, NA_integer_),
+    pre_refinement_max_gradient = scalar(fit$refinement$initial_max_gradient, NA_real_),
+    stringsAsFactors = FALSE)
+}
+
 # Retain compact results rather than serializing a live TMB objective between
 # processes. A failed fit still contributes a diagnostic row and a missing rho.
 .acl_retro_fit <- function(peel, fit_args, model_type, silent) {
@@ -55,7 +79,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
   elapsed <- (proc.time() - started)[["elapsed"]]
   diagnostics <- cbind(data.frame(Peel = peel,
     RetrospectiveYear = tail(years, 1L), elapsed = elapsed,
-    error = if (is.null(error)) "" else error), .acl_fit_status(fit, error))
+    error = if (is.null(error)) "" else error), .acl_fit_status(fit, error),
+    .acl_retro_optimizer_details(fit))
   if (!silent) message(sprintf("  %s: %.1f sec%s",
     if (peel == 0L) "Full model" else paste("Peel", peel), elapsed,
     if (is.null(error)) "" else paste0(" (failed: ", error, ")")))
@@ -160,6 +185,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @return A list containing `results`, `rho_text`, `last_points`, `model_type`,
 #'   and optionally `plot`. `fit_diagnostics` records the full fit (Peel = 0)
 #'   and every requested peel, including errors and numerical status.
+#'   It also retains the selected optimizer message and pass, all pass codes
+#'   and messages, and the refinement status, steps and pre-refinement gradient.
+#'   Missing records from older or failed fits remain NA. A successful pass can
+#'   coexist with a failed restart in the history; read the selected pass and
+#'   final numerical screen together.
 #'   `rho_by_peel` contains screened Rho, diagnostic RawRho and Valid for each
 #'   quantity and peel. `rho_text$Rho` is NA when any required fit or endpoint
 #'   is invalid. `raw_rho_text` retains an unscreened mean for diagnosis only;
@@ -196,6 +226,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
                         model = NULL, ...) {
+  .acl_check_flag(plot, "plot")
+  .acl_check_flag(silent, "silent")
   renamed <- .acl_renamed(list(...), "retro_model")
   if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
   if (is.null(facet_nrow)) facet_nrow <- renamed$facet_nrow
@@ -468,7 +500,7 @@ plot_retro <- function(retro_result,
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points
-  if (!nrow(results) || !any(is.finite(results$Year)))
+  if (!nrow(results) || !any(is.finite(results$Year) & is.finite(results$Value)))
     stop("No retrospective estimates are available to plot; inspect fit_diagnostics and errors.",
          call. = FALSE)
 

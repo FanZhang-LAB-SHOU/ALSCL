@@ -1,3 +1,19 @@
+# Unreleased
+
+- Preserve an actually converged optimization pass when a numerically equivalent restart reports false convergence; retain all original pass records and still select materially lower objectives.
+- Retain optimizer messages, selected passes and refinement evidence in retrospective diagnostics; missing legacy records remain missing.
+- Preserve native numeric precision when survey, weight or maturity tables mix numeric, text and factor columns; use the same conversion in diagnostics and reject complex cells.
+- Require one-dimensional real numeric time coordinates and quantity vectors in simulation summaries; reject matrices and arrays before they can be recycled into misleading statistics.
+- Validate retrospective plot/silent flags before fitting. Reject plots without any finite time/estimate pair while retaining gaps in partially observed series.
+
+### 简体中文
+
+- 数值上等价的重启报告 false convergence 时，保留实际收敛的轮次；保留全部原始记录，目标函数有实质改善时仍按较低值选择。
+- 回溯诊断保留优化器消息、所选轮次及收尾证据；旧结果缺少的信息继续保留为缺失值。
+- 调查、体重和成熟度表混合数值、文本与因子列时保留原有数值精度；诊断采用相同转换，并拒绝复数单元格。
+- 模拟汇总要求时间坐标和各量为一维实数数值向量；提前拒绝矩阵和数组，避免回收或拆列产生误导统计。
+- 回溯开始拟合前校验 plot/silent；没有有限时间与估计值配对时拒绝绘图，部分有效序列仍保留缺失间隔。
+
 # ALSCL 2.4.3
 
 - Check that simulation biology matches the supplied parameters and arrays before drawing data or writing files. Reject inconsistent saved survey catchability before fitting; matching legacy simulation objects remain supported.

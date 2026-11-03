@@ -1932,6 +1932,10 @@ A list with results (peel trajectories), last_points (terminal estimates), rho_b
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 
+`fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
+
+`fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
+
 **示例 / Example:**
 
 ```r
@@ -1980,6 +1984,10 @@ A list with results (peel trajectories), last_points (terminal estimates), rho_b
 当全部回溯拟合失败或没有有限轨迹时，`plot = TRUE` 会警告并返回 `plot = NULL`，同时保留 `fit_diagnostics`、`errors` 及不可用的 rho。应根据这些字段修正输入或拟合设置。请求绘图不再阻止读取失败记录。
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
+
+`fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
+
+`fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
 
 **示例 / Example:**
 
@@ -2079,6 +2087,10 @@ A list with results (peel trajectories), last_points (terminal estimates), rho_b
 
 When all retrospective fits fail or no finite trajectories remain, `plot = TRUE` now warns and returns `plot = NULL` while preserving `fit_diagnostics`, `errors` and the unavailable rho values. Inspect those fields to correct the input or fitting problem. Requesting a plot must not prevent access to the failure record.
 
+`fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
+
+`fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
+
 **示例 / Example:**
 
 ```r
@@ -2134,6 +2146,10 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
 
 A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.
+
+如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
+
+A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 
 **示例 / Example:**
 
@@ -2191,6 +2207,10 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
 
 A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.
+
+如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
+
+A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 
 **示例 / Example:**
 
@@ -3107,6 +3127,10 @@ A list with summary pooled over replicates/time by quantity, per-replicate statu
 偏差和 RMSE 使用数值有效估计对，覆盖率额外要求有限的报告标准误。报告尝试/有效重复、点及区间数和 failure_rate。缺失标准误不算覆盖失败。相对偏差排除真值为零的点。F 因需要明确定义聚合和不确定性而排除。这些条件性能统计不证明模型普遍更优。
 
 Bias/RMSE use numerically valid estimate pairs; coverage additionally requires finite reported SEs. Attempted/valid replicate, point and interval counts and failure_rate are reported. Missing SEs are not counted as failed coverage. Relative bias excludes zero truth. F is excluded because its aggregation and uncertainty must be explicitly defined. These conditional performance summaries are not proof of general model superiority.
+
+时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。
+
+Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
 
 **示例 / Example:**
 

@@ -106,6 +106,8 @@ Each replicate is fitted on one worker with its `nstarts` starts run one after t
 
 `summarize_simulations()` needs the truth as a list with the same names as the fits, each with `year` and one vector per quantity, read here from the replicate files so that the time coordinates match. `performance$replicates` gives the numerical checks and error of each replicate; `performance$summary` gives, per quantity, failure rate, bias, relative bias, RMSE and interval coverage with their counts. Bias and RMSE use fits that passed the numerical checks and coverage also needs finite standard errors, so report `failure_rate` with the statistics. If the call stops with "identical unique replicate names" or "time coordinates differ", the truth was not read from the same files as the fits.
 
+Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
+
 <h2 id="fitted">5. Simulate from a fitted model</h2>
 
 ```r

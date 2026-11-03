@@ -194,6 +194,11 @@ workflow functions. Supply one of the two.}
 A list containing \code{results}, \code{rho_text}, \code{last_points}, \code{model_type},
 and optionally \code{plot}. \code{fit_diagnostics} records the full fit (Peel = 0)
 and every requested peel, including errors and numerical status.
+It also retains the selected optimizer message and pass, all pass codes
+and messages, and the refinement status, steps and pre-refinement gradient.
+Missing records from older or failed fits remain NA. A successful pass can
+coexist with a failed restart in the history; read the selected pass and
+final numerical screen together.
 \code{rho_by_peel} contains screened Rho, diagnostic RawRho and Valid for each
 quantity and peel. \code{rho_text$Rho} is NA when any required fit or endpoint
 is invalid. \code{raw_rho_text} retains an unscreened mean for diagnosis only;

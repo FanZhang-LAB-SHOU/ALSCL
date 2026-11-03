@@ -38,11 +38,22 @@
         convergence = 1L, message = conditionMessage(e)))
     history[[i]] <- candidate
     if (is.finite(candidate$objective)) {
-      # An unchanged failed restart must not replace an earlier successful pass.
-      unchanged <- !is.null(best) && identical(candidate$par, best$par) &&
-        abs(candidate$objective - best$objective) <= 1e-8
-      if (is.null(best) || (!unchanged && candidate$objective < best$objective) ||
-          (unchanged && !isTRUE(best$convergence == 0L) && isTRUE(candidate$convergence == 0L))) {
+      # Restarts can differ by numerical roundoff without leaving the same
+      # solution. Prefer an actual successful pass only when both its objective
+      # and every parameter agree within these tolerances. Otherwise, including
+      # when both passes have the same success status, retain the lower value.
+      equivalent <- !is.null(best) &&
+        abs(candidate$objective - best$objective) <= 1e-8 &&
+        length(candidate$par) == length(best$par) &&
+        identical(names(candidate$par), names(best$par)) &&
+        all(is.finite(candidate$par)) && all(is.finite(best$par)) &&
+        all(abs(candidate$par - best$par) <=
+              1e-6 * pmax(1, abs(candidate$par), abs(best$par)))
+      candidate_ok <- isTRUE(candidate$convergence == 0L)
+      best_ok <- !is.null(best) && isTRUE(best$convergence == 0L)
+      prefer <- if (equivalent && candidate_ok != best_ok) candidate_ok else
+        is.null(best) || candidate$objective < best$objective
+      if (prefer) {
         best <- candidate; selected <- i
       }
       start <- candidate$par

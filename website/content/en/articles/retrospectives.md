@@ -53,6 +53,8 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 Peeled lines that lie on the full fit for most of the series and split only in the last years, as in both figures, show that adding observations revises the recent estimates only. When rho is `NA` the panel reads `rho unavailable: check diagnostics`; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](plot-customization.html); every argument is in the [plot_retro reference](../reference/plot_retro.html).
 
+`plot` and `silent` must each be a single `TRUE` or `FALSE`; invalid values stop before any fitting. If no stored row has both a finite time and a finite estimate, `plot_retro()` stops with a diagnostic message. With some valid estimates, missing interior values stay as gaps rather than being joined across.
+
 <h2 id="rho">4. Interpret Mohn's rho</h2>
 
 Mohn's rho averages, over the peels, the relative difference between the terminal estimate of each peel and the full fit's estimate for the same time step:

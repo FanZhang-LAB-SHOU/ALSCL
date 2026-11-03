@@ -27,6 +27,26 @@
     stop(name, " must be finite and ", if (strict) "> " else ">= ", lower, call. = FALSE)
   x
 }
+
+# Convert each time column separately. Converting a mixed-type data frame to a
+# character matrix first formats its numeric columns using getOption("digits")
+# and can silently alter observations, weights and maturity before fitting.
+.acl_numeric_matrix <- function(x, invalid_message) {
+  columns <- lapply(x, function(value) {
+    if (!is.atomic(value) || !is.null(dim(value)) || is.complex(value))
+      stop(invalid_message, call. = FALSE)
+    original <- value
+    if (is.factor(value)) value <- as.character(value)
+    if (!is.numeric(value) && !is.logical(value)) value <- as.character(value)
+    value <- suppressWarnings(as.numeric(value))
+    if (any(is.na(value) & !is.na(original)))
+      stop(invalid_message, call. = FALSE)
+    value
+  })
+  matrix(unlist(columns, use.names = FALSE), nrow = nrow(x), ncol = ncol(x),
+         dimnames = list(NULL, names(x)))
+}
+
 .acl_length_bins <- function(labels, len_mid = NULL, len_border = NULL,
                              len_lower = NULL, len_upper = NULL) {
   labels <- trimws(as.character(labels)); n <- length(labels)
@@ -103,10 +123,7 @@
     if (!identical(dim(x), dim(catl)) || !identical(as.character(x[[1L]]), as.character(catl[[1L]])) || !identical(names(x)[-1L], names(catl)[-1L])) stop(nm, " must match data.CatL length labels and time columns, including order.", call. = FALSE)
   }
   numeric_matrix <- function(x, name) {
-    original <- as.matrix(x[-1L])
-    z <- suppressWarnings(matrix(as.numeric(original), nrow = nrow(x), dimnames = list(NULL, names(x)[-1L])))
-    if (any(is.na(z) & !is.na(original))) stop(name, " contains nonnumeric observations.", call. = FALSE)
-    z
+    .acl_numeric_matrix(x[-1L], paste0(name, " contains nonnumeric observations; real values are required."))
   }
   obs <- numeric_matrix(catl, "data.CatL"); weight <- numeric_matrix(frames$data.wgt, "data.wgt"); mat <- numeric_matrix(frames$data.mat, "data.mat")
   if (any(is.infinite(obs)) || any(obs < 0, na.rm = TRUE)) stop("Survey indices must be nonnegative and finite, or NA for missing observations.", call. = FALSE)

@@ -58,6 +58,8 @@ The length bins need their midpoints (`len_mid`, one per row) and the internal b
 
 Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables differ.
 
+Native numeric columns retain their precision when other time columns contain numeric text or factors. This also applies when you pass tables directly to `run_acl()` or `run_alscl()`; diagnostics read the same values. Complex-valued cells are invalid.
+
 ```r
 library(ALSCL)
 install.packages("readxl") # once; only needed for Excel files

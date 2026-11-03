@@ -52,10 +52,9 @@
   # Use the same table representation as fitting. In particular, tibble's
   # one-column `[` result is still a table, while factors must retain labels.
   data.CatL <- as.data.frame(data.CatL, stringsAsFactors = FALSE)
-  original <- as.matrix(data.CatL[, -1L, drop = FALSE])
-  observed <- suppressWarnings(matrix(as.numeric(original), nrow(original), ncol(original)))
-  if (any(is.na(observed) & !is.na(original)) ||
-      any(is.infinite(observed)) || any(observed < 0, na.rm = TRUE))
+  observed <- unname(.acl_numeric_matrix(data.CatL[, -1L, drop = FALSE],
+    "Survey observations must be numeric, nonnegative and finite, or NA; real values are required."))
+  if (any(is.infinite(observed)) || any(observed < 0, na.rm = TRUE))
     stop("Survey observations must be numeric, nonnegative and finite, or NA.", call. = FALSE)
   mask <- is.finite(observed) & observed > 0
   if (!any(mask)) stop("No positive finite observations are available.", call. = FALSE)

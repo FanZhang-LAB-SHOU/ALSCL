@@ -53,6 +53,8 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 像两张图这样，截短的线在大部分序列上与完整拟合重合，只在最后几年分开，说明加入观测只修订了近期估计。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见 [ggsci 配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
 
+`plot` 和 `silent` 都必须是单个 `TRUE` 或 `FALSE`，无效值会在任何拟合开始前报错。如果没有一行同时包含有限时间和有限估计值，`plot_retro()` 会停止并提示检查诊断；存在有效估计时，序列内部的缺失值继续保留为断点，不跨缺失处连接。
+
 <h2 id="rho">4. 解释 Mohn rho</h2>
 
 Mohn rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：

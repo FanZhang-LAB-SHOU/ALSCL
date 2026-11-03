@@ -1,0 +1,9 @@
+"peel","run","pass","selected","code","message","objective","iterations"
+1,"baseline",1,FALSE,0,"relative convergence (4)",-224.545805217978,50
+1,"baseline",2,TRUE,1,"false convergence (8)",-224.545805218755,16
+1,"corrected",1,TRUE,0,"relative convergence (4)",-224.545805217978,50
+1,"corrected",2,FALSE,1,"false convergence (8)",-224.545805218755,16
+3,"baseline",1,FALSE,0,"relative convergence (4)",-201.023319365906,50
+3,"baseline",2,TRUE,1,"false convergence (8)",-201.023319366197,7
+3,"corrected",1,TRUE,0,"relative convergence (4)",-201.023319365906,50
+3,"corrected",2,FALSE,1,"false convergence (8)",-201.023319366197,7

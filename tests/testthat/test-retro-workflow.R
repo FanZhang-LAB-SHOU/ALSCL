@@ -206,6 +206,60 @@ test_that("nonzero raw optimizer codes remain usable after successful refinement
   expect_equal(out$rho_text$Rho, rep(.3, 4))
 })
 
+test_that("retrospectives preserve optimizer messages, passes and refinement evidence", {
+  f <- fixture_frames()
+  handler <- function(args) {
+    fit <- retro_test_fit(args)
+    fit$converge <- "relative convergence (4)"
+    fit$raw_opt <- list(selected_pass = 1L)
+    fit$optimizer_history <- list(
+      list(convergence = 0L, message = "relative convergence (4)"),
+      list(convergence = 1L, message = "false convergence (8)"))
+    fit$refinement <- list(status = "gradient_tolerance", steps = 1L,
+                          initial_max_gradient = 0.002)
+    # A genuinely selected failed pass remains visible even after good polish.
+    if (ncol(args$data.CatL) == 4L) {
+      fit$converge <- "false convergence (8)"
+      fit$convergence_code <- 1L
+      fit$raw_opt$selected_pass <- 2L
+    }
+    fit
+  }
+  local_mocked_bindings(run_acl = retro_test_mock("acl", handler), .package = "ALSCL")
+  expect_no_warning(out <- retro_acl(f, nyear = 2, silent = TRUE))
+  d <- out$fit_diagnostics
+  expect_equal(d$convergence_code, c(0L, 0L, 1L))
+  expect_equal(d$selected_pass, c(1L, 1L, 2L))
+  expect_equal(d$optimizer_message, c(rep("relative convergence (4)", 2),
+                                      "false convergence (8)"))
+  expect_equal(d$optimizer_codes, rep("0; 1", 3))
+  expect_equal(d$optimizer_messages,
+               rep("relative convergence (4); false convergence (8)", 3))
+  expect_equal(d$refinement_status, rep("gradient_tolerance", 3))
+  expect_equal(d$refinement_steps, rep(1L, 3))
+  expect_equal(d$pre_refinement_max_gradient, rep(0.002, 3))
+  expect_true(all(d$numerical_ok))
+})
+
+test_that("missing optimizer history in legacy and failed peels remains missing", {
+  f <- fixture_frames()
+  handler <- function(args) {
+    if (ncol(args$data.CatL) == 5L) stop("fit construction failed")
+    retro_test_fit(args)
+  }
+  local_mocked_bindings(run_acl = retro_test_mock("acl", handler), .package = "ALSCL")
+  expect_warning(out <- retro_acl(f, nyear = 2, silent = TRUE), "Mohn's rho is unavailable")
+  d <- out$fit_diagnostics
+  fields <- c("optimizer_message", "selected_pass", "optimizer_codes",
+    "optimizer_messages", "refinement_status", "refinement_steps",
+    "pre_refinement_max_gradient")
+  expect_equal(nrow(d), 3L)
+  expect_true(all(is.na(d[fields])))
+  expect_match(d$error[2], "fit construction failed")
+  expect_false(d$numerical_ok[2])
+  expect_true(all(d$numerical_ok[c(1, 3)]))
+})
+
 test_that("all failed fits return diagnostics and plot errors clearly", {
   f <- fixture_frames()
   local_mocked_bindings(run_acl = retro_test_mock("acl", function(args) {
@@ -221,5 +275,75 @@ test_that("retrospectives reject unnamed time columns before building fit record
   x$data.CatL <- as.matrix(x$data.CatL)
   colnames(x$data.CatL) <- NULL
   expect_error(retro_acl(x, nyear = 2, silent = TRUE), "increasing numeric labels")
+})
+
+test_that("retrospective flags are validated before any full or peeled fit", {
+  f <- fixture_frames()
+  calls <- 0L
+  local_mocked_bindings(.acl_retro_fit = function(...) {
+    calls <<- calls + 1L
+    stop("fitting must not start for an invalid flag")
+  }, .package = "ALSCL")
+  invalid <- list(NULL, NA, logical(), c(TRUE, FALSE), 0, 1, "TRUE", list(TRUE))
+  for (fun in list(retro_model, retro_acl, retro_alscl)) {
+    for (flag in c("plot", "silent")) for (value in invalid) {
+      args <- list(data.CatL = f, nyear = 2, silent = TRUE, plot = FALSE)
+      args[flag] <- list(value)
+      expect_error(do.call(fun, args), paste0(flag, " must be TRUE or FALSE"))
+      expect_equal(calls, 0L)
+    }
+  }
+})
+
+test_that("stored retrospective plots require a finite time-estimate pair", {
+  f <- fixture_frames()
+  local_mocked_bindings(run_acl = retro_test_mock("acl", function(args) {
+    fit <- retro_test_fit(args)
+    fit$report <- lapply(fit$report, function(x) rep(NA_real_, length(x)))
+    fit$diagnostics$numerical_ok <- FALSE
+    fit
+  }), .package = "ALSCL")
+  warnings <- character()
+  out <- withCallingHandlers(retro_acl(f, nyear = 2, silent = TRUE, plot = TRUE),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  expect_true(nrow(out$results) > 0L)
+  expect_null(out$plot)
+  expect_match(warnings[2], "no finite estimates")
+  for (value in c(NA_real_, NaN, Inf, -Inf)) {
+    out$results$Value <- value
+    expect_error(plot_retro(out), "No retrospective estimates")
+  }
+  # Individually finite time and value columns are insufficient when no row
+  # has both: there is still no drawable point.
+  out$results$Value <- 1
+  out$results$Year <- NA_real_
+  out$results$Year[1] <- 2000
+  out$results$Value[1] <- NA_real_
+  expect_error(plot_retro(out), "No retrospective estimates")
+})
+
+test_that("retrospective plots retain gaps between available estimates without grids", {
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  f <- fixture_frames()
+  local_mocked_bindings(run_acl = retro_test_mock("acl"), .package = "ALSCL")
+  out <- retro_acl(f, nyear = 2, silent = TRUE)
+  missing <- out$results$Year == 2002 & out$results$Peel == 0L
+  out$results$Value[missing] <- NA_real_
+  expect_no_warning(p <- plot_retro(out))
+  expect_equal(nrow(p$data), nrow(out$results))
+  expect_identical(p$data$Value, out$results$Value)
+  built <- ggplot2::ggplot_build(p)
+  # Keep the missing middle points so geom_line breaks the path rather than
+  # drawing a spurious connection across the missing time step.
+  expect_equal(sum(is.na(built$data[[1]]$y)), sum(missing))
+  expect_true(any(is.finite(built$data[[1]]$y)))
+  expect_no_warning(ggplot2::ggplotGrob(p))
+  for (grid in c("panel.grid.major.x", "panel.grid.major.y",
+                 "panel.grid.minor.x", "panel.grid.minor.y"))
+    expect_s3_class(ggplot2::calc_element(grid, built$plot$theme), "element_blank")
 })
 

@@ -14,6 +14,146 @@ test_that("an unchanged failed pass preserves earlier success and all pass recor
   expect_match(opt$optimizer_history[[3]]$message, "restart failed")
 })
 
+test_that("near-identical failed restarts preserve an actual successful pass", {
+  # These differences reproduce the two own-data ALSCL retrospective failures:
+  # the second pass reported false convergence after a sub-nanounit NLL gain.
+  cases <- list(
+    list(objective = -224.5458052179776, change = -7.78e-10, delta = 3.27e-7),
+    list(objective = -201.02331936590565, change = -2.91e-10, delta = 1.64e-8))
+  for (case in cases) {
+    i <- 0L
+    first <- list(par = c(log_sigma_index = -2.2), objective = case$objective,
+      convergence = 0L, message = "relative convergence (4)")
+    second <- list(par = first$par + case$delta,
+      objective = first$objective + case$change, convergence = 1L,
+      message = "false convergence (8)")
+    local_mocked_bindings(nlminb = function(...) {
+      i <<- i + 1L
+      if (i == 1L) first else second
+    }, .package = "stats")
+    opt <- .acl_optimize(NULL, first$par, -Inf, Inf, 2L, list())
+    expect_identical(opt$par, first$par)
+    expect_identical(opt$objective, first$objective)
+    expect_identical(opt$convergence, 0L)
+    expect_identical(opt$selected_pass, 1L)
+    expect_identical(opt$optimizer_history, list(first, second))
+  }
+})
+
+test_that("optimizer selection uses both parameter and objective agreement", {
+  first <- list(par = c(x = 1, y = 10000), objective = -200,
+                convergence = 0L, message = "relative convergence (4)")
+  second <- first
+  choose <- function(a, b) {
+    i <- 0L
+    local_mocked_bindings(nlminb = function(...) {
+      i <<- i + 1L
+      if (i == 1L) a else b
+    }, .package = "stats")
+    .acl_optimize(NULL, a$par, -Inf, Inf, 2L, list())
+  }
+  # A later, genuinely successful pass can win a numerical tie even when its
+  # reported objective is slightly higher; its original code is never changed.
+  failed <- first; failed$convergence <- 1L; failed$message <- "false convergence (8)"
+  second$par["x"] <- 1 + 1e-7
+  second$objective <- first$objective + 5e-9
+  opt <- choose(failed, second)
+  expect_identical(opt$convergence, 0L)
+  expect_identical(opt$selected_pass, 2L)
+  expect_identical(opt$optimizer_history, list(failed, second))
+
+  # A material likelihood improvement remains selected even with a nonzero code.
+  second <- failed; second$par["x"] <- 1 + 1e-9
+  second$objective <- first$objective - 1e-5
+  opt <- choose(first, second)
+  expect_identical(opt$convergence, 1L)
+  expect_identical(opt$selected_pass, 2L)
+  expect_identical(opt$par, second$par)
+
+  # Compare each coordinate on its own scale: a large unrelated coordinate
+  # must not make a meaningful change in x count as the same solution.
+  second$par["x"] <- 1 + 1e-4
+  second$objective <- first$objective - 5e-10
+  opt <- choose(first, second)
+  expect_identical(opt$convergence, 1L)
+  expect_identical(opt$selected_pass, 2L)
+  expect_identical(opt$par, second$par)
+
+  # Large coordinates use relative agreement, not an absolute-only cutoff.
+  first$par <- c(x = 100)
+  second <- first; second$par <- c(x = 100 + 5e-5)
+  second$objective <- first$objective - 5e-10
+  second$convergence <- 1L; second$message <- "false convergence (8)"
+  opt <- choose(first, second)
+  expect_identical(opt$convergence, 0L)
+  expect_identical(opt$selected_pass, 1L)
+  expect_identical(opt$par, first$par)
+
+  # Different parameter identities are not equivalent merely because their
+  # numeric positions are close.
+  second$par <- c(z = 100 + 5e-5)
+  opt <- choose(first, second)
+  expect_identical(opt$selected_pass, 2L)
+  expect_identical(opt$par, second$par)
+})
+
+test_that("passes with the same success status retain the lower objective", {
+  for (code in c(0L, 1L)) for (delta in c(0, 1e-8)) {
+    first <- list(par = c(x = 1), objective = -200, convergence = code,
+                  message = if (code == 0L) "relative convergence (4)" else "false convergence (8)")
+    for (change in c(-5e-10, 5e-10)) {
+      second <- first; second$par <- first$par + delta
+      second$objective <- first$objective + change
+      i <- 0L
+      local_mocked_bindings(nlminb = function(...) {
+        i <<- i + 1L
+        if (i == 1L) first else second
+      }, .package = "stats")
+      opt <- .acl_optimize(NULL, first$par, -Inf, Inf, 2L, list())
+      expected <- if (change < 0) second else first
+      expect_identical(opt$convergence, code)
+      expect_identical(opt$selected_pass, if (change < 0) 2L else 1L)
+      expect_identical(opt$objective, expected$objective)
+      expect_identical(opt$par, expected$par)
+      expect_identical(opt$optimizer_history, list(first, second))
+    }
+  }
+})
+
+test_that("nonfinite and errored passes remain recorded without replacing a finite fit", {
+  for (bad_value in c(Inf, -Inf, NaN, NA_real_)) {
+    i <- 0L
+    first <- list(par = c(x = 1), objective = -200, convergence = 0L,
+                  message = "relative convergence (4)")
+    local_mocked_bindings(nlminb = function(...) {
+      i <<- i + 1L
+      if (i == 1L) return(first)
+      if (i == 3L) stop("restart evaluation failed")
+      list(par = c(x = 2), objective = bad_value, convergence = 1L,
+           message = "nonfinite objective")
+    }, .package = "stats")
+    opt <- .acl_optimize(NULL, first$par, -Inf, Inf, 3L, list())
+    expect_identical(opt$selected_pass, 1L)
+    expect_identical(opt$convergence, 0L)
+    expect_identical(opt$par, first$par)
+    expect_identical(opt$optimizer_history[[2]]$objective, bad_value)
+    expect_identical(opt$optimizer_history[[3]]$par, first$par)
+    expect_match(opt$optimizer_history[[3]]$message, "restart evaluation failed")
+  }
+  i <- 0L
+  local_mocked_bindings(nlminb = function(...) {
+    i <<- i + 1L
+    stop(paste("failed pass", i))
+  }, .package = "stats")
+  opt <- .acl_optimize(NULL, c(x = 1), -Inf, Inf, 2L, list())
+  expect_true(is.na(opt$selected_pass))
+  expect_identical(opt$convergence, 1L)
+  expect_identical(opt$objective, Inf)
+  expect_length(opt$optimizer_history, 2L)
+  expect_match(opt$optimizer_history[[1]]$message, "failed pass 1")
+  expect_match(opt$optimizer_history[[2]]$message, "failed pass 2")
+})
+
 test_that("refinement improves a quadratic and respects safety guards", {
   obj <- list(fn = function(x) sum((x - 2)^2), gr = function(x) 2*(x - 2))
   good <- .acl_polish(obj, c(x = 1), -10, 10)
