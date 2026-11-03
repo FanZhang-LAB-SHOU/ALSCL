@@ -3,7 +3,9 @@
 #' This function runs a stock assessment model using the specified iteration range.
 #' Supports parallel execution on multiple CPU cores for faster computation.
 #'
-#' @param iter_range A numeric vector specifying the range of iterations to run the stock assessment model for (default is 4:100).
+#' @param iter_range A numeric vector of distinct nonnegative integer replicate
+#'   IDs to fit (default 4:100). Zero is valid, matching the seeds accepted by
+#'   sim_data().
 #' @param sim_data_path A character string specifying the path to the folder containing the simulation data files (default is the current working directory).
 #'   Recorded observation years are retained. Older files without time metadata
 #'   use a first observation year of 2000.
@@ -48,9 +50,9 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
   if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||
-      any(iter_range < 1 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
+      any(iter_range < 0 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
       anyDuplicated(iter_range))
-    stop("iter_range must contain distinct positive integer replicate IDs.", call. = FALSE)
+    stop("iter_range must contain distinct nonnegative integer replicate IDs.", call. = FALSE)
   old <- options(ALSCL.sd_cores = 1L)
   on.exit(options(old), add = TRUE)
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)

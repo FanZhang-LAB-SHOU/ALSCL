@@ -455,11 +455,17 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #' Right panel: pla heatmaps side-by-side.
 #'
 #' @inheritParams plot_compare_ts
-#' @param age_range Numeric vector of length 2. Default c(1, 20).
+#' @param age_range Numeric vector of length 2, or NULL. NULL uses the combined
+#'   range of fitted ages, starting no earlier than either model's t0. A model
+#'   without age metadata contributes the legacy range c(1, 20). An explicit
+#'   range must be finite, increasing and start at or after both t0 values.
 #' @param ref_data Optional data.frame with columns \code{Age} and \code{Length}
 #'   containing observed age-length measurements (e.g. from otolith readings).
 #'   If provided, a VB curve is fitted via \code{nls()} and overlaid as a
-#'   reference, with the raw data as scatter points.
+#'   reference, with the raw data as scatter points. The reference curve is
+#'   drawn only at ages at or above its fitted t0, within age_range. A fit with
+#'   invalid growth parameters or no positive age span in that range is omitted
+#'   with a warning; model curves and observed points are retained.
 #' @param ref_name Character. Nonempty label for the reference curve, distinct
 #'   from both model labels when ref_data is supplied. Default "Observed VB".
 #' @param ref_color Character. Color for reference curve/points. Default "grey30".
@@ -488,7 +494,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #'   ref_data = obs, ref_name = "Otolith data",
 #'   ref_color = "forestgreen", show_points = TRUE)
 #' }
-plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
+plot_compare_growth <- function(model1, model2, age_range = NULL,
                                 model1_name = NULL, model2_name = NULL,
                                 colors = NULL, linetypes = NULL, line_size = NULL,
                                 ref_data = NULL, ref_name = "Observed VB",
@@ -511,8 +517,37 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
                                line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
 
+  valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
+  for (model in list(model1, model2)) {
+    if (!valid_scalar(model$report$Linf) || model$report$Linf <= 0 ||
+        !valid_scalar(model$report$vbk) || model$report$vbk <= 0 ||
+        !valid_scalar(model$report$t0))
+      stop("Growth parameters Linf and vbk must be finite positive scalars, and t0 must be finite.",
+           call. = FALSE)
+  }
+  first_valid_age <- max(model1$report$t0, model2$report$t0)
+  if (is.null(age_range)) {
+    fitted_range <- function(model) {
+      if (is.null(model$age)) return(c(1, 20))
+      if (!is.numeric(model$age) || !length(model$age) || any(!is.finite(model$age)))
+        stop("Model age metadata must contain finite numeric ages; supply age_range for saved fits without usable age metadata.",
+             call. = FALSE)
+      range(model$age)
+    }
+    age_range <- range(c(fitted_range(model1), fitted_range(model2)))
+    age_range[1L] <- max(age_range[1L], first_valid_age)
+  }
+  if (!is.numeric(age_range) || length(age_range) != 2L || any(!is.finite(age_range)) ||
+      age_range[2L] <= age_range[1L])
+    stop("age_range must be a finite increasing pair with a positive span; supply an explicit range at or above both t0 values.",
+         call. = FALSE)
+  if (age_range[1L] < first_valid_age)
+    stop("age_range must start at or after both t0 values; earlier ages extrapolate to negative lengths.",
+         call. = FALSE)
+
   VB <- function(Linf, k, t0, age) Linf * (1 - exp(-k * (age - t0)))
   ages <- seq(age_range[1], age_range[2], by = 0.5)
+  if (tail(ages, 1L) < age_range[2L]) ages <- c(ages, age_range[2L])
   vb_df <- rbind(
     data.frame(Age = ages, Length = VB(model1$report$Linf, model1$report$vbk, model1$report$t0, ages), Model = model1_name),
     data.frame(Age = ages, Length = VB(model2$report$Linf, model2$report$vbk, model2$report$t0, ages), Model = model2_name))
@@ -552,9 +587,26 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
 
     if (!is.null(nls_fit)) {
       nls_coef <- stats::coef(nls_fit)
+      if (!valid_scalar(nls_coef["Linf"]) || nls_coef["Linf"] <= 0 ||
+          !valid_scalar(nls_coef["k"]) || nls_coef["k"] <= 0 ||
+          !valid_scalar(nls_coef["t0"])) {
+        warning("nls VB reference requires finite positive Linf and k and finite t0. Skipping reference curve.",
+                call. = FALSE)
+        nls_fit <- NULL
+      } else if (max(age_range[1L], nls_coef["t0"]) >= age_range[2L]) {
+        warning("nls VB reference has no positive age span at or above its t0 within age_range. Skipping reference curve.",
+                call. = FALSE)
+        nls_fit <- NULL
+      }
+    }
+    if (!is.null(nls_fit)) {
+      # The reference can have a later growth origin than either assessment.
+      # Include that origin exactly without shortening the model curves.
+      reference_ages <- sort(unique(c(max(age_range[1L], nls_coef["t0"]),
+                                      ages[ages >= nls_coef["t0"]])))
       ref_curve <- data.frame(
-        Age    = ages,
-        Length = VB(nls_coef["Linf"], nls_coef["k"], nls_coef["t0"], ages),
+        Age    = reference_ages,
+        Length = VB(nls_coef["Linf"], nls_coef["k"], nls_coef["t0"], reference_ages),
         Model  = ref_name
       )
       vb_df <- rbind(vb_df, ref_curve)
@@ -819,7 +871,8 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
       ggplot2::geom_col(position = "dodge", alpha = bar_alpha, width = bar_width) +
       ggplot2::geom_text(ggplot2::aes(label = round(Metric_Value, 2)),
                          position = ggplot2::position_dodge(width = bar_width),
-                         vjust = -0.3, size = label_size) +
+                         vjust = -0.3, size = label_size,
+                         family = acl_theme("font_family")) +
       ggplot2::scale_fill_manual(values = cfg$colors) +
       ggplot2::labs(title = title, x = "", y = "") +
       base_layers + ggplot2::theme(legend.position = "none")
@@ -875,6 +928,10 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
+#' @details Saved assessments are supported without refitting. Survey
+#'   catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
+#'   at the fitted length midpoints. Older fits without a recipe use log_q from
+#'   their live TMB object.
 #' @export
 plot_compare_selectivity <- function(model1, model2,
                                      model1_name = NULL, model2_name = NULL,
@@ -888,7 +945,29 @@ plot_compare_selectivity <- function(model1, model2,
                                line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
 
-  q1 <- exp(model1$obj$env$data$log_q); q2 <- exp(model2$obj$env$data$log_q)
+  catchability <- function(model) {
+    lengths <- model$len_mid
+    if (!is.numeric(lengths) || !length(lengths) || any(!is.finite(lengths)))
+      stop("Catchability plots require finite fitted length midpoints.", call. = FALSE)
+    args <- model$recipe$args
+    if (!is.null(args$sel_L50) && !is.null(args$sel_L95)) {
+      valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
+      if (!valid_scalar(args$sel_L50) || !valid_scalar(args$sel_L95) ||
+          args$sel_L95 <= args$sel_L50)
+        stop("The saved recipe must have finite sel_L50 and sel_L95 with sel_L95 greater than sel_L50.",
+             call. = FALSE)
+      log_q <- stats::plogis(log(19) * (lengths - args$sel_L50) /
+                              (args$sel_L95 - args$sel_L50), log.p = TRUE)
+    } else {
+      log_q <- model$obj$env$data$log_q
+    }
+    if (!is.numeric(log_q) || length(log_q) != length(lengths) ||
+        anyNA(log_q) || any(log_q > 0))
+      stop("Catchability plots require a complete saved recipe or fitted log_q values matching the length midpoints.",
+           call. = FALSE)
+    exp(log_q)
+  }
+  q1 <- catchability(model1); q2 <- catchability(model2)
   df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
               data.frame(Length = model2$len_mid, Selectivity = q2, Model = model2_name))
 

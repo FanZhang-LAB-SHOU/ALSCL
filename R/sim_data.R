@@ -18,7 +18,9 @@
 #' @param params A list from \code{initialize_params()} containing parameters.
 #' @param sim_year Total simulation years; NULL uses params$nyear.
 #' @param output_dir Directory for saving results (default: current directory).
-#' @param iter_range Integer vector, which iterations (seeds) to run (default: 4:100).
+#' @param iter_range Distinct nonnegative integer replicate IDs, also used as
+#'   random seeds (default 4:100). Zero is valid. The same IDs can be passed to
+#'   sim_model(), sim_acl() or sim_alscl() to fit the saved replicates.
 #' @param return_iter Integer or NULL. Replicate ID to return in memory;
 #'   NULL returns the replicate with ID max(iter_range). All requested
 #'   replicates are still saved to output_dir.
@@ -56,8 +58,9 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   if (is.null(sim_year)) sim_year <- params$nyear
   sim_year <- .acl_positive_integer(sim_year, "sim_year", 2L)
   if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||
-      any(iter_range < 0 | iter_range > .Machine$integer.max | iter_range != floor(iter_range)))
-    stop("iter_range must contain finite nonnegative integer seeds.")
+      any(iter_range < 0 | iter_range > .Machine$integer.max | iter_range != floor(iter_range)) ||
+      anyDuplicated(iter_range))
+    stop("iter_range must contain distinct finite nonnegative integer seeds.")
   # Determine model type from bio_vars (set by sim_cal).
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
   .acl_simulation_biology(bio_vars, params, model_type)

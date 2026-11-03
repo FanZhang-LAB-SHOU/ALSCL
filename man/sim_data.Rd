@@ -22,7 +22,9 @@ sim_data(
 
 \item{output_dir}{Directory for saving results (default: current directory).}
 
-\item{iter_range}{Integer vector, which iterations (seeds) to run (default: 4:100).}
+\item{iter_range}{Distinct nonnegative integer replicate IDs, also used as
+random seeds (default 4:100). Zero is valid. The same IDs can be passed to
+sim_model(), sim_acl() or sim_alscl() to fit the saved replicates.}
 
 \item{return_iter}{Integer or NULL. Replicate ID to return in memory;
 NULL returns the replicate with ID max(iter_range). All requested

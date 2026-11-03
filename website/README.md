@@ -22,9 +22,11 @@ After editing a tutorial pair, regenerate the manuals, book and Wiki:
 ```sh
 python3 scripts/build_manual.py
 python3 scripts/build_wiki.py
+python3 scripts/test_manual_builder.py
+Rscript scripts/test_plot_exports.R
 ```
 
-Use the equivalent virtual-environment Python path on Windows. The build installs no ALSCL package and does not fit models. KaTeX 0.16.22 is downloaded from the npm registry with a pinned SHA-256 and copied, with its MIT license and fonts, into the generated site. The published site requires no external fonts, analytics, translation service or JavaScript CDN. Search and mathematics work from the bundled files.
+The export check executes the maintained plotting tutorials, creates their teaching fits when no cache is supplied, and writes example exports to a temporary directory. It checks all returned panels for visible gridlines. Use the equivalent virtual-environment Python path on Windows. The build installs no ALSCL package and does not fit models. KaTeX 0.16.22 is downloaded from the npm registry with a pinned SHA-256 and copied, with its MIT license and fonts, into the generated site. The published site requires no external fonts, analytics, translation service or JavaScript CDN. Search and mathematics work from the bundled files.
 
 ## Content sources
 
@@ -52,7 +54,7 @@ their preparation code by default.
 
 ## Writing rules for tutorials
 
-Every tutorial is a task page. Write the English and Chinese versions together, with the same sequence of headings, paragraphs, lists, tables, code blocks and figures, because `scripts/build_manual.py` interleaves the two files block by block to produce the bilingual manuals, book and Wiki. The two files may differ only in wording; a different block sequence fails the build.
+Every tutorial is a task page. Write the English and Chinese versions together, with the same sequence of headings, paragraphs, lists, tables, code blocks and figures, because `scripts/build_manual.py` interleaves the two files block by block to produce the bilingual manuals, book and Wiki. The two files may differ in wording and in the number of comments or blank lines inside a code block. Executable code must match. The merger checks that the generated code is unchanged; a different block sequence fails the build.
 
 Structure of a task page:
 

@@ -464,6 +464,7 @@ plot_retro <- function(retro_result,
   if (is.null(facet_nrow)) facet_nrow <- renamed$facet_nrow
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
+  if (is.null(font_family)) font_family <- acl_theme("font_family")
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points
@@ -538,7 +539,7 @@ plot_retro <- function(retro_result,
                    paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), Rho)),
                    "rho unavailable: check diagnostics")),
     y = rho_y, hjust = rho_hjust, vjust = rho_vjust,
-    size = rho_size,
+    size = rho_size, family = font_family,
     inherit.aes = FALSE
   )
   if (any(!is.finite(rho_text$Rho)))

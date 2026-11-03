@@ -15,6 +15,7 @@ ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'_site'
 errors=[]
 for command in [
+    [sys.executable, str(ROOT/'scripts/test_manual_builder.py')],
     [sys.executable, str(ROOT/'scripts/build_manual.py'), '--check'],
     [sys.executable, str(ROOT/'scripts/build_wiki.py'), '--check'],
     ['Rscript', str(ROOT/'scripts/test_tutorial_workflows.R')],
@@ -22,8 +23,10 @@ for command in [
     result=subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     if result.returncode:
         errors.append('Documentation workflow check failed: '+command[1]+'\n'+result.stdout+result.stderr)
-    elif result.stdout:
-        print(result.stdout.strip())
+    else:
+        output = (result.stdout + result.stderr).strip()
+        if output:
+            print(output)
 version=re.search(r'^Version: (.+)$',(ROOT/'DESCRIPTION').read_text(),re.M)[1]
 minimum_r=re.search(r'R \(>= ([0-9.]+)\)',(ROOT/'DESCRIPTION').read_text())[1]
 minimum_r=minimum_r[:-2] if minimum_r.endswith('.0') else minimum_r

@@ -77,12 +77,13 @@ ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # 显式保存并恢复设置
 old <- acl_theme()
-acl_theme_set(palette="aaas")
+acl_theme_set(palette="aaas", x_breaks=c(2000, 2010),
+              ylab=list(survey="Survey index"))
 do.call(acl_theme_set, old)
 acl_theme_reset()
 ```
 
-`ggsave()` 按给定的尺寸和分辨率写出 `p`。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复；`acl_theme_reset()` 回到默认值。色板来源：[ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html)。
+`ggsave()` 按给定的尺寸和分辨率写出 `p`。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复，包括自动坐标刻度和原来为 `NULL` 的标签；`acl_theme_reset()` 回到默认值。设置 `x_breaks = NULL` 可恢复自动刻度，`ylab = list(survey = NULL)` 可清除调查标签覆盖值。所选字体也应用于回溯图 rho 和比较图数值标注。色板来源：[ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html)。
 
 <h2 id="growth">4. 设置生长图的范围和文字</h2>
 

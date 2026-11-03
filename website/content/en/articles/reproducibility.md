@@ -29,12 +29,13 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 
 ```r
 saved <- read_assessment("ytf_acl.rds")
+plot_compare_selectivity(a, saved, model1_name = "Original", model2_name = "Saved")
 refit <- refit_model(saved)
 max(abs(refit$opt$par - saved$opt$par))
 all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-`read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
+`read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `plot_compare_selectivity()` recovers fixed survey catchability from the saved inputs, so the original and saved curves coincide without refitting. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
 
 On the same computer with the same versions of ALSCL, TMB and R, the scalar parameters agree to the last digit and `all.equal()` returns `TRUE`. Differences in the last digits between machines or package versions come from floating-point arithmetic and the optimizer's stopping rule; a difference large enough to change a conclusion means the data, settings or package version differ.
 

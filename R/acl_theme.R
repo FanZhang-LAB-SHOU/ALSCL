@@ -267,9 +267,8 @@ NULL
 #' acl_theme("font_family")
 #' acl_theme("compare_colors")
 acl_theme <- function(what = NULL) {
-  current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
-  # Retain the nullable override in snapshots passed back to acl_theme_set().
-  if (!"compare_point_size" %in% names(current)) current["compare_point_size"] <- list(NULL)
+  # Snapshots retain every setting, including nested nullable label defaults.
+  current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()), keep.null = TRUE)
   if (is.null(what)) return(current)
   if (identical(what, "compare_linewidth")) {
     .acl_deprecated_message("theme.compare_linewidth",
@@ -294,7 +293,9 @@ acl_theme <- function(what = NULL) {
 #' @param axis_text_size Numeric. Axis tick label size.
 #' @param strip_text_size Numeric. Facet label size.
 #' @param legend_text_size Numeric. Legend text size.
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks. Pass NULL
+#'   explicitly to restore automatically selected breaks; omitting the argument
+#'   leaves the current setting unchanged.
 #' @param x_expand Numeric vector of length 2. X-axis expansion.
 #' @param line_color Character. Default line color for single-model plots.
 #' @param line_size Numeric. Default line width for single-model plots (1.5).
@@ -333,8 +334,11 @@ acl_theme <- function(what = NULL) {
 #' @param ylab Named list. Override specific y-axis labels. The survey key
 #'   labels survey indices independently of catch abundance; when unset,
 #'   survey plots retain a legacy customized abundance label or use Survey index.
+#'   Set a named label to NULL to restore its default, for example
+#'   \code{ylab = list(survey = NULL)}.
 #' @param ... The former argument name compare_linewidth, accepted with a warning.
-#' @return Invisible previous settings.
+#' @return Invisible previous settings. Save these or the result of acl_theme(),
+#'   then restore them with \code{do.call(acl_theme_set, old)}.
 #' @export
 #' @examples
 #' # --- Set just one thing ---
@@ -376,9 +380,7 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
                           smooth_color = NULL, hline_color = NULL,
                           low_col = NULL, high_col = NULL, ...) {
 
-  current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
-  # Retain the nullable override in snapshots passed back to acl_theme_set().
-  if (!"compare_point_size" %in% names(current)) current["compare_point_size"] <- list(NULL)
+  current <- acl_theme()
   old <- current
   renamed <- .acl_renamed(list(...), "acl_theme_set")
   if (is.null(compare_line_size)) compare_line_size <- renamed$compare_line_size
@@ -400,7 +402,7 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!is.null(axis_text_size))       current$axis_text_size       <- axis_text_size
   if (!is.null(strip_text_size))      current$strip_text_size      <- strip_text_size
   if (!is.null(legend_text_size))     current$legend_text_size     <- legend_text_size
-  if (!is.null(x_breaks))            current$x_breaks             <- x_breaks
+  if (!missing(x_breaks))            current["x_breaks"]           <- list(x_breaks)
   if (!is.null(x_expand))            current$x_expand             <- x_expand
   if (!is.null(line_color))           current$line_color           <- line_color
   if (!is.null(line_size))            current$line_size            <- line_size

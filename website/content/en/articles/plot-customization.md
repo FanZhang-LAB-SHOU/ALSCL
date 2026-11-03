@@ -77,12 +77,13 @@ ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # Preserve settings explicitly
 old <- acl_theme()
-acl_theme_set(palette="aaas")
+acl_theme_set(palette="aaas", x_breaks=c(2000, 2010),
+              ylab=list(survey="Survey index"))
 do.call(acl_theme_set, old)
 acl_theme_reset()
 ```
 
-`ggsave()` writes `p` at the given size and resolution. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore; `acl_theme_reset()` returns to the defaults. Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
+`ggsave()` writes `p` at the given size and resolution. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore, including automatic axis breaks and labels previously set to `NULL`; `acl_theme_reset()` returns to the defaults. Set `x_breaks = NULL` to restore automatic breaks or `ylab = list(survey = NULL)` to clear a survey-label override. The chosen font also applies to retrospective rho and comparison metric labels. Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
 
 <h2 id="growth">4. Set the growth-plot range and text</h2>
 

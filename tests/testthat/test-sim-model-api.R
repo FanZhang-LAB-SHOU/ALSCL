@@ -37,5 +37,5 @@ test_that("both simulation entry points preserve data coordinates and fit each m
 
 test_that("simulation replicate IDs reject collisions before writing files", {
   for (ids in list(numeric(), c(1, 1), 1.5, -1, NA_real_, Inf, "1"))
-    expect_error(sim_model(ids), "distinct positive integer")
+    expect_error(sim_model(ids), "distinct nonnegative integer")
 })

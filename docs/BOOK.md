@@ -4,11 +4,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.4.1 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.4.2 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.1。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.2。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.1.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.2.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -801,9 +801,9 @@ tuna$years
 str(inputs)
 ```
 
-`iter_range` 给出重复编号，编号同时作为随机种子；`sim_data()` 用 `save()` 把每次重复保存为 `output_dir` 中的 `sim_rep<id>` 文件，读取时用 `load()`，`return_iter` 选择返回到内存的那一次。在 `sm` 中，`SN_at_len` 是按时间乘体长排列的调查尾数矩阵，`weight` 和 `mat` 按体长乘时间排列，`years` 是保留时间步的日历，`nyear` 是它们的个数，`SSB`、`Rec`、`TB` 和 `N_at_age` 是生成真值。
+`iter_range` 给出互不重复的非负整数编号，同时也是随机种子；`sim_data()`、`sim_model()`、`sim_acl()` 和 `sim_alscl()` 均接受编号 0；`sim_data()` 用 `save()` 把每次重复保存为 `output_dir` 中的 `sim_rep<id>` 文件，读取时用 `load()`，`return_iter` 选择返回到内存的那一次。在 `sm` 中，`SN_at_len` 是按时间乘体长排列的调查尾数矩阵，`weight` 和 `mat` 按体长乘时间排列，`years` 是保留时间步的日历，`nyear` 是它们的个数，`SSB`、`Rec`、`TB` 和 `N_at_age` 是生成真值。
 
-`iter_range` gives the replicate ids, which are also the seeds; `sim_data()` saves each replicate as `sim_rep<id>` in `output_dir` with `save()`, read back with `load()`, and `return_iter` selects the one returned in memory. In `sm`, `SN_at_len` is a time by length matrix of survey numbers, `weight` and `mat` are length by time, `years` is the calendar of retained time steps and `nyear` their count, and `SSB`, `Rec`, `TB` and `N_at_age` are the generating truth.
+`iter_range` gives distinct nonnegative integer replicate IDs, which are also the seeds; ID 0 is accepted by `sim_data()`, `sim_model()`, `sim_acl()` and `sim_alscl()`; `sim_data()` saves each replicate as `sim_rep<id>` in `output_dir` with `save()`, read back with `load()`, and `return_iter` selects the one returned in memory. In `sm`, `SN_at_len` is a time by length matrix of survey numbers, `weight` and `mat` are length by time, `years` is the calendar of retained time steps and `nyear` their count, and `SSB`, `Rec`, `TB` and `N_at_age` are the generating truth.
 
 `simulation_to_tables(sm, pa)` 转置 `SN_at_len`，用体长中点作为行标签、用 `sm$years` 作为列名，并把三张表作为一个列表返回；[模拟调查数据案例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/CASES.md#case-simulate-survey)从 `pa` 加入生物学设置并拟合一次重复。`run_simulation_examples(out = "simulation_examples")` 为两个预设完成本步骤，把表写成 CSV 文件并在旁边保存 `truth.rds`；两个预设的第 4 次重复已保存在仓库中，见[下载和读取说明](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/cases/README.md)。
 
@@ -1968,6 +1968,14 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion dashed) with their `Linf` and `k` in the subtitle, the grey reference curve that `nls()` fits to `ref_data`, and the grey points of that data; right: the age length matrices of both fits as heat maps, with the length bin index on the vertical axis. Use it to see whether the two models assume the same growth and how they differ from independent age length data; the curves coincide here because growth is fixed at the same values, and the reference data come from the code above, so they are simulated values rather than measurements.
 
+省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
+
+Omit `age_range` to use the combined fitted age range, starting at or after both models' `t0`. A model without saved age metadata contributes the legacy range 1-20 years. An explicit range must contain two finite increasing ages and start at or after both `t0` values. A range with no positive span is rejected.
+
+可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
+
+The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the assessment curves and observed points remain.
+
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_growth)
 
 
@@ -2521,14 +2529,15 @@ ggplot2::ggsave("retrospective.png", p, width=11, height=7, dpi=300, bg="white")
 ggplot2::ggsave("retrospective.pdf", p, width=11, height=7)
 # 显式保存并恢复设置 / Preserve settings explicitly
 old <- acl_theme()
-acl_theme_set(palette="aaas")
+acl_theme_set(palette="aaas", x_breaks=c(2000, 2010),
+              ylab=list(survey="Survey index"))
 do.call(acl_theme_set, old)
 acl_theme_reset()
 ```
 
-`ggsave()` 按给定的尺寸和分辨率写出 `p`。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复；`acl_theme_reset()` 回到默认值。色板来源：[ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html)。
+`ggsave()` 按给定的尺寸和分辨率写出 `p`。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复，包括自动坐标刻度和原来为 `NULL` 的标签；`acl_theme_reset()` 回到默认值。设置 `x_breaks = NULL` 可恢复自动刻度，`ylab = list(survey = NULL)` 可清除调查标签覆盖值。所选字体也应用于回溯图 rho 和比较图数值标注。色板来源：[ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html)。
 
-`ggsave()` writes `p` at the given size and resolution. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore; `acl_theme_reset()` returns to the defaults. Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
+`ggsave()` writes `p` at the given size and resolution. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore, including automatic axis breaks and labels previously set to `NULL`; `acl_theme_reset()` returns to the defaults. Set `x_breaks = NULL` to restore automatic breaks or `ylab = list(survey = NULL)` to clear a survey-label override. The chosen font also applies to retrospective rho and comparison metric labels. Palette source: [ggsci NPG documentation](https://nanx.me/ggsci/reference/pal_npg.html).
 
 <a id="plot-customization-growth"></a>
 
@@ -2584,9 +2593,9 @@ Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is uns
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.4.1，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.2，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **65 exported functions** of ALSCL 2.4.1 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **65 exported functions** of ALSCL 2.4.2 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -2728,6 +2737,10 @@ acl_theme_reset()
 ## `acl_theme_set()`
 
 设置全局主题 / Set global theme settings
+
+保存 `old <- acl_theme()`，再用 `do.call(acl_theme_set, old)` 完整恢复设置。显式 `x_breaks = NULL` 恢复自动刻度，`ylab = list(survey = NULL)` 清除调查标签覆盖值；省略参数保留当前值。
+
+Save `old <- acl_theme()` and restore the settings with `do.call(acl_theme_set, old)`. Explicit `x_breaks = NULL` restores automatic breaks and `ylab = list(survey = NULL)` clears a survey-label override; omitted arguments leave current values unchanged.
 
 省略的 `line_size` 与 `se_alpha` 参数继承 `acl_theme_set()`（默认 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差和指标组合图的标题及 F 分面文字继承全局字体设置。默认无网格。
 
@@ -3576,12 +3589,20 @@ plot_compare_F_ts(a, b, method = "apical") +
 
 生长与外部参照接口 / Growth and reference-data interface
 
+可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
+
+The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the assessment curves and observed points remain.
+
+省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
+
+Omit `age_range` to use the combined fitted age range, starting at or after both models' `t0`. A model without saved age metadata contributes the legacy range 1-20 years. An explicit range must contain two finite increasing ages and start at or after both `t0` values. A range with no positive span is rejected.
+
 提供 `ref_data` 时，`ref_name` 必须为非空字符串，且与两个模型标签均不同；重复名称会在拟合参考曲线前报错。
 
 When supplying `ref_data`, use a nonempty `ref_name` distinct from both model labels; duplicate names are rejected before fitting the reference curve.
 
 ```r
-plot_compare_growth (model1, model2, age_range = c(1, 20), model1_name = NULL, model2_name = NULL,
+plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model2_name = NULL,
     colors = NULL, linetypes = NULL, line_size = NULL, ref_data = NULL, ref_name = "Observed VB",
     ref_color = "grey30", ref_linetype = "dotdash", show_points = TRUE, point_size = NULL,
     point_alpha = 0.4, nls_start = NULL, ...)
@@ -3591,7 +3612,7 @@ plot_compare_growth (model1, model2, age_range = c(1, 20), model1_name = NULL, m
 |---|---|---|---|
 | `model1` | `必填 / required` | 第一个拟合对象。 | First model result (reference). |
 | `model2` | `必填 / required` | 第二个拟合对象。 | Second model result (alternative). |
-| `age_range` | `c(1, 20)` | 生长图的年龄上下限，单位为年。 | Numeric vector of length 2. Default c(1, 20). |
+| `age_range` | `NULL` | 两份拟合的合并年龄范围，自动起点不早于两个 t0；旧结果回退到 1-20 岁。显式值须为有限递增的二元向量，起点不早于两个 t0。 | Combined fitted ages, starting at or after both t0 values; legacy fallback 1-20. An explicit finite increasing pair must start at or after both t0 values. |
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
@@ -3727,6 +3748,10 @@ plot_compare_residuals(a, b, dat)
 ## `plot_compare_selectivity()`
 
 固定调查可捕性 / Fixed survey catchability
+
+`read_assessment()` 读取的评估结果可直接绘图，固定调查可捕性从保留的输入配方恢复。旧会话中的拟合可使用其 TMB 数据；若旧保存结果缺少所需输入，须先用原始输入列表 `x` 重新保存。
+
+Saved assessments from `read_assessment()` can be plotted directly: fixed survey catchability is recovered from the retained input recipe. A legacy live fit can use its TMB data; an older saved fit without the required inputs must first be saved again with its original input bundle `x`.
 
 ```r
 plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL,
@@ -4785,7 +4810,7 @@ sim_acl (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters =
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `iter_range` | `4:100` | 重复编号；模拟时也用作随机种子。 | A numeric vector specifying the range of iterations to run the stock assessment model for (default is 4:100). |
+| `iter_range` | `4:100` | 互不重复的非负整数编号，包括 0；模拟时也用作随机种子。 | Distinct nonnegative integer replicate IDs, including 0; also used as simulation seeds. |
 | `sim_data_path` | `"."` | 包含 sim_rep 文件的目录。 | A character string specifying the path to the folder containing the simulation data files (default is the current working directory). |
 | `output_dir` | `"."` | 输出目录；必要时自动建立。 | Character, the directory where simulation results will be saved.(default is the current working directory). |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | A list containing the custom initial values for the parameters (default is NULL). |
@@ -4870,7 +4895,7 @@ sim_data (bio_vars, params, sim_year = NULL, output_dir = ".", iter_range = 4:10
 | `params` | `必填 / required` | initialize_params() 返回的完整模拟参数列表。 | A list from initialize_params() containing parameters. |
 | `sim_year` | `NULL` | 模拟总年数；NULL 使用 params$nyear。 | Total simulation years; NULL uses params$nyear. |
 | `output_dir` | `"."` | 输出目录；必要时自动建立。 | Directory for saving results (default: current directory). |
-| `iter_range` | `4:100` | 重复编号；模拟时也用作随机种子。 | Integer vector, which iterations (seeds) to run (default: 4:100). |
+| `iter_range` | `4:100` | 互不重复的非负整数编号，包括 0；模拟时也用作随机种子。 | Distinct nonnegative integer replicate IDs, including 0; also used as simulation seeds. |
 | `return_iter` | `NULL` | 在内存中返回的重复编号；NULL 默认选 iter_range 中的最大编号。 | Replicate ID to return in memory; NULL selects the largest ID in iter_range. |
 
 **返回 / Returns:** 返回 return_iter 指定的重复结果；NULL 默认选择 iter_range 中的最大编号。结果包含调查数量 SN_at_len、种群体长别数量 N_at_len、年龄别数量 N_at_age、SSB、Rec、捕捞量及时间、年龄、体长等元数据。所有重复另以包含 sim.data 的 `sim_rep<id>` 文件写入 output_dir。
@@ -5551,6 +5576,10 @@ summary(saved)
 
 使用 ALSCL 拟合模拟批次的便捷入口。 / Convenience interface for simulation batches fitted with ALSCL.
 
+`sim_data()`、`sim_model()`、`sim_acl()` 和 `sim_alscl()` 的重复编号须为互不重复的非负整数，可以包含 0。模拟以编号作为随机种子，拟合读取对应的 `sim_rep<id>` 文件。
+
+Replicate IDs must be distinct nonnegative integers, including 0, in `sim_data()`, `sim_model()`, `sim_acl()` and `sim_alscl()`. Simulation uses each ID as its seed and fitting reads the matching `sim_rep<id>` file.
+
 ```r
 sim_alscl (..., nstarts = 1)
 ```
@@ -5599,7 +5628,7 @@ sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
 |---|---|---|---|
-| `iter_range` | `4:100` | 与 `sim_rep<id>` 文件名对应的互不重复正整数编号。 | Distinct positive integer replicate IDs matching `sim_rep<id>` filenames. |
+| `iter_range` | `4:100` | 与 `sim_rep<id>` 文件名对应的互不重复非负整数编号，包括 0。 | Distinct nonnegative integer replicate IDs, including 0, matching `sim_rep<id>` filenames. |
 | `sim_data_path` | `"."` | 存放 sim_data() 模拟文件的目录。 | Folder containing simulation files produced by sim_data(). |
 | `output_dir` | `"."` | 保存 `result_rep_<id>` 的目录；ACL 和 ALSCL 应使用不同目录。 | Directory for `result_rep_<id>` files; use different directories for ACL and ALSCL. |
 | `parameters` | `NULL` | 可选、对应模型的标量参数初值。 | Optional model-specific scalar initial values. |
@@ -5814,14 +5843,15 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 
 ```r
 saved <- read_assessment("ytf_acl.rds")
+plot_compare_selectivity(a, saved, model1_name = "Original", model2_name = "Saved")
 refit <- refit_model(saved)
 max(abs(refit$opt$par - saved$opt$par))
 all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`refit_model()` 重新拟合配方，返回带有可执行对象的拟合结果；命名参数会覆盖配方，`map` 这类列表会整体替换保存的列表。
+`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 重新拟合配方，返回带有可执行对象的拟合结果；命名参数会覆盖配方，`map` 这类列表会整体替换保存的列表。
 
-`read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
+`read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `plot_compare_selectivity()` recovers fixed survey catchability from the saved inputs, so the original and saved curves coincide without refitting. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
 
 在同一台电脑上使用相同版本的 ALSCL、TMB 和 R 时，标量参数逐位相同，`all.equal()` 返回 `TRUE`。不同机器或不同软件包版本之间末位数字的差异来自浮点运算和优化器的停止规则；大到足以改变结论的差异，说明数据、设置或软件包版本不同。
 
@@ -6481,41 +6511,48 @@ Starting values go in `x$fit_config$acl$parameters` or `x$fit_config$alscl$param
 The script below runs every step on the teaching data: it reads the three CSV files in `docs/data`, collects the biology in `bio`, derives the bin midpoints and boundaries from the row labels, sets the starting values and maps of both models, builds and checks `x`, fits ACL (`a`) and ALSCL (`b`), prints their numerical checks, draws the residual and spawning biomass plots of `b`, and saves the bundle, both fits without their live TMB object, the two figures and the session information to `output/own-data-example`. Run it from the root of a downloaded copy of the repository, because it sources `scripts/plot_helpers.R` and reads `docs/data`: `source("scripts/fit_own_data_example.R", encoding = "UTF-8")`.
 
 ```r
-# ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
-# 从仓库根目录运行 / Run from the repository root: / Run from the repository root:
-# source("scripts/fit_own_data_example.R", encoding = "UTF-8")
-# 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。 / The supplied numbers describe the synthetic YTF example, not your stock.
 
+# ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
+# 从仓库根目录运行 / Run from the repository root:
+# source("scripts/fit_own_data_example.R", encoding = "UTF-8")
+# 默认读取内附模拟数据。正式分析必须修改第 1、2、3 步。
+# The supplied numbers describe the synthetic YTF example, not your stock.
 library(ALSCL)
 if (packageVersion("ALSCL") < "2.4.0")
   stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
 
-# Read the three aligned tables -------------------------------
-# 1. 读取三表 / Read the three aligned tables ------------------------------- / data.CatL.csv, data.wgt.csv, data.mat.csv.
+# 1. 读取三表 / Read the three aligned tables -------------------------------
+# 正式数据改成 "my_data"，其中放以下三个 CSV：
+# data.CatL.csv, data.wgt.csv, data.mat.csv.
 data_dir <- "docs/data"
 inputs <- read_survey_csv(data_dir)
-# Excel alternative (requires readxl):
-# inputs <- read_survey_excel("my_survey.xlsx")
 
-# inputs <- read_survey_excel("my_survey.xlsx") / Shared biology -----------------------------------------
+# Excel 可替换上一行 / Excel alternative (requires readxl):
+# inputs <- read_survey_excel("my_survey.xlsx")
+# 2. 共用生物设置 / Shared biology -----------------------------------------
+# 以下是年度 YTF 教学值，正式数据必须采用自己的生物学依据。
 # M_annual and vbk are annual; lengths are cm; weights in the example are kg.
 bio <- list(rec.age = 1, nage = 15, M_annual = 0.2,
             growth_step = 1, sel_L50 = 15, sel_L95 = 20,
             Linf = 60, vbk = 0.2, t0 = 1 / 60,
             cv_len = 0.2, cv_grow = 0.2)
+# 当前 ALSCL 使用 log_t0，故要求 0 < t0 < rec.age；不要对负 t0 取绝对值。
 stopifnot(bio$t0 > 0, bio$t0 < bio$rec.age)
 
+# 此例 LengthBin 填数值中点：6, 8, ..., 50。
 # For labels such as "5-7", supply the actual midpoints explicitly instead.
 len_mid <- as.numeric(inputs$data.CatL[[1]])
 stopifnot(all(is.finite(len_mid)), all(diff(len_mid) > 0))
+# 此例为连续等宽组；非等宽组请直接填写实测的 nlen-1 个内部边界。
 # This midpoint formula is only used for the equal-width demonstration bins.
 stopifnot(max(abs(diff(len_mid) - diff(len_mid)[1])) < 1e-8)
 len_border <- (head(len_mid, -1) + tail(len_mid, -1)) / 2
 
-# Model-specific settings ------------------------------
-# 此例为连续等宽组；非等宽组请直接填写实测的 nlen-1 个内部边界。 / Growth and most process values below are starts, not automatic fixes.
-# This midpoint formula is only used for the equal-width demonstration bins. / Review starts, bounds and the documented default fixed values for your stock.
+# 3. 各模型拟合设置 / Model-specific settings ------------------------------
+# 生长和多数过程参数作为初值，不再自动固定每个提供的参数。
+# Growth and most process values below are starts, not automatic fixes.
+# Review starts, bounds and the documented default fixed values for your stock.
 p_acl <- list(
   log_Linf = log(bio$Linf), log_vbk = log(bio$vbk), t0 = bio$t0,
   log_cv_len = log(bio$cv_len),
@@ -6526,20 +6563,23 @@ p_alscl <- list(
   log_cv_len = log(bio$cv_len), log_cv_grow = log(bio$cv_grow),
   log_sigma_log_F = log(0.2), log_sigma_log_N0 = log(0.2),
   logit_log_R = qlogis(0.1))
+# 使用模型默认 map：ACL 固定 4 项、估计 10 项；ALSCL 固定 2 项、估计 13 项。
 # Default maps: ACL fixes 4 and estimates 10 scalars; ALSCL fixes 2 and estimates 13.
 # ACL fixes log_std_log_F, logit_log_F_y, logit_log_F_a and t0.
 # ALSCL fixes log_sigma_log_F and log_t0. These values still need justification.
 map_acl <- list()
 map_alscl <- list()
+
+# 可选：只固定 t0；更灵活的设置必须另做诊断，不保证可识别。
 # Optional: fix only t0; diagnose this more flexible configuration separately.
 # map_acl <- list(t0 = factor(NA), log_std_log_F = NULL,
-# 使用模型默认 map：ACL 固定 4 项、估计 10 项；ALSCL 固定 2 项、估计 13 项。 / logit_log_F_y = NULL, logit_log_F_a = NULL)
-# Default maps: ACL fixes 4 and estimates 10 scalars; ALSCL fixes 2 and estimates 13. / map_alscl <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
-# ACL fixes log_std_log_F, logit_log_F_y, logit_log_F_a and t0. / Preserve a named NULL to release a default fix; $t0 <- NULL deletes the entry.
-# ALSCL fixes log_sigma_log_F and log_t0. These values still need justification. / map_acl["t0"] <- list(NULL)
+# logit_log_F_y = NULL, logit_log_F_a = NULL)
+# map_alscl <- list(log_t0 = factor(NA), log_sigma_log_F = NULL)
+# 解除默认固定项需保留具名 NULL；$t0 <- NULL 仅删除条目。
+# Preserve a named NULL to release a default fix; $t0 <- NULL deletes the entry.
+# map_acl["t0"] <- list(NULL)
 # map_alscl["log_t0"] <- list(NULL)
-
-# 可选：只固定 t0；更灵活的设置必须另做诊断，不保证可识别。 / Assemble and check the input bundle --------------------
+# 4. 组装并检查 x / Assemble and check the input bundle --------------------
 x <- prepare_alscl_data(inputs,
   fit_args = list(
     rec.age = bio$rec.age, nage = bio$nage,
@@ -6552,28 +6592,30 @@ x <- prepare_alscl_data(inputs,
   fit_config = list(
     acl = list(parameters = p_acl, map = map_acl),
     alscl = list(parameters = p_alscl, map = map_alscl)))
-# Check data, time grid and settings without compiling.
+# 不编译即可检查数据、时间网格和参数设置 / Check data, time grid and settings without compiling.
 for (model in c("acl", "alscl")) {
   check <- check_alscl_data(x, model)
   if (!check$valid) stop(paste(check$errors, collapse = "\n"))
   print(check$summary)
 }
 
-# Fit directly ----------------------------------------------
+# 5. 直接拟合 / Fit directly ----------------------------------------------
+# 内置加速使用当前 alscl_speed() 设置，无需额外包装。
 alscl_speed_info()
 a <- run_acl(x)
 b <- run_alscl(x)
+
+# 可直接覆盖设置；固定 nstarts 才能公平比较并行数：
 # a <- run_acl(x, nstarts = 4, ncores = 2)
 # b <- run_alscl(x, nstarts = 4, ncores = 2)
-
-# Inspect, plot and save ------------------------------
+# 6. 检查、绘图、保存 / Inspect, plot and save ------------------------------
 checks <- list(ACL = diagnose_model(x$data.CatL, a),
                ALSCL = diagnose_model(x$data.CatL, b))
 print(checks)
 print(a$sd_info)
 print(b$sd_info)
 for (fit in list(a, b)) {
-  print(fit$par_low_up) # Actual free scalars and bounds
+  print(fit$par_low_up) # 实际自由参数及边界 / Actual free scalars and bounds
   print(list(convergence = fit$convergence_code,
              max_gradient = fit$max_abs_gradient,
              pdHess = fit$pdHess, bound_hit = fit$bound_hit))
@@ -6585,10 +6627,11 @@ for (fit in list(a, b)) {
 }
 residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
-# 实际自由参数及边界 / Actual free scalars and bounds / Omit SE intervals if Hessian is not positive definite.
+# 非正定 Hessian 时不展示标准误区间 / Omit SE intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)
+# obj 是当前会话的 TMB 指针，不包含在可移植结果中。
 portable <- function(fit) fit[setdiff(names(fit), "obj")]
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -6600,8 +6643,8 @@ saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
         file.path(output_dir, "assessment_summary.rds"))
 writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt"))
-# Refit in a new session:
-# obj 是当前会话的 TMB 指针，不包含在可移植结果中。 / x <- readRDS("output/own-data-example/inputs_x.rds")
+# 新会话可读取 x 并重新拟合 / Refit in a new session:
+# x <- readRDS("output/own-data-example/inputs_x.rds")
 # b <- run_alscl(x)
 ```
 

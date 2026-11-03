@@ -1,3 +1,13 @@
+## ALSCL 2.4.2
+
+- Allow `plot_compare_selectivity()` to use saved assessments without refitting, recovering fixed survey catchability from the retained input recipe.
+- Restore nullable theme settings, including automatic axis breaks and survey labels, when a saved `acl_theme()` snapshot is applied. Retrospective rho and comparison metric labels inherit the chosen font.
+- Use fitted ages for comparative growth plots and reject explicit ranges before either model's `t0`, preventing negative-length extrapolation. Existing valid explicit ranges remain supported.
+- Accept replicate ID 0 consistently in simulation generation and fitting; require distinct nonnegative integer IDs.
+- Execute the current plotting tutorial blocks and check the `facet_by` examples, with grid-free checks included in the automated workflow.
+- Preserve every executable line when merging bilingual code examples with different comment or blank-line counts; add generator regression checks.
+
+
 ## ALSCL 2.4.1
 
 - The README now provides an English entry page and a separate Simplified Chinese version, with installation, examples and links to the task guides.

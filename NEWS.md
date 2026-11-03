@@ -1,3 +1,22 @@
+# ALSCL 2.4.2
+
+- Allow `plot_compare_selectivity()` to use saved assessments without refitting, recovering fixed survey catchability from the retained input recipe.
+- Restore nullable theme settings, including automatic axis breaks and survey labels, when a saved `acl_theme()` snapshot is applied. Retrospective rho and comparison metric labels inherit the chosen font.
+- Use fitted ages for comparative growth plots and reject explicit ranges before either model's `t0`, preventing negative-length extrapolation. Existing valid explicit ranges remain supported.
+- Accept replicate ID 0 consistently in simulation generation and fitting; require distinct nonnegative integer IDs.
+- Execute the current plotting tutorial blocks and check the `facet_by` examples, with grid-free checks included in the automated workflow.
+- Preserve every executable line when merging bilingual code examples with different comment or blank-line counts; add generator regression checks.
+
+### 2.4.2 · 简体中文
+
+- `plot_compare_selectivity()` 可直接使用保存后读取的评估结果，从保留的输入配方恢复固定调查可捕性，无须重新拟合。
+- 应用保存的 `acl_theme()` 设置时，可恢复自动坐标刻度和调查标签等可为空的设置。回溯图 rho 和比较图数值标注继承所选字体。
+- 生长比较图默认采用拟合年龄，显式范围不得早于任一模型的 `t0`，避免负体长外推；原有有效的显式范围仍可使用。
+- 模拟生成和拟合统一接受编号 0，重复编号须为互不重复的非负整数。
+- 绘图教程检查执行当前的多个代码块，并按 `facet_by` 检查示例，将无网格线验证纳入自动检查流程。
+- 合并中英文代码示例时，即使注释或空行数不同，也保留全部可执行代码，并新增生成器回归检查。
+
+
 # ALSCL 2.4.1
 
 - `README.md` is an English entry page: what the package does, documentation links, installation, a ten-line example with figures and the citation. `README.zh-CN.md` is the Chinese version, and `website/check.py` verifies the counts and version strings in both files.

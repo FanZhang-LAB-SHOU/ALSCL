@@ -41,3 +41,9 @@ A ggplot object.
 Connects the supplied catchability values directly, preserving their range.
 The values are fixed model inputs, not estimated fishery selectivity.
 }
+\details{
+Saved assessments are supported without refitting. Survey
+catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
+at the fitted length midpoints. Older fits without a recipe use log_q from
+their live TMB object.
+}

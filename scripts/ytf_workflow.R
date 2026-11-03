@@ -22,6 +22,19 @@ run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
   a <- if (is.null(fits)) run_acl(x, train_times = 2, ncores = 1, silent = TRUE) else fits$acl
   message("Fitting YTF ALSCL")
   b <- if (is.null(fits)) run_alscl(x, train_times = 2, ncores = 1, silent = TRUE) else fits$alscl
+  # Older teaching caches omitted their recipe. Reattach the original YTF
+  # inputs through the public archive interface before drawing portable fits.
+  if (!is.null(fits)) {
+    restore_recipe <- function(fit) {
+      if (!is.null(fit$recipe)) return(fit)
+      path <- tempfile(fileext = ".rds")
+      on.exit(unlink(path), add = TRUE)
+      save_assessment(fit, path, x = x)
+      read_assessment(path)
+    }
+    a <- restore_recipe(a)
+    b <- restore_recipe(b)
+  }
   dat <- inputs$data.CatL
   status <- function(f, name) data.frame(Model=name, Code=f$convergence_code,
     MaxGradient=f$max_abs_gradient, pdHess=f$pdHess, Boundary=f$bound_hit)
@@ -110,19 +123,7 @@ write.csv(ref,file.path(out,'data','synthetic_growth_reference.csv'),row.names=F
 render('compare_growth','生长与外部参照接口','Growth and reference-data interface',growth_display(plot_compare_growth(a,b,age_range=c(1,15),ref_data=ref,ref_name='Synthetic reference',nls_start=list(Linf=60,k=.2,t0=1/60))),height=8.5,note_zh='灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。ref_name 必须是非空名称，且与两个模型名称不同。',note_en='The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. ref_name must be nonempty and differ from both model names.')
 render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),facet_ncol = 2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.')
 render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,facet_ncol = 2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
-# Portable fits omit the TMB objective. Survey q is a fixed input in this
-# teaching example, so reconstruct this plotting data from the original bundle.
-survey_q_plot <- function() {
-  if (is.null(fits)) return(plot_compare_selectivity(a,b))
-  q <- exp(plogis(log(19)*(a$len_mid-x$fit_args$sel_L50)/
-                    (x$fit_args$sel_L95-x$fit_args$sel_L50),log.p=TRUE))
-  # Rebuild only the fixed survey input required by this plotting helper.
-  # No serialized TMB objective is executed.
-  plot_a <- a; plot_b <- b
-  plot_a$obj <- plot_b$obj <- list(env = list(data = list(log_q = log(q))))
-  plot_compare_selectivity(plot_a, plot_b)
-}
-render('compare_selectivity','固定调查可捕性','Fixed survey catchability',survey_q_plot(),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
+render('compare_selectivity','固定调查可捕性','Fixed survey catchability',plot_compare_selectivity(a,b),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
 for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_F_ts(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。季度拟合按季度汇总，不做年化。',note_en='Apical is the maximum; mean is an unweighted group average. Quarterly fits are summarized per quarter; nothing is annualized.')
 # 回溯逐次删除末端时间步 / Peel successive terminal time steps.
 retro_a <- if (is.null(fits)) retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_acl

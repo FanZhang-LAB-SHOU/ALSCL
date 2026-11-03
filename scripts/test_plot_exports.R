@@ -1,4 +1,5 @@
-# Run from the repository root; no model fitting or cached assessments required.
+# Run from the repository root. Check export guards, then execute the plotting
+# tutorials using freshly fitted teaching models; no cached assessments required.
 library(ggplot2)
 library(patchwork)
 source('scripts/plot_helpers.R')
@@ -34,3 +35,8 @@ local({
   stopifnot(identical(tools::md5sum(target), before))
   cat('PASS: valid and nested exports; all 12 invalid-grid exports rejected; existing file preserved.\n')
 })
+
+# Exercise every maintained styling block in all three documentation copies.
+# Fits are built from the package's teaching data when CI has no local cache.
+source('scripts/test_plot_examples.R')
+check_plot_examples()

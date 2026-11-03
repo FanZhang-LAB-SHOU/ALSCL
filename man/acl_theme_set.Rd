@@ -58,7 +58,9 @@ acl_theme_set(
 
 \item{legend_text_size}{Numeric. Legend text size.}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks. Pass NULL
+explicitly to restore automatically selected breaks; omitting the argument
+leaves the current setting unchanged.}
 
 \item{x_expand}{Numeric vector of length 2. X-axis expansion.}
 
@@ -106,7 +108,9 @@ compare_annualF are accepted with a warning.}
 
 \item{ylab}{Named list. Override specific y-axis labels. The survey key
 labels survey indices independently of catch abundance; when unset,
-survey plots retain a legacy customized abundance label or use Survey index.}
+survey plots retain a legacy customized abundance label or use Survey index.
+Set a named label to NULL to restore its default, for example
+\code{ylab = list(survey = NULL)}.}
 
 \item{palette}{Character or NULL. ggsci palette: "npg" (default), "aaas",
 "nejm", "lancet", or "jama". Changing it resets palette-derived colors;
@@ -121,7 +125,8 @@ Default point, observation, smoother and reference-line colors.}
 \item{...}{The former argument name compare_linewidth, accepted with a warning.}
 }
 \value{
-Invisible previous settings.
+Invisible previous settings. Save these or the result of acl_theme(),
+then restore them with \code{do.call(acl_theme_set, old)}.
 }
 \description{
 Modify one or more global theme settings. Partial updates are supported:

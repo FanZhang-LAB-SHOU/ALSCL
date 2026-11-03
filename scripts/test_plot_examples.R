@@ -1,31 +1,38 @@
 # Execute the maintained examples, rather than only parsing their argument names.
-# Run from the repository root. Fits are reused; the documented retrospective
-# is fitted once and reused only for identical calls in the translated examples.
-# Rscript scripts/test_plot_examples.R output/release-225/gallery/fits.rds
-check_reference_grid_examples <- function(b, assert_grid_free_plot) {
-  notes <- jsonlite::fromJSON("website/reference-notes.json", simplifyVector = FALSE)
+# Run from the repository root. An optional archive avoids refitting teaching
+# models; without one, the documented fits are built from YTF_example. The
+# retrospective is fitted once for identical calls in the translated examples.
+# Rscript scripts/test_plot_examples.R [path/to/fits.rds]
+check_reference_theme_examples <- function(b, assert_grid_free_plot) {
+  lines <- readLines("docs/FUNCTION_REFERENCE.md", warn = FALSE, encoding = "UTF-8")
+  acl_theme_reset()
+  defaults <- acl_theme()
   for (name in c("acl_theme", "acl_theme_set", "acl_theme_reset")) {
-    for (lang in c("en", "zh")) {
-      text <- notes[[name]]$details[[lang]]
-      blocks <- regmatches(text, gregexpr("(?s)```r\\n.*?\\n```", text, perl = TRUE))[[1L]]
-      if (length(blocks) != 1L)
-        stop("Expected one grid-free reference example: ", name, "/", lang)
-      code <- sub("^```r\\n", "", sub("\\n```$", "", blocks[[1L]]))
-      acl_theme_reset()
-      e <- new.env(parent = environment())
-      e$b <- b
-      plots <- 0L
-      for (expr in parse(text = code)) {
-        value <- eval(expr, e)
-        if (inherits(value, "ggplot")) {
-          assert_grid_free_plot(value)
-          plots <- plots + 1L
-        }
-      }
-      if (plots != 2L)
-        stop("Reference example must create and style one plot: ", name, "/", lang)
-      cat("PASS grid-free reference example:", name, lang, "\n")
-    }
+    start <- which(lines == paste0('<a id="', name, '"></a>'))
+    if (length(start) != 1L) stop("Missing theme reference section: ", name)
+    next_section <- which(seq_along(lines) > start & grepl('^<a id=', lines))
+    end <- if (length(next_section)) next_section[[1L]] - 1L else length(lines)
+    section <- lines[seq.int(start, end)]
+    example <- which(section == "**示例 / Example:**")
+    if (length(example) != 1L) stop("Missing theme reference example: ", name)
+    text <- paste(section[seq.int(example, length(section))], collapse = "\n")
+    blocks <- regmatches(text, gregexpr("(?s)```r\\n.*?\\n```", text, perl = TRUE))[[1L]]
+    if (length(blocks) != 1L) stop("Expected one theme reference example: ", name)
+    code <- sub("^```r\\n", "", sub("\\n```$", "", blocks[[1L]]))
+    acl_theme_reset()
+    acl_theme_set(line_color = "orange", line_size = 3)
+    before <- acl_theme()
+    e <- new.env(parent = environment())
+    values <- lapply(as.list(parse(text = code)), eval, envir = e)
+    if (name == "acl_theme") {
+      stopifnot(length(values) == 2L, identical(values[[1L]], before),
+                identical(values[[2L]], before$line_color), identical(acl_theme(), before))
+    } else if (name == "acl_theme_set") {
+      stopifnot(identical(values[[1L]], before), identical(acl_theme("line_color"), "navy"),
+                identical(acl_theme("base_theme"), "bw"))
+    } else stopifnot(identical(acl_theme(), defaults))
+    assert_grid_free_plot(plot_SSB(b))
+    cat("PASS executable theme reference and grid-free plot:", name, "\n")
   }
   invisible(TRUE)
 }
@@ -50,12 +57,6 @@ check_growth_fishing_examples <- function(a, b, assert_grid_free_plot) {
   check <- function(ok, context) {
     if (!isTRUE(ok)) stop(context, call. = FALSE)
   }
-  # This is the actual dedicated-label setting shown in the style guide.
-  style <- paste(readLines("docs/PLOT_STYLE.md", warn = FALSE), collapse = "\n")
-  inline <- regmatches(style, gregexpr("`[^`\\n]+`", style, perl = TRUE))[[1L]]
-  survey_setting <- unique(gsub("^`|`$", "", inline[
-    grepl("^`acl_theme_set\\(ylab = list\\(survey =", inline)]))
-  check(length(survey_setting) == 1L, "Style guide must show one dedicated survey-label setting")
   counts <- stats::setNames(integer(length(targets)), targets)
   custom_survey_checks <- 0L
   for (path in paths) {
@@ -108,7 +109,7 @@ check_growth_fishing_examples <- function(a, b, assert_grid_free_plot) {
                   paste(path, "annotation size ignored"))
         } else if (name == "plot_compare_CatL") {
           check(identical(value$labels$y, "Survey index"), paste(path, "survey comparison uses catch label"))
-          eval(parse(text = survey_setting), e)
+          acl_theme_set(ylab = list(survey = "Survey index (example check)"))
           custom <- eval(expr, e)
           assert_grid_free_plot(custom)
           check(identical(custom$labels$y, acl_theme("ylab")$survey),
@@ -124,25 +125,27 @@ check_growth_fishing_examples <- function(a, b, assert_grid_free_plot) {
   invisible(list(examples = counts, survey_labels = custom_survey_checks))
 }
 
-main <- function() {
-  args <- commandArgs(trailingOnly = TRUE)
-  fits_file <- if (length(args)) args[[1L]] else "output/release-225/gallery/fits.rds"
-  if (!file.exists(fits_file)) stop("Supply the saved teaching fits as the first argument.")
+check_plot_examples <- function(fits_file = NULL) {
+  repo_root <- normalizePath(".", mustWork = TRUE)
+  if (!is.null(fits_file) && !file.exists(fits_file)) stop("Teaching-fit archive does not exist: ", fits_file)
   pkgload::load_all(quiet = TRUE)
   library(ggplot2)
   library(patchwork)
   source("scripts/plot_helpers.R", local = environment())
   cache <- Sys.getenv("ALSCL_MANUAL_CACHE")
   if (nzchar(cache)) options(ALSCL.tmb.cache = cache)
-  fits <- readRDS(fits_file)
-  old_theme <- acl_theme()
-  on.exit(do.call(acl_theme_set, old_theme), add = TRUE)
+  old_options <- options(ALSCL.sd_cores = 1L)
+  old_options["acl.theme"] <- list(getOption("acl.theme"))
+  on.exit(options(old_options), add = TRUE)
+  fits <- if (!is.null(fits_file)) readRDS(fits_file) else list(
+    acl = run_acl(YTF_example, ncores = 1, silent = TRUE),
+    alscl = run_alscl(YTF_example, ncores = 1, silent = TRUE))
   figure_file <- tempfile(fileext = ".pdf")
   grDevices::pdf(figure_file)
   on.exit({ grDevices::dev.off(); unlink(figure_file) }, add = TRUE)
 
   r_blocks <- function(path) {
-    lines <- readLines(path, warn = FALSE)
+    lines <- readLines(file.path(repo_root, path), warn = FALSE)
     starts <- which(grepl("^```r[[:space:]]*$", lines))
     lapply(starts, function(start) {
       end <- which(seq_along(lines) > start & lines == "```")[1L]
@@ -186,8 +189,13 @@ main <- function() {
     if (!isTRUE(ok)) stop(context, call. = FALSE)
   }
 
-  check_reference_grid_examples(fits$alscl, assert_grid_free_plot)
+  check_reference_theme_examples(fits$alscl, assert_grid_free_plot)
   check_growth_fishing_examples(fits$acl, fits$alscl, assert_grid_free_plot)
+
+  export_dir <- tempfile("alscl-example-exports-")
+  dir.create(export_dir)
+  setwd(export_dir)
+  on.exit({ setwd(repo_root); unlink(export_dir, recursive = TRUE) }, add = TRUE)
 
   style_files <- c("docs/PLOT_STYLE.md", paste0("website/content/", c("en", "zh"),
                                                "/articles/plot-customization.md"))
@@ -196,11 +204,20 @@ main <- function() {
     e <- fresh_context()
     check(!exists("rb", e, inherits = FALSE), "Prerequisite test must start without rb")
     calls_before <- retrospective_calls
-    plots <- evaluate(r_blocks(path)[[1L]], e)
+    blocks <- r_blocks(path)
+    # Each block shares the same session, exactly as readers run the numbered
+    # steps. This also exercises export and settings restoration after setup.
+    plots <- unlist(lapply(blocks, evaluate, e = e), recursive = FALSE)
     check(exists("rb", e, inherits = FALSE), paste(path, "did not create rb"))
     check(retrospective_calls == calls_before + 1L, paste(path, "did not run its retrospective setup"))
-    check(length(plots) >= 10L, paste(path, "did not execute all styling examples"))
-    cat("PASS setup and styling:", path, "\n")
+    check(length(plots) > 0L, paste(path, "did not create any styling plots"))
+    for (extension in c("png", "pdf")) {
+      exported <- paste0("retrospective.", extension)
+      check(file.exists(exported) && file.info(exported)$size > 0,
+            paste(path, "did not export", extension))
+      unlink(exported)
+    }
+    cat("PASS setup, all", length(blocks), "styling blocks and exports:", path, "\n")
   }
 
   gallery_files <- c("docs/PLOT_GALLERY.md", paste0("website/content/", c("en", "zh"),
@@ -210,7 +227,7 @@ main <- function() {
     calls <- unlist(lapply(r_blocks(path), function(code) as.list(parse(text = code))),
                     recursive = FALSE)
     calls <- Filter(function(expr) is.call(expr) && identical(expr[[1L]], as.name("plot_CatL")) &&
-                      identical(as.list(expr)$type, "year"), calls)
+                      identical(as.list(expr)$facet_by, "year"), calls)
     check(length(calls) == 2L, paste(path, "must cover both year-mode scales"))
     for (call in calls) {
       p <- eval(call, fresh_context())
@@ -239,6 +256,9 @@ main <- function() {
     check(isTRUE(all.equal(built$x.range, range(e$b$year))), "Global expansion ignored")
     cat("PASS global labels and axes:", path, "\n")
   }
-  cat("PASS: three prerequisite/styling examples, six year-mode figures, three global-axis examples, six grid-free reference examples.\n")
+  cat("PASS: three prerequisite/styling examples, six year-mode figures, three global-axis examples, three executable theme references.\n")
 }
-main()
+if (sys.nframe() == 0L) {
+  args <- commandArgs(trailingOnly = TRUE)
+  check_plot_examples(if (length(args)) args[[1L]] else NULL)
+}

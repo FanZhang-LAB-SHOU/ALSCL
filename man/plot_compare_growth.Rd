@@ -7,7 +7,7 @@
 plot_compare_growth(
   model1,
   model2,
-  age_range = c(1, 20),
+  age_range = NULL,
   model1_name = NULL,
   model2_name = NULL,
   colors = NULL,
@@ -29,7 +29,10 @@ plot_compare_growth(
 
 \item{model2}{Second model result (alternative).}
 
-\item{age_range}{Numeric vector of length 2. Default c(1, 20).}
+\item{age_range}{Numeric vector of length 2, or NULL. NULL uses the combined
+range of fitted ages, starting no earlier than either model's t0. A model
+without age metadata contributes the legacy range c(1, 20). An explicit
+range must be finite, increasing and start at or after both t0 values.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
@@ -42,7 +45,10 @@ plot_compare_growth(
 \item{ref_data}{Optional data.frame with columns \code{Age} and \code{Length}
 containing observed age-length measurements (e.g. from otolith readings).
 If provided, a VB curve is fitted via \code{nls()} and overlaid as a
-reference, with the raw data as scatter points.}
+reference, with the raw data as scatter points. The reference curve is
+drawn only at ages at or above its fitted t0, within age_range. A fit with
+invalid growth parameters or no positive age span in that range is omitted
+with a warning; model curves and observed points are retained.}
 
 \item{ref_name}{Character. Nonempty label for the reference curve, distinct
 from both model labels when ref_data is supplied. Default "Observed VB".}

@@ -36,16 +36,16 @@ fit$sd_info          # 标准误的计算方式与耗时 / how the standard erro
 `alscl_speed_info()` prints the setting, the cores and method that will be used, the reason, the AD library and the TMB version. With `silent = FALSE` the fit prints one line about the standard errors, and `fit$sd_info` stores the same information: `method` (`"forked processes"`, `"socket workers (delta method)"` or `"sequential"`), `cores`, `seconds` and a `note` that explains a sequential calculation. On macOS in a terminal you should see:
 
 ```r
-#> Standard errors: forked processes on 4 cores, 9.0 s.
+# > Standard errors: forked processes on 4 cores, 9.0 s.
 alscl_speed_info()
-#> ALSCL speed settings
-#>   sd_cores setting:                  auto
-#>   cores for standard errors:         4
-#>   standard errors computed by:       forked processes on 4 cores: Hessian and delta method
-#>   reason:                            forked processes are safe here (macOS or Linux outside a GUI front-end)
-#>   framework:                         CppAD
-#>   cross-version numerical identity:  not guaranteed across package versions (the optimizer finishing step can change estimates at numerical precision)
-#>   TMB version:                       1.9.21 (checked)
+# > ALSCL speed settings
+# >   sd_cores setting:                  auto
+# >   cores for standard errors:         4
+# >   standard errors computed by:       forked processes on 4 cores: Hessian and delta method
+# >   reason:                            forked processes are safe here (macOS or Linux outside a GUI front-end)
+# >   framework:                         CppAD
+# >   cross-version numerical identity:  not guaranteed across package versions (the optimizer finishing step can change estimates at numerical precision)
+# >   TMB version:                       1.9.21 (checked)
 ```
 
 一次拟合分两部分。优化部分由 `nlminb()` 在固定效应上搜索，每次计算都对随机效应做一次内层牛顿优化（拉普拉斯近似），只在一个核上运行：每一步都依赖上一步，分到多个核会改变优化路径和结果。标准误随后由 `TMB::sdreport()` 计算：固定效应的 Hessian（每个固定效应两次梯度计算）和每个 ADREPORT 量的 delta 方法标准误（各年份、年龄与体长的补充量、丰度、生物量、产卵生物量、渔获量与捕捞死亡率；20 年 ALSCL 示例共 3,866 个量）。Hessian 的各列互不依赖，各 ADREPORT 量也互不依赖，因此都可以在多个核上计算，结果逐位相同。基准测试中，ALSCL 拟合 `YTF_example` 的 20 年数据时，速度改动之前优化约 88 秒，Hessian 11.4 秒，delta 方法 10.6 秒。

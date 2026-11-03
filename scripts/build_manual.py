@@ -141,14 +141,53 @@ def heading_parts(line):
     return len(m[1]), None, m[2].strip()
 
 
+def code_lines(lines):
+    """Split code and comments without interpreting hashes inside R strings."""
+    quote = None
+    raw_end = None
+    out = []
+    for line in lines:
+        continuation = quote is not None or raw_end is not None
+        i = 0
+        comment_at = len(line)
+        while i < len(line):
+            char = line[i]
+            if raw_end is not None:
+                if line.startswith(raw_end, i):
+                    i += len(raw_end)
+                    raw_end = None
+                    continue
+            elif quote is not None:
+                if char == "\\":
+                    i += 2
+                    continue
+                if char == quote:
+                    quote = None
+            elif char == '#':
+                comment_at = i
+                break
+            elif char in ('"', "'", '`'):
+                quote = char
+            elif char in 'rR' and (i == 0 or not (line[i - 1].isalnum() or line[i - 1] in '._')):
+                raw = re.match(r"[rR]([\"'])(-*)([([{])", line[i:])
+                if raw:
+                    raw_end = {'(': ')', '[': ']', '{': '}'}[raw[3]] + raw[2] + raw[1]
+                    i += len(raw[0])
+                    continue
+            i += 1
+        code = line[:comment_at]
+        comment = line[comment_at + 1:].strip() if comment_at < len(line) else None
+        out.append((code, comment, bool(code.strip()) or continuation))
+    return out
+
+
 def code_signature(lines):
-    """Code with comments and blank lines removed, for comparing the two languages."""
-    body = []
-    for line in lines[1:-1]:
-        code = re.split(r'(?<!["\'])#', line, maxsplit=1)[0].rstrip() if not lines[0].startswith('```math') else line
-        if code.strip():
-            body.append(code)
-    return lines[0].strip(), tuple(body)
+    """Executable lines, retaining hashes and blank lines inside strings."""
+    if lines[0].startswith('```math'):
+        body = tuple(line for line in lines[1:-1] if line.strip())
+    else:
+        body = tuple(code.rstrip() for code, _, executable in code_lines(lines[1:-1]) if executable)
+    return lines[0].strip(), body
 
 
 def check_alignment(slug, en, zh):
@@ -221,19 +260,73 @@ def merge_table(el, zl):
 
 
 def merge_code(el, zl):
-    out = [el[0]]
-    for e, z in zip(el[1:-1], zl[1:-1]):
-        if el[0].startswith('```math'):
-            out.append(e)
-            continue
-        em = re.match(r'(.*?)(\s*#\s*)(.*)$', e) if not e.lstrip().startswith('#') else re.match(r'()(\s*#\s*)(.*)$', e)
-        zm = re.match(r'(.*?)(\s*#\s*)(.*)$', z) if not z.lstrip().startswith('#') else re.match(r'()(\s*#\s*)(.*)$', z)
-        if em and zm and em[3].strip() and zm[3].strip() and em[3].strip() != zm[3].strip():
-            indent = re.match(r'\s*', e)[0] if e.lstrip().startswith('#') else ''
-            out.append((em[1] + em[2] if em[1] else indent + '# ') + zm[3].strip() + ' / ' + em[3].strip())
+    """Align executable lines first; translated comments cannot truncate code."""
+    if code_signature(el) != code_signature(zl):
+        raise ValueError('Cannot merge code blocks with different executable code.')
+    if el[0].startswith('```math'):
+        return list(el)
+
+    def groups(lines):
+        pending = []
+        out = []
+        for record in code_lines(lines[1:-1]):
+            if record[2]:
+                out.append((pending, record))
+                pending = []
+            else:
+                pending.append(record)
+        return out, pending
+
+    def contains_comment(text, comment):
+        return bool(text and comment) and (text == comment or
+            text.startswith(comment + ' / ') or text.endswith(' / ' + comment) or
+            ' / ' + comment + ' / ' in text)
+
+    def combined_comment(en, zh):
+        if not en or contains_comment(zh, en):
+            return zh
+        if not zh or contains_comment(en, zh):
+            return en
+        return zh + ' / ' + en
+
+    def merge_notes(en, zh):
+        english = [comment for _, comment, _ in en if comment]
+        chinese = [comment for _, comment, _ in zh if comment]
+        out = []
+        if len(english) == len(chinese):
+            translated = iter(chinese)
+            for code, comment, _ in en:
+                out.append(code + '# ' + combined_comment(comment, next(translated))
+                           if comment else code)
         else:
-            out.append(e)
+            # Unequal comment counts do not establish line-by-line translation.
+            # Keep each language's group intact, omitting only exact repeats or
+            # an English comment already included in a bilingual Chinese line.
+            seen = []
+            for code, comment, _ in en:
+                if not comment:
+                    out.append(code)
+                elif not any(contains_comment(text, comment) for text in chinese + seen):
+                    out.append(code + '# ' + comment)
+                    seen.append(comment)
+            for code, comment, _ in zh:
+                if comment and not any(contains_comment(text, comment) for text in seen):
+                    out.append(code + '# ' + comment)
+                    seen.append(comment)
+        return out
+
+    eg, etail = groups(el)
+    zg, ztail = groups(zl)
+    out = [el[0]]
+    for (enotes, (ecode, ecomment, _)), (znotes, (_, zcomment, _)) in zip(eg, zg):
+        out.extend(merge_notes(enotes, znotes))
+        comment = combined_comment(ecomment, zcomment)
+        separator = '' if not ecode or ecode[-1].isspace() else ' '
+        out.append(ecode + (separator + '# ' + comment if comment else ''))
+    out.extend(merge_notes(etail, ztail))
     out.append(el[-1])
+    if code_signature(out) != code_signature(el):
+        raise ValueError('Merged code differs from its source block.')
     return out
 
 
