@@ -65,7 +65,7 @@ build_ytf_example <- function() {
       kind = "Synthetic teaching data; not observations from the paper",
       species = "Yellowtail flounder (Limanda ferruginea)",
       parameter_source = "ALSCL::YTF with flatfish operating-model defaults",
-      code_version = "2.0.0", seed = 4L,
+      code_version = as.character(utils::packageVersion("ALSCL")), seed = 4L,
       rng = c("Mersenne-Twister", "Inversion", "Rejection"),
       generating_model = "age_based", burn_in_years = 80,
       observation_years = years, observation_log_sd = pa$std_SN,

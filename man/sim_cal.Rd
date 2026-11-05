@@ -11,7 +11,10 @@ sim_cal(params)
 Must contain \code{model_type} ("age_based" or "length_based") to
 determine the matrix orientation and whether to build growth transitions.
 Length midpoints must lie inside the matching open-tail bins; geometry is
-checked again so that manually edited parameter lists cannot bypass it.}
+checked again so that manually edited parameter lists cannot bypass it.
+Fishing selectivity is \code{params$sel_type = "flat"} or \code{"dome"}. For
+a dome, set \code{sel_L50_asc < sel_L95_asc} for the ascending length curve
+and \code{sel_L50_desc > sel_L95_desc} for the descending length curve.}
 }
 \value{
 A list containing:
@@ -21,7 +24,10 @@ A list containing:
 \item{W_at_len}{Weight-at-length vector}
 \item{mat}{Maturity-at-length vector}
 \item{q_surv}{Survey catchability-at-length vector}
-\item{sel}{Selectivity vector (at-age for age_based, at-length for length_based)}
+\item{sel}{Fishing selectivity at age for age_based or at length for
+length_based. For an age-based dome, each age's value is the average
+of the length-specific selectivities weighted by its probabilities
+of length given age.}
 \item{pla}{Probability of length given age. Rows are ages and columns
 are length groups for age_based; this orientation is transposed for
 length_based. Each age's probabilities sum to one.}

@@ -27,7 +27,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
     if (peel > 0L) {
       # Unused levels would create parameters with no retained observations
       # in TMB. Dropping them preserves all equality relationships that remain.
-      mapping[[name]] <- droplevels(value[seq_len(groups * kept)])
+      mapping[[name]] <- .acl_drop_map_levels(value[seq_len(groups * kept)])
     }
   }
   mapping

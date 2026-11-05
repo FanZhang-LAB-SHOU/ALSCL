@@ -84,6 +84,10 @@ If `simulation_to_tables()` stops because `len_mid` differs from the coordinates
 
 `sim_data()` checks that the biological arrays and their recorded inputs match `pa` before drawing data or writing files. After changing growth, ages, the time step, length bins, weight, maturity, catchability or selectivity, run `bio <- sim_cal(pa)` again; do not edit the arrays by hand. Changes only to mortality, recruitment, error, duration or dates do not require rebuilding biology. Matching older objects without recorded inputs still work. When fitting saved replicates, inconsistent survey-catchability metadata produces an error record: regenerate the simulation with matching inputs.
 
+年龄别体长分布的尾部体长组仍可具有很小的正概率，这些组的模拟调查指数会保留相应的正值。自定义穹顶形渔业选择性时，将 `pa$sel_type` 设为 `"dome"` 并提供上升段和下降段的参数。年龄结构模拟用各年龄的体长分布对体长别选择性加权，得到年龄别选择性。体长结构模拟直接使用体长别曲线。
+
+Length bins in the tails of the length-at-age distribution can have very small positive probabilities. The simulator carries those probabilities into the survey observations. For custom dome-shaped fishery selectivity, set `pa$sel_type` to `"dome"` and supply both logistic limbs. In an age-based simulation, selectivity at each age is the length-specific curve averaged over the distribution of length at that age. The length-based simulation uses the curve directly.
+
 <a id="simulation-rates"></a>
 
 ### 3. 设置死亡率、变异和时间单位 / Set rates, variation and time units

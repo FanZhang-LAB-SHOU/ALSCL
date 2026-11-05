@@ -279,6 +279,10 @@ alscl_speed_info()
 
 Fitting, diagnostics and comparison use the same interpretation of ordinary data frames, matrices, tibbles and numeric-text factor columns. Factor labels are converted to observation values, never to internal level codes. Length labels are extracted as a vector. The checks for changed observations, missing-data masks, time labels and length-bin order still apply.
 
+比较时请提供两次拟合共同使用的调查表。程序逐格按该正观测自身的大小核对，相对容差为 `1e-12`。例如，把 `1e-13` 改成 `1e-20` 会使对数观测相差约 16，程序会在选择模型前报错。
+
+Use the original survey table for both fits. Each positive index is checked at its own scale, with a relative tolerance of `1e-12`. For example, replacing `1e-13` with `1e-20` changes the log observation by about 16 units. The comparison stops before calculating a preference.
+
 ```r
 compare_models (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL)
 ```
@@ -430,6 +434,10 @@ diagnostic_metrics(dat, b)
 ## `generate_map()`
 
 合并 ACL 默认固定参数与自定义映射 / Merge ACL default and custom maps
+
+用具名 `NULL` 释放参数时，从 `inspect_parameters(x, model)` 复制该模型的参数名。名称有误会报错。截取映射因子的子集后，程序会去掉未使用的水平，保留其余单元的绑定关系和固定位置。
+
+For a named `NULL` release, copy the exact parameter name from `inspect_parameters(x, model)`. An unknown name stops the fit. When you subset a map factor, unused levels are discarded and the remaining ties and fixed cells are preserved.
 
 ```r
 generate_map (map = NULL)
@@ -758,9 +766,9 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
 
 调查拟合 length 对数尺度 / Survey fit length log scale
 
-标题明确标为调查指数。`facet_by = "year"` 使用 `line_size1` 设置拟合线、`line_size2` 设置观测线；`line_size` 与 `point_size` 仅用于 `facet_by = "length"`。按年份分面时也遵守全局 `CatL_by_year` 标题。
+按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。
 
-Titles identify survey indices. In `facet_by = "year"`, use `line_size1` for fitted lines and `line_size2` for observed lines; `line_size` and `point_size` control only `facet_by = "length"`. The global `CatL_by_year` title now applies to year facets.
+In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。
 
@@ -920,6 +928,10 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ## `plot_compare_F()`
 
 死亡率矩阵比较 / Fishing mortality matrices
+
+ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。
+
+The ACL rows show fitted ages, including fractional ages for seasonal data. For an older fit without age coordinates, the rows are labelled as numbered age groups.
 
 ```r
 plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette = NULL)
@@ -1502,9 +1514,9 @@ plot_recruitment(b, se = TRUE)
 
 对数残差 length / Log residuals length
 
-每个分面按有效且不同的横坐标数量独立选择平滑方法：不足 2 个不画趋势，2–5 个使用线性拟合，6 个以上使用独立 span 的 loess。一个稀疏组不会改变其他组的趋势。
+每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
 
-Each facet selects its smoother independently using the number of distinct valid x values: fewer than 2 omits the trend, 2–5 uses a linear fit, and 6 or more uses loess with its own span. A sparse group never changes another group's trend.
+Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.
 
 调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。
 
@@ -1526,7 +1538,7 @@ plot_residuals (model_result, f = 0.4, line_color = NULL, smooth_color = NULL, h
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | run_acl() 或 run_alscl() 的拟合结果，需保存 report 及观测信息。 | A fit from run_acl() or run_alscl(), retaining report and observation information. |
-| `f` | `0.4` | 残差平滑参数，越大越平滑。 | Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which influence the smooth at each value. Larger values result in more smoothing. Default is 0.4. Each facet independently uses no trend with fewer than 2 valid distinct x values, a linear fit with 2–5, or loess with at least 6; span is enlarged for at least five neighbors. |
+| `f` | `0.4` | 残差平滑参数，越大越平滑。 | Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which influence the smooth at each value. Larger values result in more smoothing. Default is 0.4. Trends are fitted within consecutive observed runs. Loess is used for at least 6 observations, with a span that includes at least five neighbors. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `smooth_color` | `NULL` | 残差平滑线颜色。 | Character or NULL. NULL inherits the global smooth_color setting. |
 | `hline_color` | `NULL` | 残差零参考线颜色。 | Character or NULL. NULL inherits the global hline_color setting. |
@@ -2289,6 +2301,10 @@ do.call(sim_acl, c(list(iter_range = 4:5,
 
 从参数计算生物矩阵 / Calculate biological arrays
 
+年龄别体长分布的尾部体长组仍可具有很小的正概率，这些组的模拟调查指数会保留相应的正值。自定义穹顶形渔业选择性时，将 `pa$sel_type` 设为 `"dome"` 并提供上升段和下降段的参数。年龄结构模拟用各年龄的体长分布对体长别选择性加权，得到年龄别选择性。体长结构模拟直接使用体长别曲线。
+
+Length bins in the tails of the length-at-age distribution can have very small positive probabilities. The simulator carries those probabilities into the survey observations. For custom dome-shaped fishery selectivity, set `pa$sel_type` to `"dome"` and supply both logistic limbs. In an age-based simulation, selectivity at each age is the length-specific curve averaged over the distribution of length at that age. The length-based simulation uses the curve directly.
+
 ```r
 sim_cal (params)
 ```
@@ -2976,6 +2992,10 @@ summary(updated)
 ## `save_assessment`
 
 保存完整可移植评估 / Save a portable assessment
+
+并行保存时，请给每个拟合指定不同文件名。若两个会话用默认的 `overwrite = FALSE` 写入同一新路径，只有一个能成功。如果会话意外中断后仍提示锁错误，请先确认写入进程已停止，再删除报错中列出的锁目录。
+
+Give independent fits distinct filenames when saving in parallel. If two sessions use the same new path with the default `overwrite = FALSE`, only one can save there. If a session was interrupted and a lock error persists, confirm that its writer has stopped before removing the lock directory shown in the error.
 
 ```r
 save_assessment (fit, file, x = NULL, overwrite = FALSE)

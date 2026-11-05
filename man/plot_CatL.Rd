@@ -44,7 +44,7 @@ plot_CatL(
 \item{model_result}{A fitted result with report$Elog_index, observed survey data
 and time/length metadata.}
 
-\item{point_size}{Numeric or NULL. Point size for facet_by = "length"; NULL inherits the global point_size setting (default 2.5).}
+\item{point_size}{Numeric or NULL. Point size for observations, including isolated points in year facets; NULL inherits the global point_size setting (default 2.5).}
 
 \item{point_color}{Character or NULL. NULL inherits the global observed_color setting.}
 
@@ -127,7 +127,8 @@ Facets separate length groups or time periods.
 \details{
 Predicted and observed matrices are aligned by position with fitted
 year and length metadata, independently of optional matrix dimnames. Missing
-and zero observations remain excluded. Dimensions and metadata must agree;
+and zero observations leave gaps. An isolated observation is drawn as a point.
+Dimensions and metadata must agree;
 predictions must be finite, including after an exponential transformation.
 }
 \examples{

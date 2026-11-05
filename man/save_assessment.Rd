@@ -32,6 +32,10 @@ the working tree was clean. R source-file hashes are also recorded when
 available in a source tree; ordinary installed packages need not retain
 those files. Missing source metadata remains unavailable, and no
 source revision is inferred for an older fit supplied with x.
+Concurrent saves to the same path use a temporary lock directory during
+the final rename. With overwrite = FALSE, only the first save can publish
+the archive. If an interrupted process leaves a lock, confirm that the
+writer has stopped before removing the lock directory named in the error.
 A fresh session can summarize and plot it without a live
 TMB pointer. refit_model rebuilds a live model; cross-version numerical
 equality is not promised. Only read archives from trusted sources.

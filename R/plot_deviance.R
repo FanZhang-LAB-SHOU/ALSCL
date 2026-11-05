@@ -66,7 +66,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
   values <- model_result$report[[quantity]]
   shared <- type == "F" && identical(model_result$F_structure, "year")
   is_alscl <- identical(model_result$model_type, "ALSCL") ||
-    (is.null(model_result$report$F) && !is.null(model_result$report$FL))
+    (is.null(model_result$report[["F"]]) && !is.null(model_result$report$FL))
   n_groups <- 1L
   if (type == "F" && !shared) {
     field <- model_result$report[[if (is_alscl) "FL" else "F"]]

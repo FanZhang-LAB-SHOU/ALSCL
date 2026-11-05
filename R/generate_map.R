@@ -18,18 +18,39 @@
 #' @return A list representing the generated map with custom or default values.
 #' @export
 generate_map <- function(map = NULL) {
-  default_map <- list(
-    log_std_log_F = factor(NA),
-    logit_log_F_y = factor(NA),
-    logit_log_F_a = factor(NA),
-    #log_vbk=factor(NA),
-    #log_Linf=factor(NA),
-    t0 = factor(NA)
-  )
+  allowed <- c(names(create_parameters(model_type = "acl")$parameters),
+               "dev_log_R", "dev_log_F", "dev_log_N0")
+  .acl_merge_map(map, "ACL", allowed)
+}
 
+.acl_merge_map <- function(map, model, allowed) {
+  default_map <- if (model == "ACL") {
+    list(log_std_log_F = factor(NA), logit_log_F_y = factor(NA),
+         logit_log_F_a = factor(NA), t0 = factor(NA))
+  } else {
+    list(log_sigma_log_F = factor(NA), log_t0 = factor(NA))
+  }
   if (!is.null(map)) {
-    if (!is.list(map) || (length(map) && (is.null(names(map)) || any(!nzchar(names(map))) || anyDuplicated(names(map))))) stop("map must be a named list.")
-    for (nm in names(map)) default_map[nm] <- map[nm]
+    if (!is.list(map) || is.data.frame(map) || (length(map) &&
+        (is.null(names(map)) || anyNA(names(map)) || any(!nzchar(names(map))) ||
+         anyDuplicated(names(map)))))
+      stop("map must be a named list with unique, non-empty parameter names.", call. = FALSE)
+    # A named NULL releases a default fix. Check its spelling before removal.
+    unknown <- setdiff(names(map), allowed)
+    if (length(unknown))
+      stop("Unknown map parameter: ", paste(unknown, collapse = ", "), call. = FALSE)
+    default_map[names(map)] <- map
   }
   default_map[!vapply(default_map, is.null, logical(1))]
+}
+
+# TMB allocates a coordinate for every level, including unused levels. Work
+# with integer codes so a genuine fixed entry stays missing even when a free
+# group has an NA label (which base droplevels() can merge with that entry).
+.acl_drop_map_levels <- function(value) {
+  codes <- as.integer(value)
+  used <- which(tabulate(codes, nbins = nlevels(value)) > 0L)
+  if (length(used) == nlevels(value)) return(value)
+  names(codes) <- names(value)
+  factor(codes, levels = used, labels = levels(value)[used], ordered = is.ordered(value))
 }

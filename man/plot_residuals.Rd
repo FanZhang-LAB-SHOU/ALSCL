@@ -37,9 +37,9 @@ stored observations and time/length metadata.}
 
 \item{f}{Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
 influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
-Each facet is handled independently: fewer than two distinct observed x values
-omit its trend, two to five use a linear trend, and six or more use loess.
-The loess span is enlarged per facet when needed for at least five neighbors.}
+Within each facet, missing observations break the residual line and trend.
+An isolated observation is drawn as a point. Consecutive runs of two to five
+observations use a linear trend; longer runs use loess with at least five neighbors.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 

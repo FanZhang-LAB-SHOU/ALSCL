@@ -1,20 +1,39 @@
 .acl_map <- function(parameters, map, model) {
-  if (!is.null(map) && (!is.list(map) || (length(map) &&
-      (is.null(names(map)) || any(!nzchar(names(map))) || anyDuplicated(names(map))))))
-    stop("map must be a named list.", call. = FALSE)
-  defaults <- if (model == "ACL") generate_map(map) else {
-    out <- list(log_sigma_log_F = factor(NA), log_t0 = factor(NA))
-    if (!is.null(map)) for (nm in names(map)) out[nm] <- map[nm]
-    out[!vapply(out, is.null, logical(1))]
-  }
-  if (length(setdiff(names(defaults), names(parameters)))) stop("Unknown map parameter: ", paste(setdiff(names(defaults), names(parameters)), collapse = ", "), call. = FALSE)
+  defaults <- .acl_merge_map(map, model, names(parameters))
   for (nm in names(defaults)) {
     value <- defaults[[nm]]
     if (length(value) == 1L && is.na(value)) defaults[[nm]] <- value <- factor(NA)
     if (!is.factor(value)) stop("map entries must be factors (factor(NA) fixes a parameter), or NULL to unfix.", call. = FALSE)
     if (length(value) != length(parameters[[nm]])) stop("Map length does not match parameter ", nm, call. = FALSE)
+    defaults[[nm]] <- .acl_drop_map_levels(value)
   }
   defaults
+}
+
+.acl_fit_control <- function(control) {
+  .acl_input_list(control, "control")
+  # nlminb accepts unambiguous prefixes and maxiter as an alias for iter.max.
+  supported <- c("eval.max", "iter.max", "trace", "maxiter", "abs.tol", "rel.tol",
+                 "x.tol", "xf.tol", "step.min", "step.max", "sing.tol", "scale.init", "diff.g")
+  keys <- supported[pmatch(names(control), supported, duplicates.ok = TRUE)]
+  if (anyNA(keys))
+    stop("Unknown or ambiguous nlminb control: ", paste(names(control)[is.na(keys)], collapse = ", "), call. = FALSE)
+  keys[keys == "maxiter"] <- "iter.max"
+  if (anyDuplicated(keys))
+    stop("Each nlminb control may be supplied only once, including aliases.", call. = FALSE)
+  names(control) <- keys
+  for (key in keys) {
+    value <- control[[key]]
+    if (is.null(value)) next  # Restore the nlminb default for this setting.
+    if (!(is.numeric(value) || (key == "trace" && is.logical(value))) ||
+        !is.null(dim(value)) || length(value) != 1L || !is.finite(value))
+      stop("control$", key, " must be a finite numeric scalar.", call. = FALSE)
+    if (key %in% c("eval.max", "iter.max", "trace") &&
+        (value != trunc(value) || abs(value) > .Machine$integer.max ||
+         (key != "trace" && value < 0)))
+      stop("Invalid integer for control$", key, ".", call. = FALSE)
+  }
+  utils::modifyList(list(iter.max = 2000L, eval.max = 10000L), control)
 }
 .acl_bounds <- function(par, config) {
   lower <- upper <- par
@@ -156,6 +175,7 @@
                      F_structure = c("group_year", "year"), polish = TRUE) {
   F_structure <- match.arg(F_structure)
   .acl_check_fit_flags(polish, silent, output)
+  control <- .acl_fit_control(control)
   train_times <- .acl_positive_integer(train_times, "train_times")
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
@@ -172,7 +192,6 @@
     DLL = info$dll_name, inner.control = list(trace = FALSE, maxit = 500), silent = TRUE)
   obj <- make_obj(); bounds <- .acl_bounds(obj$par, config)
   if (!length(obj$par)) stop("At least one fixed-effect parameter must remain free.", call. = FALSE)
-  control <- utils::modifyList(list(iter.max = 2000L, eval.max = 10000L), control)
   if (!silent) message("Fitting ", model, " with ", nstarts, " start(s) on ", workers, " worker(s).")
   if (workers == 1L) {
     starts <- lapply(seq_len(nstarts), function(i) .acl_fit_start(i, d, p,

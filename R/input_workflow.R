@@ -196,7 +196,7 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
   setup <- .acl_model_setup(toupper(model), prepared, args$parameters,
     args$parameters.L, args$parameters.U, args$map, structure)
   .acl_check_fit_flags(args$polish, args$silent, args$output)
-  .acl_input_list(args$control, "control")
+  .acl_fit_control(args$control)
   for (nm in c("train_times", "ncores", "nstarts"))
     .acl_positive_integer(args[[nm]], nm)
   if (any(!is.finite(unlist(setup$parameters))))

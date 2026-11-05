@@ -27,3 +27,7 @@ A ggplot object.
 \description{
 Compare Fishing Mortality Heatmaps Between Two Models
 }
+\details{
+ACL rows use the ages stored in each fit. Older fits without age
+metadata show age-group numbers. ALSCL rows follow the fitted length bins.
+}

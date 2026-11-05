@@ -616,15 +616,16 @@ acl_theme_reset <- function() {
 #' Fix length bin labels
 #' @keywords internal
 .acl_fix_len_labels <- function(len_label, prefix = "Length bin") {
-  LengthGroup <- len_label
-  n_bins <- length(LengthGroup)
-  if (n_bins >= 2) {
-    first_parts <- strsplit(as.character(LengthGroup[1]), "-")[[1]]
-    last_parts  <- strsplit(as.character(LengthGroup[n_bins]), "-")[[1]]
-    if (length(first_parts) == 2) LengthGroup[1] <- paste0("<", first_parts[2])
-    if (length(last_parts)  == 2) LengthGroup[n_bins] <- paste0(">", last_parts[1])
+  labels <- as.character(len_label)
+  if (length(labels) >= 2L) {
+    edges <- c(1L, length(labels))
+    text <- trimws(labels[edges])
+    parts <- regmatches(text, regexec(.acl_length_interval_pattern, text, perl = TRUE))
+    if (length(parts[[1L]]) == 3L) labels[edges[1L]] <- paste0("<", parts[[1L]][3L])
+    if (length(parts[[2L]]) == 3L) labels[edges[2L]] <- paste0(">", parts[[2L]][2L])
+    if (anyDuplicated(labels)) labels <- as.character(len_label)
   }
-  paste(prefix, LengthGroup)
+  paste(prefix, labels)
 }
 
 

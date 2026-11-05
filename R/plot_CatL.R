@@ -1,3 +1,17 @@
+# Keep the observed runs separate when plotting sparse survey indices or residuals.
+# Returned data include only finite values; the complete table remains available
+# to callers through return_data and preserves the missing-observation mask.
+.acl_observed_plot_runs <- function(data, facet, x, y) {
+  data <- data[order(data[[facet]], data[[x]]), , drop = FALSE]
+  observed <- is.finite(data[[y]])
+  data$survey_run <- cumsum(!duplicated(data[[facet]]) | !observed)
+  data <- data[observed, , drop = FALSE]
+  data$run_size <- tabulate(data$survey_run)[data$survey_run]
+  data
+}
+
+utils::globalVariables("survey_run")
+
 #' Plot Fitted and Observed Survey Indices over Time or across Lengths
 #'
 #' Compare observed survey indices with their fitted lognormal medians over time
@@ -20,7 +34,7 @@
 #' @param line_type2 Character. Line type for observed line. Default is "solid".
 #' @param line_alpha2 Numeric. Transparency for observed line (0-1). Default is 0.6.
 #' @param point_color Character or NULL. NULL inherits the global observed_color setting.
-#' @param point_size Numeric or NULL. Point size for facet_by = "length"; NULL inherits the global point_size setting (default 2.5).
+#' @param point_size Numeric or NULL. Point size for observations, including isolated points in year facets; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.
 #' @param facet_ncol Integer. Specifies the number of columns in the facet_wrap. Default is NULL.
 #' @param facet_scales Character. Specifies scales for facet_wrap. Default is "free".
@@ -50,7 +64,8 @@
 #' @return A ggplot object representing the plot.
 #' @details Predicted and observed matrices are aligned by position with fitted
 #'   year and length metadata, independently of optional matrix dimnames. Missing
-#'   and zero observations remain excluded. Dimensions and metadata must agree;
+#'   and zero observations leave gaps. An isolated observation is drawn as a point.
+#'   Dimensions and metadata must agree;
 #'   predictions must be finite, including after an exponential transformation.
 #'
 #' @examples
@@ -128,7 +143,7 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
 
     # Plot Elog_index over the years using ggplot2
     p <- ggplot2::ggplot() +
-      ggplot2::geom_point(logN_at_len_long, mapping=aes(x = Year, y = Count),size= point_size, color= point_color,shape=point_shape) +
+      ggplot2::geom_point(logN_at_len_long, mapping=aes(x = Year, y = Count), na.rm = TRUE, size= point_size, color= point_color,shape=point_shape) +
       ggplot2::geom_line(Elog_index_long,  mapping=aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_by_length")) +
@@ -171,11 +186,13 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
 
     df_long2$year <- factor(year_levels[match(as.numeric(df_long2$year), year)], levels = year_levels)
 
-    # Plot the data using ggplot2
+    runs <- .acl_observed_plot_runs(df_long2, "year", "len_mid", "Abundance")
     auto_title <- .acl_title("CatL_by_year")
 
     p <- ggplot2::ggplot() +
-      ggplot2::geom_line(data=df_long2, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size2,color=line_color2,linetype=line_type2,alpha=line_alpha2) +
+      ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
+        mapping = aes(x = len_mid, y = Abundance, group = survey_run),
+        linewidth = line_size2, color = line_color2, linetype = line_type2, alpha = line_alpha2) +
       ggplot2::geom_line(data=df_long1, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size1,color=line_color1,linetype=line_type1,alpha=line_alpha1) +
       ggplot2::facet_wrap(~year, scales = facet_scales,ncol=facet_ncol) +
       ggplot2::labs(caption = "Thicker line: estimated; thinner line: observed (default widths)", x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = if (!is.null(title)) title else auto_title) +
@@ -183,6 +200,11 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
 
+    if (any(runs$run_size == 1L)) {
+      p <- p + ggplot2::geom_point(data = runs[runs$run_size == 1L, , drop = FALSE],
+        mapping = aes(x = len_mid, y = Abundance), size = point_size, shape = point_shape,
+        color = line_color2, fill = line_color2, alpha = line_alpha2)
+    }
     if (return_data) {
       return(list(plot = p, data1 = df_long1, data2=df_long2))
     } else {

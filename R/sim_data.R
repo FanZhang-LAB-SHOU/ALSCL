@@ -609,7 +609,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   if (!is.null(bio$LatA)) fields <- c(fields, "LatA")
   if (inputs$model_type == "length_based") fields <- c(fields, "Gij")
   changed <- fields[!vapply(fields, function(name) {
-    if (name %in% c("q_surv", "mat", "sel"))
+    if (name %in% c("q_surv", "mat", "sel", "pla", "Gij"))
       return(.acl_simulation_probabilities_match(bio[[name]], expected[[name]]))
     if (name == "W_at_len")
       return(.acl_simulation_nonnegative_match(bio[[name]], expected[[name]]))

@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
+- Check every map name, including named NULL releases, and normalize unused factor levels before fitting. Preflight and fitting now validate the same optimizer controls.
+- Preserve small positive probabilities in the simulated age–length key and growth transitions. In age-based simulations, average dome-shaped fishery selectivity over length at each age.
+- Show isolated survey observations and residuals as points and keep gaps in observed lines and trends. Preserve scientific-notation length labels and use the fitted ages on ACL fishing mortality heatmaps.
 - Preserve an actually converged optimization pass when a numerically equivalent restart reports false convergence; retain all original pass records and still select materially lower objectives.
 - Retain optimizer messages, selected passes and refinement evidence in retrospective diagnostics; missing legacy records remain missing.
 - Preserve native numeric precision when survey, weight or maturity tables mix numeric, text and factor columns; use the same conversion in diagnostics and reject complex cells.

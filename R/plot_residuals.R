@@ -12,9 +12,9 @@
 #'   stored observations and time/length metadata.
 #' @param f Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
 #' influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
-#' Each facet is handled independently: fewer than two distinct observed x values
-#' omit its trend, two to five use a linear trend, and six or more use loess.
-#' The loess span is enlarged per facet when needed for at least five neighbors.
+#' Within each facet, missing observations break the residual line and trend.
+#' An isolated observation is drawn as a point. Consecutive runs of two to five
+#' observations use a linear trend; longer runs use loess with at least five neighbors.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
 #' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
@@ -77,17 +77,11 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
 
   if (!is.null(resid_cap)) .acl_scalar(resid_cap, "resid_cap", 0, TRUE)
   if (length(f) != 1L || !is.finite(f) || f <= 0 || f > 1) stop("f must be in (0, 1].")
-  smoother <- function(data, x, group) {
-    valid <- is.finite(data[[x]]) & is.finite(data$residual)
-    counts <- vapply(split(data[[x]][valid], data[[group]][valid], drop = TRUE),
-                     function(z) length(unique(z)), integer(1))
-    # Facets with the same support can share a layer, but a sparse facet must
-    # not remove trends or change the method/span in better-supported facets.
-    lapply(sort(unique(counts[counts >= 2L])), function(n) {
-      selected <- names(counts)[counts == n]
-      trend_data <- data[valid & as.character(data[[group]]) %in% selected, , drop = FALSE]
+  trend_layers <- function(runs) {
+    lapply(sort(unique(runs$run_size[runs$run_size >= 2L])), function(n) {
       short <- n < 6L
-      ggplot2::geom_smooth(data = trend_data,
+      ggplot2::geom_smooth(data = runs[runs$run_size == n, , drop = FALSE],
+        mapping = ggplot2::aes(group = survey_run),
         method = if (short) "lm" else "loess", formula = y ~ x,
         method.args = if (short) list() else list(degree = 1),
         span = max(f, 5 / n), se = FALSE, na.rm = TRUE,
@@ -128,9 +122,11 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
 
     plot_data$LengthGroup <- factor(plot_data$LengthGroup,
                                     levels = fixed_len_labels)
+    runs <- .acl_observed_plot_runs(plot_data, "LengthGroup", "year", "residual")
     p <- ggplot2::ggplot(plot_data, ggplot2::aes(x=year, y=residual)) +
-      ggplot2::geom_line(color = line_color, linewidth = line_size) +
-      smoother(plot_data, "year", "LengthGroup") +
+      ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
+        mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
+      trend_layers(runs) +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +
@@ -169,9 +165,11 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
 
     year_levels <- .acl_time_labels(year)
     df_long$Year <- factor(year_levels[match(as.numeric(df_long$Year), year)], levels = year_levels)
+    runs <- .acl_observed_plot_runs(df_long, "Year", "length", "residual")
     p <- ggplot2::ggplot(df_long, ggplot2::aes(x=length, y=residual)) +
-      ggplot2::geom_line(color = line_color, linewidth = line_size) +
-      smoother(df_long, "length", "Year") +
+      ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
+        mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
+      trend_layers(runs) +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +
@@ -182,6 +180,10 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
 
     data_out <-df_long
 
+  }
+  if (any(runs$run_size == 1L)) {
+    p <- p + ggplot2::geom_point(data = runs[runs$run_size == 1L, , drop = FALSE],
+      color = line_color, size = acl_theme("point_size"))
   }
   if (return_data) {
     return(list(plot = p, data = data_out))

@@ -26,8 +26,11 @@
 #' The generating recruitment process differs from the fitted process; the
 #' ALSCL fit is also structurally different from the age-based operating model.
 #' Conditional fits are demonstrations, not evidence of parameter identifiability
-#' or a reproduction of the published study. Regenerate from data-raw/YTF_example.R
-#' in the source repository. No fitted TMB object or external pointer is stored.
+#' or a reproduction of the published study. The bundled survey records the
+#' simulation generated under ALSCL 2.0.0. The source script
+#' \code{data-raw/YTF_example.R} reruns that design with the installed version
+#' of ALSCL and records it in \code{provenance$code_version}. Numerical changes
+#' in the simulator can affect the last digits of the generated survey indices.
 #' @source Biological parameters from \code{YTF}; simulated using
 #' \code{initialize_params}, \code{sim_cal}, and \code{sim_data}.
 #' @references Zhang, F. and Cadigan, N. G. (2022). An age- and length-structured

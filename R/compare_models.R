@@ -47,7 +47,7 @@ compare_models <- function(model1, model2, data.CatL,
     if (!is.null(m$model_type)) return(m$model_type)
     # Infer from report structure
     if (!is.null(m$report$FL)) return("ALSCL")
-    if (!is.null(m$report$F))  return("ACL")
+    if (!is.null(m$report[["F"]]))  return("ACL")
     return(fallback)
   }
   auto_names <- is.null(model1_name) && is.null(model2_name)

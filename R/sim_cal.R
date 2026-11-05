@@ -11,6 +11,9 @@
 #'   determine the matrix orientation and whether to build growth transitions.
 #'   Length midpoints must lie inside the matching open-tail bins; geometry is
 #'   checked again so that manually edited parameter lists cannot bypass it.
+#'   Fishing selectivity is `params$sel_type = "flat"` or `"dome"`. For
+#'   a dome, set `sel_L50_asc < sel_L95_asc` for the ascending length curve
+#'   and `sel_L50_desc > sel_L95_desc` for the descending length curve.
 #'
 #' @return A list containing:
 #'   \describe{
@@ -19,7 +22,10 @@
 #'     \item{W_at_len}{Weight-at-length vector}
 #'     \item{mat}{Maturity-at-length vector}
 #'     \item{q_surv}{Survey catchability-at-length vector}
-#'     \item{sel}{Selectivity vector (at-age for age_based, at-length for length_based)}
+#'     \item{sel}{Fishing selectivity at age for age_based or at length for
+#'       length_based. For an age-based dome, each age's value is the average
+#'       of the length-specific selectivities weighted by its probabilities
+#'       of length given age.}
 #'     \item{pla}{Probability of length given age. Rows are ages and columns
 #'       are length groups for age_based; this orientation is transposed for
 #'       length_based. Each age's probabilities sum to one.}
@@ -43,12 +49,10 @@ sim_cal <- function(params) {
   # =========================================================================
   nage       <- params$nage
   ages       <- params$ages
-  rec.age    <- params$rec.age
   vbk        <- params$vbk
   Linf       <- params$Linf
   t0         <- params$t0
   len_mid    <- bins$mid
-  len_border <- c(-Inf, bins$border, Inf)
   cv_L       <- params$cv_L
   cv_inc     <- params$cv_inc
   q_surv_L50 <- params$q_surv_L50
@@ -85,33 +89,17 @@ sim_cal <- function(params) {
   # NOTE: In M7 (age-based), pla is nage x nlen (rows=ages, cols=lengths)
   #       In M6 (length-based), pla is nlen x nage (rows=lengths, cols=ages)
   # =========================================================================
-  ml <- VB_func(Linf, vbk, t0, ages)
-  sl <- cv_L * ml
-
-  if (model_type == "age_based") {
-    # pla[age, length] -- probability of length given age
-    pla <- matrix(NA, nrow = nage, ncol = nlen)
-    for (i in 1:nlen) {
-      pla[, i] <- pnorm(len_border[i + 1], ml, sl) - pnorm(len_border[i], ml, sl)
-    }
-  } else {
-    # pla[length, age] -- probability of length given age (transposed orientation)
-    pla <- matrix(NA, nrow = nlen, ncol = nage)
-    for (i in 1:nlen) {
-      pla[i, ] <- pnorm(len_border[i + 1], ml, sl) - pnorm(len_border[i], ml, sl)
-    }
-  }
+  sd_at_age <- cv_L * LatA
+  pla <- vapply(seq_len(nlen), function(i)
+    .acl_normal_interval(len_lower[i], len_upper[i], LatA, sd_at_age), numeric(nage))
+  if (model_type == "length_based") pla <- t(pla)
 
   # =========================================================================
   # Selectivity
   # =========================================================================
-  sel_type <- if (!is.null(params$sel_type)) params$sel_type else "flat"
-
-  if (sel_type == "flat") {
-    # Flat selectivity at age (all ages fully selected)
+  if (biology_inputs$sel_type == "flat") {
     sel <- rep(1, if (model_type == "length_based") nlen else nage)
-
-  } else if (sel_type == "dome") {
+  } else {
     # Dome-shaped double logistic selectivity at length
     # Ascending limb (small fish becoming selected)
     L50_asc  <- params$sel_L50_asc
@@ -129,9 +117,7 @@ sim_cal <- function(params) {
     sel[asc_idx]  <- mat_func(L50_asc, L95_asc, len_mid[asc_idx])
     sel[desc_idx] <- mat_func(L50_desc, L95_desc, len_mid[desc_idx])
 
-  } else {
-    # Default fallback: flat at age
-    sel <- rep(1, if (model_type == "length_based") nlen else nage)
+    if (model_type == "age_based") sel <- pmin(1, drop(pla %*% sel))
   }
 
   # =========================================================================
@@ -166,8 +152,8 @@ sim_cal <- function(params) {
           Gij[i, j] <- pnorm(len_upper[i] - len_mid[j], ml_inc, sl_inc)
         } else {
           # Grow to larger bin: CDF difference
-          Gij[i, j] <- pnorm(len_upper[i] - len_mid[j], ml_inc, sl_inc) -
-            pnorm(len_lower[i] - len_mid[j], ml_inc, sl_inc)
+          Gij[i, j] <- .acl_normal_interval(len_lower[i] - len_mid[j],
+            len_upper[i] - len_mid[j], ml_inc, sl_inc)
         }
       }
     }
@@ -195,6 +181,15 @@ sim_cal <- function(params) {
   result
 }
 
+# Compute each bin mass from its nearer tail so small positive right-tail
+# probabilities are retained even when both lower-tail CDFs round to one.
+.acl_normal_interval <- function(lower, upper, mean, sd) {
+  ifelse(lower > mean,
+    stats::pnorm(lower, mean, sd, lower.tail = FALSE) -
+      stats::pnorm(upper, mean, sd, lower.tail = FALSE),
+    stats::pnorm(upper, mean, sd) - stats::pnorm(lower, mean, sd))
+}
+
 # Record only inputs that determine the biological arrays or their time scale.
 # Process scales, simulation duration, burn-in, labels and output controls can
 # change without rebuilding biology. Defaults match the simulation engines.
@@ -215,12 +210,21 @@ sim_cal <- function(params) {
          "update the age grid and rerun sim_cal(params).", call. = FALSE)
   bins <- .acl_simulation_bins(params$len_mid, params$len_border)
   sel_type <- params$sel_type %||% "flat"
+  if (!is.character(sel_type) || length(sel_type) != 1L ||
+      !sel_type %in% c("flat", "dome"))
+    stop("sel_type must be 'flat' or 'dome'.", call. = FALSE)
   fields <- c("Linf", "vbk", "t0", "cv_L", "a", "b", "mat_L50", "mat_L95",
               "q_surv_L50", "q_surv_L95")
   if (model_type == "length_based") fields <- c(fields, "cv_inc")
-  if (identical(sel_type, "dome"))
-    fields <- c(fields, "sel_L50_asc", "sel_L95_asc", "sel_L50_desc", "sel_L95_desc")
+  if (sel_type == "dome") {
+    limbs <- c("sel_L50_asc", "sel_L95_asc", "sel_L50_desc", "sel_L95_desc")
+    for (name in limbs) .acl_scalar(params[[name]], name)
+    if (params$sel_L50_asc >= params$sel_L95_asc || params$sel_L50_desc <= params$sel_L95_desc)
+      stop("Dome selectivity requires sel_L50_asc < sel_L95_asc and sel_L50_desc > sel_L95_desc.",
+           call. = FALSE)
+    fields <- c(fields, limbs)
+  }
   c(list(model_type = model_type, nage = nage, rec.age = rec_age, ages = ages,
     growth_step = step, len_mid = bins$mid, len_border = c(-Inf, bins$border, Inf),
-    sel_type = if (identical(sel_type, "dome")) "dome" else "flat"), params[fields])
+    sel_type = unname(sel_type)), params[fields])
 }

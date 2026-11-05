@@ -1,5 +1,9 @@
 # Unreleased
 
+- Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
+- Check every map name, including named NULL releases, and normalize unused factor levels before fitting. Preflight and fitting now validate the same optimizer controls.
+- Preserve small positive probabilities in the simulated age–length key and growth transitions. In age-based simulations, average dome-shaped fishery selectivity over length at each age.
+- Show isolated survey observations and residuals as points and keep gaps in observed lines and trends. Preserve scientific-notation length labels and use the fitted ages on ACL fishing mortality heatmaps.
 - Preserve an actually converged optimization pass when a numerically equivalent restart reports false convergence; retain all original pass records and still select materially lower objectives.
 - Retain optimizer messages, selected passes and refinement evidence in retrospective diagnostics; missing legacy records remain missing.
 - Preserve native numeric precision when survey, weight or maturity tables mix numeric, text and factor columns; use the same conversion in diagnostics and reject complex cells.
@@ -8,6 +12,10 @@
 
 ### 简体中文
 
+- 报告拟合指标或按 AIC 选择模型前，逐格核对调查正观测。多个进程向同一路径存档时会检查写入冲突。
+- 校验全部映射参数名，包括具名 NULL 释放项，并在拟合前清除未使用的因子水平。预检和拟合采用相同的优化器控制项校验。
+- 保留模拟年龄–体长概率和生长转移中的微小正概率。年龄结构模拟按每个年龄的体长分布对穹顶形渔业选择性加权。
+- 调查图和残差图显示孤立观测，遇到缺测会断开观测线和趋势线。保留科学计数法的体长标签，ACL 捕捞死亡率热图按拟合年龄标注。
 - 数值上等价的重启报告 false convergence 时，保留实际收敛的轮次；保留全部原始记录，目标函数有实质改善时仍按较低值选择。
 - 回溯诊断保留优化器消息、所选轮次及收尾证据；旧结果缺少的信息继续保留为缺失值。
 - 调查、体重和成熟度表混合数值、文本与因子列时保留原有数值精度；诊断采用相同转换，并拒绝复数单元格。

@@ -161,7 +161,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
   values <- par; status <- rep("estimated", length(par)); names(status) <- names(par)
   if (!is.null(fit$recipe)) {
     recipe <- .acl_recipe(fit)
-    inspection <- inspect_parameters(recipe$args, model = recipe$model)
+    # Optimizer controls do not affect the parameter map. Older archives can
+    # contain controls accepted by an earlier fitting implementation.
+    inspection_args <- recipe$args
+    inspection_args$control <- list()
+    inspection <- inspect_parameters(inspection_args, model = recipe$model)
     # Inspection is also authoritative for data-adjusted fixed starting values.
     scalars <- inspection[inspection$kind == "fixed_effect", , drop = FALSE]
     if (nrow(scalars)) {
@@ -230,7 +234,7 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
   joint <- c("NLA", "BLA", "SBLA", "CNLA", "CBLA")
   numerical_ok <- isTRUE(fit$diagnostics$numerical_ok)
   rows <- lapply(quantities, function(quantity) {
-    nm <- if (quantity == "F" && is.null(fit$report$F)) "FL" else quantity
+    nm <- if (quantity == "F" && is.null(fit$report[["F"]])) "FL" else quantity
     if (!nm %in% c(time_only, age_time, length_time, joint))
       stop("Unsupported population quantity: ", quantity, call. = FALSE)
     value <- fit$report[[nm]]
@@ -336,6 +340,10 @@ vcov.alscl_fit <- function(object, ...) object$vcov
 #'   available in a source tree; ordinary installed packages need not retain
 #'   those files. Missing source metadata remains unavailable, and no
 #'   source revision is inferred for an older fit supplied with x.
+#'   Concurrent saves to the same path use a temporary lock directory during
+#'   the final rename. With overwrite = FALSE, only the first save can publish
+#'   the archive. If an interrupted process leaves a lock, confirm that the
+#'   writer has stopped before removing the lock directory named in the error.
 #'   A fresh session can summarize and plot it without a live
 #'   TMB pointer. refit_model rebuilds a live model; cross-version numerical
 #'   equality is not promised. Only read archives from trusted sources.
@@ -369,19 +377,18 @@ save_assessment <- function(fit, file, x = NULL, overwrite = FALSE) {
   portable <- fit; portable$obj <- NULL
   class(portable) <- c("alscl_fit", "list")
   temporary <- tempfile(".alscl-archive-", tmpdir = dirname(file))
-  backup <- tempfile(".alscl-backup-", tmpdir = dirname(file))
-  on.exit(unlink(temporary), add = TRUE)
+  on.exit(unlink(temporary, expand = FALSE), add = TRUE)
   saveRDS(list(format = "ALSCL assessment", schema_version = 1L, fit = portable), temporary, version = 2)
-  moved <- FALSE
-  if (file.exists(file)) {
-    moved <- file.rename(file, backup)
-    if (!moved) stop("Could not preserve the previous archive before replacement.", call. = FALSE)
-  }
-  if (!file.rename(temporary, file)) {
-    if (moved && !file.rename(backup, file)) warning("Previous archive is retained at: ", backup, call. = FALSE)
+  # Two writers may both have observed an absent archive before serialization.
+  # Acquire an exclusive directory only for the existence check and rename.
+  lock <- file.path(dirname(file), paste0(".", basename(file), ".alscl-lock"))
+  if (!dir.create(lock, showWarnings = FALSE))
+    stop("Could not acquire the archive lock: ", lock, call. = FALSE)
+  on.exit(unlink(lock, recursive = TRUE, expand = FALSE), add = TRUE)
+  if (!overwrite && file.exists(file))
+    stop("Archive already exists; use overwrite = TRUE for a file.", call. = FALSE)
+  if (!file.rename(temporary, file))
     stop("Could not install the assessment archive.", call. = FALSE)
-  }
-  if (moved) unlink(backup)
   invisible(normalizePath(file, winslash = "/"))
 }
 

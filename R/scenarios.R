@@ -49,7 +49,7 @@
     fit <- fits[[i]]
     if (!is.null(fit$error)) return(NULL)
     series <- fit$report[intersect(c("SSB", "Rec"), names(fit$report))]
-    F <- fit$report$FL %||% fit$report$F
+    F <- fit$report$FL %||% fit$report[["F"]]
     if (is.matrix(F) && ncol(F) == length(fit$year))
       series$F <- if (F_summary == "mean") colMeans(F) else apply(F, 2L, max)
     out <- lapply(names(series), function(quantity) {

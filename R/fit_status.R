@@ -96,8 +96,12 @@
       fail("invalid stored observations")
     stored_mask <- is.finite(stored) & stored > 0
     if (!identical(unname(stored_mask), unname(mask))) fail("observation mask")
-    if (!isTRUE(all.equal(as.numeric(stored[mask]), as.numeric(observed[mask]),
-                         tolerance = 1e-12))) fail("observation values")
+    # The likelihood uses each positive observation on the log scale. Compare
+    # relative differences per cell, even for values much smaller than one.
+    fitted_values <- stored[mask]
+    supplied_values <- observed[mask]
+    if (any(abs(fitted_values - supplied_values) >
+            1e-12 * pmax(fitted_values, supplied_values))) fail("observation values")
   }
   unknown
 }

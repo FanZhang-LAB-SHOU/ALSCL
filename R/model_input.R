@@ -47,11 +47,14 @@
          dimnames = list(NULL, names(x)))
 }
 
+.acl_length_number_pattern <- "[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+.acl_length_interval_pattern <- paste0("^(", .acl_length_number_pattern, ")\\s*-\\s*(", .acl_length_number_pattern, ")$")
+
 .acl_length_bins <- function(labels, len_mid = NULL, len_border = NULL,
                              len_lower = NULL, len_upper = NULL) {
   labels <- trimws(as.character(labels)); n <- length(labels)
   if (n < 2L || anyNA(labels) || anyDuplicated(labels)) stop("At least two distinct length bins are required.", call. = FALSE)
-  number <- "[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+  number <- .acl_length_number_pattern
   single <- grepl(paste0("^", number, "$"), labels, perl = TRUE)
   lower <- upper <- mid <- rep(NA_real_, n)
   if (all(single)) {
@@ -66,8 +69,7 @@
       } else if (grepl(paste0("^>\\s*", number, "$"), s, perl = TRUE) && i == n) {
         lower[i] <- as.numeric(sub("^>\\s*", "", s)); upper[i] <- Inf
       } else {
-        pat <- paste0("^(", number, ")\\s*-\\s*(", number, ")$")
-        parts <- regmatches(s, regexec(pat, s, perl = TRUE))[[1L]]
+        parts <- regmatches(s, regexec(.acl_length_interval_pattern, s, perl = TRUE))[[1L]]
         if (length(parts) != 3L) {
           if (is.null(len_mid) || is.null(len_border)) stop("Cannot parse length bin '", s, "'; supply len_mid and len_border.", call. = FALSE)
         } else {

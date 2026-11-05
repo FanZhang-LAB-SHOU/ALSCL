@@ -13,7 +13,7 @@ utils::globalVariables(c(
 .detect_model_name <- function(m, fallback) {
   if (!is.null(m$model_type)) return(m$model_type)
   if (!is.null(m$report$FL))  return("ALSCL")
-  if (!is.null(m$report$F))   return("ACL")
+  if (!is.null(m$report[["F"]]))   return("ACL")
   return(fallback)
 }
 
@@ -257,6 +257,8 @@ plot_compare_ts <- function(model1, model2,
 #'
 #' @inheritParams plot_compare_ts
 #' @param palette Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them.
+#' @details ACL rows use the ages stored in each fit. Older fits without age
+#'   metadata show age-group numbers. ALSCL rows follow the fitted length bins.
 #' @return A ggplot object.
 #' @export
 plot_compare_F <- function(model1, model2,
@@ -267,15 +269,24 @@ plot_compare_F <- function(model1, model2,
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
 
   extract_F <- function(model, mname) {
-    is_alscl <- is.null(model$report$F) && !is.null(model$report$FL)
-    Fmat <- if (is_alscl) model$report$FL else model$report$F
+    is_alscl <- is.null(model$report[["F"]]) && !is.null(model$report$FL)
+    Fmat <- if (is_alscl) model$report$FL else model$report[["F"]]
     if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat))
       stop(mname, " must contain a numeric F or FL matrix.", call. = FALSE)
     if (is_alscl) {
       labels <- if (!is.null(model$len_label)) model$len_label else paste0("L", seq_len(nrow(Fmat)))
       dim_type <- "length"
     } else {
-      labels <- paste("Age", seq_len(nrow(Fmat)))
+      age <- model$age
+      if (is.null(age)) {
+        age <- seq_len(nrow(Fmat))
+        labels <- paste("Age group", age)
+      } else {
+        if (!is.numeric(age) || !is.null(dim(age)) || length(age) != nrow(Fmat) ||
+            any(!is.finite(age)) || any(diff(age) <= 0))
+          stop(mname, " ages must be finite, increasing and match the F matrix rows.", call. = FALSE)
+        labels <- paste("Age", age)
+      }
       dim_type <- "age"
     }
     years <- .acl_plot_year(model, ncol(Fmat), mname)
@@ -285,6 +296,7 @@ plot_compare_F <- function(model1, model2,
                      F_value = as.numeric(Fmat),
                      Label = factor(rep(labels, ncol(Fmat)), levels = rev(labels)))
     df$Model <- mname
+    if (!is_alscl) attr(df, "ages") <- stats::setNames(age, labels)
     attr(df, "dim_type") <- dim_type
     return(df)
   }
@@ -301,6 +313,13 @@ plot_compare_F <- function(model1, model2,
   }
 
   df <- rbind(df1, df2)
+  # Combining factors appends new levels. Reorder ages numerically so panels
+  # with overlapping annual and subannual age grids both keep their own order.
+  ages <- c(attr(df1, "ages"), attr(df2, "ages"))
+  if (length(ages)) {
+    labels <- union(names(sort(ages, decreasing = TRUE)), levels(df$Label))
+    df$Label <- factor(df$Label, levels = labels)
+  }
   df$Model <- factor(df$Model, levels = c(model1_name, model2_name))
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Label, fill = F_value)) +
@@ -1021,7 +1040,7 @@ plot_compare_F_ts <- function(model1, model2,
                                m1 = model1_name, m2 = model2_name)
 
   get_F <- function(m, mname) {
-    Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report$F
+    Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report[["F"]]
     if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat))
       stop(mname, " must contain a numeric F or FL matrix.", call. = FALSE)
     years <- .acl_plot_year(m, ncol(Fmat), mname)
