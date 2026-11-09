@@ -26,7 +26,7 @@ a$recipe$implementation$source$revision
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
-`save_assessment()` 保存拟合结果，不含当前会话的 TMB 对象 `a$obj`，并附上记录拟合全部依赖内容的配方：
+`save_assessment()` 保存拟合结果，不含当前会话的 TMB 对象 `a$obj`，并在 `recipe` 字段中保存重新拟合所需的数据、设置和版本信息。
 
 `save_assessment()` writes the fit without the live TMB object `a$obj` and with a recipe that records everything the fit depends on:
 
@@ -37,11 +37,11 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 | 模型源文件的 MD5 值、已知时的 Git 修订号、平台、BLAS、LAPACK、Matrix 和 RcppEigen / MD5 hashes of the model source, Git revision when known, platform, BLAS, LAPACK, Matrix and RcppEigen | `recipe$implementation` |
 | 速度设置，`framework` 和 `sd_cores` / Speed settings, `framework` and `sd_cores` | `recipe$settings` |
 
-`sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。拟合模型模拟还依赖随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
+`sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。从拟合模型模拟调查数据时，结果还取决于随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
 
 `sessionInfo()` adds the operating system, the BLAS and LAPACK libraries and the loaded packages; keep its output next to the saved file. A fitted-model simulation also depends on its seed, which `simulate_fit()` records in `metadata$seed`.
 
-当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或拟合结果没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
+当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或缺少重新拟合所需的输入和设置时，`save_assessment()` 会报错。对于缺少输入记录的旧拟合，可用 `x` 提供原始输入列表。
 
 `save_assessment()` stops when the file exists (set `overwrite = TRUE`), when its folder is missing, or when a fit has no recipe; then pass the bundle as `x` and the recipe is rebuilt from it.
 
@@ -57,7 +57,7 @@ max(abs(refit$opt$par - saved$opt$par))
 all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 重新拟合配方，返回带有可执行对象的拟合结果；命名参数会覆盖配方，`map` 这类列表会整体替换保存的列表。
+`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 使用保存的输入和设置重新拟合，返回带有可执行对象的拟合结果；传入的命名参数会覆盖对应的设置，`map` 这类列表会整体替换保存的列表。
 
 `read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `plot_compare_selectivity()` recovers fixed survey catchability from the saved inputs, so the original and saved curves coincide without refitting. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
 
@@ -65,7 +65,7 @@ all.equal(refit$report$SSB, saved$report$SSB)
 
 On the same computer with the same versions of ALSCL, TMB and R, the scalar parameters agree to the last digit and `all.equal()` returns `TRUE`. Differences in the last digits between machines or package versions come from floating-point arithmetic and the optimizer's stopping rule; a difference large enough to change a conclusion means the data, settings or package version differ.
 
-`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与配方不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果没有配方；按第 1 步用 `x` 重新保存。
+`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
 
 `refit_model()` warns when the ALSCL, TMB, Matrix or RcppEigen version or the model source differs from the recipe; to reproduce exactly, install the versions in `saved$recipe$versions`. `A complete fit recipe is required` means the fit has no recipe; save it again with `x` as in step 1.
 
@@ -171,7 +171,7 @@ Error messages are quoted as the package prints them.
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` / Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | 新的 R 进程无法启动 / The new R processes could not start | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` / Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
 | 回溯分析后 `rho_text$Rho` 是 `NA` / `rho_text$Rho` is `NA` after a retrospective analysis | 某次拟合未通过数值检查 / A fit failed the numerical checks | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 / Read `fit_diagnostics` and `rho_by_peel`, fix that fit |
 | `The current implementation differs from the saved assessment` | 保存之后软件包、TMB 或模型源文件变了 / Package, TMB or model source changed since the save | 预期末位有差异，或安装记录的版本 / Expect last-digit differences, or install the recorded versions |
-| `A complete fit recipe is required` | 拟合没有配方 / The fit has no recipe | 重新拟合，或带 `x = x` 保存 / Refit, or save with `x = x` |
+| `A complete fit recipe is required` | 缺少重新拟合所需的输入和设置 / The fit has no recipe | 重新拟合，或带 `x = x` 保存 / Refit, or save with `x = x` |
 
 <a id="reproducibility-next"></a>
 
@@ -182,7 +182,7 @@ Error messages are quoted as the package prints them.
 | 检验估计值对固定值的敏感性 / Test the sensitivity of the estimates to the fixed values | [判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity) / [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity) |
 | 选择速度设置并检查本会话的实际情况 / Choose the speed settings and check what your session does | [速度设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) / [Speed settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) |
 | 运行回溯分析并解读 Mohn's rho / Run a retrospective analysis and read Mohn's rho | [回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospective) / [Retrospectives](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospective) |
-| 从拟合模型模拟，或检验对留出时间步的预测 / Simulate from the fit or test predictions of withheld time steps | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
+| 从拟合模型模拟调查数据，或检验对留出时间步的预测 / Simulate from the fit or test predictions of withheld time steps | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
 | 比较情景、做参数剖面和投影 / Compare scenarios, profile a parameter, project forward | [评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) / [Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) |
 
 ---

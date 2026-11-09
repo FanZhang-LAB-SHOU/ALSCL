@@ -82,7 +82,7 @@ saved <- read_assessment("ytf_acl.rds")
 plot_SSB(saved, se = TRUE)
 ```
 
-`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并记录配方（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。文件已存在时调用会停止；传入 `overwrite = TRUE` 即可覆盖。
+`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并保存重新拟合所需的信息（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。文件已存在时调用会停止；传入 `overwrite = TRUE` 即可覆盖。
 
 <h2 id="bundle">run_acl(x) 如何读取输入列表</h2>
 
@@ -116,4 +116,4 @@ a4 <- run_acl(x, nstarts = 4, ncores = 2, M = 0.25)
 | 检查残差、比较不同设置 | [诊断](diagnostics.html) |
 | 绘制某个种群量 | [调查与种群图](population-plots.html) |
 | 做敏感性分析、参数剖面和投影 | [评估工作流](assessment-workflows.html) |
-| 从拟合模型模拟，或检验对未来年份的预测 | [模型验证](case-model-validation.html) |
+| 从拟合模型模拟调查数据，或检验对未来年份的预测 | [模型验证](case-model-validation.html) |

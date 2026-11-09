@@ -97,8 +97,8 @@
 #'   fixed. Neither includes parameter-estimation uncertainty. In resample mode,
 #'   recruitment follows a stationary AR(1), fishing mortality follows the
 #'   fitted stationary separable group-by-time AR(1) (or one time series for
-#'   F_structure = "year"), and initial-age deviations are independent normal
-#'   draws. The process scales are marginal SDs; AR(1) innovation SDs are the
+#'   F_structure = "year"), and numbers at age are initialized recursively
+#'   with independent normal increments on the log scale. The process scales are marginal SDs; AR(1) innovation SDs are the
 #'   marginal SD multiplied by sqrt(1 - phi^2). Recruitment and F use
 #'   exp(mean_log + deviation), without a lognormal mean correction.
 #'

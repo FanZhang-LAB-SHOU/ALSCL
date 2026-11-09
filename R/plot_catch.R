@@ -1,7 +1,9 @@
 utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' Plot Catch Number (CN), Catch by Age (CNA), or Catch by Length (CNL) Over Years
 #'
-#' Visualizes catch data from ACL or ALSCL model outputs.
+#' Plots expected fishery catch in numbers. The Baranov catch equation
+#' uses abundance at the start of the time step and the instantaneous rates
+#' of fishing and natural mortality during the step.
 #' Supports total catch ("CN"), catch at age ("CNA"), and catch at length ("CNL").
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.

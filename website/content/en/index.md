@@ -50,7 +50,7 @@ Both models use three aligned input tables: survey numbers-at-length, mean indiv
 
 <h2 id="basic-use">Basic use</h2>
 
-The bundled `YTF_example` contains synthetic yellowtail-flounder-style data, biological settings and known simulation truth. It is a teaching dataset, not the empirical dataset from the paper.
+The bundled `YTF_example` contains survey data simulated using the biological parameters in `YTF`, along with the settings and known population quantities used in the simulation.
 
 ```r
 data("YTF_example")

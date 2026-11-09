@@ -98,10 +98,11 @@ A ggplot object, or a list with plot and data if return_data = TRUE.
 }
 \description{
 This function takes the output from \code{run_acl} or \code{run_alscl}
-and plots fishing mortality over years, ages, or length-bin midpoints using ggplot2.
+and plots fishing mortality over time steps, ages, or length-bin midpoints using ggplot2.
 For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
-F-at-age (FA: (A-1) x (Y-1)) is derived from F at length.
+F at age (FA: (A-1) x (Y-1)) is the negative log of the proportion
+surviving within each age class over the time step, minus natural mortality.
 }
 \details{
 Matrix positions are matched to fitted time and group metadata;

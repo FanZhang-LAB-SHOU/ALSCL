@@ -121,8 +121,9 @@
 #' @details Each fold uses only data through its training origin. No full-data
 #'   fit is used to initialize the folds. Recruitment and F deviations follow
 #'   the fitted AR(1) conditional means on the log-process scale: the last fitted
-#'   deviation times phi to the power of the forecast horizon. Fixed fitted
-#'   scalars, growth and survey catchability are retained. project_model() advances
+#'   deviation times phi to the power of the forecast horizon. Projections retain
+#'   the scalar parameter values from the training fit and the specified survey catchability.
+#'   project_model() advances
 #'   the population; training-terminal weights and maturity are repeated only
 #'   for this calculation and do not affect survey-number predictions. These are
 #'   plug-in predictions along a conditional log-process path, not marginal
@@ -263,7 +264,7 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
     workers = .acl_workers(min(ncores, length(settings))), elapsed = unname(proc.time()[["elapsed"]] - started),
     assumptions = list(prediction = "plug-in conditional mean log-process path; not a marginal predictive mean",
       future_process = "last fitted log deviations times AR(1) correlation^horizon; no future innovations",
-      future_biology = "training-terminal weights and maturity repeated; fixed fitted growth and survey catchability",
+      future_biology = "weights and maturity from the final training step; growth from the training fit; specified survey catchability",
       uncertainty = "none; no intervals or probability scores",
       training = "expanding windows; no full-data fit or full-data fitted starting values",
       supplied_settings = "user-supplied assumptions and starts must not be tuned with held-out observations",

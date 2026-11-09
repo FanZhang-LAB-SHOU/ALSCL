@@ -102,7 +102,7 @@ performance$summary
 
 `sim_acl()` 读取 `sim_data_path` 中的每个 `sim_rep<id>` 文件，从文件构造三张表和生物学设置，再用你传入的初值、`map` 和 `M` 拟合 ACL；`sim_alscl()` 用 ALSCL 的参数名做同样的事。
 
-`YTF_example` 的配置提供 flatfish 的生长设置和指定的过程假设。本例把其中固定的 log-F SD 改为从 `pa` 换算的边际 SD，即 0.3023716。固定的初始数量及相关系数设置属于拟合假设：操作模型使用共用 F 与选择性，并沿年龄累加初始偏差；ACL 使用年龄与时间可分离的 F，以及独立初始偏差。SD 换算后，这些结构仍然不同。自己的配置按[选择拟合设置](fitting-controls.html)建立。
+本例使用 `YTF_example` 中的鲽鱼生长设置，将对数 F 的边际标准差固定为根据 `pa` 换算的 0.3023716。操作模型用共用时间序列和选择性生成 F，ACL 拟合采用年龄与时间可分离的 F 过程。两者都在对数尺度上加入独立扰动，逐龄递推初始尾数。要调整拟合假设，见[选择拟合设置](fitting-controls.html)。
 
 每次重复在一个工作进程中拟合，它的 `nstarts` 个初值依次运行；`ncores` 决定同时运行多少次重复。每次重复的结果，包括带有 `converge = "FAILED"` 和 `error` 信息的失败，都会返回并保存为 `output_dir` 下的 `result_rep_<id>`。
 
@@ -110,7 +110,7 @@ performance$summary
 
 时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。
 
-<h2 id="fitted">5. 从拟合模型模拟</h2>
+<h2 id="fitted">5. 从拟合模型模拟调查数据</h2>
 
 ```r
 fit <- run_acl(YTF_example, silent = TRUE)
@@ -119,14 +119,14 @@ names(simulated$simulations[[1]])
 simulated$simulations[[1]]$truth$SSB
 ```
 
-`simulate_fit()` 从拟合好的 ACL 或 ALSCL 模型生成数据集，这就是拟合模型模拟。`process = "conditional"` 保留拟合的种群，只重新抽取观测误差；`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差。`simulated$simulations` 的每个元素包含 `x`（`run_acl(x)` 可用的输入列表）、`observations` 和 `truth`，所以可以用 `lapply(simulated$simulations, function(s) s$truth)` 作为真值，对再拟合结果运行 `summarize_simulations()`。未通过数值检查的拟合会被拒绝，除非设置 `allow_failed_fit = TRUE`；[模型验证案例](case-model-validation.html)再拟合这些重复，并继续做预测检验。
+`simulate_fit()` 从拟合好的 ACL 或 ALSCL 模型模拟新的调查数据。`process = "conditional"` 保留拟合的种群，只重新抽取观测误差；`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差。`simulated$simulations` 的每个元素包含 `x`（`run_acl(x)` 可用的输入列表）、`observations` 和 `truth`，所以可以用 `lapply(simulated$simulations, function(s) s$truth)` 作为真值，对再拟合结果运行 `summarize_simulations()`。未通过数值检查的拟合会被拒绝，除非设置 `allow_failed_fit = TRUE`；[模型验证案例](case-model-validation.html)再拟合这些重复，并继续做预测检验。
 
 <h2 id="next">下一步</h2>
 
 | 想做什么 | 阅读 |
 |---|---|
 | 绘制一次重复，用两个模型拟合并与真值比较 | [如何模拟调查数据？](case-simulate-survey.html) |
-| 再拟合拟合模型模拟的数据并预测留出年份 | [模型验证](case-model-validation.html) |
+| 用模拟调查数据重新拟合，并预测留出的年份 | [模型验证](case-model-validation.html) |
 | 用更少的时间运行更多重复 | [速度设置](speed.html) |
 | 保存种子、设置和版本以便重复实验 | [复现结果](reproducibility.html) |
 | 比较年度和季度设置 | [年度与季度时间步](case-studies.html) |

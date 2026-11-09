@@ -14,8 +14,8 @@
 #' @param point_shape Numeric. The shape of the point. Default is 21.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_width Numeric, the width of the standard error.
-#' @param log Logical. TRUE plots log process deviations; FALSE plots their
-#'   exponentiated multiplicative factors. These are not likelihood deviances.
+#' @param log Logical. TRUE plots log process deviations; FALSE plots the corresponding
+#'   ratios to the process median, obtained by exponentiating the deviations.
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
 #' @param facet_scales Scales for facet wrap. Default is "free".
 #' @param type Character. "R" for recruitment deviation, "F" for fishing mortality deviation.

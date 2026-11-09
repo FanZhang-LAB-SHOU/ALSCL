@@ -122,9 +122,9 @@ str(tables)
 | 设置 / Setting | 含义 / Meaning | 数值来源 / Where the value comes from |
 |---|---|---|
 | `rec.age` | 模型中最小年龄组的年龄（年） / Age of the youngest age class in the model, in years | 鱼首次出现在调查中的年龄 / Age at which fish first appear in the survey |
-| `nage` | 年龄组数；最后一组是加组 / Number of age classes; the last one is a plus group | 值得追踪的最大年龄除以 `growth_step` / Oldest age worth tracking, divided by `growth_step` |
+| `nage` | 年龄组数，最后一组包括达到或超过该组起始年龄的个体 / Number of age classes, including the oldest (plus) group | 在年龄网格上选定末组起始年龄 A（年），取 `nage = 1 + (A - rec.age) / growth_step` / Choose the starting age A of the plus group on the age grid, in years. Set `nage = 1 + (A - rec.age) / growth_step` |
 | `M` | 每个时间步的自然死亡率 / Natural mortality per time step | 文献或生活史方法；季度时间步时把年值除以 4 / Literature or life-history methods; divide an annual value by 4 for quarterly steps |
-| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 调查可捕性达到 50% 和 95% 的体长 / Lengths at which survey catchability reaches 50% and 95% | 渔具选择性研究或渔获体长分布 / Gear selectivity studies or the length distribution of the catch |
+| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 调查可捕性达到 50% 和 95% 的体长 / Lengths at which survey catchability reaches 50% and 95% | 调查渔具的校准资料或对比捕捞试验。借用外部曲线时，说明假设并检验结果对该曲线的敏感性。 / Calibration or comparative fishing trials for the survey gear. If borrowing a curve, document the assumption and test sensitivity to it. |
 | `growth_step` | 每个时间步的年数 / Years per time step | 第 2 步 / Step 2 |
 | `len_mid`、`len_border` / `len_mid`, `len_border` | 体长组中点和内部边界 / Bin midpoints and internal boundaries | 第 2 步 / Step 2 |
 | `zero_action` | 调查表中 0 的处理方式 / How a 0 in the survey table is treated | `"missing"`（默认）或 `"error"` / `"missing"` (default) or `"error"` |

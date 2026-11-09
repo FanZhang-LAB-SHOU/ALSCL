@@ -136,7 +136,7 @@ On this page you read the equations behind ACL and ALSCL in the package's time u
 
 #### 种群动态 / Population dynamics
 
-令 $`i=1,\ldots,A`$ 为年龄组索引，$`a_i=a_{rec}+(i-1)\Delta t`$ 为实际年龄，$`t`$ 为时间步。ACL 在年龄维度推进存活；补充量进入第一组，最大年龄组为加组：
+令 $`i=1,\ldots,A`$ 为年龄组索引，$`a_i=a_{rec}+(i-1)\Delta t`$ 为实际年龄，$`t`$ 为时间步。ACL 将补充量计入最小年龄组，并将存活个体推进至下一年龄组。最高年龄组（plus group）包括达到或超过该组起始年龄的个体。
 
 Let $`i=1,\ldots,A`$ index age classes, with actual age $`a_i=a_{rec}+(i-1)\Delta t`$, and let $`t`$ index time steps. ACL advances survivors by age, introduces recruitment in the first class, and retains survivors in the oldest plus group:
 
@@ -245,7 +245,7 @@ ALSCL retains length, age and time in $`N_{l,i,t}`$. Entry $`G_{j,l}`$ is the pr
 N_{j,i+1,t+1}=\sum_l G_{j,l}N_{l,i,t}\exp[-(M+F_{l,t})].
 ```
 
-加组累加前一年龄组和原最大年龄组的存活及增长；补充量按最小年龄的长度分布进入第一年龄组。G 的各列和为 1，不允许缩短，最大体长组吸收右尾概率。
+最高年龄组同时接收前一年龄组新进入的存活个体和本组继续存活的个体，两者均按生长矩阵在体长组间转移。补充个体按最小年龄的体长分布进入第一年龄组。G 的各列和为 1，不允许缩短，最大体长组吸收右尾概率。
 
 The plus group combines survivors and growth from the preceding and oldest age classes. Recruitment enters the youngest class with its length distribution. Columns of G sum to one, shrinkage is excluded, and the largest bin absorbs the right-tail probability.
 
@@ -483,9 +483,9 @@ str(tables)
 | 设置 / Setting | 含义 / Meaning | 数值来源 / Where the value comes from |
 |---|---|---|
 | `rec.age` | 模型中最小年龄组的年龄（年） / Age of the youngest age class in the model, in years | 鱼首次出现在调查中的年龄 / Age at which fish first appear in the survey |
-| `nage` | 年龄组数；最后一组是加组 / Number of age classes; the last one is a plus group | 值得追踪的最大年龄除以 `growth_step` / Oldest age worth tracking, divided by `growth_step` |
+| `nage` | 年龄组数，最后一组包括达到或超过该组起始年龄的个体 / Number of age classes, including the oldest (plus) group | 在年龄网格上选定末组起始年龄 A（年），取 `nage = 1 + (A - rec.age) / growth_step` / Choose the starting age A of the plus group on the age grid, in years. Set `nage = 1 + (A - rec.age) / growth_step` |
 | `M` | 每个时间步的自然死亡率 / Natural mortality per time step | 文献或生活史方法；季度时间步时把年值除以 4 / Literature or life-history methods; divide an annual value by 4 for quarterly steps |
-| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 调查可捕性达到 50% 和 95% 的体长 / Lengths at which survey catchability reaches 50% and 95% | 渔具选择性研究或渔获体长分布 / Gear selectivity studies or the length distribution of the catch |
+| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 调查可捕性达到 50% 和 95% 的体长 / Lengths at which survey catchability reaches 50% and 95% | 调查渔具的校准资料或对比捕捞试验。借用外部曲线时，说明假设并检验结果对该曲线的敏感性。 / Calibration or comparative fishing trials for the survey gear. If borrowing a curve, document the assumption and test sensitivity to it. |
 | `growth_step` | 每个时间步的年数 / Years per time step | 第 2 步 / Step 2 |
 | `len_mid`、`len_border` / `len_mid`, `len_border` | 体长组中点和内部边界 / Bin midpoints and internal boundaries | 第 2 步 / Step 2 |
 | `zero_action` | 调查表中 0 的处理方式 / How a 0 in the survey table is treated | `"missing"`（默认）或 `"error"` / `"missing"` (default) or `"error"` |
@@ -659,7 +659,7 @@ saved <- read_assessment("ytf_acl.rds")
 plot_SSB(saved, se = TRUE)
 ```
 
-`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并记录配方（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。文件已存在时调用会停止；传入 `overwrite = TRUE` 即可覆盖。
+`save_assessment()` 保存拟合结果中除 `a$obj` 以外的全部内容（`a$obj` 是只在当前会话有效的 TMB 对象指针），并保存重新拟合所需的信息（数据表、设置和软件包版本），以后可用 `refit_model(saved)` 重建可执行对象。绘图和提取函数都能直接使用保存的拟合结果。文件已存在时调用会停止；传入 `overwrite = TRUE` 即可覆盖。
 
 `save_assessment()` writes everything in the fit except the live TMB object `a$obj`, a pointer valid only in the current session, and stores the recipe (the tables, settings and package version) so that `refit_model(saved)` can rebuild the live object later. Plots and extraction functions work directly on the saved fit. The call stops when the file exists; pass `overwrite = TRUE` to replace it.
 
@@ -709,7 +709,7 @@ Every table and setting can also be passed as a separate argument, as in `do.cal
 | 检查残差、比较不同设置 / Examine residuals and compare configurations | [诊断](USER_GUIDE.md#diagnostics) / [Diagnostics](USER_GUIDE.md#diagnostics) |
 | 绘制某个种群量 / Plot a particular quantity | [调查与种群图](PLOT_GALLERY.md) / [Survey and population plots](PLOT_GALLERY.md) |
 | 做敏感性分析、参数剖面和投影 / Test sensitivity, profile a parameter, project forward | [评估工作流](ASSESSMENT_WORKFLOWS.md) / [Assessment workflows](ASSESSMENT_WORKFLOWS.md) |
-| 从拟合模型模拟，或检验对未来年份的预测 / Simulate from the fit or test predictions of future years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
+| 从拟合模型模拟调查数据，或检验对未来年份的预测 / Simulate from the fit or test predictions of future years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
 
 <a id="simulation"></a>
 ## 5. 模拟调查数据 / Simulate survey data
@@ -848,9 +848,9 @@ performance$summary
 
 `sim_acl()` reads each `sim_rep<id>` in `sim_data_path`, builds the tables and the biology from the file and fits ACL with the starting values, `map` and `M` you pass; `sim_alscl()` does the same with ALSCL parameter names.
 
-`YTF_example` 的配置提供 flatfish 的生长设置和指定的过程假设。本例把其中固定的 log-F SD 改为从 `pa` 换算的边际 SD，即 0.3023716。固定的初始数量及相关系数设置属于拟合假设：操作模型使用共用 F 与选择性，并沿年龄累加初始偏差；ACL 使用年龄与时间可分离的 F，以及独立初始偏差。SD 换算后，这些结构仍然不同。自己的配置按[选择拟合设置](USER_GUIDE.md#fitting)建立。
+本例使用 `YTF_example` 中的鲽鱼生长设置，将对数 F 的边际标准差固定为根据 `pa` 换算的 0.3023716。操作模型用共用时间序列和选择性生成 F，ACL 拟合采用年龄与时间可分离的 F 过程。两者都在对数尺度上加入独立扰动，逐龄递推初始尾数。要调整拟合假设，见[选择拟合设置](USER_GUIDE.md#fitting)。
 
-The `YTF_example` configuration supplies the flatfish growth settings and a conditional process specification. The example overrides its fixed log-F SD with the marginal SD converted from `pa`, 0.3023716. Fixed initial-abundance and correlation settings are fitting assumptions: the operating model has shared F with selectivity and cumulative initial-age deviations, while ACL uses separable age-by-time F and independent initial deviations. These structures still differ after the SD conversion. Build your own configuration as in [Choose the fitting settings](USER_GUIDE.md#fitting).
+This example uses the flatfish growth settings in `YTF_example` and fixes the marginal SD of log F at 0.3023716, calculated from `pa`. The operating model generates F from one shared time series and selectivity. The ACL fit uses a separable age-by-time F process. Both models initialize numbers at age recursively with independent increments on the log scale. To change the fitting assumptions, see [Choose the fitting settings](USER_GUIDE.md#fitting).
 
 每次重复在一个工作进程中拟合，它的 `nstarts` 个初值依次运行；`ncores` 决定同时运行多少次重复。每次重复的结果，包括带有 `converge = "FAILED"` 和 `error` 信息的失败，都会返回并保存为 `output_dir` 下的 `result_rep_<id>`。
 
@@ -866,7 +866,7 @@ Both the time coordinates and each quantity must be one-dimensional real numeric
 
 <a id="simulation-fitted"></a>
 
-### 5. 从拟合模型模拟 / Simulate from a fitted model
+### 5. 从拟合模型模拟调查数据 / Simulate from a fitted model
 
 ```r
 fit <- run_acl(YTF_example, silent = TRUE)
@@ -875,7 +875,7 @@ names(simulated$simulations[[1]])
 simulated$simulations[[1]]$truth$SSB
 ```
 
-`simulate_fit()` 从拟合好的 ACL 或 ALSCL 模型生成数据集，这就是拟合模型模拟。`process = "conditional"` 保留拟合的种群，只重新抽取观测误差；`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差。`simulated$simulations` 的每个元素包含 `x`（`run_acl(x)` 可用的输入列表）、`observations` 和 `truth`，所以可以用 `lapply(simulated$simulations, function(s) s$truth)` 作为真值，对再拟合结果运行 `summarize_simulations()`。未通过数值检查的拟合会被拒绝，除非设置 `allow_failed_fit = TRUE`；[模型验证案例](MODEL_VALIDATION.md)再拟合这些重复，并继续做预测检验。
+`simulate_fit()` 从拟合好的 ACL 或 ALSCL 模型模拟新的调查数据。`process = "conditional"` 保留拟合的种群，只重新抽取观测误差；`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差。`simulated$simulations` 的每个元素包含 `x`（`run_acl(x)` 可用的输入列表）、`observations` 和 `truth`，所以可以用 `lapply(simulated$simulations, function(s) s$truth)` 作为真值，对再拟合结果运行 `summarize_simulations()`。未通过数值检查的拟合会被拒绝，除非设置 `allow_failed_fit = TRUE`；[模型验证案例](MODEL_VALIDATION.md)再拟合这些重复，并继续做预测检验。
 
 `simulate_fit()` generates datasets from a fitted ACL or ALSCL model: fitted-model simulation. `process = "conditional"` keeps the fitted population and redraws only the observation error; `process = "resample"` also draws new recruitment, fishing mortality and initial-abundance process deviations at the fitted scalar parameter values. Each element of `simulated$simulations` has `x`, an input bundle for `run_acl(x)`, `observations` and `truth`, so `summarize_simulations()` applies to the refits with `lapply(simulated$simulations, function(s) s$truth)` as the truth. A fit that failed the numerical checks is rejected unless `allow_failed_fit = TRUE`; the [model validation case](MODEL_VALIDATION.md) refits the replicates and continues with hindcast validation.
 
@@ -886,7 +886,7 @@ simulated$simulations[[1]]$truth$SSB
 | 想做什么 / What you want to do | 阅读 / Read |
 |---|---|
 | 绘制一次重复，用两个模型拟合并与真值比较 / Plot one replicate, fit both models and compare with the truth | [如何模拟调查数据？](CASES.md#case-simulate-survey) / [How do I simulate survey data?](CASES.md#case-simulate-survey) |
-| 再拟合拟合模型模拟的数据并预测留出年份 / Refit fitted-model simulations and predict withheld years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
+| 用模拟调查数据重新拟合，并预测留出的年份 / Refit fitted-model simulations and predict withheld years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
 | 用更少的时间运行更多重复 / Run more replicates in less time | [速度设置](SPEED_GUIDE.md) / [Speed settings](SPEED_GUIDE.md) |
 | 保存种子、设置和版本以便重复实验 / Keep seeds, settings and versions for a repeatable experiment | [复现结果](ADVANCED_WORKFLOWS.md) / [Reproducibility](ADVANCED_WORKFLOWS.md) |
 | 比较年度和季度设置 / Compare annual and quarterly settings | [年度与季度时间步](CASE_STUDIES.md) / [Annual and quarterly time steps](CASE_STUDIES.md) |
@@ -969,7 +969,7 @@ x$fit_config$acl$map <- my_map
 
 `factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Fix a parameter when the data leave it undetermined (a Hessian that is not positive definite or a correlation estimated near 1 are the usual signs) or when an external study gives a better value than the fit could; record the source of every fixed value with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`.
 
-对过程偏差块，提供与偏差数量相同的因子：`NA` 将对应偏差固定在初值（零），重复的因子水平让对应偏差共享一个估计值。`simulate_fit(process = "resample")` 要求过程偏差不受这类限制；条件模拟也支持固定或共享的 map。`hindcast_model()` 要求随时间变化的 `dev_log_R` 和 `dev_log_F` 不受这类限制，但支持固定或共享的静态 `dev_log_N0`。在验证研究中使用这些限制前，见[拟合模型模拟与预测检验](MODEL_VALIDATION.md)。
+对过程偏差块，提供与偏差数量相同的因子：`NA` 将对应偏差固定在初值（零），重复的因子水平让对应偏差共享一个估计值。`simulate_fit(process = "resample")` 要求过程偏差不受这类限制；条件模拟也支持固定或共享的 map。`hindcast_model()` 要求随时间变化的 `dev_log_R` 和 `dev_log_F` 不受这类限制，但支持固定或共享的静态 `dev_log_N0`。在验证研究中使用这些限制前，见[模拟调查数据并检验预测](MODEL_VALIDATION.md)。
 
 For a process-deviation block, supply a factor with one entry per deviation: `NA` fixes that entry at its starting value (zero), and repeated factor levels tie entries to one estimated value. `simulate_fit(process = "resample")` requires unrestricted process deviations; conditional simulation also supports fixed or tied maps. `hindcast_model()` requires unrestricted time-varying `dev_log_R` and `dev_log_F` maps, but supports fixed or tied static `dev_log_N0` values. See [Simulate and validate a fitted model](MODEL_VALIDATION.md) before using these restrictions in a validation study.
 
@@ -1023,9 +1023,9 @@ a4$start_diagnostics
 a4$refinement$status
 ```
 
-`nstarts` 运行多个独立初值：第一个使用给定的初值，之后的初值由确定性扰动得到，最终保留目标函数值最低的拟合。`start_diagnostics` 列出每个初值的目标函数值和收敛码；不同初值停在不同的目标函数值，说明目标函数面有多个极小值，最佳的那个值得进一步检查。`ncores` 设定同时运行初值的工作进程数（`nstarts` 默认等于 `ncores`，比较耗时时两者都要设定）。`train_times` 从每个初值的终点再次运行优化器；`polish = TRUE` 对最佳初值做最多五步 Newton 收尾，只在梯度减小且 Hessian 保持正定时接受，`a4$refinement` 记录结果。`control = list(iter.max = 3000)` 把限制传给 `nlminb()`。
+`nstarts` 运行多个独立初值：第一个使用给定的初值，之后的初值由确定性扰动得到，最终保留目标函数值最低的拟合。`start_diagnostics` 列出每个初值的目标函数值和收敛码。如果各次优化的目标函数终值不同，先检查收敛情况，比较终点梯度和参数估计，再判断是否存在多个局部极小值。`ncores` 设定同时运行初值的工作进程数（`nstarts` 默认等于 `ncores`，比较耗时时两者都要设定）。`train_times` 从每个初值的终点再次运行优化器；`polish = TRUE` 对最佳初值做最多五步 Newton 收尾，只在梯度减小且 Hessian 保持正定时接受，`a4$refinement` 记录结果。`control = list(iter.max = 3000)` 把限制传给 `nlminb()`。
 
-`nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the lowest objective is kept. `start_diagnostics` lists every start with its objective and convergence code; starts that end at different objectives mean the surface has several minima and the best one deserves a closer look. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
+`nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the lowest objective is kept. `start_diagnostics` lists every start with its objective and convergence code. If the final objectives differ, check convergence and compare the final gradients and parameter estimates before interpreting the difference as evidence for multiple local minima. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
@@ -1047,7 +1047,7 @@ a <- run_acl(x, silent = TRUE)
 save_assessment(a, "my_acl.rds")
 ```
 
-所有工作流函数都读取输入列表，因此存入 `x` 的选择会被 `retro_acl(x)`、`fit_scenarios(x, ...)`、`hindcast_model(x)` 和模拟函数一致地使用。`save_assessment()` 把完整配方与拟合结果一起保存，读者可以看到哪些值被固定，并用 `refit_model()` 重新拟合。
+所有工作流函数都读取输入列表，因此存入 `x` 的选择会被 `retro_acl(x)`、`fit_scenarios(x, ...)`、`hindcast_model(x)` 和模拟函数一致地使用。`save_assessment()` 同时保存拟合结果及重新拟合所需的输入和设置，读者可以看到哪些值被固定，并用 `refit_model()` 重新拟合。
 
 Every workflow function reads the bundle, so a choice stored in `x` is applied consistently by `retro_acl(x)`, `fit_scenarios(x, ...)`, `hindcast_model(x)` and the simulation functions. `save_assessment()` keeps the complete recipe with the fit, so a reader can see which values were fixed and refit the model with `refit_model()`.
 
@@ -1318,9 +1318,9 @@ Mohn's rho averages, over the peels, the relative difference between the termina
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；第 `k` 轮止于 `T-k`。rho 为正表示较短的拟合止于完整拟合之上，即加入观测后近期估计下调；为负则相反；rho 为 0.03 表示平均修订 3%。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](MODEL_VALIDATION.md)来回答。在各轮和各模型中符号相同的修订，比它的具体大小更重要。
+`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；第 `k` 轮止于 `T-k`。ρ 为 +0.03 表示截短拟合的末期估计平均比完整拟合对同一期的估计高 3%。ρ 为负表示平均偏低。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](MODEL_VALIDATION.md)来回答。按评估量分别报告修订的方向和幅度。
 
-`K` is `nyear` and `T` the last time step of the full fit; peel `k` ends at `T-k`. A positive rho means that the shorter fits ended above the full fit, so adding observations lowered the recent estimates, a negative rho the opposite, and a rho of 0.03 an average revision of 3%. Terms of opposite sign cancel, so read `rho_by_peel` as well; a full-fit estimate of zero leaves its term undefined. Mohn's rho measures the revision of terminal estimates when later observations are added; forecast accuracy is the question of [hindcast validation](MODEL_VALIDATION.md). A revision with the same sign across peels and models matters more than its exact size.
+`K` is `nyear` and `T` the last time step of the full fit; peel `k` ends at `T-k`. A rho of +0.03 means that the terminal estimates from shorter fits were on average 3% above the corresponding full-fit estimates. A negative rho means they were lower on average. Terms of opposite sign cancel, so read `rho_by_peel` as well; a full-fit estimate of zero leaves its term undefined. Mohn's rho measures the revision of terminal estimates when later observations are added; forecast accuracy is the question of [hindcast validation](MODEL_VALIDATION.md). Report the direction and magnitude of the revisions for each quantity.
 
 <a id="retrospectives-adapt"></a>
 
@@ -1355,7 +1355,7 @@ saveRDS(rb, "ytf_alscl_retro.rds")
 plot_retro(readRDS("ytf_alscl_retro.rds"), facet_ncol = 2, rho_digits = 3)
 ```
 
-回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果：它把 `b` 连同配方存为保存的拟合结果，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](ADVANCED_WORKFLOWS.md)说明如何记录软件包版本和会话。
+回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果：它将 `b` 连同重新拟合所需的输入和设置一起保存，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](ADVANCED_WORKFLOWS.md)说明如何记录软件包版本和会话。
 
 The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits: it stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproducibility](ADVANCED_WORKFLOWS.md) shows how to record the package versions and the session.
 

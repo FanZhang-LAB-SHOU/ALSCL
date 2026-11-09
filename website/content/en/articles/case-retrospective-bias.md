@@ -18,7 +18,7 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 ![Bundled ALSCL retrospective example](../assets/manual/figures/ytf/retro_ALSCL.png)
 
-Each line is one fit, coloured by its last time step; the open point marks the terminal estimate that rho compares with the full fit at the same time step. Lines on the full fit for most of the series that split only in the last years, as here, mean that new observations revise the recent estimates only. In the recorded run rho is 0.033 for biomass, 0.017 for spawning biomass, 0.027 for abundance and 0.0018 for recruitment ([rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)); a positive value means that the shorter fits ended above the full fit. Terms of opposite sign cancel in the mean, so read `rb$rho_by_peel` as well. If no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`.
+Each line is one fit, coloured by its last time step; the open point marks the terminal estimate that rho compares with the full fit at the same time step. Lines on the full fit for most of the series that split only in the last years, as here, show that the largest visible revisions are near the end of the series. In the recorded run rho is 0.033 for biomass, 0.017 for spawning biomass, 0.027 for abundance and 0.0018 for recruitment ([rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)); a positive value means the shorter fits gave higher terminal estimates on average. Terms of opposite sign cancel in the mean, so read `rb$rho_by_peel` as well. If no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`.
 
 <h2 id="acl">2. Run the ACL analysis and compare the two models</h2>
 
@@ -31,7 +31,7 @@ plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 
 ![Synthetic YTF: ACL retrospective trajectories](../assets/manual/figures/ytf/retro_ACL.png)
 
-The same observations and peel count, with ACL's starting values and `map` from `x$fit_config$acl`. Compare the revisions within each model first, then rho between models for the same quantity; the y scales differ. In the recorded run ACL's values are smaller: 0.0069 for biomass, 0.0079 for spawning biomass, -0.010 for recruitment and -0.00025 for abundance ([rho_ACL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv)). A revision with the same sign across peels and models matters more than its size; rho names no cause, so a repeated directional revision calls for checks of the inputs, fixed values and F structure ([Judge whether a fit can be used](diagnostics.html)).
+Both models use the same observations and three peels. For biomass, spawning biomass and total abundance, ACL has the smaller absolute Mohn’s rho (the signed ACL values are 0.0069, 0.0079 and −0.00025, respectively). For recruitment, rho is −0.0104 for ACL and +0.0018 for ALSCL. Recruitment revisions therefore differ in direction on average and have a larger absolute rho for ACL. Inspect the individual terminal comparisons in `rho_by_peel` for their signs and magnitudes. [ACL results](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv) · [ALSCL results](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv).
 
 <h2 id="save">3. Save the record</h2>
 

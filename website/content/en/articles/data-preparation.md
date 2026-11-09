@@ -82,9 +82,9 @@ str(tables)
 | Setting | Meaning | Where the value comes from |
 |---|---|---|
 | `rec.age` | Age of the youngest age class in the model, in years | Age at which fish first appear in the survey |
-| `nage` | Number of age classes; the last one is a plus group | Oldest age worth tracking, divided by `growth_step` |
+| `nage` | Number of age classes, including the oldest (plus) group | Choose the starting age A of the plus group on the age grid, in years. Set `nage = 1 + (A - rec.age) / growth_step` |
 | `M` | Natural mortality per time step | Literature or life-history methods; divide an annual value by 4 for quarterly steps |
-| `sel_L50`, `sel_L95` | Lengths at which survey catchability reaches 50% and 95% | Gear selectivity studies or the length distribution of the catch |
+| `sel_L50`, `sel_L95` | Lengths at which survey catchability reaches 50% and 95% | Calibration or comparative fishing trials for the survey gear. If borrowing a curve, document the assumption and test sensitivity to it. |
 | `growth_step` | Years per time step | Step 2 |
 | `len_mid`, `len_border` | Bin midpoints and internal boundaries | Step 2 |
 | `zero_action` | How a 0 in the survey table is treated | `"missing"` (default) or `"error"` |

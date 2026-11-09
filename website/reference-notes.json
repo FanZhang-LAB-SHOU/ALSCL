@@ -509,8 +509,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Choose `CN`, `CNA` or `CNL`. These are derived fishery removals, distinct from the input survey index.",
-      "zh": "选择 `CN`、`CNA` 或 `CNL`。这些量是推算的渔业移除量，与输入的调查指数不同。"
+      "en": "Choose total catch in numbers (`CN`), catch at age (`CNA`) or catch at length (`CNL`). These estimates use the Baranov catch equation and depend on starting abundance, fishing mortality and natural mortality.",
+      "zh": "选择总渔获尾数（`CN`）、年龄别渔获尾数（`CNA`）或体长别渔获尾数（`CNL`）。模型根据期初尾数、捕捞死亡率和自然死亡率，用 Baranov 渔获方程计算预期渔获尾数。"
     },
     "articles": [
       "population-plots",
@@ -613,8 +613,8 @@
       "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
     },
     "details": {
-      "en": "The heatmap shows the age–length key `pla`. It is not the one-step growth transition matrix G.\n\n`plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.",
-      "zh": "热图展示年龄—体长概率矩阵 `pla`，不是一步生长转移矩阵 G。\n\n`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。"
+      "en": "Each column of `pla` gives the probabilities of the length bins at one age. The highest length bin includes the upper tail for that age.\n\n`plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.",
+      "zh": "`pla` 的每一列给出同龄个体落入各体长组的概率。最高体长组包含该年龄体长分布的右尾。\n\n`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。"
     },
     "articles": [
       "growth-mortality",
@@ -639,8 +639,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL age-specific F is derived from cohort survival. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Default age coordinates are group indices and are labeled Age group. `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.",
-      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 的年龄别 F 从队列存活推导。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。默认年龄横坐标为组序号，标为 Age group。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。"
+      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL calculates F at age as the negative log of the proportion surviving the time step, minus natural mortality. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Default age coordinates are group indices and are labeled Age group. `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.",
+      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 先计算同一年龄组在该期的存活比例，取负对数后减去自然死亡率，得到年龄别 F。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。默认年龄横坐标为组序号，标为 Age group。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。"
     },
     "articles": [
       "growth-mortality",
@@ -684,15 +684,15 @@
   "plot_deviance": {
     "description": {
       "en": "Plot recruitment or fishing-mortality process deviations.",
-      "zh": "绘制补充或捕捞死亡率的过程偏差。"
+      "zh": "绘制补充量或捕捞死亡率的过程偏差。"
     },
     "value": {
       "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
       "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
     },
     "details": {
-      "en": "Select recruitment (`R`) or fishing mortality (`F`) and inspect whether the chosen display exponentiates log deviations. This function plots process deviations, not an overall likelihood-deviance statistic.\n\n`se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.\n\nA `title`, `xlab`, `ylab` or typography argument given in the call replaces the corresponding theme setting. ACL F-deviation age panels keep numeric order.\n\n`log = TRUE` labels log process deviations; `log = FALSE` labels multiplicative factors. Titles and y-axis labels use `dev_R`/`dev_F`, or `dev_R_multiplier`/`dev_F_multiplier` after exponentiation. These quantities are not likelihood deviances.",
-      "zh": "选择补充（`R`）或捕捞死亡率（`F`），并确认显示是否将对数偏差指数化。本函数绘制过程偏差，不是整体似然偏差统计量。\n\n`se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。\n\n调用中给出的 `title`、`xlab`、`ylab` 和字体参数替换对应的主题设置。ACL 的 F 偏差图按年龄数字顺序排列面板。\n\n`log = TRUE` 标明对数过程偏差；`log = FALSE` 标明乘数。标题和纵轴标签分别使用 `dev_R`/`dev_F`，指数转换后使用 `dev_R_multiplier`/`dev_F_multiplier`。这些量不是似然偏差统计量。"
+      "en": "Choose recruitment (`R`) or fishing mortality (`F`). The log deviation is zero at the process median. Exponentiating gives a ratio to that median, with a reference value of one.\n\n`se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.\n\nA `title`, `xlab`, `ylab` or typography argument given in the call replaces the corresponding theme setting. ACL F-deviation age panels keep numeric order.\n\n`log = TRUE` labels log process deviations; `log = FALSE` labels multiplicative factors. Titles and y-axis labels use `dev_R`/`dev_F`, or `dev_R_multiplier`/`dev_F_multiplier` after exponentiation. These quantities are not likelihood deviances.",
+      "zh": "选择补充量（`R`）或捕捞死亡率（`F`）。对数偏差为零时，对应量等于其过程中位数。取指数后得到相对于中位数的倍数，参考值为 1。\n\n`se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。\n\n调用中给出的 `title`、`xlab`、`ylab` 和字体参数替换对应的主题设置。ACL 的 F 偏差图按年龄数字顺序排列面板。\n\n`log = TRUE` 标明对数过程偏差；`log = FALSE` 标明乘数。标题和纵轴标签分别使用 `dev_R`/`dev_F`，指数转换后使用 `dev_R_multiplier`/`dev_F_multiplier`。这些量不是似然偏差统计量。"
     },
     "articles": [
       "growth-mortality",
@@ -918,7 +918,7 @@
     },
     "details": {
       "en": "The historical function name says selectivity, but the plotted q curves come from supplied survey catchability settings. They are not estimated fishery selectivity.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\nSaved assessments from `read_assessment()` can be plotted directly: fixed survey catchability is recovered from the retained input recipe. A legacy live fit can use its TMB data; an older saved fit without the required inputs must first be saved again with its original input bundle `x`.",
-      "zh": "函数历史名称含 selectivity，但 q 曲线来自所给的固定调查可捕性设置，并非估计得到的渔业选择性。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n`read_assessment()` 读取的评估结果可直接绘图，固定调查可捕性从保留的输入配方恢复。旧会话中的拟合可使用其 TMB 数据；若旧保存结果缺少所需输入，须先用原始输入列表 `x` 重新保存。"
+      "zh": "函数历史名称含 selectivity，但 q 曲线来自所给的固定调查可捕性设置，并非估计得到的渔业选择性。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n`read_assessment()` 读取的评估结果可直接绘图，固定调查可捕性根据保存的输入设置恢复。旧会话中的拟合可使用其 TMB 数据；若旧保存结果缺少所需输入，须先用原始输入列表 `x` 重新保存。"
     },
     "articles": [
       "model-comparison",
@@ -1121,7 +1121,7 @@
       "en": "A parameter table with estimates, SEs, intervals, fixed/estimated/inactive status and the numerical-screen flag."
     },
     "details": {
-      "zh": "有完整配方时包括固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。检查 numerical_ok 后再解释不确定性。\n\n`conf_level` 指构造近似区间所用的名义置信水平。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。",
+      "zh": "保存了完整输入和设置时也会列出固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。检查 numerical_ok 后再解释不确定性。\n\n`conf_level` 指构造近似区间所用的名义置信水平。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。",
       "en": "With a recipe, fixed parameters are included with NA uncertainty. Legacy objects expose only free fixed effects. Natural-scale SEs use the delta method; intervals transform internal Wald endpoints. exp(mean_log_F) and exp(mean_log_R) is a process baseline, not a time average. Inspect numerical_ok before interpreting uncertainty.\n\n`conf_level` specifies the nominal confidence level used to construct the approximate intervals. Empirical coverage is the proportion of eligible simulation intervals containing their corresponding true values and is reported separately by summarize_simulations()."
     },
     "articles": [
@@ -1223,7 +1223,7 @@
     },
     "details": {
       "en": "Population states, B and SSB are at the start of each future period. The first future state survives the terminal fitted population through terminal fitted F and original M, then receives the first future recruitment. Future F[t]/M[t] determine catch[t] and survival into t+1, so a one-period F change affects catch but not start-of-period SSB. ACL advances ages and the plus group through its fitted age-length key; ALSCL applies length-specific survival before its fitted growth matrix. ACL catch biomass is derived by mapping catch-at-age through the fitted key. F_mean is an unweighted group mean and F_apical a group maximum; neither annualizes quarterly rates. These are deterministic conditional scenarios with fixed growth, explicit recruitment and future biology, no uncertainty intervals, no estimated stock-recruitment relationship and no automatic MSY/TAC calculation. Fits explicitly failing the numerical screen are rejected by default. allow_failed_fit = TRUE permits exploratory projection with a warning. Missing legacy diagnostics are recorded as unknown, not passed; assumptions retain the status and override.",
-      "zh": "种群状态、B 和 SSB 对应每个未来时段开始时。第一期未来状态先让拟合末期种群经历末期拟合 F 和原始 M 的死亡，再加入第一期未来补充量。未来 F[t]/M[t] 决定该期捕捞以及进入 t+1 的存活，因此仅改变一期 F 会改变当期捕捞，而不会改变期初 SSB。ACL 推进年龄组和末龄加组，并使用拟合的年龄–体长键；ALSCL 先按体长存活，再通过拟合的生长矩阵。ACL 的捕捞生物量由年龄捕捞量经该键转换得到。F_mean 是组间未加权平均值，F_apical 是组间最大值，均不把季度死亡率换算成年率。这是固定生长、明确补充量与未来生物资料的确定性条件情景，没有不确定性区间、没有估计的亲体量–补充量关系，也不自动计算 MSY/TAC。 明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。"
+      "zh": "种群状态、B 和 SSB 对应每个未来时段开始时。第一期未来状态先让拟合末期种群经历末期拟合 F 和原始 M 的死亡，再加入第一期未来补充量。未来 F[t]/M[t] 决定该期捕捞以及进入 t+1 的存活，因此仅改变一期 F 会改变当期捕捞，而不会改变期初 SSB。ACL 按年龄推进种群，将达到或超过末组起始年龄的存活个体并入该组，并使用拟合时的年龄－体长转换矩阵；ALSCL 先按体长存活，再通过拟合的生长矩阵。ACL 的捕捞生物量由年龄捕捞量经该键转换得到。F_mean 是组间未加权平均值，F_apical 是组间最大值，均不把季度死亡率换算成年率。这是固定生长、明确补充量与未来生物资料的确定性条件情景，没有不确定性区间、没有估计的亲体量–补充量关系，也不自动计算 MSY/TAC。 明确未通过数值检查的拟合默认拒绝投影。allow_failed_fit = TRUE 可在警告后进行探索性投影；旧结果缺少诊断时记为 unknown，不视为通过。assumptions 保存状态及是否覆盖。"
     },
     "articles": [
       "assessment-workflows"
@@ -1243,7 +1243,7 @@
       "en": "Read a portable assessment archive"
     },
     "value": {
-      "zh": "带完整配方和估计结果的 alscl_fit 对象；没有活跃 obj。",
+      "zh": "含原始输入、拟合设置和估计结果的 alscl_fit 对象；没有活跃 obj。",
       "en": "An alscl_fit with its complete recipe and estimates, without a live obj."
     },
     "details": {
@@ -1290,11 +1290,11 @@
   },
   "refit_model": {
     "description": {
-      "zh": "按保存配方重新拟合",
-      "en": "Refit a stored assessment recipe"
+      "zh": "使用保存的输入和设置重新拟合",
+      "en": "Refit using saved inputs and settings"
     },
     "value": {
-      "zh": "新的拟合结果、更新后的配方和当前会话活跃 TMB 对象。",
+      "zh": "新的拟合结果、更新后的输入和设置和当前会话活跃 TMB 对象。",
       "en": "A fresh fit with an updated recipe and live TMB object."
     },
     "details": {
@@ -1315,7 +1315,7 @@
       "en": "Invisibly returns the file path without changing the original fit."
     },
     "details": {
-      "zh": "存档剔除会话专属 obj 指针，保存配方、输入、map、边界、设置、版本和报告。失败时保留原存档。配方不等于可跨会话执行的 TMB 指针；重建需要 refit_model()。 recipe$implementation 记录可取得的源码提交、核心模板及头文件摘要、R 源文件摘要和运行环境。无法恢复的来源保持未知。重新拟合会提示已知实现或依赖变化；元数据相同不保证跨平台数值一致。\n\n并行保存时，请给每个拟合指定不同文件名。若两个会话用默认的 `overwrite = FALSE` 写入同一新路径，只有一个能成功。如果会话意外中断后仍提示锁错误，请先确认写入进程已停止，再删除报错中列出的锁目录。",
+      "zh": "存档保存输入、map、边界、拟合设置、版本和报告。obj 指针只在原会话中有效。在新会话中可用 refit_model() 重新拟合并获得可执行的 TMB 对象。写入失败时会保留原存档。 recipe$implementation 记录可取得的源码提交、核心模板及头文件摘要、R 源文件摘要和运行环境。无法恢复的来源保持未知。重新拟合会提示已知实现或依赖变化；元数据相同不保证跨平台数值一致。\n\n并行保存时，请给每个拟合指定不同文件名。若两个会话用默认的 `overwrite = FALSE` 写入同一新路径，只有一个能成功。如果会话意外中断后仍提示锁错误，请先确认写入进程已停止，再删除报错中列出的锁目录。",
       "en": "The archive omits the session-specific obj pointer and retains inputs, maps, bounds, settings, versions and reports. Failed replacement preserves the old archive. Use refit_model() to rebuild a live TMB model. recipe$implementation records available source revision, core-template/header hashes, source R hashes and runtime metadata. Unavailable provenance remains unknown. Refitting warns about known implementation/dependency changes; matching metadata does not guarantee cross-platform equality.\n\nGive independent fits distinct filenames when saving in parallel. If two sessions use the same new path with the default `overwrite = FALSE`, only one can save there. If a session was interrupted and a lock error persists, confirm that its writer has stopped before removing the lock directory shown in the error."
     },
     "articles": [
@@ -1383,8 +1383,8 @@
       "zh": "simulations 为具名重复，每项含可直接拟合的 x、observations 及 truth；metadata 记录过程模式、种子／随机数生成器、坐标、原观测掩码、源数值状态和 parameter_uncertainty = none。真值包括时间、种群量、原生组别 F、标量参数、随机效应及期望指数。"
     },
     "details": {
-      "en": "Conditional simulation holds fitted states fixed and varies lognormal observation errors. Resampling draws stationary AR(1) recruitment, separable group/time AR(1) F (or shared time-only F) and independent initial-age deviations, then evaluates the existing C++ population equations without optimization. Scales are marginal SDs. Scalar parameters, biology and catchability remain fixed. Fixed/tied random-effect maps are rejected for resampling; no parameter uncertainty or bootstrap intervals are added. Explicit seeds restore caller RNG state; original NA/zero cells are preserved by default. Known failed fits require an explicit warned override. Portable saved fits are supported.\n\nEach returned input bundle retains the source fit’s effective fixed scalar values, including a fixed mean_log_R originally derived from data. Free parameters retain their original starting-value strategy. New ALSCL reports include dev_log_N0 in conditional truth after saving and reading; older reports without it return NULL.",
-      "zh": "条件模式固定拟合状态，只改变对数正态观测误差。过程重抽样使用平稳 AR(1) 补充、可分离组别／时间 AR(1) F（或仅时间共用 F）及独立初始年龄偏差，再调用现有 C++ 种群方程，无须优化。过程尺度为边际标准差。标量参数、生物学和可捕性保持固定；重抽样拒绝固定／绑定随机效应的 map，不加入参数不确定性或自助法区间。显式种子会恢复调用者随机数状态；默认保留原 NA／零位置。已知失败拟合须显式覆盖并警告。支持读取后的可移植拟合。\n\n每个返回的输入列表保留源拟合的实际固定标量值，包括原先由数据计算后固定的 mean_log_R。自由参数保持原初值策略。新 ALSCL 报告在保存和读取后，条件真值仍包含 dev_log_N0；缺少该字段的旧报告返回 NULL。"
+      "en": "Conditional simulation holds fitted states fixed and varies lognormal observation errors. Resampling draws stationary AR(1) recruitment, separable group/time AR(1) F (or shared time-only F) and independent log-scale increments for initial numbers at age. The C++ model accumulates these increments across ages and computes the population trajectory without optimization. Scales are marginal SDs. Scalar parameters, biology and catchability remain fixed. Fixed/tied random-effect maps are rejected for resampling; no parameter uncertainty or bootstrap intervals are added. Explicit seeds restore caller RNG state; original NA/zero cells are preserved by default. Known failed fits require an explicit warned override. Portable saved fits are supported.\n\nEach returned input bundle retains the source fit’s effective fixed scalar values, including a fixed mean_log_R originally derived from data. Free parameters retain their original starting-value strategy. New ALSCL reports include dev_log_N0 in conditional truth after saving and reading; older reports without it return NULL.",
+      "zh": "条件模式固定拟合状态，只改变对数正态观测误差。过程重抽样按平稳 AR(1) 过程生成补充量偏差，按组别与时间可分离的 AR(1) 过程生成 F 偏差（各组共用 F 时只有时间维度）。C++ 模型将独立抽取的初始对数扰动逐龄累加，再计算种群随时间的变化。过程尺度为边际标准差。标量参数、生物学和可捕性保持固定；重抽样拒绝固定／绑定随机效应的 map，不加入参数不确定性或自助法区间。显式种子会恢复调用者随机数状态；默认保留原 NA／零位置。已知失败拟合须显式覆盖并警告。支持读取后的可移植拟合。\n\n每个返回的输入列表保留源拟合的实际固定标量值，包括原先由数据计算后固定的 mean_log_R。自由参数保持原初值策略。新 ALSCL 报告在保存和读取后，条件真值仍包含 dev_log_N0；缺少该字段的旧报告返回 NULL。"
     },
     "articles": [
       "assessment-workflows",
@@ -1406,11 +1406,11 @@
     },
     "value": {
       "en": "predictions is a length/time/fold table with observed, model and persistence predictions on the log scale, errors, scaling denominators and inclusion status. scores reports paired log RMSE/MAE, log MASE and counts by horizon. diagnostics, recipes, settings, start_diagnostics and process_paths retain fit status, failures, warnings and reproduction details; fits are optional.",
-      "zh": "predictions 按体长／时间／折列出观测、模型和持平基准的对数预测、误差、尺度分母及纳入状态。scores 按期距报告配对对数 RMSE／MAE、对数 MASE 与计数。diagnostics、recipes、settings、start_diagnostics、process_paths 保留状态、失败、警告和复现细节；可选保存 fits。"
+      "zh": "predictions 按体长／时间／折列出观测、模型和朴素预测的对数预测、误差、尺度分母及纳入状态。scores 按期距报告配对对数 RMSE／MAE、对数 MASE 与计数。diagnostics、recipes、settings、start_diagnostics、process_paths 保留状态、失败、警告和复现细节；可选保存 fits。"
     },
     "details": {
-      "en": "Uses the last eligible origins with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Biology is carried forward from the training endpoint. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by consecutive training log changes within each length. Zero/undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.",
-      "zh": "使用至少 min_train 个训练期且能留出完整 horizon 的最后若干起点。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。未来生物学沿用训练末期。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备持平预测的配对正观测；对数 MASE 按同体长组连续训练对数差缩放，零／未知分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。"
+      "en": "Uses the last eligible origins with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by consecutive training log changes within each length. Zero/undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.",
+      "zh": "使用至少 min_train 个训练期且能留出完整 horizon 的最后若干起点。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组连续训练对数差缩放，零／未知分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。"
     },
     "articles": [
       "assessment-workflows",

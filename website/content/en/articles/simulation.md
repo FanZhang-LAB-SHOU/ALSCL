@@ -102,7 +102,7 @@ performance$summary
 
 `sim_acl()` reads each `sim_rep<id>` in `sim_data_path`, builds the tables and the biology from the file and fits ACL with the starting values, `map` and `M` you pass; `sim_alscl()` does the same with ALSCL parameter names.
 
-The `YTF_example` configuration supplies the flatfish growth settings and a conditional process specification. The example overrides its fixed log-F SD with the marginal SD converted from `pa`, 0.3023716. Fixed initial-abundance and correlation settings are fitting assumptions: the operating model has shared F with selectivity and cumulative initial-age deviations, while ACL uses separable age-by-time F and independent initial deviations. These structures still differ after the SD conversion. Build your own configuration as in [Choose the fitting settings](fitting-controls.html).
+This example uses the flatfish growth settings in `YTF_example` and fixes the marginal SD of log F at 0.3023716, calculated from `pa`. The operating model generates F from one shared time series and selectivity. The ACL fit uses a separable age-by-time F process. Both models initialize numbers at age recursively with independent increments on the log scale. To change the fitting assumptions, see [Choose the fitting settings](fitting-controls.html).
 
 Each replicate is fitted on one worker with its `nstarts` starts run one after the other, and `ncores` sets how many replicates run at the same time. Every result, including a failure with `converge = "FAILED"` and an `error` message, is returned and saved as `result_rep_<id>` in `output_dir`.
 

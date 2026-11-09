@@ -50,7 +50,7 @@ library(ALSCL)
 
 <h2 id="basic-use">基本使用</h2>
 
-内置 `YTF_example` 包含黄尾鲽风格的模拟数据、生物参数设置和已知模拟真值。它是教学数据，不是论文的实测样本。
+内置教学数据集 `YTF_example` 包含以 `YTF` 的生物学参数模拟的调查数据，以及模拟设置和相应的种群真值。
 
 ```r
 data("YTF_example")

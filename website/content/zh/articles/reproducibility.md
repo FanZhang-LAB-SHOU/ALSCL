@@ -12,7 +12,7 @@ a$recipe$implementation$source$revision
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
-`save_assessment()` 保存拟合结果，不含当前会话的 TMB 对象 `a$obj`，并附上记录拟合全部依赖内容的配方：
+`save_assessment()` 保存拟合结果，不含当前会话的 TMB 对象 `a$obj`，并在 `recipe` 字段中保存重新拟合所需的数据、设置和版本信息。
 
 | 内容 | 在保存的拟合结果中的位置 |
 |---|---|
@@ -21,9 +21,9 @@ writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 | 模型源文件的 MD5 值、已知时的 Git 修订号、平台、BLAS、LAPACK、Matrix 和 RcppEigen | `recipe$implementation` |
 | 速度设置，`framework` 和 `sd_cores` | `recipe$settings` |
 
-`sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。拟合模型模拟还依赖随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
+`sessionInfo()` 补充操作系统、BLAS 和 LAPACK 库以及已加载的软件包；把它的输出和保存的文件放在一起。从拟合模型模拟调查数据时，结果还取决于随机种子，`simulate_fit()` 会把它记录在 `metadata$seed` 中。
 
-当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或拟合结果没有配方时，`save_assessment()` 会报错停止；此时把输入列表作为 `x` 传入，配方会由它重建。
+当文件已存在（请设置 `overwrite = TRUE`）、文件夹不存在，或缺少重新拟合所需的输入和设置时，`save_assessment()` 会报错。对于缺少输入记录的旧拟合，可用 `x` 提供原始输入列表。
 
 <h2 id="reproduce">2. 在以后重现拟合</h2>
 
@@ -35,11 +35,11 @@ max(abs(refit$opt$par - saved$opt$par))
 all.equal(refit$report$SSB, saved$report$SSB)
 ```
 
-`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 重新拟合配方，返回带有可执行对象的拟合结果；命名参数会覆盖配方，`map` 这类列表会整体替换保存的列表。
+`read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 使用保存的输入和设置重新拟合，返回带有可执行对象的拟合结果；传入的命名参数会覆盖对应的设置，`map` 这类列表会整体替换保存的列表。
 
 在同一台电脑上使用相同版本的 ALSCL、TMB 和 R 时，标量参数逐位相同，`all.equal()` 返回 `TRUE`。不同机器或不同软件包版本之间末位数字的差异来自浮点运算和优化器的停止规则；大到足以改变结论的差异，说明数据、设置或软件包版本不同。
 
-`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与配方不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果没有配方；按第 1 步用 `x` 重新保存。
+`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
 
 <h2 id="parallel">3. 并行运行拟合</h2>
 
@@ -119,7 +119,7 @@ list.files(getOption("ALSCL.tmb.cache"))
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` | 新的 R 进程无法启动 | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` |
 | 回溯分析后 `rho_text$Rho` 是 `NA` | 某次拟合未通过数值检查 | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 |
 | `The current implementation differs from the saved assessment` | 保存之后软件包、TMB 或模型源文件变了 | 预期末位有差异，或安装记录的版本 |
-| `A complete fit recipe is required` | 拟合没有配方 | 重新拟合，或带 `x = x` 保存 |
+| `A complete fit recipe is required` | 缺少重新拟合所需的输入和设置 | 重新拟合，或带 `x = x` 保存 |
 
 <h2 id="next">下一步</h2>
 
@@ -128,5 +128,5 @@ list.files(getOption("ALSCL.tmb.cache"))
 | 检验估计值对固定值的敏感性 | [判断拟合是否可用](diagnostics.html#sensitivity) |
 | 选择速度设置并检查本会话的实际情况 | [速度设置](speed.html) |
 | 运行回溯分析并解读 Mohn's rho | [回溯分析](retrospectives.html) |
-| 从拟合模型模拟，或检验对留出时间步的预测 | [模型验证](case-model-validation.html) |
+| 从拟合模型模拟调查数据，或检验对留出时间步的预测 | [模型验证](case-model-validation.html) |
 | 比较情景、做参数剖面和投影 | [评估工作流](assessment-workflows.html) |

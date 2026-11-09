@@ -93,7 +93,7 @@ c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 
 输入列表 `x` 在 `fit_args` 中装入生成模型的生物学设置，在 `fit_config` 中按各模型自己的参数名装入初值和 `map`。平均生长参数和同龄体长 CV 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上，但年龄型 flatfish 生成器不使用这个参数。对于 F，`pa$F_sd` 是创新 SD，因此代码用 `pa$F_sd / sqrt(1 - pa$F_ar^2)` 换算成拟合模型的边际 SD（该预设为 0.3023716）。初始数量 SD 和补充量相关系数按指定的拟合假设固定，两个 F 相关系数均固定为 0.75。每个模型估计 5 个标量参数。
 
-这些条件拟合并没有重现全部生成假设：操作模型将各组共用、随时间变化的 F 与选择性相乘，并将初始数量偏差沿年龄累加；拟合模型则使用组别与时间可分离的 F 过程，以及独立的初始偏差。[年度与季度时间步](case-studies.html#annual)使用相同设置。
+操作模型用共用的 F 时间序列乘以选择性。本例的评估模型允许 F 随组别和时间变化。操作模型和评估模型都在对数尺度上加入独立扰动，逐龄递推初始尾数。操作模型在预热期开始时初始化，评估模型在保留序列的第一期初始化。见[年度与季度时间步](case-studies.html#annual)。
 
 `pa$len_border` 从 `-Inf` 到 `Inf`，去掉首尾剩下 22 个内部边界。两个模型的 `check_alscl_data()` 都应报告 23 个体长组、20 个时间步、460 个正观测和 `free_fixed` 为 5；最后一行应打印 `TRUE TRUE`。拟合耗时取决于机器和优化路径，`a$elapsed` 和 `b$elapsed` 会分别记录。若检查未通过，按[理解第一次拟合](first-model.html#checks)运行 `diagnose_model()`，并用 `nstarts` 增加初值。
 
@@ -132,5 +132,5 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs, checks = checks,
 |---|---|
 | 拟合季度 tuna 重复 | [年度与季度时间步](case-studies.html) |
 | 拟合多次重复并汇总偏差、RMSE 和覆盖率 | [模拟调查数据](simulation.html#fit) |
-| 从拟合模型模拟并重新拟合 | [模型能重现观测并预测留出时间步吗？](case-model-validation.html) |
+| 从拟合模型模拟调查数据，再重新拟合 | [模型能重现观测并预测留出时间步吗？](case-model-validation.html) |
 | 保存种子、设置和版本 | [复现结果与排除故障](reproducibility.html) |

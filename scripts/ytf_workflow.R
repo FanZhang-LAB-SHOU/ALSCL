@@ -77,11 +77,11 @@ run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
   }
 for(typ in c('length','year')) for(ex in c(FALSE,TRUE)) {
  if (typ == 'length') {
-  render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
+  render(paste0('CatL_',typ,'_',ex),paste0('各体长组的调查指数（',if(ex)'原尺度' else '对数尺度','）'),paste0('Survey index by length bin (',if(ex)'original scale' else 'log scale',')'),
    plot_CatL(b,facet_by='length',exp_transform=ex,facet_ncol=4,x_breaks=c(2000,2010,2015),point_size=1,line_size=.6,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
    note_zh=if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '点为观测对数，曲线为拟合的 Elog_index。',note_en=if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Points are log observations; curves show fitted Elog_index.')
  } else {
-  render(paste0('CatL_',typ,'_',ex),paste('调查拟合',typ,if(ex)'原尺度' else '对数尺度'),paste('Survey fit',typ,if(ex)'original scale' else 'log scale'),
+  render(paste0('CatL_',typ,'_',ex),paste0('各时间步的调查指数（',if(ex)'原尺度' else '对数尺度','）'),paste0('Survey index by time step (',if(ex)'original scale' else 'log scale',')'),
    plot_CatL(b,facet_by='year',exp_transform=ex,facet_ncol=4,x_breaks=c(10,30,50),line_size1=.6,line_size2=.4,ylab=if(ex)'Survey index' else 'Log survey index'),height=8.5,
    note_zh=paste(if(ex)'原尺度曲线为 exp(Elog_index)，即对数正态中位数。' else '朱红色为观测对数，深蓝色为拟合的 Elog_index。','line_size1 = 0.6 控制拟合线，line_size2 = 0.4 控制观测线。'),
    note_en=paste(if(ex)'Original-scale curves are lognormal medians, exp(Elog_index).' else 'Vermilion curves are log observations; navy curves show fitted Elog_index.','line_size1 = 0.6 controls fitted curves; line_size2 = 0.4 controls observations.'))
@@ -96,17 +96,29 @@ for(fun in c('plot_abundance','plot_biomass','plot_SSB','plot_catch')) {
 render('recruitment','补充量','Recruitment',plot_recruitment(b,se=TRUE),note_zh='补充量对应最小年龄组；受设定的补充年龄和时间步长影响。',note_en='Recruitment enters the youngest age class; its interpretation depends on recruitment age and time step.')
 render('SSB_Rec','亲体与补充关系','Spawning biomass and recruitment',plot_SSB_Rec(b,age_at_recruitment=1),note_zh='横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。',note_en='Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.')
 render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,se=TRUE),note_zh='生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。',note_en='Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.')
-render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。',note_en='Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.')
+render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='颜色表示给定年龄时落入各体长组的概率。每列合计为 1，最高体长组包含该年龄体长分布的右尾。横轴标签为年龄组序号。',note_en='Each column gives length-bin probabilities for one age and sums to one. The last bin includes the upper tail for that age. Age labels are class indices.')
 for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
  if(model=='ACL' && typ=='length') next # ACL has no F at length; type = 'length' is an alias of 'age'
  fit<-if(model=='ACL')a else b
- render(paste('F',model,typ,sep='_'),paste(model,'捕捞死亡率',typ),paste(model,'fishing mortality',typ),plot_fishing_mortality(fit,type=if(model=="ACL" && typ=="length")"age" else typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
+ group_en <- if (model == 'ACL') 'age class' else 'length bin'
+ group_zh <- if (model == 'ACL') '年龄组' else '体长组'
+ title_en <- switch(typ, year = paste('fishing mortality over time by', group_en),
+                    age = 'fishing mortality at age by time step', length = 'fishing mortality at length by time step')
+ title_zh <- switch(typ, year = paste0('各', group_zh, '捕捞死亡率随时间的变化'),
+                    age = '各期的年龄别捕捞死亡率', length = '各期的体长别捕捞死亡率')
+ render(paste('F',model,typ,sep='_'), paste(model, title_zh), paste(model, title_en),plot_fishing_mortality(fit,type=if(model=="ACL" && typ=="length")"age" else typ,se=TRUE,facet_ncol=4,line_size=.6),height=8.5,
  note_zh=if(model=='ACL' && typ=='length')'当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。' else '年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。',
  note_en=if(model=='ACL' && typ=='length')'In this version, ACL length is an alias of age; the output is still age-specific F.' else 'F is an instantaneous rate per model step. Native F dimensions differ between the models.')
 }
-for(typ in c('length','year')) render(paste0('residuals_',typ),paste('对数残差',typ),paste('Log residuals',typ),plot_residuals(b,facet_by=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。',note_en='Observed minus fitted log index, without standardization. Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.')
-for(typ in c('R','F'))for(lg in c(TRUE,FALSE))render(paste0('deviation_',typ,'_',lg),paste(if(lg)'对数过程偏差' else '过程乘数',typ),paste(if(lg)'Log process deviations' else 'Process multipliers',typ),plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
-note_zh=if(lg)'对数过程偏差以 0 为参照。这不是似然偏差统计量。' else '指数转换后以 1 为参照，区间不对称。这不是原尺度残差。',note_en=if(lg)'Log process deviations use zero as reference; these are not likelihood deviance statistics.' else 'Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.')
+for(typ in c('length','year')) render(paste0('residuals_',typ),if(typ=='length')'按体长组分面的对数残差' else '按时间步分面的对数残差',if(typ=='length')'Log residuals by length bin' else 'Log residuals by time step',plot_residuals(b,facet_by=typ,facet_ncol=4,x_breaks=if(typ=='length')c(2000,2010,2015)else c(10,30,50),line_size=.6),height=8.5,note_zh='观测对数减预测对数；未经标准差标准化。每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。',note_en='Observed minus fitted log index, without standardization. Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.')
+for(typ in c('R','F'))for(lg in c(TRUE,FALSE)) {
+ quantity_en <- if (typ == 'R') 'Recruitment' else 'Fishing mortality'
+ quantity_zh <- if (typ == 'R') '补充量' else '捕捞死亡率'
+ title_en <- if (lg) paste('Log', tolower(quantity_en), 'deviations') else paste(quantity_en, 'relative to the process median')
+ title_zh <- paste0(quantity_zh, if (lg) '的对数偏差' else '相对于中位数的倍数')
+ render(paste0('deviation_',typ,'_',lg),title_zh,title_en,plot_deviance(b,type=typ,log=lg,se=TRUE,facet_ncol=3,point_size=1.2,line_size=.5)+scale_x_continuous(breaks=c(2000,2010,2019),expand=expansion(mult=.04)),height=if(typ=='F')8.5 else 4,
+note_zh=if(lg)'对数偏差为零时，原尺度上的值等于过程中位数。' else '对数偏差取指数后表示相对于过程中位数的倍数。区间端点也由对数尺度的端点取指数得到。',note_en=if(lg)'A zero log deviation corresponds to the process median on the original scale.' else 'Exponentiated deviations are ratios to the process median. Interval endpoints are exponentiated from the log scale.')
+}
 render('ridges','长度组成山脊图','Length composition ridges',plot_ridges(b),height=8.5,note_zh='每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。',note_en='Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported.')
 render('compare_ts','种群时间序列比较','Population time series comparison',plot_compare_ts(a,b,se=TRUE,facet_ncol = 2),height=5.7,note_zh='只比较共同输出与相同时间窗；自由纵轴不能直接比较不同量的振幅。',note_en='Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.')
 render('compare_F','死亡率矩阵比较','Fishing mortality matrices',plot_compare_F(a,b)+scale_x_continuous(breaks=c(2000,2010,2019)),height=5,note_zh='ACL 纵轴是年龄，ALSCL 纵轴是长度；颜色可辅助观察，但两行不逐格对应。',note_en='ACL uses age and ALSCL length on the vertical axis; cells do not correspond one to one.')
@@ -124,7 +136,7 @@ render('compare_growth','生长与外部参照接口','Growth and reference-data
 render('compare_CatL','两模型调查拟合','Survey fits from both models',plot_compare_CatL(a,b,dat,years=c(2000,2005,2010,2015),facet_ncol = 2),height=5,note_zh='显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。纵轴为调查指数，不是捕获量；自定义标签使用 ylab$survey。',note_en='Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians. The vertical axis is a survey index, not catch abundance; use ylab$survey for a custom label.')
 render('compare_metrics','拟合指标比较','Fit metric comparison',plot_compare_metrics(a,b,dat,facet_ncol = 2)&scale_y_continuous(expand=expansion(mult=c(0,.3))),height=5.5,note_zh='当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。',note_en='The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.')
 render('compare_selectivity','固定调查可捕性','Fixed survey catchability',plot_compare_selectivity(a,b),note_zh='当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。',note_en='This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.')
-for(method in c('apical','mean'))render(paste0('compare_F_',method),paste('总体 F 比较',method),paste('Summary F comparison',method),plot_compare_F_ts(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。季度拟合按季度汇总，不做年化。',note_en='Apical is the maximum; mean is an unweighted group average. Quarterly fits are summarized per quarter; nothing is annualized.')
+for(method in c('apical','mean'))render(paste0('compare_F_',method),if(method=='apical')'每个时间步的最大捕捞死亡率' else '每个时间步的平均捕捞死亡率',if(method=='apical')'Maximum fishing mortality by time step' else 'Mean fishing mortality by time step',plot_compare_F_ts(a,b,method=method)+labs(title=if(method=='apical')'Apical fishing mortality'else 'Mean fishing mortality'),note_zh='apical 取最大值，mean 取组间算术平均，均非丰度加权。季度拟合按季度汇总，不做年化。',note_en='Apical is the maximum; mean is an unweighted group average. Quarterly fits are summarized per quarter; nothing is annualized.')
 # 回溯逐次删除末端时间步 / Peel successive terminal time steps.
 retro_a <- if (is.null(fits)) retro_acl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_acl
 retro_b <- if (is.null(fits)) retro_alscl(x, nyear=npeels, train_times=2, ncores=1, silent=TRUE) else fits$retro_alscl

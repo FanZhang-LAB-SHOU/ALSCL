@@ -1,10 +1,11 @@
 #' @title Plot Fishing Mortality from ACL or ALSCL Model
 #'
 #' @description This function takes the output from \code{run_acl} or \code{run_alscl}
-#' and plots fishing mortality over years, ages, or length-bin midpoints using ggplot2.
+#' and plots fishing mortality over time steps, ages, or length-bin midpoints using ggplot2.
 #' For ACL models, F is at the age level (A x Y).
 #' For ALSCL models, F is at the length level (FL: L x Y) and
-#' F-at-age (FA: (A-1) x (Y-1)) is derived from F at length.
+#' F at age (FA: (A-1) x (Y-1)) is the negative log of the proportion
+#' surviving within each age class over the time step, minus natural mortality.
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).

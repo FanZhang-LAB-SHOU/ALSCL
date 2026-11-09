@@ -1,5 +1,6 @@
 # Unreleased
 
+- Revised wording in the documentation for greater precision.
 - Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
 - Check every map name, including named NULL releases, and normalize unused factor levels before fitting. Preflight and fitting now validate the same optimizer controls.
 - Preserve small positive probabilities in the simulated age–length key and growth transitions. In age-based simulations, average dome-shaped fishery selectivity over length at each age.
@@ -12,6 +13,7 @@
 
 ### 简体中文
 
+- 修订部分表述，使其更准确。
 - 报告拟合指标或按 AIC 选择模型前，逐格核对调查正观测。多个进程向同一路径存档时会检查写入冲突。
 - 校验全部映射参数名，包括具名 NULL 释放项，并在拟合前清除未使用的因子水平。预检和拟合采用相同的优化器控制项校验。
 - 保留模拟年龄–体长概率和生长转移中的微小正概率。年龄结构模拟按每个年龄的体长分布对穹顶形渔业选择性加权。

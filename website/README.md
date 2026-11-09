@@ -88,7 +88,7 @@ Glossary (one term per concept):
 | Checks of optimizer code, gradient, Hessian and bounds (`fit$diagnostics`) | numerical checks | 数值检查 |
 | Removing the last time steps and refitting (`retro_model()`) | retrospective analysis; each refit is a peel | 回溯分析；每次截短为一轮 |
 | Fitting on earlier time steps and predicting later ones (`hindcast_model()`) | hindcast validation | 预测检验 |
-| Datasets generated from a fitted model (`simulate_fit()`) | fitted-model simulation | 拟合模型模拟 |
+| Datasets generated from a fitted model (`simulate_fit()`) | fitted-model simulation | 从拟合模型模拟调查数据 |
 | A fit saved without the live TMB object (`save_assessment()`) | saved fit | 保存的拟合结果 |
 | Standard errors from `TMB::sdreport()` | standard errors | 标准误 |
 | `B`, `SSB`, `Rec`, `N`, `F` | biomass, spawning biomass, recruitment, abundance, fishing mortality | 生物量、产卵生物量、补充量、丰度、捕捞死亡率 |

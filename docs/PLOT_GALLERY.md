@@ -21,10 +21,10 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 
 ## 图目录 / Figure index
 
-- [1. 调查拟合 length 对数尺度 / Survey fit length log scale](#CatL_length_FALSE)
-- [2. 调查拟合 length 原尺度 / Survey fit length original scale](#CatL_length_TRUE)
-- [3. 调查拟合 year 对数尺度 / Survey fit year log scale](#CatL_year_FALSE)
-- [4. 调查拟合 year 原尺度 / Survey fit year original scale](#CatL_year_TRUE)
+- [1. 各体长组的调查指数（对数尺度） / Survey index by length bin (log scale)](#CatL_length_FALSE)
+- [2. 各体长组的调查指数（原尺度） / Survey index by length bin (original scale)](#CatL_length_TRUE)
+- [3. 各时间步的调查指数（对数尺度） / Survey index by time step (log scale)](#CatL_year_FALSE)
+- [4. 各时间步的调查指数（原尺度） / Survey index by time step (original scale)](#CatL_year_TRUE)
 - [5. 丰度 N / Abundance N](#plot_abundance_N)
 - [6. 丰度 NA / Abundance NA](#plot_abundance_NA)
 - [7. 丰度 NL / Abundance NL](#plot_abundance_NL)
@@ -41,17 +41,17 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [18. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
 - [19. 生长曲线与区间 / Growth curve and interval](#VB)
 - [20. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
-- [21. ACL 捕捞死亡率 year / ACL fishing mortality year](#F_ACL_year)
-- [22. ACL 捕捞死亡率 age / ACL fishing mortality age](#F_ACL_age)
-- [23. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](#F_ALSCL_year)
-- [24. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](#F_ALSCL_age)
-- [25. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](#F_ALSCL_length)
-- [26. 对数残差 length / Log residuals length](#residuals_length)
-- [27. 对数残差 year / Log residuals year](#residuals_year)
-- [28. 对数过程偏差 R / Log process deviations R](#deviation_R_TRUE)
-- [29. 过程乘数 R / Process multipliers R](#deviation_R_FALSE)
-- [30. 对数过程偏差 F / Log process deviations F](#deviation_F_TRUE)
-- [31. 过程乘数 F / Process multipliers F](#deviation_F_FALSE)
+- [21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](#F_ACL_year)
+- [22. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
+- [23. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](#F_ALSCL_year)
+- [24. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](#F_ALSCL_age)
+- [25. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](#F_ALSCL_length)
+- [26. 按体长组分面的对数残差 / Log residuals by length bin](#residuals_length)
+- [27. 按时间步分面的对数残差 / Log residuals by time step](#residuals_year)
+- [28. 补充量的对数偏差 / Log recruitment deviations](#deviation_R_TRUE)
+- [29. 补充量相对于中位数的倍数 / Recruitment relative to the process median](#deviation_R_FALSE)
+- [30. 捕捞死亡率的对数偏差 / Log fishing mortality deviations](#deviation_F_TRUE)
+- [31. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median](#deviation_F_FALSE)
 - [32. 长度组成山脊图 / Length composition ridges](#ridges)
 - [33. 种群时间序列比较 / Population time series comparison](#compare_ts)
 - [34. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
@@ -60,8 +60,8 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [37. 两模型调查拟合 / Survey fits from both models](#compare_CatL)
 - [38. 拟合指标比较 / Fit metric comparison](#compare_metrics)
 - [39. 固定调查可捕性 / Fixed survey catchability](#compare_selectivity)
-- [40. 总体 F 比较 apical / Summary F comparison apical](#compare_F_apical)
-- [41. 总体 F 比较 mean / Summary F comparison mean](#compare_F_mean)
+- [40. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](#compare_F_apical)
+- [41. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](#compare_F_mean)
 - [42. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
 - [43. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
 - [44. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
@@ -69,7 +69,7 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 <a id="plot_CatL"></a>
 
 <a id="CatL_length_FALSE"></a>
-## 1. 调查拟合 length 对数尺度 / Survey fit length log scale
+## 1. 各体长组的调查指数（对数尺度） / Survey index by length bin (log scale)
 
 ```r
 # 绘制本图 / Draw this figure
@@ -79,7 +79,7 @@ plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-[![调查拟合 length 对数尺度 / Survey fit length log scale](figures/ytf/CatL_length_FALSE.png)](figures/ytf/CatL_length_FALSE.png)
+[![各体长组的调查指数（对数尺度） / Survey index by length bin (log scale)](figures/ytf/CatL_length_FALSE.png)](figures/ytf/CatL_length_FALSE.png)
 
 每个体长组一个面板，横轴为时间，纵轴为对数调查指数：朱红色点为观测的对数指数，深蓝色曲线为拟合的 `Elog_index`。用它逐组检查拟合；点连续偏在曲线一侧（如本例的 16 组和 50 组）说明该组被系统低估或高估，对数尺度让大小体长组的偏离同样可读。
 
@@ -88,7 +88,7 @@ One panel per length bin, time on the horizontal axis and the log survey index o
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
 <a id="CatL_length_TRUE"></a>
-## 2. 调查拟合 length 原尺度 / Survey fit length original scale
+## 2. 各体长组的调查指数（原尺度） / Survey index by length bin (original scale)
 
 ```r
 # 绘制本图 / Draw this figure
@@ -98,7 +98,7 @@ plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
   ylab = "Survey index")
 ```
 
-[![调查拟合 length 原尺度 / Survey fit length original scale](figures/ytf/CatL_length_TRUE.png)](figures/ytf/CatL_length_TRUE.png)
+[![各体长组的调查指数（原尺度） / Survey index by length bin (original scale)](figures/ytf/CatL_length_TRUE.png)](figures/ytf/CatL_length_TRUE.png)
 
 同样的面板改为原尺度：深蓝色曲线为 `exp(Elog_index)`，即拟合对数正态分布的中位数，朱红色点为观测指数。用它按指数单位读取偏差；误差是乘性的，高值处看似很大的差距与低值处的小差距可能是相同的相对偏差。
 
@@ -107,7 +107,7 @@ The same panels on the original scale: the navy curve is `exp(Elog_index)`, the 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
 <a id="CatL_year_FALSE"></a>
-## 3. 调查拟合 year 对数尺度 / Survey fit year log scale
+## 3. 各时间步的调查指数（对数尺度） / Survey index by time step (log scale)
 
 ```r
 # 绘制本图 / Draw this figure
@@ -117,7 +117,7 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-[![调查拟合 year 对数尺度 / Survey fit year log scale](figures/ytf/CatL_year_FALSE.png)](figures/ytf/CatL_year_FALSE.png)
+[![各时间步的调查指数（对数尺度） / Survey index by time step (log scale)](figures/ytf/CatL_year_FALSE.png)](figures/ytf/CatL_year_FALSE.png)
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。 / In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
@@ -128,7 +128,7 @@ One panel per time step, length on the horizontal axis and the log survey index 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
 <a id="CatL_year_TRUE"></a>
-## 4. 调查拟合 year 原尺度 / Survey fit year original scale
+## 4. 各时间步的调查指数（原尺度） / Survey index by time step (original scale)
 
 ```r
 # 绘制本图 / Draw this figure
@@ -138,13 +138,13 @@ plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
   ylab = "Survey index")
 ```
 
-[![调查拟合 year 原尺度 / Survey fit year original scale](figures/ytf/CatL_year_TRUE.png)](figures/ytf/CatL_year_TRUE.png)
+[![各时间步的调查指数（原尺度） / Survey index by time step (original scale)](figures/ytf/CatL_year_TRUE.png)](figures/ytf/CatL_year_TRUE.png)
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。 / In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
-同样的面板改为原尺度，曲线为 `exp(Elog_index)` 中位数与观测指数。用它看每个时间步的指数主要来自哪些体长；峰的位置和高度显示调查捕到的主要体长，观测峰偏离深蓝线的时间步值得再看残差图。
+曲线表示调查指数在原尺度上的拟合中位数 `exp(Elog_index)`，观测值按体长组显示。比较观测指数和拟合指数峰值所在的体长组，再查看这些体长组的残差。
 
-The same panels on the original scale, with the curves as `exp(Elog_index)` medians and the observed index. Use it to see which lengths carry the index in each time step; the position and height of the peak show where the survey catches most fish, and a time step whose observed peak sits off the navy curve is worth checking in the residual figures.
+The curves show fitted survey-index medians on the original scale, `exp(Elog_index)`, with the observed index in each length bin. Compare the lengths at which the observed and fitted indices peak, then examine the residuals for those bins.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -161,9 +161,9 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
 
 [![丰度 N / Abundance N](figures/ytf/plot_abundance_N.png)](figures/ytf/plot_abundance_N.png)
 
-各组之和的总丰度随时间步变化；阴影为近似 95% 区间，即估计值加减 1.96 倍标准误。用它看全种群的趋势及其精度；本例 2012 年的跳升是同年的强补充量进入最小年龄组。
+总丰度是每个时间步各组估计尾数之和。阴影为近似 95% 区间（估计值 ± 1.96 个标准误）。本例总丰度在 2012 年上升，同年估计补充量达到峰值。
 
-Total abundance, summed over all groups, by time step; the shaded band is the approximate 95% interval, the estimate plus or minus 1.96 standard errors. Use it for the stock-wide trend and its precision; the jump in 2012 here is the strong 2012 recruitment entering the youngest age class.
+Total abundance sums the estimated numbers across all groups in each time step. Shading shows the approximate 95% interval (estimate ± 1.96 standard errors). The rise in abundance in 2012 coincides with a peak in estimated recruitment.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_abundance)
 
@@ -178,9 +178,9 @@ plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
 
 [![丰度 NA / Abundance NA](figures/ytf/plot_abundance_NA.png)](figures/ytf/plot_abundance_NA.png)
 
-年龄别丰度，每个年龄组一个面板，纵轴各自取值，均带 95% 区间。用它追踪年级群：强年级群表现为每个时间步向右移一个面板的峰；年龄越大区间越宽，因为老龄组数量少，调查对它们的信息也少。
+每个面板显示一个年龄组的估计尾数和近似 95% 区间。追踪同一世代时，将某期该年龄组的尾数与下一期相邻较高年龄组的尾数对照。各面板使用各自的纵轴尺度。
 
-Abundance at age, one panel per age class with its own vertical scale, each with the 95% band. Use it to follow cohorts: a strong year class appears as a peak that moves one panel to the right at each time step, and the bands widen with age because the old classes are small and the survey says little about them.
+Each panel shows numbers at one age with an approximate 95% interval. To follow a cohort, compare its abundance in one age class with abundance one time step later in the next age class. Read the vertical scales separately.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_abundance)
 
@@ -195,9 +195,9 @@ plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
 
 [![丰度 NL / Abundance NL](figures/ytf/plot_abundance_NL.png)](figures/ytf/plot_abundance_NL.png)
 
-体长别丰度，每个体长组一个面板，均带 95% 区间。用它看数量集中在哪些体长；本例 2012 年的峰先出现在小体长组，随年级群生长再出现在较大的组，最大的组变化平缓，因为鱼在此累积。
+每个面板显示一个体长组的估计尾数和近似 95% 区间。本例中，小体长组在 2012 年前后先出现峰值，大体长组的峰值出现得较晚。一个体长组可包含多个年龄组的个体。
 
-Abundance at length, one panel per length bin, each with the 95% band. Use it to see which lengths hold the numbers; the 2012 peak here appears first in the small bins and later in the larger ones as the cohort grows, while the largest bin changes slowly because fish accumulate there.
+Each panel shows estimated numbers in one length bin with an approximate 95% interval. In this example the peak in smaller bins around 2012 precedes the peaks in larger bins. Several age classes can contribute to a length bin.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_abundance)
 
@@ -292,9 +292,9 @@ plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
 
 [![生物量 BL / Biomass BL](figures/ytf/plot_biomass_BL.png)](figures/ytf/plot_biomass_BL.png)
 
-体长别生物量，每个体长组一个面板，带 95% 区间。用它看生物量集中在哪些体长；本例 36 以上各组占大部分，它们在 2013 年后的上升是 2012 年级群长入大体长组。
+每个面板显示一个体长组的生物量和近似 95% 区间。按各面板纵轴的数值比较体长组对总生物量的贡献。本例中，多个较大体长组的生物量在 2013 年后上升。
 
-Biomass at length, one panel per length bin with the 95% band. Use it to see which lengths hold the biomass; here the bins above 36 carry most of it, and their rise after 2013 is the 2012 cohort growing into the large bins.
+Each panel shows biomass in one length bin and its approximate 95% interval. Compare axis values across panels to identify the bins contributing most biomass. Several of the larger bins show an increase after 2013.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_biomass)
 
@@ -311,9 +311,9 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 
 [![产卵生物量 SSB / Spawning biomass SSB](figures/ytf/plot_SSB_SSB.png)](figures/ytf/plot_SSB_SSB.png)
 
-产卵生物量随时间步变化，带 95% 区间。用它作为资源状态序列：只有成熟鱼计入，所以它滞后于总生物量；本例 2010 年前后的低点之后才出现回升。
+产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。
 
-Spawning biomass by time step with the 95% band. Use it as the stock status series: only mature fish count, so it lags total biomass, and its low point around 2010 here comes before the recovery of the later years.
+Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
 
@@ -381,9 +381,9 @@ plot_catch(b, type = "CNA", se = TRUE, facet_ncol = 3,
 
 [![捕获尾数 CNA / Catch numbers CNA](figures/ytf/plot_catch_CNA.png)](figures/ytf/plot_catch_CNA.png)
 
-年龄别捕获尾数，每个年龄组一个面板，带 95% 区间。用它看渔业主要移除哪些年龄；本例捕获集中在 1 至 3 龄，因为小鱼数量多，老龄组的区间更宽。
+每个面板显示一个年龄组的估计渔获尾数和近似 95% 区间。本例中，较年轻的年龄组渔获尾数较高。比较时请看各面板纵轴的数值。
 
-Catch in numbers at age, one panel per age class with the 95% band. Use it to see which ages the fishery removes; the catch peaks at ages 1 to 3 here because the small fish are numerous, and the bands widen in the old ages.
+Each panel shows estimated catch in numbers for one age class, with an approximate 95% interval. In this example, catches are largest in the younger age classes. Read the values against the vertical scale of each panel.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
@@ -398,9 +398,9 @@ plot_catch(b, type = "CNL", se = TRUE, facet_ncol = 3,
 
 [![捕获尾数 CNL / Catch numbers CNL](figures/ytf/plot_catch_CNL.png)](figures/ytf/plot_catch_CNL.png)
 
-体长别捕获尾数，每个体长组一个面板，带 95% 区间。与体长别捕捞死亡率对照：某组的捕获等于该组丰度与捕捞死亡率的乘积，F 高但捕获少的组只是鱼少。
+每个面板显示一个体长组的预期渔获尾数和近似 95% 区间。设组内期初尾数为 N，F 和 M 分别为每个时间步的瞬时捕捞死亡率和自然死亡率。按 Baranov 渔获方程，`C = N × (F/Z) × (1 − exp(−Z))`，其中 `Z = F + M`。ALSCL 将同一体长组各年龄的渔获尾数相加。[Baranov 渔获方程，式（15）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
-Catch in numbers at length, one panel per length bin with the 95% band. Read it with the fishing mortality at length: catch in a bin is the product of abundance and fishing mortality there, so a bin with high F but little catch is one with few fish.
+Each panel shows the expected catch in numbers for one length bin, with an approximate 95% interval. For a group with starting abundance N and instantaneous mortality rates F and M per time step, the Baranov catch equation gives `C = N × (F/Z) × (1 − exp(−Z))`, where `Z = F + M`. ALSCL sums these catches across ages within each length bin. [Baranov catch equation, eq. 15](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11).
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
@@ -416,9 +416,9 @@ plot_recruitment(b, se = TRUE)
 
 [![补充量 / Recruitment](figures/ytf/recruitment.png)](figures/ytf/recruitment.png)
 
-各时间步进入最小年龄组的补充量，带 95% 区间；纵轴标签为 `ylab$rec`。用它找强弱年级群：本例 2012 年的峰就是之后丰度和生物量上升的来源，它对应的日历时间取决于 `rec.age` 和时间步长。
+补充量表示每个时间步进入最小年龄组的估计尾数，阴影为近似 95% 区间。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
 
-Recruitment, the number entering the youngest age class at each time step, with the 95% band; the vertical label is `ylab$rec`. Use it to find strong and weak year classes: the 2012 peak here is the cohort behind the later rise in abundance and biomass, and its calendar position depends on `rec.age` and the time step.
+Recruitment is the estimated number entering the youngest age class per time step. The shaded band gives the approximate 95% interval. Estimated recruitment peaks in 2012 in this example. The age at entry is set by `rec.age`.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_recruitment)
 
@@ -438,9 +438,9 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [![亲体与补充关系 / Spawning biomass and recruitment](figures/ytf/SSB_Rec.png)](figures/ytf/SSB_Rec.png)
 
-横轴为某时间步的产卵生物量，纵轴为 `age_at_recruitment` 年后的补充量，每对一点，不拟合曲线。用它看补充量是否随产卵生物量变化；本例各点没有关系，这在意料之中，因为模型逐时间步自由估计补充量，而不用亲体补充函数。
+每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
-A scatter of spawning biomass at one time step (horizontal) against recruitment `age_at_recruitment` years later (vertical), one point per pair and no fitted curve. Use it to see whether recruitment follows spawning biomass; the points here show no relation, which is expected because the model estimates recruitment freely at each time step instead of through a stock recruitment function.
+Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock–recruitment curve.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -456,9 +456,9 @@ plot_VB(b, se = TRUE)
 
 [![生长曲线与区间 / Growth curve and interval](figures/ytf/VB.png)](figures/ytf/VB.png)
 
-由拟合的 `Linf`、`k`、`t0`（角上标注）得到的 von Bertalanffy 体长随年龄曲线；`se = TRUE` 时按参数协方差加上 95% 区间。本例生长参数固定，区间宽度为零；估计生长时区间表示年龄别平均体长的参数不确定性，不是个体体长的分布，老龄处区间很宽说明 `Linf` 难以确定。
+von Bertalanffy 曲线给出图中 `Linf`、`k` 和 `t0` 对应的各年龄平均体长。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。同龄个体的体长差异见下方的年龄－体长转换矩阵。
 
-The von Bertalanffy curve of length against age from the fitted `Linf`, `k` and `t0` (printed in the corner); `se = TRUE` adds a 95% band from the parameter covariance. Growth is fixed in this example, so the band has zero width; with estimated growth the band is parameter uncertainty about the mean length at age, not the spread of individual lengths, and a wide band at old ages means `Linf` is poorly determined.
+The von Bertalanffy curve gives mean length at age for the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. Variation in length among fish of the same age is shown separately in the length-at-age matrix below.
 
 `age_range = NULL` 时绘制拟合的年龄范围，起点不早于 `t0`；显式 `age_range` 必须是两个递增的有限年龄，且不早于 `t0`。若 `se = TRUE` 但参数协方差不可用，函数会警告并只画曲线，保留传入的标签、字号、刻度和主题。
 
@@ -478,16 +478,16 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 [![年龄—体长概率矩阵 / Age–length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
 
-年龄体长概率矩阵 `pla` 的热图：每列一个年龄组，每行一个体长组，颜色为该年龄的鱼落入该体长组的概率，每列之和为 1；代码把横轴改标为年龄组序号 1 至 15。用它看体长对年龄的区分度；对角带随年龄变宽是因为生长放慢、体长重叠，老龄在最大体长组的深色格是聚集所有老鱼的加和组。
+`pla` 的每一列表示一个年龄组的体长分布，列内概率之和为 1。颜色表示该年龄的个体落入各体长组的概率。对每个年龄组，最高体长组都包括超过最后一道体长分界的个体。横轴的 1 至 15 是年龄组序号。
 
-A heat map of the age length probability matrix `pla`: one column per age class, one row per length bin, and the fill is the probability that a fish of that age falls in that bin, so each column sums to one; the code relabels the age axis with the class index 1 to 15. Use it to see how well length identifies age; the diagonal band widens with age because growth slows and lengths overlap, and the dark cells in the largest bin at old ages are the plus group collecting all old fish.
+Each column of `pla` gives the distribution of length for one age class and sums to one. The colour shows the probability of falling in each length bin. For every age, the last length bin includes the upper tail beyond the last length boundary. The horizontal labels 1 to 15 identify the age classes.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_pla)
 
 <a id="plot_fishing_mortality"></a>
 
 <a id="F_ACL_year"></a>
-## 21. ACL 捕捞死亡率 year / ACL fishing mortality year
+## 21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
 
 `plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
 
@@ -499,16 +499,16 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 捕捞死亡率 year / ACL fishing mortality year](figures/ytf/F_ACL_year.png)](figures/ytf/F_ACL_year.png)
+[![ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](figures/ytf/F_ACL_year.png)](figures/ytf/F_ACL_year.png)
 
-ACL 拟合的捕捞死亡率 `F`，每个年龄组一个面板，横轴为时间，带 95% 区间（`se = TRUE`）；`F` 是每个时间步的瞬时率，季度拟合显示的是季度率。用它看捕捞压力何时变化：本例 2008 年的峰出现在大多数年龄组，13 至 15 龄的宽区间说明调查对老龄鱼的信息很少。
+每个面板显示 ACL 一个年龄组的瞬时捕捞死亡率（`F`）及其近似 95% 区间。F 的时间单位由模型时间步决定，本例为一年，季度拟合则为一个季度。
 
-Fishing mortality `F` of the ACL fit, one panel per age class, time on the horizontal axis and the 95% band (`se = TRUE`); `F` is an instantaneous rate per time step, so a quarterly fit shows quarterly rates. Use it to see when fishing pressure changed: the 2008 peak here appears in most age classes, and the wide bands at ages 13 to 15 show how little the survey says about old fish.
+Each panel shows the estimated instantaneous fishing mortality rate (`F`) for one ACL age class, with its approximate 95% interval. F is expressed per model time step. The time step is one year here and one quarter in a quarterly fit.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ACL_age"></a>
-## 22. ACL 捕捞死亡率 age / ACL fishing mortality age
+## 22. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -516,16 +516,16 @@ plot_fishing_mortality(a, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 捕捞死亡率 age / ACL fishing mortality age](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
+[![ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
 
-同一组 `F` 按年龄排列：每个时间步一个面板，横轴为年龄组序号（标为 Age group，因为坐标是组的位置），带 95% 区间。用它读每个时间步渔业的选择模式；本例近乎水平的线说明 ACL 拟合对各年龄施加相近的死亡率，若呈穹形或斜坡则显示渔具主要捕哪些年龄。
+每个面板显示 ACL 在一个时间步的估计值及其近似 95% 区间，横轴为年龄组序号。本例中曲线较平，表示该时间步各年龄组的估计捕捞死亡率相近。
 
-The same `F` values arranged by age: one panel per time step, the age class index on the horizontal axis (labelled Age group because the coordinate is the class position), with the 95% band. Use it to read the selection pattern of the fishery at each time step; a flat line, as here, means the ACL fit applies similar mortality to all ages, and a dome or ramp would show which ages the gear takes.
+Each panel shows the same ACL estimates for one time step, with age-class indices on the horizontal axis and approximate 95% intervals. The nearly flat profiles in this example indicate similar estimated fishing mortality across ages.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_year"></a>
-## 23. ALSCL 捕捞死亡率 year / ALSCL fishing mortality year
+## 23. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -533,16 +533,16 @@ plot_fishing_mortality(b, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 year / ALSCL fishing mortality year](figures/ytf/F_ALSCL_year.png)](figures/ytf/F_ALSCL_year.png)
+[![ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](figures/ytf/F_ALSCL_year.png)](figures/ytf/F_ALSCL_year.png)
 
-ALSCL 拟合的体长别捕捞死亡率 `FL`，每个体长组一个面板，横轴为时间，带 95% 区间。用它看各体长组的捕捞压力何时变化；本例 2008 年的峰在 20 至 34 组最强，44 以上各组的 F 最低，因为该体长的鱼很少被捕。
+每个面板显示一个体长组的捕捞死亡率（`FL`）随时间的变化及其近似 95% 区间。本例在 2008 年前后的高值以中等体长组最为明显。
 
-Fishing mortality at length `FL` of the ALSCL fit, one panel per length bin, time on the horizontal axis and the 95% band. Use it to see when pressure changed in each length bin; the 2008 peak is strongest in bins 20 to 34 here, and the bins above 44 have the lowest F because few fish of that size are taken.
+Each panel shows how fishing mortality at length (`FL`) changes over time for one length bin, with an approximate 95% interval. The estimated peak around 2008 is most pronounced at intermediate lengths.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_age"></a>
-## 24. ALSCL 捕捞死亡率 age / ALSCL fishing mortality age
+## 24. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -550,16 +550,16 @@ plot_fishing_mortality(b, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 age / ALSCL fishing mortality age](figures/ytf/F_ALSCL_age.png)](figures/ytf/F_ALSCL_age.png)
+[![ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](figures/ytf/F_ALSCL_age.png)](figures/ytf/F_ALSCL_age.png)
 
-ALSCL 拟合的年龄别捕捞死亡率 `FA`，由 `FL` 经年龄体长矩阵换算：每个时间步一个面板，横轴为年龄组序号，带 95% 区间；`FA` 在相邻时间步之间计算，所以比体长图少一个时间步和一个年龄。用它与 ACL 的年龄图比较选择模式；本例在 3 龄达到峰值的穹形，就是体长别 F 映射到对应年龄后的结果。
+ALSCL 先把同一年龄组各体长组的存活尾数相加，再除以该年龄组的期初尾数，得到存活比例。年龄别捕捞死亡率为 `FA = -log(存活比例) - M`。每个面板显示一个时间步的估计值和近似 95% 区间。`FA` 的输出不含最高年龄组和最后一个时间步。
 
-Fishing mortality at age `FA` of the ALSCL fit, derived from `FL` through the age length matrix: one panel per time step, the age class index on the horizontal axis, with the 95% band; there is one time step and one age fewer than in the length figures because `FA` is computed between consecutive steps. Use it to compare the ALSCL selection with the ACL age figure; the dome peaking at age 3 here is the length-based F mapped onto the ages that have those lengths.
+For each age class, ALSCL sums the numbers surviving across length bins and divides by the number present at the start of the step. Fishing mortality at age is `FA = -log(survival proportion) - M`. Each panel shows the estimates and approximate 95% intervals for one time step. The oldest age class and the final time step are omitted from `FA`.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_length"></a>
-## 25. ALSCL 捕捞死亡率 length / ALSCL fishing mortality length
+## 25. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -567,18 +567,18 @@ plot_fishing_mortality(b, type = "length",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 捕捞死亡率 length / ALSCL fishing mortality length](figures/ytf/F_ALSCL_length.png)](figures/ytf/F_ALSCL_length.png)
+[![ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](figures/ytf/F_ALSCL_length.png)](figures/ytf/F_ALSCL_length.png)
 
-同一组 `FL` 按体长排列：每个时间步一个面板，横轴为体长组中点 `len_mid`（不等宽组表现为不等间距），带 95% 区间。用它读每个时间步渔业的体长选择；本例 20 至 35 之间的穹形是渔具捕捞的体长范围，各面板穹形的高低就是时间效应。
+每个面板显示一个时间步各体长组的捕捞死亡率及其近似 95% 区间。横轴按体长组中点（`len_mid`）的实际间距绘制。本例中，体长约 20 至 35 的组估计捕捞死亡率较高。
 
-The same `FL` values arranged by length: one panel per time step, the length bin midpoints `len_mid` on the horizontal axis (unequal bins show as unequal spacing), with the 95% band. Use it to read the length selection of the fishery at each time step; the dome between lengths 20 and 35 here is the size the gear takes, and its height from panel to panel is the time effect.
+Each panel shows fishing mortality at length for one time step, with an approximate 95% interval. Length-bin midpoints (`len_mid`) are plotted at their actual spacing. In this example, estimated fishing mortality is higher at intermediate lengths, around 20 to 35.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="plot_residuals"></a>
 
 <a id="residuals_length"></a>
-## 26. 对数残差 length / Log residuals length
+## 26. 按体长组分面的对数残差 / Log residuals by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -586,7 +586,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
-[![对数残差 length / Log residuals length](figures/ytf/residuals_length.png)](figures/ytf/residuals_length.png)
+[![按体长组分面的对数残差 / Log residuals by length bin](figures/ytf/residuals_length.png)](figures/ytf/residuals_length.png)
 
 对数残差，即观测对数调查指数减拟合值，每个体长组一个面板，横轴为时间：深蓝线连接残差，灰线为零，青绿色虚线为平滑线。用它找模型拟合不好的体长组（零值和缺失观测没有残差）；多年同号的残差（如本例 16 组为正、20 组为负）说明系统性偏差，序列末端的趋势（如 50 组）提示模型没有跟上的变化。
 
@@ -599,7 +599,7 @@ Within each facet, a missing or excluded observation breaks the residual line an
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
 <a id="residuals_year"></a>
-## 27. 对数残差 year / Log residuals year
+## 27. 按时间步分面的对数残差 / Log residuals by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -607,7 +607,7 @@ plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(10, 30, 50))
 ```
 
-[![对数残差 year / Log residuals year](figures/ytf/residuals_year.png)](figures/ytf/residuals_year.png)
+[![按时间步分面的对数残差 / Log residuals by time step](figures/ytf/residuals_year.png)](figures/ytf/residuals_year.png)
 
 同一组残差按体长排列：每个时间步一个面板，横轴为体长，带零线和平滑线。用它看一个时间步内的偏差是否随体长变化；本例 2015 年起最大体长组的正尖峰说明那几年调查看到的大鱼多于拟合，平滑线每年在同一体长穿过零线则是模型系统性放错的体长。
 
@@ -618,7 +618,7 @@ The same residuals arranged by length: one panel per time step, length on the ho
 <a id="plot_deviance"></a>
 
 <a id="deviation_R_TRUE"></a>
-## 28. 对数过程偏差 R / Log process deviations R
+## 28. 补充量的对数偏差 / Log recruitment deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -627,16 +627,16 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![对数过程偏差 R / Log process deviations R](figures/ytf/deviation_R_TRUE.png)](figures/ytf/deviation_R_TRUE.png)
+[![补充量的对数偏差 / Log recruitment deviations](figures/ytf/deviation_R_TRUE.png)](figures/ytf/deviation_R_TRUE.png)
 
-补充量的对数过程偏差（模型的随机效应，不是似然偏差）随时间步变化：点为估计值，误差棒为 95% 区间，零对应平均补充量。用它看调查支持的年级群信号；本例 2000 至 2008 年的连续负值是低于平均的补充量，若误差棒都跨过零线，说明调查几乎没有补充量信息。
+点表示估计的补充量对数偏差，误差棒表示近似 95% 区间。对数偏差为零时，补充量等于拟合过程的中位数 `exp(mean_log_R)`。负值表示该期补充量低于这个中位数。
 
-Log process deviations of recruitment (the random effects of the model, not a likelihood deviance) by time step: points are the estimates, the error bars their 95% intervals, and zero is mean recruitment. Use it to see the year-class signal the survey supports; the negative run from 2000 to 2008 here is below-average recruitment, and error bars that all cross zero would mean the survey carries little recruitment information.
+The points are estimated log recruitment deviations and the bars are approximate 95% intervals. Zero corresponds to the median recruitment of the fitted process, `exp(mean_log_R)`. A negative estimate indicates recruitment below that median.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_R_FALSE"></a>
-## 29. 过程乘数 R / Process multipliers R
+## 29. 补充量相对于中位数的倍数 / Recruitment relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -645,16 +645,16 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程乘数 R / Process multipliers R](figures/ytf/deviation_R_FALSE.png)](figures/ytf/deviation_R_FALSE.png)
+[![补充量相对于中位数的倍数 / Recruitment relative to the process median](figures/ytf/deviation_R_FALSE.png)](figures/ytf/deviation_R_FALSE.png)
 
-同一组偏差取指数（`log = FALSE`）：纵轴为补充量乘数，1 对应平均值，区间不对称，因为它们是对数区间取指数的结果。用它把偏差读成倍数；本例 2012 年约 1.7 表示补充量高于平均 70%，它与对数图是同一拟合过程，按读者要读取的量选择尺度。
+设置 `log = FALSE` 后，每个点表示该期补充量与过程中位数之比。2012 年的比值约为 1.7，表示估计补充量比中位数高约 70%。区间端点由对数尺度的端点取指数得到。
 
-The same deviations exponentiated (`log = FALSE`): the vertical axis is the recruitment multiplier, one is the mean, and the intervals are asymmetric because they are exponentiated log intervals. Use it to read a deviation as a factor; the 2012 value of about 1.7 here means recruitment 70% above the mean, and it is the same fitted process as the log figure, so choose the scale by what the reader needs to read off.
+With `log = FALSE`, each point is recruitment divided by the process median. A ratio of 1.7, as in 2012, means that estimated recruitment was about 70% above that median. The interval endpoints are exponentiated from the log scale.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_TRUE"></a>
-## 30. 对数过程偏差 F / Log process deviations F
+## 30. 捕捞死亡率的对数偏差 / Log fishing mortality deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -663,16 +663,16 @@ plot_deviance(b, type = "F", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![对数过程偏差 F / Log process deviations F](figures/ytf/deviation_F_TRUE.png)](figures/ytf/deviation_F_TRUE.png)
+[![捕捞死亡率的对数偏差 / Log fishing mortality deviations](figures/ytf/deviation_F_TRUE.png)](figures/ytf/deviation_F_TRUE.png)
 
-捕捞死亡率的对数过程偏差，每个体长组一个面板（ACL 为每个年龄组，共享 F 时只有一个面板），点、95% 误差棒和作为平均值的零线。用它看拟合的 F 在各组、各时间步偏离平均的程度；本例小、中体长组为正，40 以上为负，即模型抬高了 40 以下的 F、压低了 40 以上的 F，36 至 50 组在 2012 年前后的下陷与 F 图中该处的低值一致。
+点和近似 95% 区间表示各期捕捞死亡率的对数偏差。偏差为零对应原尺度上的过程中位数 `exp(mean_log_F)`。ALSCL 按体长组分面，ACL 按年龄组分面。各组共用 F 时只有一个面板。
 
-Log process deviations of fishing mortality, one panel per length bin (per age class for ACL, a single panel for a shared F), with points, 95% error bars and zero as the mean. Use it to see how the fitted F departs from its mean in each bin and time step; here the deviations are positive in the small and middle bins and negative above length 40, so the model raises F below 40 and lowers it above, and the dip around 2012 in bins 36 to 50 matches the low F there in the F figures.
+Points and approximate 95% intervals show log fishing mortality deviations over time. Zero corresponds to the process median, `exp(mean_log_F)`, on the original scale. ALSCL shows one panel per length bin, ACL one per age class. A fit with shared F has one panel.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_FALSE"></a>
-## 31. 过程乘数 F / Process multipliers F
+## 31. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -681,11 +681,11 @@ plot_deviance(b, type = "F", log = FALSE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-[![过程乘数 F / Process multipliers F](figures/ytf/deviation_F_FALSE.png)](figures/ytf/deviation_F_FALSE.png)
+[![捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median](figures/ytf/deviation_F_FALSE.png)](figures/ytf/deviation_F_FALSE.png)
 
-同一组 F 偏差改为乘数（`log = FALSE`），1 为平均值，区间不对称。用它把偏离读成 F 的倍数；本例 48 组 2012 年前后约 0.5 表示 F 为平均值的一半，区间宽窄与对数尺度对应，两张图对哪些格不确定的判断一致。
+每个点表示估计捕捞死亡率与过程中位数之比。比值为 0.5 表示该期该组的捕捞死亡率为中位数的一半。误差棒为对数尺度区间端点取指数后得到的近似 95% 区间。
 
-The same F deviations as multipliers (`log = FALSE`), with one as the mean and asymmetric intervals. Use it to read the departure as a factor on F; a value of 0.5 in bin 48 around 2012 here means F at half its mean, and the interval widths carry over from the log scale, so the two figures agree on which cells are uncertain.
+Each point is the fitted fishing mortality rate divided by the process median. A ratio of 0.5 means fishing mortality was half that median. The error bars show the approximate 95% intervals after exponentiation.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
@@ -701,9 +701,9 @@ plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
 
 [![长度组成山脊图 / Length composition ridges](figures/ytf/ridges.png)](figures/ytf/ridges.png)
 
-调查指数的体长组成，每个时间步一条山脊（最早在底部，颜色按时间步取 viridis 渐变），横轴为体长：左图为观测，右图为拟合，每条山脊归一化为和为 1，所以高度只比较形状。用它检查拟合是否再现每个时间步的峰位和展布；本例 2012 年后峰从 20 向 25 移动是强年级群在生长，没有调查数据的时间步没有观测山脊，部分观测的时间步只在有观测的体长组内归一化。
+每条曲线表示一个时间步各体长组调查指数的相对组成，左图为观测值，右图为拟合值。2012 年之后，峰值向较大的体长组移动。可比较两图的峰值位置和分布宽度。某期全部缺测时不绘制该期的观测曲线，部分缺测时仅用有观测的体长组计算观测比例。
 
-Length compositions of the survey index, one ridge per time step (earliest at the bottom, colour by time step from the viridis gradient) with length on the horizontal axis: the left panel is observed, the right panel fitted, and each ridge is normalized to sum to one, so ridge height compares shape only. Use it to check that the fit reproduces the mode and spread of each time step; the mode moving from length 20 toward 25 after 2012 here is the strong cohort growing, a time step without survey data has no observed ridge, and a partly observed time step is normalized over the observed bins only.
+Each ridge shows the relative survey index across lengths in one time step, with observations on the left and the fit on the right. The peak shifts toward larger lengths after 2012. Compare the position and spread of the distributions. A step with no observations has no observed ridge, and a partially observed step is normalized over the observed bins only.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_ridges)
 
@@ -870,7 +870,7 @@ Survey catchability `q` at length from the input of each fit (`sel_L50`, `sel_L9
 <a id="plot_compare_F_ts"></a>
 
 <a id="compare_F_apical"></a>
-## 40. 总体 F 比较 apical / Summary F comparison apical
+## 40. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -878,16 +878,16 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-[![总体 F 比较 apical / Summary F comparison apical](figures/ytf/compare_F_apical.png)](figures/ytf/compare_F_apical.png)
+[![每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](figures/ytf/compare_F_apical.png)](figures/ytf/compare_F_apical.png)
 
-两组拟合的顶点捕捞死亡率，即每个时间步各组 `F` 的最大值（ACL 深蓝实线，ALSCL 朱红虚线，每个时间步一点）；`labs(title = ...)` 替换默认标题。用它在同一坐标上比较年龄模型与体长模型的总体捕捞压力；本例 ALSCL 更高，因为它的最大值落在选择性最强的体长组；函数名虽含 annual，但汇总在每个时间步内进行，季度拟合显示的仍是季度率。
+每个时间步内，ACL 取各年龄组捕捞死亡率的最大值，ALSCL 取各体长组的最大值，即 apical F。图中每个点对应该模型在该期估计 F 最高的组。季度拟合得到每季度的瞬时率。[BAM 模型中的 apical F，式（14b）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
-Apical fishing mortality, the maximum of `F` over the groups at each time step, for both fits (ACL navy solid, ALSCL vermilion dashed, a point at each time step); the `labs(title = ...)` call replaces the default title. Use it to compare overall fishing pressure between an age-based and a length-based fit on one axis; ALSCL is higher here because its maximum sits in the most selected length bins, and despite the function name a quarterly fit keeps quarterly rates, because the summary is taken within each time step.
+Apical F is the maximum fishing mortality rate across age classes in ACL or across length bins in ALSCL within each time step. The height of each point therefore refers to the group with the highest estimated F in that model and period. Quarterly fits give quarterly rates. [Apical F in the BAM model, eq. 14b](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11).
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 <a id="compare_F_mean"></a>
-## 41. 总体 F 比较 mean / Summary F comparison mean
+## 41. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -895,7 +895,7 @@ plot_compare_F_ts(a, b, method = "mean") +
   labs(title = "Mean fishing mortality")
 ```
 
-[![总体 F 比较 mean / Summary F comparison mean](figures/ytf/compare_F_mean.png)](figures/ytf/compare_F_mean.png)
+[![每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](figures/ytf/compare_F_mean.png)](figures/ytf/compare_F_mean.png)
 
 两组拟合的平均捕捞死亡率，即每个时间步各组 `F` 的非加权平均，样式同上。当关心整个选择模式而不是其峰值时用它；平均值取决于模型有多少低 F 的组（本例 15 个年龄组对 23 个体长组），所以看时间模式（两者都在 2008 年达峰）而不是水平高低。
 

@@ -62,8 +62,9 @@ of log survey indices, separately from retrospective stability.
 Each fold uses only data through its training origin. No full-data
 fit is used to initialize the folds. Recruitment and F deviations follow
 the fitted AR(1) conditional means on the log-process scale: the last fitted
-deviation times phi to the power of the forecast horizon. Fixed fitted
-scalars, growth and survey catchability are retained. project_model() advances
+deviation times phi to the power of the forecast horizon. Projections retain
+the scalar parameter values from the training fit and the specified survey catchability.
+project_model() advances
 the population; training-terminal weights and maturity are repeated only
 for this calculation and do not affect survey-number predictions. These are
 plug-in predictions along a conditional log-process path, not marginal

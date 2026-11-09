@@ -18,7 +18,7 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 ![仓库提供的 ALSCL 回溯示例](../assets/manual/figures/ytf/retro_ALSCL.png)
 
-每条线是一次拟合，按其最后一个时间步着色；空心点标出末端估计，rho 把它与完整拟合在同一时间步的值比较。像这里一样，各轮的线在大部分序列上与完整拟合重合、只在最后几年分开，说明新观测只修订近期估计。在记录运行中，生物量的 rho 为 0.033，产卵生物量 0.017，丰度 0.027，补充量 0.0018（[rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)）；正值表示截短的拟合结束在完整拟合之上。符号相反的项在均值中会抵消，所以也要读 `rb$rho_by_peel`。若没有任何拟合给出估计，`plot_retro()` 会停止并提示你读 `fit_diagnostics` 和 `errors`。
+每条线是一次拟合，按其最后一个时间步着色；空心点标出末端估计，rho 把它与完整拟合在同一时间步的值比较。像这里一样，各轮的线在大部分序列上与完整拟合重合、只在最后几年分开，说明图中较明显的修订集中在近期。在记录运行中，生物量的 rho 为 0.033，产卵生物量 0.017，丰度 0.027，补充量 0.0018（[rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)）；正值表示截短拟合的末期估计平均高于完整拟合对同一期的估计。符号相反的项在均值中会抵消，所以也要读 `rb$rho_by_peel`。若没有任何拟合给出估计，`plot_retro()` 会停止并提示你读 `fit_diagnostics` 和 `errors`。
 
 <h2 id="acl">2. 运行 ACL 分析并比较两个模型</h2>
 
@@ -31,7 +31,7 @@ plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 
 ![模拟 YTF：ACL 回溯轨迹](../assets/manual/figures/ytf/retro_ACL.png)
 
-相同的观测和轮数，使用 `x$fit_config$acl` 中 ACL 自己的初值和 `map`。先比较每个模型内部的修订，再比较两个模型同一个量的 rho；纵轴尺度不同。在记录运行中 ACL 的数值更小：生物量 0.0069，产卵生物量 0.0079，补充量 -0.010，丰度 -0.00025（[rho_ACL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv)）。各轮和各模型同向的修订比其大小更重要；rho 本身说明不了原因，所以反复出现的同向修订需要检查输入、固定值和 F 结构（[判断拟合是否可用](diagnostics.html)）。
+两个模型使用相同的观测和三轮截短拟合。对于生物量、产卵生物量和总丰度，ACL 的 Mohn’s ρ 绝对值较小，其 ρ 依次为 0.0069、0.0079 和 −0.00025。补充量的 ρ 在 ACL 中为 −0.0104，在 ALSCL 中为 +0.0018，平均修订方向相反，ACL 的绝对值较大。可在 `rho_by_peel` 中查看每一轮末期修订的方向和幅度。[ACL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv) · [ALSCL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)。
 
 <h2 id="save">3. 保存记录</h2>
 

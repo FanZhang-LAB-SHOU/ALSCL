@@ -58,8 +58,8 @@ plot_deviance(
 
 \item{facet_scales}{Scales for facet wrap. Default is "free".}
 
-\item{log}{Logical. TRUE plots log process deviations; FALSE plots their
-exponentiated multiplicative factors. These are not likelihood deviances.}
+\item{log}{Logical. TRUE plots log process deviations; FALSE plots the corresponding
+ratios to the process median, obtained by exponentiating the deviations.}
 
 \item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.}
 
