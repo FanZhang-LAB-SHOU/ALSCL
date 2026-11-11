@@ -56,7 +56,7 @@ The heatmap shows the log10 survey index by year and length bin, with `pa$len_mi
 
 ![Full flatfish simulation: survey numbers by length and year](../assets/manual/figures/cases/flatfish_data.png)
 
-Bands moving through the length bins from year to year are cohorts growing through the survey. The index is small below 10 cm, where catchability is under 0.1, and largest at 15-30 cm; a change in catchability changes this surface while the population stays the same.
+The figure shows how the survey index varies across lengths and years. Moving bands can reflect cohort growth, but several ages can contribute to one length bin; use the simulated age-specific states to track a cohort. The index is small below 10 cm, where catchability is under 0.1, and largest at 15-30 cm. Changing survey catchability changes the expected indices for a given population state.
 
 ![Generating growth curve, maturity and survey catchability](../assets/manual/figures/cases/flatfish_biology.png)
 

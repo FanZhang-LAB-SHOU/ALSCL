@@ -73,7 +73,7 @@ chapters=[
 ('15-Reproducibility','复现与故障处理 · Reproducibility and troubleshooting',no_title(read('ADVANCED_WORKFLOWS.md'))),
 ('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md'))),
 ('17-Model-Validation','模型模拟与预测验证 · Model simulation and prediction checks',no_title(read('MODEL_VALIDATION.md'))),
-('18-Worked-Cases','工作案例 · Worked cases',no_title(read('CASES.md')))]
+('18-Worked-Cases','应用案例 · Worked cases',no_title(read('CASES.md')))]
 # Internal anchor links inherited from a source refer to that source if not on this chapter.
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)

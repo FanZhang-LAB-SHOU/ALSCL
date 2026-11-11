@@ -53,7 +53,7 @@ Fractional years are allowed for subannual observations.}
 \item{M}{Numeric. Natural mortality per model time step (default 0.2).}
 
 \item{init_Z}{Numeric. Total mortality per model time step used to construct
-the initial equilibrium age distribution (default 0.5).}
+the initial age distribution (default 0.5).}
 
 \item{vbk}{Numeric. Von Bertalanffy k per year (default 0.2).}
 

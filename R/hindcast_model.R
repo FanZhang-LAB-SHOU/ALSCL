@@ -98,8 +98,9 @@
 #' @param x An input bundle accepted by run_acl() or run_alscl().
 #' @param model Model to fit, "acl" (default) or "alscl".
 #' @param horizon Positive integer; number of future model periods predicted
-#'   from each training origin. A period is a quarter for quarterly inputs.
-#' @param nfolds Positive integer; number of most recent eligible training
+#'   from each forecast origin (the last training time step). A period is a
+#'   quarter for quarterly inputs.
+#' @param nfolds Positive integer; number of most recent eligible forecast
 #'   origins. Each origin must retain min_train periods and horizon future periods.
 #' @param min_train Minimum training periods, at least two; default three.
 #' @param ncores Maximum independent socket workers for training folds.
@@ -118,7 +119,7 @@
 #'   folds, with an inclusion flag and status. n_positive counts positive held-out
 #'   observations, n_prediction those with valid model predictions, n the common
 #'   model/naive scoring cells, and n_scaled the cells used for log-scale MASE.
-#' @details Each fold uses only data through its training origin. No full-data
+#' @details Each fold uses only data through its forecast origin. No full-data
 #'   fit is used to initialize the folds. Recruitment and F deviations follow
 #'   the fitted AR(1) conditional means on the log-process scale: the last fitted
 #'   deviation times phi to the power of the forecast horizon. Projections retain
@@ -179,7 +180,7 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
     stop("Requested ", nfolds, " folds, but only ", max(0L, available),
       " origins retain min_train periods and the complete horizon.", call. = FALSE)
   # Validate full-grid maps before clipping, then reject constraints whose
-  # extension beyond each training origin has not been specified.
+  # extension beyond each forecast origin has not been specified.
   mapping <- .acl_retro_map(args, 0L, model)
   for (nm in c("dev_log_R", "dev_log_F")) {
     value <- mapping[[nm]]

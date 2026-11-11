@@ -4,20 +4,20 @@ On this page you see every scalar parameter of both models, its transformation t
 
 | ACL key | ALSCL key | Transform to natural scale | Meaning |
 |---|---|---|---|
-| `log_init_Z` | `log_init_Z` | exp |Initial equilibrium total mortality|
-| `log_std_log_N0` | `log_sigma_log_N0` | exp |Initial log-number deviation SD|
-| `mean_log_R` | `mean_log_R` | exp |Location of the log recruitment process|
-| `log_std_log_R` | `log_sigma_log_R` | exp |Log recruitment process SD scale|
+| `log_init_Z` | `log_init_Z` | exp |Total mortality parameter used to construct the initial age structure|
+| `log_std_log_N0` | `log_sigma_log_N0` | exp |SD of independent log-number increments between initial age classes|
+| `mean_log_R` | `mean_log_R` | exp |Log recruitment process mean; exp gives its natural-scale median|
+| `log_std_log_R` | `log_sigma_log_R` | exp |Marginal SD of log recruitment deviations|
 | `logit_log_R` | `logit_log_R` | plogis |Recruitment correlation restricted to (0,1)|
-| `mean_log_F` | `mean_log_F` | exp |Location of the log F process|
-| `log_std_log_F` | `log_sigma_log_F` | exp |F deviation SD scale|
+| `mean_log_F` | `mean_log_F` | exp |Log F process mean; exp gives its natural-scale median|
+| `log_std_log_F` | `log_sigma_log_F` | exp |Marginal SD of log F deviations|
 | `logit_log_F_y` | `logit_log_F_y` | plogis |Temporal F correlation|
 | `logit_log_F_a` | `logit_log_F_l` | plogis |Age/length F correlation|
 | `log_vbk` | `log_vbk` | exp |Annual VB k|
 | `log_Linf` | `log_Linf` | exp |Asymptotic length|
 | `t0` | `log_t0` |Identity (ACL); exp (ALSCL)|VB t0; ALSCL restricts it to positive values|
-| `log_cv_len` | `log_cv_len` | exp |Length-at-age CV|
-| none | `log_cv_grow` | exp |Growth-increment CV|
+| `log_cv_len` | `log_cv_len` | exp |Coefficient of variation of length among fish of the same age|
+| none | `log_cv_grow` | exp |Coefficient of variation of growth increments|
 | `log_std_index` | `log_sigma_index` | exp |Log survey observation SD|
 
 <h2 id="inspect">1. Inspect a preset</h2>

@@ -47,7 +47,7 @@ Use these task-based entry points without reading every chapter in numerical ord
 | 15 | [复现与故障处理 · Reproducibility and troubleshooting](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility) |
 | 16 | [评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) |
 | 17 | [模型模拟与预测验证 · Model simulation and prediction checks](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/17-Model-Validation) |
-| 18 | [工作案例 · Worked cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/18-Worked-Cases) |
+| 18 | [应用案例 · Worked cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/18-Worked-Cases) |
 
 ## 相关链接 · Links
 

@@ -57,13 +57,13 @@ all.equal(refit$report$SSB, saved$report$SSB)
 
 `read_assessment()` returns the saved fit, which every plot and extraction function accepts; it has no live TMB object, because `a$obj` holds pointers into the compiled model of the session that made the fit. `plot_compare_selectivity()` recovers fixed survey catchability from the saved inputs, so the original and saved curves coincide without refitting. `refit_model()` fits the recipe again and returns a fit with a live object; named arguments override the recipe, and a list such as `map` replaces the stored list.
 
-在同一台电脑上使用相同版本的 ALSCL、TMB 和 R 时，标量参数逐位相同，`all.equal()` 返回 `TRUE`。不同机器或不同软件包版本之间末位数字的差异来自浮点运算和优化器的停止规则；大到足以改变结论的差异，说明数据、设置或软件包版本不同。
+应显式比较重新拟合后的估计值。`all.equal()` 检查数值是否在容差内一致，返回 TRUE 不证明逐位相同。`identical()` 可作包括属性在内的对象精确比较。匹配软件包版本有助于复现，但源码修订、编译器和数值库、拟合设置及数值敏感性也可能影响结果。如果差异影响结论，先比较这些记录、目标函数值、梯度和其他初值的结果，再解释变化。
 
-On the same computer with the same versions of ALSCL, TMB and R, the scalar parameters agree to the last digit and `all.equal()` returns `TRUE`. Differences in the last digits between machines or package versions come from floating-point arithmetic and the optimizer's stopping rule; a difference large enough to change a conclusion means the data, settings or package version differ.
+Compare refitted estimates explicitly. `all.equal()` checks agreement within a numerical tolerance; TRUE does not establish bitwise identity. `identical()` provides an exact object comparison, including attributes. Matching package versions helps reproducibility, but source revisions, compiler and numerical libraries, fitting settings and numerical sensitivity can also matter. If differences affect a conclusion, compare those records, objectives, gradients and alternative starts before interpreting the change.
 
-`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
+`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；重建原运行环境时，应结合 `saved$recipe$versions`、实现记录和会话信息。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
 
-`refit_model()` warns when the ALSCL, TMB, Matrix or RcppEigen version or the model source differs from the recipe; to reproduce exactly, install the versions in `saved$recipe$versions`. `A complete fit recipe is required` means the fit has no recipe; save it again with `x` as in step 1.
+`refit_model()` warns when the ALSCL, TMB, Matrix or RcppEigen version or the model source differs from the recipe; use `saved$recipe$versions` together with the implementation and session records to reconstruct the original environment. `A complete fit recipe is required` means the fit has no recipe; save it again with `x` as in step 1.
 
 <a id="reproducibility-parallel"></a>
 

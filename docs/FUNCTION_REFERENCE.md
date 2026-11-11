@@ -390,6 +390,14 @@ diagnose_model (data.CatL, model_result)
 
 A data frame with Metric and Value, combining in-sample fit metrics with optimizer, gradient, Hessian and boundary diagnostics. When diagnostics are available, it also includes the numerical screen, covariance condition number and count of highly correlated parameter pairs. Undefined or unavailable metrics are NA; key diagnostics are also printed.
 
+这些样本内拟合指标仅使用有限正调查观测。拟合值为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，只应比较同一观测下采用相容似然的拟合。分别检查优化器原始收敛码、梯度、Hessian 和边界。对未参与拟合的观测检验预测时，使用 hindcast_model()。
+
+Only finite positive survey observations enter these in-sample fit metrics. Fitted values are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible likelihoods fitted to the same observations. Inspect the raw optimizer code, gradient, Hessian and boundaries separately. Use hindcast_model() to evaluate predictions for observations excluded from fitting.
+
+`numerical_ok` 按梯度、Hessian、协方差和边界准则计算。优化器原始收敛码及强参数相关单独报告；`high_correlations` 使用相关系数绝对值至少 0.95 的阈值。
+
+The numerical screen uses gradient, Hessian, covariance and boundary criteria. The raw optimizer code and strong parameter correlations are reported separately; `high_correlations` uses an absolute-correlation threshold of at least 0.95.
+
 **示例 / Example:**
 
 ```r
@@ -418,6 +426,10 @@ diagnostic_metrics (data.CatL, model_result)
 **返回 / Returns:** 包含 Metric（指标名称）和 Value（数值）的样本内拟合指标数据框；未定义的指标为 NA。
 
 A data frame of in-sample fit metrics with columns Metric and Value. Undefined metrics are NA.
+
+这些样本内拟合指标仅使用有限正调查观测。拟合值为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，只应比较同一观测下采用相容似然的拟合。分别检查优化器原始收敛码、梯度、Hessian 和边界。对未参与拟合的观测检验预测时，使用 hindcast_model()。
+
+Only finite positive survey observations enter these in-sample fit metrics. Fitted values are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible likelihoods fitted to the same observations. Inspect the raw optimizer code, gradient, Hessian and boundaries separately. Use hindcast_model() to evaluate predictions for observations excluded from fitting.
 
 **示例 / Example:**
 
@@ -482,7 +494,7 @@ initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
 | `first.year` | `NULL` | 模拟返回观测的起始年份标签。 | Numeric. First retained observation year (default 2020); fractional years are allowed. |
 | `nage` | `NULL` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | Integer. Number of age classes including plus-group (default 15). |
 | `M` | `NULL` | 每个模型时间步的自然死亡瞬时率。 | Numeric. Natural mortality rate (default 0.2). |
-| `init_Z` | `NULL` | 构造初始平衡年龄结构的总死亡率。 | Numeric. Initial total mortality for equilibrium (default 0.5). |
+| `init_Z` | `NULL` | 用于构造初始年龄结构的每时间步总死亡率参数。 | Numeric. Total mortality per model time step used to construct the initial age distribution (default 0.5). |
 | `vbk` | `NULL` | VB 生长系数，以年为时间单位。 | Numeric. Von Bertalanffy k (default 0.2). |
 | `Linf` | `NULL` | VB 渐近体长，与输入体长单位一致。 | Numeric. Asymptotic length (default 60). |
 | `t0` | `NULL` | VB 理论零体长年龄，单位为年。 | Numeric. Von Bertalanffy t0 (default 1/60). |
@@ -2473,20 +2485,20 @@ The keys below apply to starting values and bounds. Transformations map optimize
 
 | ACL 键名 / Key | ALSCL 键名 / Key | 变换 / Transform | 含义 / Meaning |
 |---|---|---|---|
-| `log_init_Z` | `log_init_Z` | exp | 初始平衡总死亡率 / Initial equilibrium total mortality |
-| `log_std_log_N0` | `log_sigma_log_N0` | exp | 初始年龄尾数偏差 SD / Initial log-number deviation SD |
-| `mean_log_R` | `mean_log_R` | exp | 对数补充过程的位置参数 / Location of the log recruitment process |
-| `log_std_log_R` | `log_sigma_log_R` | exp | 对数补充过程 SD 缩放 / Log recruitment process SD scale |
+| `log_init_Z` | `log_init_Z` | exp | 用于构造初始年龄结构的总死亡率参数 / Total mortality parameter used to construct the initial age structure |
+| `log_std_log_N0` | `log_sigma_log_N0` | exp | 初始年龄结构中逐龄独立对数增量的标准差 / SD of independent log-number increments between initial age classes |
+| `mean_log_R` | `mean_log_R` | exp | 对数补充量过程的均值；exp 后为自然尺度的中位数 / Log recruitment process mean; exp gives its natural-scale median |
+| `log_std_log_R` | `log_sigma_log_R` | exp | 对数补充量偏差的边际标准差 / Marginal SD of log recruitment deviations |
 | `logit_log_R` | `logit_log_R` | plogis | 补充 AR(1) 相关，限定 (0,1) / Recruitment correlation restricted to (0,1) |
-| `mean_log_F` | `mean_log_F` | exp | 对数 F 过程的位置参数 / Location of the log F process |
-| `log_std_log_F` | `log_sigma_log_F` | exp | F 偏差 SD 缩放 / F deviation SD scale |
+| `mean_log_F` | `mean_log_F` | exp | 对数 F 过程的均值；exp 后为自然尺度的中位数 / Log F process mean; exp gives its natural-scale median |
+| `log_std_log_F` | `log_sigma_log_F` | exp | 对数 F 偏差的边际标准差 / Marginal SD of log F deviations |
 | `logit_log_F_y` | `logit_log_F_y` | plogis | F 的时间相关 / Temporal F correlation |
 | `logit_log_F_a` | `logit_log_F_l` | plogis | F 的年龄/体长相关 / Age/length F correlation |
 | `log_vbk` | `log_vbk` | exp | VB k，单位为每年 / Annual VB k |
 | `log_Linf` | `log_Linf` | exp | 渐近体长 / Asymptotic length |
 | `t0` | `log_t0` | ACL 原值；ALSCL exp / Identity vs exp | VB t0；ALSCL 本版限定正值 / ALSCL restricts t0 to positive values |
-| `log_cv_len` | `log_cv_len` | exp | 年龄体长 CV / Length-at-age CV |
-| — | `log_cv_grow` | exp | 增长增量 CV / Growth-increment CV |
+| `log_cv_len` | `log_cv_len` | exp | 同龄个体体长的变异系数 / Coefficient of variation of length among fish of the same age |
+| — | `log_cv_grow` | exp | 生长增量的变异系数 / Coefficient of variation of growth increments |
 | `log_std_index` | `log_sigma_index` | exp | 对数调查观测 SD / Log survey observation SD |
 
 `exp(mean_log_R)` 和 `exp(mean_log_F)` 是对数位置的指数转换；有随机偏差时不能直接称作无条件算术平均数。两个模板当前都不支持负的 AR(1) 相关。SD 在相关过程中的具体尺度见指南原理部分。
@@ -3224,7 +3236,7 @@ hindcast_model (x, model = c("acl", "alscl"), horizon = 1, nfolds = 3, min_train
 | `x` | `必填 / required` | 与核心拟合相同的输入列表；起点和假设不得用留出数据调参。 | The same input bundle used for fitting; choose starts and assumptions without tuning to held-out observations. |
 | `model` | `c("acl", "alscl")` | 选择 ACL 或 ALSCL。 | Choose ACL or ALSCL. |
 | `horizon` | `1` | 正整数预测期距，单位为模型时间步。 | Positive integer forecast horizon in model time steps. |
-| `nfolds` | `3` | 最后若干合格训练起点的数量；不足时明确报错。 | Number of final eligible training origins; unavailable requested folds cause an error. |
+| `nfolds` | `3` | 最后若干合格预测起点的数量；每个起点是该次训练数据的末期，不足时明确报错。 | Number of final eligible forecast origins (last training time steps); unavailable requested folds cause an error. |
 | `min_train` | `3` | 最少训练时期数，至少 2。 | Minimum training periods, at least two. |
 | `ncores` | `1` | 并行折的最大 socket 工作进程数；每折内部单进程。 | Maximum socket workers across folds; each inner fit uses one worker. |
 | `nstarts` | `NULL` | 每折独立初值数；NULL 保留列表明确设置，否则 1。 | Independent starts per fold; NULL preserves an explicit bundle setting, otherwise one. |
@@ -3236,9 +3248,9 @@ hindcast_model (x, model = c("acl", "alscl"), horizon = 1, nfolds = 3, min_train
 
 predictions is a length/time/fold table with observed, model and persistence predictions on the log scale, errors, scaling denominators and inclusion status. scores reports paired log RMSE/MAE, log MASE and counts by horizon. diagnostics, recipes, settings, start_diagnostics and process_paths retain fit status, failures, warnings and reproduction details; fits are optional.
 
-使用至少 min_train 个训练期且能留出完整 horizon 的最后若干起点。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组连续训练对数差缩放，零／未知分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。
+使用最后若干合格预测起点，每个起点是该次训练数据的末期，且须保留至少 min_train 个训练时间步及完整 horizon。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组训练期相邻时间步的绝对对数差缩放，只使用两端观测均为正值的配对，不跨缺失时段。零或未定义的分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。
 
-Uses the last eligible origins with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by consecutive training log changes within each length. Zero/undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.
+Uses the last eligible forecast origins, each the final time step of its training dataset, with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by absolute log changes between adjacent training time steps within each length bin, using only pairs with two positive observations. Gaps are retained. Zero or undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.
 
 **示例 / Example:**
 

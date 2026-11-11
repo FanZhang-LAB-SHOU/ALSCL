@@ -26,14 +26,14 @@ a$diagnostics$numerical_ok
 a$diagnostics$issues
 ```
 
-Read the numerical checks before any estimate. `diagnose_model()` prints the optimizer convergence code (0 means it finished normally), the maximum absolute gradient at the solution (below 0.001 at a minimum), whether the Hessian is positive definite (needed for standard errors), whether a parameter sits on a bound, and whether a variance or correlation was estimated at its natural limit. The printed line `Numerical checks` summarizes them, the same value as `a$diagnostics$numerical_ok`; `a$diagnostics$issues` names any failed check.
+Read the numerical checks before interpreting estimates. `diagnose_model()` prints the raw optimizer convergence code (0 means normal termination), the maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. `Numerical checks`, also stored as `a$diagnostics$numerical_ok`, requires a gradient below 0.001, a positive-definite Hessian and covariance matrix, and no flagged parameter boundaries. This numerical screen does not include the raw optimizer code or strong parameter correlations; inspect those separately in `a$diagnostics$issues`. Passing the screen supports further examination of the fit but does not establish a unique or global optimum.
 
-| Failed check | Usual cause | What to try |
+| Failed check | Possible causes | What to try |
 |---|---|---|
 | Convergence code is not 0, or the gradient is large | The optimizer stopped early or the surface is flat | Run more starts, `run_acl(x, nstarts = 4, ncores = 2)`, and compare their objectives in `a$start_diagnostics` |
-| Hessian not positive definite | A parameter is not informed by the data | Fix that parameter with `map` or share F across groups with `F_structure = "year"` ([Fitting controls](fitting-controls.html)) |
-| Parameter on a bound | A bound or starting value is wrong for this stock | Inspect starts and bounds with `inspect_parameters(x, "acl")` and adjust them |
-| Natural-scale boundary | A standard deviation near 0 or a correlation near 1 | Fix the parameter at a supported value, or simplify the F structure |
+| Hessian not positive definite | The fit is away from a minimum, parameter scales cause numerical difficulty, or some parameters are weakly identified | Check gradients, scales and additional starts; use profiles or sensitivity analyses before fixing parameters or simplifying F ([Fitting controls](fitting-controls.html)) |
+| Parameter on a bound | The constrained optimum is at a bound, or the fit has not reached a stable solution | Inspect the bound and its biological basis, try other starts, and examine a profile before changing it |
+| Natural-scale boundary | A standard deviation near 0 or a correlation near 0 or 1 | Fix the parameter at a supported value, or simplify the F structure |
 | Checks pass but residuals show patterns | The model misses a feature of the data | Continue with [Diagnostics](diagnostics.html) |
 
 <h2 id="estimates">3. Read the estimates</h2>
@@ -57,7 +57,7 @@ plot_CatL(a, facet_by = "year", facet_ncol = 5)
 plot_residuals(a, facet_by = "year", facet_ncol = 5)
 ```
 
-`plot_CatL()` shows the observed survey index (points) and the fitted index (line) across length bins, one panel per year. `plot_residuals()` shows the log residuals, observed minus fitted on the log scale, for the same panels. A usable fit has residuals scattered around zero in every panel. A run of residuals with the same sign across neighbouring lengths in one year, or across years in one length bin, means the model misses a feature of the data, such as a cohort passing through the survey or a selectivity that differs from the assumed one; [Diagnostics](diagnostics.html) shows how to examine such patterns.
+`plot_CatL()` shows the observed and fitted survey indices across length bins, one panel per year. `plot_residuals()` shows observed minus fitted values on the log scale for those panels. Look for residuals centred near zero and for persistent signs across lengths or time. Such patterns can motivate checks of growth, cohort dynamics or survey catchability, but do not identify a unique cause; [Diagnostics](diagnostics.html) explains how to investigate them.
 
 <h2 id="compare">5. Compare ACL and ALSCL</h2>
 
@@ -70,9 +70,9 @@ comparison$fit_diagnostics
 
 ![ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
-The figure shows both models' total biomass, spawning biomass and recruitment with intervals. Similar trajectories mean the two population structures agree on the trend; a persistent scale difference usually comes from how each model converts between age and length.
+The figure shows both models' total biomass, spawning biomass and recruitment with intervals. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale calls for closer comparison of growth, mortality and age-length conversion assumptions.
 
-`compare_models()` first verifies that both fits used the same observations, then prints AIC, BIC and fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible) and any `issues`. A lower AIC supports a model statistically on these data; whether its assumptions suit the stock is a separate, biological decision.
+`compare_models()` first verifies that both fits used the same observations, then prints AIC, BIC and fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible) and any `issues`. AIC balances likelihood fit against parameter count; among compatible fits to the same observations, a lower value supports that candidate under this criterion. Whether its assumptions suit the stock is a separate, biological decision.
 
 <h2 id="save">6. Save the fit</h2>
 

@@ -37,9 +37,9 @@ all.equal(refit$report$SSB, saved$report$SSB)
 
 `read_assessment()` 返回保存的拟合结果，所有绘图和提取函数都能使用它；它没有可执行的 TMB 对象，因为 `a$obj` 保存的是指向拟合时所在会话中编译模型的指针。`plot_compare_selectivity()` 从保存的输入恢复固定调查可捕性，原结果与保存结果的曲线重合，无须重新拟合。`refit_model()` 使用保存的输入和设置重新拟合，返回带有可执行对象的拟合结果；传入的命名参数会覆盖对应的设置，`map` 这类列表会整体替换保存的列表。
 
-在同一台电脑上使用相同版本的 ALSCL、TMB 和 R 时，标量参数逐位相同，`all.equal()` 返回 `TRUE`。不同机器或不同软件包版本之间末位数字的差异来自浮点运算和优化器的停止规则；大到足以改变结论的差异，说明数据、设置或软件包版本不同。
+应显式比较重新拟合后的估计值。`all.equal()` 检查数值是否在容差内一致，返回 TRUE 不证明逐位相同。`identical()` 可作包括属性在内的对象精确比较。匹配软件包版本有助于复现，但源码修订、编译器和数值库、拟合设置及数值敏感性也可能影响结果。如果差异影响结论，先比较这些记录、目标函数值、梯度和其他初值的结果，再解释变化。
 
-`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；要逐位复现，请安装 `saved$recipe$versions` 中的版本。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
+`refit_model()` 发现 ALSCL、TMB、Matrix 或 RcppEigen 的版本或模型源文件与保存的记录不同时会给出警告；重建原运行环境时，应结合 `saved$recipe$versions`、实现记录和会话信息。`A complete fit recipe is required` 表示拟合结果缺少原始输入和设置；按第 1 步用 `x` 重新保存。
 
 <h2 id="parallel">3. 并行运行拟合</h2>
 

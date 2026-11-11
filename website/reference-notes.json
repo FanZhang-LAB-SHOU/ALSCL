@@ -1,8 +1,8 @@
 {
   "run_acl": {
     "description": {
-      "en": "Fit the age-structured survey catch-at-length model using TMB and maximum marginal likelihood. Supply aligned survey, mean-weight and maturity tables.",
-      "zh": "使用 TMB 和最大边际似然拟合年龄结构调查体长模型。输入调查数量指数、平均个体重量和成熟比例三张对齐的数据表。"
+      "en": "Fit the age-structured catch-at-length model (ACL) to survey length data using TMB and maximum marginal likelihood. Supply aligned survey-number indices, mean individual weights and maturity proportions.",
+      "zh": "使用 TMB 和最大边际似然，将年龄结构 catch-at-length 模型（ACL）拟合到调查体长数据。输入调查数量指数、平均个体体重和成熟比例三张对齐的表。"
     },
     "value": {
       "en": "A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.",
@@ -21,8 +21,8 @@
   },
   "run_alscl": {
     "description": {
-      "en": "Fit the joint age–length survey catch-at-length model using TMB and maximum marginal likelihood. Supply aligned survey, mean-weight and maturity tables.",
-      "zh": "使用 TMB 和最大边际似然拟合年龄—体长联合结构调查体长模型。输入调查数量指数、平均个体重量和成熟比例三张对齐的数据表。"
+      "en": "Fit the age- and length-structured statistical catch-at-length model (ALSCL) to survey length data using TMB and maximum marginal likelihood. Supply aligned survey-number indices, mean individual weights and maturity proportions.",
+      "zh": "使用 TMB 和最大边际似然，将年龄与体长联合结构统计 catch-at-length 模型（ALSCL）拟合到调查体长数据。输入调查数量指数、平均个体体重和成熟比例三张对齐的表。"
     },
     "value": {
       "en": "A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.",
@@ -59,8 +59,8 @@
   },
   "alscl_speed_info": {
     "description": {
-      "en": "Show the current standard-error cores, execution method, reason and AD library. Cross-version numerical identity is not guaranteed because adds optimizer refinement.",
-      "zh": "显示标准误核数、执行方式、原因及 AD 库。新增优化收尾，不保证跨版本逐位一致。"
+      "en": "Show the standard-error cores, execution method, reason and AD library. The optimizer finishing step can affect numerical agreement across package versions.",
+      "zh": "显示标准误核数、执行方式、原因及 AD 库。优化收尾步骤可能影响不同包版本之间的数值一致性。"
     },
     "value": {
       "en": "A data frame with class alscl_speed_info and columns item (setting or information item) and value. It reports standard-error workers, computation method and reason, the automatic-differentiation framework, the TMB version and the cross-version numerical-identity notice.",
@@ -273,8 +273,8 @@
       "zh": "包含 Metric（指标名称）和 Value（数值）的数据框，合并样本内拟合误差与优化、梯度、Hessian 和边界诊断；已有 diagnostics 时还包括数值筛查、协方差条件数及高相关参数对数量。未定义或不可用的指标为 NA，同时在控制台打印主要诊断。"
     },
     "details": {
-      "en": "Only finite positive survey observations enter prediction metrics. Predictions are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible fits to the same observations. Inspect gradient, Hessian and boundaries separately.",
-      "zh": "预测误差指标仅使用有限且大于零的调查观测。预测为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，仅应比较相同观测下相容的拟合。梯度、Hessian 和边界需分别检查。"
+      "en": "Only finite positive survey observations enter these in-sample fit metrics. Fitted values are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible likelihoods fitted to the same observations. Inspect the raw optimizer code, gradient, Hessian and boundaries separately. Use hindcast_model() to evaluate predictions for observations excluded from fitting.",
+      "zh": "这些样本内拟合指标仅使用有限正调查观测。拟合值为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，只应比较同一观测下采用相容似然的拟合。分别检查优化器原始收敛码、梯度、Hessian 和边界。对未参与拟合的观测检验预测时，使用 hindcast_model()。"
     },
     "articles": [
       "diagnostics",
@@ -283,16 +283,16 @@
   },
   "diagnostic_metrics": {
     "description": {
-      "en": "Summarize survey fit with prediction errors and information criteria.",
-      "zh": "汇总调查拟合的预测误差和信息准则。"
+      "en": "Summarize survey fit with in-sample errors and information criteria.",
+      "zh": "汇总调查拟合的样本内误差和信息准则。"
     },
     "value": {
       "en": "A data frame of in-sample fit metrics with columns Metric and Value. Undefined metrics are NA.",
       "zh": "包含 Metric（指标名称）和 Value（数值）的样本内拟合指标数据框；未定义的指标为 NA。"
     },
     "details": {
-      "en": "Only finite positive survey observations enter prediction metrics. Predictions are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible fits to the same observations. Inspect gradient, Hessian and boundaries separately.",
-      "zh": "预测误差指标仅使用有限且大于零的调查观测。预测为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，仅应比较相同观测下相容的拟合。梯度、Hessian 和边界需分别检查。"
+      "en": "Only finite positive survey observations enter these in-sample fit metrics. Fitted values are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible likelihoods fitted to the same observations. Inspect the raw optimizer code, gradient, Hessian and boundaries separately. Use hindcast_model() to evaluate predictions for observations excluded from fitting.",
+      "zh": "这些样本内拟合指标仅使用有限正调查观测。拟合值为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，只应比较同一观测下采用相容似然的拟合。分别检查优化器原始收敛码、梯度、Hessian 和边界。对未参与拟合的观测检验预测时，使用 hindcast_model()。"
     },
     "articles": [
       "diagnostics",
@@ -1409,8 +1409,8 @@
       "zh": "predictions 按体长／时间／折列出观测、模型和朴素预测的对数预测、误差、尺度分母及纳入状态。scores 按期距报告配对对数 RMSE／MAE、对数 MASE 与计数。diagnostics、recipes、settings、start_diagnostics、process_paths 保留状态、失败、警告和复现细节；可选保存 fits。"
     },
     "details": {
-      "en": "Uses the last eligible origins with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by consecutive training log changes within each length. Zero/undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.",
-      "zh": "使用至少 min_train 个训练期且能留出完整 horizon 的最后若干起点。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组连续训练对数差缩放，零／未知分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。"
+      "en": "Uses the last eligible forecast origins, each the final time step of its training dataset, with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by absolute log changes between adjacent training time steps within each length bin, using only pairs with two positive observations. Gaps are retained. Zero or undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.",
+      "zh": "使用最后若干合格预测起点，每个起点是该次训练数据的末期，且须保留至少 min_train 个训练时间步及完整 horizon。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组训练期相邻时间步的绝对对数差缩放，只使用两端观测均为正值的配对，不跨缺失时段。零或未定义的分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。"
     },
     "articles": [
       "assessment-workflows",

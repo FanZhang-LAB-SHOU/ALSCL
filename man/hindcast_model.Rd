@@ -23,9 +23,10 @@ hindcast_model(
 \item{model}{Model to fit, "acl" (default) or "alscl".}
 
 \item{horizon}{Positive integer; number of future model periods predicted
-from each training origin. A period is a quarter for quarterly inputs.}
+from each forecast origin (the last training time step). A period is a
+quarter for quarterly inputs.}
 
-\item{nfolds}{Positive integer; number of most recent eligible training
+\item{nfolds}{Positive integer; number of most recent eligible forecast
 origins. Each origin must retain min_train periods and horizon future periods.}
 
 \item{min_train}{Minimum training periods, at least two; default three.}
@@ -59,7 +60,7 @@ their observations in fitting. This evaluates conditional point predictions
 of log survey indices, separately from retrospective stability.
 }
 \details{
-Each fold uses only data through its training origin. No full-data
+Each fold uses only data through its forecast origin. No full-data
 fit is used to initialize the folds. Recruitment and F deviations follow
 the fitted AR(1) conditional means on the log-process scale: the last fitted
 deviation times phi to the power of the forecast horizon. Projections retain

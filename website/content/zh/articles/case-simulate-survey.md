@@ -56,7 +56,7 @@ ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 16
 
 ![完整 flatfish 模拟：体长与年份上的调查数量](../assets/manual/figures/cases/flatfish_data.png)
 
-逐年穿过各体长组的条带是在调查中生长的世代。指数在 10 cm 以下很小（那里的可捕性低于 0.1），在 15-30 cm 最大；可捕性的变化会改变这个观测面，而种群本身不变。
+图中显示调查指数随体长和年份的分布。移动的条带可能反映世代生长，但一个体长组可包含多个年龄；追踪某个世代时应查看模拟的年龄别状态。指数在 10 cm 以下很小（那里的可捕性低于 0.1），在 15-30 cm 最大。在同一种群状态下，改变调查可捕性会改变期望调查指数。
 
 ![生成模型的生长曲线、成熟比例与调查可捕性](../assets/manual/figures/cases/flatfish_biology.png)
 

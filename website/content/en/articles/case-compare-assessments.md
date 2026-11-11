@@ -52,7 +52,7 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![Conditional population estimates from the synthetic YTF example](../assets/manual/figures/ytf/compare_ts.png)
 
-Look for differences in timing, trend and scale; `se = TRUE` adds the intervals from the standard errors. Overlapping intervals mean close conditional estimates on this dataset; one dataset gives no general ranking of the two structures.
+Compare the timing, trends and magnitudes of the point estimates, then inspect their uncertainty; `se = TRUE` adds each fit's approximate intervals. Overlap alone does not show that point estimates are close: wide intervals can overlap despite large differences. For a quantitative comparison, report differences or ratios at matching times. Inference about those differences requires their joint uncertainty because the fits use the same data. This example describes one dataset.
 
 <h2 id="mortality">5. Compare fishing mortality</h2>
 

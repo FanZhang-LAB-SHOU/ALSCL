@@ -80,12 +80,12 @@ alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
-`hindcast_model()` 就是预测检验：它用截至某个训练起点的时间步拟合每个模型，预测随后 `horizon` 步的调查指数，起点取最后 `nfolds` 个合格起点，每次拟合都从 `x` 和保存的配置重新开始。本例中每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
+`hindcast_model()` 在每个预测起点重新拟合模型；预测起点是该次训练数据的最后一个时间步，模型用截至该期的数据拟合，再预测随后 `horizon` 步的调查指数。函数使用最后 `nfolds` 个合格起点，每次都从 `x` 和保存的配置重新拟合。本例中，每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
 
 | 设置 | 在本年度示例中的含义 |
 |---|---|
 | `horizon = 1` | 向前预测一个时间步 |
-| `nfolds = 2` | 使用最后两个合格的训练起点 |
+| `nfolds = 2` | 使用最后两个合格的预测起点 |
 | `min_train = 8` | 要求至少八个训练时间步 |
 | `ncores = 2` | 最多并行运行两个训练折；一折内的初值依次运行 |
 
@@ -106,7 +106,7 @@ head(alscl_validation$predictions)
 | `naive_log_RMSE`、`naive_log_MAE` | 同一批单元上朴素预测的误差 |
 | `log_MASE`、`naive_log_MASE`、`n_scaled` | 缩放后的绝对误差，以及训练期尺度可用的单元数 |
 
-评分使用自然对数调查指数；留出观测中的零值和缺失值被排除，模型和朴素预测的误差使用相同的单元。MASE 把每个绝对对数误差除以该体长组训练期内相邻正观测的平均绝对变化；没有这样一对观测的体长组没有缩放评分，所以读它之前先看 `n_scaled`。在记录运行中，两个模型对 2018-2019 年相同的 46 个正观测评分，四个训练拟合都通过检查（[hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)）：
+评分使用自然对数调查指数；留出观测中的零值和缺失值被排除，模型和朴素预测的误差使用相同的单元。MASE 把每个绝对对数误差除以该体长组训练期内相邻时间步的平均绝对对数指数变化，只使用两端观测均为正值的配对。保留原时间网格，不跨越零值或缺失时段配对。没有有效配对或缩放分母为零的体长组不计算缩放评分；解读前先查看 `n_scaled`。在记录运行中，两个模型对 2018-2019 年相同的 46 个正观测评分，四个训练拟合都通过检查（[hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)）：
 
 | 预测 | 评分观测数 | 对数 RMSE | 对数 MAE | 对数 MASE |
 |---|---:|---:|---:|---:|

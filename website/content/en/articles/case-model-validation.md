@@ -80,12 +80,12 @@ alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
-`hindcast_model()` is the hindcast validation: it fits each model on the time steps up to a training origin and predicts the survey index of the next `horizon` steps, from the last `nfolds` eligible origins, every fit starting afresh from `x` with the stored configuration. Here each model is fitted through 2017 to predict 2018 and through 2018 to predict 2019.
+`hindcast_model()` fits each model using data through a forecast origin, the last time step in that training dataset, then predicts the next `horizon` survey-index steps. It uses the last `nfolds` eligible origins, starting each fit afresh from `x` with the stored configuration. Here each model uses data through 2017 to predict 2018, and through 2018 to predict 2019.
 
 | Setting | Meaning in this annual example |
 |---|---|
 | `horizon = 1` | Predict one time step ahead |
-| `nfolds = 2` | Use the last two eligible training origins |
+| `nfolds = 2` | Use the last two eligible forecast origins |
 | `min_train = 8` | Require at least eight training time steps |
 | `ncores = 2` | Run at most two training folds in parallel; the starts inside a fold run one after another |
 
@@ -106,7 +106,7 @@ For each of the three length bins, the figure compares the withheld log survey i
 | `naive_log_RMSE`, `naive_log_MAE` | The persistence errors on the same cells |
 | `log_MASE`, `naive_log_MASE`, `n_scaled` | Scaled absolute errors and the number of cells with a usable training scale |
 
-Scores use natural-log survey indices; zero and missing withheld observations are excluded, and model and persistence errors use the same cells. For MASE each absolute log error is divided by the length bin's mean absolute change between consecutive positive training observations; a bin without such a pair gets no scaled score, so check `n_scaled` before reading it. In the recorded run both models scored the same 46 positive observations of 2018-2019 and all four training fits passed the checks ([hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)):
+Scores use natural-log survey indices; zero and missing withheld observations are excluded, and model and persistence errors use the same cells. For MASE, divide each absolute log error by the mean absolute log-index change between adjacent training time steps in that length bin, using pairs whose two observations are positive. The time grid is retained across missing or zero observations. Bins without a usable pair, or with a zero scaling denominator, receive no scaled score; check `n_scaled` before interpreting the result. In the recorded run both models scored the same 46 positive observations of 2018-2019 and all four training fits passed the checks ([hindcast-scores.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/hindcast-scores.csv)):
 
 | Prediction | Scored observations | Log RMSE | Log MAE | Log MASE |
 |---|---:|---:|---:|---:|

@@ -16,7 +16,7 @@
 #' @param nage Integer. Number of age classes including plus-group (default 15).
 #' @param M Numeric. Natural mortality per model time step (default 0.2).
 #' @param init_Z Numeric. Total mortality per model time step used to construct
-#'   the initial equilibrium age distribution (default 0.5).
+#'   the initial age distribution (default 0.5).
 #' @param vbk Numeric. Von Bertalanffy k per year (default 0.2).
 #' @param Linf Numeric. Asymptotic length (default 60).
 #' @param t0 Numeric. Von Bertalanffy t0 (default 1/60).

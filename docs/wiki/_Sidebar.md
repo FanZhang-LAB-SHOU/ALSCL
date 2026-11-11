@@ -19,6 +19,6 @@
 - [15 复现与故障处理 · Reproducibility and troubleshooting](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 - [16 评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows)
 - [17 模型模拟与预测验证 · Model simulation and prediction checks](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/17-Model-Validation)
-- [18 工作案例 · Worked cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/18-Worked-Cases)
+- [18 应用案例 · Worked cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/18-Worked-Cases)
 
 [代码与数据 · Code and data](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main)

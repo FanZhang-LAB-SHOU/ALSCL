@@ -34,7 +34,7 @@ alscl_speed_info()
 #>   TMB version:                       1.9.21 (checked)
 ```
 
-一次拟合分两部分。优化部分由 `nlminb()` 在固定效应上搜索，每次计算都对随机效应做一次内层牛顿优化（拉普拉斯近似），只在一个核上运行：每一步都依赖上一步，分到多个核会改变优化路径和结果。标准误随后由 `TMB::sdreport()` 计算：固定效应的 Hessian（每个固定效应两次梯度计算）和每个 ADREPORT 量的 delta 方法标准误（各年份、年龄与体长的补充量、丰度、生物量、产卵生物量、渔获量与捕捞死亡率；20 年 ALSCL 示例共 3,866 个量）。Hessian 的各列互不依赖，各 ADREPORT 量也互不依赖，因此都可以在多个核上计算，结果逐位相同。基准测试中，ALSCL 拟合 `YTF_example` 的 20 年数据时，速度改动之前优化约 88 秒，Hessian 11.4 秒，delta 方法 10.6 秒。
+一次拟合分两部分。优化部分由 `nlminb()` 在固定效应上搜索，每次计算都对随机效应做一次内层牛顿优化（拉普拉斯近似），在当前实现中使用一个核。下述速度设置并行计算后续的标准误；独立初值也可通过 `ncores` 并行运行。标准误随后由 `TMB::sdreport()` 计算：固定效应的 Hessian（每个固定效应两次梯度计算）和每个 ADREPORT 量的 delta 方法标准误（各年份、年龄与体长的补充量、丰度、生物量、产卵生物量、渔获量与捕捞死亡率；20 年 ALSCL 示例共 3,866 个量）。Hessian 各列和不同 ADREPORT 量的 delta 方法计算可分为独立任务。在相同拟合参数处，已测试的并行计算与顺序计算结果一致。基准测试中，ALSCL 拟合 `YTF_example` 的 20 年数据时，速度改动之前优化约 88 秒，Hessian 11.4 秒，delta 方法 10.6 秒。
 
 在可以安全分叉的环境（macOS 或 Linux 终端中的 R 或 `Rscript`，以及计算集群），ALSCL 用 `parallel::mclapply()` 启动 R 会话的副本。每个副本已经包含拟合好的模型，因此 Hessian 的各列和 delta 方法几乎零开销地分配出去：20 年 ALSCL 示例的标准误在 4 个核上用 9.0 秒，顺序计算需 23.4 秒。Windows 没有分叉；R 的文档（`?parallel::mclapply`）也不建议在图形界面（R.app、RGui、RStudio、Positron）中或搭配多线程库（如 Apple 的 Accelerate BLAS）时分叉。在这些会话中 ALSCL 改用 socket 进程，即新启动的 R 进程，它们接收数据并重建模型。新进程在第一次计算梯度之前必须重建 TMB 的导数计算带，20 年 ALSCL 示例中这一步在 CppAD 下需 14 秒（TMBad 下 42 秒），比整个 Hessian 还长。因此使用 socket 进程时，Hessian 在主会话中计算；delta 方法分给 socket 进程，它们只需要目标函数的梯度计算带（约 0.1 秒建好），并从主会话接收随机效应 Hessian；ALSCL 先在主会话中计算几个 ADREPORT 量以测出每个量的耗时，只有当剩余的量预计超过约 3 秒时才启动进程。因此小模型（如大多数 ACL 拟合）在主会话中计算标准误。20 年 ALSCL 示例中，delta 方法在 4 个 socket 进程上用 6.5 秒，顺序计算需 13.9 秒（其中启动进程 0.3 秒，在进程中重建模型 0.9 秒）。
 
@@ -46,7 +46,7 @@ alscl_speed_info()
 | 启动 socket 进程省不下时间（计算量小） | 在主会话中计算 |
 | 并行计算失败（例如进程启动失败） | 给出警告，然后顺序计算 `TMB::sdreport()`；结果不受影响 |
 
-并行代码与 `TMB::sdreport()` 执行完全相同的算术运算，每个量内部的运算顺序也相同；不同的只是各量的计算先后，而它们互不依赖。Hessian 复现了 `stats::optimHess()` 遍历参数的方式；存在随机效应时，每次梯度计算都从同一个起点开始内层优化。测试用 `identical()` 将结果的每个分量与 `TMB::sdreport()` 比较，覆盖 ACL 与 ALSCL、CppAD 与 TMBad、分叉进程与 socket 进程，并在 Linux、macOS 和 Windows 上通过。报告结果时，请与 `sessionInfo()` 一起记录 `alscl_speed_info()`；默认设置下，结果在任何核数和任一计算方式下都相同。
+并行实现对每项任务复现顺序计算的算术过程。Hessian 各列采用 `stats::optimHess()` 的参数扰动方式，每次梯度计算从同一点开始随机效应的内层优化。测试用 `identical()` 将结果与 `TMB::sdreport()` 比较，覆盖 CppAD 和 TMBad 下的 ACL 与 ALSCL。分叉测试在 macOS、Linux 上运行；socket 测试也在 Windows 上运行，Windows 跳过分叉测试。这些比较检查相同拟合参数和 AD 库下的标准误计算方法。报告结果时，请同时记录 `alscl_speed_info()` 和 `sessionInfo()`。
 
 <h2 id="cores">2. 选择核数</h2>
 
@@ -93,7 +93,7 @@ TMBad 适合探索性拟合、大量拟合（模拟研究、敏感性分析）�
 
 ![速度设置前后的拟合耗时](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
 
-该基准中速度改动前后的所有结果逐位相同；下图显示 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。基准测试在没有优化收尾步骤（`polish = TRUE`）的情况下进行，该步骤可能在数值精度上改变估计值。
+CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。
 
 ![速度设置前后的估计值与标准误](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 

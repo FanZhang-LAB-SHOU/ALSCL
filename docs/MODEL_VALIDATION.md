@@ -114,14 +114,14 @@ alscl_validation$scores
 head(alscl_validation$predictions)
 ```
 
-`hindcast_model()` 就是预测检验：它用截至某个训练起点的时间步拟合每个模型，预测随后 `horizon` 步的调查指数，起点取最后 `nfolds` 个合格起点，每次拟合都从 `x` 和保存的配置重新开始。本例中每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
+`hindcast_model()` 在每个预测起点重新拟合模型；预测起点是该次训练数据的最后一个时间步，模型用截至该期的数据拟合，再预测随后 `horizon` 步的调查指数。函数使用最后 `nfolds` 个合格起点，每次都从 `x` 和保存的配置重新拟合。本例中，每个模型先用截至 2017 年的数据预测 2018 年，再用截至 2018 年的数据预测 2019 年。
 
-`hindcast_model()` is the hindcast validation: it fits each model on the time steps up to a training origin and predicts the survey index of the next `horizon` steps, from the last `nfolds` eligible origins, every fit starting afresh from `x` with the stored configuration. Here each model is fitted through 2017 to predict 2018 and through 2018 to predict 2019.
+`hindcast_model()` fits each model using data through a forecast origin, the last time step in that training dataset, then predicts the next `horizon` survey-index steps. It uses the last `nfolds` eligible origins, starting each fit afresh from `x` with the stored configuration. Here each model uses data through 2017 to predict 2018, and through 2018 to predict 2019.
 
 | 设置 / Setting | 在本年度示例中的含义 / Meaning in this annual example |
 |---|---|
 | `horizon = 1` | 向前预测一个时间步 / Predict one time step ahead |
-| `nfolds = 2` | 使用最后两个合格的训练起点 / Use the last two eligible training origins |
+| `nfolds = 2` | 使用最后两个合格的预测起点 / Use the last two eligible forecast origins |
 | `min_train = 8` | 要求至少八个训练时间步 / Require at least eight training time steps |
 | `ncores = 2` | 最多并行运行两个训练折；一折内的初值依次运行 / Run at most two training folds in parallel; the starts inside a fold run one after another |
 
@@ -150,9 +150,9 @@ For each of the three length bins, the figure compares the withheld log survey i
 | `naive_log_RMSE`、`naive_log_MAE` / `naive_log_RMSE`, `naive_log_MAE` | 同一批单元上朴素预测的误差 / The persistence errors on the same cells |
 | `log_MASE`、`naive_log_MASE`、`n_scaled` / `log_MASE`, `naive_log_MASE`, `n_scaled` | 缩放后的绝对误差，以及训练期尺度可用的单元数 / Scaled absolute errors and the number of cells with a usable training scale |
 
-评分使用自然对数调查指数；留出观测中的零值和缺失值被排除，模型和朴素预测的误差使用相同的单元。MASE 把每个绝对对数误差除以该体长组训练期内相邻正观测的平均绝对变化；没有这样一对观测的体长组没有缩放评分，所以读它之前先看 `n_scaled`。在记录运行中，两个模型对 2018-2019 年相同的 46 个正观测评分，四个训练拟合都通过检查（[hindcast-scores.csv](results/model-validation/hindcast-scores.csv)）：
+评分使用自然对数调查指数；留出观测中的零值和缺失值被排除，模型和朴素预测的误差使用相同的单元。MASE 把每个绝对对数误差除以该体长组训练期内相邻时间步的平均绝对对数指数变化，只使用两端观测均为正值的配对。保留原时间网格，不跨越零值或缺失时段配对。没有有效配对或缩放分母为零的体长组不计算缩放评分；解读前先查看 `n_scaled`。在记录运行中，两个模型对 2018-2019 年相同的 46 个正观测评分，四个训练拟合都通过检查（[hindcast-scores.csv](results/model-validation/hindcast-scores.csv)）：
 
-Scores use natural-log survey indices; zero and missing withheld observations are excluded, and model and persistence errors use the same cells. For MASE each absolute log error is divided by the length bin's mean absolute change between consecutive positive training observations; a bin without such a pair gets no scaled score, so check `n_scaled` before reading it. In the recorded run both models scored the same 46 positive observations of 2018-2019 and all four training fits passed the checks ([hindcast-scores.csv](results/model-validation/hindcast-scores.csv)):
+Scores use natural-log survey indices; zero and missing withheld observations are excluded, and model and persistence errors use the same cells. For MASE, divide each absolute log error by the mean absolute log-index change between adjacent training time steps in that length bin, using pairs whose two observations are positive. The time grid is retained across missing or zero observations. Bins without a usable pair, or with a zero scaling denominator, receive no scaled score; check `n_scaled` before interpreting the result. In the recorded run both models scored the same 46 positive observations of 2018-2019 and all four training fits passed the checks ([hindcast-scores.csv](results/model-validation/hindcast-scores.csv)):
 
 | 预测 / Prediction | 评分观测数 / Scored observations | 对数 RMSE / Log RMSE | 对数 MAE / Log MAE | 对数 MASE / Log MASE |
 |---|---:|---:|---:|---:|

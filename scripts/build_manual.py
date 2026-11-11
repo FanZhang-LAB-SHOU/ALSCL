@@ -55,7 +55,7 @@ DOCUMENTS = [
     ('PLOT_STYLE.md', ('配色、标签与导出', 'Colors, labels and export'), ['plot-customization']),
     ('SPEED_GUIDE.md', ('速度设置', 'Speed settings'), ['speed']),
     ('ADVANCED_WORKFLOWS.md', ('复现与故障处理', 'Reproducibility and troubleshooting'), ['reproducibility']),
-    ('CASES.md', ('工作案例', 'Worked cases'), ['case-fit-survey', 'case-compare-assessments',
+    ('CASES.md', ('应用案例', 'Worked cases'), ['case-fit-survey', 'case-compare-assessments',
      'case-retrospective-bias', 'case-sensitivity-projection', 'case-simulate-survey']),
 ]
 # Where a link to an article lands inside docs/.
@@ -411,7 +411,7 @@ def build_user_guide():
             '[English](https://fanzhang-lab-shou.github.io/ALSCL/) · [简体中文](https://fanzhang-lab-shou.github.io/ALSCL/zh/).\n\n'
             '[首页 / Home](../README.md) · [函数参考 / Function reference](FUNCTION_REFERENCE.md) · '
             '[图谱 / Gallery](PLOT_GALLERY.md) · [评估工作流 / Assessment workflows](ASSESSMENT_WORKFLOWS.md) · '
-            '[模型验证 / Model validation](MODEL_VALIDATION.md) · [工作案例 / Worked cases](CASES.md)\n\n'
+            '[模型验证 / Model validation](MODEL_VALIDATION.md) · [应用案例 / Worked cases](CASES.md)\n\n'
             '## 目录 / Contents\n\n' + '\n'.join(toc) + '\n\n')
     write_output(DOCS / 'USER_GUIDE.md', head + '\n\n'.join(bodies) + '\n')
 

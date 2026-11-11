@@ -26,14 +26,14 @@ a$diagnostics$numerical_ok
 a$diagnostics$issues
 ```
 
-看任何估计值之前先读数值检查。`diagnose_model()` 打印优化器收敛码（0 表示正常结束）、解处的最大绝对梯度（优化器到达极小值时小于 0.001）、Hessian 是否正定（计算标准误的前提）、是否有参数落在边界上，以及是否有方差或相关系数估计到了自然尺度的极限。打印的 `Numerical checks` 一行汇总以上各项，与 `a$diagnostics$numerical_ok` 相同；`a$diagnostics$issues` 给出未通过的项目。
+解释估计值之前先读数值检查。`diagnose_model()` 打印优化器原始收敛码（0 表示正常结束）、最大绝对梯度、Hessian 和协方差状态，以及参数边界检查。`Numerical checks` 与 `a$diagnostics$numerical_ok` 相同，要求梯度小于 0.001、Hessian 和协方差矩阵正定，且没有标记出的参数边界问题。该筛查不包括优化器原始收敛码和强参数相关；须在 `a$diagnostics$issues` 中另行检查。通过筛查后仍需评估拟合，不能据此确认唯一解或全局最优解。
 
-| 未通过的检查 | 常见原因 | 可以尝试 |
+| 未通过的检查 | 可能原因 | 可以尝试 |
 |---|---|---|
 | 收敛码不是 0，或梯度很大 | 优化器提前停止，或目标函数面很平 | 多用几个初值，`run_acl(x, nstarts = 4, ncores = 2)`，在 `a$start_diagnostics` 中比较各初值的目标函数值 |
-| Hessian 不正定 | 某个参数得不到数据的信息 | 用 `map` 固定该参数，或用 `F_structure = "year"` 让各组共用 F（[拟合设置](fitting-controls.html)） |
-| 参数落在边界上 | 边界或初值不适合这个种群 | 用 `inspect_parameters(x, "acl")` 查看初值和边界并调整 |
-| 自然尺度边界 | 标准差接近 0 或相关系数接近 1 | 把该参数固定在有依据的值，或简化 F 结构 |
+| Hessian 不正定 | 拟合尚未到达极小值、参数尺度造成数值困难，或部分参数识别较弱 | 先检查梯度、尺度和其他初值；结合剖面或敏感性分析，再决定固定参数或简化 F（[拟合设置](fitting-controls.html)） |
+| 参数落在边界上 | 约束下的最优点位于边界，或拟合尚未达到稳定解 | 检查边界及其生物学依据，尝试其他初值，并结合剖面判断是否调整 |
+| 自然尺度边界 | 标准差接近 0，或相关系数接近 0 或 1 | 把该参数固定在有依据的值，或简化 F 结构 |
 | 检查通过但残差有规律 | 模型漏掉了数据中的某种特征 | 继续阅读[诊断](diagnostics.html) |
 
 <h2 id="estimates">3. 读估计值</h2>
@@ -57,7 +57,7 @@ plot_CatL(a, facet_by = "year", facet_ncol = 5)
 plot_residuals(a, facet_by = "year", facet_ncol = 5)
 ```
 
-`plot_CatL()` 按年份分面，画出各体长组的观测调查指数（点）和拟合指数（线）。`plot_residuals()` 画同样分面的对数残差，即对数尺度上观测减拟合。可用的拟合在每个面板中残差都围绕 0 散布。若同一年相邻体长组的残差同号成串，或同一体长组多年同号成串，说明模型漏掉了数据中的某种特征，例如一个队列穿过调查范围，或实际选择性与假设不同；[诊断](diagnostics.html)说明如何检查这类规律。
+`plot_CatL()` 按年份分面显示各体长组的观测与拟合调查指数。`plot_residuals()` 显示相应面板中对数尺度的观测值减去拟合值。检查残差是否以零附近为中心，以及是否沿体长或时间持续同号。这些规律可提示检查生长、世代动态或调查可捕性，但不能唯一确定原因；[诊断](diagnostics.html)说明如何进一步检查。
 
 <h2 id="compare">5. 比较 ACL 与 ALSCL</h2>
 
@@ -70,9 +70,9 @@ comparison$fit_diagnostics
 
 ![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
-图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；尺度上持续的差异通常来自两个模型在年龄与体长之间换算方式的不同。
+图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；若估计尺度持续不同，应进一步比较两种结构的生长、死亡率和年龄–体长转换假设。
 
-`compare_models()` 先核对两次拟合使用的观测相同，再打印 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 较低只说明该模型在统计上更贴合这些数据；它的假设是否适合这个种群，是另一个需要用生物学知识回答的问题。
+`compare_models()` 先核对两次拟合使用的观测相同，再打印 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格时给出）和 `issues`。AIC 在似然拟合与参数数量之间作权衡；对同一观测和相容似然，AIC 较低表示该准则更支持该候选模型。它的假设是否适合这个种群，是另一个需要用生物学知识回答的问题。
 
 <h2 id="save">6. 保存拟合结果</h2>
 
