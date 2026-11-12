@@ -361,6 +361,9 @@ plot_compare_F <- function(model1, model2,
 #'   stored observation metadata remain usable, but their original-data alignment
 #'   cannot be fully verified. Data frames, matrices and tibbles use the same
 #'   numeric conversion as the fitting functions.
+#'   The mean-residual line breaks at wholly unobserved periods. Isolated
+#'   observed periods remain visible as points; an SD bar requires at least
+#'   two observed length bins in that period.
 #' @export
 plot_compare_residuals <- function(model1, model2, data.CatL,
                                    model1_name = NULL, model2_name = NULL,
@@ -420,20 +423,28 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     base_layers + no_legend
 
   # P3: Mean residual by year
-  resid_by_year <- do.call(rbind, lapply(split(df, list(df$Year, df$Model), drop = TRUE), function(x) {
-    data.frame(Year = x$Year[1], Model = x$Model[1],
-               mean_r = mean(x$Residual), sd_r = stats::sd(x$Residual),
-               stringsAsFactors = FALSE)
+  # Retain the complete time grid before splitting the observed runs.
+  resid_by_year <- do.call(rbind, lapply(model_names, function(name) {
+    do.call(rbind, lapply(year, function(time) {
+      values <- df$Residual[df$Model == name & df$Year == time]
+      data.frame(Year = time, Model = name,
+        mean_r = if (length(values)) mean(values) else NA_real_,
+        sd_r = stats::sd(values), stringsAsFactors = FALSE)
+    }))
   }))
+  runs <- .acl_observed_plot_runs(resid_by_year, "Model", "Year", "mean_r")
 
   p3 <- ggplot2::ggplot(resid_by_year, ggplot2::aes(x = Year, y = mean_r, color = Model)) +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
-    ggplot2::geom_line(ggplot2::aes(linetype = Model), linewidth = cfg$line_size) +
-    ggplot2::geom_point(size = cfg$point_size, show.legend = FALSE) +
-    ggplot2::geom_errorbar(ggplot2::aes(ymin = mean_r - sd_r, ymax = mean_r + sd_r),
+    ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
+      ggplot2::aes(linetype = Model, group = survey_run), linewidth = cfg$line_size,
+      show.legend = TRUE) +
+    ggplot2::geom_point(data = runs, size = cfg$point_size, show.legend = FALSE) +
+    ggplot2::geom_errorbar(data = runs[is.finite(runs$sd_r), , drop = FALSE],
+      ggplot2::aes(ymin = mean_r - sd_r, ymax = mean_r + sd_r),
                            width = errorbar_width, alpha = 0.5, show.legend = FALSE) +
-    ggplot2::scale_color_manual(values = cfg$colors) +
-    ggplot2::scale_linetype_manual(values = cfg$linetypes) +
+    ggplot2::scale_color_manual(values = cfg$colors, limits = model_names) +
+    ggplot2::scale_linetype_manual(values = cfg$linetypes, limits = model_names) +
     ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"), y = "Mean residual",
                   color = NULL, linetype = NULL) +
     base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom")

@@ -4,7 +4,10 @@
 #' visualize observed and predicted survey length compositions over time.
 #' Each time period is normalized to a length composition. Only positive observed
 #' values contribute to the observed composition; missing and zero observations
-#' remain missing, and a wholly unobserved period has no observed ridge. Predicted
+#' remain missing, and a wholly unobserved period has no observed ridge.
+#' Missing bins break the observed outline and fill;
+#' an isolated observed bin is shown as a point at its scaled composition height.
+#' Both panels use the same vertical range so their time labels align. Predicted
 #' compositions use all length bins. Normalization is stable for large or small
 #' finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 #' a live TMB object; saved fits use the observation mask in the TMB data.
@@ -89,6 +92,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
   # --- Build fill scale from palette ---
   fill_scale <- .acl_ridges_palette(palette, n_years)
+  fill_scale$limits <- year_levels
+  fill_scale$drop <- FALSE
 
   # Subtract each column maximum before exponentiating. A shared log offset
   # does not affect a composition and must not erase a ridge through overflow
@@ -134,10 +139,19 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   df_estimated_long$year <- factor(df_estimated_long$year, levels = year_levels)
   df_estimated_long$Abundance <- df_estimated_long$Abundance * ridges_scale
 
+  runs <- .acl_observed_plot_runs(df_observed_long, "year", "len_mid", "Abundance")
+  # Include the heights from both panels in one range, with room above peaks.
+  ridge_tops <- c(as.numeric(df_observed_long$year) + df_observed_long$Abundance,
+                  as.numeric(df_estimated_long$year) + df_estimated_long$Abundance)
+  y_limits <- c(0.4, max(n_years + 0.6, max(ridge_tops, na.rm = TRUE) + 0.1))
+
   # Plot the data using ggplot2 with ggridges
   p_observed <- ggplot2::ggplot(df_observed_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
-    ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
-    ggplot2::scale_y_discrete(drop = FALSE) +
+    ggridges::geom_ridgeline(data = runs[runs$run_size > 1L, , drop = FALSE],
+      mapping = aes(group = survey_run), alpha = ridges_alpha, na.rm = TRUE) +
+    ggplot2::scale_y_discrete(limits = year_levels, drop = FALSE,
+      expand = ggplot2::expansion(add = 0)) +
+    ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_obs_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +
@@ -145,13 +159,21 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
   p_estimated <- ggplot2::ggplot(df_estimated_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
-    ggplot2::scale_y_discrete(drop = FALSE) +
+    ggplot2::scale_y_discrete(limits = year_levels, drop = FALSE,
+      expand = ggplot2::expansion(add = 0)) +
+    ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_est_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
-  p <- cowplot::plot_grid(p_observed, p_estimated, ncol = 2)
+  if (any(runs$run_size == 1L)) {
+    p_observed <- p_observed + ggplot2::geom_point(
+      data = runs[runs$run_size == 1L, , drop = FALSE], inherit.aes = FALSE,
+      mapping = aes(x = len_mid, y = as.numeric(year) + Abundance, fill = year),
+      shape = 21, size = acl_theme("point_size"), alpha = ridges_alpha, show.legend = FALSE)
+  }
+  p <- cowplot::plot_grid(p_observed, p_estimated, ncol = 2, align = "hv", axis = "tblr")
 
   return(p)
 }
@@ -188,7 +210,7 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
     # brewer diverging
     if (pal %in% names(brewer_div)) {
       cols <- grDevices::colorRampPalette(
-        RColorBrewer::brewer.pal(min(n, 11), brewer_div[[pal]])
+        RColorBrewer::brewer.pal(max(3L, min(n, 11L)), brewer_div[[pal]])
       )(n)
       return(ggplot2::scale_fill_manual(values = cols, guide = "none"))
     }

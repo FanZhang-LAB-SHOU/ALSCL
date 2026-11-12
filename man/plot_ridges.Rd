@@ -77,7 +77,10 @@ This function takes the model result as an input and creates two ridgeline plots
 visualize observed and predicted survey length compositions over time.
 Each time period is normalized to a length composition. Only positive observed
 values contribute to the observed composition; missing and zero observations
-remain missing, and a wholly unobserved period has no observed ridge. Predicted
+remain missing, and a wholly unobserved period has no observed ridge.
+Missing bins break the observed outline and fill;
+an isolated observed bin is shown as a point at its scaled composition height.
+Both panels use the same vertical range so their time labels align. Predicted
 compositions use all length bins. Normalization is stable for large or small
 finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 a live TMB object; saved fits use the observation mask in the TMB data.

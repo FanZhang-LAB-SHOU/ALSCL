@@ -1,5 +1,6 @@
 # Unreleased
 
+- Keep gaps in mean-residual comparison lines and observed ridge polygons, show isolated observations, and align ridge panels and time colors. Support Brewer palettes for two-period results; add rendering regression tests and refresh affected figures without gridlines.
 - Use the checked parallel Hessian during optimizer refinement where forked processes are selected, with sequential fallback and per-step method records. Simulate fitted processes without constructing unused derivative tapes; fitting interfaces and model equations are unchanged.
 - Revised some wording to make the documentation more precise.
 - Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
@@ -14,6 +15,7 @@
 
 ### 简体中文
 
+- 平均残差比较线和观测山脊图在缺测处断开，保留孤立观测，并统一山脊图两栏的坐标与时间配色。Brewer 配色支持两个时期的结果；补充绘图回归测试，重新生成受影响配图并保持无网格线。
 - 选择 fork 进程的会话中，优化收尾使用已验证的并行 Hessian，失败时退回顺序计算，并逐次记录计算方法。拟合过程模拟省去未使用的导数构建；拟合接口和模型方程保持不变。
 - 修订了一些表述，让说明更加精确。
 - 报告拟合指标或按 AIC 选择模型前，逐格核对调查正观测。多个进程向同一路径存档时会检查写入冲突。

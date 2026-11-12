@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Keep gaps in mean-residual comparison lines and observed ridge polygons, show isolated observations, and align ridge panels and time colors. Support Brewer palettes for two-period results; add rendering regression tests and refresh affected figures without gridlines.
 - Use the checked parallel Hessian during optimizer refinement where forked processes are selected, with sequential fallback and per-step method records. Simulate fitted processes without constructing unused derivative tapes; fitting interfaces and model equations are unchanged.
 - Revised some wording to make the documentation more precise.
 - Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
