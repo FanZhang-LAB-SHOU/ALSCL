@@ -1,7 +1,27 @@
+# Reuse the checked Hessian implementation where forked processes are supported.
+# Socket workers would rebuild the sparse derivative tape, so remain sequential.
+.acl_refinement_hessian <- function(obj, par) {
+  cores <- min(.acl_cores(), length(par))
+  sequential <- function(note) list(value = stats::optimHess(par, obj$fn, obj$gr),
+    method = "sequential", cores = 1L, note = note)
+  if (cores <= 1L) return(sequential("one Hessian column or one core"))
+  if (!.acl_tmb_supported()) return(sequential("TMB version not checked"))
+  if (.acl_sd_backend() != "fork") return(sequential("forked processes not selected"))
+  tryCatch(list(value = .acl_optimhess(obj, par, cores),
+    method = "forked processes", cores = as.integer(cores), note = ""),
+    acl_parallel_error = function(e) {
+      warning("Parallel refinement Hessian failed (", conditionMessage(e),
+        "); computing it sequentially.", call. = FALSE)
+      sequential(paste("parallel calculation failed:", conditionMessage(e)))
+    })
+}
+
 # Conservative finishing step; the original optimizer result is kept separately.
 .acl_polish <- function(obj, par, lower, upper, enabled = TRUE) {
   history <- data.frame(iteration = integer(), objective = numeric(),
     max_gradient = numeric(), step_scale = numeric())
+  hessians <- data.frame(iteration = integer(), method = character(),
+    cores = integer(), note = character())
   status <- if (enabled) "not_started" else "disabled"
   evaluate <- function(x) tryCatch({
     value <- obj$fn(x); gradient <- as.numeric(obj$gr(x))
@@ -17,7 +37,11 @@
       status <- "parameter_boundary"; break
     }
     step <- tryCatch({
-      h <- stats::optimHess(par, obj$fn, obj$gr)
+      calculation <- .acl_refinement_hessian(obj, par)
+      hessians <- rbind(hessians, data.frame(iteration = i,
+        method = calculation$method, cores = calculation$cores,
+        note = calculation$note))
+      h <- calculation$value
       h <- (h + t(h))/2
       if (any(!is.finite(h))) stop("nonfinite Hessian")
       # chol both checks positive definiteness and avoids an unstable inverse.
@@ -50,7 +74,7 @@
     final_objective = if (is.null(final)) NA_real_ else final$value,
     initial_max_gradient = if (is.null(initial)) NA_real_ else initial$mgc,
     final_max_gradient = if (is.null(final)) NA_real_ else final$mgc,
-    history = history)
+    history = history, hessian_calculations = hessians)
 }
 
 .acl_fit_diagnostics <- function(fit) {

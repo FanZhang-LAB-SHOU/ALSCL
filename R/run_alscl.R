@@ -72,6 +72,9 @@
 #'   `1e-8` (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
 #'   remain unchanged; inspect `optimizer_history`, `refinement`, and
 #'   `diagnostics` separately. This may change estimates at numerical precision.
+#'   On checked TMB versions, the refinement Hessian shares the sd_cores limit
+#'   when forked processes are selected; other sessions compute it sequentially.
+#'   refinement$hessian_calculations records methods, cores and fallback notes.
 #' @return An alscl_fit list (legacy dollar access is unchanged) with report,
 #'   opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,

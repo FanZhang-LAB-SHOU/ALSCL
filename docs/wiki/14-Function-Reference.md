@@ -231,7 +231,7 @@ alscl_speed (sd_cores = getOption("ALSCL.sd_cores", "auto"), framework = getOpti
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。"auto" 最多使用 4 个物理核并保留 1 个；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. "auto" uses up to four physical cores and keeps one free; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. |
+| `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。选择 fork 进程且 TMB 版本已验证时，也限制优化收尾的 Hessian 核数。"auto" 最多使用 4 个物理核并保留 1 个；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. Also limits refinement Hessian workers when forked processes and a checked TMB version are used. "auto" uses up to four physical cores and keeps one free; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. |
 | `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD" 为默认库；"TMBad" 更快但结果略有不同。收尾步骤可能微调最优点，不保证与旧版本逐位一致。 | Character. Automatic-differentiation library: "CppAD" is the default; "TMBad" is faster but results differ slightly. The refinement steps can move the optimum slightly, so results are not guaranteed to be identical across versions. |
 
 **返回 / Returns:** 不可见地返回原 `ALSCL.sd_cores` 与 `ALSCL.framework` 选项，可用 `options(old)` 恢复。
@@ -239,6 +239,10 @@ alscl_speed (sd_cores = getOption("ALSCL.sd_cores", "auto"), framework = getOpti
 The previous `ALSCL.sd_cores` and `ALSCL.framework` options, returned invisibly; `options(old)` restores them.
 
 **示例 / Example:**
+
+收尾 Hessian 共用 `sd_cores` 上限，并以自由固定效应数量为限。仅在已验证的 TMB 版本且选择 fork 进程时并行；单参数、socket 会话及未验证版本顺序计算，fork 失败时警告并退回顺序计算。`fit$refinement$hessian_calculations` 记录已计算 Hessian 的方法、核数和回退说明；空表需结合 `fit$refinement$status` 判断原因。
+
+Refinement Hessians share the `sd_cores` limit, capped by the number of free fixed effects. Parallel computation requires a checked TMB version and forked processes; one-parameter fits, socket sessions and unchecked versions remain sequential. Fork failures warn and fall back to sequential calculation. `fit$refinement$hessian_calculations` records computed Hessians, cores and fallback notes; interpret an empty table together with `fit$refinement$status`.
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
@@ -259,11 +263,15 @@ alscl_speed_info ()
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 
-**返回 / Returns:** 带有 alscl_speed_info 类的两列数据框：item 是设置或说明项目，value 是其值。内容包括标准误核数、计算方式及原因、自动微分框架、TMB 版本及跨版本数值一致性提示。
+**返回 / Returns:** 带有 alscl_speed_info 类的两列数据框：item 是设置或说明项目，value 是其值。内容包括标准误核数、计算方式及原因、收尾 Hessian 的并行设置、自动微分框架、TMB 版本及跨版本数值一致性提示。
 
 A data frame with class alscl_speed_info and columns item (setting or information item) and value. It reports standard-error workers, computation method and reason, the automatic-differentiation framework, the TMB version and the cross-version numerical-identity notice.
 
 **示例 / Example:**
+
+收尾 Hessian 共用 `sd_cores` 上限，并以自由固定效应数量为限。仅在已验证的 TMB 版本且选择 fork 进程时并行；单参数、socket 会话及未验证版本顺序计算，fork 失败时警告并退回顺序计算。`fit$refinement$hessian_calculations` 记录已计算 Hessian 的方法、核数和回退说明；空表需结合 `fit$refinement$status` 判断原因。
+
+Refinement Hessians share the `sd_cores` limit, capped by the number of free fixed effects. Parallel computation requires a checked TMB version and forked processes; one-parameter fits, socket sessions and unchecked versions remain sequential. Fork failures warn and fall back to sequential calculation. `fit$refinement$hessian_calculations` records computed Hessians, cores and fallback notes; interpret an empty table together with `fit$refinement$status`.
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
@@ -2114,7 +2122,7 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `rho_position` | `"top_right"` | Mohn rho 标注位置。 | Character. Position of rho text. Default is "top_right". |
 | `rho_size` | `3.5` | Mohn rho 标注字号。 | Numeric. Font size of rho text. Default is 3.5. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
-| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `zero_action` | `c("missing", "error")` | 各轮对零观测的处理；NA 始终缺失。 | Zero handling forwarded to every fit; NA is always missing. |
 | `control` | `list()` | 各轮 nlminb 优化控制；显式列表整体覆盖。 | nlminb controls forwarded to each fit; explicit lists replace stored lists. |
 | `nstarts` | `1` | 每轮独立起点数，在该轮内部依次计算；可沿用 x 设置。 | Starts per fit, run sequentially within a peel; may inherit the bundle value. |
@@ -2185,7 +2193,7 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | A named list of nlminb control settings. |
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
-| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
 
@@ -2196,6 +2204,10 @@ A list of class alscl_fit, retaining existing $ access. report stores population
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 
 **示例 / Example:**
+
+收尾 Hessian 共用 `sd_cores` 上限，并以自由固定效应数量为限。仅在已验证的 TMB 版本且选择 fork 进程时并行；单参数、socket 会话及未验证版本顺序计算，fork 失败时警告并退回顺序计算。`fit$refinement$hessian_calculations` 记录已计算 Hessian 的方法、核数和回退说明；空表需结合 `fit$refinement$status` 判断原因。
+
+Refinement Hessians share the `sd_cores` limit, capped by the number of free fixed effects. Parallel computation requires a checked TMB version and forked processes; one-parameter fits, socket sessions and unchecked versions remain sequential. Fork failures warn and fall back to sequential calculation. `fit$refinement$hessian_calculations` records computed Hessians, cores and fallback notes; interpret an empty table together with `fit$refinement$status`.
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
@@ -2246,7 +2258,7 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | A named list of nlminb control settings. |
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
-| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
 
@@ -2257,6 +2269,10 @@ A list of class alscl_fit, retaining existing $ access. report stores population
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 
 **示例 / Example:**
+
+收尾 Hessian 共用 `sd_cores` 上限，并以自由固定效应数量为限。仅在已验证的 TMB 版本且选择 fork 进程时并行；单参数、socket 会话及未验证版本顺序计算，fork 失败时警告并退回顺序计算。`fit$refinement$hessian_calculations` 记录已计算 Hessian 的方法、核数和回退说明；空表需结合 `fit$refinement$status` 判断原因。
+
+Refinement Hessians share the `sd_cores` limit, capped by the number of free fixed effects. Parallel computation requires a checked TMB version and forked processes; one-parameter fits, socket sessions and unchecked versions remain sequential. Fork failures warn and fall back to sequential calculation. `fit$refinement$hessian_calculations` records computed Hessians, cores and fallback notes; interpret an empty table together with `fit$refinement$status`.
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
@@ -2296,7 +2312,7 @@ sim_acl (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters =
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | Named nlminb control settings. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
-| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留。 | Safeguarded refinement of the selected fit; retain raw optimizer codes and inspect refinement and diagnostics. |
+| `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
 
 **返回 / Returns:** 按重复编号命名的拟合或错误记录列表（`result_rep_<id>`），包含 iter 和 elapsed。每次重复均写入对应文件，包括失败记录；失败项另含 converge="FAILED" 和 error。重跑失败会替换旧成功记录，文件写入失败会明确报告。

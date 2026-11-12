@@ -11,7 +11,11 @@ alscl_speed(
 }
 \arguments{
 \item{sd_cores}{\code{"auto"} or a positive integer: the number of cores
-used within one fit to compute standard errors. The results are
+used within one fit to compute standard errors. It also limits Hessian
+workers during optimizer refinement when forked processes are selected
+and the TMB version is checked. Refinement uses at most one worker per
+free fixed effect and stays sequential for one effect or socket sessions.
+The results are
 identical to those of the sequential calculation. Where forked processes
 are safe (macOS and Linux outside GUI front-ends), the Hessian of the
 fixed effects (one column per task) and the delta-method variance of

@@ -7,7 +7,11 @@
 #' settings mean on this computer.
 #'
 #' @param sd_cores \code{"auto"} or a positive integer: the number of cores
-#'   used within one fit to compute standard errors. The results are
+#'   used within one fit to compute standard errors. It also limits Hessian
+#'   workers during optimizer refinement when forked processes are selected
+#'   and the TMB version is checked. Refinement uses at most one worker per
+#'   free fixed effect and stays sequential for one effect or socket sessions.
+#'   The results are
 #'   identical to those of the sequential calculation. Where forked processes
 #'   are safe (macOS and Linux outside GUI front-ends), the Hessian of the
 #'   fixed effects (one column per task) and the delta-method variance of
@@ -59,7 +63,8 @@ alscl_speed <- function(sd_cores = getOption("ALSCL.sd_cores", "auto"),
 #' shared out and why, and which automatic-differentiation library is used. Use
 #' it to check that a session gets the expected speed-up, and to record the
 #' settings together with results. After a fit, \code{fit$sd_info} records
-#' what was actually done.
+#' what was actually done for standard errors;
+#' \code{fit$refinement$hessian_calculations} records each refinement Hessian.
 #'
 #' @return A data frame with columns \code{item} and \code{value}, of class
 #'   \code{"alscl_speed_info"}, which prints as a list of settings.
@@ -77,10 +82,13 @@ alscl_speed_info <- function() {
     else sprintf(paste("Hessian in the main process; delta method on %d socket workers",
                        "when it would take more than %s s"), cores, format(min_seconds))
   framework <- .acl_framework()
+  refinement <- if (cores > 1L && .acl_tmb_supported() && backend == "fork")
+    sprintf("up to %d forked processes, limited by the number of free fixed effects", cores)
+    else "sequential"
   info <- data.frame(stringsAsFactors = FALSE,
     item = c("sd_cores setting", "cores for standard errors", "standard errors computed by",
-             "reason", "framework", "cross-version numerical identity", "TMB version"),
-    value = c(format(setting), cores, method, .acl_fork_reason(), framework,
+             "refinement Hessian", "reason", "framework", "cross-version numerical identity", "TMB version"),
+    value = c(format(setting), cores, method, refinement, .acl_fork_reason(), framework,
               "not guaranteed across package versions (the optimizer finishing step can change estimates at numerical precision)",
               paste0(utils::packageVersion("TMB"),
                      if (.acl_tmb_supported()) " (checked)" else " (not checked: sequential standard errors)")))

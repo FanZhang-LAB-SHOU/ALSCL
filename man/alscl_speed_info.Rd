@@ -16,7 +16,8 @@ in this R session: how many cores the standard errors use, how the work is
 shared out and why, and which automatic-differentiation library is used. Use
 it to check that a session gets the expected speed-up, and to record the
 settings together with results. After a fit, \code{fit$sd_info} records
-what was actually done.
+what was actually done for standard errors;
+\code{fit$refinement$hessian_calculations} records each refinement Hessian.
 }
 \examples{
 alscl_speed_info()

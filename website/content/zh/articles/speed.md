@@ -34,7 +34,7 @@ alscl_speed_info()
 #>   TMB version:                       1.9.21 (checked)
 ```
 
-一次拟合分两部分。优化部分由 `nlminb()` 在固定效应上搜索，每次计算都对随机效应做一次内层牛顿优化（拉普拉斯近似），在当前实现中使用一个核。下述速度设置并行计算后续的标准误；独立初值也可通过 `ncores` 并行运行。标准误随后由 `TMB::sdreport()` 计算：固定效应的 Hessian（每个固定效应两次梯度计算）和每个 ADREPORT 量的 delta 方法标准误（各年份、年龄与体长的补充量、丰度、生物量、产卵生物量、渔获量与捕捞死亡率；20 年 ALSCL 示例共 3,866 个量）。Hessian 各列和不同 ADREPORT 量的 delta 方法计算可分为独立任务。在相同拟合参数处，已测试的并行计算与顺序计算结果一致。基准测试中，ALSCL 拟合 `YTF_example` 的 20 年数据时，速度改动之前优化约 88 秒，Hessian 11.4 秒，delta 方法 10.6 秒。
+主要优化过程由 `nlminb()` 在固定效应上搜索，每次计算都对随机效应做一次内层牛顿优化（拉普拉斯近似），在当前实现中使用一个核。下述速度设置用于并行计算后续的标准误；选择 fork 进程时，也用于可选优化收尾的 Hessian 计算。独立初值可通过 `ncores` 并行运行。标准误随后由 `TMB::sdreport()` 计算：固定效应的 Hessian（每个固定效应两次梯度计算）和每个 ADREPORT 量的 delta 方法标准误（各年份、年龄与体长的补充量、丰度、生物量、产卵生物量、渔获量与捕捞死亡率；20 年 ALSCL 示例共 3,866 个量）。Hessian 各列和不同 ADREPORT 量的 delta 方法计算可分为独立任务。在相同拟合参数处，已测试的并行计算与顺序计算结果一致。基准测试中，ALSCL 拟合 `YTF_example` 的 20 年数据时，速度改动之前优化约 88 秒，Hessian 11.4 秒，delta 方法 10.6 秒。
 
 在可以安全分叉的环境（macOS 或 Linux 终端中的 R 或 `Rscript`，以及计算集群），ALSCL 用 `parallel::mclapply()` 启动 R 会话的副本。每个副本已经包含拟合好的模型，因此 Hessian 的各列和 delta 方法几乎零开销地分配出去：20 年 ALSCL 示例的标准误在 4 个核上用 9.0 秒，顺序计算需 23.4 秒。Windows 没有分叉；R 的文档（`?parallel::mclapply`）也不建议在图形界面（R.app、RGui、RStudio、Positron）中或搭配多线程库（如 Apple 的 Accelerate BLAS）时分叉。在这些会话中 ALSCL 改用 socket 进程，即新启动的 R 进程，它们接收数据并重建模型。新进程在第一次计算梯度之前必须重建 TMB 的导数计算带，20 年 ALSCL 示例中这一步在 CppAD 下需 14 秒（TMBad 下 42 秒），比整个 Hessian 还长。因此使用 socket 进程时，Hessian 在主会话中计算；delta 方法分给 socket 进程，它们只需要目标函数的梯度计算带（约 0.1 秒建好），并从主会话接收随机效应 Hessian；ALSCL 先在主会话中计算几个 ADREPORT 量以测出每个量的耗时，只有当剩余的量预计超过约 3 秒时才启动进程。因此小模型（如大多数 ACL 拟合）在主会话中计算标准误。20 年 ALSCL 示例中，delta 方法在 4 个 socket 进程上用 6.5 秒，顺序计算需 13.9 秒（其中启动进程 0.3 秒，在进程中重建模型 0.9 秒）。
 
@@ -47,6 +47,8 @@ alscl_speed_info()
 | 并行计算失败（例如进程启动失败） | 给出警告，然后顺序计算 `TMB::sdreport()`；结果不受影响 |
 
 并行实现对每项任务复现顺序计算的算术过程。Hessian 各列采用 `stats::optimHess()` 的参数扰动方式，每次梯度计算从同一点开始随机效应的内层优化。测试用 `identical()` 将结果与 `TMB::sdreport()` 比较，覆盖 CppAD 和 TMBad 下的 ACL 与 ALSCL。分叉测试在 macOS、Linux 上运行；socket 测试也在 Windows 上运行，Windows 跳过分叉测试。这些比较检查相同拟合参数和 AD 库下的标准误计算方法。报告结果时，请同时记录 `alscl_speed_info()` 和 `sessionInfo()`。
+
+收尾需要计算 Hessian 时，在已验证的 TMB 版本且选择 fork 进程的会话中，共用 `sd_cores` 核数上限，并以自由固定效应数量为限。只有一个自由固定效应或使用 socket 的会话仍顺序计算；fork 失败时会警告并退回顺序计算。`fit$refinement$hessian_calculations` 记录每个已计算 Hessian 的方法、核数和回退说明。空表表示没有返回 Hessian；请结合 `fit$refinement$status` 区分跳过收尾与求值失败。
 
 <h2 id="cores">2. 选择核数</h2>
 

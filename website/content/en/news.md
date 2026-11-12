@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Use the checked parallel Hessian during optimizer refinement where forked processes are selected, with sequential fallback and per-step method records. Simulate fitted processes without constructing unused derivative tapes; fitting interfaces and model equations are unchanged.
 - Revised some wording to make the documentation more precise.
 - Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
 - Check every map name, including named NULL releases, and normalize unused factor levels before fitting. Preflight and fitting now validate the same optimizer controls.

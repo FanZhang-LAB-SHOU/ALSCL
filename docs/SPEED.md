@@ -81,10 +81,21 @@ The worker functions use only base R, TMB and Matrix, so the workers do not need
 
 Each fit records in `fit$sd_info` how its standard errors were computed: `method` (`"forked processes"`, `"socket workers (delta method)"` or `"sequential"`), `cores`, elapsed `seconds` and a `note` explaining a sequential calculation (one core, an unchecked TMB version, too little work for socket workers, or a failure of the parallel calculation). With `silent = FALSE` a fit prints this as one line, for example `Standard errors: forked processes on 4 cores, 9.0 s.` `alscl_speed_info()` reports before a fit what the settings mean in the current session: the cores, the method and the reason, the AD library and the notice about numerical agreement across package versions. The user guide [SPEED_GUIDE.md](SPEED_GUIDE.md) explains every setting.
 
+### 3.5 Hessians during optimizer refinement
+
+The safeguarded Newton finishing step now uses the same checked finite-difference Hessian implementation as parallel standard errors. `sd_cores` limits the workers, with at most one worker per free fixed effect. One-effect fits, unchecked TMB versions and sessions selecting socket workers retain `stats::optimHess()`. A failed fork warns and falls back to that sequential calculation. The acceptance rules, gradient tolerances, optimizer codes and model equations are unchanged. `fit$refinement$hessian_calculations` records returned Hessians; `fit$refinement$status` still records why refinement stopped.
+
+The regression tests compare sequential and forked refinement with actual ACL and ALSCL random effects, check the one-core and unsupported-backend paths, and force a parallel failure to verify sequential recovery. Existing Hessian and standard-error tests continue to exercise both CppAD and TMBad.
+
+### 3.6 Fitted-process simulation
+
+`simulate_fit(process = "resample")` evaluates population reports with `TMB::MakeADFun(type = "Fun")`. No derivatives or optimization are needed for these draws. Because this mode does not supply `$par`, simulation uses the parameter order returned by TMB in `env$parameters`. Regression tests deliberately reverse the supplied parameter order and compare reports with a full AD evaluator for both models, both F structures and both AD frameworks. The generating distributions, random-number stream and returned input bundles are unchanged. Small simulations may show little wall-clock improvement because validation and output construction still take time.
+
 ## 4. Changes tested and not kept
 
 | Candidate change | Result in ALSCL | Decision |
 |---|---|---|
+| Reusing length-by-time survival and catch integrals across ALSCL ages (November 2026 review) | In a paired full `YTF_example` fit with CppAD, elapsed time increased from 138.6 s to 178.7 s and CPU time from 111.8 s to 140.9 s. Numerical comparisons passed, but the shorter source expression did not reduce runtime. These are single-pair measurements on a shared machine, not a general speed ratio. | Not kept; model sources remain unchanged |
 | Growth transition product `G * survival` with TMB's atomic matrix product (`atomic::matmul`) | Under CppAD the fit took 168 s instead of 100 s (gradient 1.19 s instead of 0.65 s). Under TMBad it was faster (55 s instead of 71 s) but moved the estimates by up to 1.4e-8 and the reported quantities by up to 5e-6 (relative), because the optimiser took a different path. | Not kept: slower, or results changed beyond rounding |
 | Leave quantities that do not enter the likelihood (biomass, catch and F-at-age arrays) out of the tape during the optimisation | The gradient took 0.155 s instead of 0.172 s, within run-to-run variation; TMB already removes operations that do not affect the objective function when it optimises the tape. | Not kept: no measurable gain |
 | Newton steps with the AD Hessian after `nlminb()` | Not applicable: with random effects the fixed-effect AD Hessian (`obj$he()`) is not available. | Not applicable |

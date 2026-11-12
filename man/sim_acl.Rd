@@ -62,7 +62,10 @@ to the selected fit, requiring a positive-definite Hessian, in-bounds
 parameters, a smaller maximum gradient and objective increase at most
 \code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
 remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
-\code{diagnostics} separately. This may change estimates at numerical precision.}
+\code{diagnostics} separately. This may change estimates at numerical precision.
+On checked TMB versions, the refinement Hessian shares the sd_cores limit
+when forked processes are selected; other sessions compute it sequentially.
+refinement$hessian_calculations records methods, cores and fallback notes.}
 
 \item{nstarts}{Positive integer; number of independent optimization starts
 per simulated dataset. Defaults to 1, independently of ncores. Starts run

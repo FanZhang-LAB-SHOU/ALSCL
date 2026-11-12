@@ -171,9 +171,11 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
   if (process == "resample") {
     .acl_check_implementation(setup$recipe)
     info <- .acl_compile(model)
+    # Simulation needs population reports only, so no derivative tape is needed.
+    # A Fun-only object has no $par; use TMB's C++-ordered parameter list.
     evaluator <- TMB::MakeADFun(d, parameters, random = NULL, map = NULL,
-      DLL = info$dll_name, silent = TRUE)
-    parameter_order <- names(evaluator$env$parList(evaluator$par))
+      DLL = info$dll_name, type = "Fun", silent = TRUE)
+    parameter_order <- names(evaluator$env$parameters)
     scale_prefix <- if (model == "ACL") "log_std_" else "log_sigma_"
     scales <- exp(unlist(parameters[paste0(scale_prefix, c("log_R", "log_F", "log_N0"))]))
     if (any(!is.finite(scales) | scales <= 0))

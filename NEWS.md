@@ -1,5 +1,6 @@
 # Unreleased
 
+- Use the checked parallel Hessian during optimizer refinement where forked processes are selected, with sequential fallback and per-step method records. Simulate fitted processes without constructing unused derivative tapes; fitting interfaces and model equations are unchanged.
 - Revised some wording to make the documentation more precise.
 - Compare positive survey observations cell by cell before reporting fit metrics or choosing a model by AIC. Protect archives from overlapping writes to the same path.
 - Check every map name, including named NULL releases, and normalize unused factor levels before fitting. Preflight and fitting now validate the same optimizer controls.
@@ -13,6 +14,7 @@
 
 ### 简体中文
 
+- 选择 fork 进程的会话中，优化收尾使用已验证的并行 Hessian，失败时退回顺序计算，并逐次记录计算方法。拟合过程模拟省去未使用的导数构建；拟合接口和模型方程保持不变。
 - 修订了一些表述，让说明更加精确。
 - 报告拟合指标或按 AIC 选择模型前，逐格核对调查正观测。多个进程向同一路径存档时会检查写入冲突。
 - 校验全部映射参数名，包括具名 NULL 释放项，并在拟合前清除未使用的因子水平。预检和拟合采用相同的优化器控制项校验。
