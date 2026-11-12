@@ -109,9 +109,9 @@ max(abs(b$opt$par - a$opt$par) / abs(a$opt$par))   # 估计值的最大相对差
 max(abs(b$est_std[, 2] - a$est_std[, 2]) / a$est_std[, 2], na.rm = TRUE)  # 标准误 / standard errors
 ```
 
-TMB 可以用两种自动微分库之一编译模型。CppAD 是 TMB 的默认库，也是 ALSCL 的默认库。TMBad 计算拉普拉斯近似及其梯度要快几倍，因此优化和标准误的时间都会缩短，但它以不同的顺序计算同样的导数，结果的最后几位不同。基准测试中估计 5 个固定效应时，估计值的相对差最大 2.3e-11。在一个估计 10 个固定效应的 ACL 拟合中，相对差最大 2.7e-8（目标函数相差 1.7e-11）：自由参数越多，似然面越平，微小差异会在 `nlminb()` 的容差范围内改变它停止的位置。
+TMB 可以用两种自动微分库之一编译模型。CppAD 是 TMB 的默认库，也是 ALSCL 的默认库。TMBad 计算拉普拉斯近似及其梯度要快几倍，因此优化和标准误的时间都会缩短，但它以不同的顺序计算同样的导数，结果的最后几位不同。基准测试中估计 5 个固定效应时，估计值的相对差最大 2.3e-11。在一个估计 10 个固定效应的 ACL 拟合中，相对差最大 2.7e-8（目标函数相差 1.7e-11）。
 
-TMB can compile a model with one of two automatic-differentiation libraries. CppAD is TMB's default and the ALSCL default. TMBad evaluates the Laplace approximation and its gradient several times faster, so it shortens the optimization as well as the standard errors, but it computes the same derivatives in a different order, so results differ in the last digits. In the benchmark, with 5 estimated fixed effects, estimates differed by at most 2.3e-11 (relative). In an ACL fit with 10 estimated fixed effects they differed by up to 2.7e-8 (relative; the objective function by 1.7e-11): with more free parameters the likelihood is flatter, and small differences move the point at which `nlminb()` stops within its tolerance.
+TMB can compile a model with one of two automatic-differentiation libraries. CppAD is TMB's default and the ALSCL default. TMBad evaluates the Laplace approximation and its gradient several times faster, so it shortens the optimization as well as the standard errors, but it computes the same derivatives in a different order, so results differ in the last digits. In the benchmark, with 5 estimated fixed effects, estimates differed by at most 2.3e-11 (relative). In an ACL fit with 10 estimated fixed effects they differed by up to 2.7e-8 (relative; the objective function by 1.7e-11).
 
 TMBad 适合探索性拟合、大量拟合（模拟研究、敏感性分析）等可以接受这种量级差异的场合。需要与用 CppAD 得到的结果（例如已发表的评估）完全一致时，请用 CppAD，并注明所用的库。上面的代码在你自己的数据上显示两者的差异；`args` 是你传给 `run_alscl()` 的参数列表。设置 `alscl_speed(framework = "TMBad")` 后第一次拟合较慢，因为模型要用 TMBad 编译一次；同一会话中之后的拟合会重复使用。
 

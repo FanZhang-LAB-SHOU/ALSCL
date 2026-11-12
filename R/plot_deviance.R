@@ -13,7 +13,8 @@
 #' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the point. Default is 21.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_width Numeric, the width of the standard error.
+#' @param se_width Numeric. Width of the error-bar caps; does not change the
+#'   standard errors or interval lengths.
 #' @param log Logical. TRUE plots log process deviations; FALSE plots the corresponding
 #'   ratios to the process median, obtained by exponentiating the deviations.
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.

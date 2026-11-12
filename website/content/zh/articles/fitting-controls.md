@@ -54,7 +54,7 @@ extract_parameters(a_map)
 x$fit_config$acl$map <- my_map
 ```
 
-`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。当数据无法确定某个参数（常见迹象是 Hessian 不正定或相关系数估计到接近 1），或外部研究给出的值比拟合更可靠时，就固定该参数；每个固定值的来源都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。
+`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。Hessian 不正定或相关系数接近边界时，先检查梯度、参数尺度、边界、其他初值和剖面。在这些检查支持固定参数，且外部估计或生物学假设能提供合理取值时，再固定该参数；每个固定值的依据都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。
 
 对过程偏差块，提供与偏差数量相同的因子：`NA` 将对应偏差固定在初值（零），重复的因子水平让对应偏差共享一个估计值。`simulate_fit(process = "resample")` 要求过程偏差不受这类限制；条件模拟也支持固定或共享的 map。`hindcast_model()` 要求随时间变化的 `dev_log_R` 和 `dev_log_F` 不受这类限制，但支持固定或共享的静态 `dev_log_N0`。在验证研究中使用这些限制前，见[模拟调查数据并检验预测](case-model-validation.html)。
 
@@ -75,7 +75,7 @@ inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")
 
 <h2 id="f-structure">5. 选择 F 结构</h2>
 
-默认 `F_structure = "group_year"` 时，捕捞死亡率在每个时间步对每个年龄（ACL）或体长组（ALSCL）各有一个值，偏差在时间上以及年龄或体长之间相关。`F_structure = "year"` 时，每个时间步所有年龄或体长共用一个 F，季度数据就是每季度一个值。渔业对各体长作用相同，或数据无法确定年龄别或体长别 F（表现为组间相关估计到接近 1，或 Hessian 不正定）时，选 `"year"`。
+默认 `F_structure = "group_year"` 时，捕捞死亡率在每个时间步对每个年龄（ACL）或体长组（ALSCL）各有一个值，偏差在时间上以及年龄或体长之间相关。`F_structure = "year"` 时，每个时间步所有年龄或体长共用一个 F，季度数据就是每季度一个值。各组 F 相同具有合理依据，或诊断提示数据对组间变化提供的信息较少时，可考虑 `"year"`。组间相关接近 1 或 Hessian 不正定都需要调查，但不能单凭其中一项选择 F 结构。应比较两种结构的拟合、残差和敏感性。
 
 ```r
 a_year <- run_acl(x, F_structure = "year", silent = TRUE)

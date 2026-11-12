@@ -13,7 +13,7 @@ a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 ```
 
-Both fits read the input bundle `x`, so they share the tables, `M`, survey catchability and time grid, and each model takes its starting values and `map` from `x$fit_config`; the fixed growth and process values contribute no uncertainty to the intervals. Give both models the same tables and biology, so that every difference below comes from the model structure.
+Both fits read the input bundle `x`, so they share the tables, `M`, survey catchability and time grid, and each model takes its starting values and `map` from `x$fit_config`; the fixed growth and process values contribute no uncertainty to the intervals. Use the same tables and biological inputs, and document each model's map, fixed values, bounds and numerical checks. Interpret the differences under these fitting configurations when assessing the effect of model structure.
 
 <h2 id="checks">2. Check both fits and compare the fit statistics</h2>
 
@@ -42,7 +42,7 @@ plot_compare_CatL(a, b, x$data.CatL,
 
 ![Synthetic YTF: observed survey indices and fitted medians in four years](../assets/manual/figures/ytf/compare_CatL.png)
 
-Points are the observations and curves the fitted medians in the four selected years. Compare the fitted shapes, in particular in the sparse larger length bins, before reading differences in abundance.
+Points are the observations and curves the fitted medians in the four selected years. Compare the fitted shapes, in particular in the larger length bins with low survey indices, before reading differences in abundance.
 
 <h2 id="estimates">4. Compare the population estimates</h2>
 

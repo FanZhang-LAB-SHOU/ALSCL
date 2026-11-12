@@ -26,10 +26,11 @@ plot_compare_F_ts(
 
 \item{method}{Character. How to summarize F across age/length groups each model
 time step.
-\code{"apical"} (default): maximum F across groups, comparable across
-age-based and length-based models.
-\code{"mean"}: arithmetic mean across all groups, which can mislead when
-models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).}
+\code{"apical"} (default): maximum F across groups.
+\code{"mean"}: unweighted arithmetic mean across groups.
+ACL uses age groups and ALSCL length bins; both summaries depend on that
+grouping. An age-group maximum need not equal a length-bin maximum, because
+age-specific F combines survival across lengths.}
 
 \item{colors}{Named character vector of 2 colors. NULL = use global theme.}
 

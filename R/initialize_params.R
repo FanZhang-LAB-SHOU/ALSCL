@@ -28,12 +28,16 @@
 #' @param a Numeric. Length-weight coefficient (default exp(-12)).
 #' @param b Numeric. Length-weight exponent (default 3).
 #' @param mat_L50 Numeric. Length at 50 pct maturity (default 35).
-#' @param mat_L95 Numeric. Length at 95 pct maturity (default 40).
+#' @param mat_L95 Numeric. Length at 95 percent maturity (default 40), distinct
+#'   from mat_L50. An increasing maturity curve uses mat_L95 > mat_L50.
 #' @param cv_L Numeric. CV of length-at-age (default 0.2).
 #' @param cv_inc Numeric. CV of growth increment (default 0.2).
 #' @param std_logR Numeric. Innovation SD of AR(1) log-recruitment deviations
-#'   (default 0.3).
-#' @param std_logN0 Numeric. SD of initial log-N deviations (default 0.2).
+#'   (default 0.3); the stationary marginal SD is
+#'   std_logR / sqrt(1 - R_ar^2).
+#' @param std_logN0 Numeric. SD of independent log-scale increments used to
+#'   construct the initial age distribution recursively (default 0.2). The total
+#'   log deviation at each age accumulates these increments.
 #' @param alpha Numeric. Beverton-Holt alpha (default 400).
 #' @param beta Numeric. Beverton-Holt beta (default 10).
 #' @param std_SN Numeric. Survey observation error SD (default 0.2).

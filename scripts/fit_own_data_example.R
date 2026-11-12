@@ -114,7 +114,7 @@ for (fit in list(a, b)) {
 }
 residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
-# 非正定 Hessian 时不展示标准误区间 / Omit SE intervals if Hessian is not positive definite.
+# Hessian 非正定时省略近似 95% 区间 / Omit approximate 95% intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
 print(residual_plot)
 print(ssb_plot)

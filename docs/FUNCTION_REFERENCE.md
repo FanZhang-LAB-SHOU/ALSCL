@@ -503,11 +503,11 @@ initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
 | `a` | `NULL` | 长度重量关系 W=a*L^b 的系数，需匹配单位。 | Numeric. Length-weight coefficient (default exp(-12)). |
 | `b` | `NULL` | 长度重量关系 W=a*L^b 的指数。 | Numeric. Length-weight exponent (default 3). |
 | `mat_L50` | `NULL` | 成熟比例为 0.5 的体长。 | Numeric. Length at 50 pct maturity (default 35). |
-| `mat_L95` | `NULL` | 比例为 0.95 的体长，必须不同于 L50；下降选择性可小于 L50。 | Numeric. Length at 95 pct maturity (default 40). |
+| `mat_L95` | `NULL` | 成熟比例为 0.95 的体长，必须不同于 mat_L50。上升的成熟曲线使用 mat_L95 > mat_L50。 | Length at 95 percent maturity (default 40), distinct from mat_L50. An increasing maturity curve uses mat_L95 > mat_L50. |
 | `cv_L` | `NULL` | 给定年龄时体长的变异系数。 | Numeric. CV of length-at-age (default 0.2). |
 | `cv_inc` | `NULL` | 生长增量的变异系数。 | Numeric. CV of growth increment (default 0.2). |
-| `std_logR` | `NULL` | 模拟对数补充偏差的 SD 缩放。 | Numeric. SD of log-recruitment deviations (default 0.3). |
-| `std_logN0` | `NULL` | 初始对数年龄组尾数偏差的 SD。 | Numeric. SD of initial log-N deviations (default 0.2). |
+| `std_logR` | `NULL` | 对数补充偏差 AR(1) 过程的创新标准差；平稳边际标准差为 std_logR / sqrt(1 - R_ar^2)。 | Innovation SD of AR(1) log-recruitment deviations (default 0.3); the stationary marginal SD is std_logR / sqrt(1 - R_ar^2). |
+| `std_logN0` | `NULL` | 初始年龄结构逐龄递推中独立对数增量的标准差。各年龄的总对数偏差由这些增量累加得到。 | SD of independent log-scale increments used to construct the initial age distribution recursively (default 0.2). The total log deviation at each age accumulates these increments. |
 | `alpha` | `NULL` | Beverton–Holt 补充关系系数，量纲随丰度与生物量单位改变。 | Numeric. Beverton-Holt alpha (default 400). |
 | `beta` | `NULL` | Beverton–Holt 补充关系系数，量纲随丰度与生物量单位改变。 | Numeric. Beverton-Holt beta (default 10). |
 | `std_SN` | `NULL` | 调查观测对数误差的标准差。 | Numeric. Survey observation error SD (default 0.2). |
@@ -800,7 +800,7 @@ plot_CatL (model_result, point_size = NULL, point_color = NULL, point_shape = 16
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups. |
+| `model_result` | `必填 / required` | 包含 report$Elog_index（拟合的自然对数调查指数）、调查观测及时间和体长元数据的拟合结果。 | A fitted result containing report$Elog_index (predicted natural-log survey indices), observed survey data, and time and length metadata. |
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. NULL inherits the global observed_color setting. |
 | `point_shape` | `16` | 点形状编号，如 16、21。 | Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square. |
@@ -818,7 +818,7 @@ plot_CatL (model_result, point_size = NULL, point_color = NULL, point_shape = 16
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Specifies the number of columns in the facet_wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Specifies scales for facet_wrap. Default is "free". |
 | `facet_by` | `c("length", "year")` | 布局："length" 每个体长组一个面板、横轴为时间；"year" 每个时间步一个面板、横轴为体长。 | "length" (default) draws one panel per length bin with time on the x axis; "year" draws one panel per time step with length on the x axis. |
-| `exp_transform` | `FALSE` | 对数调查值取指数，显示原尺度；拟合曲线是中位数。 | Logical. Specifies whether to apply the exponential function to the data before plotting. If TRUE, the exponential of the data values is plotted. Default is FALSE. |
+| `exp_transform` | `FALSE` | TRUE 将对数观测和拟合值取指数，恢复原调查指数尺度；拟合曲线表示条件中位数。FALSE 保留对数尺度。 | TRUE exponentiates the logged observations and fitted values to the original survey-index scale; fitted curves represent conditional medians. FALSE keeps the log scale. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
@@ -977,6 +977,10 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 各时间步 F 比较 / Fishing mortality by time step
 
+ACL 按年龄组、ALSCL 按体长组汇总 F。年龄别 F 汇总了各体长的存活，因此年龄组最大值与体长组最大值未必相同，即使针对同一种群。比较时应同时报告组别和汇总方法。
+
+ACL summarizes F across age groups and ALSCL across length bins. An age-group maximum need not equal a length-bin maximum, even for the same population, because age-specific F combines survival across lengths. Report the grouping and summary method with the comparison.
+
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical", 
     "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL)
@@ -988,7 +992,7 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `model2` | `必填 / required` | 第二个拟合对象。 | Second model result (alternative). |
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
-| `method` | `c("apical", "mean")` | apical 取组间最大 F；mean 取非加权均值，不自动年化。 | Character. How to summarize F across age/length groups each model time step; quarterly fits are not aggregated to years. "apical" (default): maximum F across groups -- comparable across age-based and length-based models. "mean": arithmetic mean across all groups -- can be misleading when models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero). |
+| `method` | `c("apical", "mean")` | 每个时间步内，apical 取各组 F 的最大值，mean 取非加权算术均值；不自动年化。ACL 按年龄组、ALSCL 按体长组汇总，组别不同会影响两种汇总量。 | Summary within each model time step: "apical" takes the maximum F across groups; "mean" takes the unweighted arithmetic mean. Rates are not annualized. ACL uses age groups and ALSCL length bins; both summaries depend on that grouping. |
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
@@ -1019,6 +1023,10 @@ plot_compare_F_ts(a, b, method = "apical") +
 ## `plot_compare_growth()`
 
 生长与外部参照接口 / Growth and reference-data interface
+
+曲线比较 VB 参数，热图比较静态 `pla` 矩阵。ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。
+
+The curves compare VB parameters and the heatmaps compare static `pla` matrices. Realized length distributions at age in ALSCL also depend on growth transitions and survival.
 
 可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
 
@@ -1304,7 +1312,7 @@ plot_deviance (model_result, se = FALSE, point_size = NULL, point_color = "white
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
-| `se` | `FALSE` | 是否画标准误区间；默认 FALSE。 | Logical. Whether to draw 95% intervals from the standard errors. Default is FALSE. |
+| `se` | `FALSE` | 是否绘制基于标准误计算的近似 95% 区间；默认 FALSE。 | Whether to draw approximate 95% intervals computed from standard errors. Default is FALSE. |
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_color` | `"white"` | 点颜色。 | Character. The color of the point. Default is "white". |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. The shape of the point. Default is 21. |
@@ -1312,7 +1320,7 @@ plot_deviance (model_result, se = FALSE, point_size = NULL, point_color = "white
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character, the line type. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_width` | `0.5` | 误差棒端帽宽度。 | Numeric, the width of the standard error. |
+| `se_width` | `0.5` | 误差棒端帽宽度，不改变标准误或区间长度。 | Width of the error-bar caps; does not change the standard errors or interval lengths. |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Number of columns in facet wrap. Default is NULL. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Scales for facet wrap. Default is "free". |
 | `log` | `TRUE` | TRUE 为对数过程偏差；FALSE 取指数，参考值为 1。 | TRUE plots log process deviations; FALSE plots exponentiated multipliers, not likelihood deviances. |
@@ -1418,6 +1426,10 @@ ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长�
 ## `plot_pla()`
 
 给定年龄的体长分布 / Distribution of length at age
+
+`pla` 是静态年龄别体长概率矩阵。ACL 在每个时间步使用它；ALSCL 用它初始化种群并分配补充个体的体长。ALSCL 某年龄、某时期的实际分布应由 `NLA` 中对应的体长向量归一化得到。
+
+`pla` is a static matrix of length probabilities conditional on age. ACL uses it at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in `NLA` to obtain the realized distribution at a given age and time in ALSCL.
 
 `plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。
 
@@ -1554,7 +1566,7 @@ plot_residuals (model_result, f = 0.4, line_color = NULL, smooth_color = NULL, h
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free". |
 | `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric, optional. Number of columns in facet wrap. Default is NULL. |
 | `facet_by` | `c("length", "year")` | 布局："length" 每个体长组一个面板、横轴为时间；"year" 每个时间步一个面板、横轴为体长。 | "length" (default) draws one panel per length bin with time on the x axis; "year" draws one panel per time step with length on the x axis. |
-| `resid_cap` | `NULL` | 可选残差显示裁剪阈值；使用时需说明。 | Numeric or NULL. Symmetrically cap residuals at +/- this value. Useful for species with many length bins where tail bins (e.g. >120 for tuna) have very few observations, producing extreme log-residuals that distort the plot. Default is NULL (no capping). Use capping only when its threshold and effect on displayed residuals are reported. |
+| `resid_cap` | `NULL` | 有限正数或 NULL。将显示的残差对称裁剪到正负该阈值，NULL 不裁剪。只改变显示范围；使用时报告阈值及受影响的点。 | Finite positive scalar or NULL. Symmetrically cap displayed residuals at +/- this value; NULL disables capping. This changes the display only. Report the threshold and which points are affected. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
@@ -1826,6 +1838,10 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 ## `plot_VB()`
 
 生长曲线与区间 / Growth curve and interval
+
+曲线由拟合结果中的 VB 参数计算，`t0` 是理论零体长年龄。ALSCL 各期实际的年龄别体长分布还取决于生长转移和体长别死亡；此图展示的是参数对应的参考曲线。
+
+The curve is calculated from the fitted VB parameters; `t0` is the theoretical age at zero length. Realized length distributions at age in ALSCL also depend on growth transitions and length-specific mortality; this plot shows the parameter-based reference curve.
 
 `age_range = NULL` 使用拟合年龄范围；旧结果没有年龄信息时回退到 1–25 岁，自动起点不早于 `t0`。显式范围必须是有限、递增且起点不早于 `t0` 的二元向量；自动范围没有正跨度时会报错。有效的显式范围仍可使用。两种区间样式均保留参数标注，并遵守 `text_size`、`text_color`、`font_family` 和 `ylab$growth`；单次调用的标签优先。
 
@@ -2793,9 +2809,9 @@ profile_model (fit, parameter, values, scale = c("natural", "internal"), ncores 
 
 A list containing grid diagnostics, objectives and delta_nll, portable fits, resolved settings, reference objective and timing.
 
-其余自由标量初值取自拟合最优点，保留固定值和具名 NULL 释放。必须至少保留一个其他自由标量。delta_nll 相对于原拟合，可为负值并提示重查最优点。保留失败点，不自动生成置信区间或卡方阈值；外部假设使用 fit_scenarios()。
+其余自由标量初值取自拟合最优点，保留固定值和具名 NULL 释放。必须至少保留一个其他自由标量。delta_nll 相对于原拟合。负值会保留，小于 -1e-6 时才会因目标函数值更低而警告。应检查该次重新拟合的数值状态，并重查原拟合；很小的负差值可能来自舍入误差。剖面的解释以当前模型及固定参数设置为条件。保留失败点，不自动生成置信区间或卡方阈值；外部假设使用 fit_scenarios()。
 
-Other free scalar starts come from the fitted optimum; fixed values and named NULL releases are preserved. At least one other free scalar must remain. delta_nll is relative to the original fit and can be negative, prompting rechecking of that optimum. Failed points remain visible. No automatic confidence intervals or chi-square cutoffs are provided. External assumptions use fit_scenarios().
+Other free scalar starts come from the fitted optimum; fixed values and named NULL releases are preserved. At least one other free scalar must remain. delta_nll is relative to the original fit. Negative values are retained, and a value below -1e-6 triggers a warning about a lower objective. Check that refit's numerical status and recheck the original fit; tiny negative differences can reflect roundoff. The profile is conditional on the model and fixed-parameter settings. Failed points remain visible. No automatic confidence intervals or chi-square cutoffs are provided. External assumptions use fit_scenarios().
 
 **示例 / Example:**
 

@@ -74,7 +74,9 @@ A ggplot object.
 \description{
 Left panel: VB growth curves from each model. Optionally overlay a VB curve
 fitted independently from observed age-length data via \code{nls()}.
-Right panel: pla heatmaps side-by-side.
+Right panel: static pla heatmaps side-by-side. These compare VB parameters
+and static length-at-age probabilities. Realized length distributions at age
+in ALSCL also depend on growth transitions and survival.
 }
 \examples{
 \dontrun{

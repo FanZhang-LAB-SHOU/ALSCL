@@ -74,16 +74,20 @@ to -Inf and Inf so that the outer bins absorb the distribution tails.}
 
 \item{mat_L50}{Numeric. Length at 50 pct maturity (default 35).}
 
-\item{mat_L95}{Numeric. Length at 95 pct maturity (default 40).}
+\item{mat_L95}{Numeric. Length at 95 percent maturity (default 40), distinct
+from mat_L50. An increasing maturity curve uses mat_L95 > mat_L50.}
 
 \item{cv_L}{Numeric. CV of length-at-age (default 0.2).}
 
 \item{cv_inc}{Numeric. CV of growth increment (default 0.2).}
 
 \item{std_logR}{Numeric. Innovation SD of AR(1) log-recruitment deviations
-(default 0.3).}
+(default 0.3); the stationary marginal SD is
+std_logR / sqrt(1 - R_ar^2).}
 
-\item{std_logN0}{Numeric. SD of initial log-N deviations (default 0.2).}
+\item{std_logN0}{Numeric. SD of independent log-scale increments used to
+construct the initial age distribution recursively (default 0.2). The total
+log deviation at each age accumulates these increments.}
 
 \item{alpha}{Numeric. Beverton-Holt alpha (default 400).}
 

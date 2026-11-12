@@ -33,7 +33,7 @@ Read the numerical checks before interpreting estimates. `diagnose_model()` prin
 | Convergence code is not 0, or the gradient is large | The optimizer stopped early or the surface is flat | Run more starts, `run_acl(x, nstarts = 4, ncores = 2)`, and compare their objectives in `a$start_diagnostics` |
 | Hessian not positive definite | The fit is away from a minimum, parameter scales cause numerical difficulty, or some parameters are weakly identified | Check gradients, scales and additional starts; use profiles or sensitivity analyses before fixing parameters or simplifying F ([Fitting controls](fitting-controls.html)) |
 | Parameter on a bound | The constrained optimum is at a bound, or the fit has not reached a stable solution | Inspect the bound and its biological basis, try other starts, and examine a profile before changing it |
-| Natural-scale boundary | A standard deviation near 0 or a correlation near 0 or 1 | Fix the parameter at a supported value, or simplify the F structure |
+| Natural-scale boundary | A standard deviation near 0 or a correlation near 0 or 1 | Check gradients, bounds, alternative starts and profiles; assess biological support before fixing a value or simplifying F |
 | Checks pass but residuals show patterns | The model misses a feature of the data | Continue with [Diagnostics](diagnostics.html) |
 
 <h2 id="estimates">3. Read the estimates</h2>

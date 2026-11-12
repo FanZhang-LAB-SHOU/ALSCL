@@ -472,7 +472,9 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #'
 #' Left panel: VB growth curves from each model. Optionally overlay a VB curve
 #' fitted independently from observed age-length data via \code{nls()}.
-#' Right panel: pla heatmaps side-by-side.
+#' Right panel: static pla heatmaps side-by-side. These compare VB parameters
+#' and static length-at-age probabilities. Realized length distributions at age
+#' in ALSCL also depend on growth transitions and survival.
 #'
 #' @inheritParams plot_compare_ts
 #' @param age_range Numeric vector of length 2, or NULL. NULL uses the combined
@@ -1016,10 +1018,11 @@ plot_compare_selectivity <- function(model1, model2,
 #' @inheritParams plot_compare_ts
 #' @param method Character. How to summarize F across age/length groups each model
 #'   time step.
-#'   \code{"apical"} (default): maximum F across groups, comparable across
-#'   age-based and length-based models.
-#'   \code{"mean"}: arithmetic mean across all groups, which can mislead when
-#'   models differ in dimension (e.g. 20 ages vs 22 length bins with many near-zero).
+#'   \code{"apical"} (default): maximum F across groups.
+#'   \code{"mean"}: unweighted arithmetic mean across groups.
+#'   ACL uses age groups and ALSCL length bins; both summaries depend on that
+#'   grouping. An age-group maximum need not equal a length-bin maximum, because
+#'   age-specific F combines survival across lengths.
 #' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.

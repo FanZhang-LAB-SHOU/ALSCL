@@ -3,6 +3,11 @@
 #' Display the age-length probability matrix reported by an ACL or ALSCL fit.
 #' Each cell shows the probability that a fish of a given age falls within
 #' a length group. Columns correspond to ages and rows to length groups.
+#' ACL uses this static matrix to convert numbers at age to numbers at length
+#' in every time step. ALSCL uses it for initialization and recruitment;
+#' subsequent length distributions follow growth and survival. Normalize the
+#' corresponding length vector in NLA to obtain the realized distribution
+#' at a given age and time in ALSCL.
 #'
 #' @param model_result An ACL or ALSCL fitted result containing report$pla
 #'   and length-group metadata.

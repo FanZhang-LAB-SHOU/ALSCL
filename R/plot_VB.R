@@ -1,6 +1,10 @@
 #' Plot the Von Bertalanffy growth function
 #'
-#' This function takes Linf, k, and t0 as input, creates a sequence of ages, applies the VB function to each age, and then plots the result using ggplot2.
+#' Plot a reference curve using Linf, vbk and t0 from a fitted result.
+#' The parameter t0 is the theoretical age at zero length. In ALSCL, realized
+#' length distributions at age also depend on growth transitions and
+#' length-specific mortality, so this curve does not summarize the evolving
+#' population.
 #' @param model_result A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.
 #' @param age_range NULL or a finite increasing numeric pair in years. NULL
 #'   uses the fitted age range in model_result$age, or c(1, 25) for saved fits

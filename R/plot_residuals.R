@@ -26,9 +26,8 @@
 #'   on the x axis. This changes the layout, not the residual definition.
 #' @param resid_cap Finite positive numeric scalar or NULL. Symmetrically cap
 #'   residuals at +/- this value; NULL disables capping.
-#'   Useful for species with many length bins where tail bins (e.g. >120 for tuna)
-#'   have very few observations, producing extreme log-residuals that distort the
-#'   plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
+#'   This changes the display only. Report the threshold and which points
+#'   are affected when using capping.
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #' @param ... The former argument name type, accepted with a warning.
 #'

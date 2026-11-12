@@ -41,7 +41,9 @@ utils::globalVariables("survey_run")
 #' @param facet_by Character. "length" (default) draws one panel per length bin
 #'   with time on the x axis; "year" draws one panel per time step with length
 #'   on the x axis.
-#' @param exp_transform Logical. Specifies whether to apply the exponential function to the data before plotting. If TRUE, the exponential of the data values is plotted. Default is FALSE.
+#' @param exp_transform Logical. TRUE exponentiates the logged observations and
+#'   fitted values to the original survey-index scale; fitted curves represent
+#'   conditional medians. FALSE keeps the log scale.
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #' @param ... The former argument name type, accepted with a warning.
 #'

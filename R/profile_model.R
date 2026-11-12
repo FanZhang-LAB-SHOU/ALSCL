@@ -18,8 +18,10 @@
 #' @details At least one other free scalar must remain, as required by the fitting
 #'   core. Grid values must satisfy the original optimizer bounds. Other free
 #'   scalar starts are initialized at the fitted optimum; fixed parameters and
-#'   named NULL map releases are preserved. A better grid objective triggers a
-#'   warning to recheck the original fit. No confidence intervals or chi-square
+#'   named NULL map releases are preserved. A delta_nll below -1e-6 triggers a
+#'   warning to recheck the original fit; tiny negative differences can reflect
+#'   roundoff. Check the grid fit's numerical status as well. The profile is
+#'   conditional on the model and fixed-parameter settings. No confidence intervals or chi-square
 #'   cutoffs are inferred, and failed numerical screens remain visible.
 #' @examples
 #' \dontrun{

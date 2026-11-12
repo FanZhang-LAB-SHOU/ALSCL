@@ -52,7 +52,8 @@ plot_deviance(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_width}{Numeric, the width of the standard error.}
+\item{se_width}{Numeric. Width of the error-bar caps; does not change the
+standard errors or interval lengths.}
 
 \item{facet_ncol}{Number of columns in facet wrap. Default is NULL.}
 

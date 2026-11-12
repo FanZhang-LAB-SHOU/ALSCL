@@ -86,7 +86,11 @@ display modes. Default is 5.}
 A ggplot object representing the plot.
 }
 \description{
-This function takes Linf, k, and t0 as input, creates a sequence of ages, applies the VB function to each age, and then plots the result using ggplot2.
+Plot a reference curve using Linf, vbk and t0 from a fitted result.
+The parameter t0 is the theoretical age at zero length. In ALSCL, realized
+length distributions at age also depend on growth transitions and
+length-specific mortality, so this curve does not summarize the evolving
+population.
 }
 \details{
 If the growth covariance is unavailable or unusable, a request for

@@ -80,7 +80,9 @@ and time/length metadata.}
 with time on the x axis; "year" draws one panel per time step with length
 on the x axis.}
 
-\item{exp_transform}{Logical. Specifies whether to apply the exponential function to the data before plotting. If TRUE, the exponential of the data values is plotted. Default is FALSE.}
+\item{exp_transform}{Logical. TRUE exponentiates the logged observations and
+fitted values to the original survey-index scale; fitted curves represent
+conditional medians. FALSE keeps the log scale.}
 
 \item{return_data}{A logical indicating whether to return the processed data alongside the plot. Default is FALSE.}
 
