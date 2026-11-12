@@ -2,6 +2,8 @@
 
 **44 张图，覆盖 22 个公开绘图函数及主要类型。44 figures covering all 22 public plotting functions and major variants.**
 
+另附单点估计与缺测绘图示例。 / Additional examples show single estimates and missing observations.
+
 全部 44 张图使用当前绘图函数从内置教学拟合生成，默认不显示网格线；BL/SBL 图包含可用的近似 95% 区间。 / All 44 figures are drawn with the current plotting functions from the built-in teaching fits; the defaults show no gridlines, and the BL/SBL figures include the available approximate 95% intervals.
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
@@ -152,6 +154,10 @@ The curves show fitted survey-index medians on the original scale, `exp(Elog_ind
 
 <a id="plot_abundance_N"></a>
 ## 5. 丰度 N / Abundance N
+
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 # 绘制本图 / Draw this figure
@@ -316,6 +322,28 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
+
+
+### 显示一个已保存的估计值 / Displaying a single saved estimate
+
+此列表仅用于显示 `b` 最后一期的产卵群体生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
+
+This display-only list contains the final spawning-biomass estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
+
+```r
+# Display one saved estimate without refitting.
+ssb_rows <- which(rownames(b$est_std) == "SSB")
+one_period <- list(
+  model_type = b$model_type,
+  year = tail(b$year, 1L),
+  report = list(SSB = tail(b$report$SSB, 1L)),
+  est_std = b$est_std[tail(ssb_rows, 1L), , drop = FALSE]
+)
+plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
+  ggplot2::coord_cartesian(xlim = one_period$year + c(-0.5, 0.5))
+```
+
+![Displaying a single saved estimate](figures/sparse-panels/single-period-SSB.png)
 
 <a id="plot_SSB_SBA"></a>
 ## 12. 产卵生物量 SBA / Spawning biomass SBA
@@ -488,6 +516,10 @@ Each column of the static `pla` matrix gives length-bin probabilities for one ag
 
 <a id="F_ACL_year"></a>
 ## 21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
+
+每个面板只有一个估计值时显示为点，带状区间改用误差棒；已选择 `se_type = "errorbar"` 时不会重复添加区间。
+
+A panel with one estimate uses a point and an error bar in place of a ribbon. Choosing `se_type = "errorbar"` does not add a duplicate interval.
 
 `plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
 
@@ -694,6 +726,10 @@ Each point is the fitted fishing mortality rate divided by the process median. A
 <a id="ridges"></a>
 ## 32. 长度组成山脊图 / Length composition ridges
 
+山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。
+
+Both ridge panels retain the full model length range, even when the shortest or longest bins are unobserved or all observations are missing. Custom `x_breaks` and global `x_expand` apply to both panels. `ridges_scale` must be `NULL` (automatic height) or one finite positive number; zero, negative values, missing values, infinity and vectors are rejected.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
@@ -711,10 +747,37 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_ridges)
 
+
+### 边界体长组缺测 / Missing boundary length bins
+
+这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10–90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
+
+This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10–90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
+
+```r
+# Synthetic display example with missing boundary length bins.
+lengths <- seq(10, 90, 10)
+years <- 2000:2003
+log_index <- outer(lengths, seq(35, 50, 5),
+  function(length, center) -((length - center) / 18)^2)
+ridge_example <- list(year = years, len_mid = lengths,
+  observations = exp(log_index), report = list(Elog_index = log_index))
+ridge_example$observations[c(1, 2, 8, 9), ] <- NA_real_
+ridge_example$observations[, 1L] <- NA_real_
+plot_ridges(ridge_example, ridges_scale = 1,
+  x_breaks = seq(10, 90, 20))
+```
+
+![Missing boundary length bins](figures/sparse-panels/ridges-missing-edges.png)
+
 <a id="plot_compare_ts"></a>
 
 <a id="compare_ts"></a>
 ## 33. 种群时间序列比较 / Population time series comparison
+
+每个模型分别判断是否只有一个估计值；单点用点与误差棒，多期结果仍用曲线与带状区间。
+
+Each model is handled separately: a single estimate uses a point and error bar, while a multi-period series retains its line and ribbon.
 
 ```r
 # 绘制本图 / Draw this figure
@@ -751,6 +814,10 @@ Heat maps of fishing mortality, one per fit, time on the horizontal axis and the
 
 <a id="compare_residuals"></a>
 ## 35. 残差联合诊断 / Combined residual diagnostics
+
+平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。
+
+The mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.
 
 ```r
 # 绘制本图 / Draw this figure

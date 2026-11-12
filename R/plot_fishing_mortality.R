@@ -45,6 +45,9 @@
 #'   settings and the explicit typography arguments. Major and minor
 #'   grids are removed for every base theme.
 #'
+#' @details A group or panel with only one estimate is drawn as a point.
+#'   When intervals are requested, its ribbon is replaced by an error bar.
+#'   The point uses the global point_size setting and the estimate's line colour.
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
 #' @details Matrix positions are matched to fitted time and group metadata;
 #'   optional matrix dimnames do not replace these coordinates. Intervals require
@@ -324,6 +327,10 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       y     = if (!is.null(ylab)) ylab else .acl_lab("y", "F")
     ) +
     .acl_scale_x(x_breaks, n_breaks = 5) + current_theme
+
+  groups <- if (type == "year")
+    if (is_alscl) "Group" else "AgeGroup" else "Period"
+  p <- .acl_show_singletons(p, groups)
 
   if (return_data) {
     return(list(plot = p, data = data_out))

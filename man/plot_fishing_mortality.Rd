@@ -105,6 +105,10 @@ F at age (FA: (A-1) x (Y-1)) is the negative log of the proportion
 surviving within each age class over the time step, minus natural mortality.
 }
 \details{
+A group or panel with only one estimate is drawn as a point.
+When intervals are requested, its ribbon is replaced by an error bar.
+The point uses the global point_size setting and the estimate's line colour.
+
 Matrix positions are matched to fitted time and group metadata;
 optional matrix dimnames do not replace these coordinates. Intervals require
 one finite estimate and finite nonnegative standard error per plotted cell.

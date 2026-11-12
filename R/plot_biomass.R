@@ -42,6 +42,9 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'
 #' @details A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
 #'   theme label, and the typography arguments replace the corresponding theme settings.
+#' @details A group or panel with only one estimate is drawn as a point.
+#'   When intervals are requested, its ribbon is replaced by an error bar.
+#'   The point uses the global point_size setting and the estimate's line colour.
 #' @return A ggplot object or a list with plot and data.
 #' @export
 plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
@@ -173,6 +176,8 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
                          y = if (!is.null(ylab)) ylab else .acl_lab("y", "biomass"),
                          title = if (!is.null(title)) title else .acl_title(title_key)) +
     .acl_scale_x(x_breaks, n_breaks = 5) + current_theme
+
+  p <- .acl_show_singletons(p, intersect(c("AgeGroup", "LengthGroup"), names(p$data)))
 
   if (return_data) {
     return(list(plot = p, data = data_out))

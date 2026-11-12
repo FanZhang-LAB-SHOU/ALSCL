@@ -22,6 +22,8 @@ for folder in ['docs/figures', 'man/figures']:
             kind, source = 'worksheet', 'input table illustration (cell borders retained)'
         elif rel.startswith('man/figures/') or '/own-data-example/' in rel:
             source = 'scripts/refresh_manual_figures.R'
+        elif '/sparse-panels/' in rel:
+            source = 'scripts/plot_sparse_panels.R'
         elif '/ytf/' in rel:
             source = 'scripts/ytf_workflow.R'
         elif '/cases/' in rel:

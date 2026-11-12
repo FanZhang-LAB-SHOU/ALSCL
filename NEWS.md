@@ -1,5 +1,6 @@
 # Unreleased
 
+- Draw single estimates as points with error bars when intervals are requested. Keep the full length range in ridge panels and the full time range in mean-residual comparisons when boundary observations are missing. Validate ridge-height multipliers; add rendering regression tests and bilingual examples without gridlines.
 - Keep gaps in mean-residual comparison lines and observed ridge polygons, show isolated observations, and align ridge panels and time colors. Support Brewer palettes for two-period results; add rendering regression tests and refresh affected figures without gridlines.
 - Use the checked parallel Hessian during optimizer refinement where forked processes are selected, with sequential fallback and per-step method records. Simulate fitted processes without constructing unused derivative tapes; fitting interfaces and model equations are unchanged.
 - Revised some wording to make the documentation more precise.
@@ -15,6 +16,7 @@
 
 ### 简体中文
 
+- 单个估计值显示为点，请求区间时显示误差棒。边界观测缺失时，山脊图保留完整体长范围，平均残差比较图保留完整时间范围。校验山脊高度缩放参数，补充实际渲染回归测试和无网格线的双语示例。
 - 平均残差比较线和观测山脊图在缺测处断开，保留孤立观测，并统一山脊图两栏的坐标与时间配色。Brewer 配色支持两个时期的结果；补充绘图回归测试，重新生成受影响配图并保持无网格线。
 - 选择 fork 进程的会话中，优化收尾使用已验证的并行 Hessian，失败时退回顺序计算，并逐次记录计算方法。拟合过程模拟省去未使用的导数构建；拟合接口和模型方程保持不变。
 - 修订了一些表述，让说明更加精确。

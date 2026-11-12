@@ -314,8 +314,8 @@
     "zh": "长度组成山脊图",
     "en": "Length composition ridges",
     "code": "plot_ridges(b)",
-    "note_zh": "每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。 缺失或被排除的体长组会断开观测轮廓和填色。孤立的观测体长组在缩放后的组成高度处画为点；归一化仍使用该期全部正观测。左右面板使用相同的时间位置、纵轴范围和时间配色，包括完全缺测的时期。`spectral` 等 Brewer 配色也支持只有两个时期的结果。",
-    "note_en": "Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported. Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that period. Both panels keep the same time positions, vertical range and time colors, including periods without observations. Brewer palettes such as `spectral` also support two-period results.",
+    "note_zh": "每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。含已保存观测的结果可直接绘图。 缺失或被排除的体长组会断开观测轮廓和填色。孤立的观测体长组在缩放后的组成高度处画为点；归一化仍使用该期全部正观测。左右面板使用相同的时间位置、完整模型体长范围、纵轴范围和时间配色，包括完全缺测的时期。`spectral` 等 Brewer 配色也支持只有两个时期的结果。",
+    "note_en": "Each period is normalized separately: observations left, fit right. This does not show total abundance trends. Saved results containing observations are supported. Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that period. Both panels keep the same time positions, full model length range, vertical range and time colors, including periods without observations. Brewer palettes such as `spectral` also support two-period results.",
     "warnings": [],
     "status": "PASS"
   },

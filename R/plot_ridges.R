@@ -7,14 +7,15 @@
 #' remain missing, and a wholly unobserved period has no observed ridge.
 #' Missing bins break the observed outline and fill;
 #' an isolated observed bin is shown as a point at its scaled composition height.
-#' Both panels use the same vertical range so their time labels align. Predicted
+#' Both panels use the full model length range and the same vertical range,
+#' including missing edge bins and wholly unobserved periods. Predicted
 #' compositions use all length bins. Normalization is stable for large or small
 #' finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 #' a live TMB object; saved fits use the observation mask in the TMB data.
 #'
 #' @param model_result A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year.
 #' @param ridges_alpha Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.
-#' @param ridges_scale Numeric or NULL. Multiplier for ridge height. When NULL (default),
+#' @param ridges_scale One finite positive number or NULL. Multiplier for ridge height. When NULL (default),
 #'   auto-scales so the tallest peak fills ~80\% of inter-year spacing. Increase for
 #'   taller ridges, decrease for flatter. Useful when many length bins make proportions
 #'   small (e.g. tuna with 22 bins).
@@ -73,6 +74,11 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
                         axis_title_size = NULL, axis_text_size = NULL,
                         strip_text_size = NULL, legend_text_size = NULL,
                         x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+
+  if (!is.null(ridges_scale) && (!is.numeric(ridges_scale) ||
+      is.complex(ridges_scale) || !is.null(dim(ridges_scale)) ||
+      length(ridges_scale) != 1L || !is.finite(ridges_scale) || ridges_scale <= 0))
+    stop("ridges_scale must be NULL or one finite positive number.", call. = FALSE)
 
   # Define the data
   Elog_index <- model_result[["report"]][["Elog_index"]]
@@ -173,6 +179,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
       mapping = aes(x = len_mid, y = as.numeric(year) + Abundance, fill = year),
       shape = 21, size = acl_theme("point_size"), alpha = ridges_alpha, show.legend = FALSE)
   }
+  # Train both axes on the complete length grid even if edge bins, or all
+  # observations, are missing. Blank layers retain the configured expansion.
+  p_observed <- p_observed + ggplot2::expand_limits(x = range(len_mid))
+  p_estimated <- p_estimated + ggplot2::expand_limits(x = range(len_mid))
   p <- cowplot::plot_grid(p_observed, p_estimated, ncol = 2, align = "hv", axis = "tblr")
 
   return(p)

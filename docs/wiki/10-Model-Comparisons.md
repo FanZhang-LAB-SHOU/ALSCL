@@ -15,6 +15,10 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 
 ## 33. 种群时间序列比较 / Population time series comparison
 
+每个模型分别判断是否只有一个估计值；单点用点与误差棒，多期结果仍用曲线与带状区间。
+
+Each model is handled separately: a single estimate uses a point and error bar, while a multi-period series retains its line and ribbon.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
@@ -48,6 +52,10 @@ Heat maps of fishing mortality, one per fit, time on the horizontal axis and the
 
 
 ## 35. 残差联合诊断 / Combined residual diagnostics
+
+平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。
+
+The mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.
 
 ```r
 # 绘制本图 / Draw this figure

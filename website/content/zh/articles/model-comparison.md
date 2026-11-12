@@ -8,6 +8,8 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+
 ## 种群时间序列比较
 
 ```r
@@ -48,6 +50,8 @@ plot_compare_residuals(a, b, dat)
 整期缺测会断开平均残差线，孤立的有效时期仍显示为点。只有该期至少有两个观测体长组时才绘制标准差误差棒；仅有一个观测时仍保留残差点。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_residuals)
+
+平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。
 
 ## 生长与外部参照接口
 

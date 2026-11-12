@@ -30,6 +30,9 @@
 #'   estimate and finite nonnegative standard error per model time step.
 #'   Missing or invalid uncertainty produces an explicit error; use se = FALSE
 #'   to plot reported estimates alone.
+#' @details A group or panel with only one estimate is drawn as a point.
+#'   When intervals are requested, its ribbon is replaced by an error bar.
+#'   The point uses the global point_size setting and the estimate's line colour.
 #' @return A ggplot object representing the plot.
 #'
 #' @examples
@@ -104,6 +107,8 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
     data_out <-confidence_intervals_rec
 
   }
+  p <- .acl_show_singletons(p, intersect(c("AgeGroup", "LengthGroup"), names(p$data)))
+
   if (return_data) {
     return(list(plot = p, data = data_out))
   } else {

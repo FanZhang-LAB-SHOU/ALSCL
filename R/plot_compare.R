@@ -110,6 +110,8 @@ utils::globalVariables(c(
 #'   silently omitted panels. With se = TRUE, both models must have complete,
 #'   finite estimates and finite nonnegative standard errors for every requested
 #'   quantity. Use se = FALSE when uncertainty is unavailable.
+#'   A model with one estimate in a panel is drawn as a point, with an error
+#'   bar when se = TRUE. Models with multiple estimates retain lines and ribbons.
 #' @export
 #'
 #' @examples
@@ -241,10 +243,11 @@ plot_compare_ts <- function(model1, model2,
         data = ribbon_df,
         ggplot2::aes(x = Year, ymin = lower, ymax = upper, fill = Model),
         alpha = cfg$se_alpha, inherit.aes = FALSE
-      ) + ggplot2::scale_fill_manual(values = cfg$colors)
+      ) + ggplot2::scale_fill_manual(values = cfg$colors, limits = names(cfg$colors))
     }
   }
 
+  p <- .acl_show_singletons(p, c("Model", "Quantity"), cfg$point_size)
   if (return_data) return(list(plot = p, data = df)) else return(p)
 }
 
@@ -361,7 +364,8 @@ plot_compare_F <- function(model1, model2,
 #'   stored observation metadata remain usable, but their original-data alignment
 #'   cannot be fully verified. Data frames, matrices and tibbles use the same
 #'   numeric conversion as the fitting functions.
-#'   The mean-residual line breaks at wholly unobserved periods. Isolated
+#'   The mean-residual axis retains the full fitted time range, including
+#'   unobserved first or last periods. The line breaks at unobserved periods. Isolated
 #'   observed periods remain visible as points; an SD bar requires at least
 #'   two observed length bins in that period.
 #' @export
@@ -447,7 +451,8 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::scale_linetype_manual(values = cfg$linetypes, limits = model_names) +
     ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"), y = "Mean residual",
                   color = NULL, linetype = NULL) +
-    base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom")
+    base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom") +
+    ggplot2::expand_limits(x = range(year))
 
   # P4: |Residual| by length bin
   df$abs_resid <- abs(df$Residual)

@@ -53,6 +53,10 @@ Each column of the static `pla` matrix gives length-bin probabilities for one ag
 
 ## 21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
 
+每个面板只有一个估计值时显示为点，带状区间改用误差棒；已选择 `se_type = "errorbar"` 时不会重复添加区间。
+
+A panel with one estimate uses a point and an error bar in place of a ribbon. Choosing `se_type = "errorbar"` does not add a duplicate interval.
+
 `plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横坐标是年龄组的位置，所以未设置 `xlab$age` 时默认标签为 Age group；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
 
 `plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal coordinate is the position of the age class, so the default label reads Age group unless you set `xlab$age`; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
@@ -263,6 +267,10 @@ Each point is the fitted fishing mortality rate divided by the process median. A
 
 ## 32. 长度组成山脊图 / Length composition ridges
 
+山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。
+
+Both ridge panels retain the full model length range, even when the shortest or longest bins are unobserved or all observations are missing. Custom `x_breaks` and global `x_expand` apply to both panels. `ridges_scale` must be `NULL` (automatic height) or one finite positive number; zero, negative values, missing values, infinity and vectors are rejected.
+
 ```r
 # 绘制本图 / Draw this figure
 plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
@@ -279,6 +287,29 @@ Each ridge shows the relative survey index across lengths in one time step, with
 Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that period. Both panels keep the same time positions, vertical range and time colors, including periods without observations. Brewer palettes such as `spectral` also support two-period results.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_ridges)
+
+
+### 边界体长组缺测 / Missing boundary length bins
+
+这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10–90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
+
+This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10–90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
+
+```r
+# Synthetic display example with missing boundary length bins.
+lengths <- seq(10, 90, 10)
+years <- 2000:2003
+log_index <- outer(lengths, seq(35, 50, 5),
+  function(length, center) -((length - center) / 18)^2)
+ridge_example <- list(year = years, len_mid = lengths,
+  observations = exp(log_index), report = list(Elog_index = log_index))
+ridge_example$observations[c(1, 2, 8, 9), ] <- NA_real_
+ridge_example$observations[, 1L] <- NA_real_
+plot_ridges(ridge_example, ridges_scale = 1,
+  x_breaks = seq(10, 90, 20))
+```
+
+![Missing boundary length bins](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/ridges-missing-edges.png?raw=true&v=b91666c9a782)
 
 
 

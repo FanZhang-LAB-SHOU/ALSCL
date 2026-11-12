@@ -65,6 +65,8 @@ time metadata. Unknown or unavailable quantities are errors, rather than
 silently omitted panels. With se = TRUE, both models must have complete,
 finite estimates and finite nonnegative standard errors for every requested
 quantity. Use se = FALSE when uncertainty is unavailable.
+A model with one estimate in a panel is drawn as a point, with an error
+bar when se = TRUE. Models with multiple estimates retain lines and ribbons.
 }
 \examples{
 \dontrun{

@@ -8,6 +8,8 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+
 ## Population time series comparison
 
 ```r
@@ -48,6 +50,8 @@ Four panels show the in-sample log residuals of both fits: a histogram, a QQ plo
 A wholly unobserved period breaks the mean-residual line. Isolated observed periods remain visible as points. An SD bar is drawn only when the period contains at least two observed length bins; a single observation still contributes its residual point.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_residuals)
+
+The mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.
 
 ## Growth and reference-data interface
 

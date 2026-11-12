@@ -99,4 +99,8 @@ Axis labels use \code{xlab$year} and \code{ylab$biomass}.
 
 A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
 theme label, and the typography arguments replace the corresponding theme settings.
+
+A group or panel with only one estimate is drawn as a point.
+When intervals are requested, its ribbon is replaced by an error bar.
+The point uses the global point_size setting and the estimate's line colour.
 }

@@ -28,7 +28,7 @@ plot_ridges(
 
 \item{ridges_alpha}{Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.}
 
-\item{ridges_scale}{Numeric or NULL. Multiplier for ridge height. When NULL (default),
+\item{ridges_scale}{One finite positive number or NULL. Multiplier for ridge height. When NULL (default),
 auto-scales so the tallest peak fills ~80\\% of inter-year spacing. Increase for
 taller ridges, decrease for flatter. Useful when many length bins make proportions
 small (e.g. tuna with 22 bins).}
@@ -80,7 +80,8 @@ values contribute to the observed composition; missing and zero observations
 remain missing, and a wholly unobserved period has no observed ridge.
 Missing bins break the observed outline and fill;
 an isolated observed bin is shown as a point at its scaled composition height.
-Both panels use the same vertical range so their time labels align. Predicted
+Both panels use the full model length range and the same vertical range,
+including missing edge bins and wholly unobserved periods. Predicted
 compositions use all length bins. Normalization is stable for large or small
 finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 a live TMB object; saved fits use the observation mask in the TMB data.

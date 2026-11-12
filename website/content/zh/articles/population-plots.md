@@ -8,6 +8,8 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+
 ## 各体长组的调查指数（对数尺度）
 
 ```r
@@ -280,3 +282,22 @@ q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
 paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
 stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
+
+## 显示一个已保存的估计值
+
+此列表仅用于显示 `b` 最后一期的产卵群体生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
+
+```r
+# Display one saved estimate without refitting.
+ssb_rows <- which(rownames(b$est_std) == "SSB")
+one_period <- list(
+  model_type = b$model_type,
+  year = tail(b$year, 1L),
+  report = list(SSB = tail(b$report$SSB, 1L)),
+  est_std = b$est_std[tail(ssb_rows, 1L), , drop = FALSE]
+)
+plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
+  ggplot2::coord_cartesian(xlim = one_period$year + c(-0.5, 0.5))
+```
+
+![显示一个已保存的估计值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true)

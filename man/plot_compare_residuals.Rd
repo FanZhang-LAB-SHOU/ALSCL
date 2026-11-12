@@ -63,7 +63,8 @@ results. Zeros and NA are excluded as in fitting. Saved fits without
 stored observation metadata remain usable, but their original-data alignment
 cannot be fully verified. Data frames, matrices and tibbles use the same
 numeric conversion as the fitting functions.
-The mean-residual line breaks at wholly unobserved periods. Isolated
+The mean-residual axis retains the full fitted time range, including
+unobserved first or last periods. The line breaks at unobserved periods. Isolated
 observed periods remain visible as points; an SD bar requires at least
 two observed length bins in that period.
 }

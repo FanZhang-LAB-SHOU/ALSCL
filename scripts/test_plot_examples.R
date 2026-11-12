@@ -198,6 +198,21 @@ check_plot_examples <- function(fits_file = NULL) {
   check_reference_theme_examples(fits$alscl, assert_grid_free_plot)
   check_growth_fishing_examples(fits$acl, fits$alscl, assert_grid_free_plot)
 
+  for (case in list(c("population-plots", "one_period <- list("),
+                    c("growth-mortality", "ridge_example <- list("))) {
+    paths <- c("docs/PLOT_GALLERY.md", paste0("website/content/", c("en", "zh"),
+                                             "/articles/", case[1L], ".md"))
+    for (path in paths) {
+      codes <- Filter(function(code) grepl(case[2L], code, fixed = TRUE), r_blocks(path))
+      check(length(codes) == 1L, paste(path, "must include one sparse-panel example"))
+      acl_theme_reset()
+      plots <- evaluate(codes[[1L]], fresh_context())
+      check(length(plots) == 1L, paste(path, "must return one sparse-panel plot"))
+      ggplot2::ggplotGrob(plots[[1L]])
+      cat("PASS sparse-panel example and rendering:", path, "\n")
+    }
+  }
+
   export_dir <- tempfile("alscl-example-exports-")
   dir.create(export_dir)
   setwd(export_dir)

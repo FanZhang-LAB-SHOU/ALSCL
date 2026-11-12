@@ -84,6 +84,10 @@ With se = TRUE, the standard-error table must have one finite
 estimate and finite nonnegative standard error per model time step.
 Missing or invalid uncertainty produces an explicit error; use se = FALSE
 to plot reported estimates alone.
+
+A group or panel with only one estimate is drawn as a point.
+When intervals are requested, its ribbon is replaced by an error bar.
+The point uses the global point_size setting and the estimate's line colour.
 }
 \examples{
 \dontrun{

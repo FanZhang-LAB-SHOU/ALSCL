@@ -8,6 +8,8 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+
 ## Survey index by length bin (log scale)
 
 ```r
@@ -280,3 +282,22 @@ q <- list(year = 2000 + (0:7)/4, growth_step = 0.25,
 paired <- plot_SSB_Rec(q, age_at_recruitment = 0.25, return_data = TRUE)$data
 stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
+
+## Displaying a single saved estimate
+
+This display-only list contains the final spawning-biomass estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
+
+```r
+# Display one saved estimate without refitting.
+ssb_rows <- which(rownames(b$est_std) == "SSB")
+one_period <- list(
+  model_type = b$model_type,
+  year = tail(b$year, 1L),
+  report = list(SSB = tail(b$report$SSB, 1L)),
+  est_std = b$est_std[tail(ssb_rows, 1L), , drop = FALSE]
+)
+plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
+  ggplot2::coord_cartesian(xlim = one_period$year + c(-0.5, 0.5))
+```
+
+![Displaying a single saved estimate](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true)

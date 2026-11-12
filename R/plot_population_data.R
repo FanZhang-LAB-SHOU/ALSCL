@@ -61,3 +61,55 @@
       else "' must be finite numeric values.", call. = FALSE)
   selected
 }
+
+# Lines and ribbons have no visible extent for a single observation. Apply this
+# only to the estimate layers assembled by our plot functions, keeping their
+# data, facet coordinates and styles intact. Multi-point groups are unchanged.
+.acl_show_singletons <- function(plot, groups = character(),
+                                  point_size = acl_theme("point_size")) {
+  singleton_rows <- function(data) {
+    if (!length(groups)) return(rep(nrow(data) == 1L, nrow(data)))
+    group <- interaction(data[groups], drop = TRUE, lex.order = TRUE)
+    tabulate(group)[as.integer(group)] == 1L
+  }
+  points <- list()
+  for (i in seq_along(plot$layers)) {
+    layer <- plot$layers[[i]]
+    line <- inherits(layer$geom, "GeomLine")
+    ribbon <- inherits(layer$geom, "GeomRibbon")
+    if (!line && !ribbon) next
+    data <- if (inherits(layer$data, "waiver")) plot$data else layer$data
+    if (!is.data.frame(data) || !nrow(data)) next
+    single <- singleton_rows(data)
+    if (!any(single)) next
+    # Clone the layer rather than modifying a potentially shared ggproto object.
+    # ggproto resolves its parent lazily; bind the actual object, not the loop
+    # variable, so earlier clones cannot inherit a subsequent ribbon layer.
+    plot$layers[[i]] <- do.call(ggplot2::ggproto,
+      list(NULL, layer, data = data[!single, , drop = FALSE]))
+    mapping <- layer$mapping
+    style <- layer$aes_params
+    args <- list(data = data[single, , drop = FALSE], mapping = mapping,
+      inherit.aes = layer$inherit.aes, show.legend = FALSE)
+    if (line) {
+      args$show.legend <- layer$show.legend
+      args <- c(args, style[intersect(c("colour", "alpha"), names(style))],
+        list(size = point_size))
+      points[[length(points) + 1L]] <- do.call(ggplot2::geom_point, args)
+    } else {
+      # A mapped fill in a comparison ribbon becomes the interval's colour.
+      if (!is.null(mapping$fill)) {
+        if (is.null(mapping$colour)) mapping$colour <- mapping$fill
+        mapping$fill <- NULL
+      }
+      args$mapping <- mapping
+      colour <- style$colour %||% style$fill
+      if (!is.null(colour)) args$colour <- colour
+      args <- c(args, style[intersect(c("alpha", "linewidth"), names(style))],
+        list(width = .3))
+      plot <- plot + do.call(ggplot2::geom_errorbar, args)
+    }
+  }
+  # Keep estimate points above their uncertainty intervals.
+  plot + points
+}

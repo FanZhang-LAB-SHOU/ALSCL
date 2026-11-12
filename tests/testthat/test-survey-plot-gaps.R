@@ -17,6 +17,62 @@ survey_ridge_panels <- function(fit, ...) {
   Filter(function(x) inherits(x, "ggplot"), plot_ridges(fit, ...))
 }
 
+test_that("ridge panels retain the full length grid when edge bins are unobserved", {
+  withr::local_options(list(acl.theme = NULL))
+  grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+  for (all_missing in c(FALSE, TRUE)) for (expand in list(c(.01, .01), c(0, 0), c(.05, .1))) {
+    fit <- survey_gap_fixture(periods = 3L)
+    fit$observations[c(1, 2, 8, 9), ] <- NA_real_
+    if (all_missing) fit$observations[,] <- NA_real_
+    acl_theme_set(x_expand = expand)
+    panels <- survey_ridge_panels(fit, x_breaks = c(10, 30, 50, 70, 90))
+    built <- lapply(panels, ggplot2::ggplot_build)
+    axes <- lapply(built, function(p) p$layout$panel_params[[1]])
+    expect_equal(axes[[1]]$x.range, axes[[2]]$x.range)
+    expect_equal(axes[[1]]$x.range, c(10 - 80 * expand[1], 90 + 80 * expand[2]))
+    expect_equal(axes[[1]]$x$breaks, c(10, 30, 50, 70, 90))
+    expect_equal(axes[[1]]$y.range, axes[[2]]$y.range)
+    expect_equal(nrow(built[[1]]$data[[1]]), if (all_missing) 0L else 15L)
+    expect_silent(ggplot2::ggplotGrob(plot_ridges(fit)))
+  }
+})
+
+test_that("residual comparisons retain unobserved boundary periods", {
+  withr::local_options(list(acl.theme = NULL))
+  grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
+  for (step in c(1, .25)) {
+    fit <- survey_gap_fixture(step)
+    fit$observations[, c(1, 7)] <- NA_real_
+    dat <- data.frame(LengthBin = fit$len_label, fit$observations, check.names = FALSE)
+    names(dat)[-1L] <- as.character(fit$year)
+    plot <- plot_compare_residuals(fit, fit, dat)
+    panel <- Filter(function(x) is.data.frame(x$data) &&
+      "mean_r" %in% names(x$data), survey_gap_panels(plot))[[1L]]
+    built <- ggplot2::ggplot_build(panel)
+    limits <- built$layout$panel_params[[1L]]$x.range
+    expect_true(min(limits) <= min(fit$year))
+    expect_true(max(limits) >= max(fit$year))
+    expect_equal(sort(unique(built$data[[3L]]$x)), fit$year[2:6])
+    expect_silent(patchwork::patchworkGrob(plot))
+  }
+})
+
+test_that("ridge heights reject invalid multipliers before reading model data", {
+  for (bad in list(NA_real_, NaN, Inf, -Inf, 0, -1, numeric(), c(1, 2),
+                  "1", TRUE, 1i, matrix(1)))
+    expect_error(plot_ridges(list(), ridges_scale = bad),
+      "ridges_scale must be NULL or one finite positive number", fixed = TRUE)
+  fit <- survey_gap_fixture(periods = 2L)
+  for (scale in list(NULL, .5, 3)) {
+    panels <- survey_ridge_panels(fit, ridges_scale = scale)
+    expect_true(all(is.finite(panels[[1]]$data$Abundance)))
+    if (!is.null(scale)) {
+      totals <- tapply(panels[[1]]$data$Abundance, panels[[1]]$data$year, sum)
+      expect_equal(unname(totals), rep(scale, 2), ignore_attr = TRUE)
+    }
+  }
+})
+
 test_that("residual comparison lines break at missing annual and quarterly periods", {
   withr::local_options(list(acl.theme = NULL))
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
