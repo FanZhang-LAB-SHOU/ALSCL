@@ -53,7 +53,7 @@ GROUPS = [
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['check_fit', 'diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
     ('assumptions', 'Sensitivity, profiles and projections', '敏感性、参数剖面与情景投影', ['fit_scenarios', 'profile_model', 'project_model']),
     ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
-    ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulate_example_data']),
+    ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulation_to_tables', 'simulate_example_data']),
     ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_recruitment', 'plot_SSB_Rec']),
     ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_pla', 'plot_fishing_mortality', 'plot_residuals', 'plot_deviance', 'plot_ridges']),
     ('comparison', 'Compare models visually', '模型比较绘图', ['plot_compare_ts', 'plot_compare_CatL', 'plot_compare_F', 'plot_compare_F_ts', 'plot_compare_growth', 'plot_compare_selectivity', 'plot_compare_residuals', 'plot_compare_metrics', 'plot_compare_annual_F']),
@@ -312,7 +312,7 @@ def load_reference():
     return reference
 
 def example_setup(name, lang):
-    if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data']: return 'library(ALSCL)'
+    if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data','simulation_to_tables']: return 'library(ALSCL)'
     base = 'library(ALSCL)\nlibrary(ggplot2)\nlibrary(patchwork)\ndata("YTF_example")\nx <- YTF_example\ninputs <- x[c("data.CatL", "data.wgt", "data.mat")]\ndat <- x$data.CatL'
     if name in ['prepare_alscl_data', 'read_survey_csv', 'read_survey_excel', 'check_alscl_data', 'inspect_parameters', 'fit_scenarios', 'profile_model', 'sim_model', 'sim_alscl', 'simulate_fit', 'hindcast_model', 'summarize_simulations']: return base
     if name in ['sim_cal','sim_data','sim_acl']:

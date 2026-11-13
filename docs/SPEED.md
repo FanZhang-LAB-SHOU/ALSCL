@@ -55,7 +55,7 @@ On the 20-year ALSCL fit compiled with CppAD, the standard errors took 9.0 s on 
 
 Forked processes are used only where they are safe (macOS and Linux outside GUI front-ends); elsewhere socket workers share out the delta method (section 3.3). The sequential `TMB::sdreport()` is used in these cases:
 
-- one core (`sd_cores = 1`, or fits inside `retro_model()` and `sim_acl()` workers);
+- one core (`sd_cores = 1`, or fits on the parallel socket workers of `retro_model()`, `sim_acl()` and `fit_scenarios()`, that is with `ncores` greater than 1; with `ncores = 1` these functions fit in the main process and use the `sd_cores` of the session);
 - TMB versions other than those the parallel delta method was checked against (`.acl_tmb_checked`, currently 1.9.21 and 1.9.25). The test that compares the two with `identical()` runs the parallel code with any installed TMB, for both AD libraries, and fails if the parallel code falls back to the sequential calculation, so a new version can be added after the tests pass with it;
 - any failure of the parallel calculation, including a failure to start forked processes or socket workers, with a warning.
 
@@ -151,8 +151,9 @@ Rscript scripts/benchmark_speed.R /tmp/alscl-original docs/results/speed 3
 
 - Inside the package namespace, `solve()` on the sparse random-effect Hessian must be `Matrix::solve()`. Base R's `solve()` converts the matrix to dense and uses LAPACK, which changed the standard errors by about 1e-16 (relative) and broke `identical()`. TMB itself calls the Matrix method, which uses a sparse Cholesky factorisation.
 - `TMB::sdreport(obj, hessian.fixed = optimHess(...))` evaluates the Hessian lazily inside `sdreport()`, after it has stored the random effects that maximise the joint likelihood at the estimates (the joint mode), and leaves `obj$env$last.par` at the last finite-difference point. `.acl_sdreport()` therefore computes the Hessian first, and checks that `obj$env$last.par` holds the estimates and the joint mode before the delta method starts.
-- Socket workers that fit models themselves (`retro_model()`, `sim_acl()`) receive the AD library of the main process and use one core for standard errors, so the number of processes does not multiply. Fits run in a user's own parallel loop should use `alscl_speed(sd_cores = 1)`.
+- Socket workers that fit models themselves (`retro_model()`, `sim_acl()`) receive the AD library of the main process and use one core for standard errors, so the number of processes does not multiply. The same functions with `ncores = 1` fit in the main process and use the `sd_cores` of the session, with identical results. Fits run in a user's own parallel loop should use `alscl_speed(sd_cores = 1)`.
 - Benchmarks were run on frozen copies of the code (`git archive`), because `pkgload::load_all()` reads the source when each process starts.
+- The cache key of a compiled model is computed from the template sources, the R, TMB and RcppEigen versions, the AD library, the platform of the R build and the C++ settings of R (the compiler entries of `Makeconf` and the site and user `Makevars` files). A build is installed in the cache atomically, so a session never loads a partly written library.
 
 Fixes after the external review of the first version (commit `54f1350`):
 

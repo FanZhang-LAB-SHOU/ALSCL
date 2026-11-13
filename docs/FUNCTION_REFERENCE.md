@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.4.3.9000，覆盖 **65 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.3.9000，覆盖 **66 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **65 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **66 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -76,8 +76,8 @@ dat <- x$data.CatL
 - [plot_residuals](#plot_residuals) — 按时间步或体长组绘制调查指数的对数残差 / Log survey-index residuals by time step or length bin
 - [plot_retro](#plot_retro) — 截短拟合与完整拟合的比较 / Retrospective estimates and the full fit
 - [plot_ridges](#plot_ridges) — 长度组成山脊图 / Length composition ridges
-- [plot_SSB](#plot_SSB) — 产卵生物量 SSB / Spawning biomass SSB
-- [plot_SSB_Rec](#plot_SSB_Rec) — 亲体与补充关系 / Spawning biomass and recruitment
+- [plot_SSB](#plot_SSB) — 产卵生物量 SSB / Spawning stock biomass (SSB)
+- [plot_SSB_Rec](#plot_SSB_Rec) — 亲体与补充关系 / Spawning stock biomass against recruitment
 - [plot_VB](#plot_VB) — 生长曲线与区间 / Growth curve and interval
 - [retro_acl](#retro_acl) — ACL 回溯入口 / ACL retrospective wrapper
 - [retro_alscl](#retro_alscl) — ALSCL 回溯入口 / ALSCL retrospective wrapper
@@ -87,6 +87,7 @@ dat <- x$data.CatL
 - [sim_acl](#sim_acl) — 批量拟合 ACL 模拟重复 / Fit simulated replicates with ACL
 - [sim_cal](#sim_cal) — 从参数计算生物矩阵 / Calculate biological arrays
 - [sim_data](#sim_data) — 运行完整随机种群模拟 / Simulate full population dynamics
+- [simulation_to_tables](#simulation_to_tables) — 把一个模拟重复转换为拟合用的三张表 / Convert one simulated replicate to the tables used for fitting
 - [simulate_example_data](#simulate_example_data) — 快速年度教学数据生成 / Generate simple annual teaching data
 - [VB_func](#VB_func) — 计算 VB 平均体长 / Calculate VB mean length
 
@@ -129,9 +130,9 @@ acl_theme_reset ()
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 
-**返回 / Returns:** 重置选项并打印提示后，不可见地返回 NULL。
+**返回 / Returns:** 把每项主题设置恢复为包的默认值，并用 message 报告（可用 `suppressMessages()` 关闭），然后不可见地返回 NULL。
 
-Invisibly returns NULL after resetting the option and printing a confirmation.
+Restores every theme setting to the package default and reports this with a message, which `suppressMessages()` silences. Returns NULL, invisibly.
 
 **示例 / Example:**
 
@@ -162,12 +163,12 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
     compare_legend_pos = NULL, compare_facet_ncol = NULL, compare_facet_scales = NULL, 
     titles = NULL, xlab = NULL, ylab = NULL, palette = NULL, point_color = NULL, 
     observed_color = NULL, smooth_color = NULL, hline_color = NULL, low_col = NULL, 
-    high_col = NULL, ...)
+    high_col = NULL, ..., interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character. Base ggplot2 theme name. |
+| `base_theme` | `NULL` | 基础主题名称："bw"、"minimal"、"classic"、"gray"、"grey"、"light"、"linedraw"、"dark" 或 "void"，可带 "theme_" 前缀。其他取值报错。 | Character. Base ggplot2 theme name: "bw", "minimal", "classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or without the "theme_" prefix. Any other value is an error. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for all text. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Plot title size in pt. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric. Title alignment (0=left, 0.5=center, 1=right). |
@@ -175,13 +176,13 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric. Axis tick label size. |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric. Facet label size. |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric. Legend text size. |
-| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks. |
+| `x_breaks` | `NULL` | 横轴刻度向量或 NULL。同一设置用于时间、年龄和体长坐标轴：只有至少一个刻度落在某张图的横轴范围内时，该图才使用它，否则自动选择刻度；因此按年份设置的刻度不会清空年龄轴或体长轴。显式传入 NULL 恢复自动刻度；省略该参数则保留当前设置。 | Numeric vector or NULL. Custom x-axis breaks. One setting serves time, age and length axes. A plot uses it only when at least one break lies within the range of its x axis; otherwise that plot chooses its breaks automatically. Calendar-year breaks therefore do not blank age or length axes. Pass NULL explicitly to restore automatically selected breaks; omitting the argument leaves the current setting unchanged. |
 | `x_expand` | `NULL` | 横轴留白设置，长度 2 的数值向量。 | Numeric vector of length 2. X-axis expansion. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character. Default line color for single-model plots. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `point_size` | `NULL` | 所有含点图的默认点大小（2.5）；比较图可单独覆盖。 | Default point size for all point-drawing plots (2.5); comparison plots can override it. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character. Default CI color. |
-| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
+| `se_alpha` | `NULL` | 区间阴影的默认透明度（0.2）。绘图参数为 NULL 时继承该值，显式给出的透明度优先。误差棒默认不透明，除非绘图调用给出 se_alpha。 | Numeric. Default transparency of interval ribbons (0.2). Plot arguments set to NULL inherit this value; explicit alpha takes priority. Error bars are drawn opaque unless a plot call supplies se_alpha. |
 | `compare_colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Character vector of 2 colors. Can be unnamed (positional) or named. The first color is always model1, second is model2. Examples: c("blue", "red"), c(ACL = "blue", ALSCL = "red"), c("M=0" = "steelblue", "M=0.5" = "tomato"). |
 | `compare_linetypes` | `NULL` | 按模型顺序提供两种线型。 | Character vector of 2 linetypes. Same rules as colors. |
 | `compare_line_size` | `NULL` | 比较图全局线宽。 | Numeric. Line width for comparison plots. |
@@ -192,7 +193,7 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `compare_facet_scales` | `NULL` | 比较图全局分面尺度。 | Character. Facet scales for comparison plots. |
 | `titles` | `NULL` | 以图名为键的标题列表，用于全局覆盖。 | Named list. Override specific titles. |
 | `xlab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Named list. Override specific x-axis labels. |
-| `ylab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Named list. Override specific y-axis labels. |
+| `ylab` | `NULL` | 命名列表，覆盖指定的纵轴标签。默认的捕捞死亡率标签会加上拟合的时间基准，例如 "(per year)" 或 "(per quarter)"；自定义的 `F` 标签原样使用。 | Named list. Override specific y-axis labels. The default fishing mortality label gains the time basis of the fit, for example "(per year)" or "(per quarter)"; a customized `F` label is used verbatim. |
 | `palette` | `NULL` | ggsci 色板名；NULL 继承全局设置，部分图也保留旧色板。 | Character or NULL. ggsci palette: "npg" (default), "aaas", "nejm", "lancet", or "jama". Changing it resets palette-derived colors; explicit color arguments in the same call take precedence. No arguments leaves settings unchanged; use acl_theme_reset() to reset. |
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
 | `observed_color` | `NULL` | 观测数据颜色；NULL 继承全局角色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
@@ -201,10 +202,11 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `low_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. Continuous heatmap endpoints. |
 | `high_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. Continuous heatmap endpoints. |
 | `...` | 可选 / optional | 旧参数名 compare_linewidth，仍可使用但会给出警告。 | The former argument name compare_linewidth, accepted with a warning. |
+| `interval` | `NULL` | 正值量（丰度、生物量、产卵生物量、补充量、渔获量和捕捞死亡率）默认的 95% 区间："lognormal"（默认）或 "wald"。公式见 `plot_abundance()`。 | Character. Default 95% interval for positive quantities (abundance, biomass, spawning stock biomass, recruitment, catch and fishing mortality): "lognormal" (default) or "wald". See `plot_abundance()` for the formulas. |
 
-**返回 / Returns:** 不可见地返回原 `acl.theme` 选项，并更新当前全局选项。
+**返回 / Returns:** 不可见地返回原 `acl.theme` 选项，并更新当前全局选项。不支持的设置（例如未知的基础主题、少于两种颜色的 `compare_colors`、"lognormal" 和 "wald" 以外的 `interval`）会报错，不改动当前设置。
 
-The previous `acl.theme` option, returned invisibly. The active global option is updated.
+The previous `acl.theme` option, returned invisibly. The active global option is updated. An unsupported setting, such as an unknown base theme, a `compare_colors` vector with fewer than two colors or an `interval` other than "lognormal" and "wald", is an error and leaves the current settings unchanged.
 
 **示例 / Example:**
 
@@ -227,7 +229,7 @@ alscl_speed (sd_cores = getOption("ALSCL.sd_cores", "auto"), framework = getOpti
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。选择 fork 进程且 TMB 版本已验证时，也限制优化收尾的 Hessian 核数。"auto" 最多使用 4 个物理核并保留 1 个；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. Also limits refinement Hessian workers when forked processes and a checked TMB version are used. "auto" uses up to four physical cores and keeps one free; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. |
+| `sd_cores` | `getOption("ALSCL.sd_cores", "auto")` | 单次拟合中计算标准误所用的核数，结果与顺序计算逐位相同。选择 fork 进程且 TMB 版本已验证时，也限制优化收尾的 Hessian 核数。"auto" 最多使用 4 个核并保留 1 个，在 R 能区分物理核与逻辑核的系统（macOS 和 Windows）上按物理核计数，并且不超过 Slurm（`SLURM_CPUS_PER_TASK`）或 `options(mc.cores = )` 分配给任务的核数；macOS、Linux 终端中用分叉进程计算 Hessian 与 delta 方法，在 Windows、图形界面（R.app、RGui、RStudio、Positron）及 Apple Accelerate BLAS 下改用 socket 进程计算 delta 方法；BLAS 库可能使用 OpenMP 线程（以 OpenMP 构建的 OpenBLAS、BLIS、FlexiBLAS、Intel MKL）时也不 fork，除非线程数限制为 1（例如设置环境变量 `OMP_NUM_THREADS=1`）。在并行 socket 工作进程上运行的拟合（例如 `ncores` 大于 1 的 `retro_model()`、`sim_acl()` 或 `fit_scenarios()`）各用一个核；同样的函数在 `ncores = 1` 时在主进程中拟合并使用本设置。在自己的并行循环中运行拟合时设 `sd_cores = 1`。 | "auto" or a positive integer. Cores used within one fit to compute standard errors; results are identical to the sequential calculation. Also limits refinement Hessian workers when forked processes and a checked TMB version are used. "auto" uses up to four cores and keeps one free. It counts physical cores where R can tell them from logical cores (macOS and Windows) and does not exceed the number of cores given to the job by Slurm (`SLURM_CPUS_PER_TASK`) or by `options(mc.cores = )`; forked processes compute the Hessian and the delta method on macOS and Linux, and socket workers compute the delta method on Windows, in GUI front-ends and with Apple's Accelerate BLAS. Forking is also avoided with a BLAS library that may use OpenMP threads (OpenBLAS built with OpenMP, BLIS, FlexiBLAS, Intel MKL), unless the number of threads is limited to one, for example with the environment variable `OMP_NUM_THREADS=1`. Fits that run on parallel socket workers (for example `retro_model()`, `sim_acl()` or `fit_scenarios()` with `ncores` greater than 1) use one core each. The same functions with `ncores = 1` fit in the main process and use this setting. Set `sd_cores = 1` when you run fits in your own parallel loop. |
 | `framework` | `getOption("ALSCL.framework", "CppAD")` | TMB 编译模型所用的自动微分库。"CppAD" 为默认库；"TMBad" 更快但结果略有不同。收尾步骤可能微调最优点，不保证与旧版本逐位一致。 | Character. Automatic-differentiation library: "CppAD" is the default; "TMBad" is faster but results differ slightly. The refinement steps can move the optimum slightly, so results are not guaranteed to be identical across versions. |
 
 **返回 / Returns:** 不可见地返回原 `ALSCL.sd_cores` 与 `ALSCL.framework` 选项，可用 `options(old)` 恢复。
@@ -299,9 +301,9 @@ compare_models (model1, model2, data.CatL, model1_name = NULL, model2_name = NUL
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Label for model1. Default is auto-detected from model_type. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Label for model2. Default is auto-detected from model_type. |
 
-**返回 / Returns:** 不可见地返回列表：summary 为优化状态、目标函数、信息准则和耗时比较；growth 为生长参数；fit_metrics 为样本内调查拟合误差；correlation 为共同种群时间序列的 Pearson 相关系数及均值比 Ratio_Mean（model2/model1）。fit_diagnostics 保存数值诊断；comparison 包含数据是否核验（data_verified）、比较是否满足条件（eligible）、优选标签（preferred，仅在两次拟合都合格且 AIC 相差至少 2 时给出；差值更小时为 NULL，issues 为空）及问题（issues）。model1_name 和 model2_name 保存显示标签。
+**返回 / Returns:** 不可见地返回列表：summary 为优化状态、目标函数、信息准则和耗时比较；growth 为生长参数；fit_metrics 为样本内调查拟合误差；correlation 为共同种群时间序列的 Pearson 相关系数及均值比 Ratio_Mean（model2/model1）。fit_diagnostics 保存数值诊断；comparison 包含数据是否核验（data_verified）、比较是否满足条件（eligible）、优选标签（preferred，仅在两次拟合都合格且 AIC 相差至少 2 时给出；差值更小时为 NULL，issues 为空）及问题（issues）。delta_aic 是 model2 的 AIC 减去 model1 的 AIC，aic_threshold 是给出优选所需的最小绝对差（2），reason 说明没有给出优选的原因（给出优选时为 NA）。AIC 差小于 2 并不说明两个模型等价。批量函数的失败记录（例如 fit_scenarios()$fits 中含 error 的元素）会被拒绝，并给出其拟合错误。model1_name 和 model2_name 保存显示标签。
 
-Invisibly returns a list: summary compares optimizer status, objectives, information criteria and timing; growth contains growth parameters; fit_metrics contains in-sample survey-fit errors; correlation contains Pearson correlations and Ratio_Mean (model2/model1) for shared population series. fit_diagnostics records numerical diagnostics. comparison contains data_verified, eligible, preferred and issues; preferred names the model with the lower AIC only when both fits are eligible and the AIC values differ by at least 2; with a smaller difference it is NULL and issues is empty. model1_name and model2_name retain display labels.
+Invisibly returns a list: summary compares optimizer status, objectives, information criteria and timing; growth contains growth parameters; fit_metrics contains in-sample survey-fit errors; correlation contains Pearson correlations and Ratio_Mean (model2/model1) for shared population series. fit_diagnostics records numerical diagnostics. comparison contains data_verified, eligible, preferred and issues; preferred names the model with the lower AIC only when both fits are eligible and the AIC values differ by at least 2; with a smaller difference it is NULL and issues is empty. delta_aic is the Akaike information criterion (AIC) of model2 minus that of model1, aic_threshold is the smallest absolute difference for which a preference is given (2), and reason states why a preference was withheld (NA when one is given). A difference below 2 does not establish that the models are equivalent. A failure record from a batch function, such as an element of fit_scenarios()$fits that holds an error, is rejected with its fit error. model1_name and model2_name retain display labels.
 
 **检查 / Checks:** 要求相同时间、体长标签、正观测及缺失掩码；不匹配报错。返回 fit_diagnostics 和 comparison；不合格拟合或无法核验的旧结果保留原始 AIC，但不自动推荐模型。 / Requires matching periods, length labels, positive observations and masks. Returns fit_diagnostics and comparison; failed or unverifiable fits retain raw AIC without an automatic preference.
 
@@ -531,9 +533,9 @@ initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
 | `burn_in` | `NULL` | 模拟预热年数，必须对齐 growth_step 且小于总模拟年数。 | Burn-in duration in years; must be a whole number of model steps and less than the simulation duration. |
 | `observation_error` | `c("independent", "shared_time")` | independent：各单元独立；shared_time：同一期共享误差。 | Independent lognormal errors per length and time cell, or shared_time for an explicitly misspecified, perfectly correlated scenario. |
 
-**返回 / Returns:** 包含物种、年龄/时间/体长网格、生长、死亡率、补充、观测和过程设置的命名参数列表。
+**返回 / Returns:** 包含物种、年龄/时间/体长网格、生长、死亡率、补充、观测和过程设置的命名参数列表。`years` 结束于最后一个观测期。要用可选的模型结构模拟，在返回的列表上设置 `structure`（例如 `pa$structure <- list(initial_plus_group = "equilibrium")`），取值与 `run_acl()`、`run_alscl()` 的 `structure` 参数相同；`sim_cal()` 和 `sim_data()` 读取它。
 
-A named parameter list with species, age/time/length grids, growth, mortality, recruitment, observation and process settings.
+A named parameter list with species, age/time/length grids, growth, mortality, recruitment, observation and process settings. `years` ends at the last observation period. To simulate with an optional model structure, set `structure` on the returned list (for example `pa$structure <- list(initial_plus_group = "equilibrium")`), with the same values as the `structure` argument of `run_acl()` and `run_alscl()`; `sim_cal()` and `sim_data()` read it.
 
 快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。
 
@@ -598,9 +600,9 @@ All modes inherit global titles (N, NA_, NL; interval variants use the correspon
 
 矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。 Matrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -608,7 +610,7 @@ plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "
     facet_scales = "free", return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, 
     font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
-    title_hjust = NULL)
+    title_hjust = NULL, interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -636,10 +638,19 @@ plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+
+年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
+
+Age panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". Results saved without age metadata keep the position labels "Age bin 1", "Age bin 2" and so on.
 
 **示例 / Example:**
 
@@ -666,9 +677,9 @@ All modes inherit global titles (B, BL, BA; interval variants use the correspond
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -676,7 +687,7 @@ plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "so
     facet_scales = "free", return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, 
     font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
-    title_hjust = NULL)
+    title_hjust = NULL, interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -704,10 +715,19 @@ plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "so
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+
+年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
+
+Age panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". Results saved without age metadata keep the position labels "Age bin 1", "Age bin 2" and so on.
 
 **示例 / Example:**
 
@@ -734,9 +754,9 @@ All modes inherit global titles (CN, CNA, CNL; interval variants use the corresp
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -744,7 +764,7 @@ plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "soli
     type = c("CN", "CNA", "CNL"), return_data = FALSE, title = NULL, xlab = NULL, 
     ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
-    title_hjust = NULL)
+    title_hjust = NULL, interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -772,10 +792,19 @@ plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "soli
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+
+年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
+
+Age panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". Results saved without age metadata keep the position labels "Age bin 1", "Age bin 2" and so on.
 
 **示例 / Example:**
 
@@ -957,9 +986,9 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 
 死亡率矩阵比较 / Fishing mortality matrices
 
-ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。
+ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。ALSCL 的各行对应拟合的体长组。ACL 拟合与 ALSCL 拟合的行不同，两张热图不能逐行比较；要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
 
-The ACL rows show fitted ages, including fractional ages for seasonal data. For an older fit without age coordinates, the rows are labelled as numbered age groups.
+The ACL rows show fitted ages, including fractional ages for seasonal data. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". For an older fit without age coordinates, the rows are labelled as numbered age groups. ALSCL rows follow the fitted length bins. An ACL fit and an ALSCL fit have different rows, so their heatmaps cannot be compared row by row. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = "age")`.
 
 ```r
 plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette = NULL)
@@ -997,13 +1026,14 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 各时间步 F 比较 / Fishing mortality by time step
 
-ACL 按年龄组、ALSCL 按体长组汇总 F。年龄别 F 汇总了各体长的存活，因此年龄组最大值与体长组最大值未必相同，即使针对同一种群。比较时应同时报告组别和汇总方法。
+默认（`basis = "native"`）ACL 按年龄组、ALSCL 按体长组汇总 F。年龄别 F 汇总了各体长的存活，因此年龄组最大值与体长组最大值未必相同，即使针对同一种群；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都使用年龄别 F，只汇总两者共有的拟合年龄和时间步。纵轴标签注明捕捞死亡率的时间基准，图注说明每个汇总量覆盖的组别。比较时应同时报告组别和汇总方法。
 
-ACL summarizes F across age groups and ALSCL across length bins. An age-group maximum need not equal a length-bin maximum, even for the same population, because age-specific F combines survival across lengths. Report the grouping and summary method with the comparison.
+By default (`basis = "native"`) ACL summarizes F across age groups and ALSCL across length bins. An age-group maximum need not equal a length-bin maximum, even for the same population, because age-specific F combines survival across lengths. Read the time pattern of such a pair, not the difference in level. `basis = "age"` uses F at age for both fits and summarizes only the fitted ages and time steps present in both. The y-axis label gives the time basis of the fishing mortality rate and the caption states the groups that each summary covers. Report the grouping and summary method with the comparison.
 
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical", 
-    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL)
+    "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL, 
+    basis = c("native", "age"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1018,6 +1048,7 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
 | `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
+| `basis` | `c("native", "age")` | 汇总 F 时所用的组别。"native"（默认）使用各模型估计的 F 矩阵：ACL 为年龄别 F，ALSCL 为体长别 F。"age" 对两个拟合都使用年龄别 F（ACL 的 `report$F` 和 ALSCL 推算的 `report$FA`），只汇总两者共有的拟合年龄和时间步。ALSCL 的年龄别 F 没有 plus group 一行，也没有最后一个时间步的值，所以与 ALSCL 拟合比较时不含 ACL 的 plus group 和最后一个时间步。 | Character. The groups over which F is summarized. "native" (default) uses the F matrix that each model estimates: F at age for ACL and F at length for ALSCL. "age" uses F at age for both fits: `report$F` for ACL and the derived `report$FA` for ALSCL. Only the fitted ages and the time steps present in both fits are summarized. ALSCL F at age has no plus-group row and no value for the last time step, so a comparison with an ALSCL fit leaves out the ACL plus group and the last time step. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -1044,9 +1075,9 @@ plot_compare_F_ts(a, b, method = "apical") +
 
 生长与外部参照接口 / Growth and reference-data interface
 
-曲线比较 VB 参数，热图比较静态 `pla` 矩阵。ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。
+曲线比较 VB 参数，热图比较静态 `pla` 矩阵。两个面板都使用拟合的年龄和体长：热图单元位于 `model$age` 中的年龄和 `model$len_mid` 中的体长组中点上；任一拟合缺少这些元数据时，热图使用年龄组和体长组的位置，并在坐标轴上注明。ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。
 
-The curves compare VB parameters and the heatmaps compare static `pla` matrices. Realized length distributions at age in ALSCL also depend on growth transitions and survival.
+The curves compare VB parameters and the heatmaps compare static `pla` matrices. Both panels use fitted ages and lengths: the heatmap cells sit at the ages in `model$age` and at the length-bin midpoints in `model$len_mid`. If either fit lacks this metadata, the heatmaps use age-class and length-bin positions and say so on their axes. Realized length distributions at age in ALSCL also depend on growth transitions and survival.
 
 可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
 
@@ -1272,14 +1303,14 @@ Fishing-mortality plots use matrix positions and fitted time/group metadata, so 
 
 `plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_F_ts(a, b, method = "apical")` or `method = "mean"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_compare_ts (model1, model2, quantities = c("SSB", "R", "B", "N", "CN"), se = FALSE, 
     model1_name = NULL, model2_name = NULL, colors = NULL, linetypes = NULL, line_size = NULL, 
-    facet_ncol = NULL, facet_scales = NULL, return_data = FALSE, ...)
+    facet_ncol = NULL, facet_scales = NULL, return_data = FALSE, ..., interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1297,6 +1328,7 @@ plot_compare_ts (model1, model2, quantities = c("SSB", "R", "B", "N", "CN"), se 
 | `facet_scales` | `NULL` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet facet_scales. NULL = use global theme. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Return data alongside plot. Default FALSE. |
 | `...` | 可选 / optional | 旧参数名 linewidth、ncol、scales，仍可使用但会给出警告。 | The former argument names linewidth, ncol and scales, accepted with a warning. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
@@ -1326,9 +1358,9 @@ plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 
 `log = TRUE` labels log process deviations; `log = FALSE` labels multiplicative factors. Titles and y-axis labels use `dev_R`/`dev_F`, or `dev_R_multiplier`/`dev_F_multiplier` after exponentiation. These quantities are not likelihood deviances.
 
-调用中给出的 `title`、`xlab`、`ylab` 和字体参数替换对应的主题设置。ACL 的 F 偏差图按年龄数字顺序排列面板。
+调用中给出的 `title`、`xlab`、`ylab` 和字体参数替换对应的主题设置。ACL 的 F 偏差图按年龄数字顺序排列面板，并用 `model_result$age` 中的拟合年龄标注；最大的年龄组是 plus group，标为 "Age 15+" 这样的形式。
 
-A `title`, `xlab`, `ylab` or typography argument given in the call replaces the corresponding theme setting. ACL F-deviation age panels keep numeric order.
+A `title`, `xlab`, `ylab` or typography argument given in the call replaces the corresponding theme setting. ACL F-deviation age panels keep numeric order and are labelled with the fitted ages in `model_result$age`; the oldest age class is a plus group and is marked with a plus sign, for example "Age 15+".
 
 `se = FALSE` 使用报告中的过程偏差，无需标准误表；绘制区间则要求完整、有限、非负的标准误。 `se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.
 
@@ -1392,25 +1424,25 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
 
 按年龄或体长绘制捕捞死亡率 / Plot fishing mortality by age or length
 
-所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。默认年龄横坐标为组序号，标为 Age group。`base_theme` 接受 `"theme_bw"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。
+所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。年龄坐标轴和年龄分面使用 `model_result$age` 中的拟合年龄，默认标签为 "Age (years)"；保存时没有年龄元数据的结果按组序号绘制，未自定义的年龄轴标为 Age group。`base_theme` 接受 `"theme_bw"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。
 
-All modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Default age coordinates are group indices and are labeled Age group. `base_theme` accepts a theme name such as `"theme_bw"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.
+All modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Age axes and age panels use the fitted ages in `model_result$age`, with the default label "Age (years)". Results saved without age metadata are plotted against group positions, and their uncustomized age axis is labeled Age group. `base_theme` accepts a theme name such as `"theme_bw"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.
 
 捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
     facet_ncol = NULL, facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, 
     se_type = "ribbon", type = c("year", "age", "length"), return_data = FALSE, x_breaks = NULL, 
     title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, 
-    base_theme = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
-    legend_text_size = NULL, title_hjust = NULL)
+    base_theme = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, 
+    legend_text_size = NULL, title_hjust = NULL, interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1423,14 +1455,14 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet_wrap. Default is "free". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
 | `se_type` | `"ribbon"` | 区间样式：ribbon 或 errorbar。 | Character. "ribbon" or "errorbar". Default is "ribbon". |
 | `type` | `c("year", "age", "length")` | year 为时间横轴；age 按年绘年龄别 F；ALSCL length 按年绘实际体长别 F。ACL 旧 length 别名仍画年龄并警告。 | year uses a time axis; age facets F-at-age by year; ALSCL length uses actual midpoints and year facets. The legacy ACL length alias still draws age and warns. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return data alongside the plot. Default is FALSE. |
-| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector. Custom x-axis breaks. |
+| `x_breaks` | `NULL` | 横轴刻度向量或 NULL。NULL 时，全局 x_breaks 至少有一个值落在该坐标轴上才继承，否则自动选择刻度。留白沿用全局 x_expand。 | Numeric vector or NULL. Custom x-axis breaks. NULL inherits the global x_breaks setting when at least one of its values lies on this axis; otherwise the breaks are chosen automatically. Expansion follows global x_expand. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character. Custom plot title. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character. Custom x-axis label. |
-| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character. Custom y-axis label. |
+| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承全局 ylab$F。默认标签带有拟合的时间基准，例如 "Fishing mortality rate (per year)"。 | Character or NULL. Custom y-axis label; NULL inherits global ylab$F. The default label gains the time basis of the fit, for example "Fishing mortality rate (per year)". |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for text elements. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Title text size. |
 | `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
@@ -1439,10 +1471,15 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。估计值不为正时保留 Wald 区间；ALSCL 的年龄别 F 由总死亡率减去自然死亡率得到，可能出现这种情况。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. An estimate that is not positive keeps the Wald bounds. This can occur for ALSCL F at age, which is derived as total mortality minus natural mortality. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+F 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 "Age 15+" 或刻度标签 "15+"；ALSCL 的年龄别 F 没有 plus group 一行。`return_data = TRUE` 且 `type = "age"` 时，数据在 `AgeGroup` 中保留组序号，并在 `Age` 中给出拟合年龄。各组共享 F（`F_structure = "year"`）时，每组的序列相同，`type = "year"` 只画一个标为 "Shared F" 的分面，返回的数据仍包含每一组。
+
+F is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title "Age 15+" or the tick label "15+". ALSCL F at age has no plus-group row. With `return_data = TRUE` and `type = "age"`, the data keep the group position in `AgeGroup` and add the fitted age in `Age`. When F is shared across groups (`F_structure = "year"`), every group has the same series, and `type = "year"` draws one panel labelled "Shared F"; the returned data still hold every group.
 
 **示例 / Example:**
 
@@ -1467,9 +1504,9 @@ ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长�
 
 `pla` is a static matrix of length probabilities conditional on age. ACL uses it at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in `NLA` to obtain the realized distribution at a given age and time in ALSCL.
 
-`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择年龄组刻度，不删除热图单元。
+各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 "15+"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。
 
-`plot_pla(x_breaks = c(1, 5, 10, 15))` selects age-bin ticks without removing heatmap cells.
+Columns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "15+". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.
 
 ```r
 plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, 
@@ -1492,7 +1529,7 @@ plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NU
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
-| `x_breaks` | `NULL` | 整数年龄组位置；仅选择刻度，不删除热图单元。NULL 继承全局值。 | Integer age-bin positions selecting ticks without removing cells; NULL inherits the global setting. |
+| `x_breaks` | `NULL` | 要标注的年龄组位置（1 到年龄组数之间的整数）。只改变刻度标签，不改变热图单元。NULL 时，全局 x_breaks 的值全部是这样的位置才继承；为其他坐标轴设置的全局值（例如年份）被忽略，这时每个年龄组都标注。 | Integer positions of the age classes to label (between 1 and the number of age classes). This changes tick labels only, never the heatmap cells. NULL inherits the global x_breaks setting when all of its values are such positions; a global setting meant for another axis, for example calendar years, is ignored. Otherwise every age class is labelled. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
@@ -1518,16 +1555,17 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。 Standard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
     se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), 
     return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, 
     title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, 
-    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, 
+    interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1538,7 +1576,7 @@ plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type =
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Specifies the type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Draw approximate pointwise 95% confidence intervals using model-based standard errors. Default FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
 | `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon 或 errorbar。 | Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
@@ -1553,10 +1591,15 @@ plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type =
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 **示例 / Example:**
 
@@ -1686,7 +1729,11 @@ plot_retro (retro_result, rho_digits = 4, rho_position = "top_right", rho_size =
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
+每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 "Terminal year"，更短的时间步为 "Terminal period"，季度时期标为 "2019 Q4" 这样的形式。默认颜色随回溯轮次固定，所以某个末期的拟合不论其他拟合是否给出估计值都保持同一颜色。未通过数值检查的拟合用虚线绘制，并增加 "Numerical screen" 图例。没有估计值的拟合（例如拟合出错）仍留在图例中，标为 "(no estimates)"。副标题列出这两类拟合；Mohn's rho 不予给出时，每个分面说明有多少轮回溯有效。
+
 A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+
+Each line is one fit and is identified by the terminal period of its data. The legend is titled "Terminal year" for annual steps and "Terminal period" for shorter steps, where quarterly periods are labelled as in "2019 Q4". Default colors follow the retrospective peel, so the fit with a given terminal period has the same color whether or not another fit returned estimates. A fit that failed the numerical screen is drawn with a dashed line and a "Numerical screen" legend is added. A requested fit without estimates, for example after a fit error, stays in the legend and is marked "(no estimates)". The subtitle names both kinds of fit, and each panel states how many requested peels are valid when Mohn's rho is withheld.
 
 **示例 / Example:**
 
@@ -1729,7 +1776,7 @@ plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "v
 | `ridges_alpha` | `0.8` | 山脊图透明度。 | Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8. |
 | `ridges_scale` | `NULL` | NULL 自动设定高度，否则须为一个有限正数。 | One finite positive number or NULL. Multiplier for ridge height. When NULL (default), auto-scales so the tallest peak fills ~80\% of inter-year spacing. Increase for taller ridges, decrease for flatter. Useful when many length bins make proportions small (e.g. tuna with 22 bins). |
 | `palette` | `"viridis"` | 按时间顺序渐变；NULL 同样使用 viridis，不继承全局分类色板。可选 cividis、plasma、ocean 或自定义渐变端点。 | Sequential gradient across ordered years; NULL also uses viridis independently of the global categorical palette. Accepts other named gradients or a color vector; explicit journal palettes remain available. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | 整张图的总标题。NULL 使用全局 `ridges` 标题，空字符串不画标题。两个面板保留各自的标题（全局键 `CatL_obs_length` 和 `CatL_est_length`），因此观测面板和拟合面板始终有标注。 | Character or NULL. One title for the whole figure. NULL uses the global `ridges` title; an empty string draws none. The two panels keep their own titles, from the global `CatL_obs_length` and `CatL_est_length` keys, so observed and fitted panels stay labelled. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1742,9 +1789,9 @@ plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "v
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
-**返回 / Returns:** 包含观测与拟合体长组成两个面板的组合图（ggplot 对象），可用 ggplot2::ggsave() 保存。
+**返回 / Returns:** patchwork 对象，包含观测面板和拟合面板，可用 ggplot2::ggsave() 保存。用 `p[[1]]` 或 `p[[2]]` 取出单个面板。时间轴在年度拟合中显示整年（"2000"），在季度拟合中显示季度（"2000 Q2"），其他时间步保留小数标签。
 
-A two-panel composition of observed and fitted length distributions, returned as a ggplot object and compatible with ggplot2::ggsave().
+A patchwork object holding the observed panel and the fitted panel, compatible with ggplot2::ggsave(). Extract a panel with `p[[1]]` or `p[[2]]`. The time axis shows whole years for annual fits ("2000") and quarters for quarterly fits ("2000 Q2"); other time steps keep their decimal labels.
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 
@@ -1768,7 +1815,7 @@ plot_ridges(b)
 <a id="plot_SSB"></a>
 ## `plot_SSB()`
 
-产卵生物量 SSB / Spawning biomass SSB
+产卵生物量 SSB / Spawning stock biomass (SSB)
 
 所有模式继承全局标题（SSB, SBL, SBA；区间使用对应的 `_se` 键，年龄丰度为 `NA_se`）、`xlab$year`、`ylab$ssb`、`x_breaks` 与 `x_expand`。调用中给出的 `title`、`xlab`、`ylab`、字体和线条参数优先，默认无网格。
 
@@ -1778,9 +1825,9 @@ All modes inherit global titles (SSB, SBL, SBA; interval variants use the corres
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示估计值 ± 1.96 倍标准误，因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ```r
 plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -1788,7 +1835,7 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
     facet_ncol = NULL, facet_scales = "free", return_data = FALSE, title = NULL, 
     xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, 
     axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, 
-    base_theme = NULL, title_hjust = NULL)
+    base_theme = NULL, title_hjust = NULL, interval = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1816,10 +1863,19 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
+
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+
+年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
+
+Age panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". Results saved without age metadata keep the position labels "Age bin 1", "Age bin 2" and so on.
 
 **示例 / Example:**
 
@@ -1836,10 +1892,10 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 <a id="plot_SSB_Rec"></a>
 ## `plot_SSB_Rec()`
 
-亲体与补充关系 / Spawning biomass and recruitment
+亲体与补充关系 / Spawning stock biomass against recruitment
 
 ```r
-plot_SSB_Rec (model_result, age_at_recruitment = 1, point_size = NULL, point_color = NULL, 
+plot_SSB_Rec (model_result, age_at_recruitment = NULL, point_size = NULL, point_color = NULL, 
     point_shape = 16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, 
     font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
@@ -1849,7 +1905,7 @@ plot_SSB_Rec (model_result, age_at_recruitment = 1, point_size = NULL, point_col
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec". |
-| `age_at_recruitment` | `1` | 以年为单位的补充年龄；除以 growth_step 得到整数步滞后，允许零。 | Recruitment age in years; divided by growth_step to obtain an integer lag. Zero is allowed; default 1 year. |
+| `age_at_recruitment` | `NULL` | 以年为单位的补充年龄，用于把 SSB 与之后的补充量配对。NULL（默认）使用最小拟合年龄 `model_result$age[1]`：`rec.age = 1` 的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。没有年龄元数据的结果用 1 年。给定的值必须非负，并且是模型 `growth_step` 的整数倍；0 表示同期配对。 | Numeric or NULL. Recruitment age in years, used to pair SSB with later recruitment. NULL (default) uses the youngest fitted age, `model_result$age[1]`: 1 year for an annual fit with `rec.age = 1`, and one quarter for a quarterly fit with `rec.age = 0.25`. Results saved without age metadata use 1 year. A supplied value must be nonnegative and an exact multiple of the model's `growth_step`; 0 pairs SSB and recruitment in the same period. |
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. NULL inherits the global point_color setting. |
 | `point_shape` | `16` | 点形状编号，如 16、21。 | Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle). |
@@ -1871,9 +1927,9 @@ plot_SSB_Rec (model_result, age_at_recruitment = 1, point_size = NULL, point_col
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`age_at_recruitment` 的单位是年。`plot_SSB_Rec()` 除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
+某一时间步的补充量是最小拟合年龄的个体数，所以每个 SSB 值与该年龄之后的补充量配对。`age_at_recruitment` 的单位是年，默认 NULL 取最小拟合年龄；最小拟合年龄不是时间步的整数倍时，默认值取最接近的整数步并用 message 说明。`plot_SSB_Rec()` 把给定的值除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。旧结果没有 `growth_step` 时使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
 
-`age_at_recruitment` is in years. `plot_SSB_Rec()` divides it by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
+Recruitment in a time step is the number of fish at the youngest fitted age, so each SSB value is paired with the recruitment that many years later. `age_at_recruitment` is in years, and the default NULL uses the youngest fitted age. If that age is not a whole number of time steps, the default uses the nearest whole number and reports it with a message. `plot_SSB_Rec()` divides a supplied value by the fit's `growth_step` and requires an integer lag on a regular time grid. With quarterly data, 0.25 means one step and 1 means four steps. Zero lag is allowed; negative, nonfinite and fractional-step lags are rejected. Legacy results without `growth_step` use their regular time spacing, or an annual step when neither metadata field is available.
 
 **示例 / Example:**
 
@@ -1919,8 +1975,8 @@ plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, li
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Draw approximate pointwise 95% confidence intervals using model-based standard errors. Default FALSE. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
-| `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon 或 errorbar。 | Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon". |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
+| `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon（阴影）或 errorbar（误差棒）。误差棒画在 age_range 内的拟合年龄（model_result$age）上；没有年龄元数据的结果，或范围内没有拟合年龄时，画在每个绘图年龄上。 | Character. Type of interval display: "ribbon" (shaded area) or "errorbar" (error bars). Error bars are drawn at the fitted ages in model_result$age that lie within age_range. Results saved without age metadata, and ranges that contain no fitted age, use every plotted age. Default is "ribbon". |
 | `text_color` | `"black"` | 生长参数标注文字颜色。 | Character. The color of the text in the plot. Default is "black". |
 | `text_size` | `5` | 生长参数标注文字大小。 | Numeric. The thickness of the text in the plot. Default is 5. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
@@ -1973,7 +2029,7 @@ retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `nyear` | `5` | 模拟器为总年数；回溯函数为删除的末端时间步数。 | Number of terminal observation steps peeled, not calendar years for quarterly data. |
+| `nyear` | `5` | 回溯轮数，默认 5。每轮删除的时间步数由传给 `retro_model()` 的 peel_step 决定（默认 1）。 | Integer. Number of retrospective peels. Default is 5. The number of time steps removed per peel follows peel_step of `retro_model()` (default 1). |
 | `data.CatL` | `必填 / required` | 原拟合使用的调查数量指数表（首列体长标签，其余列为模型时期），或完整拟合输入列表。 | The original survey numbers-at-length or index table (length labels followed by model periods), or a complete fitting input bundle. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | The weight data. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
@@ -2014,9 +2070,9 @@ retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
 | `ncores` | `1` | 独立回溯拟合的最大并行工作进程数；1 为顺序执行。 | Maximum workers across independent retrospective peels; 1 runs sequentially. |
 | `...` | 可选 / optional | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
 
-**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
+**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置，peel_step 记录每轮删除的时间步数。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
 
-A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
+A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings, and peel_step records the number of time steps removed per peel. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
 
 **诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
 
@@ -2027,6 +2083,10 @@ When all retrospective fits fail or no finite trajectories remain, `plot = TRUE`
 `fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
 
 `fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
+
+拟合过程中产生的警告记录在 `fit_diagnostics$warnings` 中对应的拟合上（包括 socket 工作进程上的拟合），并有一条汇总警告指出这些拟合。map 固定的参数在完整拟合和每一轮中取相同的值：map 固定 `mean_log_R` 而 `parameters` 没有给值时，该值只按完整观测计算一次（各期调查指数总和的均值取对数），并用于每次拟合。Mohn's rho 是各轮末期估计与完整拟合同期估计之相对差的均值；季度数据在 `peel_step = 1` 时是对季度回溯求均值，需要按年回溯的 rho 时设 `peel_step = 4`。
+
+Warnings raised while fitting are recorded in `fit_diagnostics$warnings` for the fit that raised them, including fits on socket workers, and one summary warning names these fits. A parameter that the map fixes has the same value in the full fit and in every peel: when map fixes `mean_log_R` and `parameters` gives no value for it, the value is derived once from the complete observations (the log of the mean total survey index over periods) and used in every fit. Mohn's rho is the mean over peels of the relative difference between the terminal estimate of a peel and the estimate of the full fit for the same period. With `peel_step = 1` on quarterly data this is a mean over quarterly peels; use `peel_step = 4` for a rho based on annual peels.
 
 **示例 / Example:**
 
@@ -2055,7 +2115,7 @@ retro_alscl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `nyear` | `5` | 模拟器为总年数；回溯函数为删除的末端时间步数。 | Number of terminal observation steps peeled, not calendar years for quarterly data. |
+| `nyear` | `5` | 回溯轮数，默认 5。每轮删除的时间步数由传给 `retro_model()` 的 peel_step 决定（默认 1）。 | Integer. Number of retrospective peels. Default is 5. The number of time steps removed per peel follows peel_step of `retro_model()` (default 1). |
 | `data.CatL` | `必填 / required` | 原拟合使用的调查数量指数表（首列体长标签，其余列为模型时期），或完整拟合输入列表。 | The original survey numbers-at-length or index table (length labels followed by model periods), or a complete fitting input bundle. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | The weight data. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
@@ -2067,9 +2127,9 @@ retro_alscl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `growth_step` | `NULL` | 每个时间步包含的年数；NULL 时 rec.age<1 取 rec.age、否则取 1；季度为 0.25。 | Time step in years. NULL uses rec.age when it is below one, otherwise one, as in run_alscl(); a bundle supplies its own value. |
 | `...` | 可选 / optional | 转发参数；仅使用目标函数接受的命名参数。 | Additional arguments passed to retro_model(). |
 
-**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
+**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置，peel_step 记录每轮删除的时间步数。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
 
-A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
+A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings, and peel_step records the number of time steps removed per peel. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
 
 **诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
 
@@ -2080,6 +2140,10 @@ When all retrospective fits fail or no finite trajectories remain, `plot = TRUE`
 `fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
 
 `fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
+
+拟合过程中产生的警告记录在 `fit_diagnostics$warnings` 中对应的拟合上（包括 socket 工作进程上的拟合），并有一条汇总警告指出这些拟合。map 固定的参数在完整拟合和每一轮中取相同的值：map 固定 `mean_log_R` 而 `parameters` 没有给值时，该值只按完整观测计算一次（各期调查指数总和的均值取对数），并用于每次拟合。Mohn's rho 是各轮末期估计与完整拟合同期估计之相对差的均值；季度数据在 `peel_step = 1` 时是对季度回溯求均值，需要按年回溯的 rho 时设 `peel_step = 4`。
+
+Warnings raised while fitting are recorded in `fit_diagnostics$warnings` for the fit that raised them, including fits on socket workers, and one summary warning names these fits. A parameter that the map fixes has the same value in the full fit and in every peel: when map fixes `mean_log_R` and `parameters` gives no value for it, the value is derived once from the complete observations (the log of the mean total survey index over periods) and used in every fit. Mohn's rho is the mean over peels of the relative difference between the terminal estimate of a peel and the estimate of the full fit for the same period. With `peel_step = 1` on quarterly data this is a mean over quarterly peels; use `peel_step = 4` for a rho based on annual peels.
 
 **示例 / Example:**
 
@@ -2112,12 +2176,13 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
     title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, 
     F_structure = c("group_year", "year"), polish = TRUE, zero_action = c("missing", 
-        "error"), control = list(), nstarts = 1, model = NULL, ...)
+        "error"), control = list(), nstarts = 1, model = NULL, peel_step = 1, structure = list(), 
+    start_spread = 0.15, ...)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `nyear` | `5` | 模拟器为总年数；回溯函数为删除的末端时间步数。 | Number of terminal observation steps peeled, not calendar years for quarterly data. |
+| `nyear` | `5` | 回溯轮数，默认 5。每一轮比上一轮多删除 peel_step 个模型时间步；默认 peel_step = 1 时，每轮删除一个时间步（季度数据为一个季度）。 | Integer. Number of retrospective peels. Default is 5. Each successive peel removes peel_step further model time steps. With the default peel_step = 1, one peel removes one model time step (one quarter for quarterly data). |
 | `data.CatL` | `必填 / required` | 原拟合使用的调查数量指数表（首列体长标签，其余列为模型时期），或完整拟合输入列表。 | The original survey numbers-at-length or index table (length labels followed by model periods), or a complete fitting input bundle. |
 | `data.wgt` | `必填 / required` | 平均单尾体重表，与调查表完全对齐。 | The weight data. |
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
@@ -2134,10 +2199,10 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Optional TMB map argument for fixing parameters. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Optional numeric vector of length bin midpoints. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Optional numeric vector of length bin borders. |
-| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
-| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
+| `len_lower` | `NULL` | 已弃用，将被移除。ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional lower bin boundaries (ALSCL only). The first entry must be `-Inf` and the remaining entries must match len_border, so the argument cannot change a fit. |
+| `len_upper` | `NULL` | 已弃用，将被移除。ALSCL 每组上界；末项必须为 `Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional upper bin boundaries (ALSCL only). The final entry must be `Inf` and the preceding entries must match len_border, so the argument cannot change a fit. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
-| `ncores` | `1` | 显式指定并行回溯轮数；不沿用 x 内拟合用的 ncores，各轮拟合单进程。 | Explicit peel workers; stored fitting ncores is ignored, and each fit uses one fitting worker. |
+| `ncores` | `1` | 完整拟合和各轮回溯使用的 socket 工作进程数，默认 1。多于一个时，完整拟合与各轮在同一批中运行，估计值与单进程相同。不沿用 x 内拟合用的 ncores，须显式指定；每次拟合内部依次运行其 nstarts 个起点。 | Integer. Number of socket workers for the full fit and the peels. Default is 1. With more than one worker, the full fit and the peels run in one batch; estimates are the same as with one worker. A bundle's fitting ncores is ignored: specify this argument explicitly. Each fit runs its nstarts sequentially with ncores = 1. |
 | `silent` | `FALSE` | TRUE 减少拟合进度输出。 | Logical. If TRUE, suppress all progress messages. Default is FALSE. |
 | `plot` | `FALSE` | TRUE 请求附带图；没有有限估计时警告并返回 plot = NULL，仍保留诊断。 | Include a plot when TRUE; if no finite estimates are available, warn and return plot = NULL while retaining diagnostics. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
@@ -2167,11 +2232,14 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `control` | `list()` | 各轮 nlminb 优化控制；显式列表整体覆盖。 | nlminb controls forwarded to each fit; explicit lists replace stored lists. |
 | `nstarts` | `1` | 每轮独立起点数，在该轮内部依次计算；可沿用 x 设置。 | Starts per fit, run sequentially within a peel; may inherit the bundle value. |
 | `model` | `NULL` | 与 model_type 相同，为与其他工作流函数一致而提供；两者只填一个。 | Same as model_type, accepted for consistency with the other workflow functions. Supply one of the two. |
+| `peel_step` | `1` | 正整数。每一轮多删除的模型时间步数，默认 1。季度数据设 peel_step = 4 即按年回溯：第 k 轮的数据止于末期之前 k 年。 | Positive integer. Number of model time steps that each successive peel removes. Default is 1. For quarterly data, peel_step = 4 gives annual peels: peel k then ends k years before the terminal period. |
+| `structure` | `list()` | 传给完整拟合和每一轮拟合的可选模型结构，取值见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Optional model structures passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
+| `start_spread` | `0.15` | 传给完整拟合和每一轮拟合的起点离散程度，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Spread of the second and later starts, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
 | `...` | 可选 / optional | 旧参数名 facet_col、facet_row，仍可使用但会给出警告。 | The former argument names facet_col and facet_row, accepted with a warning. |
 
-**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
+**返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置，peel_step 记录每轮删除的时间步数。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
 
-A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
+A list with results (peel trajectories), last_points (terminal estimates), rho_by_peel (relative differences by peel), rho_text (numerically screened Mohn's rho) and raw_rho_text (unscreened descriptive summaries). fit_diagnostics and errors retain fit status and errors. model_type, workers and nstarts record model and computation settings, and peel_step records the number of time steps removed per peel. With plot=TRUE, plot contains the plot object, or NULL when no finite estimates can be drawn.
 
 **诊断 / Diagnostics:** 支持同一份拟合 x，显式设置优先；原逐项参数和 do.call 写法保留。fit_diagnostics 保留完整拟合及每轮状态。若任何要求的拟合未通过数值筛查，或末端差无定义，rho_text 的相应 Rho 为 NA 并警告；rho_by_peel、raw_rho_text 和 errors 保留追查记录。 / Accepts the fitting bundle with explicit overrides and preserves legacy calls. fit_diagnostics retains the full fit and all peels. Any failed requested numerical screen or undefined terminal difference makes the corresponding authoritative rho NA with a warning; rho_by_peel, raw_rho_text and errors retain exploratory records.
 
@@ -2182,6 +2250,10 @@ When all retrospective fits fail or no finite trajectories remain, `plot = TRUE`
 `fit_diagnostics` 还保留所选轮次及完整历史的 `optimizer_message`、`selected_pass`、`optimizer_codes`、`optimizer_messages`。`refinement_status`、`refinement_steps`、`pre_refinement_max_gradient` 记录 Newton 收尾的状态、步数和收尾前梯度；`max_abs_gradient` 仍为最终梯度。旧结果或失败拟合缺少的记录保留为 `NA`。历史中的失败重启不会使较早选中的成功轮次失效，选中的非零退出码也不会被改写为零。
 
 `fit_diagnostics` also retains `optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` for the selected pass and complete pass history. `refinement_status`, `refinement_steps` and `pre_refinement_max_gradient` show how Newton refinement changed the fit; `max_abs_gradient` remains the final gradient. Missing records from old or failed fits remain `NA`. A failed restart in the history does not invalidate an earlier selected successful pass, and a selected nonzero code is never relabeled as zero.
+
+拟合过程中产生的警告记录在 `fit_diagnostics$warnings` 中对应的拟合上（包括 socket 工作进程上的拟合），并有一条汇总警告指出这些拟合。map 固定的参数在完整拟合和每一轮中取相同的值：map 固定 `mean_log_R` 而 `parameters` 没有给值时，该值只按完整观测计算一次（各期调查指数总和的均值取对数），并用于每次拟合。Mohn's rho 是各轮末期估计与完整拟合同期估计之相对差的均值；季度数据在 `peel_step = 1` 时是对季度回溯求均值，需要按年回溯的 rho 时设 `peel_step = 4`。
+
+Warnings raised while fitting are recorded in `fit_diagnostics$warnings` for the fit that raised them, including fits on socket workers, and one summary warning names these fits. A parameter that the map fixes has the same value in the full fit and in every peel: when map fixes `mean_log_R` and `parameters` gives no value for it, the value is derived once from the complete observations (the log of the mean total survey index over periods) and used in every fit. Mohn's rho is the mean over peels of the relative difference between the terminal estimate of a peel and the estimate of the full fit for the same period. With `peel_step = 1` on quarterly data this is a mean over quarterly peels; use `peel_step = 4` for a rho based on annual peels.
 
 **示例 / Example:**
 
@@ -2205,7 +2277,7 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
     parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL, 
     output = FALSE, train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL, 
     zero_action = c("missing", "error"), control = list(), nstarts = ncores, F_structure = c("group_year", 
-        "year"), polish = TRUE)
+        "year"), polish = TRUE, structure = list(), start_spread = 0.15)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2234,14 +2306,28 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
+| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构。ACL 只有一项设置 `initial_plus_group`："single_cohort"（默认，第一期的 plus group 只含一个世代）或 "equilibrium"（等于在总死亡率 init_Z 下所有更老世代之和，因此补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变）。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022). ACL has one setting, `initial_plus_group`: "single_cohort" (default; the first-period plus group holds one cohort) or "equilibrium" (it holds the sum of all older cohorts at total mortality init_Z, so a population with constant recruitment, no fishing and init_Z equal to M stays constant over time). The setting used is stored in the `structure` element of the fit. |
+| `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
 
-**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
+**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
 
-A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.
+A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session. sd_info records how the standard errors were computed (method, cores, seconds). structure records the model structure used and start_spread the spread of the starts. start_summary gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to diagnostics$issues. clamped_starts lists the starting values that were moved into their bounds, zero_observations is the number of zero survey observations treated as missing, and restricted_random names the process-deviation arrays that the map ties or fixes.
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
+
+单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个起点（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
+
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+
+过程密度按完整的偏差数组计算。map 把 `dev_log_R`、`dev_log_F` 或 `dev_log_N0` 的元素设为共享值，或用 NA 固定其中的元素时，只有对应的标准差和相关系数参数也固定才被接受；否则这些估计有偏，拟合被拒绝。每个时间步只用一个各组共享的 F 偏差时，请用 `F_structure = "year"`，它有自己正确归一化的密度。元素共享时，共享值的先验标准差小于所给的标准差；带有共享或固定元素的拟合，其目标函数不能与对这些偏差使用其他 map 的拟合比较（例如用 AIC）。拟合结果的 `restricted_random` 列出涉及的数组。
+
+The process densities are evaluated on the complete arrays of deviations. A map that ties entries of `dev_log_R`, `dev_log_F` or `dev_log_N0` to shared values, or fixes entries with NA, is therefore accepted only when the matching standard deviation and correlation parameters are fixed too; otherwise their estimates would be biased and the fit is rejected. For one F deviation per time step shared by all groups, use `F_structure = "year"`, which has its own correctly normalized density. With tied entries the shared value has a smaller prior standard deviation than the stated one, and the objective of a fit with tied or fixed entries cannot be compared (for example by AIC) with fits that use another map for these deviations. `restricted_random` in the fit names the arrays concerned.
+
+超出边界的初值会被移到最近的边界：用户给定的初值给出警告，默认初值给出提示，拟合结果的 `clamped_starts` 列出这些初值。ACL 中 Linf 的默认初值（60）和边界（10 到 100）采用黄尾鲽示例的体长单位。上界低于最大体长组中点的 1.2 倍，或初值不在该中点的 0.7 到 2 倍之间时，未由用户给定的初值和边界按数据设置，与 `run_alscl()` 相同：初值为最大中点的 1.1 倍，边界为 0.7 倍和 2 倍。
+
+Starting values outside their bounds are moved to the nearest bound: with a warning when the start was supplied, and with a message for default starts. `clamped_starts` in the fit lists them. The default start (60) and bounds (10 to 100) of Linf are in the length units of the yellowtail flounder example. When the upper bound is below 1.2 times the largest length-bin midpoint, or the start is outside 0.7 to 2 times that midpoint, the start and bounds that were not supplied are set from the data as in `run_alscl()`: start 1.1, bounds 0.7 and 2 times the largest midpoint.
 
 **示例 / Example:**
 
@@ -2268,7 +2354,8 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
     parameters = NULL, parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, 
     len_border = NULL, len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1, 
     ncores = 1, silent = FALSE, zero_action = c("missing", "error"), control = list(), 
-    nstarts = ncores, F_structure = c("group_year", "year"), polish = TRUE)
+    nstarts = ncores, F_structure = c("group_year", "year"), polish = TRUE, structure = list(), 
+    start_spread = 0.15)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2288,8 +2375,8 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Named TMB factor mappings. factor(NA) fixes a parameter at its supplied value; a named NULL entry releases that parameter. A whole map = NULL or list() applies model defaults. Other unspecified defaults remain in force. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Finite length-bin midpoints; overrides automatic parsing. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Interior boundaries, one fewer than the number of length bins. |
-| `len_lower` | `NULL` | ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于内部边界。 | ALSCL lower bounds: first entry must be `-Inf`; remaining entries must match internal boundaries. |
-| `len_upper` | `NULL` | ALSCL 每组上界；末项必须为 `Inf`，其余项须等于内部边界。 | ALSCL upper bounds: final entry must be `Inf`; preceding entries must match internal boundaries. |
+| `len_lower` | `NULL` | 已弃用，将被移除。ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional lower bin boundaries (ALSCL only). The first entry must be `-Inf` and the remaining entries must match len_border, so the argument cannot change a fit. |
+| `len_upper` | `NULL` | 已弃用，将被移除。ALSCL 每组上界；末项必须为 `Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional upper bin boundaries (ALSCL only). The final entry must be `Inf` and the preceding entries must match len_border, so the argument cannot change a fit. |
 | `output` | `FALSE` | 是否导出拟合诊断与图；TRUE 使用 output 目录。 | Save diagnostic tables and plots below output/ when TRUE. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 独立初始点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。 | Maximum socket workers across independent starts, capped at nstarts; not threads within one start. |
@@ -2299,14 +2386,28 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
+| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）在每项设置上都是 Zhang 和 Cadigan (2022) 已发表的结构。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`；"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，期望生长量不依赖组宽。每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组）使用 "bin"。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；已发表的结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022) for every setting. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`; "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin, so the expected advance does not depend on the bin width. Use "bin" when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the published structure it does not. The settings used are stored in the `structure` element of the fit. |
+| `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
 
-**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。 / sd_info records how the standard errors were computed (method, cores, seconds).
+**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
 
-A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session.
+A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session. sd_info records how the standard errors were computed (method, cores, seconds). structure records the model structure used and start_spread the spread of the starts. start_summary gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to diagnostics$issues. clamped_starts lists the starting values that were moved into their bounds, zero_observations is the number of zero survey observations treated as missing, and restricted_random names the process-deviation arrays that the map ties or fixes.
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
+
+单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个起点（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
+
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+
+过程密度按完整的偏差数组计算。map 把 `dev_log_R`、`dev_log_F` 或 `dev_log_N0` 的元素设为共享值，或用 NA 固定其中的元素时，只有对应的标准差和相关系数参数也固定才被接受；否则这些估计有偏，拟合被拒绝。每个时间步只用一个各组共享的 F 偏差时，请用 `F_structure = "year"`，它有自己正确归一化的密度。元素共享时，共享值的先验标准差小于所给的标准差；带有共享或固定元素的拟合，其目标函数不能与对这些偏差使用其他 map 的拟合比较（例如用 AIC）。拟合结果的 `restricted_random` 列出涉及的数组。
+
+The process densities are evaluated on the complete arrays of deviations. A map that ties entries of `dev_log_R`, `dev_log_F` or `dev_log_N0` to shared values, or fixes entries with NA, is therefore accepted only when the matching standard deviation and correlation parameters are fixed too; otherwise their estimates would be biased and the fit is rejected. For one F deviation per time step shared by all groups, use `F_structure = "year"`, which has its own correctly normalized density. With tied entries the shared value has a smaller prior standard deviation than the stated one, and the objective of a fit with tied or fixed entries cannot be compared (for example by AIC) with fits that use another map for these deviations. `restricted_random` in the fit names the arrays concerned.
+
+超出边界的初值会被移到最近的边界：用户给定的初值给出警告，默认初值给出提示，拟合结果的 `clamped_starts` 列出这些初值。未给定时，Linf 的初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍。体长组远超最大个体时请给出 `parameters.L$log_Linf`，否则低于最大中点 0.7 倍的 Linf 被排除在外。
+
+Starting values outside their bounds are moved to the nearest bound: with a warning when the start was supplied, and with a message for default starts. `clamped_starts` in the fit lists them. Unless supplied, the start of Linf is 1.1 times the largest length-bin midpoint and its bounds are 0.7 and 2 times that midpoint. Supply `parameters.L$log_Linf` when the bins extend well beyond the largest fish, because Linf below 0.7 times the largest midpoint is otherwise excluded.
 
 **示例 / Example:**
 
@@ -2334,8 +2435,9 @@ Parameters are estimated from their starting values unless fixed by the map. A w
 
 ```r
 sim_acl (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters = NULL, 
-    parameters.L = NULL, parameters.U = NULL, map = NULL, M = 0.2, ncores = 1, train_times = 1, 
-    control = list(), F_structure = c("group_year", "year"), polish = TRUE, nstarts = 1)
+    parameters.L = NULL, parameters.U = NULL, map = NULL, M = NULL, ncores = 1, train_times = 1, 
+    control = list(), F_structure = c("group_year", "year"), polish = TRUE, nstarts = 1, 
+    allow_M_mismatch = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2347,17 +2449,18 @@ sim_acl (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters =
 | `parameters.L` | `NULL` | 命名下界列表，采用优化器尺度。 | A list containing the custom lower bounds for the parameters (default is NULL). |
 | `parameters.U` | `NULL` | 命名上界列表，采用优化器尺度。 | A list containing the custom upper bounds for the parameters (default is NULL). |
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | A list containing the custom values for the map elements (default is NULL). |
-| `M` | `0.2` | 每个模型时间步的自然死亡瞬时率。 | Numeric, natural mortality (default: 0.2) |
+| `M` | `NULL` | 每个模型时间步的自然死亡率，用于每次拟合。默认 NULL 使用 sim_data() 记录在每个重复文件中的自然死亡率。给定的值必须等于记录值，除非 allow_M_mismatch 为 TRUE。没有记录值的文件必须给出 M。 | Natural mortality rate per model time step used in every fit. The default, NULL, uses the natural mortality rate recorded in each replicate file by sim_data(). A supplied value must equal the recorded rate unless allow_M_mismatch is TRUE. Files without a recorded rate require M. |
 | `ncores` | `1` | 独立模拟重复的最大 socket 工作进程数；1 为顺序执行，每次拟合内部使用单进程。 | Maximum socket workers across independent simulated replicates; 1 runs sequentially and each inner fit uses one worker. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `control` | `list()` | 传入 nlminb 的命名控制列表，如 iter.max、eval.max。 | Named nlminb control settings. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
+| `allow_M_mismatch` | `FALSE` | 逻辑值。FALSE（默认）在给定的 M 与重复文件记录的自然死亡率不同时停止。TRUE 按给定的 M 拟合，用于研究自然死亡率设定有误的情形。 | Logical. FALSE (default) stops when a supplied M differs from the natural mortality rate recorded in a replicate file. TRUE fits the supplied M, for a study of misspecified natural mortality. |
 
-**返回 / Returns:** 按重复编号命名的拟合或错误记录列表（`result_rep_<id>`），包含 iter 和 elapsed。每次重复均写入对应文件，包括失败记录；失败项另含 converge="FAILED" 和 error。重跑失败会替换旧成功记录，文件写入失败会明确报告。
+**返回 / Returns:** 按重复编号命名的拟合或错误记录列表（`result_rep_<id>`），包含 iter 和 elapsed。每次重复均写入对应文件，包括失败记录；失败项属于 `alscl_fit_error` 类，另含 converge="FAILED" 和 error。重跑失败会替换旧成功记录，文件写入失败会明确报告。结果不含 TMB 对象 `obj`；需要时对结果调用 `refit_model()`。每个结果在 `simulation_M` 中记录实际使用的自然死亡率、重复文件中记录的值及所用值的来源。`ncores` 大于 1 时每个工作进程用一个核计算标准误；`ncores = 1` 时使用会话的 `alscl_speed()` 设置，结果完全相同。
 
-A named list of replicate fits or error records (`result_rep_<id>`), including iter and elapsed. Every replicate is written to its corresponding file, including failures; failed records also contain converge="FAILED" and error. A failed rerun replaces an earlier success record, and output-write failures are reported.
+A named list of replicate fits or error records (`result_rep_<id>`), including iter and elapsed. Every replicate is written to its corresponding file, including failures; failed records have class `alscl_fit_error` and also contain converge="FAILED" and error. A failed rerun replaces an earlier success record, and output-write failures are reported. Results do not contain the TMB object `obj`; use `refit_model()` on a result when one is needed. Each result records in `simulation_M` the natural mortality rate used, the rate recorded in the replicate file and where the rate used came from. With `ncores` greater than 1 each worker computes standard errors on one core; with `ncores = 1` the standard errors use the session setting of `alscl_speed()`, with identical results.
 
 快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。
 
@@ -2437,9 +2540,9 @@ sim_data (bio_vars, params, sim_year = NULL, output_dir = ".", iter_range = 4:10
 | `iter_range` | `4:100` | 互不重复的非负整数编号，包括 0；模拟时也用作随机种子。 | Distinct nonnegative integer replicate IDs, including 0; also used as simulation seeds. |
 | `return_iter` | `NULL` | 在内存中返回的重复编号；NULL 默认选 iter_range 中的最大编号。 | Replicate ID to return in memory; NULL selects the largest ID in iter_range. |
 
-**返回 / Returns:** 返回 return_iter 指定的重复结果；NULL 默认选择 iter_range 中的最大编号。结果包含调查数量 SN_at_len、种群体长别数量 N_at_len、年龄别数量 N_at_age、SSB、Rec、捕捞量及时间、年龄、体长等元数据。所有重复另以包含 sim.data 的 `sim_rep<id>` 文件写入 output_dir。
+**返回 / Returns:** 返回 return_iter 指定的重复结果；NULL 默认选择 iter_range 中的最大编号。结果包含调查数量 SN_at_len、种群体长别数量 N_at_len、年龄别数量 N_at_age、SSB、Rec、捕捞量及时间、年龄、体长等元数据。所有重复另以包含 sim.data 的 `sim_rep<id>` 文件写入 output_dir；全部重复通过检查后才写文件，文件名用编号的整数形式（例如 1e5 为 `sim_rep100000`）。每个重复在 `provenance` 中记录种子、随机数发生器设置和包版本。每个重复自行设定种子和发生器，因此同一编号在任何会话设置下给出相同数据，调用结束后调用者的随机数流保持不变。`params$structure` 接受与 `run_acl()`、`run_alscl()` 的 `structure` 相同的列表，`sim_cal()` 也读取它。
 
-The replicate selected by return_iter; NULL selects the largest ID in iter_range. The result includes survey numbers SN_at_len, population numbers at length N_at_len and at age N_at_age, SSB, Rec, fishery catch, and time, age and length metadata. All replicates are also written to output_dir as `sim_rep<id>` files containing sim.data.
+The replicate selected by return_iter; NULL selects the largest ID in iter_range. The result includes survey numbers SN_at_len, population numbers at length N_at_len and at age N_at_age, SSB, Rec, fishery catch, and time, age and length metadata. All replicates are also written to output_dir as `sim_rep<id>` files containing sim.data. Files are written only after every replicate is valid, and file names use the integer form of each ID (`sim_rep100000` for 1e5). Each replicate records its seed, random-number generator settings and package version in `provenance`. Each replicate sets its own seed and generator, so a replicate ID gives the same data under any session generator, and the caller's random-number stream is unchanged after the call. `params$structure` takes the same list as the `structure` argument of `run_acl()` and `run_alscl()`; `sim_cal()` reads it too.
 
 快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。
 
@@ -2462,6 +2565,39 @@ sm <- sim_data(bio, pa, iter_range = 4:5, return_iter = 4,
 ```
 
 ![示例图 / Example figure: `sim_data(sim_cal(pa), pa, iter_range = 4, return_iter = 4)`](figures/cases/flatfish_truth.png)
+
+<a id="simulation_to_tables"></a>
+## `simulation_to_tables()`
+
+把一个模拟重复转换为拟合用的三张表 / Convert one simulated replicate to the tables used for fitting
+
+```r
+simulation_to_tables (sm, pa = NULL, first_year = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `sm` | `必填 / required` | 一个模拟重复：`sim_data()` 返回的列表，或从 `sim_rep<id>` 文件读入的 `sim.data` 对象。 | A simulated replicate: the list returned by `sim_data()` or the `sim.data` object loaded from a `sim_rep<id>` file. |
+| `pa` | `NULL` | 生成该重复的 `initialize_params()` 参数列表，可选。较早的重复没有记录 `len_mid`、`growth_step` 和 `first.year` 时由它提供。`pa` 中的体长组中点必须与 `sm` 中记录的一致。 | Optional parameter list from `initialize_params()` that generated the replicate. It supplies `len_mid`, `growth_step` and `first.year` for older replicates that do not record them. Length-bin midpoints in `pa` must match those recorded in `sm`. |
+| `first_year` | `NULL` | 第一个观测年份，可选。给出时替换 `sm` 中记录的年份。 | Optional first observation year. It replaces the years recorded in `sm`. |
+
+**返回 / Returns:** 包含三个数据框的列表：`data.CatL`（调查体长别渔获）、`data.wgt`（体长别体重）和 `data.mat`（体长别成熟比例）。每张表有一列 `LengthBin`，其后每个模型时间步一列。行是体长组，以体长组中点标注；列是该重复记录的模型时间步。
+
+A list with data frames `data.CatL` (survey catch at length), `data.wgt` (weight at length) and `data.mat` (proportion mature at length). Each has a `LengthBin` column followed by one column per model time step. Rows are length bins, labelled by the length-bin midpoints. Columns are the model time steps recorded in the replicate.
+
+`SN_at_len`、`weight` 或 `mat` 的维度与时间和体长坐标不一致时函数停止，因此不会循环补齐行。`sim_model()`、`sim_acl()` 和 `sim_alscl()` 对保存的重复使用同样的转换。得到的三张表可直接传给 `run_acl()` 和 `run_alscl()`；拟合还需要给出补充年龄、年龄组数、自然死亡率和调查可捕性等设置。
+
+The function stops when the dimensions of `SN_at_len`, `weight` or `mat` do not match the time and length coordinates, so rows are never recycled. `sim_model()`, `sim_acl()` and `sim_alscl()` apply the same conversion to saved replicates. The three tables can be passed to `run_acl()` and `run_alscl()`; a fit also needs the recruitment age, the number of age classes, the natural mortality rate and the survey catchability settings.
+
+**示例 / Example:**
+
+```r
+pa <- initialize_params(species = "flatfish", nyear = 6, burn_in = 2)
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = tempdir())
+tables <- simulation_to_tables(sm, pa)
+names(tables)
+dim(tables$data.CatL)
+```
 
 <a id="simulate_example_data"></a>
 ## `simulate_example_data()`
@@ -2497,7 +2633,7 @@ simulate_example_data (years = 2000:2025, bin_breaks = c(0, 20, 25, 30, 35, 40, 
 | `mean_F` | `0.3` | 生成 F 轨迹的算术平均值，必须非负，零表示无捕捞。 | Nonnegative arithmetic mean of the generated F trajectory; zero gives zero fishing mortality. |
 | `cv_catch` | `0.3` | 简易模拟调查误差的 CV，而非对数 SD。 | Numeric. CV of survey observation noise, not its log-scale SD. Default 0.3. |
 | `rec_sigma` | `0.5` | 简易模拟对数补充扰动 SD。 | Numeric. SD of log-recruitment variation. Default 0.5. |
-| `seed` | `NULL` | 随机种子；设定后可重复生成。 | Integer or NULL. Random seed for reproducibility. Default NULL (different result each run). Set e.g. seed = 42 for reproducible output. |
+| `seed` | `NULL` | 随机种子；设定后可重复生成，并且不改变调用者的随机数流。 | Integer or NULL. Random seed for reproducibility. Default NULL (different result each run). Set e.g. seed = 42 for reproducible output. A supplied seed does not change the caller's random-number stream. |
 | `save_csv` | `FALSE` | TRUE 将生成的三张输入表写为 CSV。 | Logical. Save CSV files to working directory. Default FALSE. |
 | `output_dir` | `"."` | 输出目录；必要时自动建立。 | Character. Directory for CSV output. Default ".". |
 
@@ -2659,6 +2795,10 @@ residuals(fit, type = "log") 返回观测对数值减去拟合对数值的长表
 
 residuals(fit, type = "log") returns a long table of observed minus fitted log index; type = "standardized" divides by the fitted observation SD. It retains original observations, model times and length coordinates, marks excluded cells, and assigns NA residuals to zero/missing observations. check_fit() uses standardized residuals. Gaps are never compressed; correlations require at least three finite paired values at the requested actual lag and nonconstant values on both sides. These residuals condition on fitted latent effects: standardization is not a guarantee of independence, calibrated tests or model adequacy. Plots follow the package's grid-free theme.
 
+QQ 图把合并的条件对数残差除以拟合的观测标准差后，与标准正态分位数对照，参照线为等值线。这条参照线不是模型正确时残差的分布：拟合的随机效应吸收了一部分观测误差，所以正确设定的模型的点斜率小于 1（用包内示例做的模拟检验中为 0.91 到 0.96），并在两端落在参照线内侧。判断偏态或厚尾时看点的弯曲和不对称，不看点到参照线的距离。标准差接近 1 不说明拟合好，小于 1 也不说明观测误差被高估。图中不画模拟包络。
+
+The quantile-quantile (QQ) plot shows the pooled conditional log residuals divided by the fitted observation standard deviation against standard normal quantiles, with the line of equality as the reference. This reference is not the distribution of the residuals under a correct model: the fitted random effects absorb part of the observation error, so the points of a correctly specified model have a slope below one (0.91 to 0.96 in simulation tests with the package examples) and lie inside the line at both tails. Read curvature and asymmetry of the points, not their distance from the line, as signs of skewness or heavy tails. A standard deviation close to one is not evidence of a good fit, and a value below one is not evidence of overestimated observation error. No simulation envelope is drawn.
+
 **示例 / Example:**
 
 ```r
@@ -2688,13 +2828,17 @@ extract_estimates (fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_
 | `quantities` | `c("SSB", "Rec", "B", "N", "CN", "F")` | SSB、Rec、B、N、CN、CB、F 及模型实际报告的年龄、体长或联合数组。 | Reported population vectors and age, length or joint arrays; F resolves to ACL F or ALSCL FL. |
 | `conf_level` | `0.95` | 近似区间的名义置信水平，严格介于 0 与 1。 | Nominal confidence level of the approximate intervals, strictly between zero and one. |
 
-**返回 / Returns:** 含量名、实际报告名、年份、年龄、体长、估计、SE、区间及 numerical_ok 的长表。
+**返回 / Returns:** 含量名、实际报告名、年份、年龄、体长、估计、SE、区间、numerical_ok 及 extrapolated 的长表。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同。依赖末期捕捞死亡率的行 extrapolated 为 TRUE。
 
-A long table containing quantity, report name, time, age, length, estimate, SE, interval and numerical_ok.
+A long table containing quantity, report name, time, age, length, estimate, SE, interval, numerical_ok and extrapolated. numerical_ok is the numerical screen of the fit, the same verdict that summary() reports. extrapolated is TRUE for rows that depend on the fishing mortality rate (F) of the terminal period.
 
 估计来自 report，SE 只按完整、精确同名的 est_std 行提取。未报告 SE 时保留 NA，不造出区间。F 保留原分组和每模型步单位，不自动求平均或年化。FA 使用存活区间的起始年龄和时期；正态区间不截零。
 
 Estimates use report and complete exact-name SE rows from est_std. Missing uncertainty remains NA. F retains native groups and per-step units without averaging or annualization. FA uses source ages and periods. Normal intervals are not truncated at zero.
+
+没有观测为末期的 F 提供信息。某一期的调查指数反映该期开始时的丰度，而期初丰度只取决于此前各期的 F。因此报告的末期 F（F 和 FL）是由上一期按一阶自回归（AR(1)）过程得到的预测，其标准误反映 F 过程而不是数据。末期的渔获尾数（CN、CNA、CNL、CNLA）和渔获重量（CB、CBA、CBL、CBLA）是有数据支持的丰度与这一预测 F 的乘积。这些行的 extrapolated 为 TRUE。FA 不含末期，所以没有被标记的行。
+
+No observation informs F in the terminal period. The survey index of a period measures abundance at the start of that period, and abundance at the start of a period depends on F in earlier periods only. The reported terminal-period F (F and FL) is therefore the first-order autoregressive (AR(1)) prediction from the preceding period, and its standard error reflects the F process, not data. Terminal-period catch in number (CN, CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of an abundance that the data inform and this predicted F. These rows have extrapolated = TRUE. FA omits the terminal period, so none of its rows is marked.
 
 **示例 / Example:**
 
@@ -2723,9 +2867,9 @@ extract_parameters (fit, scale = c("natural", "internal"), conf_level = 0.95)
 
 A parameter table with estimates, SEs, intervals, fixed/estimated/inactive status and the numerical-screen flag.
 
-保存了完整输入和设置时也会列出固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。检查 numerical_ok 后再解释不确定性。
+保存了完整输入和设置时也会列出固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同；先检查它再解释不确定性。较早版本写出的存档可能含有当前输入检查不接受的输入，这时表中只有估计的参数，并给出说明原因的警告，原因保存在 "inspection_error" 属性中。
 
-With a recipe, fixed parameters are included with NA uncertainty. Legacy objects expose only free fixed effects. Natural-scale SEs use the delta method; intervals transform internal Wald endpoints. exp(mean_log_F) and exp(mean_log_R) are a process baseline, not a time average. Inspect numerical_ok before interpreting uncertainty.
+With a recipe, fixed parameters are included with NA uncertainty. Legacy objects expose only free fixed effects. Natural-scale SEs use the delta method; intervals transform internal Wald endpoints. exp(mean_log_F) and exp(mean_log_R) are a process baseline, not a time average. numerical_ok records the numerical screen of the fit, the same verdict that summary() reports; inspect it before interpreting uncertainty. An archive written by an earlier release can hold inputs that the current input checks reject. In that case the table contains the estimated parameters only, a warning gives the reason, and the reason is stored in the "inspection_error" attribute.
 
 **示例 / Example:**
 
@@ -2750,13 +2894,13 @@ fit_scenarios (x, scenarios, model = c("acl", "alscl"), ncores = 1, F_summary = 
 | `x` | `必填 / required` | run_acl() 或 run_alscl() 接受的输入集合。 | An input bundle accepted by run_acl() or run_alscl(). |
 | `scenarios` | `必填 / required` | 非空具名列表，每项为拟合参数覆盖列表。空列表代表参照情景，不允许修改数据表。 | A nonempty named list of named fitting-argument overrides. An empty list is the reference scenario; data tables cannot be changed. |
 | `model` | `c("acl", "alscl")` | "acl"（默认）或 "alscl"。 | "acl" (default) or "alscl". |
-| `ncores` | `1` | 不同情景的最大工作进程数；内部拟合和标准误使用一个进程。 | Maximum independent scenario workers; inner fitting and standard errors use one worker. |
+| `ncores` | `1` | 不同情景的最大工作进程数。每个情景由一个进程拟合；`ncores` 大于 1 时每个工作进程用一个核计算标准误，`ncores = 1` 时标准误使用会话的 alscl_speed() 设置，结果完全相同。 | Maximum independent scenario workers. Each scenario is fitted by one worker. With ncores greater than 1 each worker computes standard errors on one core; with ncores = 1 the standard errors use the session setting of alscl_speed(). The results are identical. |
 | `F_summary` | `c("mean", "apical")` | "mean" 为组间非加权均值，"apical" 为最大值；F 保持每模型时间步单位。 | "mean" for the unweighted group mean, or "apical" for the maximum. F remains per model step. |
 | `...` | 可选 / optional | 各情景之前应用的 run_* 共用覆盖。parameters/map/control 均为整份列表替换。 | Common run_* overrides, applied before each scenario. Complete parameter/map/control lists replace their predecessors. |
 
-**返回 / Returns:** 返回具名拟合/错误记录、完整设置、状态、耗时、估计长表、模型、F 汇总方式和工作进程数。
+**返回 / Returns:** 返回具名拟合/错误记录（错误记录属于 `alscl_fit_error` 类）、完整设置、状态、耗时、估计长表、模型、F 汇总方式和工作进程数。
 
-A list with named fits/error records, resolved settings, status, elapsed, estimates, model, F_summary and workers.
+A list with named fits/error records (error records have class `alscl_fit_error`), resolved settings, status, elapsed, estimates, model, F_summary and workers.
 
 保留警告和未通过数值筛查的结果，不自动排名。串行和并行保留相同初始点数量。结果移除会话专用 obj 指针，需要可执行目标函数时使用 refit_model()；本接口不实现断点续跑。
 
@@ -2833,9 +2977,9 @@ prepare_alscl_data (data.CatL = NULL, data.wgt = NULL, data.mat = NULL, file = N
 
 A structured list containing data.CatL, data.wgt, data.mat, fit_args and optional fit_config.
 
-安全转换数字文本，并检查三表的数值和排列是否一致；不填补或重排缺失时段，也不推测生物学参数。在 fit_args 中提供 rec.age、nage、M、sel_L50、sel_L95，再运行 check_alscl_data(x, model)。优先级为共享 fit_args、选中的 fit_config、显式运行参数；列表参数整体替换，具名 NULL 的 map 释放规则保留。零值在导入后仍为零，由拟合的 zero_action 决定排除或拒绝。
+安全转换数字文本，并检查三表的数值和排列是否一致；不填补或重排缺失时段，也不推测生物学参数。在 fit_args 中提供 rec.age、nage、M、sel_L50、sel_L95，再运行 check_alscl_data(x, model)。优先级为共享 fit_args、选中的 fit_config、显式运行参数；列表参数整体替换，具名 NULL 的 map 释放规则保留。零值在导入后仍为零，由拟合的 zero_action 决定排除或拒绝。fit_config 中没有某个模型的条目时，该模型只使用共享的 fit_args，所以只含一个模型设置的输入列表也可以用另一个模型拟合。只有三张表、fit_args 和 fit_config 是拟合设置：放在返回列表顶层的拟合参数（例如 `x$M <- 0.3` 或 `x$map <- ...`）不会被使用，拟合时给出警告；请把它放进 `x$fit_args`、`x$fit_config$acl` 或 `x$fit_config$alscl`。仅用于 ALSCL 的 len_lower 和 len_upper 已弃用：它们不能改变拟合，将被移除。
 
-This constructor converts numeric text safely and checks table values and alignment. It never fills or reorders missing periods and does not infer biology. Supply rec.age, nage, M, sel_L50 and sel_L95 in fit_args, then run check_alscl_data(x, model). Settings follow shared fit_args, selected fit_config, then explicit run arguments; list-valued settings replace the entire corresponding list. Named NULL map releases remain intact. Zeros remain zeros until the fitting zero_action excludes or rejects them.
+This constructor converts numeric text safely and checks table values and alignment. It never fills or reorders missing periods and does not infer biology. Supply rec.age, nage, M, sel_L50 and sel_L95 in fit_args, then run check_alscl_data(x, model). Settings follow shared fit_args, selected fit_config, then explicit run arguments; list-valued settings replace the entire corresponding list. Named NULL map releases remain intact. Zeros remain zeros until the fitting zero_action excludes or rejects them. A model without an entry in fit_config uses the shared fit_args only, so a bundle whose fit_config has an entry for one model can be fitted with the other. Only the three tables, fit_args and fit_config are fitting settings. A fitting argument stored at the top level of the returned list, for example `x$M <- 0.3` or `x$map <- ...`, is not used, and fitting warns about it; store such a setting in `x$fit_args`, `x$fit_config$acl` or `x$fit_config$alscl`. The ALSCL-only arguments len_lower and len_upper are deprecated: they cannot change a fit and will be removed.
 
 **示例 / Example:**
 
@@ -3021,9 +3165,9 @@ read_survey_excel (file)
 
 A named list containing the three numeric data tables.
 
-需要可选的 readxl 包。工作表名称必须完全一致。第一列为体长组标签，后续表头为数值时间标签。使用与 read_survey_csv() 相同的数值和对齐检查；保留调查零值和缺失值，不推测生物学输入或填补时段。
+需要可选的 readxl 包。工作表名称必须完全一致。第一列为体长组标签，后续表头为数值时间标签。使用与 read_survey_csv() 相同的数值和对齐检查；保留调查零值和缺失值，不推测生物学输入或填补时段。只有空单元格和 `NA` 表示缺失。单元格含 Excel 错误值（例如公式产生的 `#DIV/0!` 或 `#N/A`）时报错，并指出工作表和单元格；否则 readxl 会把它读成缺失值，该观测会在没有提示的情况下被排除在似然之外。这项检查直接读取工作簿文件，适用于 `.xlsx` 和 `.xlsm` 格式；较早的 `.xls` 格式无法这样检查。
 
-Requires the optional readxl package. Sheet names must match exactly. The first column is the length-bin label; remaining headers are numeric time labels. The reader applies the same value and alignment checks as read_survey_csv(), preserves zero and missing survey cells, and does not infer biology or fill missing periods.
+Requires the optional readxl package. Sheet names must match exactly. The first column is the length-bin label; remaining headers are numeric time labels. The reader applies the same value and alignment checks as read_survey_csv(), preserves zero and missing survey cells, and does not infer biology or fill missing periods. Only blank cells and `NA` denote missing values. A cell that holds an Excel error value, such as `#DIV/0!` or `#N/A` from a formula, is an error that names the sheet and the cells; readxl would otherwise import it as a missing value and the observation would be left out of the likelihood without a message. This check reads the workbook file directly and applies to the `.xlsx` and `.xlsm` formats; cells of a workbook in the older `.xls` format cannot be checked in this way.
 
 **示例 / Example:**
 
@@ -3096,9 +3240,9 @@ save_assessment (fit, file, x = NULL, overwrite = FALSE)
 
 Invisibly returns the file path without changing the original fit.
 
-存档保存输入、map、边界、拟合设置、版本和报告。obj 指针只在原会话中有效。在新会话中可用 refit_model() 重新拟合并获得可执行的 TMB 对象。写入失败时会保留原存档。
+存档保存输入、map、边界、拟合设置、版本和报告。obj 指针只在原会话中有效。在新会话中可用 refit_model() 重新拟合并获得可执行的 TMB 对象。写入失败时会保留原存档。为旧拟合提供 x 时，拟合中缺少的结果字段（观测、时间标签、年龄、体长组、时间步和 F 结构）由 x 补齐，这样去掉 TMB 对象后残差、估计值和绘图仍然可用；`recipe$provenance` 列出来自 x 的字段。文件使用 R 序列化第 3 版，它记录体长标签和列名的字符编码。
 
-The archive omits the session-specific obj pointer and retains inputs, maps, bounds, settings, versions and reports. Failed replacement preserves the old archive. Use refit_model() to rebuild a live TMB model.
+The archive omits the session-specific obj pointer and retains inputs, maps, bounds, settings, versions and reports. Failed replacement preserves the old archive. Use refit_model() to rebuild a live TMB model. For an older fit supplied with x, result fields that it lacks (observations, time labels, ages, length bins, time step and F structure) are filled from x, so that residuals, estimates and plots remain available after the live TMB object is dropped; `recipe$provenance` lists the fields that came from x. The file uses R serialization version 3, which records the character encoding of length labels and column names.
 
 `recipe$implementation` 保存可取得的提交号、核心与 R 源码摘要、运行环境。旧存档及来源未知的旧拟合保持可读；重新拟合会提示已知实现或依赖变化。
 
@@ -3136,9 +3280,9 @@ sim_alscl (..., nstarts = 1)
 
 A named list of replicate fits or error records, including iter and elapsed. Every result also replaces its `result_rep_<id>` file.
 
-保留模拟文件中的时间和体长坐标。每次拟合内部使用一个进程及顺序标准误。失败重跑会替换旧成功文件。M、F 均为每模型时间步单位。这是操作模型模拟数据拟合，不自动构成拟合模型参数自助法。
+保留模拟文件中的时间和体长坐标。每个重复使用一个拟合进程，`nstarts` 大于 1 时也是如此。重复在并行工作进程上运行（`ncores` 大于 1）时，每个工作进程用一个核计算标准误，避免嵌套并行；`ncores = 1` 时标准误使用会话的 `alscl_speed()` 设置，结果完全相同。结果不含 TMB 对象 `obj`（内存和保存的文件中都没有）；需要 TMB 对象时对结果调用 `refit_model()`。每个结果在 `simulation_M` 中记录自然死亡率：实际使用的值（used）、重复文件中记录的值（recorded，没有时为 NA）和所用值的来源（source）。失败的拟合属于 `alscl_fit_error` 类，包含 converge = "FAILED"、error 和 iter。失败重跑会替换旧成功文件。M、F 均为每模型时间步单位。这是操作模型模拟数据拟合，不自动构成拟合模型参数自助法。
 
-Recorded time and length coordinates are retained. Each replicate uses one inner fitting worker and sequential standard errors. Failed reruns replace old success files. M and F are per model step. This fits operating-model simulations; it does not automatically create a fitted parametric bootstrap.
+Recorded time and length coordinates are retained. Each replicate uses one fitting worker, including when `nstarts` is greater than 1. When replicates run on parallel workers (`ncores` greater than 1), each worker computes standard errors on one core to avoid nested parallelism. With `ncores = 1` the standard errors use the session setting of `alscl_speed()`; the results are identical. Results do not contain the TMB object `obj`, in memory or in the saved files; use `refit_model()` on a result when a TMB object is needed. Each result records the natural mortality rate in `simulation_M`: the rate used (used), the rate recorded in the replicate file (recorded, NA when absent) and where the rate used came from (source). Failed fits have class `alscl_fit_error` and contain converge = "FAILED", error and iter. Failed reruns replace old success files. M and F are per model step. This fits operating-model simulations; it does not automatically create a fitted parametric bootstrap.
 
 `start_diagnostics` 保留每个初值的结果、进程与耗时。 / `start_diagnostics` retains the result, process and timing of every start.
 
@@ -3164,9 +3308,9 @@ lapply(fits, function(fit) fit$diagnostics)
 
 ```r
 sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters = NULL, 
-    parameters.L = NULL, parameters.U = NULL, map = NULL, M = 0.2, ncores = 1, train_times = 1, 
+    parameters.L = NULL, parameters.U = NULL, map = NULL, M = NULL, ncores = 1, train_times = 1, 
     control = list(), F_structure = c("group_year", "year"), polish = TRUE, model = c("acl", 
-        "alscl"), nstarts = 1)
+        "alscl"), nstarts = 1, allow_M_mismatch = FALSE)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
@@ -3178,7 +3322,7 @@ sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters
 | `parameters.L` | `NULL` | 可选、对应模型的具名下界。 | Optional named lower bounds, matching the selected model. |
 | `parameters.U` | `NULL` | 可选、对应模型的具名上界。 | Optional named upper bounds, matching the selected model. |
 | `map` | `NULL` | 对应模型的参数映射；保留具名 NULL 释放。 | Model-specific parameter mappings; named NULL releases are preserved. |
-| `M` | `0.2` | 每模型时间步的自然死亡率，默认 0.2。 | Natural mortality per model time step; default 0.2. |
+| `M` | `NULL` | 每个模型时间步的自然死亡率，用于每次拟合。默认 NULL 使用 sim_data() 记录在每个重复文件中的自然死亡率。给定的值必须等于记录值，除非 allow_M_mismatch 为 TRUE。没有记录值的文件必须给出 M。 | Natural mortality rate per model time step used in every fit. The default, NULL, uses the natural mortality rate recorded in each replicate file by sim_data(). A supplied value must equal the recorded rate unless allow_M_mismatch is TRUE. Files without a recorded rate require M. |
 | `ncores` | `1` | 独立模拟重复的最大 socket 工作进程数。 | Maximum independent replicate socket workers. |
 | `train_times` | `1` | 每个初值的优化轮数。 | Optimization passes per start. |
 | `control` | `list()` | 具名 nlminb 优化控制。 | Named nlminb optimizer controls. |
@@ -3186,14 +3330,15 @@ sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters
 | `polish` | `TRUE` | 是否应用有保护的优化收尾，默认 TRUE。 | Apply safeguarded optimization refinement; default TRUE. |
 | `model` | `c("acl", "alscl")` | "acl"（默认）或 "alscl"。 | "acl" (default) or "alscl". |
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
+| `allow_M_mismatch` | `FALSE` | 逻辑值。FALSE（默认）在给定的 M 与重复文件记录的自然死亡率不同时停止。TRUE 按给定的 M 拟合，用于研究自然死亡率设定有误的情形。 | Logical. FALSE (default) stops when a supplied M differs from the natural mortality rate recorded in a replicate file. TRUE fits the supplied M, for a study of misspecified natural mortality. |
 
 **返回 / Returns:** 返回包含 iter 和 elapsed 的具名拟合或错误记录列表；每个结果同时替换对应 `result_rep_<id>` 文件。
 
 A named list of replicate fits or error records, including iter and elapsed. Every result also replaces its `result_rep_<id>` file.
 
-保留模拟文件中的时间和体长坐标。每次拟合内部使用一个进程及顺序标准误。失败重跑会替换旧成功文件。M、F 均为每模型时间步单位。这是操作模型模拟数据拟合，不自动构成拟合模型参数自助法。
+保留模拟文件中的时间和体长坐标。每个重复使用一个拟合进程，`nstarts` 大于 1 时也是如此。重复在并行工作进程上运行（`ncores` 大于 1）时，每个工作进程用一个核计算标准误，避免嵌套并行；`ncores = 1` 时标准误使用会话的 `alscl_speed()` 设置，结果完全相同。结果不含 TMB 对象 `obj`（内存和保存的文件中都没有）；需要 TMB 对象时对结果调用 `refit_model()`。每个结果在 `simulation_M` 中记录自然死亡率：实际使用的值（used）、重复文件中记录的值（recorded，没有时为 NA）和所用值的来源（source）。失败的拟合属于 `alscl_fit_error` 类，包含 converge = "FAILED"、error 和 iter。失败重跑会替换旧成功文件。M、F 均为每模型时间步单位。这是操作模型模拟数据拟合，不自动构成拟合模型参数自助法。
 
-Recorded time and length coordinates are retained. Each replicate uses one inner fitting worker and sequential standard errors. Failed reruns replace old success files. M and F are per model step. This fits operating-model simulations; it does not automatically create a fitted parametric bootstrap.
+Recorded time and length coordinates are retained. Each replicate uses one fitting worker, including when `nstarts` is greater than 1. When replicates run on parallel workers (`ncores` greater than 1), each worker computes standard errors on one core to avoid nested parallelism. With `ncores = 1` the standard errors use the session setting of `alscl_speed()`; the results are identical. Results do not contain the TMB object `obj`, in memory or in the saved files; use `refit_model()` on a result when a TMB object is needed. Each result records the natural mortality rate in `simulation_M`: the rate used (used), the rate recorded in the replicate file (recorded, NA when absent) and where the rate used came from (source). Failed fits have class `alscl_fit_error` and contain converge = "FAILED", error and iter. Failed reruns replace old success files. M and F are per model step. This fits operating-model simulations; it does not automatically create a fitted parametric bootstrap.
 
 `start_diagnostics` 保留每个初值的结果、进程与耗时。 / `start_diagnostics` retains the result, process and timing of every start.
 
@@ -3228,9 +3373,9 @@ summarize_simulations (fits, truth, quantities = c("SSB", "Rec"), conf_level = 0
 | `quantities` | `c("SSB", "Rec")` | SSB、Rec、B、N、CN、CB 中互不重复的总体时序，默认 SSB 和 Rec。 | Distinct aggregate time series from SSB, Rec, B, N, CN, CB; default SSB and Rec. |
 | `conf_level` | `0.95` | 基于报告标准误构造正态区间的名义置信水平；实际覆盖率另行计算。 | Nominal confidence level used to construct normal intervals from reported SEs; empirical coverage is calculated separately. |
 
-**返回 / Returns:** 返回按量跨重复/时间合并的 summary、逐重复状态/耗时，以及保留失败点的逐点估计和真值。
+**返回 / Returns:** 返回按量跨重复/时间合并的 summary、逐重复状态/耗时（replicates），以及保留失败点的逐点估计和真值（estimates）。summary_converged 对全部收敛的拟合重复 summary 的统计量，不论是否通过数值检查。failures 按原因统计未通过检查的重复：n_replicates 是有该原因的重复数，n_sole 是只有该原因的重复数。replicates 中 converged 标出收敛的拟合，failure_reasons 列出每个重复的原因；estimates 中 converged 和 covered_converged 对每个估计对给出同样的信息。
 
-A list with summary pooled over replicates/time by quantity, per-replicate status/timing and all pointwise estimates/truth, including failures.
+A list with summary pooled over replicates/time by quantity, per-replicate status/timing (replicates) and all pointwise estimates/truth, including failures (estimates). summary_converged repeats the statistics of summary for all converged fits, whether or not they pass the numerical screen. failures counts the replicates that fail the screen by reason: n_replicates is the number of replicates with that reason and n_sole the number for which it is the only reason. In replicates, converged marks converged fits and failure_reasons lists the reasons of each replicate. In estimates, converged and covered_converged give the same information for each estimate pair.
 
 偏差和 RMSE 使用数值有效估计对，覆盖率额外要求有限的报告标准误。报告尝试/有效重复、点及区间数和 failure_rate。缺失标准误不算覆盖失败。相对偏差排除真值为零的点。F 因需要明确定义聚合和不确定性而排除。这些条件性能统计不证明模型普遍更优。
 
@@ -3239,6 +3384,10 @@ Bias/RMSE use numerically valid estimate pairs; coverage additionally requires f
 时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。
 
 Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
+
+收敛的拟合指没有报错、目标函数有限且最大绝对梯度低于 1e-3（数值检查的梯度阈值）的拟合。这样的拟合仍可能通不过检查，例如估计的相关系数或标准差落在自然尺度的边界上，或 Hessian 不正定。比较 summary 与 summary_converged，看被检查排除的拟合是否改变偏差、RMSE 或覆盖率；把失败率当作收敛率之前先读 failures。
+
+A converged fit returned no error and has a finite objective and a maximum absolute gradient below 1e-3, the gradient threshold of the numerical screen. Such a fit can still fail the screen, for example because an estimated correlation or SD lies at a natural-scale boundary or the Hessian is not positive definite. Compare summary with summary_converged to see whether the fits excluded by the screen change bias, RMSE or coverage, and read failures before treating the failure rate as a convergence rate.
 
 **示例 / Example:**
 

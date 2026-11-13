@@ -2,7 +2,7 @@
 
 本页帮你决定模型估计哪些参数、固定哪些参数、捕捞死亡率采用什么结构，以及优化器如何运行。你需要一个输入列表 `x`（[准备调查数据](data-preparation.html)），并且最好已读过[理解第一次拟合](first-model.html)，其中的检查会告诉你哪项设置需要调整。
 
-设置分三组：`x$fit_args` 中的生物学和数据设置，见[准备调查数据](data-preparation.html)；模型配置（初值、边界、`map`、F 结构），ACL 和 ALSCL 分别设置；优化器设置（初值个数、工作进程、优化轮数），它们改变求解方式，模型本身保持不变。
+设置分三组：`x$fit_args` 中的生物学和数据设置，见[准备调查数据](data-preparation.html)；模型配置（初值、边界、`map`、F 结构和可选的模型结构），ACL 和 ALSCL 分别设置；优化器设置（初值个数、工作进程、优化轮数），它们改变求解方式，模型本身保持不变。
 
 <h2 id="settings">1. 了解各项设置及其位置</h2>
 
@@ -13,13 +13,15 @@
 | `parameters`、`parameters.L`、`parameters.U` | 标量参数在优化器尺度上的初值和边界 | `x$fit_config$acl` 或 `x$fit_config$alscl` |
 | `map` | 哪些参数固定在初值、哪些默认固定的参数被释放 | `x$fit_config$acl` 或 `x$fit_config$alscl` |
 | `F_structure` | `"group_year"`（默认）：F 随年龄或体长及时间步变化；`"year"`：每个时间步一个 F | `x$fit_args` 或调用 |
+| `structure` | 可选的模型结构；默认是 Zhang 和 Cadigan (2022) 已发表的结构 | `x$fit_config$acl` 或 `x$fit_config$alscl`，或调用 |
 | `nstarts`、`ncores` | 独立初值的个数和运行它们的工作进程数 | 调用 |
+| `start_spread` | 第二个及之后的初值围绕第一个初值的离散程度（默认 0.15） | 调用 |
 | `train_times` | 每个初值连续优化的轮数（默认 1） | 调用 |
 | `polish` | 对最佳初值做带检查的 Newton 收尾（默认 `TRUE`） | 调用 |
 | `control` | `nlminb()` 的控制参数，如 `iter.max` | 调用 |
 | `silent`、`output` | 不显示进度信息；把诊断和图写入 `output/` | 调用 |
 
-调用中给出的值只在本次调用中覆盖保存的值。希望之后的每项分析（回溯分析、情景、预测检验）都使用某个选择时，把它存入 `x`，做法见第 7 步。
+调用中给出的值只在本次调用中覆盖保存的值。希望之后的每项分析（回溯分析、情景、预测检验）都使用某个选择时，把它存入 `x`，做法见第 8 步。
 
 <h2 id="parameters">2. 查看哪些参数会被估计</h2>
 
@@ -51,15 +53,12 @@ my_map <- list(log_Linf = factor(NA), log_vbk = factor(NA), logit_log_F_y = NULL
 a_map <- run_acl(x, map = my_map, silent = TRUE)
 extract_parameters(a_map)
 # 把选择存入输入列表，供之后的分析使用
-# 未提供 fit_config 的输入列表没有保存的配置：
-# 第一次赋值前先为两个模型各建一项
-if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$map <- my_map
 ```
 
-`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。Hessian 不正定或相关系数接近边界时，先检查梯度、参数尺度、边界、其他初值和剖面。在这些检查支持固定参数，且外部估计或生物学假设能提供合理取值时，再固定该参数；每个固定值的依据都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。未提供 `fit_config` 的输入列表没有保存的配置，直接给 `x$fit_config$acl$map` 赋值只会建立 ACL 一项。上面的 `if` 一行先为两个模型各建一项，使保存的配置同时列出两个模型；空项表示使用模型默认设置。
+`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。Hessian 不正定或相关系数接近边界时，先检查梯度、参数尺度、边界、其他初值和剖面。在这些检查支持固定参数，且外部估计或生物学假设能提供合理取值时，再固定该参数；每个固定值的依据都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。输入列表没有保存的配置时，这次赋值会建立 `x$fit_config$acl`。`x$fit_config` 中没有条目的模型使用共用的 `x$fit_args` 和模型默认设置，所以只为 ACL 保存了配置的输入列表仍然可以用 ALSCL 拟合。
 
-不要把过程偏差块 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 写进 `map`。模型对每个块的全部偏差计算过程似然。因此，用 `NA` 固定其中一些偏差，或让多个偏差使用同一个因子水平，得到的并不是偏差更少的模型的似然。除非该过程的标准差和 AR(1) 相关系数也都固定，否则这样的 map 会被拒绝。即使固定了，目标函数也不能与其他拟合比较，不要用 AIC 比较。要让所有年龄组或体长组在每个时间步共用一个捕捞死亡率，使用 `F_structure = "year"`（第 5 步），它有自己的一维 AR(1) 似然。`simulate_fit(process = "resample")` 要求过程偏差不受限制，`hindcast_model()` 要求 `dev_log_R` 和 `dev_log_F` 不受限制。见[模拟调查数据并检验预测](case-model-validation.html)。
+不要把过程偏差块 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 写进 `map`。模型对每个块的全部偏差计算过程似然。因此，用 `NA` 固定其中一些偏差，或让多个偏差使用同一个因子水平，得到的并不是偏差更少的模型的似然。除非该过程的标准差和 AR(1) 相关系数也都固定，否则这样的 map 会被拒绝，因为这些参数的估计会有偏。即使固定了，目标函数也不能与对这些偏差使用其他 map 的拟合比较，不要用 AIC 比较；拟合结果在 `restricted_random` 中列出涉及的偏差块。要让所有年龄组或体长组在每个时间步共用一个捕捞死亡率，使用 `F_structure = "year"`（第 5 步），它有自己的一维 AR(1) 似然。`simulate_fit(process = "resample")` 要求过程偏差不受限制，`hindcast_model()` 要求 `dev_log_R` 和 `dev_log_F` 不受限制。见[模拟调查数据并检验预测](case-model-validation.html)。
 
 用具名 `NULL` 释放参数时，从 `inspect_parameters(x, model)` 复制该模型的参数名。名称有误会报错。截取映射因子的子集后，程序会去掉未使用的水平，其余单元保持原来的固定或估计状态。
 
@@ -69,13 +68,12 @@ x$fit_config$acl$map <- my_map
 p <- create_parameters(model_type = "acl", species = "flatfish")
 p$parameters$log_Linf <- log(65)
 p$parameters.U$log_Linf <- log(90)
-if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$parameters <- p$parameters
 x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
 ```
 
-初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，因此 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间。超出边界的初值会在拟合前移到最近的边界。[估计参数清单](estimation-parameters.html)给出完整列表和变换方式。
+初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，因此 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界，做法与 `run_alscl()` 相同：初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍。[估计参数清单](estimation-parameters.html)给出完整列表和变换方式。
 
 <h2 id="f-structure">5. 选择 F 结构</h2>
 
@@ -90,21 +88,53 @@ plot_deviance(a_year, type = "F", se = TRUE)
 
 选 `"year"` 后，组间相关参数（`logit_log_F_a` 或 `logit_log_F_l`）被排除在拟合之外；`report$dev_log_F` 只有一行，`report$F` 保持年龄（或体长）乘时间的形状，各行相同。同一输入列表之后的每项分析（包括回溯）都要用同一种结构。
 
-<h2 id="optimizer">6. 控制优化器</h2>
+<h2 id="structure">6. 选择可选的模型结构</h2>
+
+```r
+b_structure <- run_alscl(x, structure = list(
+  growth_increment = "von_bertalanffy", growth_transition = "bin",
+  initial_length = "growth", initial_plus_group = "equilibrium"),
+  silent = TRUE)
+b_structure$structure
+a_structure <- run_acl(x, structure = list(initial_plus_group = "equilibrium"),
+                       silent = TRUE)
+a_structure$structure
+```
+
+`structure` 参数选择可选的模型结构。默认值（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构，所以不带 `structure` 的调用拟合的模型与以前相同。每项设置替换该结构的一个部分，可以逐项选择。ACL 只有第一项设置，ALSCL 四项都有。
+
+| 设置 | 已发表的结构（默认） | 可选的结构 |
+|---|---|---|
+| `initial_plus_group`（ACL 和 ALSCL） | `"single_cohort"`：第一个时间步的末组（plus group）只含一个世代 | `"equilibrium"`：末组等于在初始总死亡率 `init_Z` 下所有更老世代之和 |
+| `initial_length`（ALSCL） | `"length_at_age"`：第一个时间步每个年龄都采用变异系数为 `cv_len` 的年龄别体长分布 | `"growth"`：第一个年龄采用该分布，其后每个年龄由前一年龄按 `init_Z` 存活并生长一步得到，与之后各时间步相同 |
+| `growth_increment`（ALSCL） | `"logistic"`：期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step` | `"von_bertalanffy"`：体长 `L` 低于 `Linf` 时，一个时间步的期望增量为 `(Linf - L) * (1 - exp(-vbk * growth_step))`，高于 `Linf` 时平滑降到零，因此 `Linf` 和 `vbk` 的含义与年龄别体长曲线中相同 |
+| `growth_transition`（ALSCL） | `"midpoint"`：体长组内所有个体都从组中点开始生长 | `"bin"`：起始体长在组内均匀分布，期望生长量不依赖体长组的宽度 |
+
+有两对设置具有已发表的结构所没有的性质。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、没有捕捞且 `init_Z` 等于 `M` 的种群保持不变。`growth_increment = "von_bertalanffy"` 与 `growth_transition = "bin"` 同时使用时，世代的平均体长沿 von Bertalanffy 曲线变化，与体长组的宽度无关。在已发表的结构下，每个时间步的生长增量相对组宽较小时（例如季度时间步配较宽的体长组），组宽会影响结果：体长组宽 5 cm 时，一个季度金枪鱼世代 10 年后的平均体长为 122 cm，而 von Bertalanffy 曲线给出 150 cm。
+
+`b_structure$structure` 和 `a_structure$structure` 列出每项设置实际采用的取值，保存的拟合结果也保留它们。采用可选结构的拟合是另一个模型，选用之前先把它的数值检查、残差和估计值与默认拟合比较（[诊断](diagnostics.html)）。如果 `run_acl()` 因某项设置“applies to ALSCL only”而停止，请从 ACL 的调用中去掉生长和初始体长的设置：ACL 没有生长转移矩阵。把选择存在所属模型之下，例如 `x$fit_config$alscl$structure`，这样该输入列表之后的拟合（包括回溯分析的每一轮）都会使用它。要用同样的结构模拟数据，见[模拟调查数据](simulation.html#generate)。
+
+<h2 id="optimizer">7. 控制优化器</h2>
 
 ```r
 a4 <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
 a4$start_diagnostics
+a4$start_summary
 a4$refinement$status
+# 用于报告的结果：增加初值个数，并加大初值的离散程度
+a5 <- run_acl(x, nstarts = 5, start_spread = 0.5, ncores = 2, silent = TRUE)
+a5$start_summary
 ```
 
-`nstarts` 运行多个独立初值：第一个使用给定的初值，之后的初值由确定性扰动得到，最终保留目标函数值最低的拟合。`start_diagnostics` 列出每个初值的目标函数值和收敛码。如果各次优化的目标函数终值不同，先检查收敛情况，比较终点梯度和参数估计，再判断是否存在多个局部极小值。`ncores` 设定同时运行初值的工作进程数（`nstarts` 默认等于 `ncores`，比较耗时时两者都要设定）。`train_times` 从每个初值的终点再次运行优化器；`polish = TRUE` 对最佳初值做最多五步 Newton 收尾，只在梯度减小且 Hessian 保持正定时接受，`a4$refinement` 记录结果。`control = list(iter.max = 3000)` 把限制传给 `nlminb()`。
+`nstarts` 运行多个独立初值：第一个使用给定的初值，之后的初值由确定性扰动得到，最终保留目标函数值最低的拟合。扰动是优化器尺度上标准差为 `start_spread`（默认 0.15）的正态偏差。`start_diagnostics` 列出每个初值的目标函数值和收敛码，`start_summary` 给出收敛的初值个数、它们目标函数值的范围以及与最优值一致的个数；范围超过 2 时写入 `diagnostics$issues`。如果各次优化的目标函数终值不同，先检查收敛情况，比较终点梯度和参数估计，再判断是否存在多个局部极小值。`ncores` 设定同时运行初值的工作进程数（`nstarts` 默认等于 `ncores`，比较耗时时两者都要设定）。`train_times` 从每个初值的终点再次运行优化器；`polish = TRUE` 对最佳初值做最多五步 Newton 收尾，只在梯度减小且 Hessian 保持正定时接受，`a4$refinement` 记录结果。`control = list(iter.max = 3000)` 把限制传给 `nlminb()`。
+
+单个初值可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。数值检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个初值（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），如代码块最后两行所示，并比较 `start_diagnostics` 中的目标函数值。
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
 `nlminb()` 的每个控制项只按名称提供一次，例如 `control = list(iter.max = 3000L)`。预检和拟合都会在优化前校验名称和值。
 
-<h2 id="record">7. 记录你的选择</h2>
+<h2 id="record">8. 记录你的选择</h2>
 
 ```r
 x$fit_args$F_structure <- "year"

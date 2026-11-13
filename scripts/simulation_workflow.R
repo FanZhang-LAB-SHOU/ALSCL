@@ -2,12 +2,6 @@
 # source("scripts/simulation_workflow.R", encoding="UTF-8")
 library(ALSCL)
 
-simulation_to_tables <- function(sm, pa, first_year=NULL) {
-  # Recorded coordinates take priority; mismatched parameter grids are errors.
-  # Old simulation objects without len_mid may use the matching parameter grid.
-  ALSCL:::.acl_simulation_to_tables(sm, pa, first_year)
-}
-
 # 默认输出在已被 Git 忽略的 output/ 下 / The default output folder is under the ignored output/.
 run_simulation_examples <- function(out=file.path("output","simulation_examples"),fit_batch=FALSE) {
   # 写入 docs/ 的已提交数据必须来自当前检出的代码 / Committed data under docs/ must come from this checkout.

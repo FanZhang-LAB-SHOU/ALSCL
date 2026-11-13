@@ -58,7 +58,7 @@ a4$workers
 | `fit_scenarios()`, `hindcast_model()` | The tasks: one scenario or training fold each | The same rule |
 | `sim_model()`, `sim_acl()`, `sim_alscl()` | The replicates | `nstarts`, default one |
 
-Because `nstarts` defaults to `ncores`, set both when you compare timings. Later starts add fixed perturbations and the lowest objective is selected, so the result is the same for any `ncores`; `a4$start_diagnostics` records each start. The other functions ignore the `ncores` of a bundle and give each fit one worker and sequential standard errors.
+Because `nstarts` defaults to `ncores`, set both when you compare timings. Later starts add fixed perturbations and the lowest objective is selected, so the result is the same for any `ncores`; `a4$start_diagnostics` records each start. The other functions ignore the `ncores` of a bundle and give each fit one worker. Fits that run on parallel workers compute their standard errors on one core; with `ncores = 1` the fits run in the main session and use its `sd_cores` setting, with identical results.
 
 The cores used for the standard errors inside one fit are a separate setting, `alscl_speed(sd_cores = ...)`, with results identical to the sequential calculation; [Speed settings](speed.html) explains it.
 
@@ -85,7 +85,7 @@ a <- run_acl(x, silent = TRUE)
 list.files(getOption("ALSCL.tmb.cache"))
 ```
 
-The first fit of each model compiles its C++ template into a cache folder named by a key computed from the MD5 hashes of the model source and header, the R, TMB and RcppEigen versions, the OpenMP flag and the `framework`; a fit with the same key loads the library without compiling. The default cache lies under `tempdir()`, which R removes at the end of the session. Set `ALSCL.tmb.cache` before the first fit, for example in `.Rprofile`, to keep the compiled models between sessions; socket workers load the library compiled by the session.
+The first fit of each model compiles its C++ template into a cache folder named by a key computed from the MD5 hashes of the model source and header, the R, TMB and RcppEigen versions, the `framework`, the platform of the R build and the C++ settings of R (the compiler entries of its `Makeconf` file and the site and user `Makevars` files); a fit with the same key loads the library without compiling. A cache folder shared between computers, or between two builds of R on one computer, therefore keeps one compiled library for each, and a persistent cache written by an earlier version of the package is compiled again once. The default cache lies under `tempdir()`, which R removes at the end of the session. Set `ALSCL.tmb.cache` before the first fit, for example in `.Rprofile`, to keep the compiled models between sessions; socket workers load the library compiled by the session.
 
 Compiling needs a C++ compiler:
 
