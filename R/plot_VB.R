@@ -157,7 +157,8 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   r <- model_result$report; delta <- ages-r$t0; decay <- exp(-r$vbk*delta)
   mu <- r$Linf*(1-decay)
   jacobian <- cbind(log_Linf = mu, log_vbk = r$Linf*decay*r$vbk*delta,
-                    t0 = -r$Linf*r$vbk*decay, log_t0 = -r$Linf*r$vbk*decay*r$t0)
+                    t0 = -r$Linf*r$vbk*decay,
+                    log_t0 = -r$Linf*r$vbk*decay*(r$t0 - .acl_scale_settings(model_result)$t0_lower))
   keys <- intersect(colnames(jacobian), rownames(cov))
   se <- rep(0, length(ages))
   if (length(keys)) {

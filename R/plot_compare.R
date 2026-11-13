@@ -227,7 +227,7 @@ plot_compare_ts <- function(model1, model2,
                   x = .acl_lab("x", "year"), y = "Estimate",
                   color = "Model", linetype = "Model") +
     .acl_base_theme() +
-    .acl_scale_x(values = df$Year) +
+    .acl_scale_x(values = df$Year, check_overlap = TRUE) +
     ggplot2::theme(legend.position = cfg$legend_pos,
                    strip.text = ggplot2::element_text(face = "bold"))
 
@@ -353,7 +353,7 @@ plot_compare_F <- function(model1, model2,
     ggplot2::facet_wrap(~Model, scales = "free_y") +
     ggplot2::labs(title = .acl_title("compare_F", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = row_label) +
-    .acl_base_theme() + .acl_scale_x(values = df$Year) +
+    .acl_base_theme() + .acl_scale_x(values = df$Year, check_overlap = TRUE) +
     ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
                    legend.position = acl_theme("compare_legend_pos"))
 
@@ -479,7 +479,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"),
                   y = "Mean log residual (bars: 1 SD)",
                   color = NULL, linetype = NULL) +
-    base_layers + .acl_scale_x(values = year) + ggplot2::theme(legend.position = "bottom") +
+    base_layers + .acl_scale_x(values = year, check_overlap = TRUE) + ggplot2::theme(legend.position = "bottom") +
     ggplot2::expand_limits(x = range(year))
 
   # P4: |Residual| by length bin
@@ -1148,22 +1148,23 @@ plot_compare_F_ts <- function(model1, model2,
     list(data = data.frame(Year = years, MeanF = summarize(Fmat), Model = mname),
          groups = paste(nrow(Fmat), if (!is.null(m$report$FL)) "length bins" else "ages"))
   }
-  # F at age with its fitted ages and time steps. ALSCL F at age (FA) has no
-  # plus-group row and no column for the last time step.
+  # F at age with its fitted ages and time steps. ALSCL F at age (FA) from
+  # earlier versions has no plus-group row and no column for the last time step.
   get_F_age <- function(m, mname) {
     alscl <- !is.null(m$report$FL)
     Fmat <- if (alscl) m$report$FA else m$report[["F"]]
+    short <- alscl && is.matrix(Fmat) && !(is.numeric(m$year) && ncol(Fmat) == length(m$year))
     if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat) ||
         any(!is.finite(Fmat)))
       stop(mname, " has no finite F-at-age matrix (", if (alscl) "report$FA" else "report$F",
            "), which basis = \"age\" needs. Use basis = \"native\".", call. = FALSE)
-    years <- .acl_plot_year(m, ncol(Fmat) + alscl, mname)
-    ages <- .acl_fitted_ages(m, nrow(Fmat), plus_group = !alscl)
+    years <- .acl_plot_year(m, ncol(Fmat) + short, mname)
+    ages <- .acl_fitted_ages(m, nrow(Fmat), plus_group = !short)
     if (is.null(ages))
       stop(mname, " has no age metadata matching its F-at-age matrix, so basis = \"age\" ",
            "cannot match ages between the fits. Use basis = \"native\".", call. = FALSE)
     list(F = Fmat, years = years[seq_len(ncol(Fmat))], ages = ages,
-         plus = if (alscl) rep(FALSE, length(ages)) else seq_along(ages) == length(ages))
+         plus = if (short) rep(FALSE, length(ages)) else seq_along(ages) == length(ages))
   }
 
   if (basis == "native") {
@@ -1173,6 +1174,11 @@ plot_compare_F_ts <- function(model1, model2,
                       model2_name, ": ", summary_name, " across ", f2$groups, ".")
   } else {
     a1 <- get_F_age(model1, model1_name); a2 <- get_F_age(model2, model2_name)
+    steps <- c(model1$growth_step, model2$growth_step)
+    if (length(steps) == 2L && all(is.finite(steps)) && abs(diff(steps)) > 1e-8)
+      stop("basis = \"age\" needs fits with the same time step, because F is a rate per time step. ",
+           model1_name, " has a step of ", steps[1L], " years and ", model2_name, " a step of ", steps[2L],
+           " years.", call. = FALSE)
     key <- function(x) round(x, 8)
     ages <- intersect(key(a1$ages), key(a2$ages))
     # An age that is a plus group in only one fit covers different fish.
@@ -1206,7 +1212,7 @@ plot_compare_F_ts <- function(model1, model2,
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_title("compare_F_ts", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = ylab, caption = caption) +
-    .acl_base_theme() + .acl_scale_x(values = df$Year) +
+    .acl_base_theme() + .acl_scale_x(values = df$Year, check_overlap = TRUE) +
     ggplot2::theme(legend.position = cfg$legend_pos)
   return(p)
 }

@@ -11,6 +11,8 @@
 // - Initial numbers at age (ages after the first) have iid normal deviations.
 // - Optional data entry initial_plus_group = 1 makes the first-period plus
 //   group the equilibrium sum of all older cohorts at init_Z.
+// - Optional data entry correlation_range = 1 lets the AR(1) correlations
+//   take values between -1 and 1.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -68,12 +70,15 @@ Type objective_function<Type>::operator() ()
   Type init_Z = exp(log_init_Z);
   Type std_log_N0 = exp(log_std_log_N0);
 
+  // Optional: AR(1) correlations between -1 and 1 (absent or 0 keeps 0 to 1).
+  int correlation_range = optional_setting(this->data, "correlation_range");
+
   Type std_log_R = exp(log_std_log_R);
-  Type phi_log_R = invlogit(logit_log_R);
+  Type phi_log_R = ar1_correlation(logit_log_R, correlation_range);
 
   Type std_log_F = exp(log_std_log_F);
-  Type phi_log_F_y = invlogit(logit_log_F_y);
-  Type phi_log_F_a = invlogit(logit_log_F_a);
+  Type phi_log_F_y = ar1_correlation(logit_log_F_y, correlation_range);
+  Type phi_log_F_a = ar1_correlation(logit_log_F_a, correlation_range);
 
   Type vbk = exp(log_vbk);
   Type Linf = exp(log_Linf);

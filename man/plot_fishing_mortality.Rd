@@ -118,8 +118,11 @@ per year for annual fits and per quarter for quarterly fits. The default
 y-axis label states this time basis.
 For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
-F at age (FA: (A-1) x (Y-1)) is the negative log of the proportion
+F at age (FA: A x Y) is the negative log of the proportion
 surviving within each age class over the time step, minus natural mortality.
+Fits made by earlier versions hold FA without the plus group and without
+the last period; both forms are drawn. F in the last period is predicted
+by the F process and is not informed by observations.
 }
 \details{
 A group or panel with only one estimate is drawn as a point.
@@ -128,8 +131,8 @@ The point uses the global point_size setting and the estimate's line colour.
 
 Age axes and age panels use the fitted ages in \code{model_result$age}.
 The oldest age class of an ACL fit is a plus group and is marked with a
-plus sign, for example "Age 15+" or the tick label "15+". ALSCL F at age has
-no plus-group row. With \code{return_data = TRUE} and \code{type = "age"}, the
+plus sign, for example "Age 15+" or the tick label "15+". ALSCL F at age
+includes the plus group, except in fits made by earlier versions. With \code{return_data = TRUE} and \code{type = "age"}, the
 data keep the group position in \code{AgeGroup} and add the fitted age in
 \code{Age}.
 

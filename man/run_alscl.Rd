@@ -32,7 +32,8 @@ run_alscl(
   F_structure = c("group_year", "year"),
   polish = TRUE,
   structure = list(),
-  start_spread = 0.15
+  start_spread = 0.15,
+  t0_lower = 0
 )
 }
 \arguments{
@@ -136,6 +137,14 @@ as in all later periods.}
 \item{\code{initial_plus_group}}{\code{"single_cohort"}: the first-period plus group
 holds one cohort. \code{"equilibrium"}: it holds the sum of all older cohorts
 at total mortality init_Z.}
+\item{\code{correlation_range}}{\code{"positive"}: the AR(1) correlations of
+recruitment and of F over time and length lie between 0 and 1, as the
+logistic transform of the \verb{logit_*} parameters. \code{"symmetric"}: they
+lie between -1 and 1, as 2 * logistic - 1, so a \verb{logit_*} value of 0
+means no correlation and negative correlation can be estimated. A
+\verb{logit_*} start or fixed value has a different meaning under the two
+settings: a correlation rho is \code{qlogis(rho)} under \code{"positive"} and
+\code{qlogis((rho + 1) / 2)} under \code{"symmetric"}.}
 }
 With \code{initial_length = "growth"} and \code{initial_plus_group = "equilibrium"}
 a population with constant recruitment, no fishing and init_Z equal to M
@@ -146,6 +155,13 @@ The settings used are stored in the \code{structure} element of the fit.}
 starting values (on the scale of the optimizer, mostly logarithms) of
 the second and later starts. The default 0.15 keeps the starts used by
 earlier versions. See Details for when to use a larger value.}
+
+\item{t0_lower}{Lower limit of the von Bertalanffy parameter t0 in years.
+The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published
+parameterization, in which t0 is positive. Set a negative value, for
+example -1, to allow negative t0; a known t0 is then supplied as
+\code{parameters = list(log_t0 = log(t0 - t0_lower))}. Reported t0 values are
+always on the natural scale.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,

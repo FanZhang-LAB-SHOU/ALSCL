@@ -37,7 +37,8 @@ initialize_params(
   species = NULL,
   growth_step = NULL,
   burn_in = NULL,
-  observation_error = c("independent", "shared_time")
+  observation_error = c("independent", "shared_time"),
+  random_numbers = c("sequential", "by_process")
 )
 }
 \arguments{
@@ -124,6 +125,16 @@ must be an exact multiple of \code{growth_step} and smaller than \code{nyear}.}
 
 \item{observation_error}{Independent lognormal errors per length and time cell,
 or shared_time for an explicitly misspecified, perfectly correlated scenario.}
+
+\item{random_numbers}{How \code{sim_data()} draws the random numbers of a
+replicate. \code{"sequential"} (default) draws all processes from one
+stream, as in earlier versions; changing a setting of one process (for
+example the recruitment correlation) then also changes the draws of F,
+the initial numbers and the survey errors. \code{"by_process"} gives
+recruitment, F, initial numbers and survey errors separate streams with
+a fixed number of draws each, so that scenarios which differ in one
+process share the random numbers of the others. The two settings give
+different data for the same replicate ID.}
 }
 \value{
 A list containing all initialized parameters and derived variables

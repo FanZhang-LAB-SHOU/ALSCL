@@ -152,6 +152,12 @@
     positive <- positive[usable]; width <- width[usable]
     lower[positive] <- exp(log(estimate[positive]) - width)
     upper[positive] <- log_upper[usable]
+    # Where the lognormal bounds are not available (an estimate of exactly
+    # zero, or an upper bound that overflows), the Wald bounds are kept but
+    # the lower bound of a nonnegative estimate stops at zero. Negative
+    # estimates keep the Wald bounds.
+    nonnegative <- which(is.finite(estimate) & estimate >= 0 & is.finite(lower))
+    lower[nonnegative] <- pmax(lower[nonnegative], 0)
   }
   list(lower = lower, upper = upper)
 }

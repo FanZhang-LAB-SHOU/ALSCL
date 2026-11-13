@@ -16,7 +16,13 @@ extract_estimates(
 \item{quantities}{Character vector of reported population quantities. F resolves
 to age-specific F for ACL and length-specific FL for ALSCL. Supported outputs
 include SSB, Rec, B, N, CN, CB, NA, NL, BA, BL, SBA, SBL, CNA, CNL, CBA,
-CBL, F, FL, FA and the joint NLA/BLA/SBLA/CNLA/CBLA arrays when reported.}
+CBL, F, FL, FA and the joint NLA/BLA/SBLA/CNLA/CBLA arrays when reported.
+Numbers at age can be requested as N_at_age, an alias of NA: a table with
+the label "NA" loses that label when it is written to a CSV file and read
+back with the default settings of \code{read.csv()}, which read "NA" as a
+missing value (use N_at_age, or \code{na.strings = ""} when reading).
+In the fitted report the matrix is \code{fit$report[["NA"]]}; the
+double brackets are needed because NA is a reserved word in R.}
 
 \item{conf_level}{Nominal confidence level of approximate normal intervals
 on the reported scale, strictly between zero and one.}
@@ -46,8 +52,11 @@ terminal-period F (F and FL) is therefore the first-order autoregressive
 reflects the F process, not data. Terminal-period catch in number (CN,
 CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
 an abundance that the data inform and this predicted F. These rows have
-extrapolated = TRUE. FA omits the terminal period, so none of its rows is
-marked.
+extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
+(FA). When the last periods have no positive survey observation, F is
+a prediction from the last period with an observation onwards, and those
+periods are marked as well. FA from fits made by earlier versions has no
+terminal period and no plus group.
 }
 \examples{
 \dontrun{

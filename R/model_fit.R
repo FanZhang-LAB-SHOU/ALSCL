@@ -179,6 +179,17 @@
   p <- config$parameters; d <- prepared$data
   structure <- .acl_structure(prepared$structure, model)
   d[names(structure$data)] <- structure$data
+  # ALSCL: t0 = t0_lower + exp(log_t0). Zero is the published positive t0.
+  t0_lower <- if (is.null(prepared$t0_lower)) 0 else prepared$t0_lower
+  if (!is.numeric(t0_lower) || length(t0_lower) != 1L || !is.finite(t0_lower) || t0_lower >= min(d$age))
+    stop("t0_lower must be one finite number below the recruitment age.", call. = FALSE)
+  if (model == "ACL" && t0_lower != 0)
+    stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.", call. = FALSE)
+  if (t0_lower != 0) d$t0_lower <- t0_lower
+  # Default correlation starts keep their natural value under either range.
+  if (identical(structure$choices$correlation_range, "symmetric"))
+    for (nm in grep("^logit_", names(p), value = TRUE))
+      if (is.null(parameters[[nm]])) p[[nm]] <- stats::qlogis((stats::plogis(p[[nm]]) + 1) / 2)
   max_len <- max(prepared$bins$mid)
   if (model == "ALSCL") {
     d$len_mid <- prepared$bins$mid; d$len_lower <- prepared$bins$lower
@@ -208,9 +219,10 @@
   }
   # Length-at-age standard deviations must stay positive during optimization.
   t0_name <- if (model == "ACL") "t0" else "log_t0"
-  t0_upper <- if (model == "ACL") min(d$age)*(1-1e-6) else log(min(d$age)*(1-1e-6))
+  t0_upper <- if (model == "ACL") min(d$age)*(1-1e-6) else if (t0_lower == 0) log(min(d$age)*(1-1e-6)) else
+    log(min(d$age) - t0_lower) + log1p(-1e-6)
   config$parameters.U[[t0_name]] <- min(config$parameters.U[[t0_name]], t0_upper)
-  if ((if (model == "ACL") p$t0 else exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.", call. = FALSE)
+  if ((if (model == "ACL") p$t0 else t0_lower + exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.", call. = FALSE)
   p$dev_log_R <- rep(0, d$Y)
   p$dev_log_F <- array(0, c(if (F_structure == "year") 1L else if (model == "ACL") d$A else d$L, d$Y))
   p$dev_log_N0 <- rep(0, d$A-1L)
@@ -236,7 +248,7 @@
   }
   list(data = d, parameters = p, config = config, map = mapping,
        random = random, F_structure = F_structure, structure = structure$choices,
-       clamped_starts = clamped, restricted_random = restricted_random)
+       clamped_starts = clamped, restricted_random = restricted_random, t0_lower = t0_lower)
 }
 
 # Tell the user about starting values that were moved into the bounds. A start
@@ -375,7 +387,7 @@
     nstarts = nstarts, workers = workers, observations = prepared$observations,
     F_structure = F_structure, optimizer_history = raw_opt$optimizer_history,
     raw_opt = raw_opt, refinement = refined[setdiff(names(refined), "par")],
-    structure = setup$structure, start_summary = .acl_start_summary(starts),
+    structure = setup$structure, t0_lower = setup$t0_lower, start_summary = .acl_start_summary(starts),
     start_spread = start_spread, clamped_starts = setup$clamped_starts,
     zero_observations = prepared$zero_observations,
     restricted_random = setup$restricted_random)

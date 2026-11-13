@@ -192,7 +192,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param peel_step Positive integer. Number of model time steps that each
 #'   successive peel removes. Default is 1. For quarterly data, peel_step = 4
 #'   gives annual peels: peel k then ends k years before the terminal period.
-#' @param structure,start_spread Passed to every full and peel fit; see
+#' @param structure,start_spread,t0_lower Passed to every full and peel fit; see
 #'   \code{\link{run_alscl}}. A bundle's own settings are used unless these are
 #'   supplied explicitly.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
@@ -289,7 +289,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
-                        model = NULL, peel_step = 1, structure = list(), start_spread = 0.15, ...) {
+                        model = NULL, peel_step = 1, structure = list(), start_spread = 0.15, t0_lower = 0, ...) {
   .acl_check_flag(plot, "plot")
   .acl_check_flag(silent, "silent")
   renamed <- .acl_renamed(list(...), "retro_model")
@@ -651,8 +651,11 @@ plot_retro <- function(retro_result,
   all_times <- c(numeric_periods, results$Year)
   annual <- all(is.finite(numeric_periods)) &&
     all(abs(all_times - round(all_times)) < 1e-8, na.rm = TRUE)
+  # The model time step comes from the fitted series, not from the spacing of
+  # the terminal periods, which is peel_step times the model step.
+  model_step <- suppressWarnings(min(diff(sort(unique(results$Year[is.finite(results$Year)])))))
   period_labels <- if (annual || !all(is.finite(numeric_periods))) periods else
-    .acl_time_labels(numeric_periods)
+    .acl_time_labels(numeric_periods, step = if (is.finite(model_step)) model_step else NULL)
   legend_title <- if (annual) "Terminal year" else "Terminal period"
   screen_ok <- if (is.null(results$NumericalOK)) rep(TRUE, nrow(results)) else
     results$NumericalOK %in% TRUE

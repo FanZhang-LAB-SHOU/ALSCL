@@ -240,10 +240,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
   }
   lo <- values - z * se; hi <- values + z * se
   if (scale == "natural") {
+    settings <- .acl_scale_settings(fit)
     transform <- function(x) vapply(seq_along(values), function(i)
-      .acl_parameter_transform(names(values)[i], x[i]), numeric(1))
+      .acl_parameter_transform(names(values)[i], x[i], settings = settings), numeric(1))
     se <- se * vapply(seq_along(values), function(i)
-      abs(.acl_parameter_transform(names(values)[i], values[i], derivative = TRUE)), numeric(1))
+      abs(.acl_parameter_transform(names(values)[i], values[i], derivative = TRUE, settings = settings)), numeric(1))
     lo <- transform(lo); hi <- transform(hi); values <- stats::setNames(transform(values), names(values))
   }
   out <- data.frame(parameter = names(values), scale = scale, status = unname(status),
@@ -259,6 +260,12 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   to age-specific F for ACL and length-specific FL for ALSCL. Supported outputs
 #'   include SSB, Rec, B, N, CN, CB, NA, NL, BA, BL, SBA, SBL, CNA, CNL, CBA,
 #'   CBL, F, FL, FA and the joint NLA/BLA/SBLA/CNLA/CBLA arrays when reported.
+#'   Numbers at age can be requested as N_at_age, an alias of NA: a table with
+#'   the label "NA" loses that label when it is written to a CSV file and read
+#'   back with the default settings of \code{read.csv()}, which read "NA" as a
+#'   missing value (use N_at_age, or \code{na.strings = ""} when reading).
+#'   In the fitted report the matrix is \code{fit$report[["NA"]]}; the
+#'   double brackets are needed because NA is a reserved word in R.
 #' @param conf_level Nominal confidence level of approximate normal intervals
 #'   on the reported scale, strictly between zero and one.
 #' @return A long data frame with quantity, report_name, year, age, length,
@@ -280,8 +287,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   reflects the F process, not data. Terminal-period catch in number (CN,
 #'   CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
 #'   an abundance that the data inform and this predicted F. These rows have
-#'   extrapolated = TRUE. FA omits the terminal period, so none of its rows is
-#'   marked.
+#'   extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
+#'   (FA). When the last periods have no positive survey observation, F is
+#'   a prediction from the last period with an observation onwards, and those
+#'   periods are marked as well. FA from fits made by earlier versions has no
+#'   terminal period and no plus group.
 #' @examples
 #' \dontrun{
 #' fit <- run_alscl(YTF_example, silent = TRUE)
@@ -300,16 +310,26 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
   joint <- c("NLA", "BLA", "SBLA", "CNLA", "CBLA")
   numerical_ok <- .acl_numerical_ok(fit)
   # Terminal-period F enters no likelihood term; catch depends on it.
-  terminal_F <- c("F", "FL", "CN", "CNA", "CNL", "CNLA", "CB", "CBA", "CBL", "CBLA")
+  terminal_F <- c("F", "FL", "FA", "CN", "CNA", "CNL", "CNLA", "CB", "CBA", "CBL", "CBLA")
+  # F in a period is informed only by observations of later periods, so F is a
+  # prediction from the last period with a positive observation onwards.
+  observed <- fit$observations
+  last_informed <- if (is.matrix(observed) && ncol(observed) == length(years)) {
+    with_data <- which(colSums(is.finite(observed) & observed > 0) > 0)
+    if (length(with_data)) years[max(with_data)] else max(years)
+  } else max(years)
   rows <- lapply(quantities, function(quantity) {
-    nm <- if (quantity == "F" && is.null(fit$report[["F"]])) "FL" else quantity
+    nm <- if (quantity == "F" && is.null(fit$report[["F"]])) "FL" else
+      if (quantity == "N_at_age") "NA" else quantity
     if (!nm %in% c(time_only, age_time, length_time, joint))
       stop("Unsupported population quantity: ", quantity, call. = FALSE)
     value <- fit$report[[nm]]
     if (!is.numeric(value) || !length(value) || any(!is.finite(value)))
       stop("Quantity '", quantity, "' is unavailable or contains nonfinite estimates.", call. = FALSE)
-    period <- if (nm == "FA") head(years, -1L) else years
-    age <- if (nm == "FA") head(fit$age, -1L) else fit$age
+    # F at age from earlier versions has no plus-group row and no last period.
+    short_FA <- nm == "FA" && is.matrix(value) && ncol(value) == length(years) - 1L
+    period <- if (short_FA) head(years, -1L) else years
+    age <- if (short_FA) head(fit$age, -1L) else fit$age
     if (nm %in% time_only) {
       if (length(value) != length(period)) stop("Time dimensions do not match for ", nm, call. = FALSE)
       coords <- data.frame(year = period, age = NA_real_, length = NA_real_, length_label = NA_character_)
@@ -340,10 +360,11 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
       selected <- tab[which(rownames(tab) == nm), "Std. Error"]
       if (is.numeric(selected) && length(selected) == length(value) && all(is.finite(selected)) && all(selected >= 0)) se <- as.numeric(selected)
     }
-    data.frame(quantity = quantity, report_name = nm, coords, estimate = as.numeric(value),
+    data.frame(quantity = quantity, report_name = if (quantity == "N_at_age") quantity else nm,
+      coords, estimate = as.numeric(value),
       std_error = se, conf_low = as.numeric(value) - z * se,
       conf_high = as.numeric(value) + z * se, numerical_ok = numerical_ok,
-      extrapolated = nm %in% terminal_F & coords$year == max(years), row.names = NULL)
+      extrapolated = nm %in% terminal_F & coords$year >= last_informed, row.names = NULL)
   })
   do.call(rbind, rows)
 }

@@ -58,6 +58,7 @@ retro_model(
   peel_step = 1,
   structure = list(),
   start_spread = 0.15,
+  t0_lower = 0,
   ...
 )
 }
@@ -203,7 +204,7 @@ workflow functions. Supply one of the two.}
 successive peel removes. Default is 1. For quarterly data, peel_step = 4
 gives annual peels: peel k then ends k years before the terminal period.}
 
-\item{structure, start_spread}{Passed to every full and peel fit; see
+\item{structure, start_spread, t0_lower}{Passed to every full and peel fit; see
 \code{\link{run_alscl}}. A bundle's own settings are used unless these are
 supplied explicitly.}
 

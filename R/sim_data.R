@@ -102,6 +102,25 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
        ALSCL_version = as.character(utils::packageVersion("ALSCL")))
 }
 
+# Draws for one process of a replicate under random_numbers = "by_process":
+# each process (recruitment, F, initial numbers, survey error) has its own
+# stream and a fixed number of standard normal draws, so changing the settings
+# of one process leaves the draws of the others unchanged. With `ar`, the
+# result is a stationary AR(1) series with unit innovation variance.
+.acl_simulation_streams <- function(params) {
+  if (!identical(params$random_numbers, "by_process")) return(NULL)
+  sample.int(.Machine$integer.max, 4L)
+}
+.acl_simulation_normal <- function(n, streams, process, ar = NULL) {
+  set.seed(streams[process], kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  z <- rnorm(n)
+  if (is.null(ar)) return(z)
+  x <- numeric(n)
+  x[1L] <- z[1L] / sqrt(1 - ar^2)
+  if (n > 1L) for (t in 2:n) x[t] <- ar * x[t - 1L] + z[t]
+  x
+}
+
 # AR(1) series with unit innovation variance. A zero coefficient is white
 # noise; stats::arima.sim() returns it but warns about the polynomial root.
 .acl_simulation_ar1 <- function(ar, n) {
@@ -181,11 +200,15 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Recruitment deviations (AR1) ---
     provenance <- .acl_simulation_seed(iter)
-    dev_logR <- .acl_simulation_ar1(R_ar, sim_year) * std_logR
+    streams <- .acl_simulation_streams(params)
+    provenance$random_numbers <- if (is.null(streams)) "sequential" else "by_process"
+    dev_logR <- (if (is.null(streams)) .acl_simulation_ar1(R_ar, sim_year) else
+      .acl_simulation_normal(sim_year, streams, 1L, R_ar)) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(.acl_simulation_ar1(F_ar, sim_year) * F_sd)
+    F_yr <- F_mean * exp((if (is.null(streams)) .acl_simulation_ar1(F_ar, sim_year) else
+      .acl_simulation_normal(sim_year, streams, 2L, F_ar)) * F_sd)
 
     Z_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
     F_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -197,7 +220,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Initial age structure ---
     N0_at_age <- rep(NA, nage)
-    dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
+    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
     N0_at_age[1] <- Rec[1]
     for (i in 2:nage) {
       N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
@@ -261,7 +285,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     # --- Survey index ---
     RVN_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
-    surv_error <- matrix(rnorm(sim_year * nlen, 0, std_SN), sim_year, nlen)
+    surv_error <- matrix(if (is.null(streams)) rnorm(sim_year * nlen, 0, std_SN) else
+      .acl_simulation_normal(sim_year * nlen, streams, 4L) * std_SN, sim_year, nlen)
     if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:sim_year) {
       RVN_at_len[i, ] <- N_at_len[i, ] * q_surv * exp(surv_error[i, ])
@@ -379,11 +404,15 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Recruitment deviations (AR1, at quarterly resolution) ---
     provenance <- .acl_simulation_seed(iter)
-    dev_logR <- .acl_simulation_ar1(R_ar, nstep) * std_logR
+    streams <- .acl_simulation_streams(params)
+    provenance$random_numbers <- if (is.null(streams)) "sequential" else "by_process"
+    dev_logR <- (if (is.null(streams)) .acl_simulation_ar1(R_ar, nstep) else
+      .acl_simulation_normal(nstep, streams, 1L, R_ar)) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Length-dependent fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(.acl_simulation_ar1(F_ar, nstep) * F_sd)
+    F_yr <- F_mean * exp((if (is.null(streams)) .acl_simulation_ar1(F_ar, nstep) else
+      .acl_simulation_normal(nstep, streams, 2L, F_ar)) * F_sd)
 
     Z_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     F_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
@@ -395,7 +424,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Initial age structure ---
     N0_at_age <- rep(NA, nage)
-    dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
+    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
     N0_at_age[1] <- Rec[1]
     for (i in 2:nage) {
       N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
@@ -514,7 +544,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     # --- Survey index (3D-aware, like M6 original) ---
     RVN_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
-    surv_error <- matrix(rnorm(nstep * nlen, 0, std_SN), nstep, nlen)
+    surv_error <- matrix(if (is.null(streams)) rnorm(nstep * nlen, 0, std_SN) else
+      .acl_simulation_normal(nstep * nlen, streams, 4L) * std_SN, nstep, nlen)
     if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:nstep) {
       # Apply q_surv to each age column, then sum across ages
@@ -597,6 +628,9 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     F_sd = 0.2, F_ar = 0.75, R_ar = 0.1)
   for (name in c("R_init", "F_mean", "F_sd"))
     .acl_scalar(params[[name]] %||% defaults[[name]], name, 0)
+  if (!is.null(params$random_numbers) && !(is.character(params$random_numbers) &&
+      length(params$random_numbers) == 1L && params$random_numbers %in% c("sequential", "by_process")))
+    stop("random_numbers must be \"sequential\" or \"by_process\".", call. = FALSE)
   for (name in c("F_ar", "R_ar")) {
     value <- .acl_scalar(params[[name]] %||% defaults[[name]], name)
     if (abs(value) >= 1)

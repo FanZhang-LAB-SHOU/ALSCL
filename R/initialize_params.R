@@ -56,6 +56,15 @@
 #' @param growth_step Time step in years; defaults to the species preset.
 #' @param burn_in Simulation years discarded before returning observations;
 #'   must be an exact multiple of \code{growth_step} and smaller than \code{nyear}.
+#' @param random_numbers How \code{sim_data()} draws the random numbers of a
+#'   replicate. \code{"sequential"} (default) draws all processes from one
+#'   stream, as in earlier versions; changing a setting of one process (for
+#'   example the recruitment correlation) then also changes the draws of F,
+#'   the initial numbers and the survey errors. \code{"by_process"} gives
+#'   recruitment, F, initial numbers and survey errors separate streams with
+#'   a fixed number of draws each, so that scenarios which differ in one
+#'   process share the random numbers of the others. The two settings give
+#'   different data for the same replicate ID.
 #' @param observation_error Independent lognormal errors per length and time cell,
 #'   or shared_time for an explicitly misspecified, perfectly correlated scenario.
 #' @return A list containing all initialized parameters and derived variables
@@ -121,7 +130,9 @@ initialize_params <- function(nyear      = NULL,
                               F_sd       = NULL,
                               R_ar       = NULL, species = NULL,
                               growth_step = NULL, burn_in = NULL,
-                              observation_error = c("independent", "shared_time")) {
+                              observation_error = c("independent", "shared_time"),
+                              random_numbers = c("sequential", "by_process")) {
+  random_numbers <- match.arg(random_numbers)
   if (is.character(nyear) && length(nyear) == 1L && is.null(species)) {species <- nyear; nyear <- NULL}
   observation_error <- match.arg(observation_error)
 
@@ -309,6 +320,9 @@ initialize_params <- function(nyear      = NULL,
   if (!is.null(growth_step)) sp$growth_step <- growth_step
   if (!is.null(burn_in)) sp$burn_in <- burn_in
   sp$observation_error <- observation_error
+  # Stored only when it differs from the default, so default parameter lists
+  # are the same as in earlier versions.
+  if (random_numbers != "sequential") sp$random_numbers <- random_numbers
   sp$nage <- .acl_positive_integer(sp$nage, "nage", 2L)
   sp$nyear <- .acl_positive_integer(sp$nyear, "nyear", 2L)
   .acl_scalar(sp$growth_step, "growth_step", 0, TRUE)

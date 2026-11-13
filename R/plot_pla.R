@@ -93,7 +93,10 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
         ggplot2::waiver() else function(x) sub("^Age ", "", x)) +
     ggplot2::scale_fill_gradient(low = low_col, high = high_col) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else
+      # Results without age metadata show positions, which have no unit.
+      if (is.null(.acl_fitted_ages(model_result, length(age_labels))) &&
+          identical(.acl_lab("x", "age"), "Age (years)")) "Age group" else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
 
   return(p)
 }

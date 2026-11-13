@@ -100,6 +100,11 @@ test_that("zero and negative estimates keep Wald bounds without missing values",
   expect_equal(bounds$upper[1L], 1e-300 + 1.96)
   expect_equal(bounds$upper[2L], 2 * exp(1.96 * 0.1))
   expect_true(all(is.finite(unlist(bounds))))
+  # The fallback never puts the lower bound of a nonnegative estimate below zero.
+  expect_identical(bounds$lower[1L], 0)
+  zero <- ALSCL:::.acl_interval(c(0, 0), c(0.1, 0))
+  expect_equal(zero$lower, c(0, 0)); expect_equal(zero$upper, c(0.196, 0))
+  expect_equal(ALSCL:::.acl_interval(-0.05, 0.02)$lower, -0.05 - 1.96 * 0.02)
 })
 
 test_that("the interval type follows the call, then the theme, and rejects other values", {

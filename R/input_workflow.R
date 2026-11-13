@@ -285,24 +285,28 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
 
 # Shared optimizer/natural-scale transformation; no arithmetic-mean claim is
 # attached to exponentiated log locations or log random-effect deviations.
-.acl_parameter_transform <- function(name, value, derivative = FALSE, inverse = FALSE) {
+.acl_parameter_transform <- function(name, value, derivative = FALSE, inverse = FALSE,
+                                     settings = .acl_scale_settings()) {
   correlation <- grepl("^logit_", name)
   positive <- grepl("^(log_|mean_log_|dev_log_)", name)
+  shift <- if (identical(name, "log_t0")) settings$t0_lower else 0
   if (inverse) {
-    if (correlation) return(stats::qlogis(value))
-    if (positive) return(log(value))
+    if (correlation) return(stats::qlogis(if (settings$symmetric) (value + 1) / 2 else value))
+    if (positive) return(log(value - shift))
     return(value)
   }
   if (correlation) {
     p <- stats::plogis(value)
+    if (settings$symmetric) return(if (derivative) 2 * p * (1 - p) else 2 * p - 1)
     return(if (derivative) p * (1 - p) else p)
   }
-  if (positive) return(exp(value))
+  if (positive) return(if (derivative) exp(value) else shift + exp(value))
   if (derivative) rep(1, length(value)) else value
 }
 
 .acl_parameter_table <- function(preflight, model) {
   setup <- preflight$setup; args <- preflight$args
+  settings <- .acl_scale_settings(list(structure = setup$structure, t0_lower = setup$t0_lower))
   default_map <- .acl_map(setup$parameters, NULL, toupper(model))
   group <- if (model == "acl") "logit_log_F_a" else "logit_log_F_l"
   rows <- lapply(names(setup$parameters), function(nm) {
@@ -318,10 +322,12 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
       "mixed" else if (tied > 0L) "tied" else "free"
     scalar <- nm %in% names(setup$config$parameters)
     data.frame(parameter = nm, kind = if (scalar) "fixed_effect" else "random_effect",
-      start = unname(value[1L]), natural_start = unname(.acl_parameter_transform(nm, value[1L])),
+      start = unname(value[1L]), natural_start = unname(.acl_parameter_transform(nm, value[1L], settings = settings)),
       lower = if (scalar) setup$config$parameters.L[[nm]] else -Inf,
       upper = if (scalar) setup$config$parameters.U[[nm]] else Inf,
-      transform = if (grepl("^logit_", nm)) "plogis" else if (grepl("^(log_|mean_log_|dev_log_)", nm)) "exp" else "identity",
+      transform = if (grepl("^logit_", nm)) (if (settings$symmetric) "2*plogis-1" else "plogis") else
+        if (nm == "log_t0" && settings$t0_lower != 0) "t0_lower+exp" else
+        if (grepl("^(log_|mean_log_|dev_log_)", nm)) "exp" else "identity",
       status = status, map_source = source, size = size,
       dimensions = paste(if (is.null(dim(value))) length(value) else dim(value), collapse = " x "),
       n_free = free, n_fixed = fixed, n_tied = tied, stringsAsFactors = FALSE)

@@ -95,10 +95,13 @@
     near_boundary = rep(FALSE, sum(rho | sd)), row.names = NULL)
   if (nrow(natural)) {
     irho <- natural$scale == "correlation"
-    natural$estimate[irho] <- stats::plogis(natural$estimate[irho])
+    # With correlations between -1 and 1, zero is an interior value.
+    symmetric <- .acl_scale_settings(fit)$symmetric
+    natural$estimate[irho] <- if (symmetric) 2 * stats::plogis(natural$estimate[irho]) - 1 else
+      stats::plogis(natural$estimate[irho])
     natural$estimate[!irho] <- exp(natural$estimate[!irho])
     natural$near_boundary <- ifelse(irho,
-      natural$estimate <= 1e-4 | natural$estimate >= 1 - 1e-4,
+      natural$estimate <= (if (symmetric) -1 else 0) + 1e-4 | natural$estimate >= 1 - 1e-4,
       natural$estimate <= 1e-4)
   }
   correlations <- data.frame(parameter1 = character(), parameter2 = character(), correlation = numeric())

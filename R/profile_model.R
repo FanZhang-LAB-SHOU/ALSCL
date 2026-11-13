@@ -56,12 +56,18 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
     stop("values must be a nonempty vector of distinct finite numbers.", call. = FALSE)
   internal <- values
   if (scale == "natural") {
+    settings <- .acl_scale_settings(fit)
     if (grepl("^logit_", parameter)) {
-      if (any(values <= 0 | values >= 1)) stop("Natural correlation values must lie strictly between 0 and 1.", call. = FALSE)
-      internal <- stats::qlogis(values)
+      low <- if (settings$symmetric) -1 else 0
+      if (any(values <= low | values >= 1))
+        stop("Natural correlation values must lie strictly between ", low, " and 1.", call. = FALSE)
+      internal <- .acl_parameter_transform(parameter, values, inverse = TRUE, settings = settings)
     } else if (grepl("^(log_|mean_log_)", parameter)) {
-      if (any(values <= 0)) stop("Natural values must be strictly positive for a log parameter.", call. = FALSE)
-      internal <- log(values)
+      low <- if (parameter == "log_t0") settings$t0_lower else 0
+      if (any(values <= low))
+        stop(if (low == 0) "Natural values must be strictly positive for a log parameter." else
+          paste0("Natural t0 values must be above t0_lower = ", low, "."), call. = FALSE)
+      internal <- .acl_parameter_transform(parameter, values, inverse = TRUE, settings = settings)
     }
   }
   bounds <- fit$par_low_up
@@ -110,7 +116,7 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
     warning("A profile grid fit has a lower objective than the original fit; recheck the original optimum before interpreting the profile.", call. = FALSE)
   list(parameter = parameter, scale = scale, grid = grid, fits = fits,
     settings = settings, reference_objective = reference,
-    reference_numerical_ok = isTRUE(fit$diagnostics$numerical_ok),
+    reference_numerical_ok = .acl_numerical_ok(fit),
     elapsed = unname(proc.time()[["elapsed"]] - started),
     model = recipe$model, workers = .acl_workers(min(ncores, length(settings))))
 }

@@ -180,10 +180,12 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
     scales <- exp(unlist(parameters[paste0(scale_prefix, c("log_R", "log_F", "log_N0"))]))
     if (any(!is.finite(scales) | scales <= 0))
       stop("Process marginal SDs must be positive and finite.", call. = FALSE)
-    phi_r <- stats::plogis(parameters$logit_log_R)
-    phi_t <- stats::plogis(parameters$logit_log_F_y)
+    settings <- .acl_scale_settings(fit)
+    phi <- function(name) .acl_parameter_transform(name, parameters[[name]], settings = settings)
+    phi_r <- phi("logit_log_R")
+    phi_t <- phi("logit_log_F_y")
     phi_g <- if (nrow(parameters$dev_log_F) == 1L) 0 else
-      stats::plogis(parameters[[if (model == "ACL") "logit_log_F_a" else "logit_log_F_l"]])
+      phi(if (model == "ACL") "logit_log_F_a" else "logit_log_F_l")
   }
   if (!is.null(seed)) {
     restore_rng <- .acl_preserve_rng()

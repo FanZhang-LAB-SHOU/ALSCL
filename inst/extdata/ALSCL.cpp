@@ -17,6 +17,8 @@
 //   initial_length     1 = first-period lengths at age follow from growth
 //   initial_plus_group 1 = first-period plus group is the equilibrium sum of
 //                          all older cohorts at init_Z
+//   correlation_range  1 = AR(1) correlations between -1 and 1
+//   t0_lower           lower limit of t0: t0 = t0_lower + exp(log_t0)
 
 #include <TMB.hpp>
 #include <iostream>
@@ -79,16 +81,22 @@ Type objective_function<Type>::operator()()
 	Type init_Z = exp(log_init_Z);
 	Type sigma_log_N0 = exp(log_sigma_log_N0);
 
+	// Optional settings (absent or 0 = published structure).
+	int correlation_range = optional_setting(this->data, "correlation_range");
+	double t0_lower = optional_value(this->data, "t0_lower");
+
 	Type sigma_log_R = exp(log_sigma_log_R);
-	Type phi_log_R = invlogit(logit_log_R);
+	Type phi_log_R = ar1_correlation(logit_log_R, correlation_range);
 
 	Type sigma_log_F = exp(log_sigma_log_F);
-	Type phi_log_F_y = invlogit(logit_log_F_y);
-	Type phi_log_F_l = invlogit(logit_log_F_l);
+	Type phi_log_F_y = ar1_correlation(logit_log_F_y, correlation_range);
+	Type phi_log_F_l = ar1_correlation(logit_log_F_l, correlation_range);
 
 	Type vbk = exp(log_vbk);
 	Type Linf = exp(log_Linf);
+	// t0 = t0_lower + exp(log_t0); t0_lower = 0 gives the published positive t0.
 	Type t0 = exp(log_t0);
+	if (t0_lower != 0.0) t0 = t0 + Type(t0_lower);
 	Type cv_len = exp(log_cv_len);
 	Type cv_grow = exp(log_cv_grow);
 	Type sigma_index = exp(log_sigma_index);
@@ -287,10 +295,12 @@ Type objective_function<Type>::operator()()
 
 	// ==================== EMERGENT F-AT-AGE ====================
 	// Derived from population abundance at age, NOT a direct parameter
-	matrix<Type> ZA(A-1,Y-1);
-	matrix<Type> FA(A-1,Y-1);
-	for(int i=0; i<A-1; ++i){
-		for(int j=0; j<Y-1; ++j){
+	// All ages (including the plus group) and all periods. In the last period
+	// F at length is predicted by the AR(1) process, not informed by data.
+	matrix<Type> ZA(A,Y);
+	matrix<Type> FA(A,Y);
+	for(int i=0; i<A; ++i){
+		for(int j=0; j<Y; ++j){
 			vector<Type> cohort = NLA.col(j).col(i);
 			vector<Type> survivors = cohort * exp(-ZL.col(j).array());
 			ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors.sum()));

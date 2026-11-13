@@ -52,6 +52,20 @@ inline int optional_setting(SEXP data, const char* name) {
   if (Rf_isNull(value) || Rf_length(value) < 1) return 0;
   return (int) Rf_asReal(value);
 }
+// Optional numeric setting in the data list; an absent entry returns 0.
+inline double optional_value(SEXP data, const char* name) {
+  SEXP value = getListElement(data, name);
+  if (Rf_isNull(value) || Rf_length(value) < 1) return 0.0;
+  return Rf_asReal(value);
+}
+// AR(1) correlation from its optimizer-scale parameter.
+// range 0: logistic, between 0 and 1 (published structure).
+// range 1: 2 * logistic - 1, between -1 and 1.
+template<class Type>
+Type ar1_correlation(Type x, int range) {
+  if (range == 1) return Type(2) * invlogit(x) - Type(1);
+  return invlogit(x);
+}
 // Expected growth increment over one time step for a fish of length x.
 // increment 0: decreasing logistic curve of Zhang and Cadigan (2022), scaled
 //   linearly by the time step.

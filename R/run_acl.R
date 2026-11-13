@@ -81,7 +81,11 @@
 #'   the first-period plus group holds one cohort) or `"equilibrium"` (it
 #'   holds the sum of all older cohorts at total mortality init_Z, so a
 #'   population with constant recruitment, no fishing and init_Z equal to M
-#'   stays constant over time). The setting used is stored in the `structure`
+#'   stays constant over time). `correlation_range`: `"positive"` (default;
+#'   AR(1) correlations between 0 and 1, the logistic transform of the
+#'   `logit_*` parameters) or `"symmetric"` (between -1 and 1, as
+#'   2 * logistic - 1; a correlation rho is then `qlogis((rho + 1) / 2)` on the
+#'   optimizer scale). The settings used are stored in the `structure`
 #'   element of the fit.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of

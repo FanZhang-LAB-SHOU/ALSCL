@@ -251,10 +251,10 @@ ref_alscl_dynamics <- function(data, p, key = ref_length_age_key,
   by_age <- function(x) apply(x, c(2L, 3L), sum)
   NL <- by_length(NLA)
   # Total mortality at age is the log ratio of a cohort's numbers before and
-  # after one step of length-specific mortality, for all ages but the last and
-  # all time steps but the last.
-  ZA <- matrix(0, A - 1L, Y - 1L)
-  for (a in seq_len(A - 1L)) for (y in seq_len(Y - 1L)) {
+  # after one step of length-specific mortality, for every age (including
+  # the plus group) and every time step.
+  ZA <- matrix(0, A, Y)
+  for (a in seq_len(A)) for (y in seq_len(Y)) {
     cohort <- NLA[, a, y]
     ZA[a, y] <- log(max(sum(cohort), 1e-300)) -
       log(max(sum(cohort * exp(-ZL[, y])), 1e-300))

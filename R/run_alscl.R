@@ -98,11 +98,25 @@
 #'   \item{`initial_plus_group`}{`"single_cohort"`: the first-period plus group
 #'     holds one cohort. `"equilibrium"`: it holds the sum of all older cohorts
 #'     at total mortality init_Z.}
+#'   \item{`correlation_range`}{`"positive"`: the AR(1) correlations of
+#'     recruitment and of F over time and length lie between 0 and 1, as the
+#'     logistic transform of the `logit_*` parameters. `"symmetric"`: they
+#'     lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0
+#'     means no correlation and negative correlation can be estimated. A
+#'     `logit_*` start or fixed value has a different meaning under the two
+#'     settings: a correlation rho is `qlogis(rho)` under `"positive"` and
+#'     `qlogis((rho + 1) / 2)` under `"symmetric"`.}
 #'   }
 #'   With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`
 #'   a population with constant recruitment, no fishing and init_Z equal to M
 #'   stays constant over time; with the published structure it does not.
 #'   The settings used are stored in the `structure` element of the fit.
+#' @param t0_lower Lower limit of the von Bertalanffy parameter t0 in years.
+#'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published
+#'   parameterization, in which t0 is positive. Set a negative value, for
+#'   example -1, to allow negative t0; a known t0 is then supplied as
+#'   `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are
+#'   always on the natural scale.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by
@@ -170,12 +184,12 @@ run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
                       output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
                       zero_action = c("missing", "error"), control = list(), nstarts = ncores,
                       F_structure = c("group_year", "year"), polish = TRUE,
-                    structure = list(), start_spread = 0.15) {
+                    structure = list(), start_spread = 0.15, t0_lower = 0) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "alscl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action,
-    structure, start_spread)
+    structure, start_spread, t0_lower)
   result <- .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
   .acl_attach_recipe(result, model = "alscl",

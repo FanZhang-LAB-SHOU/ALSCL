@@ -94,5 +94,7 @@ test_that("extract_estimates marks terminal-period F and catch (F11)", {
     expect_equal(deviations[, Y], fit$report$phi_log_F_y * deviations[, Y - 1L], tolerance = 1e-8)
   }
   alscl <- fit_fixture("ALSCL")$result
-  expect_false(any(extract_estimates(alscl, "FA")$extrapolated))
+  # F at age covers every period; only its terminal period is predicted.
+  fa <- extract_estimates(alscl, "FA")
+  expect_identical(fa$extrapolated, fa$year == max(alscl$year))
 })

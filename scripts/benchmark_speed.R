@@ -39,10 +39,10 @@ if (length(args) && args[1] == "--child") {
       names(d) <- c("LengthBin", as.character(years)); d
     }
     p <- if (model == "ACL") list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), t0 = pa$t0,
-           log_cv_len = log(pa$cv_L), log_std_log_F = log(pa$F_sd),
+           log_cv_len = log(pa$cv_L), log_std_log_F = log(pa$F_sd / sqrt(1 - pa$F_ar^2)),
            log_std_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
          else list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk), log_t0 = log(pa$t0),
-           log_cv_len = log(pa$cv_L), log_cv_grow = log(pa$cv_inc), log_sigma_log_F = log(pa$F_sd),
+           log_cv_len = log(pa$cv_L), log_cv_grow = log(pa$cv_inc), log_sigma_log_F = log(pa$F_sd / sqrt(1 - pa$F_ar^2)),
            log_sigma_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
     m <- lapply(p, function(v) factor(NA))
     if (model == "ALSCL") m$logit_log_F_l <- m$logit_log_F_y <- factor(NA)

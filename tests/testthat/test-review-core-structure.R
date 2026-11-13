@@ -23,11 +23,12 @@ structure_fixture <- function(model, flags = list(), width = 5, step = .25, A = 
 test_that("structure settings are validated and default to the published structure", {
   default <- ALSCL:::.acl_structure(list(), "ALSCL")
   expect_identical(default$choices, list(initial_plus_group = "single_cohort",
-    initial_length = "length_at_age", growth_increment = "logistic", growth_transition = "midpoint"))
+    initial_length = "length_at_age", growth_increment = "logistic", growth_transition = "midpoint",
+    correlation_range = "positive"))
   expect_length(default$data, 0L)
   chosen <- ALSCL:::.acl_structure(list(growth_transition = "bin", initial_plus_group = "equilibrium"), "ALSCL")
   expect_identical(chosen$data, list(initial_plus_group = 1L, growth_transition = 1L))
-  expect_identical(names(ALSCL:::.acl_structure(NULL, "ACL")$choices), "initial_plus_group")
+  expect_identical(names(ALSCL:::.acl_structure(NULL, "ACL")$choices), c("initial_plus_group", "correlation_range"))
   expect_error(ALSCL:::.acl_structure(list(growth_increment = "von_bertalanffy"), "ACL"), "applies to ALSCL only")
   expect_silent(ALSCL:::.acl_structure(list(growth_increment = "logistic"), "ACL"))
   expect_error(ALSCL:::.acl_structure(list(growth = "vb"), "ALSCL"), "Unknown structure setting: growth")

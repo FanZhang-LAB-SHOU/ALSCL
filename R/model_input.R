@@ -115,7 +115,7 @@
                               sel_L50, sel_L95, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
                               len_upper = NULL, zero_action = c("missing", "error"),
-                              structure = list(), start_spread = 0.15) {
+                              structure = list(), start_spread = 0.15, t0_lower = 0) {
   zero_action <- match.arg(zero_action)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
@@ -154,7 +154,7 @@
                   len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
                   Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
-       structure = structure, start_spread = start_spread,
+       structure = structure, start_spread = start_spread, t0_lower = t0_lower,
        zero_observations = sum(obs == 0, na.rm = TRUE))
 }
 
@@ -164,7 +164,20 @@
   initial_plus_group = c("single_cohort", "equilibrium"),
   initial_length = c("length_at_age", "growth"),
   growth_increment = c("logistic", "von_bertalanffy"),
-  growth_transition = c("midpoint", "bin"))
+  growth_transition = c("midpoint", "bin"),
+  correlation_range = c("positive", "symmetric"))
+
+# Settings that decide how optimizer-scale values map to natural values:
+# whether AR(1) correlations lie between -1 and 1, and the lower limit of the
+# ALSCL t0. `x` is a fit, a recipe argument list or a prepared input.
+.acl_scale_settings <- function(x = NULL) {
+  structure <- x$structure
+  if (is.null(structure)) structure <- x$recipe$args$structure
+  t0_lower <- x$t0_lower
+  if (is.null(t0_lower)) t0_lower <- x$recipe$args$t0_lower
+  if (is.null(t0_lower)) t0_lower <- 0
+  list(symmetric = identical(structure$correlation_range, "symmetric"), t0_lower = t0_lower)
+}
 
 # Validate a structure list for one model. Returns the complete named choices
 # and the data entries passed to the template (non-default settings only, so a
@@ -172,7 +185,7 @@
 .acl_structure <- function(structure = list(), model = "ALSCL") {
   if (is.null(structure)) structure <- list()
   model <- toupper(model)
-  available <- if (model == "ACL") "initial_plus_group" else names(.acl_structure_choices)
+  available <- if (model == "ACL") c("initial_plus_group", "correlation_range") else names(.acl_structure_choices)
   if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
       (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
        anyDuplicated(names(structure)))))
