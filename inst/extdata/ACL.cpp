@@ -1,12 +1,16 @@
-// Survey-based statistical catch-at-length model (SURBAL) without process error (R follows AR1)
-// Known catchability
-// create a discrete dnorm function for pla.
-// constant Linf and vbk
-// add error in estimation of initial number
-// dev_logF follows two-way AR1 process
-// add plus group
-// use a more effcient discrete_pnorm function (taylor series expansion)
-// model tailored to yellowtail flounder
+// Age-structured statistical catch-at-length model (ACL) for survey catch at length
+// Based on: Zhang & Cadigan (2022) Fish and Fisheries, 23(5), 1121-1135
+//
+// - Numbers at age follow a cohort model with a plus group.
+// - Numbers at length are numbers at age times the length-at-age
+//   probability matrix pla (von Bertalanffy mean, constant CV, normal).
+// - Survey catchability at length is supplied (log_q), not estimated.
+// - Recruitment deviations follow an AR(1) process; log-F deviations follow a
+//   separable AR(1) process over ages and time steps, or one AR(1) series
+//   shared by all ages when dev_log_F has a single row.
+// - Initial numbers at age (ages after the first) have iid normal deviations.
+// - Optional data entry initial_plus_group = 1 makes the first-period plus
+//   group the equilibrium sum of all older cohorts at init_Z.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -110,6 +114,12 @@ Type objective_function<Type>::operator() ()
   for(int i = 1;i < A;++i){
     log_NA(i,0) = log_NA(i-1,0) -init_Z  + dev_log_N0(i-1);
 	NA(i,0) = exp(log_NA(i,0));
+  }
+  // Optional: the first-period plus group is the equilibrium sum of all older
+  // cohorts at init_Z (absent or 0 keeps the published single-cohort value).
+  if (optional_setting(this->data, "initial_plus_group") == 1) {
+    log_NA(A-1,0) -= log(one - exp(-init_Z));
+    NA(A-1,0) = exp(log_NA(A-1,0));
   }
   //compute numbers at age
   for(int j = 1;j < Y;++j){

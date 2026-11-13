@@ -542,12 +542,30 @@ create_parameters <- function(model_type = c("acl", "alscl"),
   }
   if ("t0" %in% names(defaults)) {defaults_L$t0 <- -5; defaults_U$t0 <- 5}
   if ("log_t0" %in% names(defaults)) {defaults_L$log_t0 <- -20; defaults_U$log_t0 <- log(5)}
-  for (overrides in list(parameters, parameters.L, parameters.U)) {
-    if (!is.null(overrides) && (!is.list(overrides) || (length(overrides) && (is.null(names(overrides)) ||
-        anyDuplicated(names(overrides)) || length(setdiff(names(overrides), names(defaults)))))))
-      stop("Parameter overrides must be named lists of known fixed parameters.")
-    if (any(!vapply(overrides, function(x) is.numeric(x) && length(x) == 1L && !is.na(x), logical(1))))
-      stop("Each parameter or bound must be a numeric scalar.")
+  override_lists <- list(parameters = parameters, parameters.L = parameters.L, parameters.U = parameters.U)
+  for (list_name in names(override_lists)) {
+    overrides <- override_lists[[list_name]]
+    if (is.null(overrides)) next
+    if (!is.list(overrides) || (length(overrides) && (is.null(names(overrides)) || anyDuplicated(names(overrides)))))
+      stop(list_name, " must be a named list with one entry per parameter.", call. = FALSE)
+    unknown <- setdiff(names(overrides), names(defaults))
+    if (length(unknown)) {
+      # The two models name the same quantities differently; point to the equivalent name.
+      other <- c(t0 = "log_t0", log_t0 = "t0", log_std_log_N0 = "log_sigma_log_N0",
+        log_sigma_log_N0 = "log_std_log_N0", log_std_log_R = "log_sigma_log_R", log_sigma_log_R = "log_std_log_R",
+        log_std_log_F = "log_sigma_log_F", log_sigma_log_F = "log_std_log_F", log_std_index = "log_sigma_index",
+        log_sigma_index = "log_std_index", logit_log_F_a = "logit_log_F_l", logit_log_F_l = "logit_log_F_a")
+      hint <- other[intersect(unknown, names(other))]
+      hint <- hint[hint %in% names(defaults)]
+      stop(list_name, " has parameter(s) that the ", toupper(model_type), " model does not have: ",
+           paste(unknown, collapse = ", "), ". ",
+           if (length(hint)) paste0("The ", toupper(model_type), " name is ",
+             paste(sprintf("%s (not %s)", hint, names(hint)), collapse = ", "), ". ") else "",
+           "Known parameters: ", paste(names(defaults), collapse = ", "), ".", call. = FALSE)
+    }
+    bad <- names(overrides)[!vapply(overrides, function(x) is.numeric(x) && length(x) == 1L && !is.na(x), logical(1))]
+    if (length(bad))
+      stop("Each entry of ", list_name, " must be one number; check ", paste(bad, collapse = ", "), ".", call. = FALSE)
   }
 
   # =========================================================================

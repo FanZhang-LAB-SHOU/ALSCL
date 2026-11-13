@@ -75,6 +75,67 @@
 #'   On checked TMB versions, the refinement Hessian shares the sd_cores limit
 #'   when forked processes are selected; other sessions compute it sequentially.
 #'   refinement$hessian_calculations records methods, cores and fallback notes.
+#' @param structure Named list of optional model structures. The default, an
+#'   empty list, is the published structure of Zhang and Cadigan (2022) for
+#'   every setting. Settings and values (default first):
+#'   \describe{
+#'   \item{`growth_increment`}{`"logistic"`: the expected growth increment is a
+#'     decreasing logistic function of length, multiplied by `growth_step`.
+#'     `"von_bertalanffy"`: the expected increment over one time step is
+#'     (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
+#'     declines smoothly to zero above Linf, so Linf and vbk have the same
+#'     meaning as in the length-at-age curve.}
+#'   \item{`growth_transition`}{`"midpoint"`: every fish in a length bin grows
+#'     from the bin midpoint. `"bin"`: starting lengths are uniform within the
+#'     bin, so the expected advance does not depend on the bin width. Use
+#'     `"bin"` when the increment per time step is small relative to the bin
+#'     width (for example quarterly steps with wide bins).}
+#'   \item{`initial_length`}{`"length_at_age"`: in the first period every age
+#'     has the length-at-age distribution with coefficient of variation
+#'     cv_len. `"growth"`: the first age has that distribution and each older
+#'     age is the previous age after survival at init_Z and one growth step,
+#'     as in all later periods.}
+#'   \item{`initial_plus_group`}{`"single_cohort"`: the first-period plus group
+#'     holds one cohort. `"equilibrium"`: it holds the sum of all older cohorts
+#'     at total mortality init_Z.}
+#'   }
+#'   With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`
+#'   a population with constant recruitment, no fishing and init_Z equal to M
+#'   stays constant over time; with the published structure it does not.
+#'   The settings used are stored in the `structure` element of the fit.
+#' @param start_spread Standard deviation of the normal deviates added to the
+#'   starting values (on the scale of the optimizer, mostly logarithms) of
+#'   the second and later starts. The default 0.15 keeps the starts used by
+#'   earlier versions. See Details for when to use a larger value.
+#' @details A single start can stop at a local optimum that passes every
+#'   numerical check, particularly for the growth parameters of ALSCL. The
+#'   checks in `diagnostics` are local: they do not show whether a better
+#'   optimum exists. For results that will be reported, use several starts
+#'   (for example `nstarts = 5`) with a wider `start_spread` (for example
+#'   0.5) and compare the objectives in `start_diagnostics`. `start_summary`
+#'   gives the number of converged starts, the range of their objectives and
+#'   the number that agree with the best one; a range above 2 is added to
+#'   `diagnostics$issues`.
+#' @details The process densities are evaluated on the complete arrays of
+#'   deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
+#'   to shared values, or fixes entries with NA, is therefore accepted only
+#'   when the matching standard deviation and correlation parameters are fixed
+#'   too; otherwise their estimates would be biased and the fit is rejected.
+#'   For one F deviation per time step shared by all groups, use
+#'   `F_structure = "year"`, which has its own correctly normalized density.
+#'   With tied entries the shared value has a smaller prior standard deviation
+#'   than the stated one, and the objective of a fit with tied or fixed
+#'   entries cannot be compared (for example by AIC) with fits that use
+#'   another map for these deviations. `restricted_random` in the fit names
+#'   the arrays concerned.
+#' @details Starting values outside their bounds are moved to the nearest
+#'   bound: with a warning when the start was supplied, and with a message for
+#'   default starts. `clamped_starts` in the fit lists them.
+#'   Unless supplied, the start of Linf is 1.1 times the largest length-bin
+#'   midpoint and its bounds are 0.7 and 2 times that midpoint. Supply
+#'   `parameters.L$log_Linf` when the bins extend well beyond the largest
+#'   fish, because Linf below 0.7 times the largest midpoint is otherwise
+#'   excluded.
 #' @return An alscl_fit list (legacy dollar access is unchanged) with report,
 #'   opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
@@ -108,11 +169,13 @@ run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
                       map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,
                       output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
                       zero_action = c("missing", "error"), control = list(), nstarts = ncores,
-                      F_structure = c("group_year", "year"), polish = TRUE) {
+                      F_structure = c("group_year", "year"), polish = TRUE,
+                    structure = list(), start_spread = 0.15) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "alscl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
-    sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action)
+    sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action,
+    structure, start_spread)
   result <- .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
   .acl_attach_recipe(result, model = "alscl",

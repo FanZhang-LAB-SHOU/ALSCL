@@ -75,6 +75,48 @@
 #'   On checked TMB versions, the refinement Hessian shares the sd_cores limit
 #'   when forked processes are selected; other sessions compute it sequentially.
 #'   refinement$hessian_calculations records methods, cores and fallback notes.
+#' @param structure Named list of optional model structures. The default, an
+#'   empty list, is the published structure of Zhang and Cadigan (2022).
+#'   ACL has one setting, `initial_plus_group`: `"single_cohort"` (default;
+#'   the first-period plus group holds one cohort) or `"equilibrium"` (it
+#'   holds the sum of all older cohorts at total mortality init_Z, so a
+#'   population with constant recruitment, no fishing and init_Z equal to M
+#'   stays constant over time). The setting used is stored in the `structure`
+#'   element of the fit.
+#' @param start_spread Standard deviation of the normal deviates added to the
+#'   starting values (on the scale of the optimizer, mostly logarithms) of
+#'   the second and later starts. The default 0.15 keeps the starts used by
+#'   earlier versions. See Details for when to use a larger value.
+#' @details A single start can stop at a local optimum that passes every
+#'   numerical check, particularly for the growth parameters of ALSCL. The
+#'   checks in `diagnostics` are local: they do not show whether a better
+#'   optimum exists. For results that will be reported, use several starts
+#'   (for example `nstarts = 5`) with a wider `start_spread` (for example
+#'   0.5) and compare the objectives in `start_diagnostics`. `start_summary`
+#'   gives the number of converged starts, the range of their objectives and
+#'   the number that agree with the best one; a range above 2 is added to
+#'   `diagnostics$issues`.
+#' @details The process densities are evaluated on the complete arrays of
+#'   deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
+#'   to shared values, or fixes entries with NA, is therefore accepted only
+#'   when the matching standard deviation and correlation parameters are fixed
+#'   too; otherwise their estimates would be biased and the fit is rejected.
+#'   For one F deviation per time step shared by all groups, use
+#'   `F_structure = "year"`, which has its own correctly normalized density.
+#'   With tied entries the shared value has a smaller prior standard deviation
+#'   than the stated one, and the objective of a fit with tied or fixed
+#'   entries cannot be compared (for example by AIC) with fits that use
+#'   another map for these deviations. `restricted_random` in the fit names
+#'   the arrays concerned.
+#' @details Starting values outside their bounds are moved to the nearest
+#'   bound: with a warning when the start was supplied, and with a message for
+#'   default starts. `clamped_starts` in the fit lists them.
+#'   The default start (60) and bounds (10 to 100) of Linf are in the length
+#'   units of the yellowtail flounder example. When the upper bound is below
+#'   1.2 times the largest length-bin midpoint, or the start is outside 0.7 to
+#'   2 times that midpoint, the start and bounds that were not supplied are
+#'   set from the data as in `run_alscl()`: start 1.1, bounds 0.7 and 2 times
+#'   the largest midpoint.
 #' @return An alscl_fit list (legacy dollar access is unchanged) with report,
 #'   opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
@@ -100,11 +142,13 @@ run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, se
                     map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
                     train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
                     zero_action = c("missing", "error"), control = list(), nstarts = ncores,
-                      F_structure = c("group_year", "year"), polish = TRUE) {
+                      F_structure = c("group_year", "year"), polish = TRUE,
+                    structure = list(), start_spread = 0.15) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "acl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
-    sel_L50, sel_L95, growth_step, len_mid, len_border, zero_action = zero_action)
+    sel_L50, sel_L95, growth_step, len_mid, len_border, zero_action = zero_action,
+    structure = structure, start_spread = start_spread)
   result <- .acl_fit("ACL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
   .acl_attach_recipe(result, model = "acl",

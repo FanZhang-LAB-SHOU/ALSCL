@@ -5,9 +5,18 @@
 // - 3D population dynamics: NLA(length, age, year)
 // - F at length level with 2D AR1 variation (year x length)
 // - Growth transition matrix G applied each time step
-// - Decreasing logistic function for growth increment
+// - Decreasing logistic function for growth increment (published structure);
+//   optional von Bertalanffy increment and integration over the source bin
 // - FA (F-at-age) derived as emergent property from NLA -> NA
 // - Supports both annual and sub-annual (quarterly) time steps
+//
+// Optional data entries select alternative structures. When an entry is absent
+// or 0 the published structure is used:
+//   growth_increment   1 = von Bertalanffy increment over the time step
+//   growth_transition  1 = starting lengths uniform within the source bin
+//   initial_length     1 = first-period lengths at age follow from growth
+//   initial_plus_group 1 = first-period plus group is the equilibrium sum of
+//                          all older cohorts at init_Z
 
 #include <TMB.hpp>
 #include <iostream>
@@ -22,8 +31,6 @@ Type objective_function<Type>::operator()()
 	DATA_MATRIX(na_matrix);     // indicator: 1 = observed, 0 = missing/zero (L x Y)
 	DATA_VECTOR(log_q);         // survey catchability at length (L)
 	DATA_VECTOR(len_mid);       // midpoints of length bins (L)
-	DATA_VECTOR(len_lower);     // lower bounds of length bins (L)
-	DATA_VECTOR(len_upper);     // upper bounds of length bins (L)
 	DATA_VECTOR(len_border);    // borders between adjacent length bins (L-1)
 	DATA_VECTOR(age);           // age vector (A)
 	DATA_INTEGER(Y);            // number of years
@@ -100,9 +107,16 @@ Type objective_function<Type>::operator()()
 		}
 	}
 
+	// Optional structure settings (0 = published structure).
+	int growth_increment = optional_setting(this->data, "growth_increment");
+	int growth_transition = optional_setting(this->data, "growth_transition");
+	int initial_length = optional_setting(this->data, "initial_length");
+	int initial_plus_group = optional_setting(this->data, "initial_plus_group");
+
 	// Growth conserves all survivors; the last bin absorbs the right tail.
 	matrix<Type> G(L,L);
 	G.setZero();
+	if (growth_increment == 0 && growth_transition == 0) {
 	for (int j=0; j<L; ++j) {
 		Type max_inc = (one-exp(-vbk))*Linf;
 		Type l50 = Type(.5)*Linf;
@@ -118,6 +132,10 @@ Type objective_function<Type>::operator()()
 		}
 		Type total=G.col(j).sum();
 		G.col(j)/=total;
+	}
+	} else {
+		G = growth_matrix(len_mid, len_border, Linf, vbk, cv_grow, growth_step,
+		                  growth_increment, growth_transition);
 	}
 
 	// ==================== RECRUITMENT ====================
@@ -141,8 +159,35 @@ Type objective_function<Type>::operator()()
 		N0(j) = exp(log_N0(j));
 	}
 
-	for(int j=0; j<A; ++j){
-		NLA.col(0).col(j) = pla.col(j) * N0(j);
+	Type init_survival = exp(-init_Z);
+	if (initial_length == 0) {
+		// Published structure: every age has the length-at-age distribution pla.
+		if (initial_plus_group == 1) N0(A-1) = N0(A-1) / (one - init_survival);
+		for(int j=0; j<A; ++j){
+			NLA.col(0).col(j) = pla.col(j) * N0(j);
+		}
+	} else {
+		// Lengths at age follow from growth: each age is the previous age after
+		// survival at init_Z and one growth step, so the first period is
+		// consistent with the dynamics that follow.
+		vector<Type> state = pla.col(0) * N0(0);
+		NLA.col(0).col(0) = state;
+		for(int j=1; j<A; ++j){
+			vector<Type> grown = G * state;
+			state = grown * exp(-init_Z + dev_log_N0(j-1));
+			if (j == A-1 && initial_plus_group == 1) {
+				// Sum over all older cohorts, sum_k (s G)^k state, by forward
+				// substitution (G is lower triangular).
+				vector<Type> total(L);
+				for (int i=0; i<L; ++i) {
+					Type acc = state(i);
+					for (int k=0; k<i; ++k) acc += init_survival * G(i,k) * total(k);
+					total(i) = acc / (one - init_survival * G(i,i));
+				}
+				state = total;
+			}
+			NLA.col(0).col(j) = state;
+		}
 	}
 
 	// Core dynamics: years 2+

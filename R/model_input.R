@@ -37,6 +37,8 @@
       stop(invalid_message, call. = FALSE)
     original <- value
     if (is.factor(value)) value <- as.character(value)
+    # TRUE/FALSE are not observations; only an all-missing logical column is accepted.
+    if (is.logical(value) && any(!is.na(value))) stop(invalid_message, call. = FALSE)
     if (!is.numeric(value) && !is.logical(value)) value <- as.character(value)
     value <- suppressWarnings(as.numeric(value))
     if (any(is.na(value) & !is.na(original)))
@@ -60,6 +62,10 @@
   if (all(single)) {
     mid <- as.numeric(labels)
     edges <- (mid[-n] + mid[-1L]) / 2
+    if (is.null(len_border) && n > 2L && diff(range(diff(mid))) > 1e-8 * max(abs(mid)))
+      warning("Length labels are single numbers with unequal spacing, and len_border is not supplied. ",
+              "Boundaries were set halfway between adjacent labels, which is correct only for equal-width bins. ",
+              "Supply len_border, or use interval labels such as \"20-25\".", call. = FALSE)
     lower <- c(-Inf, edges); upper <- c(edges, Inf)
   } else {
     for (i in seq_len(n)) {
@@ -108,7 +114,8 @@
 .acl_prepare_data <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M,
                               sel_L50, sel_L95, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
-                              len_upper = NULL, zero_action = c("missing", "error")) {
+                              len_upper = NULL, zero_action = c("missing", "error"),
+                              structure = list(), start_spread = 0.15) {
   zero_action <- match.arg(zero_action)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
@@ -146,7 +153,49 @@
   list(data = list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
                   len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
                   Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
-       bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl)
+       bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
+       structure = structure, start_spread = start_spread,
+       zero_observations = sum(obs == 0, na.rm = TRUE))
+}
+
+# Optional model structures. The first choice of each setting is the published
+# structure of Zhang and Cadigan (2022) and is the default.
+.acl_structure_choices <- list(
+  initial_plus_group = c("single_cohort", "equilibrium"),
+  initial_length = c("length_at_age", "growth"),
+  growth_increment = c("logistic", "von_bertalanffy"),
+  growth_transition = c("midpoint", "bin"))
+
+# Validate a structure list for one model. Returns the complete named choices
+# and the data entries passed to the template (non-default settings only, so a
+# default fit passes exactly the same data as earlier versions).
+.acl_structure <- function(structure = list(), model = "ALSCL") {
+  if (is.null(structure)) structure <- list()
+  model <- toupper(model)
+  available <- if (model == "ACL") "initial_plus_group" else names(.acl_structure_choices)
+  if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
+      (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
+       anyDuplicated(names(structure)))))
+    stop("structure must be a named list, for example list(growth_increment = \"von_bertalanffy\").", call. = FALSE)
+  unknown <- setdiff(names(structure), names(.acl_structure_choices))
+  if (length(unknown))
+    stop("Unknown structure setting: ", paste(unknown, collapse = ", "), ". Available settings: ",
+         paste(names(.acl_structure_choices), collapse = ", "), ".", call. = FALSE)
+  choices <- lapply(.acl_structure_choices[available], `[`, 1L)
+  for (nm in names(structure)) {
+    value <- structure[[nm]]
+    allowed <- .acl_structure_choices[[nm]]
+    if (!is.character(value) || length(value) != 1L || is.na(value) || !value %in% allowed)
+      stop("structure$", nm, " must be one of: ", paste0("\"", allowed, "\"", collapse = ", "), ".", call. = FALSE)
+    if (!nm %in% available) {
+      if (value != allowed[1L])
+        stop("structure$", nm, " applies to ALSCL only; ACL has no growth transition matrix.", call. = FALSE)
+      next
+    }
+    choices[[nm]] <- value
+  }
+  codes <- vapply(names(choices), function(nm) match(choices[[nm]], .acl_structure_choices[[nm]]) - 1L, integer(1))
+  list(choices = choices, data = as.list(codes[codes > 0L]))
 }
 .acl_observed_log <- function(model_result) {
   observed <- model_result$observations
