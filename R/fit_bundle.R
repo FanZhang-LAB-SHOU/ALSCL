@@ -22,14 +22,33 @@
   if (any(c("fit_args", "fit_config") %in% names(x))) {
     tables <- c("data.CatL", "data.wgt", "data.mat")
     args <- x[intersect(tables, names(x))]
-    if ("fit_args" %in% names(x))
-      args <- overlay(args, validate(x[["fit_args"]], "x$fit_args", allowed))
+    # Only the tables, fit_args and fit_config of a structured bundle are
+    # fitting settings. A top-level entry named like a fitting argument is
+    # most likely a setting in the wrong place. The top-level parameters entry
+    # is exempt: example bundles keep their simulation settings there.
+    every_argument <- union(names(formals(run_acl)), names(formals(run_alscl)))
+    misplaced <- setdiff(intersect(names(x), every_argument), c(tables, "parameters"))
+    if (length(misplaced))
+      warning("x contains fit_args or fit_config, so these top-level entries are not used in fitting: ",
+              paste(misplaced, collapse = ", "), ". Move them into x$fit_args or x$fit_config$",
+              model, ".", call. = FALSE)
+    if ("fit_args" %in% names(x)) {
+      shared <- validate(x[["fit_args"]], "x$fit_args")
+      # fit_args is shared by both models. The deprecated ALSCL-only bin
+      # bounds must not make the bundle unusable for ACL.
+      bounds <- intersect(names(shared), c("len_lower", "len_upper"))
+      if (model == "acl" && length(bounds)) {
+        .acl_deprecated_bin_bounds("run_acl")
+        shared <- shared[setdiff(names(shared), bounds)]
+      }
+      args <- overlay(args, validate(shared, "x$fit_args", allowed))
+    }
     if ("fit_config" %in% names(x)) {
       configs <- validate(x[["fit_config"]], "x$fit_config", c("acl", "alscl"))
-      if (!model %in% names(configs))
-        stop("x$fit_config must contain a '", model, "' configuration.", call. = FALSE)
-      args <- overlay(args, validate(configs[[model]],
-                                    paste0("x$fit_config$", model), allowed))
+      # A configuration for the other model only: this model uses fit_args.
+      if (model %in% names(configs))
+        args <- overlay(args, validate(configs[[model]],
+                                      paste0("x$fit_config$", model), allowed))
     }
   } else {
     args <- validate(x, "x", allowed)

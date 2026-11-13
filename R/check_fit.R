@@ -12,6 +12,15 @@
 #'   effects. Standardizing does not make them independent or provide calibrated
 #'   model tests. Observation SD is on the log scale. A live TMB object is not
 #'   required when observations and reports were retained in the saved result.
+#'
+#'   Standardized conditional residuals do not have unit standard deviation
+#'   when the model is correct. The fitted random effects absorb part of the
+#'   observation error, so the residuals are smaller than the observation
+#'   errors. In simulation tests with the package examples, where data were
+#'   simulated from a fitted model and the same model was refitted, their
+#'   standard deviation was 0.91 to 0.96. A standard deviation close to one
+#'   is therefore not evidence of a good fit, and a value below one is not
+#'   evidence of overestimated observation error.
 #' @examples
 #' \dontrun{
 #' fit <- run_acl(YTF_example)
@@ -90,6 +99,17 @@ residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
 #'   the requested actual time lag. These descriptive checks use fitted latent
 #'   effects and are not independent residual tests, simulation envelopes or
 #'   evidence of model adequacy. All plots inherit the package's grid-free theme.
+#'
+#'   The quantile-quantile (QQ) plot shows the pooled conditional log
+#'   residuals divided by the fitted observation standard deviation (SD)
+#'   against standard normal quantiles, with the line of equality as the
+#'   reference. This reference is not the distribution of the residuals under
+#'   a correct model: the fitted random effects absorb part of the observation
+#'   error, so the points of a correctly specified model have a slope below
+#'   one (0.91 to 0.96 in simulation tests with the package examples) and lie
+#'   inside the line at both tails. Read curvature and asymmetry of the
+#'   points, not their distance from the line, as signs of skewness or heavy
+#'   tails. No simulation envelope is drawn.
 #' @examples
 #' \dontrun{
 #' fit <- run_alscl(YTF_example)
@@ -141,12 +161,16 @@ check_fit <- function(fit, max_lag = 5) {
   qq_plot <- ggplot2::ggplot(qq, ggplot2::aes(x = theoretical, y = residual)) +
     ggplot2::geom_abline(intercept = 0, slope = 1, color = acl_theme("hline_color")) +
     ggplot2::geom_point(color = acl_theme("point_color"), size = acl_theme("point_size")) +
-    ggplot2::labs(x = "Standard-normal quantile", y = "Standardized log residual",
-      title = "Conditional residual QQ plot") + .acl_plot_theme()
+    ggplot2::labs(x = "Standard normal quantile",
+      y = "Conditional log residual / fitted SD",
+      title = "Conditional residual QQ plot",
+      subtitle = "Line of equality. A correctly specified model gives a slope below 1.") +
+    .acl_plot_theme()
   list(residuals = residual, lag_correlations = correlations, qq_data = qq,
     plots = list(heatmap = heatmap, lag = lag_plot, qq = qq_plot), time_step = step,
     notes = c("Conditional residuals use fitted latent effects; no independence or calibrated-test claim.",
-      "Lag correlations require at least three nonconstant pairs separated by the actual model-time lag."))
+      "Lag correlations require at least three nonconstant pairs separated by the actual model-time lag.",
+      "Standardized conditional residuals of a correctly specified model have a standard deviation below one, so their QQ points lie inside the line of equality at both tails."))
 }
 
 utils::globalVariables(c("year", "length_label", "lag", "correlation", "theoretical", "residual"))
