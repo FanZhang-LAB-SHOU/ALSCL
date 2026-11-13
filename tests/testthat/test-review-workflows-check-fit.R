@@ -14,5 +14,7 @@ test_that("the QQ plot states that its reference is not calibrated (GR1)", {
   built <- ggplot2::ggplot_build(qq)
   expect_identical(built$data[[1L]]$slope, 1)
   expect_identical(built$data[[1L]]$intercept, 0)
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(ggplot2::ggplotGrob(qq))
 })

@@ -17,6 +17,12 @@ retro_plot_fixture <- function(times = 2000:2004, peels = 3L) {
        model_type = "acl", fit_diagnostics = diagnostics)
 }
 retro_color_scale <- function(plot) ggplot2::ggplot_build(plot)$plot$scales$get_scales("colour")
+# Draw without leaving an Rplots.pdf file in the test directory.
+review_grob <- function(plot) {
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  ggplot2::ggplotGrob(plot)
+}
 
 test_that("a complete annual retrospective plot keeps its appearance", {
   r <- retro_plot_fixture()
@@ -46,7 +52,7 @@ test_that("a peel that failed the numerical screen is dashed and named (GS4)", {
   expect_match(p$labels$subtitle, "numerical checks")
   expect_match(p$labels$subtitle, "Failed the numerical screen: terminal year 2002.", fixed = TRUE)
   expect_true(all(built$data[[3L]]$label == "rho unavailable (2 of 3 peels valid): check diagnostics"))
-  expect_no_warning(ggplot2::ggplotGrob(p))
+  expect_no_warning(review_grob(p))
 })
 
 test_that("a peel without estimates stays in the legend and colors stay with the peel (GS4)", {
@@ -60,7 +66,7 @@ test_that("a peel without estimates stays in the legend and colors stay with the
   expect_identical(scale$map(c("2004", "2003", "2002", "2001")), reference)
   expect_identical(scale$get_labels(), c("2004", "2003 (no estimates)", "2002", "2001"))
   expect_match(p$labels$subtitle, "No estimates: terminal year 2003.", fixed = TRUE)
-  expect_no_warning(ggplot2::ggplotGrob(p))
+  expect_no_warning(review_grob(p))
 
   # Without the diagnostics table the recorded peel index still fixes the colors.
   r$fit_diagnostics <- NULL
