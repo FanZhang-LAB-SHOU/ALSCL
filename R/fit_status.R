@@ -75,6 +75,14 @@
     stop(label, " does not match data.CatL: ", part, ".", call. = FALSE)
   }
   log_predicted <- m$report$Elog_index
+  # A failure record from a batch function has no report. Name the failed fit
+  # and its error; the survey table is not the problem.
+  if (is.null(log_predicted) && (!is.null(m$error) || identical(m$converge, "FAILED"))) {
+    reason <- if (is.character(m$error) && length(m$error) == 1L && !is.na(m$error))
+      paste0(" Fit error: ", m$error) else ""
+    stop(if (identical(label, "Model")) "model_result" else label,
+         " is a failed fit without estimates and cannot be used here.", reason, call. = FALSE)
+  }
   if (!identical(dim(log_predicted), dim(observed)))
     fail("prediction dimensions", "Observed and predicted dimensions differ.")
   if (!is.numeric(log_predicted) || any(!is.finite(log_predicted[mask])) ||

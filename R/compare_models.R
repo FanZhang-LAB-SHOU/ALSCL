@@ -22,8 +22,13 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   \item{model1_name,model2_name}{Labels used in the comparison.}
 #'   \item{fit_diagnostics}{Numerical status of each fit, including the raw code,
 #'     gradient, Hessian and natural-scale boundaries.}
-#'   \item{comparison}{Whether data comparability was verified and both numerical
-#'     screens passed; preferred is NULL when an automatic preference is withheld.}
+#'   \item{comparison}{Whether data comparability was verified (data_verified) and
+#'     both numerical screens passed (eligible); preferred is NULL when an
+#'     automatic preference is withheld. issues lists unverified data and
+#'     failed numerical screens. delta_aic is the Akaike information criterion
+#'     (AIC) of model2 minus that of model1, aic_threshold is the smallest
+#'     absolute difference for which a preference is given (2), and reason
+#'     states why a preference was withheld (NA when one is given).}
 #' }
 #' @details Both fits must use the same positive observations, missing-data mask,
 #'   length labels and time grid as data.CatL. Known mismatches are errors.
@@ -31,6 +36,13 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   receive no automatic model preference. The same applies to failed numerical
 #'   screens. Passing the screen does not establish model adequacy; AIC expresses
 #'   relative support among these candidates, not biological validation.
+#'   When both fits are eligible, preferred names the model with the lower AIC
+#'   only if the two AIC values differ by at least 2. With a smaller difference
+#'   preferred is NULL, issues is empty and comparison$reason records that the
+#'   AIC difference is below 2; such a difference does not establish that the
+#'   models are equivalent. A failure record from a batch function, such as an
+#'   element of fit_scenarios()$fits that holds an error, is rejected with its
+#'   fit error.
 #'   Goodness-of-fit measures use the same calculation as
 #'   \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 #'   is NA; nonfinite response-scale predictions at observed cells are errors.
@@ -220,11 +232,17 @@ compare_models <- function(model1, model2, data.CatL,
   # Report raw information criteria even when a fit is unsuitable for inference,
   # but never present an automatic winner for unverified or failed fits.
   delta_aic <- aic2 - aic1
+  aic_threshold <- 2
   preferred <- NULL
+  reason <- NA_character_
   cat(sprintf("\nDelta AIC = %.2f ", delta_aic))
   if (!eligible || !is.finite(delta_aic)) {
+    reason <- if (!eligible)
+      "data not verified or a fit failed the numerical screen; see issues" else
+      "AIC difference unavailable"
     cat("(automatic preference withheld; inspect diagnostics)\n")
-  } else if (abs(delta_aic) < 2) {
+  } else if (abs(delta_aic) < aic_threshold) {
+    reason <- sprintf("absolute AIC difference below %g", aic_threshold)
     cat("(little separation in AIC; this does not establish model equivalence)\n")
   } else if (delta_aic < 0) {
     preferred <- model2_name
@@ -241,7 +259,9 @@ compare_models <- function(model1, model2, data.CatL,
     correlation = corr_df,
     fit_diagnostics = fit_diagnostics,
     comparison = list(data_verified = data_check$verified, eligible = eligible,
-                      preferred = preferred, issues = reasons),
+                      preferred = preferred, issues = reasons,
+                      delta_aic = delta_aic, aic_threshold = aic_threshold,
+                      reason = reason),
     model1_name = model1_name,
     model2_name = model2_name
   ))
