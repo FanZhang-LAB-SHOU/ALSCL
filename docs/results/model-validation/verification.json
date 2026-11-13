@@ -5,8 +5,8 @@
     {
       "model": "ACL",
       "fold": 1,
-      "elapsed": 4.812,
-      "pid": 98325,
+      "elapsed": 4.225,
+      "pid": 19672,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -25,8 +25,8 @@
     {
       "model": "ACL",
       "fold": 2,
-      "elapsed": 5.911,
-      "pid": 98324,
+      "elapsed": 5.231,
+      "pid": 19671,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -45,12 +45,12 @@
     {
       "model": "ALSCL",
       "fold": 1,
-      "elapsed": 87.6,
-      "pid": 98462,
+      "elapsed": 70.935,
+      "pid": 19729,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
-      "max_abs_gradient": 9.3607e-12,
+      "max_abs_gradient": 9.8349e-12,
       "pdHess": true,
       "bound_hit": false,
       "natural_boundary": false,
@@ -65,12 +65,12 @@
     {
       "model": "ALSCL",
       "fold": 2,
-      "elapsed": 94.482,
-      "pid": 98461,
+      "elapsed": 75.225,
+      "pid": 19728,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
-      "max_abs_gradient": 4.6326e-12,
+      "max_abs_gradient": 5.2462e-12,
       "pdHess": true,
       "bound_hit": false,
       "natural_boundary": false,
@@ -128,7 +128,7 @@
       "relative_bias": -0.0053,
       "rmse": 3.2541,
       "coverage": 1,
-      "mean_elapsed": 139.0463
+      "mean_elapsed": 125.925
     },
     {
       "quantity": "Rec",
@@ -143,7 +143,7 @@
       "relative_bias": 0.0042,
       "rmse": 20.5567,
       "coverage": 0.95,
-      "mean_elapsed": 139.0463
+      "mean_elapsed": 125.925
     }
   ],
   "archive_simulation_equal": true,
