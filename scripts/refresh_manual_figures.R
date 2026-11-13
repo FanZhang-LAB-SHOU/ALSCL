@@ -1,15 +1,20 @@
 # Refresh legacy help assets and the own-data figures from saved assessments.
-# First run scripts/ytf_workflow.R (save returned fits) and the own-data example.
+# First run scripts/ytf_workflow.R, which saves its fits to output/ytf-guide/fits.rds,
+# and scripts/fit_own_data_example.R, which saves output/own-data-example/assessment_summary.rds.
 # Rscript scripts/refresh_manual_figures.R [ytf_fits.rds] [own_assessment.rds]
-library(ALSCL)
-# The figures must come from this checkout: stop when an older installation is loaded.
-if (packageVersion("ALSCL") < read.dcf("DESCRIPTION", "Version")[[1]])
-  stop("Installed ALSCL ", packageVersion("ALSCL"), " is older than this checkout; run R CMD INSTALL . first.")
+# The figures and tables must come from the code of this checkout. The guard
+# loads the checkout with pkgload, or stops when the installed package has
+# different functions, templates or data. A version number cannot show that.
+source("scripts/checkout_guard.R")
+use_checkout_alscl()
 library(ggplot2)
 library(patchwork)
 args <- commandArgs(TRUE)
-ytffile <- if (length(args)) args[1] else 'output/release-225/gallery/fits.rds'
+ytffile <- if (length(args)) args[1] else 'output/ytf-guide/fits.rds'
 ownfile <- if (length(args)>1) args[2] else 'output/own-data-example/assessment_summary.rds'
+for (needed in list(c(ytffile, 'scripts/ytf_workflow.R'), c(ownfile, 'scripts/fit_own_data_example.R')))
+  if (!file.exists(needed[1])) stop('Fit archive not found: ', needed[1], '. Run ', needed[2],
+                                    ' first, or give the path as an argument.', call. = FALSE)
 z <- readRDS(ytffile); a <- z$acl; b <- z$alscl
 acl_theme_reset()
 acl_theme_set(base_theme='bw',font_family='sans',title_size=12,

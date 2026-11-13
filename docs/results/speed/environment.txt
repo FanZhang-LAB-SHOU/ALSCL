@@ -1,6 +1,7 @@
 UTC: 2026-10-12 18:45:47 UTC
 R: R version 4.6.0 (2026-04-24)
 Platform: aarch64-apple-darwin23
+CPU: Apple M2 Pro
 TMB: 1.9.21
 RcppEigen: 0.3.4.0.2
 Matrix: 1.7.5

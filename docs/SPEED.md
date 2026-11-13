@@ -145,7 +145,7 @@ git archive 4dc1fc3 | (mkdir -p /tmp/alscl-original && tar -x -C /tmp/alscl-orig
 Rscript scripts/benchmark_speed.R /tmp/alscl-original docs/results/speed 3
 ```
 
-`Rscript scripts/plot_speed_benchmark.R` redraws both figures from the saved results without refitting. The benchmark script writes every fit to `runs.csv` (elapsed and CPU time, load average, convergence) and the comparison with the original code to `summary.csv`, in which `n_report` counts all rows of `summary(sdreport)` (fixed effects, random effects and ADREPORT quantities).
+`Rscript scripts/plot_speed_benchmark.R` redraws both figures from the saved results without refitting. The benchmark script writes every fit to `runs.csv` (elapsed and CPU time, load average, convergence) and the comparison with the original code to `summary.csv`, in which `n_report` counts all rows of `summary(sdreport)` (fixed effects, random effects and ADREPORT quantities). It writes the estimates and standard errors of the ALSCL fit to `YTF_example` to `agreement_YTF_ALSCL.csv`, as the values of the original code and the exact differences of the two settings from them, and the computer and the number of repeats to `environment.txt`. The figure captions take the number of runs and the computer from these files, so the four files of one run belong together.
 
 ## 6. Implementation notes
 

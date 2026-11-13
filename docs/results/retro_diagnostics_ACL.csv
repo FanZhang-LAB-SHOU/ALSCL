@@ -1,5 +1,5 @@
-"Peel","RetrospectiveYear","elapsed","error","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues"
-0,2019,7.84700000000001,"",0,2.80095946436631e-10,TRUE,FALSE,FALSE,TRUE,""
-1,2018,6.99100000000001,"",0,4.97119671816204e-10,TRUE,FALSE,FALSE,TRUE,""
-2,2017,6.44400000000002,"",0,2.94101275451208e-10,TRUE,FALSE,FALSE,TRUE,""
-3,2016,5.09,"",0,4.58314254603298e-11,TRUE,FALSE,FALSE,TRUE,""
+"Peel","RetrospectiveYear","elapsed","error","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues","optimizer_message","selected_pass","optimizer_codes","optimizer_messages","refinement_status","refinement_steps","pre_refinement_max_gradient"
+0,2019,11.139,"",0,2.80135026287098e-10,TRUE,FALSE,FALSE,TRUE,"","relative convergence (4)",1,"0; 0","relative convergence (4); relative convergence (4)","gradient_tolerance",1,0.000121864676486921
+1,2018,9.55099999999999,"",0,4.97068849622528e-10,TRUE,FALSE,FALSE,TRUE,"","relative convergence (4)",2,"0; 0","relative convergence (4); relative convergence (4)","gradient_tolerance",1,0.000315642429654872
+2,2017,10.768,"",0,2.94100541663178e-10,TRUE,FALSE,FALSE,TRUE,"","relative convergence (4)",2,"0; 0","relative convergence (4); relative convergence (4)","gradient_tolerance",1,0.000372659986680901
+3,2016,8.63499999999999,"",0,4.60210931862992e-11,TRUE,FALSE,FALSE,TRUE,"","relative convergence (4)",1,"0; 0","relative convergence (4); relative convergence (4)","gradient_tolerance",1,9.80986571408951e-05

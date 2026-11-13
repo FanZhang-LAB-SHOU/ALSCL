@@ -394,7 +394,7 @@ def section(slugs, number=None):
 
 
 def build_user_guide():
-    version = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(), re.M)[1]
+    version = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(encoding='utf-8'), re.M)[1]
     toc = []
     bodies = []
     for n, (anchor, slugs) in enumerate(USER_GUIDE, 1):

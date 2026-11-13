@@ -82,8 +82,8 @@ class ManualCodeTests(unittest.TestCase):
     def test_every_current_article_keeps_its_executable_code(self):
         count = 0
         for slug in ARTICLE_TARGET:
-            en = blocks((WEB / 'en' / 'articles' / (slug + '.md')).read_text())
-            zh = blocks((WEB / 'zh' / 'articles' / (slug + '.md')).read_text())
+            en = blocks((WEB / 'en' / 'articles' / (slug + '.md')).read_text(encoding='utf-8'))
+            zh = blocks((WEB / 'zh' / 'articles' / (slug + '.md')).read_text(encoding='utf-8'))
             check_alignment(slug, en, zh)
             for (kind, el), (_, zl) in zip(en, zh):
                 if kind == 'code':
@@ -91,6 +91,27 @@ class ManualCodeTests(unittest.TestCase):
                         self.assert_merge(el, zl)
                     count += 1
         self.assertGreater(count, 100)
+
+    def test_reference_examples_keep_hashes_inside_strings(self):
+        from extract_reference_examples import website_helpers
+        code_language = website_helpers()['code_language']
+        line = 'plot_SSB(b, line_color = "#1B9E77") # 自定义颜色 / Custom colour'
+        self.assertEqual(code_language(line, 'en'),
+                         'plot_SSB(b, line_color = "#1B9E77") # Custom colour')
+        self.assertEqual(code_language(line, 'zh'),
+                         'plot_SSB(b, line_color = "#1B9E77") # 自定义颜色')
+        # A line without a comment, and a hash in a multi-line string, stay as written.
+        code = 'x <- "first\n# literal text\nlast"\nprint(x)'
+        self.assertEqual(code_language(code, 'en'), code)
+
+    def test_reference_examples_keep_a_space_after_the_hash(self):
+        from extract_reference_examples import reference_examples
+        for entry in reference_examples(['plot_compare_growth', 'diagnostic_metrics']):
+            for line in entry['example'].splitlines():
+                if line.lstrip().startswith('#'):
+                    self.assertRegex(line.lstrip(), r'^#( |$)')
+            if entry['language'] == 'en':
+                self.assertNotRegex(entry['example'], '[\u3400-\u9fff]')
 
     def test_math_is_retained_verbatim(self):
         en = ['```math', 'a # b', '', 'c', '```']

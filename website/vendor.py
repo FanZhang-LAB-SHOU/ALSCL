@@ -12,7 +12,7 @@ SHA256 = 'e9e0d167db3175481cbadaff38e8d90b130f6a3ddb451a47e43c577fd511f365'
 def prepare_katex(destination):
     destination=Path(destination)
     marker=destination/'.verified'
-    if marker.exists() and marker.read_text().strip()==SHA256: return
+    if marker.exists() and marker.read_text(encoding='utf-8').strip()==SHA256: return
     context=ssl.create_default_context()
     # Python.org macOS installs may not include the system root certificates.
     if Path('/etc/ssl/cert.pem').exists(): context.load_verify_locations('/etc/ssl/cert.pem')
@@ -28,4 +28,4 @@ def prepare_katex(destination):
                 if not path.resolve().is_relative_to(destination.resolve()):raise ValueError('Invalid archive path')
                 path.parent.mkdir(parents=True,exist_ok=True)
                 path.write_bytes(archive.extractfile(member).read())
-    marker.write_text(SHA256+'\n')
+    marker.write_text(SHA256+'\n', encoding='utf-8')

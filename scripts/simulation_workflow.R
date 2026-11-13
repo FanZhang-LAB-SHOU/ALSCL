@@ -8,7 +8,13 @@ simulation_to_tables <- function(sm, pa, first_year=NULL) {
   ALSCL:::.acl_simulation_to_tables(sm, pa, first_year)
 }
 
-run_simulation_examples <- function(out="simulation_examples",fit_batch=FALSE) {
+# 默认输出在已被 Git 忽略的 output/ 下 / The default output folder is under the ignored output/.
+run_simulation_examples <- function(out=file.path("output","simulation_examples"),fit_batch=FALSE) {
+  # 写入 docs/ 的已提交数据必须来自当前检出的代码 / Committed data under docs/ must come from this checkout.
+  if (grepl("^(\\./)?docs(/|$)", out)) {
+    source("scripts/checkout_guard.R", local = TRUE)
+    require_checkout_alscl()
+  }
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
   # 简单年度模型：直接返回三张表 / Simple annual model returns fit-ready tables.
   quick <- simulate_example_data(years=2000:2019, seed=42,

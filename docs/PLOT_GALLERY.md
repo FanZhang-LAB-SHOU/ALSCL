@@ -8,9 +8,9 @@
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
-先运行指南第 2 节，定义 `a`、`b`、`x`、`inputs`、`dat <- x$data.CatL`，并加载 `ggplot2`、`patchwork`。回溯图使用指南第 9 节的 `ra` 和 `rb`。全部图来自同一个模拟 YTF 数据和固定部分生物参数的条件拟合。
+先运行[指南第 4 节](USER_GUIDE.md#builtin)，得到输入列表 `x` 和拟合结果 `a`、`b`；再定义 `dat <- x$data.CatL`，并加载 `ggplot2`、`patchwork`。回溯图使用[指南第 8 节](USER_GUIDE.md#retrospective)的 `ra` 和 `rb`。全部图来自同一个模拟 YTF 数据和固定部分生物参数的条件拟合。
 
-Run section 2 of the guide, define `dat <- x$data.CatL`, and load ggplot2/patchwork. Retrospective plots use `ra/rb` from section 9. Every fit uses the same synthetic YTF data and conditional fixed-biology settings.
+Run [section 4 of the guide](USER_GUIDE.md#builtin) to create the input bundle `x` and the fits `a` and `b`. Then define `dat <- x$data.CatL` and load ggplot2 and patchwork. Retrospective plots use `ra` and `rb` from [section 8](USER_GUIDE.md#retrospective). Every fit uses the same synthetic YTF data and conditional fixed-biology settings.
 
 代码中的额外主题、刻度及组合布局仅调整显示。图像可点击放大；保存时建议宽 11 英寸、多分面高 8.5 英寸。 / Extra theme, scale and layout calls affect presentation only. Click figures to enlarge; use wide output for multi-panel figures.
 

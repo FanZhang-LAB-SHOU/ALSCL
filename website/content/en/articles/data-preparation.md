@@ -25,7 +25,7 @@ Both models read three tables with the same layout: the survey index table `data
 
 <h3 id="survey-table">Survey index table data.CatL</h3>
 
-Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
+Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. The model outputs are on the scale of this index. Survey catchability rises to a fixed maximum of 1 for large fish, and no catchability scale is estimated. Abundance, biomass, spawning biomass, recruitment and catch are therefore absolute estimates only when the index is an absolute abundance estimate at length, such as swept-area numbers expanded to the stock area. With a relative index such as numbers per tow, read them as relative values in the units of the index and label the axes accordingly. Fishing mortality rates do not depend on the scale of the index. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
 
 ![Survey index worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
 
@@ -84,7 +84,7 @@ str(tables)
 | `rec.age` | Age of the youngest age class in the model, in years | Age at which fish first appear in the survey |
 | `nage` | Number of age classes, including the oldest (plus) group | Choose the starting age A of the plus group on the age grid, in years. Set `nage = 1 + (A - rec.age) / growth_step` |
 | `M` | Natural mortality per time step | Literature or life-history methods; divide an annual value by 4 for quarterly steps |
-| `sel_L50`, `sel_L95` | Lengths at which survey catchability reaches 50% and 95% | Calibration or comparative fishing trials for the survey gear. If borrowing a curve, document the assumption and test sensitivity to it. |
+| `sel_L50`, `sel_L95` | Lengths at which survey catchability reaches 50% and 95% of its maximum, which is fixed at 1 | Calibration or comparative fishing trials for the survey gear. If borrowing a curve, document the assumption and test sensitivity to it. |
 | `growth_step` | Years per time step | Step 2 |
 | `len_mid`, `len_border` | Bin midpoints and internal boundaries | Step 2 |
 | `zero_action` | How a 0 in the survey table is treated | `"missing"` (default) or `"error"` |

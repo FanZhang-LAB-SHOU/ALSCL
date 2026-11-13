@@ -8,6 +8,8 @@
 #   Rscript scripts/benchmark_speed.R /tmp/alscl-original [output_dir] [repeats]
 # The original source is the version before the speed changes (ALSCL 2.0.0,
 # commit 4dc1fc3). On macOS, set LC_ALL=en_US.UTF-8 if the path is not ASCII.
+# Writes environment.txt, runs.csv, summary.csv and agreement_YTF_ALSCL.csv to
+# output_dir; scripts/plot_speed_benchmark.R draws the figures from these files.
 args <- commandArgs(trailingOnly = TRUE)
 
 # ---- One fit, in a child process --------------------------------------------
@@ -96,8 +98,16 @@ run_child <- function(config, case, model, file) {
     stop("Fit failed: ", config, " ", case, " ", model)
   if (file != "-") readRDS(file)
 }
+# CPU model, for the figure caption; left out when the system does not report it.
+cpu_model <- tryCatch(switch(Sys.info()[["sysname"]],
+  Darwin = system2("sysctl", c("-n", "machdep.cpu.brand_string"), stdout = TRUE, stderr = FALSE),
+  Linux = sub("^model name[[:space:]]*:[[:space:]]*", "",
+              grep("^model name", readLines("/proc/cpuinfo"), value = TRUE)[1L]),
+  character()), error = function(e) character(), warning = function(w) character())
+cpu_model <- cpu_model[!is.na(cpu_model) & nzchar(cpu_model)]
 writeLines(c(paste("UTC:", format(Sys.time(), tz = "UTC", usetz = TRUE)),
   paste("R:", R.version.string), paste("Platform:", R.version$platform),
+  if (length(cpu_model)) paste("CPU:", cpu_model[1L]),
   paste("TMB:", utils::packageVersion("TMB")), paste("RcppEigen:", utils::packageVersion("RcppEigen")),
   paste("Matrix:", utils::packageVersion("Matrix")),
   paste("Logical CPUs:", parallel::detectCores()),
@@ -156,4 +166,22 @@ summary <- do.call(rbind, lapply(seq_len(nrow(cases)), function(i) do.call(rbind
 }))))
 utils::write.csv(summary, file.path(out, "summary.csv"), row.names = FALSE)
 print(summary, digits = 3)
+
+# Every reported estimate and standard error of the ALSCL fit to YTF_example
+# (first repetition): the values of the original code and the exact differences
+# of two speed settings from them. Differences are stored, not the second
+# values, so that an exact agreement reads back as 0. Written before the fit
+# files are deleted, so the table always belongs to the timings of the same run.
+agreement_fit <- function(config) fits[[paste("YTF", "ALSCL", config, 1, sep = "_")]]$est_std
+reference <- agreement_fit("original")
+exact <- function(v) sprintf("%.17g", v)
+agreement <- data.frame(quantity = rownames(reference),
+  original_estimate = exact(reference[, 1]), original_std_error = exact(reference[, 2]))
+for (config in c("cppad_par", "tmbad_par")) {
+  current <- agreement_fit(config)
+  stopifnot(identical(dim(current), dim(reference)), identical(rownames(current), rownames(reference)))
+  agreement[[paste0(config, "_estimate_diff")]] <- exact(current[, 1] - reference[, 1])
+  agreement[[paste0(config, "_std_error_diff")]] <- exact(current[, 2] - reference[, 2])
+}
+utils::write.csv(agreement, file.path(out, "agreement_YTF_ALSCL.csv"), row.names = FALSE, quote = FALSE)
 unlink(work, recursive = TRUE)

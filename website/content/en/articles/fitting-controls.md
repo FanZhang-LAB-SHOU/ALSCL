@@ -11,7 +11,7 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 | `rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border` | Biology, survey catchability and time step | `x$fit_args`, shared by both models |
 | `zero_action` | Treat survey zeros as missing (`"missing"`, default) or stop (`"error"`) | `x$fit_args` |
 | `parameters`, `parameters.L`, `parameters.U` | Starting values and bounds of the scalar parameters, on the optimizer scale | `x$fit_config$acl` or `x$fit_config$alscl` |
-| `map` | Which parameters are fixed at their starting value or tied together | `x$fit_config$acl` or `x$fit_config$alscl` |
+| `map` | Which parameters are fixed at their starting value and which default fixes are released | `x$fit_config$acl` or `x$fit_config$alscl` |
 | `F_structure` | `"group_year"` (default): F varies by age or length and by time step; `"year"`: one F per time step | `x$fit_args` or the call |
 | `nstarts`, `ncores` | Number of independent optimizer starts and of worker processes running them | The call |
 | `train_times` | Successive optimizer passes from each start (default 1) | The call |
@@ -41,7 +41,7 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 | Correlation of recruitment across time | `logit_log_R` | `logit_log_R` |
 | Initial total mortality; survey observation SD | `log_init_Z`, `log_std_index` | `log_init_Z`, `log_sigma_index` |
 
-By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more (the growth parameters and two process SDs) so that its teaching configuration runs quickly; your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are created from the data dimensions and estimated as random effects by default. Their `map` entries can fix individual deviations or tie them together; inspect `n_free`, `n_fixed` and `n_tied` to see how many remain free in each block.
+By default ACL fixes `log_std_log_F`, `logit_log_F_y`, `logit_log_F_a` and `t0`, and ALSCL fixes `log_sigma_log_F` and `log_t0`; everything else is estimated. `YTF_example` fixes more so that its teaching configuration runs quickly: the growth parameters (`log_Linf`, `log_vbk`, `t0` or `log_t0`, `log_cv_len` and, for ALSCL, `log_cv_grow`), the standard deviations of the F deviations and of the initial-numbers deviations, and every AR(1) correlation (`logit_log_R`, `logit_log_F_y`, and `logit_log_F_a` or `logit_log_F_l`). Each model then estimates five scalar parameters: `log_init_Z`, `mean_log_R`, `mean_log_F`, the recruitment SD and the survey observation SD. The intervals of the example are conditional on all of these fixed values. Your own bundle starts from the defaults. The process deviations `dev_log_R`, `dev_log_F` and `dev_log_N0` are created from the data dimensions and estimated as random effects; step 3 explains why their `map` entries should stay at the default. The `n_free`, `n_fixed` and `n_tied` columns show how many entries of each block are estimated.
 
 <h2 id="map">3. Fix or release parameters with map</h2>
 
@@ -51,14 +51,17 @@ my_map <- list(log_Linf = factor(NA), log_vbk = factor(NA), logit_log_F_y = NULL
 a_map <- run_acl(x, map = my_map, silent = TRUE)
 extract_parameters(a_map)
 # Keep the choice in the bundle for later analyses
+# A bundle built without fit_config has no stored configuration:
+# create an entry for each model before the first assignment
+if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$map <- my_map
 ```
 
-`factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Investigate a non-positive-definite Hessian or a correlation near a boundary by checking gradients, parameter scales, bounds, additional starts and profiles. Fix a parameter when these checks support doing so and an external estimate or biological assumption provides a defensible value; record that basis with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`.
+`factor(NA)` fixes a parameter at its starting value; a named `NULL` releases a parameter that the model fixes by default. A `map` given in the call or stored in `x$fit_config` replaces the stored map completely, so list every fix you want each time. Investigate a non-positive-definite Hessian or a correlation near a boundary by checking gradients, parameter scales, bounds, additional starts and profiles. Fix a parameter when these checks support doing so and an external estimate or biological assumption provides a defensible value; record that basis with the assessment. `generate_map()` merges a list with the ACL defaults but drops `NULL` entries, so pass release lists directly as `map`. A bundle built without `fit_config` has no stored configuration, and assigning `x$fit_config$acl$map` to it would create an ACL entry only. The `if` line above first creates an entry for each model, so that the stored configuration names both models; an empty entry means the model defaults.
 
-For a process-deviation block, supply a factor with one entry per deviation: `NA` fixes that entry at its starting value (zero), and repeated factor levels tie entries to one estimated value. `simulate_fit(process = "resample")` requires unrestricted process deviations; conditional simulation also supports fixed or tied maps. `hindcast_model()` requires unrestricted time-varying `dev_log_R` and `dev_log_F` maps, but supports fixed or tied static `dev_log_N0` values. See [Simulate and validate a fitted model](case-model-validation.html) before using these restrictions in a validation study.
+Leave the process-deviation blocks `dev_log_R`, `dev_log_F` and `dev_log_N0` out of `map`. The models evaluate the process likelihood for every entry of a block. Fixing entries with `NA`, or giving several entries the same factor level, therefore does not give the likelihood of a model with fewer deviations. Such a map is rejected unless the standard deviation and the AR(1) correlations of that process are fixed as well. Even then the objective is not comparable with that of other fits, so do not compare it by AIC. To let all ages or lengths share one fishing mortality rate in each time step, use `F_structure = "year"` (step 5), which has its own one-dimensional AR(1) likelihood. `simulate_fit(process = "resample")` requires unrestricted process deviations, and `hindcast_model()` requires unrestricted `dev_log_R` and `dev_log_F`. See [Simulate and validate a fitted model](case-model-validation.html).
 
-For a named `NULL` release, copy the exact parameter name from `inspect_parameters(x, model)`. An unknown name stops the fit. When you subset a map factor, unused levels are discarded and the remaining ties and fixed cells are preserved.
+For a named `NULL` release, copy the exact parameter name from `inspect_parameters(x, model)`. An unknown name stops the fit. When you subset a map factor, unused levels are discarded and the remaining entries keep their fixed or estimated status.
 
 <h2 id="starts">4. Set starting values and bounds</h2>
 
@@ -66,12 +69,13 @@ For a named `NULL` release, copy the exact parameter name from `inspect_paramete
 p <- create_parameters(model_type = "acl", species = "flatfish")
 p$parameters$log_Linf <- log(65)
 p$parameters.U$log_Linf <- log(90)
+if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$parameters <- p$parameters
 x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
 ```
 
-Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5. `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. ACL uses `t0` directly, while ALSCL uses `log_t0`, so an ALSCL `t0` must lie between 0 and `rec.age`. A starting value outside its bounds is moved to the nearest bound before fitting. [Estimation parameter lists](estimation-parameters.html) gives the full list with transformations.
+Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5. `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. The presets are starting configurations taken from simulation operating models, not validated settings for a stock. The `"tuna"` preset, for example, is the tuna-like operating model M6 of the simulation study: 20 quarterly age classes with a plus group at 5 years, an asymptotic length of 152 cm and constant natural mortality. ACL uses `t0` directly, while ALSCL uses `log_t0`, so an ALSCL `t0` must lie between 0 and `rec.age`. A starting value outside its bounds is moved to the nearest bound before fitting. [Estimation parameter lists](estimation-parameters.html) gives the full list with transformations.
 
 <h2 id="f-structure">5. Choose the F structure</h2>
 
