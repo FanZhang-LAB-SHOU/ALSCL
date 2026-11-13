@@ -103,6 +103,48 @@ read_survey_csv <- function(folder) {
   .acl_input_tables(tables)
 }
 
+# Locate cells that hold an Excel error value such as #DIV/0! or #N/A. readxl
+# imports these cells as NA, which the survey tables read as missing
+# observations. Only the zipped workbook formats (.xlsx, .xlsm) can be
+# inspected; NULL means that the workbook could not be inspected.
+.acl_excel_error_cells <- function(file, sheets) {
+  tryCatch({
+    parts <- utils::unzip(file, list = TRUE)$Name
+    index <- c("xl/workbook.xml", "xl/_rels/workbook.xml.rels")
+    if (!all(index %in% parts)) return(NULL)
+    folder <- tempfile("alscl-workbook-")
+    dir.create(folder)
+    on.exit(unlink(folder, recursive = TRUE), add = TRUE)
+    read_part <- function(part) {
+      utils::unzip(file, files = part, exdir = folder)
+      paste(readLines(file.path(folder, part), warn = FALSE, encoding = "UTF-8"), collapse = "")
+    }
+    tags <- function(text, element)
+      regmatches(text, gregexpr(paste0("<(?:[A-Za-z0-9]+:)?", element, "\\s[^>]*>"), text, perl = TRUE))[[1L]]
+    attribute <- function(tag, name) {
+      found <- regmatches(tag, regexec(paste0("\\s", name, "=\"([^\"]*)\""), tag, perl = TRUE))
+      vapply(found, function(m) if (length(m) == 2L) m[2L] else NA_character_, character(1))
+    }
+    sheet_tags <- tags(read_part(index[1L]), "sheet")
+    relation_tags <- tags(read_part(index[2L]), "Relationship")
+    sheet_names <- attribute(sheet_tags, "name")
+    sheet_ids <- attribute(sheet_tags, "(?:[A-Za-z0-9]+:)id")
+    targets <- stats::setNames(attribute(relation_tags, "Target"), attribute(relation_tags, "Id"))
+    out <- stats::setNames(vector("list", length(sheets)), sheets)
+    for (sheet in sheets) {
+      target <- targets[[sheet_ids[match(sheet, sheet_names)]]]
+      part <- if (startsWith(target, "/")) substring(target, 2L) else paste0("xl/", target)
+      if (!part %in% parts) return(NULL)
+      cells <- tags(read_part(part), "c")
+      cells <- cells[grepl("\\st=\"e\"", cells, perl = TRUE)]
+      references <- attribute(cells, "r")
+      references[is.na(references)] <- "unknown cell"
+      out[[sheet]] <- references
+    }
+    out
+  }, error = function(e) NULL, warning = function(w) NULL)
+}
+
 #' Read survey tables from an Excel workbook
 #'
 #' The workbook must contain sheets named `data.CatL`, `data.wgt` and `data.mat`
@@ -110,6 +152,13 @@ read_survey_csv <- function(folder) {
 #' package. Importing validates the tables but does not choose biological inputs.
 #' @param file Path to an existing Excel workbook.
 #' @return A named list containing the three numeric survey tables.
+#' @details Only blank cells and `NA` denote missing values. A cell that holds
+#'   an Excel error value, such as `#DIV/0!` or `#N/A` from a formula, is an
+#'   error: readxl would otherwise import it as a missing value and the
+#'   observation would be left out of the likelihood without a message. The
+#'   error names the sheet and the cells. This check reads the workbook file
+#'   directly and applies to the `.xlsx` and `.xlsm` formats; cells of a
+#'   workbook in the older `.xls` format cannot be checked in this way.
 #' @seealso [prepare_alscl_data()], [check_alscl_data()]
 #' @export
 read_survey_excel <- function(file) {
@@ -122,6 +171,19 @@ read_survey_excel <- function(file) {
   absent <- setdiff(sheets, readxl::excel_sheets(file))
   if (length(absent))
     stop("Missing workbook sheets: ", paste(absent, collapse = ", "), call. = FALSE)
+  flagged <- .acl_excel_error_cells(file, sheets)
+  flagged <- flagged[lengths(flagged) > 0L]
+  if (length(flagged)) {
+    listing <- vapply(names(flagged), function(sheet) {
+      cells <- flagged[[sheet]]
+      shown <- paste(utils::head(cells, 10L), collapse = ", ")
+      if (length(cells) > 10L) shown <- paste0(shown, " and ", length(cells) - 10L, " more")
+      paste0("sheet ", sheet, ": ", shown)
+    }, character(1))
+    stop("The workbook contains Excel error values (for example #DIV/0! or #N/A) in ",
+         paste(listing, collapse = "; "),
+         ". Correct these cells, or clear them to record missing values.", call. = FALSE)
+  }
   tables <- stats::setNames(lapply(sheets, function(sheet) readxl::read_excel(file,
     sheet = sheet, col_types = "text", na = c("", "NA"), .name_repair = "minimal")), sheets)
   .acl_input_tables(tables)
