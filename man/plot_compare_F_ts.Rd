@@ -53,9 +53,11 @@ bins, because F at age combines survival across lengths. Read the time
 pattern of such a pair, not the difference in level.
 \code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
 derived \code{report$FA} for ALSCL. Only the fitted ages and the time
-steps present in both fits are summarized. ALSCL F at age has no plus-group
-row and no value for the last time step, so a comparison with an ALSCL fit
-leaves out the ACL plus group and the last time step.}
+steps present in both fits are summarized. ALSCL F at age covers every age
+and time step; in fits made by earlier versions it has no plus-group row
+and no value for the last time step, and a comparison with such a fit
+leaves out the ACL plus group and the last time step. The two fits must
+have the same time step.}
 }
 \value{
 A ggplot object.
@@ -65,4 +67,23 @@ One summary value of the fishing mortality rate (F) per model time step for
 each fit, on the same axes. Quarterly fits stay quarterly; nothing is
 annualized. The y-axis label gives the time basis of the rate and the
 caption states the groups that each summary covers.
+}
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
+# Largest fishing mortality rate over ages (ACL) or lengths (ALSCL) in
+# each year
+plot_compare_F_ts(fit_acl, fit_alscl)
+
+# Mean fishing mortality rate at age over the ages that both fits share
+plot_compare_F_ts(fit_acl, fit_alscl, method = "mean", basis = "age")
+}
 }

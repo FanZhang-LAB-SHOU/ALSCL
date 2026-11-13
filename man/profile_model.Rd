@@ -49,11 +49,10 @@ conditional on the model and fixed-parameter settings. No confidence intervals o
 cutoffs are inferred, and failed numerical screens remain visible.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 grid <- exp(fit$opt$par[["mean_log_F"]]) * c(0.9, 1, 1.1)
-p <- profile_model(fit, "mean_log_F", values = grid,
-                   scale = "natural", ncores = 2)
-p$grid
+p <- profile_model(fit, "mean_log_F", values = grid, scale = "natural")
+p$grid[, c("value", "objective", "delta_nll", "numerical_ok")]
 }
 }

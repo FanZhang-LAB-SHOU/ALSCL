@@ -13,7 +13,8 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
 #' @param type Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N".
@@ -65,6 +66,16 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #'   When intervals are requested, its ribbon is replaced by an error bar.
 #'   The point uses the global point_size setting and the estimate's line colour.
 #' @return A ggplot object or a list with plot and data.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#'
+#' # Total abundance with 95% confidence intervals
+#' plot_abundance(fit, se = TRUE)
+#'
+#' # Abundance at age, one panel per age
+#' plot_abundance(fit, type = "NA")
+#' }
 #' @export
 plot_abundance <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
                            se = FALSE, se_color = NULL, se_alpha = NULL,

@@ -103,12 +103,12 @@
 #'   Results omit session-specific obj pointers in both serial and parallel modes;
 #'   use refit_model() when a live TMB objective is needed. No ranking is applied.
 #' @examples
-#' \dontrun{
-#' z <- fit_scenarios(YTF_example, list(reference = list(),
-#'   low_M = list(M = 0.15), common_F = list(F_structure = "year")),
-#'   model = "alscl", ncores = 2, F_summary = "mean", silent = TRUE)
-#' z$status
-#' z$estimates
+#' \donttest{
+#' z <- fit_scenarios(YTF_example,
+#'   list(reference = list(), low_M = list(M = 0.15)),
+#'   model = "acl", F_summary = "mean", silent = TRUE)
+#' z$status[, c("scenario", "elapsed", "numerical_ok")]
+#' head(z$estimates)
 #' }
 #' @export
 fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,

@@ -16,6 +16,13 @@
 #'   would otherwise reapply defaults for the removed entries.
 #'
 #' @return A list representing the generated map with custom or default values.
+#' @examples
+#' # ACL parameters that are fixed by default
+#' names(generate_map())
+#'
+#' # Also fix the von Bertalanffy growth coefficient at its starting value
+#' map <- generate_map(list(log_vbk = factor(NA)))
+#' names(map)
 #' @export
 generate_map <- function(map = NULL) {
   allowed <- c(names(create_parameters(model_type = "acl")$parameters),

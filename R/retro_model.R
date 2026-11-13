@@ -261,14 +261,13 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   `workers` the number of workers used.
 #' @export
 #' @examples
-#' \dontrun{
-#' retro <- retro_model(nyear = 5, data.CatL, data.wgt, data.mat,
-#'                      rec.age = 1, nage = 7, M = 0.8,
-#'                      sel_L50 = 28, sel_L95 = 36, model_type = "acl")
+#' \donttest{
+#' # Two retrospective peels of the ACL model
+#' retro <- retro_model(nyear = 2, data.CatL = YTF_example, model_type = "acl",
+#'                      silent = TRUE)
+#' retro$rho_text
+#' retro$fit_diagnostics[, c("Peel", "RetrospectiveYear", "numerical_ok")]
 #' plot_retro(retro)
-#' retro <- retro_alscl(YTF_example, nyear = 3, F_structure = "year")
-#' retro$fit_diagnostics
-#' retro$rho_by_peel
 #' }
 retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
@@ -495,6 +494,12 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @return A list. See [retro_model()].
 #' @inheritParams retro_model
 #' @seealso [retro_model()], [retro_alscl()], [plot_retro()]
+#' @examples
+#' \donttest{
+#' retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
+#' retro$rho_text
+#' retro$rho_by_peel
+#' }
 #' @export
 retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
                       parameters = NULL, parameters.L = NULL, parameters.U = NULL,
@@ -524,6 +529,17 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' @param ... Additional arguments passed to [retro_model()].
 #' @return A list. See [retro_model()].
 #' @seealso [retro_model()], [retro_acl()], [plot_retro()]
+#' @examples
+#' \donttest{
+#' # The last ten years of the example data and one fishing mortality rate
+#' # shared by all lengths in each year keep the three ALSCL fits short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' retro <- retro_alscl(x, nyear = 2, F_structure = "year", silent = TRUE)
+#' retro$rho_text
+#' retro$fit_diagnostics[, c("Peel", "RetrospectiveYear", "numerical_ok")]
+#' }
 #' @export
 retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
@@ -579,11 +595,12 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @export
 #' @examples
-#' \dontrun{
-#' retro <- retro_acl(nyear = 5, data.CatL, data.wgt, data.mat,
-#'                    rec.age = 1, nage = 7, M = 0.8,
-#'                    sel_L50 = 28, sel_L95 = 36)
+#' \donttest{
+#' retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
 #' plot_retro(retro)
+#'
+#' # Change the display without fitting again
+#' plot_retro(retro, rho_digits = 2, facet_ncol = 2)
 #' }
 plot_retro <- function(retro_result,
                        rho_digits = 4,

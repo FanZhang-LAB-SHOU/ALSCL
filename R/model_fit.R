@@ -201,10 +201,15 @@
              exp(p$log_Linf) < .7 * max_len || exp(p$log_Linf) > 2 * max_len) {
     # The ACL defaults (start 60, bounds 10 to 100 length units) suit the
     # yellowtail flounder example. When they do not suit the length bins of
-    # the data, use the data-based rule of ALSCL for the values the user did
-    # not supply.
-    if (is.null(parameters$log_Linf)) p$log_Linf <- log(1.1 * max_len)
-    if (is.null(parameters.L$log_Linf)) config$parameters.L$log_Linf <- log(.7 * max_len)
+    # the data, set the values the user did not supply from the data. Length
+    # bins can extend well beyond the largest fish, so the start comes from
+    # the length below which 99 percent of the summed survey index lies, and
+    # the lower bound is never raised above the default.
+    by_length <- rowSums(prepared$observations, na.rm = TRUE)
+    large <- prepared$bins$mid[which(cumsum(by_length) >= .99 * sum(by_length))[1L]]
+    if (is.null(parameters$log_Linf)) p$log_Linf <- log(1.1 * large)
+    if (is.null(parameters.L$log_Linf))
+      config$parameters.L$log_Linf <- min(config$parameters.L$log_Linf, log(.5 * large))
     if (is.null(parameters.U$log_Linf)) config$parameters.U$log_Linf <- log(2 * max_len)
   }
   if (is.null(parameters$mean_log_R)) {

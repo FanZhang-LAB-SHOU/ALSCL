@@ -119,3 +119,20 @@ checked against the complete recorded vector.
 Standard errors are computed for every replicate because
 summarize_simulations() uses them for interval coverage.
 }
+\examples{
+\donttest{
+# Simulate one replicate of a ten-year survey and fit ACL to it, with the
+# growth parameters fixed as in the YTF_example settings.
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
+cfg <- YTF_example$fit_config$acl
+fits <- sim_model(iter_range = 1, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map, model = "acl")
+summary(fits$result_rep_1)$diagnostics
+
+# The fit is also saved next to the simulated replicate
+list.files(folder)
+unlink(folder, recursive = TRUE)
+}
+}

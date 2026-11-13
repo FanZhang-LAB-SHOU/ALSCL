@@ -39,17 +39,9 @@
 #' @return A ggplot object representing the scatter plot of SSB versus recruitment.
 #'
 #' @examples
-#' \dontrun{
-#' # The model_result is typically obtained from run_acl().
-#' # Here, we create a dummy example.
-#' # Use 'run_acl' to get 'model_result'
-#' model_result <- run_acl(...)
-#'
-#' # Call the function
-#' p <- plot_SSB_Rec(model_result)
-#'
-#' # Print the plot
-#' print(p)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' plot_SSB_Rec(fit)
 #' }
 #' @export
 plot_SSB_Rec <- function(model_result, age_at_recruitment = NULL,

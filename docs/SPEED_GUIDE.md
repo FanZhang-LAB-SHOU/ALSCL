@@ -138,9 +138,9 @@ In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfis
 
 ![速度设置前后的拟合耗时 / Fit time before and after the speed settings](figures/speed/timing.png)
 
-CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。
+CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。基准测试中的拟合还把对数 F 的标准差固定在 0.2；`YTF_example` 的 `fit_config` 现在把它固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以示例数据当前的拟合耗时与表中不同。
 
-The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision.
+The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision. The benchmark fits also fixed the standard deviation of log F at 0.2; the `fit_config` of `YTF_example` now fixes it at 0.302, the marginal SD of the generating AR(1) process, so current fits of the example take other times.
 
 ![速度设置前后的估计值与标准误 / Estimates and standard errors before and after the speed settings](figures/speed/agreement.png)
 

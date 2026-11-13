@@ -42,7 +42,7 @@ contains the estimated parameters only, a warning gives the reason, and
 the reason is stored in the "inspection_error" attribute.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 extract_parameters(fit)
 extract_parameters(fit, scale = "internal")

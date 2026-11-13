@@ -66,5 +66,7 @@ jobs:
           testthat::test_local(filter = "parallel|core-225", stop_on_failure = TRUE)
       - uses: r-lib/actions/check-r-package@v2
         with:
-          args: 'c("--no-manual")'
+          # The examples that fit models are in \donttest blocks; run them on
+          # one operating system so that documented calls are tested.
+          args: ${{ runner.os == 'Linux' && 'c("--no-manual", "--run-donttest")' || 'c("--no-manual")' }}
           error-on: '"warning"'

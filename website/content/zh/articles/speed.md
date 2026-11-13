@@ -95,7 +95,7 @@ TMBad 适合探索性拟合、大量拟合（模拟研究、敏感性分析）�
 
 ![速度设置前后的拟合耗时](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
 
-CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。
+CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。基准测试中的拟合还把对数 F 的标准差固定在 0.2；`YTF_example` 的 `fit_config` 现在把它固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以示例数据当前的拟合耗时与表中不同。
 
 ![速度设置前后的估计值与标准误](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 

@@ -141,19 +141,14 @@ Dimensions and metadata must agree;
 predictions must be finite, including after an exponential transformation.
 }
 \examples{
-\dontrun{
-# Use 'run_acl' to obtain 'model_result'
-model_result <- run_acl(...)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 
-# Plot Elog_index across lengths
-plot_CatL(model_result, facet_by = "length")
+# Observed and fitted log survey index over time, one panel per length bin
+plot_CatL(fit, facet_by = "length")
 
-# Plot Elog_index over years
-plot_CatL(model_result, facet_by = "year")
-
-# With exp_transform set to TRUE
-model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
-plot_CatL(model_result, facet_by = "year", exp_transform = TRUE)
+# Observed and fitted survey index across lengths, one panel per year, on
+# the original scale of the index
+plot_CatL(fit, facet_by = "year", exp_transform = TRUE)
 }
-
 }

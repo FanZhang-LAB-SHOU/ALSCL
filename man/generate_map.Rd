@@ -29,3 +29,11 @@ result. When releasing default fixes through run_acl(), pass the named NULL
 list directly as map rather than wrapping it in generate_map(): the fitter
 would otherwise reapply defaults for the removed entries.
 }
+\examples{
+# ACL parameters that are fixed by default
+names(generate_map())
+
+# Also fix the von Bertalanffy growth coefficient at its starting value
+map <- generate_map(list(log_vbk = factor(NA)))
+names(map)
+}

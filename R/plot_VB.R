@@ -52,8 +52,10 @@
 #' @return A ggplot object representing the plot.
 #' @export
 #' @examples
-#' \dontrun{
-#' plot_VB(model_result, age_range = c(1, 25))
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' plot_VB(fit)
+#' plot_VB(fit, age_range = c(1, 25))
 #' }
 plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"),text_color="black",text_size=5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
   # NULL 继承全局色板 / NULL inherits the global palette.

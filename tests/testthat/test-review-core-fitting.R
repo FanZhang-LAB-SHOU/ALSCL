@@ -38,15 +38,21 @@ test_that("default Linf start and bounds follow the data when the ACL defaults d
   # Lengths on the scale of the yellowtail flounder example keep the published defaults.
   expect_equal(linf(setup(seq(15, 55, 5))), c(start = 60, lower = 10, upper = 100))
   # Tuna lengths in cm and lengths in mm use the data-based rule.
-  expect_equal(linf(setup(seq(40, 120, 10))), c(start = 132, lower = 84, upper = 240))
-  expect_equal(linf(setup(seq(150, 550, 50))), c(start = 605, lower = 385, upper = 1100))
-  expect_equal(linf(setup(seq(1, 5, .5))), c(start = 5.5, lower = 3.5, upper = 10))
+  expect_equal(linf(setup(seq(40, 120, 10))), c(start = 132, lower = 10, upper = 240))
+  expect_equal(linf(setup(seq(150, 550, 50))), c(start = 605, lower = 10, upper = 1100))
+  expect_equal(linf(setup(seq(1, 5, .5))), c(start = 5.5, lower = 2.5, upper = 10))
+  # Bins that extend beyond the largest fish: the start follows the data and
+  # the lower bound stays at the default, so a smaller Linf is not excluded.
+  sparse <- frames(seq(20, 100, 10))
+  sparse$data.CatL[6:9, -1] <- 0
+  beyond <- ALSCL:::.acl_model_setup("ACL", do.call(ALSCL:::.acl_prepare_data, sparse))
+  expect_equal(linf(beyond), c(start = 66, lower = 10, upper = 200))
   # Supplied values are kept.
   kept <- linf(setup(seq(40, 120, 10), parameters = list(log_Linf = log(150)), parameters.U = list(log_Linf = log(300))))
   expect_equal(kept, c(start = 150, lower = 10, upper = 300))
   # A supplied start with unsuitable default bounds gets data-based bounds.
   expect_equal(linf(setup(seq(40, 120, 10), parameters = list(log_Linf = log(150)))),
-               c(start = 150, lower = 84, upper = 240))
+               c(start = 150, lower = 10, upper = 240))
   expect_null(setup(seq(40, 120, 10))$clamped_starts)
 })
 

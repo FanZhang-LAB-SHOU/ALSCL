@@ -58,6 +58,16 @@
 #'   by default (or rejects them with zero_action = "error"); an all-zero survey
 #'   cannot be fitted by the lognormal observation model.
 #'
+#' @examples
+#' pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1:2, output_dir = folder)
+#'
+#' # One file per replicate; the replicate with the largest ID is returned
+#' list.files(folder)
+#' sm$years
+#' round(sm$SSB, 1)
+#' unlink(folder, recursive = TRUE)
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
                      output_dir = ".", iter_range = 4:100, return_iter = NULL) {

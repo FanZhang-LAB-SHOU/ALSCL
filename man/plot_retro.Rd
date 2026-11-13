@@ -107,10 +107,11 @@ each panel states how many requested peels are valid when Mohn's rho is
 withheld.
 }
 \examples{
-\dontrun{
-retro <- retro_acl(nyear = 5, data.CatL, data.wgt, data.mat,
-                   rec.age = 1, nage = 7, M = 0.8,
-                   sel_L50 = 28, sel_L95 = 36)
+\donttest{
+retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
 plot_retro(retro)
+
+# Change the display without fitting again
+plot_retro(retro, rho_digits = 2, facet_ncol = 2)
 }
 }

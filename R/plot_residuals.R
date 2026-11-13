@@ -50,21 +50,14 @@
 #' @return A ggplot object representing the facet plot of residuals.
 #'
 #' @examples
-#' \dontrun{
-#' # Use 'run_acl' to get 'model_result'
-#' model_result <- run_acl(...)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #'
-#' # One panel per length bin
-#' p_length <- plot_residuals(model_result, facet_by = "length")
+#' # Residuals over time, one panel per length bin
+#' plot_residuals(fit, facet_by = "length")
 #'
-#' # Print the plot for "length"
-#' print(p_length)
-#'
-#' # One panel per time step
-#' p_year <- plot_residuals(model_result, facet_by = "year")
-#'
-#' # Print the plot for "year"
-#' print(p_year)
+#' # Residuals across lengths, one panel per year
+#' plot_residuals(fit, facet_by = "year")
 #' }
 #' @export
 plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol = NULL, facet_by = c("length", "year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {

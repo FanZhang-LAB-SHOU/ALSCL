@@ -61,16 +61,21 @@ A ggplot object.
 Compare Goodness-of-Fit Metrics
 }
 \examples{
-\dontrun{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
 # All panels (default)
-plot_compare_metrics(result_acl, result_alscl, data.CatL)
+plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL)
 
 # Only error and information criteria
-plot_compare_metrics(result_acl, result_alscl, data.CatL,
+plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL,
   metrics = c("error", "IC"))
-
-# Just R2 and MAPE
-plot_compare_metrics(result_acl, result_alscl, data.CatL,
-  metrics = c("R2", "MAPE"))
 }
 }

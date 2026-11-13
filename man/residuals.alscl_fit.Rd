@@ -39,8 +39,8 @@ is therefore not evidence of a good fit, and a value below one is not
 evidence of overestimated observation error.
 }
 \examples{
-\dontrun{
-fit <- run_acl(YTF_example)
-residuals(fit, type = "standardized")
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+head(residuals(fit, type = "standardized"))
 }
 }

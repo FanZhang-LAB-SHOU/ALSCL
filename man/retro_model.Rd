@@ -259,13 +259,12 @@ period. With peel_step = 1 on quarterly data this is a mean over quarterly
 peels. Use peel_step = 4 for a rho based on annual peels.
 }
 \examples{
-\dontrun{
-retro <- retro_model(nyear = 5, data.CatL, data.wgt, data.mat,
-                     rec.age = 1, nage = 7, M = 0.8,
-                     sel_L50 = 28, sel_L95 = 36, model_type = "acl")
+\donttest{
+# Two retrospective peels of the ACL model
+retro <- retro_model(nyear = 2, data.CatL = YTF_example, model_type = "acl",
+                     silent = TRUE)
+retro$rho_text
+retro$fit_diagnostics[, c("Peel", "RetrospectiveYear", "numerical_ok")]
 plot_retro(retro)
-retro <- retro_alscl(YTF_example, nyear = 3, F_structure = "year")
-retro$fit_diagnostics
-retro$rho_by_peel
 }
 }

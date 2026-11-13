@@ -500,7 +500,8 @@ initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
     std_logR = NULL, std_logN0 = NULL, alpha = NULL, beta = NULL, std_SN = NULL,
     q_surv_L50 = NULL, q_surv_L95 = NULL, R_init = NULL, F_mean = NULL, F_ar = NULL,
     F_sd = NULL, R_ar = NULL, species = NULL, growth_step = NULL, burn_in = NULL,
-    observation_error = c("independent", "shared_time"))
+    observation_error = c("independent", "shared_time"), random_numbers = c("sequential",
+        "by_process"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -538,6 +539,7 @@ initialize_params (nyear = NULL, rec.age = NULL, first.year = NULL, nage = NULL,
 | `growth_step` | `NULL` | 每个时间步包含的年数；季度为 0.25。 | Time step in years; defaults to the species preset. |
 | `burn_in` | `NULL` | 模拟预热年数，必须对齐 growth_step 且小于总模拟年数。 | Burn-in duration in years; must be a whole number of model steps and less than the simulation duration. |
 | `observation_error` | `c("independent", "shared_time")` | independent：各单元独立；shared_time：同一期共享误差。 | Independent lognormal errors per length and time cell, or shared_time for an explicitly misspecified, perfectly correlated scenario. |
+| `random_numbers` | `c("sequential", "by_process")` | `sim_data()` 抽取一次重复的随机数的方式。"sequential"（默认）：所有过程从同一个随机数流中抽取，与早期版本相同；改变某个过程的设置（例如补充量的相关系数）也会改变 F、初始尾数和调查误差的抽样。"by_process"：补充量、F、初始尾数和调查误差各有自己的随机数流，抽取次数固定，因此只在一个过程上不同的情景在其他过程上使用相同的随机数。两种设置对同一重复编号给出不同的数据。 | How `sim_data()` draws the random numbers of a replicate. "sequential" (default) draws all processes from one stream, as in earlier versions; changing a setting of one process (for example the recruitment correlation) then also changes the draws of F, the initial numbers and the survey errors. "by_process" gives recruitment, F, initial numbers and survey errors separate streams with a fixed number of draws each, so that scenarios which differ in one process share the random numbers of the others. The two settings give different data for the same replicate ID. |
 
 **返回 / Returns:** 包含物种、年龄/时间/体长网格、生长、死亡率、补充、观测和过程设置的命名参数列表。`years` 结束于最后一个观测期。要用可选的模型结构模拟，在返回的列表上设置 `structure`（例如 `pa$structure <- list(initial_plus_group = "equilibrium")`），取值与 `run_acl()`、`run_alscl()` 的 `structure` 参数相同；`sim_cal()` 和 `sim_data()` 读取它。
 
@@ -650,9 +652,9 @@ plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
 
-With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
 
@@ -666,7 +668,7 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=cdb2d0472558)
+![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=64c2a350a0c9)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_abundance)。
 
@@ -727,9 +729,9 @@ plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "so
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
 
-With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
 
@@ -743,7 +745,7 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=697d33075a88)
+![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=7a81d55f8558)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_biomass)。
 
@@ -804,9 +806,9 @@ plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "soli
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
 
-With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
 
@@ -820,7 +822,7 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=44ba7e881cc8)
+![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=b14892161d94)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_catch)。
 
@@ -903,7 +905,7 @@ plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-![示例图 / Example figure: `plot_CatL(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=207341ada444)
+![示例图 / Example figure: `plot_CatL(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=0f142752eea3)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_CatL)。
 
@@ -983,7 +985,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 ```
 
-![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=06278fecb8b7)
+![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_CatL.png?raw=true&v=b68e6751418e)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_CatL)。
 
@@ -1023,7 +1025,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 ```
 
-![示例图 / Example figure: `plot_compare_F(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)
+![示例图 / Example figure: `plot_compare_F(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=35ad35946c11)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F)。
 
@@ -1032,9 +1034,9 @@ plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 
 各时间步 F 比较 / Fishing mortality by time step
 
-默认（`basis = "native"`）ACL 按年龄组、ALSCL 按体长组汇总 F。年龄别 F 汇总了各体长的存活，因此年龄组最大值与体长组最大值未必相同，即使针对同一种群；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都使用年龄别 F，只汇总两者共有的拟合年龄和时间步。纵轴标签注明捕捞死亡率的时间基准，图注说明每个汇总量覆盖的组别。比较时应同时报告组别和汇总方法。
+默认（`basis = "native"`）ACL 按年龄组、ALSCL 按体长组汇总 F。年龄别 F 汇总了各体长的存活，因此年龄组最大值与体长组最大值未必相同，即使针对同一种群；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都使用年龄别 F，只汇总两者共有的拟合年龄和时间步；F 是每个时间步的瞬时率，两个拟合的时间步长不同时函数会停止。纵轴标签注明捕捞死亡率的时间基准，图注说明每个汇总量覆盖的组别。比较时应同时报告组别和汇总方法。
 
-By default (`basis = "native"`) ACL summarizes F across age groups and ALSCL across length bins. An age-group maximum need not equal a length-bin maximum, even for the same population, because age-specific F combines survival across lengths. Read the time pattern of such a pair, not the difference in level. `basis = "age"` uses F at age for both fits and summarizes only the fitted ages and time steps present in both. The y-axis label gives the time basis of the fishing mortality rate and the caption states the groups that each summary covers. Report the grouping and summary method with the comparison.
+By default (`basis = "native"`) ACL summarizes F across age groups and ALSCL across length bins. An age-group maximum need not equal a length-bin maximum, even for the same population, because age-specific F combines survival across lengths. Read the time pattern of such a pair, not the difference in level. `basis = "age"` uses F at age for both fits and summarizes only the fitted ages and time steps present in both; the function stops when the two fits have different time steps, because F is a rate per time step. The y-axis label gives the time basis of the fishing mortality rate and the caption states the groups that each summary covers. Report the grouping and summary method with the comparison.
 
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical",
@@ -1054,7 +1056,7 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
 | `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
-| `basis` | `c("native", "age")` | 汇总 F 时所用的组别。"native"（默认）使用各模型估计的 F 矩阵：ACL 为年龄别 F，ALSCL 为体长别 F。"age" 对两个拟合都使用年龄别 F（ACL 的 `report$F` 和 ALSCL 推算的 `report$FA`），只汇总两者共有的拟合年龄和时间步。ALSCL 的年龄别 F 没有 plus group 一行，也没有最后一个时间步的值，所以与 ALSCL 拟合比较时不含 ACL 的 plus group 和最后一个时间步。 | Character. The groups over which F is summarized. "native" (default) uses the F matrix that each model estimates: F at age for ACL and F at length for ALSCL. "age" uses F at age for both fits: `report$F` for ACL and the derived `report$FA` for ALSCL. Only the fitted ages and the time steps present in both fits are summarized. ALSCL F at age has no plus-group row and no value for the last time step, so a comparison with an ALSCL fit leaves out the ACL plus group and the last time step. |
+| `basis` | `c("native", "age")` | 汇总 F 时所用的组别。"native"（默认）使用各模型估计的 F 矩阵：ACL 为年龄别 F，ALSCL 为体长别 F。"age" 对两个拟合都使用年龄别 F（ACL 的 `report$F` 和 ALSCL 推算的 `report$FA`），只汇总两者共有的拟合年龄和时间步。ALSCL 的年龄别 F 覆盖每个年龄和每个时间步；早期版本的 ALSCL 拟合没有 plus group 一行，也没有最后一个时间步的值，与这样的拟合比较时不含 ACL 的 plus group 和最后一个时间步。两个拟合的时间步长必须相同。 | Character. The groups over which F is summarized. "native" (default) uses the F matrix that each model estimates: F at age for ACL and F at length for ALSCL. "age" uses F at age for both fits: `report$F` for ACL and the derived `report$FA` for ALSCL. Only the fitted ages and the time steps present in both fits are summarized. ALSCL F at age covers every age and time step; an ALSCL fit made by an earlier version has no plus-group row and no value for the last time step, so a comparison with such a fit leaves out the ACL plus group and the last time step. The two fits must have the same time step. |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -1072,7 +1074,7 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=07fdc7e90395)
+![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=f66a30e88ca0)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F_ts)。
 
@@ -1192,7 +1194,7 @@ plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = ex
     0.3)))
 ```
 
-![示例图 / Example figure: `plot_compare_metrics(a, b, dat, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=9ff1d578e5f7)
+![示例图 / Example figure: `plot_compare_metrics(a, b, dat, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=2b6819163e34)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_metrics)。
 
@@ -1247,7 +1249,7 @@ A wholly unobserved period breaks the mean-residual line. Isolated observed peri
 plot_compare_residuals(a, b, dat)
 ```
 
-![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)
+![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=fe4fef4e5af6)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_residuals)。
 
@@ -1351,7 +1353,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 ```
 
-![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
+![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=5ec8cc9f7b69)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_ts)。
 
@@ -1421,7 +1423,7 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
   scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
 ```
 
-![示例图 / Example figure: `plot_deviance(b, type = "R", log = TRUE, se = TRUE, facet_ncol = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=e16626d72746)
+![示例图 / Example figure: `plot_deviance(b, type = "R", log = TRUE, se = TRUE, facet_ncol = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true&v=2a5c43e443a3)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_deviance)。
 
@@ -1477,15 +1479,15 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
 | `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
-| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。估计值不为正时保留 Wald 区间；ALSCL 的年龄别 F 由总死亡率减去自然死亡率得到，可能出现这种情况。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. An estimate that is not positive keeps the Wald bounds. This can occur for ALSCL F at age, which is derived as total mortality minus natural mortality. |
+| `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。估计值不为正时保留 Wald 区间（估计值恰为零时下限取零）；ALSCL 的年龄别 F 由总死亡率减去自然死亡率得到，可能出现这种情况。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. An estimate that is not positive keeps the Wald bounds, with the lower bound at zero when the estimate is exactly zero. This can occur for ALSCL F at age, which is derived as total mortality minus natural mortality. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-F 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 "Age 15+" 或刻度标签 "15+"；ALSCL 的年龄别 F 没有 plus group 一行。`return_data = TRUE` 且 `type = "age"` 时，数据在 `AgeGroup` 中保留组序号，并在 `Age` 中给出拟合年龄。各组共享 F（`F_structure = "year"`）时，每组的序列相同，`type = "year"` 只画一个标为 "Shared F" 的分面，返回的数据仍包含每一组。
+F 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 "Age 15+" 或刻度标签 "15+"；ALSCL 的年龄别 F（`report$FA`）对每个年龄（包括 plus group）和每个时间步都有值，早期版本的拟合不含 plus group 和最后一个时间步，两种形式都能绘制。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。`return_data = TRUE` 且 `type = "age"` 时，数据在 `AgeGroup` 中保留组序号，并在 `Age` 中给出拟合年龄。各组共享 F（`F_structure = "year"`）时，每组的序列相同，`type = "year"` 只画一个标为 "Shared F" 的分面，返回的数据仍包含每一组。
 
-F is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title "Age 15+" or the tick label "15+". ALSCL F at age has no plus-group row. With `return_data = TRUE` and `type = "age"`, the data keep the group position in `AgeGroup` and add the fitted age in `Age`. When F is shared across groups (`F_structure = "year"`), every group has the same series, and `type = "year"` draws one panel labelled "Shared F"; the returned data still hold every group.
+F is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title "Age 15+" or the tick label "15+". ALSCL F at age (`report$FA`) has a value for every age, including the plus group, and for every time step; fits made by earlier versions hold it without the plus group and without the last time step, and both forms are drawn. F in the last time step is predicted by the F process and is not informed by observations. With `return_data = TRUE` and `type = "age"`, the data keep the group position in `AgeGroup` and add the fitted age in `Age`. When F is shared across groups (`F_structure = "year"`), every group has the same series, and `type = "year"` draws one panel labelled "Shared F"; the returned data still hold every group.
 
 **示例 / Example:**
 
@@ -1495,7 +1497,7 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=336db1035cf1)
+![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=a1e3db3ee716)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_fishing_mortality)。
 
@@ -1510,9 +1512,9 @@ ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长�
 
 `pla` is a static matrix of length probabilities conditional on age. ACL uses it at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in `NLA` to obtain the realized distribution at a given age and time in ALSCL.
 
-各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 "15+"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。
+各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 "15+"。保存时没有年龄元数据的结果按年龄组的位置标注，横轴标签为 "Age group"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。
 
-Columns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "15+". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.
+Columns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "15+". A result saved without age metadata is labelled with the positions of the age classes, and the axis label reads "Age group". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.
 
 ```r
 plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL,
@@ -1550,7 +1552,7 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-![示例图 / Example figure: `plot_pla(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=736cfc4bb05d)
+![示例图 / Example figure: `plot_pla(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=90a9ca2b22fd)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_pla)。
 
@@ -1603,9 +1605,9 @@ plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type =
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
 
-With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 **示例 / Example:**
 
@@ -1614,7 +1616,7 @@ With `se = TRUE` the default interval is lognormal. The log of a positive estima
 plot_recruitment(b, se = TRUE)
 ```
 
-![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=764bb52a57ef)
+![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=47a314e4a713)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_recruitment)。
 
@@ -1687,7 +1689,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
-![示例图 / Example figure: `plot_residuals(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=f424d49deb2e)
+![示例图 / Example figure: `plot_residuals(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=00c4fd04634b)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_residuals)。
 
@@ -1735,11 +1737,11 @@ plot_retro (retro_result, rho_digits = 4, rho_position = "top_right", rho_size =
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
-每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 "Terminal year"，更短的时间步为 "Terminal period"，季度时期标为 "2019 Q4" 这样的形式。默认颜色随回溯轮次固定，所以某个末期的拟合不论其他拟合是否给出估计值都保持同一颜色。未通过数值检查的拟合用虚线绘制，并增加 "Numerical screen" 图例。没有估计值的拟合（例如拟合出错）仍留在图例中，标为 "(no estimates)"。副标题列出这两类拟合；Mohn's rho 不予给出时，每个分面说明有多少轮回溯有效。
+每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 "Terminal year"，更短的时间步为 "Terminal period"，季度时期标为 "2019 Q4" 这样的形式，`peel_step` 大于 1 时也是如此（例如按年回溯的季度模型标为 "2004 Q4"）。默认颜色随回溯轮次固定，所以某个末期的拟合不论其他拟合是否给出估计值都保持同一颜色。未通过数值检查的拟合用虚线绘制，并增加 "Numerical screen" 图例。没有估计值的拟合（例如拟合出错）仍留在图例中，标为 "(no estimates)"。副标题列出这两类拟合；Mohn's rho 不予给出时，每个分面说明有多少轮回溯有效。
 
 A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 
-Each line is one fit and is identified by the terminal period of its data. The legend is titled "Terminal year" for annual steps and "Terminal period" for shorter steps, where quarterly periods are labelled as in "2019 Q4". Default colors follow the retrospective peel, so the fit with a given terminal period has the same color whether or not another fit returned estimates. A fit that failed the numerical screen is drawn with a dashed line and a "Numerical screen" legend is added. A requested fit without estimates, for example after a fit error, stays in the legend and is marked "(no estimates)". The subtitle names both kinds of fit, and each panel states how many requested peels are valid when Mohn's rho is withheld.
+Each line is one fit and is identified by the terminal period of its data. The legend is titled "Terminal year" for annual steps and "Terminal period" for shorter steps, where quarterly periods are labelled as in "2019 Q4", also when `peel_step` is above 1 (for example "2004 Q4" for annual peels of a quarterly model). Default colors follow the retrospective peel, so the fit with a given terminal period has the same color whether or not another fit returned estimates. A fit that failed the numerical screen is drawn with a dashed line and a "Numerical screen" legend is added. A requested fit without estimates, for example after a fit error, stays in the legend and is marked "(no estimates)". The subtitle names both kinds of fit, and each panel states how many requested peels are valid when Mohn's rho is withheld.
 
 **示例 / Example:**
 
@@ -1748,7 +1750,7 @@ Each line is one fit and is identified by the terminal period of its data. The l
 plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
-![示例图 / Example figure: `plot_retro(rb, facet_ncol = 2, rho_digits = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
+![示例图 / Example figure: `plot_retro(rb, facet_ncol = 2, rho_digits = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8a32812e2238)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_retro)。
 
@@ -1814,7 +1816,7 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 plot_ridges(b)
 ```
 
-![示例图 / Example figure: `plot_ridges(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=355293f5ee2d)
+![示例图 / Example figure: `plot_ridges(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=5b62bafa140e)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_ridges)。
 
@@ -1875,9 +1877,9 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
+`se = TRUE` 时默认绘制对数正态区间：把正估计值的对数视为正态，标准误为 SE / estimate（delta 方法），区间为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，因此不会低于零。估计值及其标准误（SE）取自 `model_result$est_std`。`interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。
 
-With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
+With `se = TRUE` the default interval is lognormal. The log of a positive estimate is treated as normal with standard error SE / estimate (delta method), so the bounds are `exp(log(estimate) +/- 1.96 * SE / estimate)` and cannot fall below zero. The estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = "wald"`, or `acl_theme_set(interval = "wald")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.
 
 年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。保存时没有年龄元数据的结果沿用位置标签 "Age bin 1"、"Age bin 2" 等。
 
@@ -1891,7 +1893,7 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d9b4f4e332d7)
+![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=099551937add)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB)。
 
@@ -1944,7 +1946,7 @@ Recruitment in a time step is the number of fish at the youngest fitted age, so 
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-![示例图 / Example figure: `plot_SSB_Rec(b, age_at_recruitment = 1)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=4343a7828e9a)
+![示例图 / Example figure: `plot_SSB_Rec(b, age_at_recruitment = 1)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=53681501f48b)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
 
@@ -2103,7 +2105,7 @@ ra$fit_diagnostics
 ra$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
+![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=ceece7596534)
 
 <a id="retro_alscl"></a>
 ## `retro_alscl()`
@@ -2160,7 +2162,7 @@ rb$fit_diagnostics
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
+![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8a32812e2238)
 
 <a id="retro_model"></a>
 ## `retro_model()`
@@ -2183,7 +2185,7 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
     title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
     F_structure = c("group_year", "year"), polish = TRUE, zero_action = c("missing",
         "error"), control = list(), nstarts = 1, model = NULL, peel_step = 1, structure = list(),
-    start_spread = 0.15, ...)
+    start_spread = 0.15, t0_lower = 0, ...)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2241,6 +2243,7 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `peel_step` | `1` | 正整数。每一轮多删除的模型时间步数，默认 1。季度数据设 peel_step = 4 即按年回溯：第 k 轮的数据止于末期之前 k 年。 | Positive integer. Number of model time steps that each successive peel removes. Default is 1. For quarterly data, peel_step = 4 gives annual peels: peel k then ends k years before the terminal period. |
 | `structure` | `list()` | 传给完整拟合和每一轮拟合的可选模型结构，取值见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Optional model structures passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
 | `start_spread` | `0.15` | 传给完整拟合和每一轮拟合的起点离散程度，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Spread of the second and later starts, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
+| `t0_lower` | `0` | 传给完整拟合和每一轮拟合的 ALSCL t0 下限，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Lower limit of the ALSCL t0, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
 | `...` | 可选 / optional | 旧参数名 facet_col、facet_row，仍可使用但会给出警告。 | The former argument names facet_col and facet_row, accepted with a warning. |
 
 **返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置，peel_step 记录每轮删除的时间步数。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
@@ -2271,7 +2274,7 @@ rb$rho_by_peel
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
+![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8a32812e2238)
 
 <a id="run_acl"></a>
 ## `run_acl()`
@@ -2312,7 +2315,7 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
-| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构。ACL 只有一项设置 `initial_plus_group`："single_cohort"（默认，第一期的 plus group 只含一个世代）或 "equilibrium"（等于在总死亡率 init_Z 下所有更老世代之和，因此补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变）。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022). ACL has one setting, `initial_plus_group`: "single_cohort" (default; the first-period plus group holds one cohort) or "equilibrium" (it holds the sum of all older cohorts at total mortality init_Z, so a population with constant recruitment, no fishing and init_Z equal to M stays constant over time). The setting used is stored in the `structure` element of the fit. |
+| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构。ACL 有两项设置。`initial_plus_group`："single_cohort"（默认，第一期的 plus group 只含一个世代）或 "equilibrium"（等于在总死亡率 init_Z 下所有更老世代之和，因此补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变）。`correlation_range`："positive"（默认，AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换）或 "symmetric"（在 -1 和 1 之间，等于 2 * logistic - 1；这时相关系数 rho 在优化器尺度上为 `qlogis((rho + 1) / 2)`）。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022). ACL has two settings. `initial_plus_group`: "single_cohort" (default; the first-period plus group holds one cohort) or "equilibrium" (it holds the sum of all older cohorts at total mortality init_Z, so a population with constant recruitment, no fishing and init_Z equal to M stays constant over time). `correlation_range`: "positive" (default; AR(1) correlations between 0 and 1, the logistic transform of the `logit_*` parameters) or "symmetric" (between -1 and 1, as 2 * logistic - 1; a correlation rho is then `qlogis((rho + 1) / 2)` on the optimizer scale). The settings used are stored in the `structure` element of the fit. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
 
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
@@ -2361,7 +2364,7 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
     len_border = NULL, len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1,
     ncores = 1, silent = FALSE, zero_action = c("missing", "error"), control = list(),
     nstarts = ncores, F_structure = c("group_year", "year"), polish = TRUE, structure = list(),
-    start_spread = 0.15)
+    start_spread = 0.15, t0_lower = 0)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2381,8 +2384,8 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `map` | `NULL` | TMB 映射；factor(NA) 固定，具名 NULL 项释放该项；整个 map=NULL 则使用模型默认固定规则。 | Named TMB factor mappings. factor(NA) fixes a parameter at its supplied value; a named NULL entry releases that parameter. A whole map = NULL or list() applies model defaults. Other unspecified defaults remain in force. |
 | `len_mid` | `NULL` | 每个体长组的中心值向量，长度与数据行数相同。 | Finite length-bin midpoints; overrides automatic parsing. |
 | `len_border` | `NULL` | 体长边界；拟合入口需要 nlen-1 个内部边界，模拟器使用 nlen+1 个完整边界。 | Interior boundaries, one fewer than the number of length bins. |
-| `len_lower` | `NULL` | 已弃用，将被移除。ALSCL 每组下界；首项必须为 `-Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional lower bin boundaries (ALSCL only). The first entry must be `-Inf` and the remaining entries must match len_border, so the argument cannot change a fit. |
-| `len_upper` | `NULL` | 已弃用，将被移除。ALSCL 每组上界；末项必须为 `Inf`，其余项须等于 len_border，因此该参数不能改变拟合。 | Deprecated; it will be removed. Optional upper bin boundaries (ALSCL only). The final entry must be `Inf` and the preceding entries must match len_border, so the argument cannot change a fit. |
+| `len_lower` | `NULL` | 可选的每组下界；首项必须为 `-Inf`，其余项须等于 len_border，因此该参数不能改变拟合。在 `prepare_alscl_data()`、`retro_model()` 和用 ACL 拟合的输入列表中已弃用；`run_alscl()` 仍接受它且不给出警告。 | Optional lower bin boundaries. The first entry must be `-Inf` and the remaining entries must match len_border, so the argument cannot change a fit. It is deprecated in `prepare_alscl_data()`, `retro_model()` and bundles fitted with ACL; `run_alscl()` still accepts it without a warning. |
+| `len_upper` | `NULL` | 可选的每组上界；末项必须为 `Inf`，其余项须等于 len_border，因此该参数不能改变拟合。在 `prepare_alscl_data()`、`retro_model()` 和用 ACL 拟合的输入列表中已弃用；`run_alscl()` 仍接受它且不给出警告。 | Optional upper bin boundaries. The final entry must be `Inf` and the preceding entries must match len_border, so the argument cannot change a fit. It is deprecated in `prepare_alscl_data()`, `retro_model()` and bundles fitted with ACL; `run_alscl()` still accepts it without a warning. |
 | `output` | `FALSE` | 是否导出拟合诊断与图；TRUE 使用 output 目录。 | Save diagnostic tables and plots below output/ when TRUE. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
 | `ncores` | `1` | 独立初始点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。 | Maximum socket workers across independent starts, capped at nstarts; not threads within one start. |
@@ -2392,12 +2395,13 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
-| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）在每项设置上都是 Zhang 和 Cadigan (2022) 已发表的结构。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`；"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，期望生长量不依赖组宽。每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组）使用 "bin"。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；已发表的结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022) for every setting. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`; "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin, so the expected advance does not depend on the bin width. Use "bin" when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the published structure it does not. The settings used are stored in the `structure` element of the fit. |
+| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）在每项设置上都是 Zhang 和 Cadigan (2022) 已发表的结构。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`；"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，期望生长量不依赖组宽。每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组）使用 "bin"。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；已发表的结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022) for every setting. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`; "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin, so the expected advance does not depend on the bin width. Use "bin" when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the published structure it does not. The settings used are stored in the `structure` element of the fit. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
+| `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是已发表的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. |
 
-**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
+**返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，t0_lower 记录 t0 的下限，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
 
-A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session. sd_info records how the standard errors were computed (method, cores, seconds). structure records the model structure used and start_spread the spread of the starts. start_summary gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to diagnostics$issues. clamped_starts lists the starting values that were moved into their bounds, zero_observations is the number of zero survey observations treated as missing, and restricted_random names the process-deviation arrays that the map ties or fixes.
+A list of class alscl_fit, retaining existing $ access. report stores population quantities and survey predictions; opt stores the selected optimizer parameters, objective and raw status; obj is the session-specific TMB object; est_std, vcov and pdHess describe approximate uncertainty and Hessian status. gradient, max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit and diagnostics support numerical checks. raw_opt, optimizer_history and refinement retain optimization records. year, age, length metadata, growth_step, F_structure and elapsed record coordinates, structure and timing. starts, start_diagnostics, nstarts and workers record starting values, PIDs, timestamps and work performed. recipe stores complete inputs and fitting settings. Selection uses the lowest finite objective; inspect numerical status separately. Evaluating obj requires the DLL to remain loaded in the fitting session. sd_info records how the standard errors were computed (method, cores, seconds). structure records the model structure used, t0_lower the lower limit of t0 and start_spread the spread of the starts. start_summary gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to diagnostics$issues. clamped_starts lists the starting values that were moved into their bounds, zero_observations is the number of zero survey observations treated as missing, and restricted_random names the process-deviation arrays that the map ties or fixes.
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
@@ -2546,9 +2550,9 @@ sim_data (bio_vars, params, sim_year = NULL, output_dir = ".", iter_range = 4:10
 | `iter_range` | `4:100` | 互不重复的非负整数编号，包括 0；模拟时也用作随机种子。 | Distinct nonnegative integer replicate IDs, including 0; also used as simulation seeds. |
 | `return_iter` | `NULL` | 在内存中返回的重复编号；NULL 默认选 iter_range 中的最大编号。 | Replicate ID to return in memory; NULL selects the largest ID in iter_range. |
 
-**返回 / Returns:** 返回 return_iter 指定的重复结果；NULL 默认选择 iter_range 中的最大编号。结果包含调查数量 SN_at_len、种群体长别数量 N_at_len、年龄别数量 N_at_age、SSB、Rec、捕捞量及时间、年龄、体长等元数据。所有重复另以包含 sim.data 的 `sim_rep<id>` 文件写入 output_dir；全部重复通过检查后才写文件，文件名用编号的整数形式（例如 1e5 为 `sim_rep100000`）。每个重复在 `provenance` 中记录种子、随机数发生器设置和包版本。每个重复自行设定种子和发生器，因此同一编号在任何会话设置下给出相同数据，调用结束后调用者的随机数流保持不变。`params$structure` 接受与 `run_acl()`、`run_alscl()` 的 `structure` 相同的列表，`sim_cal()` 也读取它。
+**返回 / Returns:** 返回 return_iter 指定的重复结果；NULL 默认选择 iter_range 中的最大编号。结果包含调查数量 SN_at_len、种群体长别数量 N_at_len、年龄别数量 N_at_age、SSB、Rec、捕捞量及时间、年龄、体长等元数据。所有重复另以包含 sim.data 的 `sim_rep<id>` 文件写入 output_dir；全部重复通过检查后才写文件，文件名用编号的整数形式（例如 1e5 为 `sim_rep100000`）。每个重复在 `provenance` 中记录种子、随机数发生器设置和包版本，并在 `provenance$random_numbers` 中记录随机数是顺序抽取（"sequential"）还是按过程抽取（"by_process"，见 `initialize_params()`）。每个重复自行设定种子和发生器，因此同一编号在任何会话设置下给出相同数据，调用结束后调用者的随机数流保持不变。`params$structure` 接受与 `run_acl()`、`run_alscl()` 的 `structure` 相同的列表，`sim_cal()` 也读取它。
 
-The replicate selected by return_iter; NULL selects the largest ID in iter_range. The result includes survey numbers SN_at_len, population numbers at length N_at_len and at age N_at_age, SSB, Rec, fishery catch, and time, age and length metadata. All replicates are also written to output_dir as `sim_rep<id>` files containing sim.data. Files are written only after every replicate is valid, and file names use the integer form of each ID (`sim_rep100000` for 1e5). Each replicate records its seed, random-number generator settings and package version in `provenance`. Each replicate sets its own seed and generator, so a replicate ID gives the same data under any session generator, and the caller's random-number stream is unchanged after the call. `params$structure` takes the same list as the `structure` argument of `run_acl()` and `run_alscl()`; `sim_cal()` reads it too.
+The replicate selected by return_iter; NULL selects the largest ID in iter_range. The result includes survey numbers SN_at_len, population numbers at length N_at_len and at age N_at_age, SSB, Rec, fishery catch, and time, age and length metadata. All replicates are also written to output_dir as `sim_rep<id>` files containing sim.data. Files are written only after every replicate is valid, and file names use the integer form of each ID (`sim_rep100000` for 1e5). Each replicate records its seed, random-number generator settings and package version in `provenance`, and `provenance$random_numbers` records whether the random numbers were drawn from one stream ("sequential") or by process ("by_process"; see `initialize_params()`). Each replicate sets its own seed and generator, so a replicate ID gives the same data under any session generator, and the caller's random-number stream is unchanged after the call. `params$structure` takes the same list as the `structure` argument of `run_acl()` and `run_alscl()`; `sim_cal()` reads it too.
 
 快速年度模拟器的 `mean_F` 等于生成 F 序列的算术平均值；`mean_F = 0` 生成零捕捞死亡率。
 
@@ -2707,14 +2711,14 @@ The keys below apply to starting values and bounds. Transformations map optimize
 | `log_std_log_N0` | `log_sigma_log_N0` | exp | 初始年龄结构中逐龄独立对数增量的标准差 / SD of independent log-number increments between initial age classes |
 | `mean_log_R` | `mean_log_R` | exp | 对数补充量过程的均值；exp 后为自然尺度的中位数 / Log recruitment process mean; exp gives its natural-scale median |
 | `log_std_log_R` | `log_sigma_log_R` | exp | 对数补充量偏差的边际标准差 / Marginal SD of log recruitment deviations |
-| `logit_log_R` | `logit_log_R` | plogis | 补充 AR(1) 相关，限定 (0,1) / Recruitment correlation restricted to (0,1) |
+| `logit_log_R` | `logit_log_R` | plogis；`correlation_range = "symmetric"` 时为 2 * plogis - 1 / plogis; 2 * plogis - 1 with `correlation_range = "symmetric"` | 补充 AR(1) 相关，默认在 0 和 1 之间，对称范围下在 -1 和 1 之间 / Recruitment correlation, between 0 and 1 by default and between -1 and 1 with the symmetric range |
 | `mean_log_F` | `mean_log_F` | exp | 对数 F 过程的均值；exp 后为自然尺度的中位数 / Log F process mean; exp gives its natural-scale median |
 | `log_std_log_F` | `log_sigma_log_F` | exp | 对数 F 偏差的边际标准差 / Marginal SD of log F deviations |
-| `logit_log_F_y` | `logit_log_F_y` | plogis | F 的时间相关 / Temporal F correlation |
-| `logit_log_F_a` | `logit_log_F_l` | plogis | F 的年龄/体长相关 / Age/length F correlation |
+| `logit_log_F_y` | `logit_log_F_y` | 同 `logit_log_R` / As `logit_log_R` | F 的时间相关 / Temporal F correlation |
+| `logit_log_F_a` | `logit_log_F_l` | 同 `logit_log_R` / As `logit_log_R` | F 的年龄/体长相关 / Age/length F correlation |
 | `log_vbk` | `log_vbk` | exp | VB k，单位为每年 / Annual VB k |
 | `log_Linf` | `log_Linf` | exp | 渐近体长 / Asymptotic length |
-| `t0` | `log_t0` | ACL 原值；ALSCL exp / Identity vs exp | VB t0；ALSCL 本版限定正值 / ALSCL restricts t0 to positive values |
+| `t0` | `log_t0` | ACL 原值；ALSCL 为 `t0_lower` + exp / Identity (ACL); `t0_lower` + exp (ALSCL) | VB t0；ALSCL 中它大于 `t0_lower`（默认 0） / In ALSCL t0 lies above `t0_lower`, which is 0 by default |
 | `log_cv_len` | `log_cv_len` | exp | 同龄个体体长的变异系数 / Coefficient of variation of length among fish of the same age |
 | — | `log_cv_grow` | exp | 生长增量的变异系数 / Coefficient of variation of growth increments |
 | `log_std_index` | `log_sigma_index` | exp | 对数调查观测 SD / Log survey observation SD |
@@ -2831,7 +2835,7 @@ extract_estimates (fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
 |---|---|---|---|
 | `fit` | `必填 / required` | ACL 或 ALSCL 拟合结果；保存的可移植结果也可使用。 | An ACL or ALSCL fit, including a portable saved result. |
-| `quantities` | `c("SSB", "Rec", "B", "N", "CN", "F")` | SSB、Rec、B、N、CN、CB、F 及模型实际报告的年龄、体长或联合数组。 | Reported population vectors and age, length or joint arrays; F resolves to ACL F or ALSCL FL. |
+| `quantities` | `c("SSB", "Rec", "B", "N", "CN", "F")` | SSB、Rec、B、N、CN、CB、F 及模型实际报告的年龄、体长或联合数组。年龄别尾数可用 N_at_age 请求，它是 NA 的别名。 | Reported population vectors and age, length or joint arrays; F resolves to ACL F or ALSCL FL. Numbers at age can be requested as N_at_age, an alias of NA. |
 | `conf_level` | `0.95` | 近似区间的名义置信水平，严格介于 0 与 1。 | Nominal confidence level of the approximate intervals, strictly between zero and one. |
 
 **返回 / Returns:** 含量名、实际报告名、年份、年龄、体长、估计、SE、区间、numerical_ok 及 extrapolated 的长表。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同。依赖末期捕捞死亡率的行 extrapolated 为 TRUE。
@@ -2842,9 +2846,13 @@ A long table containing quantity, report name, time, age, length, estimate, SE, 
 
 Estimates use report and complete exact-name SE rows from est_std. Missing uncertainty remains NA. F retains native groups and per-step units without averaging or annualization. FA uses source ages and periods. Normal intervals are not truncated at zero.
 
-没有观测为末期的 F 提供信息。某一期的调查指数反映该期开始时的丰度，而期初丰度只取决于此前各期的 F。因此报告的末期 F（F 和 FL）是由上一期按一阶自回归（AR(1)）过程得到的预测，其标准误反映 F 过程而不是数据。末期的渔获尾数（CN、CNA、CNL、CNLA）和渔获重量（CB、CBA、CBL、CBLA）是有数据支持的丰度与这一预测 F 的乘积。这些行的 extrapolated 为 TRUE。FA 不含末期，所以没有被标记的行。
+没有观测为末期的 F 提供信息。某一期的调查指数反映该期开始时的丰度，而期初丰度只取决于此前各期的 F。因此报告的末期 F（F 和 FL）是由上一期按一阶自回归（AR(1)）过程得到的预测，其标准误反映 F 过程而不是数据。末期的渔获尾数（CN、CNA、CNL、CNLA）和渔获重量（CB、CBA、CBL、CBLA）是有数据支持的丰度与这一预测 F 的乘积。这些行的 extrapolated 为 TRUE，ALSCL 年龄别 F（FA）的末期各行也是如此。最后几期没有正的调查观测时，从最后一个有观测的时期起 F 都是预测，这些时期也会被标记。早期版本拟合的 FA 不含末期和 plus group。
 
-No observation informs F in the terminal period. The survey index of a period measures abundance at the start of that period, and abundance at the start of a period depends on F in earlier periods only. The reported terminal-period F (F and FL) is therefore the first-order autoregressive (AR(1)) prediction from the preceding period, and its standard error reflects the F process, not data. Terminal-period catch in number (CN, CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of an abundance that the data inform and this predicted F. These rows have extrapolated = TRUE. FA omits the terminal period, so none of its rows is marked.
+年龄别尾数可用 N_at_age 请求，它是 NA 的别名：标签为 "NA" 的表写入 CSV 文件后，用 `read.csv()` 的默认设置读回时，"NA" 会被读成缺失值，标签因此丢失（请使用 N_at_age，或在读取时设 `na.strings = ""`）。拟合报告中的矩阵是 `fit$report[["NA"]]`；NA 是 R 的保留字，所以要用双方括号。
+
+No observation informs F in the terminal period. The survey index of a period measures abundance at the start of that period, and abundance at the start of a period depends on F in earlier periods only. The reported terminal-period F (F and FL) is therefore the first-order autoregressive (AR(1)) prediction from the preceding period, and its standard error reflects the F process, not data. Terminal-period catch in number (CN, CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of an abundance that the data inform and this predicted F. These rows have extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age (FA). When the last periods have no positive survey observation, F is a prediction from the last period with an observation onwards, and those periods are marked as well. FA from fits made by earlier versions has no terminal period and no plus group.
+
+Numbers at age can be requested as N_at_age, an alias of NA: a table with the label "NA" loses that label when it is written to a CSV file and read back with the default settings of `read.csv()`, which read "NA" as a missing value (use N_at_age, or `na.strings = ""` when reading). In the fitted report the matrix is `fit$report[["NA"]]`; the double brackets are needed because NA is a reserved word in R.
 
 **示例 / Example:**
 
@@ -2873,9 +2881,9 @@ extract_parameters (fit, scale = c("natural", "internal"), conf_level = 0.95)
 
 A parameter table with estimates, SEs, intervals, fixed/estimated/inactive status and the numerical-screen flag.
 
-保存了完整输入和设置时也会列出固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同；先检查它再解释不确定性。较早版本写出的存档可能含有当前输入检查不接受的输入，这时表中只有估计的参数，并给出说明原因的警告，原因保存在 "inspection_error" 属性中。
+保存了完整输入和设置时也会列出固定参数；其 SE 和区间为 NA。旧对象仅能可靠列出自由固定效应。自然尺度 SE 用 delta method，区间转换内部尺度 Wald 端点；相关系数的自然值按拟合的 `correlation_range` 换算，ALSCL 的 log_t0 的自然值是以年为单位的 t0（已计入拟合的 `t0_lower`）；exp(mean_log_F) 和 exp(mean_log_R) 是过程基准水平，不是时间算术平均。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同；先检查它再解释不确定性。较早版本写出的存档可能含有当前输入检查不接受的输入，这时表中只有估计的参数，并给出说明原因的警告，原因保存在 "inspection_error" 属性中。
 
-With a recipe, fixed parameters are included with NA uncertainty. Legacy objects expose only free fixed effects. Natural-scale SEs use the delta method; intervals transform internal Wald endpoints. exp(mean_log_F) and exp(mean_log_R) are a process baseline, not a time average. numerical_ok records the numerical screen of the fit, the same verdict that summary() reports; inspect it before interpreting uncertainty. An archive written by an earlier release can hold inputs that the current input checks reject. In that case the table contains the estimated parameters only, a warning gives the reason, and the reason is stored in the "inspection_error" attribute.
+With a recipe, fixed parameters are included with NA uncertainty. Legacy objects expose only free fixed effects. Natural-scale SEs use the delta method; intervals transform internal Wald endpoints. Natural values of correlations follow the `correlation_range` of the fit, and the natural value of the ALSCL log_t0 is t0 in years, including the fit's `t0_lower`. exp(mean_log_F) and exp(mean_log_R) are a process baseline, not a time average. numerical_ok records the numerical screen of the fit, the same verdict that summary() reports; inspect it before interpreting uncertainty. An archive written by an earlier release can hold inputs that the current input checks reject. In that case the table contains the estimated parameters only, a warning gives the reason, and the reason is stored in the "inspection_error" attribute.
 
 **示例 / Example:**
 
@@ -2944,9 +2952,9 @@ inspect_parameters (x, model = c("acl", "alscl"))
 
 A data frame with parameter, kind, start, natural_start, lower, upper, transform, status, map_source, size, dimensions, n_free, n_fixed and n_tied.
 
-使用真实的数据初值、按上下界截断的自由初值、补充年龄约束、默认 map 和共享 F 约束。kind=fixed_effect 指外层模型参数，并不表示该参数被 map 固定。status 可为 free、fixed、tied、mixed 或 inactive；map_source 区分 default、explicit、unmapped 和 F_structure。随机效应块初值为零，n_free 为独立映射值数量，n_tied 为共享这些值的额外元素数量。exp(mean_log_R) 和 exp(mean_log_F) 是自然尺度上的过程基准水平，不是算术平均值；随机效应的 natural_start 是乘数。全程无需编译。
+使用真实的数据初值、按上下界截断的自由初值、补充年龄约束、默认 map 和共享 F 约束。kind=fixed_effect 指外层模型参数，并不表示该参数被 map 固定。status 可为 free、fixed、tied、mixed 或 inactive；map_source 区分 default、explicit、unmapped 和 F_structure。随机效应块初值为零，n_free 为独立映射值数量，n_tied 为共享这些值的额外元素数量。exp(mean_log_R) 和 exp(mean_log_F) 是自然尺度上的过程基准水平，不是算术平均值；随机效应的 natural_start 是乘数。transform 列给出所用的变换：`correlation_range = "symmetric"` 时相关系数为 `2*plogis-1`，ALSCL 设了 `t0_lower` 时 log_t0 为 `t0_lower+exp`。全程无需编译。
 
-Uses actual data-derived starts, clamped free starts, recruitment-age bounds, default maps and shared-F restrictions. kind=fixed_effect means an outer-model parameter, not necessarily a parameter fixed by map. Status can be free, fixed, tied, mixed or inactive. map_source distinguishes default, explicit, unmapped and F_structure. Random blocks start at zero; n_free counts independent mapped values and n_tied counts additional entries sharing them. exp(mean_log_R) and exp(mean_log_F) are baseline process levels on the natural scale, not arithmetic means; random natural_start is a multiplier. No compilation is performed.
+Uses actual data-derived starts, clamped free starts, recruitment-age bounds, default maps and shared-F restrictions. kind=fixed_effect means an outer-model parameter, not necessarily a parameter fixed by map. Status can be free, fixed, tied, mixed or inactive. map_source distinguishes default, explicit, unmapped and F_structure. Random blocks start at zero; n_free counts independent mapped values and n_tied counts additional entries sharing them. exp(mean_log_R) and exp(mean_log_F) are baseline process levels on the natural scale, not arithmetic means; random natural_start is a multiplier. The transform column names the transform used: `2*plogis-1` for correlations under `correlation_range = "symmetric"` and `t0_lower+exp` for log_t0 when an ALSCL bundle sets `t0_lower`. No compilation is performed.
 
 **示例 / Example:**
 
@@ -3012,7 +3020,7 @@ profile_model (fit, parameter, values, scale = c("natural", "internal"), ncores 
 | `fit` | `必填 / required` | 保留完整 recipe、最终优化参数和边界的拟合结果。 | A fit retaining its complete recipe, final optimizer estimates and bounds. |
 | `parameter` | `必填 / required` | names(fit$opt$par) 中的内部标量名称，如 "log_Linf"；不支持固定参数及外部 M/q。 | One internal scalar name in names(fit$opt$par), such as "log_Linf"; fixed parameters and external M/q are excluded. |
 | `values` | `必填 / required` | 原优化边界内互不重复的有限网格值。 | Distinct finite grid values inside the original optimizer bounds. |
-| `scale` | `c("natural", "internal")` | "natural"（默认）对 log_*/mean_log_* 使用 exp、logit_* 使用 plogis、t0 使用恒等变换；"internal" 使用优化坐标。参数名始终为内部名称。 | "natural" (default) transforms values using exp for log_*/mean_log_*, plogis for logit_* and identity for t0; "internal" uses optimizer coordinates. Parameter names remain internal. |
+| `scale` | `c("natural", "internal")` | "natural"（默认）对 log_*/mean_log_* 使用 exp、logit_* 使用 plogis、t0 使用恒等变换；"internal" 使用优化坐标。参数名始终为内部名称。拟合使用 `correlation_range = "symmetric"` 时，相关系数的自然值在 -1 和 1 之间；ALSCL 拟合设了 `t0_lower` 时，log_t0 的自然值是大于 t0_lower 的 t0。 | "natural" (default) transforms values using exp for log_*/mean_log_*, plogis for logit_* and identity for t0; "internal" uses optimizer coordinates. Parameter names remain internal. For a fit with `correlation_range = "symmetric"`, natural correlation values lie between -1 and 1; for an ALSCL fit with `t0_lower`, natural values of log_t0 are t0 values above t0_lower. |
 | `ncores` | `1` | 最大独立 socket 工作进程数；内部拟合及标准误使用一个进程。 | Maximum independent socket workers; inner fits and standard errors use one worker. |
 
 **返回 / Returns:** 返回网格诊断、目标函数及 delta_nll、可移植拟合、完整设置、参照目标值和耗时。
@@ -3269,9 +3277,9 @@ summary(saved)
 
 使用 ALSCL 拟合模拟批次的便捷入口。 / Convenience interface for simulation batches fitted with ALSCL.
 
-`sim_data()`、`sim_model()`、`sim_acl()` 和 `sim_alscl()` 的重复编号须为互不重复的非负整数，可以包含 0。模拟以编号作为随机种子，拟合读取对应的 `sim_rep<id>` 文件。
+`sim_data()`、`sim_model()`、`sim_acl()` 和 `sim_alscl()` 的重复编号须为互不重复的非负整数，可以包含 0。模拟以编号作为随机种子，拟合读取对应的 `sim_rep<id>` 文件；早期版本以 `sim_rep1e+05` 这类名称写出的文件也能读取。
 
-Replicate IDs must be distinct nonnegative integers, including 0, in `sim_data()`, `sim_model()`, `sim_acl()` and `sim_alscl()`. Simulation uses each ID as its seed and fitting reads the matching `sim_rep<id>` file.
+Replicate IDs must be distinct nonnegative integers, including 0, in `sim_data()`, `sim_model()`, `sim_acl()` and `sim_alscl()`. Simulation uses each ID as its seed and fitting reads the matching `sim_rep<id>` file; files that earlier versions wrote under names such as `sim_rep1e+05` are read as well.
 
 ```r
 sim_alscl (..., nstarts = 1)

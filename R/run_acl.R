@@ -55,10 +55,14 @@
 #'   The original separate-argument and do.call interfaces remain supported.
 #'   Both interfaces use the same fitting and standard-error acceleration.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' x <- YTF_example
-#' fit <- run_acl(x)
-#' fit <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+#' fit <- run_acl(x, silent = TRUE)
+#' fit
+#'
+#' # Two independent starts; compare their objectives
+#' fit <- run_acl(x, nstarts = 2, silent = TRUE)
+#' fit$start_diagnostics[, c("start_id", "objective", "convergence")]
 #' }
 #' @param F_structure Fishing-mortality structure. `"group_year"` (default)
 #'   retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
@@ -119,8 +123,11 @@
 #'   units of the yellowtail flounder example. When the upper bound is below
 #'   1.2 times the largest length-bin midpoint, or the start is outside 0.7 to
 #'   2 times that midpoint, the start and bounds that were not supplied are
-#'   set from the data as in `run_alscl()`: start 1.1, bounds 0.7 and 2 times
-#'   the largest midpoint.
+#'   set from the data. The start is 1.1 times the length below which 99
+#'   percent of the summed survey index lies, the upper bound is 2 times the
+#'   largest midpoint, and the lower bound is the smaller of the default (10)
+#'   and half of that 99 percent length, so that length bins extending beyond
+#'   the largest fish do not exclude the true Linf.
 #' @return An alscl_fit list (legacy dollar access is unchanged) with report,
 #'   opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,

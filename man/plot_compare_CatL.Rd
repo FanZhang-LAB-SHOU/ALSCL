@@ -88,16 +88,25 @@ If survey is unset, a legacy custom abundance label is retained; otherwise
 the default is Survey index. The plotted predictions are exp(Elog_index).
 }
 \examples{
-\dontrun{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
 # All years (default)
-plot_compare_CatL(result_acl, result_alscl, data.CatL)
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL)
 
 # Select specific years
-plot_compare_CatL(result_acl, result_alscl, data.CatL,
-  years = c(1991, 1995, 2000, 2005, 2011))
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
+  years = c(2010, 2015, 2019))
 
 # Customize layout
-plot_compare_CatL(result_acl, result_alscl, data.CatL,
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
   facet_ncol = 5, obs_color = "black", point_size = 2)
 }
 }

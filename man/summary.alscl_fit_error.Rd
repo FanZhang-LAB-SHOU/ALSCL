@@ -35,3 +35,12 @@ Batch functions such as \code{\link[=sim_model]{sim_model()}} and \code{\link[=f
 class alscl_fit_error for a fit that stopped with an error. The record is a
 list with converge = "FAILED" and the error message in error.
 }
+\examples{
+# A scenario with an invalid natural mortality rate stops before any model
+# is fitted, and its error is kept as a failure record.
+z <- fit_scenarios(YTF_example, list(negative_M = list(M = -1)))
+failed <- z$fits$negative_M
+failed
+summary(failed)$diagnostics$numerical_ok
+coef(failed)
+}

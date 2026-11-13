@@ -151,7 +151,8 @@ current values.
 }
 \examples{
 # --- Set just one thing ---
-acl_theme_set(base_theme = "theme_classic")
+# The first call returns the previous settings, which are restored at the end.
+old <- acl_theme_set(base_theme = "theme_classic")
 acl_theme_set(font_family = "Times New Roman")
 acl_theme_set(compare_line_size = 2)
 
@@ -173,4 +174,7 @@ acl_theme_set(
 # plot_compare_ts(result1, result2,
 #   model1_name = "Run A", model2_name = "Run B",
 #   colors = c("darkgreen", "purple"))
+
+# --- Restore the previous settings ---
+do.call(acl_theme_set, old)
 }

@@ -22,9 +22,9 @@
 #'   is therefore not evidence of a good fit, and a value below one is not
 #'   evidence of overestimated observation error.
 #' @examples
-#' \dontrun{
-#' fit <- run_acl(YTF_example)
-#' residuals(fit, type = "standardized")
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' head(residuals(fit, type = "standardized"))
 #' }
 #' @export
 residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
@@ -111,10 +111,10 @@ residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
 #'   points, not their distance from the line, as signs of skewness or heavy
 #'   tails. No simulation envelope is drawn.
 #' @examples
-#' \dontrun{
-#' fit <- run_alscl(YTF_example)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #' checks <- check_fit(fit, max_lag = 4)
-#' checks$lag_correlations
+#' head(checks$lag_correlations)
 #' checks$plots$heatmap
 #' }
 #' @export

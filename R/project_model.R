@@ -53,8 +53,8 @@
 #'   `source_fit_status` as "passed", "failed", or "unknown", along with
 #'   `source_fit_numerical_ok` and whether a `failed_fit_override` was used.
 #' @examples
-#' \dontrun{
-#' fit <- run_acl(YTF_example)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #' h <- 4L
 #' nlength <- length(fit$len_mid)
 #' future_weight <- matrix(1, nlength, h) # replace with species-specific values

@@ -30,6 +30,10 @@ compiling or optimizing. This includes data-derived starts, start clamping,
 recruitment-age bounds and shared-F restrictions, which a table made only
 from create_parameters() cannot show.
 }
+\examples{
+starts <- inspect_parameters(YTF_example, "alscl")
+starts[, c("parameter", "natural_start", "lower", "upper", "status")]
+}
 \seealso{
 \code{\link[=check_alscl_data]{check_alscl_data()}}, \code{\link[=prepare_alscl_data]{prepare_alscl_data()}}
 }

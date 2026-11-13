@@ -15,7 +15,8 @@
 #'   global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
 #' @param se_type Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".
@@ -45,17 +46,15 @@
 #' @return A ggplot object representing the plot.
 #'
 #' @examples
-#' \dontrun{
-#' # Use 'run_acl' to obtain 'model_result'
-#' model_result <- run_acl(...)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #'
-#' # Plot recruitment without standard error
-#' plot_recruitment(model_result)
+#' # Recruitment without confidence intervals
+#' plot_recruitment(fit)
 #'
-#' # Plot recruitment with standard error
-#' plot_recruitment(model_result, se = TRUE)
+#' # Recruitment with 95% confidence intervals
+#' plot_recruitment(fit, se = TRUE)
 #' }
-#'
 #' @export
 
 plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, interval = NULL){

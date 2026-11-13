@@ -111,7 +111,9 @@ An automatic age range with no positive span at or above t0 is rejected;
 supply an explicit biologically meaningful age_range in that case.
 }
 \examples{
-\dontrun{
-plot_VB(model_result, age_range = c(1, 25))
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+plot_VB(fit)
+plot_VB(fit, age_range = c(1, 25))
 }
 }

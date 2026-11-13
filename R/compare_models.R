@@ -50,6 +50,20 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   fitting. Numeric text and factor labels are read as observations, never
 #'   as internal factor-level codes.
 #'
+#' @examples
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' comparison <- compare_models(fit_acl, fit_alscl, x$data.CatL)
+#' comparison$comparison$delta_aic
+#' comparison$comparison$preferred
+#' }
 #' @export
 compare_models <- function(model1, model2, data.CatL,
                            model1_name = NULL, model2_name = NULL) {

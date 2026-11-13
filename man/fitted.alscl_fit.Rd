@@ -38,7 +38,7 @@ only and are valid for comparing fits to the same observations. Zero and
 missing observations are excluded from the likelihood and from nobs.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 head(fitted(fit))
 logLik(fit)

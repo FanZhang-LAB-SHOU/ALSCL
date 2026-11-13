@@ -86,3 +86,17 @@ The named list of replicate fits or error records returned by sim_model().
 \description{
 Fit simulation replicates with ACL
 }
+\examples{
+\donttest{
+# Simulate two replicates of a ten-year survey and fit ACL to each, with
+# the growth parameters fixed as in the YTF_example settings.
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1:2, output_dir = folder)
+cfg <- YTF_example$fit_config$acl
+fits <- sim_acl(iter_range = 1:2, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map)
+sapply(fits, function(fit) fit$diagnostics$numerical_ok)
+unlink(folder, recursive = TRUE)
+}
+}

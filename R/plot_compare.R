@@ -97,7 +97,8 @@ utils::globalVariables(c(
 #' @param se Logical. Show 95% confidence intervals. Default FALSE.
 #' @param interval Character or NULL. The interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
 #' @param model1_name,model2_name Character. Labels. Auto-detected if NULL.
@@ -124,26 +125,35 @@ utils::globalVariables(c(
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Basic usage
-#' plot_compare_ts(result_acl, result_alscl)
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' plot_compare_ts(fit_acl, fit_alscl)
 #'
-#' # With CI
-#' plot_compare_ts(result_acl, result_alscl, se = TRUE)
+#' # With 95% confidence intervals
+#' plot_compare_ts(fit_acl, fit_alscl, quantities = c("SSB", "R"), se = TRUE)
 #'
-#' # Per-call override + ggplot2 layering
-#' plot_compare_ts(result_acl, result_alscl,
+#' # Colors for one call, followed by ggplot2 layers
+#' plot_compare_ts(fit_acl, fit_alscl,
 #'   colors = c(ACL = "darkgreen", ALSCL = "orange")) +
 #'   ggplot2::theme(legend.position = "top") +
 #'   ggplot2::labs(title = "My Title")
 #'
-#' # Or set globally once
-#' acl_theme_set(
+#' # Or set the style of all comparison plots, then restore the previous
+#' # settings
+#' old <- acl_theme_set(
 #'   compare_colors = c(ACL = "steelblue", ALSCL = "tomato"),
 #'   compare_linetypes = c(ACL = "solid", ALSCL = "longdash"),
 #'   base_theme = "theme_classic"
 #' )
-#' plot_compare_ts(result_acl, result_alscl)  # uses global settings
+#' plot_compare_ts(fit_acl, fit_alscl)
+#' do.call(acl_theme_set, old)
 #' }
 plot_compare_ts <- function(model1, model2,
                             quantities = c("SSB", "R", "B", "N", "CN"),
@@ -277,6 +287,18 @@ plot_compare_ts <- function(model1, model2,
 #'   their heatmaps cannot be compared row by row. For a summary of both fits
 #'   over the same ages, use \code{plot_compare_F_ts(basis = "age")}.
 #' @return A ggplot object.
+#' @examples
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' plot_compare_F(fit_acl, fit_alscl)
+#' }
 #' @export
 plot_compare_F <- function(model1, model2,
                            model1_name = NULL, model2_name = NULL,
@@ -393,6 +415,18 @@ plot_compare_F <- function(model1, model2,
 #'   unobserved first or last periods. The line breaks at unobserved periods. Isolated
 #'   observed periods remain visible as points; an SD bar requires at least
 #'   two observed length bins in that period.
+#' @examples
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' plot_compare_residuals(fit_acl, fit_alscl, x$data.CatL)
+#' }
 #' @export
 plot_compare_residuals <- function(model1, model2, data.CatL,
                                    model1_name = NULL, model2_name = NULL,
@@ -552,17 +586,26 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#'
 #' # Without reference data
-#' plot_compare_growth(result_acl, result_alscl)
+#' plot_compare_growth(fit_acl, fit_alscl)
 #'
 #' # With observed age-length data
 #' obs <- data.frame(Age = c(1,1,2,2,3,3,4,5,6,7),
 #'                   Length = c(20,22,30,28,38,35,42,48,50,52))
-#' plot_compare_growth(result_acl, result_alscl, ref_data = obs)
+#' plot_compare_growth(fit_acl, fit_alscl, ref_data = obs)
 #'
 #' # Customize reference
-#' plot_compare_growth(result_acl, result_alscl,
+#' plot_compare_growth(fit_acl, fit_alscl,
 #'   ref_data = obs, ref_name = "Otolith data",
 #'   ref_color = "forestgreen", show_points = TRUE)
 #' }
@@ -820,16 +863,25 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#'
 #' # All years (default)
-#' plot_compare_CatL(result_acl, result_alscl, data.CatL)
+#' plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL)
 #'
 #' # Select specific years
-#' plot_compare_CatL(result_acl, result_alscl, data.CatL,
-#'   years = c(1991, 1995, 2000, 2005, 2011))
+#' plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
+#'   years = c(2010, 2015, 2019))
 #'
 #' # Customize layout
-#' plot_compare_CatL(result_acl, result_alscl, data.CatL,
+#' plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
 #'   facet_ncol = 5, obs_color = "black", point_size = 2)
 #' }
 plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
@@ -929,17 +981,22 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#'
 #' # All panels (default)
-#' plot_compare_metrics(result_acl, result_alscl, data.CatL)
+#' plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL)
 #'
 #' # Only error and information criteria
-#' plot_compare_metrics(result_acl, result_alscl, data.CatL,
+#' plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL,
 #'   metrics = c("error", "IC"))
-#'
-#' # Just R2 and MAPE
-#' plot_compare_metrics(result_acl, result_alscl, data.CatL,
-#'   metrics = c("R2", "MAPE"))
 #' }
 plot_compare_metrics <- function(model1, model2, data.CatL,
                                  model1_name = NULL, model2_name = NULL,
@@ -1038,6 +1095,18 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #'   catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
 #'   at the fitted length midpoints. Older fits without a recipe use log_q from
 #'   their live TMB object.
+#' @examples
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' plot_compare_selectivity(fit_acl, fit_alscl)
+#' }
 #' @export
 plot_compare_selectivity <- function(model1, model2,
                                      model1_name = NULL, model2_name = NULL,
@@ -1114,13 +1183,33 @@ plot_compare_selectivity <- function(model1, model2,
 #'   pattern of such a pair, not the difference in level.
 #'   \code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
 #'   derived \code{report$FA} for ALSCL. Only the fitted ages and the time
-#'   steps present in both fits are summarized. ALSCL F at age has no plus-group
-#'   row and no value for the last time step, so a comparison with an ALSCL fit
-#'   leaves out the ACL plus group and the last time step.
+#'   steps present in both fits are summarized. ALSCL F at age covers every age
+#'   and time step; in fits made by earlier versions it has no plus-group row
+#'   and no value for the last time step, and a comparison with such a fit
+#'   leaves out the ACL plus group and the last time step. The two fits must
+#'   have the same time step.
 #' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
 #' @return A ggplot object.
+#' @examples
+#' \donttest{
+#' # Fit both models to the last ten years of the example data. The shorter
+#' # series and one fishing mortality rate (F) shared by all lengths in each
+#' # year keep the ALSCL fit short.
+#' x <- YTF_example
+#' tables <- c("data.CatL", "data.wgt", "data.mat")
+#' x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+#' fit_acl <- run_acl(x, silent = TRUE)
+#' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+#'
+#' # Largest fishing mortality rate over ages (ACL) or lengths (ALSCL) in
+#' # each year
+#' plot_compare_F_ts(fit_acl, fit_alscl)
+#'
+#' # Mean fishing mortality rate at age over the ages that both fits share
+#' plot_compare_F_ts(fit_acl, fit_alscl, method = "mean", basis = "age")
+#' }
 #' @export
 plot_compare_F_ts <- function(model1, model2,
                               model1_name = NULL, model2_name = NULL,

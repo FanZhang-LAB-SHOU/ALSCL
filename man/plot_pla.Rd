@@ -78,13 +78,13 @@ example "15+". Results saved without age metadata keep the position
 labels "Age bin 1", "Age bin 2" and so on.
 }
 \examples{
-\dontrun{
-model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 
-# Generate a heatmap with the default color gradient
-plot_pla(model_result)
+# Heatmap with the default color gradient
+plot_pla(fit)
 
-# Generate a heatmap with a custom color gradient from white to steelblue
-plot_pla(model_result, "white", "steelblue")
+# Heatmap with a color gradient from white to steelblue
+plot_pla(fit, low_col = "white", high_col = "steelblue")
 }
 }

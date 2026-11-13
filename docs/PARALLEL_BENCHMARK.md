@@ -24,11 +24,11 @@ Each entry summarizes **three runs**, with **four identical starts** and **two s
 ## Data and machine / 数据与环境
 
 - Synthetic `YTF_example`, seed 4: first 10 annual columns (2000–2009), all 23 length bins and 15 age classes. These are teaching data, not empirical stock observations.
-- The same bundled `fit_args` and model-specific `fit_config` were used at every worker count. Known biological assumptions stay fixed; other configured fixed effects and random effects are estimated. These conditional fits do not establish performance for every full assessment.
+- The same bundled `fit_args` and model-specific `fit_config` were used at every worker count. Known biological assumptions stay fixed; other configured fixed effects and random effects are estimated. These conditional fits do not establish performance for every full assessment. The `fit_config` bundled at the time of the measurement fixed the standard deviation of log F at 0.2; the current one fixes it at 0.302, the marginal SD of the generating AR(1) process, so current fits take other times.
 - Apple M2 Pro, 10 logical CPUs, 32 GiB RAM; R 4.6.0, TMB 1.9.21, RcppEigen 0.3.4.0.2; optimized C++ templates compiled with `-O2`, without template OpenMP.
 - Worker order rotates (1,2,4; 2,4,1; 4,1,2), and model order alternates. Other user analyses shared the machine. These are shared-machine measurements, not an isolated hardware benchmark or a universal speed guarantee.
 
-使用内置模拟数据前 10 年，保留 23 个体长组和 15 个年龄组；不同并行数使用相同数据、参数映射、初始值与默认优化控制。机器为 Apple M2 Pro / 32 GiB，测试期间有其他分析在运行。计时顺序轮换以降低顺序偏差，但不能排除系统负载影响。具体环境见 [environment.txt](results/parallel/environment.txt)。
+使用内置模拟数据前 10 年，保留 23 个体长组和 15 个年龄组；不同并行数使用相同数据、参数映射、初始值与默认优化控制。测试时随包的 `fit_config` 把对数 F 的标准差固定在 0.2；当前的配置固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以当前拟合的耗时与表中不同。机器为 Apple M2 Pro / 32 GiB，测试期间有其他分析在运行。计时顺序轮换以降低顺序偏差，但不能排除系统负载影响。具体环境见 [environment.txt](results/parallel/environment.txt)。
 
 ## Evidence of real computation / 真实运算证据
 

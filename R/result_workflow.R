@@ -187,7 +187,7 @@
 #'   contains the estimated parameters only, a warning gives the reason, and
 #'   the reason is stored in the "inspection_error" attribute.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
 #' extract_parameters(fit)
 #' extract_parameters(fit, scale = "internal")
@@ -293,10 +293,13 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   periods are marked as well. FA from fits made by earlier versions has no
 #'   terminal period and no plus group.
 #' @examples
-#' \dontrun{
-#' fit <- run_alscl(YTF_example, silent = TRUE)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #' estimates <- extract_estimates(fit, c("SSB", "Rec", "F"))
-#' write.csv(estimates, tempfile(fileext = ".csv"), row.names = FALSE)
+#' head(estimates)
+#' path <- tempfile(fileext = ".csv")
+#' write.csv(estimates, path, row.names = FALSE)
+#' unlink(path)
 #' }
 #' @export
 extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = .95) {
@@ -382,6 +385,14 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
 #'   status and boundary status. A stored assessment whose inputs do not pass
 #'   the current input checks is still summarized: the parameter table then
 #'   contains the estimated parameters only, and notes gives the reason.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' fit
+#' s <- summary(fit)
+#' s$diagnostics
+#' print(s, digits = 3)
+#' }
 #' @export
 summary.alscl_fit <- function(object, ...) {
   years <- object$year
@@ -444,6 +455,14 @@ print.alscl_fit <- function(x, ...) {
 #'   stored matrix contains nonfinite values or is not positive definite, as
 #'   happens when the Hessian is singular. The stored matrix remains available
 #'   as object$vcov for inspection.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' coef(fit)
+#'
+#' # Standard errors on the optimizer scale
+#' sqrt(diag(vcov(fit)))
+#' }
 #' @export
 coef.alscl_fit <- function(object, ...) object$opt$par
 
@@ -470,7 +489,7 @@ vcov.alscl_fit <- function(object, ...) {
 #'   only and are valid for comparing fits to the same observations. Zero and
 #'   missing observations are excluded from the likelihood and from nobs.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
 #' head(fitted(fit))
 #' logLik(fit)
@@ -522,6 +541,14 @@ logLik.alscl_fit <- function(object, ...) {
 #'   recorded, and a one-row diagnostics table with numerical_ok = FALSE.
 #'   coef and vcov return NULL, so a loop over a batch of results does not stop
 #'   at a failed fit.
+#' @examples
+#' # A scenario with an invalid natural mortality rate stops before any model
+#' # is fitted, and its error is kept as a failure record.
+#' z <- fit_scenarios(YTF_example, list(negative_M = list(M = -1)))
+#' failed <- z$fits$negative_M
+#' failed
+#' summary(failed)$diagnostics$numerical_ok
+#' coef(failed)
 #' @export
 summary.alscl_fit_error <- function(object, ...) {
   message_text <- .acl_error_text(object)
@@ -630,12 +657,13 @@ vcov.alscl_fit_error <- function(object, ...) NULL
 #'   TMB pointer. refit_model rebuilds a live model; cross-version numerical
 #'   equality is not promised. Only read archives from trusted sources.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
 #' path <- tempfile(fileext = ".rds")
 #' save_assessment(fit, path)
 #' saved <- read_assessment(path)
 #' summary(saved)
+#' unlink(path)
 #' }
 #' @export
 save_assessment <- function(fit, file, x = NULL, overwrite = FALSE) {
@@ -681,6 +709,19 @@ save_assessment <- function(fit, file, x = NULL, overwrite = FALSE) {
 #' Read a portable assessment archive
 #' @param file RDS file created by save_assessment.
 #' @return An alscl_fit object with a recipe and no live TMB obj.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' path <- tempfile(fileext = ".rds")
+#' save_assessment(fit, path)
+#' saved <- read_assessment(path)
+#'
+#' # The archive has no TMB object, and the estimates are unchanged
+#' is.null(saved$obj)
+#' all.equal(coef(saved), coef(fit))
+#' plot_SSB(saved)
+#' unlink(path)
+#' }
 #' @export
 read_assessment <- function(file) {
   archive <- readRDS(file)
@@ -710,6 +751,15 @@ read_assessment <- function(file) {
 #'   hold a named NULL entry for a parameter that the model does not have,
 #'   which release 2.4.3 accepted and ignored; such an entry is dropped before
 #'   refitting unless map is overridden.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#'
+#' # Refit with a lower natural mortality rate; other settings are unchanged
+#' low_M <- refit_model(fit, M = 0.15)
+#' low_M$recipe$args$M
+#' extract_parameters(low_M)[1:5, c("parameter", "estimate")]
+#' }
 #' @export
 refit_model <- function(fit, ...) {
   recipe <- .acl_recipe(fit)

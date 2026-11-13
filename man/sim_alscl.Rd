@@ -19,3 +19,18 @@ The named list of replicate fits or error records returned by sim_model().
 \description{
 Fit simulation replicates with ALSCL
 }
+\examples{
+\donttest{
+# Simulate one replicate of a ten-year survey and fit ALSCL to it, with the
+# growth parameters fixed as in the YTF_example settings. One fishing
+# mortality rate shared by all lengths in each year keeps the fit short.
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
+cfg <- YTF_example$fit_config$alscl
+fits <- sim_alscl(iter_range = 1, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map, F_structure = "year")
+summary(fits$result_rep_1)$diagnostics
+unlink(folder, recursive = TRUE)
+}
+}

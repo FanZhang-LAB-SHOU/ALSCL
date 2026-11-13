@@ -147,10 +147,10 @@
 #'   gives no scaled score for that cell. Overlapping folds are retained and
 #'   scored as distinct origin-horizon predictions, not independent observations.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' validation <- hindcast_model(YTF_example, model = "acl", horizon = 1,
-#'   nfolds = 3, nstarts = 2, ncores = 2)
-#' validation$diagnostics
+#'   nfolds = 2)
+#' validation$diagnostics[, c("fold", "origin", "numerical_ok", "prediction_ok")]
 #' validation$scores
 #' }
 #' @export

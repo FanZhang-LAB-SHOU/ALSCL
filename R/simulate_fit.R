@@ -132,11 +132,14 @@
 #'   seed, RNG kind, coordinates, original observation mask, source fit status and the
 #'   explicit parameter_uncertainty = "none" assumption.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
 #' simulated <- simulate_fit(fit, nsim = 3, seed = 42, process = "resample")
-#' refit <- run_acl(simulated$simulations[[1]]$x, silent = TRUE)
 #' simulated$simulations[[1]]$truth$SSB
+#'
+#' # Each simulated data set is an input bundle that can be fitted again
+#' refit <- run_acl(simulated$simulations[[1]]$x, silent = TRUE)
+#' refit$report$SSB
 #' }
 #' @export
 simulate_fit <- function(fit, nsim = 1, seed = NULL,

@@ -202,13 +202,20 @@ The default start (60) and bounds (10 to 100) of Linf are in the length
 units of the yellowtail flounder example. When the upper bound is below
 1.2 times the largest length-bin midpoint, or the start is outside 0.7 to
 2 times that midpoint, the start and bounds that were not supplied are
-set from the data as in \code{run_alscl()}: start 1.1, bounds 0.7 and 2 times
-the largest midpoint.
+set from the data. The start is 1.1 times the length below which 99
+percent of the summed survey index lies, the upper bound is 2 times the
+largest midpoint, and the lower bound is the smaller of the default (10)
+and half of that 99 percent length, so that length bins extending beyond
+the largest fish do not exclude the true Linf.
 }
 \examples{
-\dontrun{
+\donttest{
 x <- YTF_example
-fit <- run_acl(x)
-fit <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+fit <- run_acl(x, silent = TRUE)
+fit
+
+# Two independent starts; compare their objectives
+fit <- run_acl(x, nstarts = 2, silent = TRUE)
+fit$start_diagnostics[, c("start_id", "objective", "convergence")]
 }
 }

@@ -87,48 +87,81 @@ Type growth_increment_mean(Type x, Type Linf, Type vbk, Type growth_step, int in
   Type l95 = Type(.05) * Linf;
   return growth_step * max_inc / (Type(1) + exp(-log(Type(19)) * (x - l50) / (l95 - l50)));
 }
+// Mean of the standard normal CDF over the interval between u_hi and u_lo:
+// (H(u_lo) - H(u_hi)) / (u_lo - u_hi) with H(u) = u * pnorm(u) + dnorm(u), the
+// antiderivative of pnorm. For a very short interval it is pnorm at the middle.
+template<class Type>
+Type mean_pnorm(Type u_lo, Type u_hi) {
+  Type du = u_lo - u_hi;
+  Type tiny = CppAD::CondExpLt(CppAD::abs(du), Type(1e-8), Type(1), Type(0));
+  Type safe = CppAD::CondExpLt(CppAD::abs(du), Type(1e-8), Type(1), du);
+  Type H_lo = u_lo * pnorm(u_lo) + dnorm(u_lo, Type(0), Type(1), false);
+  Type H_hi = u_hi * pnorm(u_hi) + dnorm(u_hi, Type(0), Type(1), false);
+  Type ratio = (H_lo - H_hi) / safe;
+  Type middle = pnorm(Type(.5) * (u_lo + u_hi));
+  return tiny * middle + (Type(1) - tiny) * ratio;
+}
 // Growth transition matrix G(i,j): probability of moving from length bin j to
 // bin i in one time step. Fish cannot shrink out of their bin, and the last
 // bin absorbs the right tail. The increment is normal with mean
 // growth_increment_mean() and SD cv_grow times that mean.
 // transition 0: every fish starts at the midpoint of its bin.
-// transition 1: starting lengths are uniform within the bin (five-point
-//   Gauss-Legendre rule), so the expected advance does not depend on the bin
-//   width. The first bin is taken as symmetric about its midpoint.
+// transition 1: starting lengths are uniform within the bin. The bin is cut
+//   into eight pieces; within a piece the expected end length is taken as
+//   linear in the starting length and the increment SD as constant, which
+//   gives the probability of ending below a border in closed form
+//   (mean_pnorm). The result is smooth in the growth parameters and does not
+//   stall when the increment is much smaller than the bin width. The first
+//   bin is taken as symmetric about its midpoint.
 template<class Type>
 matrix<Type> growth_matrix(vector<Type> len_mid, vector<Type> len_border, Type Linf,
                            Type vbk, Type cv_grow, Type growth_step,
                            int increment, int transition) {
-  static const double node[5] = {-0.9061798459386640, -0.5384693101056831, 0.0,
-                                 0.5384693101056831, 0.9061798459386640};
-  static const double weight[5] = {0.2369268850561891, 0.4786286704993665,
-                                   0.5688888888888889, 0.4786286704993665,
-                                   0.2369268850561891};
   int L = len_mid.size();
-  int Q = transition == 1 ? 5 : 1;
+  int K = 8;
   Type sd_floor = Type(1e-12) * Linf;
   matrix<Type> G(L, L);
   G.setZero();
   for (int j = 0; j < L; ++j) {
     if (j == L-1) { G(j,j) = Type(1); continue; }
-    Type lower = j == 0 ? Type(2) * len_mid(0) - len_border(0) : len_border(j-1);
-    Type upper = len_border(j);
-    for (int q = 0; q < Q; ++q) {
+    if (transition != 1) {
       Type x = len_mid(j);
-      Type w = Type(1);
-      if (Q > 1) {
-        x = Type(.5) * (lower + upper) + Type(.5) * (upper - lower) * Type(node[q]);
-        w = Type(.5) * Type(weight[q]);
-      }
       Type mean_inc = growth_increment_mean(x, Linf, vbk, growth_step, increment);
       Type sd_inc = mean_inc * cv_grow + sd_floor;
       for (int i = j; i < L; ++i) {
+        if (i == L-1) G(i,j) = pnorm(-(len_border(L-2) - x - mean_inc) / sd_inc);
+        else if (i == j) G(i,j) = pnorm((len_border(i) - x - mean_inc) / sd_inc);
+        else G(i,j) = normal_interval((len_border(i) - x - mean_inc) / sd_inc,
+                                      (len_border(i-1) - x - mean_inc) / sd_inc);
+      }
+    } else {
+      Type lower = j == 0 ? Type(2) * len_mid(0) - len_border(0) : len_border(j-1);
+      Type upper = len_border(j);
+      // Probability of ending at or below (below) and above (above) each
+      // border from bin j upwards, averaged over the pieces of the bin.
+      vector<Type> below(L-1), above(L-1);
+      below.setZero(); above.setZero();
+      for (int k = 0; k < K; ++k) {
+        Type a = lower + (upper - lower) * Type(k) / Type(K);
+        Type b = lower + (upper - lower) * Type(k + 1) / Type(K);
+        Type end_a = a + growth_increment_mean(a, Linf, vbk, growth_step, increment);
+        Type end_b = b + growth_increment_mean(b, Linf, vbk, growth_step, increment);
+        Type sd_inc = cv_grow * growth_increment_mean(Type(.5) * (a + b), Linf, vbk,
+                                                      growth_step, increment) + sd_floor;
+        for (int i = j; i < L-1; ++i) {
+          Type u_a = (len_border(i) - end_a) / sd_inc;
+          Type u_b = (len_border(i) - end_b) / sd_inc;
+          below(i) += mean_pnorm(u_a, u_b) / Type(K);
+          above(i) += mean_pnorm(-u_b, -u_a) / Type(K);
+        }
+      }
+      for (int i = j; i < L; ++i) {
         Type p;
-        if (i == L-1) p = pnorm(-(len_border(L-2) - x - mean_inc) / sd_inc);
-        else if (i == j) p = pnorm((len_border(i) - x - mean_inc) / sd_inc);
-        else p = normal_interval((len_border(i) - x - mean_inc) / sd_inc,
-                                 (len_border(i-1) - x - mean_inc) / sd_inc);
-        G(i,j) += w * p;
+        if (i == L-1) p = above(L-2);
+        else if (i == j) p = below(i);
+        else p = CppAD::CondExpGt(below(i-1), Type(.5), above(i-1) - above(i),
+                                  below(i) - below(i-1));
+        G(i,j) = CppAD::CondExpLt(p, Type(0), Type(0), p);
       }
     }
     Type total = G.col(j).sum();

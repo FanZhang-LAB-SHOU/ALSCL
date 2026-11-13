@@ -59,9 +59,12 @@ periods are marked as well. FA from fits made by earlier versions has no
 terminal period and no plus group.
 }
 \examples{
-\dontrun{
-fit <- run_alscl(YTF_example, silent = TRUE)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 estimates <- extract_estimates(fit, c("SSB", "Rec", "F"))
-write.csv(estimates, tempfile(fileext = ".csv"), row.names = FALSE)
+head(estimates)
+path <- tempfile(fileext = ".csv")
+write.csv(estimates, path, row.names = FALSE)
+unlink(path)
 }
 }

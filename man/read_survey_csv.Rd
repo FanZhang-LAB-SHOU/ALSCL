@@ -20,6 +20,21 @@ in the remaining headers. Numeric text and factor labels are converted
 safely; blank cells and \code{NA} denote missing values. Tables retain their
 original row and column order. Biological inputs are supplied separately.
 }
+\examples{
+# Write the three example tables as CSV files, then read them back
+folder <- tempfile("survey")
+dir.create(folder)
+for (name in c("data.CatL", "data.wgt", "data.mat"))
+  write.csv(YTF_example[[name]], file.path(folder, paste0(name, ".csv")),
+            row.names = FALSE)
+tables <- read_survey_csv(folder)
+tables$data.CatL[1:3, 1:4]
+
+# Add the biological inputs and check the configuration before fitting
+x <- prepare_alscl_data(tables, fit_args = YTF_example$fit_args)
+check_alscl_data(x, "acl")$valid
+unlink(folder, recursive = TRUE)
+}
 \seealso{
 \code{\link[=prepare_alscl_data]{prepare_alscl_data()}}, \code{\link[=check_alscl_data]{check_alscl_data()}}
 }

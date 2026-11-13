@@ -106,23 +106,14 @@ The time axis shows whole years for annual fits ("2000") and quarters for
 quarterly fits ("2000 Q2"). Other time steps keep their decimal labels.
 }
 \examples{
-\dontrun{
-# Assume model_result is the result obtained from function 'run_acl'.
-p <- plot_ridges(model_result)
-print(p)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+plot_ridges(fit)
 
-# Built-in palettes
-plot_ridges(model_result, palette = "viridis")   # purple-yellow
-plot_ridges(model_result, palette = "ocean")      # deep blue-teal
-plot_ridges(model_result, palette = "sunset")     # dark purple-red-gold
-plot_ridges(model_result, palette = "forest")     # dark green-light green
-plot_ridges(model_result, palette = "fire")       # black-red-gold
-plot_ridges(model_result, palette = "spectral")   # red-yellow-blue
-plot_ridges(model_result, palette = "turbo")      # rainbow-like
-plot_ridges(model_result, palette = "plasma")     # purple-orange-yellow
+# A built-in palette
+plot_ridges(fit, palette = "ocean")
 
-# Custom colors (auto-interpolated)
-plot_ridges(model_result, palette = c("#0D1B2A", "#2E86AB", "#72EFDD"))
-plot_ridges(model_result, palette = c("navy", "white", "firebrick"))
+# Custom colors, interpolated over the years
+plot_ridges(fit, palette = c("navy", "white", "firebrick"))
 }
 }

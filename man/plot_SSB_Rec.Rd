@@ -84,16 +84,8 @@ at the youngest fitted age, so each SSB value is paired with the
 recruitment that many years later.
 }
 \examples{
-\dontrun{
-# The model_result is typically obtained from run_acl().
-# Here, we create a dummy example.
-# Use 'run_acl' to get 'model_result'
-model_result <- run_acl(...)
-
-# Call the function
-p <- plot_SSB_Rec(model_result)
-
-# Print the plot
-print(p)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+plot_SSB_Rec(fit)
 }
 }

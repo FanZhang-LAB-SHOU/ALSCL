@@ -114,3 +114,14 @@ scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
 theme label, and the typography arguments replace the corresponding theme settings.
 }
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+
+# Log recruitment deviations with 95\% intervals
+plot_deviance(fit, se = TRUE)
+
+# Log deviations of the fishing mortality rate, one panel per age
+plot_deviance(fit, type = "F")
+}
+}

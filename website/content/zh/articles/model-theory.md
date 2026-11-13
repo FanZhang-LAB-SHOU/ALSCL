@@ -92,7 +92,7 @@ N_{j,i+1,t+1}=\sum_l G_{j,l}N_{l,i,t}\exp[-(M+F_{l,t})].
 {1+\exp\!\left(-\log(19)\frac{L-0.5L_\infty}{0.05L_\infty-0.5L_\infty}\right)}.
 ```
 
-此函数与精确的任意时间步 VB 增量 $`(L_\infty-L)(1-e^{-k\Delta t})`$ 不同，并且体长组内所有个体都从组中点开始生长。使用 `structure = list(growth_increment = "von_bertalanffy", growth_transition = "bin")` 时，ALSCL 采用 VB 增量，起始体长在组内均匀分布（[选择拟合设置](fitting-controls.html#structure)）。`pla` 是给定年龄的长度分布，G 是给定源长度的一步转移概率，各模型使用各自的矩阵。`FL` 是长度别 F，`FA` 则由同一世代在相应时间步的存活比例推导。
+此函数与精确的任意时间步 VB 增量 $`(L_\infty-L)(1-e^{-k\Delta t})`$ 不同，并且体长组内所有个体都从组中点开始生长。使用 `structure = list(growth_increment = "von_bertalanffy", growth_transition = "bin")` 时，ALSCL 采用 VB 增量，起始体长在组内均匀分布（[选择拟合设置](fitting-controls.html#structure)）。`pla` 是给定年龄的长度分布，G 是给定源长度的一步转移概率，各模型使用各自的矩阵。`FL` 是长度别 F，`FA` 则由同一世代在相应时间步的存活比例推导。报告中的 `FA` 和对应的年龄别总死亡率 `ZA` 覆盖每个年龄（包括末组）和每个时间步。
 
 <h3 id="derived">派生量</h3>
 

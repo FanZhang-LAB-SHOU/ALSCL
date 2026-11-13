@@ -50,3 +50,16 @@ catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
 at the fitted length midpoints. Older fits without a recipe use log_q from
 their live TMB object.
 }
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_selectivity(fit_acl, fit_alscl)
+}
+}

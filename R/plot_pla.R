@@ -39,14 +39,14 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' model_result <- run_alscl(YTF_example, train_times = 2, silent = TRUE)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #'
-#' # Generate a heatmap with the default color gradient
-#' plot_pla(model_result)
+#' # Heatmap with the default color gradient
+#' plot_pla(fit)
 #'
-#' # Generate a heatmap with a custom color gradient from white to steelblue
-#' plot_pla(model_result, "white", "steelblue")
+#' # Heatmap with a color gradient from white to steelblue
+#' plot_pla(fit, low_col = "white", high_col = "steelblue")
 #' }
 plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   # NULL inherits the global palette.

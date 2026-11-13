@@ -41,7 +41,7 @@
 #' dim(YTF_example$data.CatL)
 #' YTF_example$data.CatL[1:3, 1:4]
 #' YTF_example$provenance$seed
-#' \dontrun{
+#' \donttest{
 #' x <- YTF_example
 #' inputs <- x[c("data.CatL", "data.wgt", "data.mat")]
 #' fit <- run_acl(x, train_times = 2, silent = TRUE)

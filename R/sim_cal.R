@@ -38,6 +38,17 @@
 #'       rerun sim_cal(params) after changing biological inputs.}
 #'   }
 #'
+#' @examples
+#' pa <- initialize_params(species = "flatfish")
+#' bio <- sim_cal(pa)
+#' bio$model_type
+#'
+#' # Length at age
+#' round(bio$LatA, 1)
+#'
+#' # Probability of length given age: one row per age, and each row sums to one
+#' dim(bio$pla)
+#' range(rowSums(bio$pla))
 #' @export
 sim_cal <- function(params) {
 
@@ -205,37 +216,52 @@ sim_cal <- function(params) {
     (1 + exp(-log(19) * (x - .5 * Linf) / (.05 * Linf - .5 * Linf)))
 }
 
+# Mean of the standard normal CDF over the interval between u_hi and u_lo; the
+# R counterpart of mean_pnorm() in inst/extdata/model_math.hpp.
+.acl_mean_pnorm <- function(u_lo, u_hi) {
+  H <- function(u) u * stats::pnorm(u) + stats::dnorm(u)
+  du <- u_lo - u_hi
+  short <- abs(du) < 1e-8
+  ifelse(short, stats::pnorm(.5 * (u_lo + u_hi)), (H(u_lo) - H(u_hi)) / ifelse(short, 1, du))
+}
+
 # Growth transition matrix G[i, j]: probability of moving from length bin j to
 # bin i in one time step; the R counterpart of growth_matrix() in
 # inst/extdata/model_math.hpp. len_border holds the interior borders.
+# transition "midpoint": every fish starts at the bin midpoint.
+# transition "bin": starting lengths are uniform within the bin, which is cut
+# into eight pieces; within a piece the expected end length is linear in the
+# starting length and the increment SD is constant, so the probability of
+# ending below a border has a closed form.
 .acl_growth_matrix <- function(len_mid, len_border, Linf, vbk, cv_inc, growth_step,
                                increment = "logistic", transition = "midpoint") {
-  node <- c(-0.9061798459386640, -0.5384693101056831, 0, 0.5384693101056831, 0.9061798459386640)
-  weight <- c(0.2369268850561891, 0.4786286704993665, 0.5688888888888889,
-              0.4786286704993665, 0.2369268850561891)
-  L <- length(len_mid)
+  L <- length(len_mid); K <- 8L
+  sd_floor <- 1e-12 * Linf
+  mean_inc <- function(x) .acl_growth_increment(x, Linf, vbk, growth_step, increment)
   G <- matrix(0, L, L)
   G[L, L] <- 1
   for (j in seq_len(L - 1L)) {
-    lower <- if (j == 1L) 2 * len_mid[1L] - len_border[1L] else len_border[j - 1L]
-    upper <- len_border[j]
-    if (transition == "bin") {
-      x <- .5 * (lower + upper) + .5 * (upper - lower) * node
-      w <- .5 * weight
+    if (transition != "bin") {
+      x <- len_mid[j]
+      m <- mean_inc(x); s <- m * cv_inc + sd_floor
+      z <- (len_border - x - m) / s
+      for (i in j:L) G[i, j] <- if (i == L) stats::pnorm(-z[L - 1L]) else if (i == j) stats::pnorm(z[i]) else
+        max(0, if (z[i - 1L] > 0) stats::pnorm(-z[i - 1L]) - stats::pnorm(-z[i]) else stats::pnorm(z[i]) - stats::pnorm(z[i - 1L]))
     } else {
-      x <- len_mid[j]; w <- 1
-    }
-    for (q in seq_along(x)) {
-      mean_inc <- .acl_growth_increment(x[q], Linf, vbk, growth_step, increment)
-      sd_inc <- mean_inc * cv_inc + 1e-12 * Linf
-      cdf <- stats::pnorm((len_border - x[q] - mean_inc) / sd_inc)
-      upper_tail <- stats::pnorm(-(len_border - x[q] - mean_inc) / sd_inc)
-      for (i in j:L) {
-        G[i, j] <- G[i, j] + w[q] * if (i == L) upper_tail[L - 1L] else if (i == j) cdf[i] else {
-          z_low <- (len_border[i - 1L] - x[q] - mean_inc) / sd_inc
-          max(0, if (z_low > 0) upper_tail[i - 1L] - upper_tail[i] else cdf[i] - cdf[i - 1L])
-        }
+      lower <- if (j == 1L) 2 * len_mid[1L] - len_border[1L] else len_border[j - 1L]
+      upper <- len_border[j]
+      below <- above <- numeric(L - 1L)
+      for (k in seq_len(K)) {
+        a <- lower + (upper - lower) * (k - 1L) / K
+        b <- lower + (upper - lower) * k / K
+        end_a <- a + mean_inc(a); end_b <- b + mean_inc(b)
+        s <- cv_inc * mean_inc(.5 * (a + b)) + sd_floor
+        u_a <- (len_border - end_a) / s; u_b <- (len_border - end_b) / s
+        below <- below + .acl_mean_pnorm(u_a, u_b) / K
+        above <- above + .acl_mean_pnorm(-u_b, -u_a) / K
       }
+      for (i in j:L) G[i, j] <- if (i == L) above[L - 1L] else if (i == j) below[i] else
+        max(0, if (below[i - 1L] > .5) above[i - 1L] - above[i] else below[i] - below[i - 1L])
     }
     G[, j] <- G[, j] / sum(G[, j])
   }

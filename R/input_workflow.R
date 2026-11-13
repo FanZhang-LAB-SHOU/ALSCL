@@ -88,6 +88,20 @@
 #' @return A named list containing numeric data.CatL, data.wgt and data.mat
 #'   tables. No missing periods, weights or maturity values are imputed.
 #' @seealso [prepare_alscl_data()], [check_alscl_data()]
+#' @examples
+#' # Write the three example tables as CSV files, then read them back
+#' folder <- tempfile("survey")
+#' dir.create(folder)
+#' for (name in c("data.CatL", "data.wgt", "data.mat"))
+#'   write.csv(YTF_example[[name]], file.path(folder, paste0(name, ".csv")),
+#'             row.names = FALSE)
+#' tables <- read_survey_csv(folder)
+#' tables$data.CatL[1:3, 1:4]
+#'
+#' # Add the biological inputs and check the configuration before fitting
+#' x <- prepare_alscl_data(tables, fit_args = YTF_example$fit_args)
+#' check_alscl_data(x, "acl")$valid
+#' unlink(folder, recursive = TRUE)
 #' @export
 read_survey_csv <- function(folder) {
   if (!is.character(folder) || length(folder) != 1L || is.na(folder) ||
@@ -160,6 +174,22 @@ read_survey_csv <- function(folder) {
 #'   directly and applies to the `.xlsx` and `.xlsm` formats; cells of a
 #'   workbook in the older `.xls` format cannot be checked in this way.
 #' @seealso [prepare_alscl_data()], [check_alscl_data()]
+#' @examples
+#' # The typical call is not run: the package has no example workbook, and R
+#' # needs an additional package to write one.
+#' \dontrun{
+#' tables <- read_survey_excel("survey.xlsx")
+#' x <- prepare_alscl_data(tables, fit_args = list(rec.age = 1, nage = 15,
+#'   M = 0.2, sel_L50 = 15, sel_L95 = 20))
+#' check_alscl_data(x, "acl")$valid
+#' }
+#'
+#' # A workbook without the three sheets is rejected, and the message names
+#' # the missing sheets.
+#' if (requireNamespace("readxl", quietly = TRUE)) {
+#'   workbook <- readxl::readxl_example("datasets.xlsx")
+#'   try(read_survey_excel(workbook))
+#' }
 #' @export
 read_survey_excel <- function(file) {
   if (!is.character(file) || length(file) != 1L || is.na(file) || !file.exists(file))
@@ -357,6 +387,9 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
 #'   identifies an outer-model parameter, even when its status is "free".
 #'   An inactive correlation is fixed because shared F does not use it.
 #' @seealso [check_alscl_data()], [prepare_alscl_data()]
+#' @examples
+#' starts <- inspect_parameters(YTF_example, "alscl")
+#' starts[, c("parameter", "natural_start", "lower", "upper", "status")]
 #' @export
 inspect_parameters <- function(x, model = c("acl", "alscl")) {
   model <- match.arg(model)
@@ -377,6 +410,15 @@ inspect_parameters <- function(x, model = c("acl", "alscl")) {
 #'   flag excluded zeros, unobserved periods/bins and very sparse observations.
 #'   They are screening messages, not a statistical test of data sufficiency.
 #' @seealso [inspect_parameters()], [prepare_alscl_data()]
+#' @examples
+#' check <- check_alscl_data(YTF_example, "acl")
+#' check$valid
+#' check$summary
+#'
+#' # An invalid setting is reported and the call does not stop
+#' x <- YTF_example
+#' x$fit_args$M <- -1
+#' check_alscl_data(x, "acl")$errors
 #' @export
 check_alscl_data <- function(x, model = c("acl", "alscl")) {
   model <- match.arg(model)

@@ -37,6 +37,22 @@
 #'   result records the natural mortality rate in simulation_M: the rate used
 #'   (used), the rate recorded in the replicate file (recorded, NA when
 #'   absent) and where the rate used came from (source).
+#' @examples
+#' \donttest{
+#' # Simulate one replicate of a ten-year survey and fit ACL to it, with the
+#' # growth parameters fixed as in the YTF_example settings.
+#' pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
+#' cfg <- YTF_example$fit_config$acl
+#' fits <- sim_model(iter_range = 1, sim_data_path = folder, output_dir = folder,
+#'   parameters = cfg$parameters, map = cfg$map, model = "acl")
+#' summary(fits$result_rep_1)$diagnostics
+#'
+#' # The fit is also saved next to the simulated replicate
+#' list.files(folder)
+#' unlink(folder, recursive = TRUE)
+#' }
 #' @export
 #' @param train_times Number of optimization passes per independent start.
 #' @param control Named nlminb control settings.
@@ -128,6 +144,19 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
 #' Fit simulation replicates with ACL
 #' @inheritParams sim_model
 #' @return The named list of replicate fits or error records returned by sim_model().
+#' @examples
+#' \donttest{
+#' # Simulate two replicates of a ten-year survey and fit ACL to each, with
+#' # the growth parameters fixed as in the YTF_example settings.
+#' pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1:2, output_dir = folder)
+#' cfg <- YTF_example$fit_config$acl
+#' fits <- sim_acl(iter_range = 1:2, sim_data_path = folder, output_dir = folder,
+#'   parameters = cfg$parameters, map = cfg$map)
+#' sapply(fits, function(fit) fit$diagnostics$numerical_ok)
+#' unlink(folder, recursive = TRUE)
+#' }
 #' @export
 sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
@@ -143,6 +172,20 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
 #' @param ... Arguments passed to sim_model(), excluding model and nstarts.
 #' @inheritParams sim_model
 #' @return The named list of replicate fits or error records returned by sim_model().
+#' @examples
+#' \donttest{
+#' # Simulate one replicate of a ten-year survey and fit ALSCL to it, with the
+#' # growth parameters fixed as in the YTF_example settings. One fishing
+#' # mortality rate shared by all lengths in each year keeps the fit short.
+#' pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
+#' cfg <- YTF_example$fit_config$alscl
+#' fits <- sim_alscl(iter_range = 1, sim_data_path = folder, output_dir = folder,
+#'   parameters = cfg$parameters, map = cfg$map, F_structure = "year")
+#' summary(fits$result_rep_1)$diagnostics
+#' unlink(folder, recursive = TRUE)
+#' }
 #' @export
 sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts = nstarts)
 
@@ -260,10 +303,12 @@ sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts 
 #'   and \code{\link{sim_alscl}} apply the same conversion to saved replicates.
 #' @examples
 #' pa <- initialize_params(species = "flatfish", nyear = 6, burn_in = 2)
-#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = tempdir())
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
 #' tables <- simulation_to_tables(sm, pa)
 #' names(tables)
 #' dim(tables$data.CatL)
+#' unlink(folder, recursive = TRUE)
 #' @export
 simulation_to_tables <- function(sm, pa = NULL, first_year = NULL)
   .acl_simulation_to_tables(sm, pa, first_year)

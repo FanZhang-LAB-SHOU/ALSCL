@@ -24,6 +24,16 @@ Perform the core table, time-grid, biology, bin, start, bound and map checks
 without compiling TMB or running an optimizer. A successful check establishes
 input consistency; it does not establish identifiability or convergence.
 }
+\examples{
+check <- check_alscl_data(YTF_example, "acl")
+check$valid
+check$summary
+
+# An invalid setting is reported and the call does not stop
+x <- YTF_example
+x$fit_args$M <- -1
+check_alscl_data(x, "acl")$errors
+}
 \seealso{
 \code{\link[=inspect_parameters]{inspect_parameters()}}, \code{\link[=prepare_alscl_data]{prepare_alscl_data()}}
 }

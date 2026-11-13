@@ -57,7 +57,8 @@ line_size, ncol for facet_ncol and scales for facet_scales.}
 
 \item{interval}{Character or NULL. The interval drawn when \code{se = TRUE}.
 \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+stays above zero (an estimate of exactly zero keeps the Wald upper bound
+with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
 }
@@ -80,25 +81,34 @@ A model with one estimate in a panel is drawn as a point, with an error
 bar when se = TRUE. Models with multiple estimates retain lines and ribbons.
 }
 \examples{
-\dontrun{
-# Basic usage
-plot_compare_ts(result_acl, result_alscl)
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(fit_acl, fit_alscl)
 
-# With CI
-plot_compare_ts(result_acl, result_alscl, se = TRUE)
+# With 95\% confidence intervals
+plot_compare_ts(fit_acl, fit_alscl, quantities = c("SSB", "R"), se = TRUE)
 
-# Per-call override + ggplot2 layering
-plot_compare_ts(result_acl, result_alscl,
+# Colors for one call, followed by ggplot2 layers
+plot_compare_ts(fit_acl, fit_alscl,
   colors = c(ACL = "darkgreen", ALSCL = "orange")) +
   ggplot2::theme(legend.position = "top") +
   ggplot2::labs(title = "My Title")
 
-# Or set globally once
-acl_theme_set(
+# Or set the style of all comparison plots, then restore the previous
+# settings
+old <- acl_theme_set(
   compare_colors = c(ACL = "steelblue", ALSCL = "tomato"),
   compare_linetypes = c(ACL = "solid", ALSCL = "longdash"),
   base_theme = "theme_classic"
 )
-plot_compare_ts(result_acl, result_alscl)  # uses global settings
+plot_compare_ts(fit_acl, fit_alscl)
+do.call(acl_theme_set, old)
 }
 }

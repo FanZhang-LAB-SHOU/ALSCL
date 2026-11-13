@@ -13,7 +13,8 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
 #' @param type Character. "B" (total), "BL" (at length), or "BA" (at age). Default is "B".
@@ -64,6 +65,16 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'   When intervals are requested, its ribbon is replaced by an error bar.
 #'   The point uses the global point_size setting and the estimate's line colour.
 #' @return A ggplot object or a list with plot and data.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#'
+#' # Total biomass with 95% confidence intervals
+#' plot_biomass(fit, se = TRUE)
+#'
+#' # Biomass at length, one panel per length bin
+#' plot_biomass(fit, type = "BL")
+#' }
 #' @export
 plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid",
                          se = FALSE, se_color = NULL, se_alpha = NULL,

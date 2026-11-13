@@ -82,7 +82,8 @@ lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{interval}{Character or NULL. The 95\% interval drawn when \code{se = TRUE}.
 \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+stays above zero (an estimate of exactly zero keeps the Wald upper bound
+with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
 }
@@ -123,4 +124,15 @@ theme label, and the typography arguments replace the corresponding theme settin
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
 The point uses the global point_size setting and the estimate's line colour.
+}
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+
+# Spawning stock biomass (SSB) with 95\% confidence intervals
+plot_SSB(fit, se = TRUE)
+
+# Spawning stock biomass at length, one panel per length bin
+plot_SSB(fit, type = "SBL")
+}
 }

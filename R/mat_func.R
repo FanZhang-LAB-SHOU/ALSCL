@@ -7,6 +7,9 @@
 #' @details L50 and L95 must be distinct finite scalars. A decreasing curve
 #'   (L95 below L50) is supported for descending selectivity limbs. Stable
 #'   logistic evaluation retains probabilities of zero or one in extreme tails.
+#' @examples
+#' # Proportion mature at the length-bin midpoints of YTF
+#' round(mat_func(L50 = YTF$mat_L50, L95 = YTF$mat_L95, length = YTF$len_mid), 3)
 #' @export
 mat_func <- function(L50, L95, length) {
   .acl_scalar(L50, "L50")

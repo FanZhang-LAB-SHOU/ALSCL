@@ -60,3 +60,25 @@ Relative bias excludes zero truth values. F and grouped arrays are excluded
 because aggregation requires an explicit definition and its uncertainty.
 Operating-model simulations are not automatically a fitted parametric bootstrap.
 }
+\examples{
+\donttest{
+# Simulate two replicates of a ten-year survey and fit ACL to each
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+bio <- sim_cal(pa)
+sims <- lapply(1:2, function(i)
+  sim_data(bio, pa, iter_range = i, output_dir = folder))
+cfg <- YTF_example$fit_config$acl
+fits <- sim_acl(iter_range = 1:2, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map)
+
+# Simulated spawning stock biomass (SSB) and recruitment of each replicate,
+# named like the fits
+truth <- lapply(sims, function(sm)
+  list(year = sm$years, SSB = as.numeric(sm$SSB), Rec = as.numeric(sm$Rec)))
+names(truth) <- names(fits)
+performance <- summarize_simulations(fits, truth, quantities = c("SSB", "Rec"))
+performance$summary
+unlink(folder, recursive = TRUE)
+}
+}

@@ -92,7 +92,7 @@ Growth increments use the following smooth decreasing mean, with SD $`CV_G\mu_{\
 {1+\exp\!\left(-\log(19)\frac{L-0.5L_\infty}{0.05L_\infty-0.5L_\infty}\right)}.
 ```
 
-This curve differs from the exact von Bertalanffy increment $`(L_\infty-L)(1-e^{-k\Delta t})`$, and every fish in a length bin grows from the bin midpoint. With `structure = list(growth_increment = "von_bertalanffy", growth_transition = "bin")`, ALSCL uses the von Bertalanffy increment and starting lengths that are uniform within the bin ([Choose the fitting settings](fitting-controls.html#structure)). `pla` describes length given age, while G describes a one-step transition given source length; each model uses its own. `FL` is length-specific F; `FA` is derived from the survival proportion of the same cohort over the model time step.
+This curve differs from the exact von Bertalanffy increment $`(L_\infty-L)(1-e^{-k\Delta t})`$, and every fish in a length bin grows from the bin midpoint. With `structure = list(growth_increment = "von_bertalanffy", growth_transition = "bin")`, ALSCL uses the von Bertalanffy increment and starting lengths that are uniform within the bin ([Choose the fitting settings](fitting-controls.html#structure)). `pla` describes length given age, while G describes a one-step transition given source length; each model uses its own. `FL` is length-specific F; `FA` is derived from the survival proportion of the same cohort over the model time step. The report holds `FA` and the matching total mortality at age `ZA` for every age, including the plus group, and for every time step.
 
 <h3 id="derived">Derived quantities</h3>
 

@@ -35,3 +35,16 @@ fitted length bins. An ACL fit and an ALSCL fit have different rows, so
 their heatmaps cannot be compared row by row. For a summary of both fits
 over the same ages, use \code{plot_compare_F_ts(basis = "age")}.
 }
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_F(fit_acl, fit_alscl)
+}
+}

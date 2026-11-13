@@ -148,6 +148,13 @@ A list. See \code{\link[=retro_model]{retro_model()}}.
 Convenience wrapper that calls \code{retro_model(..., model_type = "acl")}.
 See \code{\link[=retro_model]{retro_model()}} for full documentation of all parameters.
 }
+\examples{
+\donttest{
+retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
+retro$rho_text
+retro$rho_by_peel
+}
+}
 \seealso{
 \code{\link[=retro_model]{retro_model()}}, \code{\link[=retro_alscl]{retro_alscl()}}, \code{\link[=plot_retro]{plot_retro()}}
 }

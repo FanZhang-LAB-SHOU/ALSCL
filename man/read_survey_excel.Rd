@@ -26,6 +26,23 @@ error names the sheet and the cells. This check reads the workbook file
 directly and applies to the \code{.xlsx} and \code{.xlsm} formats; cells of a
 workbook in the older \code{.xls} format cannot be checked in this way.
 }
+\examples{
+# The typical call is not run: the package has no example workbook, and R
+# needs an additional package to write one.
+\dontrun{
+tables <- read_survey_excel("survey.xlsx")
+x <- prepare_alscl_data(tables, fit_args = list(rec.age = 1, nage = 15,
+  M = 0.2, sel_L50 = 15, sel_L95 = 20))
+check_alscl_data(x, "acl")$valid
+}
+
+# A workbook without the three sheets is rejected, and the message names
+# the missing sheets.
+if (requireNamespace("readxl", quietly = TRUE)) {
+  workbook <- readxl::readxl_example("datasets.xlsx")
+  try(read_survey_excel(workbook))
+}
+}
 \seealso{
 \code{\link[=prepare_alscl_data]{prepare_alscl_data()}}, \code{\link[=check_alscl_data]{check_alscl_data()}}
 }

@@ -21,3 +21,7 @@ Length at age.
 \description{
 Calculate length at age using the von Bertalanffy growth function.
 }
+\examples{
+# Length at ages 1 to 15 with the yellowtail flounder parameters in YTF
+VB_func(Linf = YTF$Linf, k = YTF$vbk, t0 = YTF$t0, age = 1:15)
+}

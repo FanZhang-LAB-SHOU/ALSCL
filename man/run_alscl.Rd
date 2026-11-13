@@ -123,12 +123,20 @@ decreasing logistic function of length, multiplied by \code{growth_step}.
 \code{"von_bertalanffy"}: the expected increment over one time step is
 (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
 declines smoothly to zero above Linf, so Linf and vbk have the same
-meaning as in the length-at-age curve.}
+meaning as in the length-at-age curve. Fish then stop growing at about
+Linf, so Linf acts as an upper limit of length after the first period:
+data with many fish larger than the mean asymptotic length fit poorly,
+and the standard error of Linf can be very small. The logistic
+increment stays positive above Linf.}
 \item{\code{growth_transition}}{\code{"midpoint"}: every fish in a length bin grows
 from the bin midpoint. \code{"bin"}: starting lengths are uniform within the
-bin, so the expected advance does not depend on the bin width. Use
-\code{"bin"} when the increment per time step is small relative to the bin
-width (for example quarterly steps with wide bins).}
+bin and the transition is integrated over the bin, so fish keep moving
+to the next bin when the increment per time step is small relative to
+the bin width (for example quarterly steps with wide bins). The mean
+length of a cohort then follows the growth curve closely for bins a
+few times wider than the increment; with much wider bins it remains
+approximate, because fish are spread evenly over their bin after every
+step.}
 \item{\code{initial_length}}{\code{"length_at_age"}: in the first period every age
 has the length-at-age distribution with coefficient of variation
 cv_len. \code{"growth"}: the first age has that distribution and each older
@@ -249,9 +257,12 @@ ALSCL tracks joint length-age abundance and F at length; FA summarizes
 effective cohort survival. log_t0 represents a positive t0 below rec.age.
 }
 \examples{
-\dontrun{
+\donttest{
+# One fishing mortality rate (F) shared by all lengths in each year keeps
+# this example short. The default, F by length and year, takes several
+# times longer for these data.
 x <- YTF_example
-fit <- run_alscl(x)
-fit <- run_alscl(x, nstarts = 4, ncores = 2, silent = TRUE)
+fit <- run_alscl(x, F_structure = "year", silent = TRUE)
+fit
 }
 }

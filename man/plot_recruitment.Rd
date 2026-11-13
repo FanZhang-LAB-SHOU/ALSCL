@@ -77,7 +77,8 @@ lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{interval}{Character or NULL. The 95\% interval drawn when \code{se = TRUE}.
 \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+stays above zero (an estimate of exactly zero keeps the Wald upper bound
+with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
 }
@@ -101,15 +102,13 @@ When intervals are requested, its ribbon is replaced by an error bar.
 The point uses the global point_size setting and the estimate's line colour.
 }
 \examples{
-\dontrun{
-# Use 'run_acl' to obtain 'model_result'
-model_result <- run_acl(...)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 
-# Plot recruitment without standard error
-plot_recruitment(model_result)
+# Recruitment without confidence intervals
+plot_recruitment(fit)
 
-# Plot recruitment with standard error
-plot_recruitment(model_result, se = TRUE)
+# Recruitment with 95\% confidence intervals
+plot_recruitment(fit, se = TRUE)
 }
-
 }

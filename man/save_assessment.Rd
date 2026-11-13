@@ -48,11 +48,12 @@ TMB pointer. refit_model rebuilds a live model; cross-version numerical
 equality is not promised. Only read archives from trusted sources.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 path <- tempfile(fileext = ".rds")
 save_assessment(fit, path)
 saved <- read_assessment(path)
 summary(saved)
+unlink(path)
 }
 }

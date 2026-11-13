@@ -55,10 +55,13 @@
 #'   The original separate-argument and do.call interfaces remain supported.
 #'   Both interfaces use the same fitting and standard-error acceleration.
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' # One fishing mortality rate (F) shared by all lengths in each year keeps
+#' # this example short. The default, F by length and year, takes several
+#' # times longer for these data.
 #' x <- YTF_example
-#' fit <- run_alscl(x)
-#' fit <- run_alscl(x, nstarts = 4, ncores = 2, silent = TRUE)
+#' fit <- run_alscl(x, F_structure = "year", silent = TRUE)
+#' fit
 #' }
 #' @param F_structure Fishing-mortality structure. `"group_year"` (default)
 #'   retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
@@ -84,12 +87,20 @@
 #'     `"von_bertalanffy"`: the expected increment over one time step is
 #'     (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
 #'     declines smoothly to zero above Linf, so Linf and vbk have the same
-#'     meaning as in the length-at-age curve.}
+#'     meaning as in the length-at-age curve. Fish then stop growing at about
+#'     Linf, so Linf acts as an upper limit of length after the first period:
+#'     data with many fish larger than the mean asymptotic length fit poorly,
+#'     and the standard error of Linf can be very small. The logistic
+#'     increment stays positive above Linf.}
 #'   \item{`growth_transition`}{`"midpoint"`: every fish in a length bin grows
 #'     from the bin midpoint. `"bin"`: starting lengths are uniform within the
-#'     bin, so the expected advance does not depend on the bin width. Use
-#'     `"bin"` when the increment per time step is small relative to the bin
-#'     width (for example quarterly steps with wide bins).}
+#'     bin and the transition is integrated over the bin, so fish keep moving
+#'     to the next bin when the increment per time step is small relative to
+#'     the bin width (for example quarterly steps with wide bins). The mean
+#'     length of a cohort then follows the growth curve closely for bins a
+#'     few times wider than the increment; with much wider bins it remains
+#'     approximate, because fish are spread evenly over their bin after every
+#'     step.}
 #'   \item{`initial_length`}{`"length_at_age"`: in the first period every age
 #'     has the length-at-age distribution with coefficient of variation
 #'     cv_len. `"growth"`: the first age has that distribution and each older

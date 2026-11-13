@@ -123,7 +123,13 @@ sim2 <- simulate_example_data(bin_breaks = seq(10, 60, by = 5))
 # Custom unequal bins
 sim3 <- simulate_example_data(bin_breaks = c(0, 15, 25, 35, 45, 60))
 
-\dontrun{
+# Save CSVs for sharing
+folder <- tempfile("example_data")
+sim <- simulate_example_data(seed = 42, save_csv = TRUE, output_dir = folder)
+list.files(folder)
+unlink(folder, recursive = TRUE)
+
+\donttest{
 # Run ACL with simulated data. The simulated population has t0 = -0.1, no
 # deviations in the initial numbers at age, independent recruitment and
 # smooth changes in F. Settings that match it: t0 at its true value (the
@@ -140,10 +146,9 @@ result <- run_acl(
   sel_L50 = 28, sel_L95 = 36,
   parameters = list(t0 = sim$true_params$t0, log_std_log_N0 = log(0.1),
                     log_std_log_F = log(0.3), logit_log_R = qlogis(0.01)),
-  map = list(log_std_log_N0 = factor(NA), logit_log_R = factor(NA))
+  map = list(log_std_log_N0 = factor(NA), logit_log_R = factor(NA)),
+  silent = TRUE
 )
-
-# Save CSVs for sharing
-sim <- simulate_example_data(save_csv = TRUE, output_dir = "example_data")
+result$diagnostics$numerical_ok
 }
 }

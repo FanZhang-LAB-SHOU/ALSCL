@@ -24,7 +24,8 @@
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
-#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both. An estimate that is
 #'   not positive, which can occur for ALSCL F at age because it is derived as
@@ -82,6 +83,16 @@
 #'   one finite estimate and finite nonnegative standard error per plotted cell.
 #'   Use se = FALSE for saved fits without a complete uncertainty table.
 #'
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#'
+#' # Fishing mortality rate over time, one panel per age
+#' plot_fishing_mortality(fit)
+#'
+#' # Fishing mortality rate at age, one panel per year
+#' plot_fishing_mortality(fit, type = "age")
+#' }
 #' @export
 plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", facet_ncol = NULL,
                                    facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = "ribbon",

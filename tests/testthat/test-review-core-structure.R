@@ -72,6 +72,46 @@ test_that("the von Bertalanffy increment with bin integration follows the growth
   expect_lt(published[["mean"]], published[["curve"]] - 20)
 })
 
+test_that("integration over the source bin does not stall and is smooth in Linf", {
+  grid <- function(width) {
+    border <- seq(10 + width, 180, by = width)
+    list(mid = c(border[1] - width / 2, border + width / 2), border = border)
+  }
+  cohort_mean <- function(Linf, vbk, width, step, years, cv = .3) {
+    g <- grid(width)
+    G <- ALSCL:::.acl_growth_matrix(g$mid, g$border, Linf, vbk, cv, step, "von_bertalanffy", "bin")
+    n <- as.numeric(seq_along(g$mid) == which.min(abs(g$mid - 40)))
+    start <- sum(n * g$mid)
+    for (i in seq_len(round(years / step))) n <- as.vector(G %*% n)
+    c(mean = sum(n * g$mid), curve = Linf - (Linf - start) * exp(-vbk * years))
+  }
+  # Increments far below the bin width: slow growth, 5-cm bins, quarterly and
+  # monthly steps over 60 years. A rule with a few nodes per bin stalled at
+  # 131 to 143 cm here.
+  for (step in c(.25, 1 / 12)) {
+    result <- cohort_mean(150, .1, 5, step, 60)
+    expect_lt(abs(result[["mean"]] - result[["curve"]]), 1)
+  }
+  wide <- cohort_mean(152, .38, 10, .25, 60)
+  expect_lt(abs(wide[["mean"]] - wide[["curve"]]), 4)
+  # Mean length at age 10 rises steadily with Linf; steps of uneven size would
+  # give the likelihood several optima in Linf about one bin width apart.
+  Linf <- seq(148, 160, by = .5)
+  means <- vapply(Linf, function(x) cohort_mean(x, .38, 5, .25, 10, cv = .1)[["mean"]], numeric(1))
+  expect_true(all(diff(means) > .4 & diff(means) < .6))
+  # The closed form agrees with direct numerical integration over the bin.
+  g <- grid(5)
+  closed <- ALSCL:::.acl_growth_matrix(g$mid, g$border, 152, .38, .3, .25, "von_bertalanffy", "bin")
+  j <- 20L; n <- 20000L
+  x <- g$border[j - 1L] + (g$border[j] - g$border[j - 1L]) * (seq_len(n) - .5) / n
+  m <- ALSCL:::.acl_growth_increment(x, 152, .38, .25, "von_bertalanffy")
+  cdf <- vapply(g$border, function(b) mean(stats::pnorm((b - x - m) / (.3 * m + 1e-12 * 152))), numeric(1))
+  direct <- diff(c(0, cdf, 1)); direct[seq_len(j - 1L)] <- 0; direct[j] <- cdf[j]
+  expect_equal(closed[, j], direct / sum(direct), tolerance = 1e-3)
+  expect_equal(ALSCL:::.acl_mean_pnorm(c(2, 1e-10, 40), c(-1, 0, 30)),
+               c(stats::integrate(stats::pnorm, -1, 2)$value / 3, .5, 1), tolerance = 1e-8)
+})
+
 test_that("a population with constant recruitment and no fishing stays constant with the consistent initial state", {
   skip_on_cran()
   ratio <- function(model, flags, ...) {

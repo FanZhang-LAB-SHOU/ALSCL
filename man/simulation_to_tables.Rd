@@ -38,8 +38,10 @@ and \code{\link{sim_alscl}} apply the same conversion to saved replicates.
 }
 \examples{
 pa <- initialize_params(species = "flatfish", nyear = 6, burn_in = 2)
-sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = tempdir())
+folder <- tempfile("simulation")
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = folder)
 tables <- simulation_to_tables(sm, pa)
 names(tables)
 dim(tables$data.CatL)
+unlink(folder, recursive = TRUE)
 }
