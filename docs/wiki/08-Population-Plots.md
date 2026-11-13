@@ -291,7 +291,7 @@ plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
   ggplot2::coord_cartesian(xlim = one_period$year + c(-0.5, 0.5))
 ```
 
-![Displaying a single saved estimate](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true&v=f0e874a94dee)
+![Displaying a single saved estimate](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true&v=654007fc5aa0)
 
 
 

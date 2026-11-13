@@ -42,7 +42,7 @@ The default palette is ggsci NPG: navy estimates, vermilion observations, and na
 
 The figure shows the five palettes `acl_theme_set()` accepts. In each row the first labelled colour draws lines, intervals and points of single-model plots, the second draws observations and the second model in comparisons, and the third draws smoothers; the remaining colours are used in order when a plot needs more groups, for example the peels of a retrospective. The next figure shows the same comparison plot under every palette, so you can pick one by eye; `docs/figures/palettes/ssb_by_palette.png` in the repository shows a single-model plot in the same way.
 
-![各色板下的 plot_compare_ts(a, b, quantities = "SSB", se = TRUE) / plot_compare_ts(a, b, quantities = "SSB", se = TRUE) under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=a267f422e5a1)
+![各色板下的 plot_compare_ts(a, b, quantities = "SSB", se = TRUE) / plot_compare_ts(a, b, quantities = "SSB", se = TRUE) under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=d601aa110dce)
 
 | 设置 / Setting | 范围与优先级 / Scope and precedence |
 |---|---|

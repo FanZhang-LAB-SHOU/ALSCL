@@ -311,7 +311,7 @@ plot_ridges(ridge_example, ridges_scale = 1,
   x_breaks = seq(10, 90, 20))
 ```
 
-![Missing boundary length bins](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/ridges-missing-edges.png?raw=true&v=b91666c9a782)
+![Missing boundary length bins](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/ridges-missing-edges.png?raw=true&v=b5f6fb20bdef)
 
 
 

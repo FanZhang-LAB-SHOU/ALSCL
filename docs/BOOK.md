@@ -1632,7 +1632,7 @@ plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
   ggplot2::coord_cartesian(xlim = one_period$year + c(-0.5, 0.5))
 ```
 
-![Displaying a single saved estimate](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true&v=f0e874a94dee)
+![Displaying a single saved estimate](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/single-period-SSB.png?raw=true&v=654007fc5aa0)
 
 
 
@@ -2072,7 +2072,7 @@ plot_ridges(ridge_example, ridges_scale = 1,
   x_breaks = seq(10, 90, 20))
 ```
 
-![Missing boundary length bins](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/ridges-missing-edges.png?raw=true&v=b91666c9a782)
+![Missing boundary length bins](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/sparse-panels/ridges-missing-edges.png?raw=true&v=b5f6fb20bdef)
 
 
 
@@ -2686,7 +2686,7 @@ The default palette is ggsci NPG: navy estimates, vermilion observations, and na
 
 The figure shows the five palettes `acl_theme_set()` accepts. In each row the first labelled colour draws lines, intervals and points of single-model plots, the second draws observations and the second model in comparisons, and the third draws smoothers; the remaining colours are used in order when a plot needs more groups, for example the peels of a retrospective. The next figure shows the same comparison plot under every palette, so you can pick one by eye; `docs/figures/palettes/ssb_by_palette.png` in the repository shows a single-model plot in the same way.
 
-![各色板下的 plot_compare_ts(a, b, quantities = "SSB", se = TRUE) / plot_compare_ts(a, b, quantities = "SSB", se = TRUE) under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=a267f422e5a1)
+![各色板下的 plot_compare_ts(a, b, quantities = "SSB", se = TRUE) / plot_compare_ts(a, b, quantities = "SSB", se = TRUE) under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=d601aa110dce)
 
 | 设置 / Setting | 范围与优先级 / Scope and precedence |
 |---|---|
@@ -2927,7 +2927,7 @@ acl_theme()
 acl_theme("line_color")
 ```
 
-![示例图 / Example figure: `plot_SSB(b, se = TRUE) under each palette of acl_theme_set()`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/ssb_by_palette.png?raw=true&v=3e6eab644390)
+![示例图 / Example figure: `plot_SSB(b, se = TRUE) under each palette of acl_theme_set()`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/ssb_by_palette.png?raw=true&v=51b0d14a0b2a)
 
 <a id="acl_theme_reset"></a>
 ## `acl_theme_reset()`

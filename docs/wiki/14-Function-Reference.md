@@ -122,7 +122,7 @@ acl_theme()
 acl_theme("line_color")
 ```
 
-![示例图 / Example figure: `plot_SSB(b, se = TRUE) under each palette of acl_theme_set()`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/ssb_by_palette.png?raw=true&v=3e6eab644390)
+![示例图 / Example figure: `plot_SSB(b, se = TRUE) under each palette of acl_theme_set()`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/ssb_by_palette.png?raw=true&v=51b0d14a0b2a)
 
 <a id="acl_theme_reset"></a>
 ## `acl_theme_reset()`
