@@ -5,7 +5,7 @@
 "MASE",0.38363131058306
 "RMSE",2.51557195011448
 "Rsquared",0.971067820745238
-"MAPE",7.63612926899098
+"MAPE",7.63612926899097
 "SMAPE",7.59617885414634
 "Explained Variance Score",0.971103138613416
 "Max Error",11.9929510983648
@@ -13,9 +13,9 @@
 "BIC",-640.729207654584
 "Boundary Hit",0
 "Model Converged",1
-"Final Outer mgc",2.80095946436631e-10
+"Final Outer mgc",2.80135026287098e-10
 "Positive Definite Hessian",1
 "Numerical Screen Passed",1
 "Natural Scale Boundary",0
-"Covariance Condition",21.4987347184477
+"Covariance Condition",21.4987347184498
 "Highly Correlated Pairs",0
