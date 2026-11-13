@@ -259,12 +259,11 @@ test_that("the survey index caption follows the line styles in use", {
   expect_null(plot_CatL(fit)$labels$caption)
 })
 
-test_that("matrices are reshaped as reshape2::melt did", {
-  x <- matrix(c(1.5, 2, 3, 4, 5, 6), 2L, 3L)
+test_that("matrices are reshaped in column-major order with integer positions", {
+  # The layout that the retired melt() call returned for a matrix without dimnames.
+  x <- matrix(c(1.5, 2, 3, 4, 5, 6), 2L, 3L, dimnames = list(c("a", "b"), NULL))
   long <- ALSCL:::.acl_matrix_long(x, c("Group", "Period", "Value"))
   expect_identical(long, data.frame(Group = rep(1:2, 3L), Period = rep(1:3, each = 2L),
-                                    Value = as.numeric(x)))
+                                    Value = c(1.5, 2, 3, 4, 5, 6)))
   expect_identical(names(ALSCL:::.acl_matrix_long(x)), c("Var1", "Var2", "value"))
-  skip_if_not_installed("reshape2")
-  expect_identical(ALSCL:::.acl_matrix_long(x), reshape2::melt(x))
 })
