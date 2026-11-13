@@ -17,6 +17,15 @@ The workbook must contain sheets named \code{data.CatL}, \code{data.wgt} and \co
 with the same layout as \code{\link[=read_survey_csv]{read_survey_csv()}}. Requires the optional readxl
 package. Importing validates the tables but does not choose biological inputs.
 }
+\details{
+Only blank cells and \code{NA} denote missing values. A cell that holds
+an Excel error value, such as \verb{#DIV/0!} or \verb{#N/A} from a formula, is an
+error: readxl would otherwise import it as a missing value and the
+observation would be left out of the likelihood without a message. The
+error names the sheet and the cells. This check reads the workbook file
+directly and applies to the \code{.xlsx} and \code{.xlsm} formats; cells of a
+workbook in the older \code{.xls} format cannot be checked in this way.
+}
 \seealso{
 \code{\link[=prepare_alscl_data]{prepare_alscl_data()}}, \code{\link[=check_alscl_data]{check_alscl_data()}}
 }

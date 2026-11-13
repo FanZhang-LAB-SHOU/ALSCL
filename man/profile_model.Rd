@@ -31,6 +31,7 @@ errors use one worker, retaining the original number of starts.}
 A list with parameter, scale, grid (including objective, delta_nll,
 numerical diagnostics, warnings and errors), named portable fits and settings.
 delta_nll is relative to the original fit; negative values are not clipped.
+workers is the number of socket workers that were used.
 }
 \description{
 Fix one scalar at each grid value and refit the remaining free parameters and

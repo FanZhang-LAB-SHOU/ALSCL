@@ -34,8 +34,13 @@ the ratio of means (model2/model1), for common population quantities.}
 \item{model1_name,model2_name}{Labels used in the comparison.}
 \item{fit_diagnostics}{Numerical status of each fit, including the raw code,
 gradient, Hessian and natural-scale boundaries.}
-\item{comparison}{Whether data comparability was verified and both numerical
-screens passed; preferred is NULL when an automatic preference is withheld.}
+\item{comparison}{Whether data comparability was verified (data_verified) and
+both numerical screens passed (eligible); preferred is NULL when an
+automatic preference is withheld. issues lists unverified data and
+failed numerical screens. delta_aic is the Akaike information criterion
+(AIC) of model2 minus that of model1, aic_threshold is the smallest
+absolute difference for which a preference is given (2), and reason
+states why a preference was withheld (NA when one is given).}
 }
 }
 \description{
@@ -50,6 +55,13 @@ Older results lacking this metadata can still display raw statistics, but
 receive no automatic model preference. The same applies to failed numerical
 screens. Passing the screen does not establish model adequacy; AIC expresses
 relative support among these candidates, not biological validation.
+When both fits are eligible, preferred names the model with the lower AIC
+only if the two AIC values differ by at least 2. With a smaller difference
+preferred is NULL, issues is empty and comparison$reason records that the
+AIC difference is below 2; such a difference does not establish that the
+models are equivalent. A failure record from a batch function, such as an
+element of fit_scenarios()$fits that holds an error, is rejected with its
+fit error.
 Goodness-of-fit measures use the same calculation as
 \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 is NA; nonfinite response-scale predictions at observed cells are errors.

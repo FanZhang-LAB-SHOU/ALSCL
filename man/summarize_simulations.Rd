@@ -33,6 +33,13 @@ replicates (numerical status, elapsed seconds and errors), and estimates
 Summary denominators distinguish attempted replicates, valid fits, valid
 estimate pairs and usable intervals. Bias and RMSE use valid estimate pairs;
 coverage uses only valid fits with available finite standard errors.
+summary_converged repeats the statistics of summary for all converged
+fits, whether or not they pass the numerical screen. failures counts the
+replicates that fail the screen by reason: n_replicates is the number of
+replicates with that reason and n_sole the number for which it is the only
+reason. In replicates, converged marks converged fits and failure_reasons
+lists the reasons of each replicate. In estimates, converged and
+covered_converged give the same information for each estimate pair.
 }
 \description{
 Summarize simulation bias, uncertainty coverage and fitting failures
@@ -41,6 +48,14 @@ Summarize simulation bias, uncertainty coverage and fitting failures
 Numerical failures remain in the output but do not enter bias, RMSE
 or coverage. This conditional summary must be interpreted together with the
 reported failure rate. Missing uncertainty is not treated as a failed interval.
+A converged fit returned no error and has a finite objective and a maximum
+absolute gradient below 1e-3, the gradient threshold of the numerical
+screen. Such a fit can still fail the screen, for example because an
+estimated correlation or SD lies at a natural-scale boundary or the
+Hessian is not positive definite. Compare summary with summary_converged
+to see whether the fits excluded by the screen change bias, RMSE or
+coverage, and read failures before treating the failure rate as a
+convergence rate.
 Relative bias excludes zero truth values. F and grouped arrays are excluded
 because aggregation requires an explicit definition and its uncertainty.
 Operating-model simulations are not automatically a fitted parametric bootstrap.

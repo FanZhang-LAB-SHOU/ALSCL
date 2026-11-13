@@ -30,7 +30,9 @@ run_alscl(
   control = list(),
   nstarts = ncores,
   F_structure = c("group_year", "year"),
-  polish = TRUE
+  polish = TRUE,
+  structure = list(),
+  start_spread = 0.15
 )
 }
 \arguments{
@@ -110,6 +112,40 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
+
+\item{structure}{Named list of optional model structures. The default, an
+empty list, is the published structure of Zhang and Cadigan (2022) for
+every setting. Settings and values (default first):
+\describe{
+\item{\code{growth_increment}}{\code{"logistic"}: the expected growth increment is a
+decreasing logistic function of length, multiplied by \code{growth_step}.
+\code{"von_bertalanffy"}: the expected increment over one time step is
+(Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
+declines smoothly to zero above Linf, so Linf and vbk have the same
+meaning as in the length-at-age curve.}
+\item{\code{growth_transition}}{\code{"midpoint"}: every fish in a length bin grows
+from the bin midpoint. \code{"bin"}: starting lengths are uniform within the
+bin, so the expected advance does not depend on the bin width. Use
+\code{"bin"} when the increment per time step is small relative to the bin
+width (for example quarterly steps with wide bins).}
+\item{\code{initial_length}}{\code{"length_at_age"}: in the first period every age
+has the length-at-age distribution with coefficient of variation
+cv_len. \code{"growth"}: the first age has that distribution and each older
+age is the previous age after survival at init_Z and one growth step,
+as in all later periods.}
+\item{\code{initial_plus_group}}{\code{"single_cohort"}: the first-period plus group
+holds one cohort. \code{"equilibrium"}: it holds the sum of all older cohorts
+at total mortality init_Z.}
+}
+With \code{initial_length = "growth"} and \code{initial_plus_group = "equilibrium"}
+a population with constant recruitment, no fishing and init_Z equal to M
+stays constant over time; with the published structure it does not.
+The settings used are stored in the \code{structure} element of the fit.}
+
+\item{start_spread}{Standard deviation of the normal deviates added to the
+starting values (on the scale of the optimizer, mostly logarithms) of
+the second and later starts. The default 0.15 keeps the starts used by
+earlier versions. See Details for when to use a larger value.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -160,6 +196,38 @@ corresponding list; NULL is preserved. Other top-level fields in a structured
 bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.
+
+A single start can stop at a local optimum that passes every
+numerical check, particularly for the growth parameters of ALSCL. The
+checks in \code{diagnostics} are local: they do not show whether a better
+optimum exists. For results that will be reported, use several starts
+(for example \code{nstarts = 5}) with a wider \code{start_spread} (for example
+0.5) and compare the objectives in \code{start_diagnostics}. \code{start_summary}
+gives the number of converged starts, the range of their objectives and
+the number that agree with the best one; a range above 2 is added to
+\code{diagnostics$issues}.
+
+The process densities are evaluated on the complete arrays of
+deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
+to shared values, or fixes entries with NA, is therefore accepted only
+when the matching standard deviation and correlation parameters are fixed
+too; otherwise their estimates would be biased and the fit is rejected.
+For one F deviation per time step shared by all groups, use
+\code{F_structure = "year"}, which has its own correctly normalized density.
+With tied entries the shared value has a smaller prior standard deviation
+than the stated one, and the objective of a fit with tied or fixed
+entries cannot be compared (for example by AIC) with fits that use
+another map for these deviations. \code{restricted_random} in the fit names
+the arrays concerned.
+
+Starting values outside their bounds are moved to the nearest
+bound: with a warning when the start was supplied, and with a message for
+default starts. \code{clamped_starts} in the fit lists them.
+Unless supplied, the start of Linf is 1.1 times the largest length-bin
+midpoint and its bounds are 0.7 and 2 times that midpoint. Supply
+\code{parameters.L$log_Linf} when the bins extend well beyond the largest
+fish, because Linf below 0.7 times the largest midpoint is otherwise
+excluded.
 
 ALSCL tracks joint length-age abundance and F at length; FA summarizes
 effective cohort survival. log_t0 represents a positive t0 below rec.age.

@@ -8,7 +8,7 @@
 \usage{
 \method{summary}{alscl_fit}(object, ...)
 
-\method{print}{summary.alscl_fit}(x, ...)
+\method{print}{summary.alscl_fit}(x, digits = NULL, ...)
 
 \method{print}{alscl_fit}(x, ...)
 }
@@ -18,6 +18,9 @@
 \item{...}{Reserved for future methods.}
 
 \item{x}{A fitted object or its summary.}
+
+\item{digits}{Number of significant digits to print; NULL uses
+getOption("digits").}
 }
 \value{
 summary returns a summary.alscl_fit list with numerical diagnostics and
@@ -25,4 +28,12 @@ a natural-scale parameter table. print returns its input invisibly.
 }
 \description{
 Summarize an assessment fit
+}
+\details{
+The numerical screen is computed once and is the same in the
+diagnostics row and in the parameter table. A fit without stored
+diagnostics is screened from its stored optimizer code, gradient, Hessian
+status and boundary status. A stored assessment whose inputs do not pass
+the current input checks is still summarized: the parameter table then
+contains the estimated parameters only, and notes gives the reason.
 }

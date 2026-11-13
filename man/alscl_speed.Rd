@@ -25,12 +25,22 @@ Windows, in GUI or embedded front-ends (R.app, RGui, RStudio, Positron)
 and with Apple's Accelerate BLAS, the delta method runs on socket workers
 when it would take more than about 3 seconds, and the Hessian is computed
 in the main process, because each new R process would first have to
-rebuild TMB's derivative tapes. \code{"auto"} uses up to four physical
-cores and keeps one free. This setting is separate from the
+rebuild TMB's derivative tapes. Forking is also avoided with a BLAS
+library that may use OpenMP threads (OpenBLAS built with OpenMP, BLIS,
+FlexiBLAS, Intel MKL), unless the number of threads is limited to one, for
+example with the environment variable \code{OMP_NUM_THREADS=1}.
+\code{"auto"} uses up to four cores and keeps one free. It counts
+physical cores where R can tell them from logical cores (macOS and
+Windows). It does not exceed the number of cores given to the job by
+Slurm (\code{SLURM_CPUS_PER_TASK}) or by \code{options(mc.cores = )}.
+This setting is separate from the
 \code{ncores} argument of \code{run_acl()} and \code{run_alscl()}, which
-sets the number of workers for multiple starts. Fits that already run on
-parallel workers (\code{retro_model()}, \code{sim_acl()}) use one core
-each; set \code{sd_cores = 1} when you run fits in your own parallel loop.
+sets the number of workers for multiple starts. Fits that run on
+parallel socket workers (for example \code{retro_model()},
+\code{sim_acl()} or \code{fit_scenarios()} with \code{ncores} greater
+than 1) use one core each. The same functions with \code{ncores = 1} fit
+in the main process and use this setting. Set \code{sd_cores = 1} when
+you run fits in your own parallel loop.
 Parallel standard errors are enabled for checked TMB versions 1.9.21 and
 1.9.25; other versions use sequential standard errors until validated.}
 
@@ -41,7 +51,7 @@ estimates; parallel standard errors still match sequential calculations
 at the same parameters. This is not a cross-version identity guarantee.
 \code{"TMBad"} evaluates the Laplace approximation and its gradient
 several times faster, but results are not identical: in the tests in
-\file{docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
+\url{https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
 5 fixed effects were estimated and by up to 3e-8 when 10 were estimated.
 A change takes effect at the next fit, which compiles the model once for
 each library.}
@@ -64,5 +74,5 @@ options(old)
 }
 \seealso{
 \code{\link{alscl_speed_info}}; the user guide
-\file{docs/SPEED_GUIDE.md}.
+\url{https://fanzhang-lab-shou.github.io/ALSCL/articles/speed.html}.
 }

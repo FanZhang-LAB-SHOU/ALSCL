@@ -31,8 +31,15 @@ interval. exp(mean_log_F) and exp(mean_log_R) are baseline process levels,
 not arithmetic averages over time. Parameter names retain their exact
 internal spelling to make the transformation explicit. Unavailable or
 invalid covariance entries produce NA uncertainty, never zero uncertainty.
-numerical_ok records the existing fit screen; intervals from a fit failing
+numerical_ok records the numerical screen of the fit, the same verdict
+that summary() reports; intervals from a fit failing
 this screen must not be interpreted as validated uncertainty.
+
+Fixed and inactive parameters are listed by inspecting the stored recipe
+with \code{\link[=inspect_parameters]{inspect_parameters()}}. An archive written by an earlier release can
+hold inputs that the current input checks reject. In that case the table
+contains the estimated parameters only, a warning gives the reason, and
+the reason is stored in the "inspection_error" attribute.
 }
 \examples{
 \dontrun{

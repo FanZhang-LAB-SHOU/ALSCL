@@ -19,7 +19,7 @@ retro_alscl(
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of time columns to peel. Default is 5.}
+\item{nyear}{Integer. Number of retrospective peels. Default is 5.}
 
 \item{data.CatL}{Survey abundance indices at length or a named input bundle, as in
 \code{retro_alscl(x, nyear = 3)}.}

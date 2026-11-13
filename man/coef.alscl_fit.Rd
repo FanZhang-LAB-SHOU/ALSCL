@@ -22,3 +22,9 @@ are excluded; use extract_parameters for natural-scale estimates.
 \description{
 Extract optimizer coefficients and covariance
 }
+\details{
+vcov returns NULL when no covariance was stored, and when the
+stored matrix contains nonfinite values or is not positive definite, as
+happens when the Hessian is singular. The stored matrix remains available
+as object$vcov for inspection.
+}

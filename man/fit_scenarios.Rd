@@ -33,7 +33,8 @@ subannual F remains per model step rather than being annualized.}
 \item{...}{Common overrides of the fitting arguments, applied before scenarios.}
 }
 \value{
-A list with named portable fits (including error records), resolved
+A list with named portable fits (including error records of class
+"alscl_fit_error"), resolved
 settings, status, batch elapsed time, estimates and model. The estimates
 table retains failed numerical screens rather than silently discarding them.
 }
@@ -42,7 +43,10 @@ Apply explicitly named changes to an input bundle. This is sensitivity to
 assumptions, not a profile likelihood or an automatic model ranking.
 }
 \details{
-Inner fitting uses one worker and sequential standard errors. Each
+Each scenario is fitted by one worker. When scenarios run on
+parallel workers (ncores greater than 1), each worker computes standard
+errors on one core. With ncores = 1 the standard errors use the session
+setting of alscl_speed(); the results are identical. Each
 scenario runs the nstarts of the bundle or of the call; when neither sets
 it, one start is used, the rule of hindcast_model() and retro_model().
 Warnings are recorded in status.

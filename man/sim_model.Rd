@@ -12,20 +12,22 @@ sim_model(
   parameters.L = NULL,
   parameters.U = NULL,
   map = NULL,
-  M = 0.2,
+  M = NULL,
   ncores = 1,
   train_times = 1,
   control = list(),
   F_structure = c("group_year", "year"),
   polish = TRUE,
   model = c("acl", "alscl"),
-  nstarts = 1
+  nstarts = 1,
+  allow_M_mismatch = FALSE
 )
 }
 \arguments{
 \item{iter_range}{A numeric vector of distinct nonnegative integer replicate
 IDs to fit (default 4:100). Zero is valid, matching the seeds accepted by
-sim_data().}
+sim_data(). File names use the integer form of each ID, for example
+sim_rep100000 for 1e5, whatever the number formatting options are.}
 
 \item{sim_data_path}{A character string specifying the path to the folder containing the simulation data files (default is the current working directory).
 Recorded observation years are retained. Older files without time metadata
@@ -41,7 +43,10 @@ use a first observation year of 2000.}
 
 \item{map}{A list containing the custom values for the map elements (default is NULL).}
 
-\item{M}{Numeric, natural mortality (default: 0.2)}
+\item{M}{Natural mortality rate per model time step used in every fit. The
+default, NULL, uses the natural mortality rate recorded in each replicate
+file by sim_data(). A supplied value must equal the recorded rate unless
+allow_M_mismatch is TRUE. Files without a recorded rate require M.}
 
 \item{ncores}{Integer. Number of CPU cores to use. 1 = sequential (default).
 Uses socket workers on all platforms.
@@ -73,12 +78,22 @@ refinement$hessian_calculations records methods, cores and fallback notes.}
 \item{nstarts}{Positive integer; number of independent optimization starts
 per simulated dataset. Defaults to 1, independently of ncores. Starts run
 sequentially within each replicate; ncores controls parallel replicates.}
+
+\item{allow_M_mismatch}{Logical. FALSE (default) stops when a supplied M
+differs from the natural mortality rate recorded in a replicate file.
+TRUE fits the supplied M, for a study of misspecified natural mortality.}
 }
 \value{
 A list containing the results of the stock assessment model. Failed
-fits contain converge = "FAILED", error and iter. Each result, including
+fits have class "alscl_fit_error" and contain converge = "FAILED", error
+and iter. Each result, including
 failures, replaces its result_rep_\if{html}{\out{<iter>}} file in output_dir. Storage errors
 stop the batch rather than leave an old success file as the current result.
+Results do not contain the TMB object obj, in memory or in the saved
+files; use refit_model() on a result when a TMB object is needed. Each
+result records the natural mortality rate in simulation_M: the rate used
+(used), the rate recorded in the replicate file (recorded, NA when
+absent) and where the rate used came from (source).
 }
 \description{
 This function runs a stock assessment model using the specified iteration range.
@@ -86,8 +101,11 @@ Supports parallel execution on multiple CPU cores for faster computation.
 }
 \details{
 M and F are per model time step, including quarterly simulations.
-Each replicate uses one fitting worker and sequential standard errors to
-avoid nested parallelism, including when nstarts is greater than 1. Each
+Each replicate uses one fitting worker, including when nstarts is greater
+than 1. When replicates run on parallel workers (ncores greater than 1),
+each worker computes standard errors on one core to avoid nested
+parallelism. With ncores = 1 the standard errors use the session setting
+of alscl_speed(); the results are identical. Each
 successful result retains nstarts, workers and start_diagnostics from the
 core fit. train_times controls successive optimization passes from each
 start, whereas nstarts controls independent initial values. Model-specific
@@ -98,4 +116,6 @@ Recorded survey catchability must agree with its logistic metadata before
 fitting. Older files with only valid logistic metadata remain supported;
 if metadata are absent, a logistic curve is recovered from q_surv and
 checked against the complete recorded vector.
+Standard errors are computed for every replicate because
+summarize_simulations() uses them for interval coverage.
 }

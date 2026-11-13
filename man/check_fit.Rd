@@ -27,6 +27,17 @@ including for quarterly data. Correlations use observations separated by
 the requested actual time lag. These descriptive checks use fitted latent
 effects and are not independent residual tests, simulation envelopes or
 evidence of model adequacy. All plots inherit the package's grid-free theme.
+
+The quantile-quantile (QQ) plot shows the pooled conditional log
+residuals divided by the fitted observation standard deviation (SD)
+against standard normal quantiles, with the line of equality as the
+reference. This reference is not the distribution of the residuals under
+a correct model: the fitted random effects absorb part of the observation
+error, so the points of a correctly specified model have a slope below
+one (0.91 to 0.96 in simulation tests with the package examples) and lie
+inside the line at both tails. Read curvature and asymmetry of the
+points, not their distance from the line, as signs of skewness or heavy
+tails. No simulation envelope is drawn.
 }
 \examples{
 \dontrun{
