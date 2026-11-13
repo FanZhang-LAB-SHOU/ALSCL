@@ -152,7 +152,11 @@ sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts 
 
 .acl_read_simulation <- function(sim_data_path, iter) {
   e <- new.env(parent = emptyenv())
-  load(file.path(sim_data_path, paste0("sim_rep", .acl_replicate_id(iter))), envir = e)
+  file <- file.path(sim_data_path, paste0("sim_rep", .acl_replicate_id(iter)))
+  # Earlier versions named files with the default number format (sim_rep1e+05).
+  legacy <- file.path(sim_data_path, paste0("sim_rep", iter))
+  if (!file.exists(file) && file.exists(legacy)) file <- legacy
+  load(file, envir = e)
   if (is.null(e$sim.data)) stop("Simulation file does not contain sim.data.")
   e$sim.data
 }

@@ -14,7 +14,8 @@
   cl <- parallel::makeCluster(ncores)
   on.exit(parallel::stopCluster(cl), add = TRUE)
   .acl_initialize_workers(cl, cache = dirname(dirname(info$cpp_path)),
-    settings = c(.acl_worker_options(), list(ALSCL.se_level = .acl_se_level())))
+    settings = c(.acl_worker_options(), list(ALSCL.se_level = .acl_se_level(),
+                                             ALSCL.delta_method = .acl_delta_method())))
   parallel::parLapply(cl, X, FUN, ...)
 }
 

@@ -38,7 +38,10 @@
 .acl_install_build <- function(build, cache, lib) {
   if (file.exists(lib)) return(invisible(FALSE))
   # A cache folder without a library was left by an interrupted build.
-  if (dir.exists(cache)) unlink(cache, recursive = TRUE)
+  # Check for the library again just before removing: another process may
+  # have installed a complete entry since the first check.
+  if (dir.exists(cache) && !file.exists(lib)) unlink(cache, recursive = TRUE)
+  if (file.exists(lib)) return(invisible(FALSE))
   if (suppressWarnings(file.rename(build, cache))) return(invisible(TRUE))
   # The rename fails when another process installed the entry in the meantime.
   if (file.exists(lib)) return(invisible(FALSE))

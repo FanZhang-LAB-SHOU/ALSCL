@@ -113,7 +113,13 @@ print.alscl_speed_info <- function(x, ...) {
   invisible(x)
 }
 
-.acl_framework <- function() match.arg(getOption("ALSCL.framework", "CppAD"), c("CppAD", "TMBad"))
+.acl_framework <- function() {
+  choice <- getOption("ALSCL.framework", "CppAD")
+  if (!is.character(choice) || length(choice) != 1L || is.na(choice) ||
+      is.na(pmatch(choice, c("CppAD", "TMBad"))))
+    stop("options(ALSCL.framework = ) must be \"CppAD\" or \"TMBad\".", call. = FALSE)
+  match.arg(choice, c("CppAD", "TMBad"))
+}
 
 # Settings for socket workers that fit models themselves: the same AD
 # library as the main process, and sequential standard errors, because the
@@ -155,8 +161,9 @@ print.alscl_speed_info <- function(x, ...) {
   .acl_framework()
   .acl_cores()
   choice <- getOption("ALSCL.sd_backend", "auto")
+  # Unambiguous abbreviations are accepted, as in earlier versions.
   if (!is.character(choice) || length(choice) != 1L || is.na(choice) ||
-      !choice %in% c("auto", "fork", "socket"))
+      is.na(pmatch(choice, c("auto", "fork", "socket"))))
     stop("options(ALSCL.sd_backend = ) must be \"auto\", \"fork\" or \"socket\".", call. = FALSE)
   .acl_se_level()
   .acl_delta_method()
