@@ -57,21 +57,51 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
     stringsAsFactors = FALSE)
 }
 
+# A scalar that the map fixes must have one value in the full fit and in every
+# peel. Without an explicit value, mean_log_R starts at a value derived from
+# the observations, which each peel would otherwise derive from its own
+# truncated data. Resolve it once from the complete data.
+.acl_retro_fixed_scalars <- function(fit_args) {
+  mapping <- fit_args$map
+  if (!is.list(mapping) || is.data.frame(mapping)) return(fit_args)
+  entry <- mapping[["mean_log_R"]]
+  fixed <- length(entry) == 1L && is.na(entry)
+  if (!fixed || !is.null(fit_args$parameters[["mean_log_R"]])) return(fit_args)
+  survey <- tryCatch(.acl_survey_data(fit_args$data.CatL), error = function(e) NULL)
+  if (is.null(survey)) return(fit_args)
+  # The same rule as the fitting setup, applied to all periods.
+  totals <- colSums(survey$observed, na.rm = TRUE)
+  value <- log(mean(totals[totals > 0]))
+  if (!is.finite(value)) return(fit_args)
+  parameters <- fit_args$parameters
+  if (is.null(parameters)) parameters <- list()
+  parameters$mean_log_R <- value
+  fit_args["parameters"] <- list(parameters)
+  fit_args
+}
+
 # Retain compact results rather than serializing a live TMB objective between
 # processes. A failed fit still contributes a diagnostic row and a missing rho.
-.acl_retro_fit <- function(peel, fit_args, model_type, silent) {
+# Peel k removes the last k * peel_step time steps. Warnings are recorded with
+# the fit that raised them: a socket worker cannot pass them to the caller.
+.acl_retro_fit <- function(peel, fit_args, model_type, silent, peel_step = 1L) {
   started <- proc.time()
-  end_col <- ncol(fit_args$data.CatL) - peel
+  removed <- peel * peel_step
+  end_col <- ncol(fit_args$data.CatL) - removed
   years <- suppressWarnings(as.numeric(sub("^X", "",
     colnames(fit_args$data.CatL)[seq.int(2L, end_col)])))
   error <- NULL
-  fit <- tryCatch({
+  warnings <- character()
+  fit <- tryCatch(withCallingHandlers({
     if ("map" %in% names(fit_args))
-      fit_args["map"] <- list(.acl_retro_map(fit_args, peel, model_type))
+      fit_args["map"] <- list(.acl_retro_map(fit_args, removed, model_type))
     for (name in c("data.CatL", "data.wgt", "data.mat"))
       fit_args[[name]] <- fit_args[[name]][, seq_len(end_col), drop = FALSE]
     do.call(if (model_type == "acl") run_acl else run_alscl, fit_args)
-  }, error = function(e) {
+  }, warning = function(w) {
+    warnings <<- c(warnings, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  }), error = function(e) {
     error <<- conditionMessage(e)
     NULL
   })
@@ -80,13 +110,18 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
   diagnostics <- cbind(data.frame(Peel = peel,
     RetrospectiveYear = tail(years, 1L), elapsed = elapsed,
     error = if (is.null(error)) "" else error), .acl_fit_status(fit, error),
-    .acl_retro_optimizer_details(fit))
-  if (!silent) message(sprintf("  %s: %.1f sec%s",
-    if (peel == 0L) "Full model" else paste("Peel", peel), elapsed,
-    if (is.null(error)) "" else paste0(" (failed: ", error, ")")))
+    .acl_retro_optimizer_details(fit),
+    data.frame(warnings = paste(unique(warnings), collapse = "; "), stringsAsFactors = FALSE))
+  if (!silent) message(.acl_retro_progress(peel, elapsed, error))
   list(peel = peel, year = years, diagnostics = diagnostics,
        variables = list(B = fit$report$B, Rec = fit$report$Rec,
                         SSB = fit$report$SSB, N = fit$report$N))
+}
+
+.acl_retro_progress <- function(peel, elapsed, error = NULL) {
+  failed <- !is.null(error) && nzchar(error)
+  sprintf("  %s: %.1f sec%s", if (peel == 0L) "Full model" else paste("Peel", peel),
+          elapsed, if (failed) paste0(" (failed: ", error, ")") else "")
 }
 
 .acl_retro_wrapper <- function(call, frame, model) {
@@ -109,8 +144,10 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' Recruitment, Biomass, and Abundance to quantify retrospective bias.
 #' Supports both ACL and ALSCL model types via the `model_type` argument.
 #'
-#' @param nyear Integer. Number of time columns to peel sequentially. Default is
-#'   5. One peel removes one model time step (one quarter for quarterly data).
+#' @param nyear Integer. Number of retrospective peels. Default is 5. Each
+#'   successive peel removes peel_step further model time steps. With the
+#'   default peel_step = 1, one peel removes one model time step (one quarter
+#'   for quarterly data).
 #' @param data.CatL Survey abundance indices at length or the same named input bundle used
 #'   by [run_acl()] or [run_alscl()]. For example, `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
@@ -135,20 +172,26 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   including dev_log_N0 and named NULL releases, are unchanged.
 #' @param len_mid Optional numeric vector of length bin midpoints.
 #' @param len_border Optional numeric vector of length bin borders.
-#' @param len_lower Optional lower bin boundaries (ALSCL only). The first entry must be
-#'   -Inf and the remaining entries must match len_border.
-#' @param len_upper Optional upper bin boundaries (ALSCL only). The final entry must be
-#'   Inf and the preceding entries must match len_border.
+#' @param len_lower Deprecated. Optional lower bin boundaries (ALSCL only). The
+#'   first entry must be -Inf and the remaining entries must match len_border,
+#'   so the argument cannot change a fit. It will be removed.
+#' @param len_upper Deprecated. Optional upper bin boundaries (ALSCL only). The
+#'   final entry must be Inf and the preceding entries must match len_border,
+#'   so the argument cannot change a fit. It will be removed.
 #' @param train_times Positive integer. Number of consecutive optimization passes
 #'   per start. Default is 1; nstarts controls the number of independent starts.
 #' @param nstarts Positive integer. Number of independent starts per full/peel
 #'   fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.
-#' @param ncores Integer. Number of CPU cores for parallel peel computation.
-#'   Default is 1. A bundle's fitting ncores is ignored: specify this argument
-#'   explicitly for peel workers. Each fit runs its nstarts sequentially with
-#'   ncores = 1, avoiding nested fitting workers.
+#' @param ncores Integer. Number of socket workers for the full fit and the
+#'   peels. Default is 1. With more than one worker, the full fit and the peels
+#'   run in one batch; estimates are the same as with one worker. A bundle's
+#'   fitting ncores is ignored: specify this argument explicitly. Each fit runs
+#'   its nstarts sequentially with ncores = 1, avoiding nested fitting workers.
 #' @param silent Logical. Suppress progress messages when TRUE. Numerical-screen
 #'   warnings are still reported. Default is FALSE.
+#' @param peel_step Positive integer. Number of model time steps that each
+#'   successive peel removes. Default is 1. For quarterly data, peel_step = 4
+#'   gives annual peels: peel k then ends k years before the terminal period.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
@@ -182,11 +225,27 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   The full fit and every requested peel must pass the numerical screen, and
 #'   have finite terminal estimates with a nonzero reference, before a quantity's
 #'   Mohn's rho is reported. Invalid or failed fits are not silently dropped.
+#'
+#'   A parameter that the map fixes has the same value in the full fit and in
+#'   every peel. When map fixes mean_log_R and parameters gives no value for
+#'   it, the value is derived once from the complete observations (the log of
+#'   the mean total survey index over periods) and used in every fit. Earlier
+#'   versions derived it again from the truncated data of each peel.
+#'
+#'   Warnings raised while fitting are recorded in fit_diagnostics$warnings for
+#'   the fit that raised them, including fits on socket workers, and one
+#'   summary warning names these fits.
+#'
+#'   Mohn's rho is the mean over peels of the relative difference between the
+#'   terminal estimate of a peel and the estimate of the full fit for the same
+#'   period. With peel_step = 1 on quarterly data this is a mean over quarterly
+#'   peels. Use peel_step = 4 for a rho based on annual peels.
 #' @return A list containing `results`, `rho_text`, `last_points`, `model_type`,
 #'   and optionally `plot`. `fit_diagnostics` records the full fit (Peel = 0)
 #'   and every requested peel, including errors and numerical status.
 #'   It also retains the selected optimizer message and pass, all pass codes
-#'   and messages, and the refinement status, steps and pre-refinement gradient.
+#'   and messages, the refinement status, steps and pre-refinement gradient,
+#'   and the warnings raised by each fit.
 #'   Missing records from older or failed fits remain NA. A successful pass can
 #'   coexist with a failed restart in the history; read the selected pass and
 #'   final numerical screen together.
@@ -195,6 +254,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   is invalid. `raw_rho_text` retains an unscreened mean for diagnosis only;
 #'   it is NA if any terminal comparison is missing. `errors` lists fit errors.
 #'   `results` retains available estimates, with NumericalOK and RawRho flags.
+#'   `peel_step` records the number of time steps removed per peel and
+#'   `workers` the number of workers used.
 #' @export
 #' @examples
 #' \dontrun{
@@ -225,7 +286,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
-                        model = NULL, ...) {
+                        model = NULL, peel_step = 1, ...) {
   .acl_check_flag(plot, "plot")
   .acl_check_flag(silent, "silent")
   renamed <- .acl_renamed(list(...), "retro_model")
@@ -239,14 +300,24 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   model_type <- match.arg(model_type)
   supplied <- names(as.list(match.call())[-1L])
   if (is.list(nyear) && !is.data.frame(nyear)) {
-    if (!missing(data.CatL))
-      stop("Supply the input bundle only once.", call. = FALSE)
+    # A bundle in the first position. A number that follows it positionally
+    # is the number of peels, as in retro_acl(x, 3).
+    peels <- 5L
+    if (!missing(data.CatL)) {
+      if (!is.numeric(data.CatL) || length(data.CatL) != 1L)
+        stop("The first argument is an input bundle, so data.CatL must not be supplied as well. ",
+             "Give the number of peels by name, for example retro_model(x, nyear = 3).",
+             call. = FALSE)
+      peels <- data.CatL
+    }
     data.CatL <- nyear
-    nyear <- 5L
+    nyear <- peels
     supplied <- union(setdiff(supplied, "nyear"), "data.CatL")
   }
   nyear <- .acl_positive_integer(nyear, "nyear")
   ncores <- .acl_positive_integer(ncores, "ncores")
+  peel_step <- .acl_positive_integer(peel_step, "peel_step")
+  if (!is.null(len_lower) || !is.null(len_upper)) .acl_deprecated_bin_bounds("retro_model")
   fit_fun <- if (model_type == "acl") run_acl else run_alscl
   fit_names <- intersect(names(formals(fit_fun)), names(formals(retro_model)))
   # Peel workers and within-fit starts are separate controls. Only explicit
@@ -268,28 +339,42 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   if (length(labels) != ncol(fit_args$data.CatL) || any(!is.finite(years)) ||
       any(diff(years) <= 0))
     stop("Time columns must have increasing numeric labels before retrospective fitting.", call. = FALSE)
-  if (nyear > ncol(fit_args$data.CatL) - 3L)
-    stop("Every retrospective peel must retain at least two time steps.", call. = FALSE)
+  if (as.double(nyear) * peel_step > ncol(fit_args$data.CatL) - 3L)
+    stop("Every retrospective peel must retain at least two time steps. ",
+         "nyear * peel_step is ", as.double(nyear) * peel_step, " and the data have ",
+         ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
+  fit_args <- .acl_retro_fixed_scalars(fit_args)
 
   progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()
-  progress(sprintf("Fitting full %s model...", toupper(model_type)))
-  full <- .acl_retro_fit(0L, fit_args, model_type, silent)
-  ncores_use <- .acl_workers(min(ncores, nyear))
+  # The full fit is one task of the batch, so no worker waits for it.
+  ncores_use <- .acl_workers(min(ncores, nyear + 1L))
   if (ncores_use == 1L) {
+    progress(sprintf("Fitting full %s model...", toupper(model_type)))
+    full <- .acl_retro_fit(0L, fit_args, model_type, silent, peel_step)
     progress(sprintf("Running %d retrospective peels sequentially...", nyear))
     peels <- lapply(seq_len(nyear), .acl_retro_fit, fit_args = fit_args,
-                    model_type = model_type, silent = silent)
+                    model_type = model_type, silent = silent, peel_step = peel_step)
   } else {
-    progress(sprintf("Running %d retrospective peels on %d socket workers...",
-                     nyear, ncores_use))
-    peels <- .acl_cluster_lapply(seq_len(nyear), .acl_retro_fit, ncores_use, model_type,
+    progress(sprintf("Fitting the full %s model and %d retrospective peels on %d socket workers...",
+                     toupper(model_type), nyear, ncores_use))
+    batch <- .acl_cluster_lapply(seq.int(0L, nyear), .acl_retro_fit, ncores_use, model_type,
                                  fit_args = fit_args, model_type = model_type,
-                                 silent = silent)
+                                 silent = TRUE, peel_step = peel_step)
+    full <- batch[[1L]]
+    peels <- batch[-1L]
+    # Messages from socket workers do not reach this session.
+    for (fit in batch)
+      progress(.acl_retro_progress(fit$peel, fit$diagnostics$elapsed, fit$diagnostics$error))
   }
   fits <- c(list(full), peels)
   fit_diagnostics <- do.call(rbind, lapply(fits, `[[`, "diagnostics"))
   rownames(fit_diagnostics) <- NULL
+  warned <- fit_diagnostics$Peel[nzchar(fit_diagnostics$warnings)]
+  if (length(warned))
+    warning("Warnings were raised while fitting ",
+            paste(ifelse(warned == 0L, "the full model", paste("peel", warned)), collapse = ", "),
+            ". See the warnings column of fit_diagnostics.", call. = FALSE)
   variables <- c("B", "Rec", "SSB", "N")
   rho_by_peel <- do.call(rbind, lapply(peels, function(peel) {
     do.call(rbind, lapply(variables, function(variable) {
@@ -357,7 +442,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                  rho_by_peel = rho_by_peel, raw_rho_text = raw_rho_text,
                  errors = fit_diagnostics[nzchar(fit_diagnostics$error),
                                           c("Peel", "RetrospectiveYear", "error"), drop = FALSE],
-                 workers = ncores_use, nstarts = fit_args$nstarts)
+                 workers = ncores_use, nstarts = fit_args$nstarts, peel_step = peel_step)
   if (plot) {
     if (!nrow(results) || !any(is.finite(results$Value))) {
       output["plot"] <- list(NULL)
@@ -387,7 +472,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' Convenience wrapper that calls `retro_model(..., model_type = "acl")`.
 #' See [retro_model()] for full documentation of all parameters.
 #'
-#' @param nyear Integer. Number of time columns to peel. Default is 5.
+#' @param nyear Integer. Number of retrospective peels. Default is 5.
 #' @param data.CatL Survey abundance indices at length or a named input bundle, as in
 #'   `retro_acl(x, nyear = 3)`.
 #' @param data.wgt The weight data.
@@ -415,7 +500,7 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' Convenience wrapper that calls `retro_model(..., model_type = "alscl")`.
 #' See [retro_model()] for full documentation of all parameters.
 #'
-#' @param nyear Integer. Number of time columns to peel. Default is 5.
+#' @param nyear Integer. Number of retrospective peels. Default is 5.
 #' @param data.CatL Survey abundance indices at length or a named input bundle, as in
 #'   `retro_alscl(x, nyear = 3)`.
 #' @param data.wgt The weight data.

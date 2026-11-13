@@ -26,10 +26,10 @@
       args <- overlay(args, validate(x[["fit_args"]], "x$fit_args", allowed))
     if ("fit_config" %in% names(x)) {
       configs <- validate(x[["fit_config"]], "x$fit_config", c("acl", "alscl"))
-      if (!model %in% names(configs))
-        stop("x$fit_config must contain a '", model, "' configuration.", call. = FALSE)
-      args <- overlay(args, validate(configs[[model]],
-                                    paste0("x$fit_config$", model), allowed))
+      # A configuration for the other model only: this model uses fit_args.
+      if (model %in% names(configs))
+        args <- overlay(args, validate(configs[[model]],
+                                      paste0("x$fit_config$", model), allowed))
     }
   } else {
     args <- validate(x, "x", allowed)

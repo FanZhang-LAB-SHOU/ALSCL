@@ -15,6 +15,7 @@
 #' @return A list with parameter, scale, grid (including objective, delta_nll,
 #'   numerical diagnostics, warnings and errors), named portable fits and settings.
 #'   delta_nll is relative to the original fit; negative values are not clipped.
+#'   workers is the number of socket workers that were used.
 #' @details At least one other free scalar must remain, as required by the fitting
 #'   core. Grid values must satisfy the original optimizer bounds. Other free
 #'   scalar starts are initialized at the fitted optimum; fixed parameters and
@@ -111,5 +112,5 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
     settings = settings, reference_objective = reference,
     reference_numerical_ok = isTRUE(fit$diagnostics$numerical_ok),
     elapsed = unname(proc.time()[["elapsed"]] - started),
-    model = recipe$model, workers = min(ncores, length(settings)))
+    model = recipe$model, workers = .acl_workers(min(ncores, length(settings))))
 }

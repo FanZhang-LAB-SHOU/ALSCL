@@ -68,6 +68,15 @@
     "%s() is deprecated and will be removed; use %s() instead.", old, .acl_deprecated_functions[[old]]))
 }
 
+# len_lower and len_upper are checked against len_border and then rebuilt from
+# it, so they cannot change a fit. They remain accepted for one release cycle.
+.acl_deprecated_bin_bounds <- function(fun) {
+  .acl_deprecated_message("argument.length_bin_bounds", paste0(
+    fun, "(): arguments 'len_lower' and 'len_upper' are deprecated and will be removed. ",
+    "The first and last length bins are always open-ended and the other bounds equal len_border, ",
+    "so these arguments cannot change a fit. Remove them from the call or from the input bundle."))
+}
+
 # Tests reset the once-per-session warnings.
 .acl_reset_deprecations <- function() {
   rm(list = ls(.acl_deprecation_env, all.names = TRUE), envir = .acl_deprecation_env)

@@ -204,7 +204,7 @@ read_survey_excel <- function(file) {
 #' @param fit_args Named list of shared fitting arguments, including rec.age,
 #'   nage, M, sel_L50 and sel_L95. Keep the three tables outside this list.
 #' @param fit_config Optional named list with acl and/or alscl model-specific
-#'   settings. When supplied, it must contain the model selected for fitting.
+#'   settings. A model without an entry uses the shared fit_args only.
 #' @details Settings follow the ordinary bundle precedence: shared fit_args,
 #'   selected fit_config, then explicit arguments to run_acl/run_alscl. List-valued
 #'   overrides replace complete lists. Named NULL map releases are preserved.

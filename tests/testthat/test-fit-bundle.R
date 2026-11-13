@@ -29,7 +29,9 @@ test_that("bundles reject malformed or incomplete settings before fitting", {
   expect_error(run_alscl(x), "x\\$fit_args contains unknown arguments: ncore")
   x <- YTF_example
   x$fit_config$acl <- NULL
-  expect_error(run_acl(x), "must contain a 'acl' configuration")
+  # A model without a fit_config entry uses the shared fit_args (review finding F73).
+  expect_identical(.acl_bundle_args(x, "acl"),
+                   c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args))
   x$fit_config$alscl <- 1
   expect_error(run_alscl(x), "unique, non-empty names")
   x <- YTF_example
