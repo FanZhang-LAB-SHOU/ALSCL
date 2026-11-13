@@ -4,7 +4,7 @@ utils::globalVariables(c(
   "LenBin", "YearIdx", "F_value", "Label", "Residual",
   "Observed", "Predicted", "Metric_Name", "Metric_Value",
   "abs_resid", "year_fct", "MeanF", "Selectivity", "Source",
-  "mean_r", "sd_r"
+  "mean_r", "sd_r", "Width", "Height"
 ))
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ utils::globalVariables(c(
   }
   if (midpoints && !isTRUE(all.equal(as.numeric(models[[1L]]$len_mid),
                                      as.numeric(models[[2L]]$len_mid), tolerance = 1e-8)))
-    stop("Models have different length midpoints; a paired catch-at-length plot requires the same grid.",
+    stop("Models have different length midpoints; plot_compare_CatL() needs both fits on the same length bins.",
          call. = FALSE)
   list(observed = observed, year = years, len_label = labels)
 }
@@ -81,9 +81,10 @@ utils::globalVariables(c(
 
 #' Compare Time-Series Outputs of Two Models
 #'
-#' Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
-#' on the same axes. The plot uses the global theme and can be
-#' extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
+#' Plots spawning stock biomass (SSB), recruitment, total biomass, total
+#' abundance and catch from two models on the same axes. The plot uses the
+#' global theme and can be extended with \code{+ ggplot2::theme()} or any
+#' ggplot2 layer.
 #'
 #' @param model1 First model result (reference).
 #' @param model2 Second model result (alternative).
@@ -93,10 +94,18 @@ utils::globalVariables(c(
 #'   requested explicitly when both supplied results contain it.
 #'   For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 #'   mean or apical summary; F is not a scalar time series in the model reports.
-#' @param se Logical. Show confidence intervals. Default FALSE.
+#' @param se Logical. Show 95% confidence intervals. Default FALSE.
+#' @param interval Character or NULL. The interval drawn when \code{se = TRUE}.
+#'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   fall below zero. NULL inherits the global \code{interval} setting (default
+#'   "lognormal"). Point estimates are the same for both.
 #' @param model1_name,model2_name Character. Labels. Auto-detected if NULL.
-#' @param colors Named character vector of 2 colors. NULL = use global theme.
-#' @param linetypes Named character vector of 2 linetypes. NULL = use global theme.
+#' @param colors Character vector of 2 colors, named by model or in model
+#'   order. NULL = use global theme. A vector with fewer than two colors gives
+#'   a warning and the global setting is used.
+#' @param linetypes Character vector of 2 linetypes, with the same rules as
+#'   \code{colors}. NULL = use global theme.
 #' @param line_size Numeric or NULL. Line width; NULL uses the global compare_line_size.
 #' @param facet_ncol Integer or NULL. Facet columns; NULL uses the global compare_facet_ncol.
 #' @param facet_scales Character or NULL. Facet scales; NULL uses the global compare_facet_scales.
@@ -142,9 +151,10 @@ plot_compare_ts <- function(model1, model2,
                             model1_name = NULL, model2_name = NULL,
                             colors = NULL, linetypes = NULL, line_size = NULL,
                             facet_ncol = NULL, facet_scales = NULL,
-                            return_data = FALSE, ...) {
+                            return_data = FALSE, ..., interval = NULL) {
 
   renamed <- .acl_renamed(list(...), "plot_compare_ts")
+  interval <- .acl_interval_type(interval)
   if (is.null(line_size)) line_size <- renamed$line_size
   if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
   if (is.null(facet_scales)) facet_scales <- renamed$facet_scales
@@ -173,7 +183,7 @@ plot_compare_ts <- function(model1, model2,
                    CN = "CN", catch = "CN",
                    CB = "CB")
 
-  qty_labels <- c(SSB = "Spawning biomass", Rec = "Recruitment",
+  qty_labels <- c(SSB = "Spawning stock biomass (SSB)", Rec = "Recruitment",
                   B = "Total biomass", N = "Total abundance",
                   CN = "Catch numbers", CB = "Catch biomass")
 
@@ -214,10 +224,10 @@ plot_compare_ts <- function(model1, model2,
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::facet_wrap(~Quantity, ncol = cfg$facet_ncol, scales = cfg$facet_scales) +
     ggplot2::labs(title = .acl_title("compare_ts", model1_name, model2_name),
-                  x = .acl_lab("x", "year"), y = "Value",
+                  x = .acl_lab("x", "year"), y = "Estimate",
                   color = "Model", linetype = "Model") +
     .acl_base_theme() +
-    .acl_scale_x() +
+    .acl_scale_x(values = df$Year) +
     ggplot2::theme(legend.position = cfg$legend_pos,
                    strip.text = ggplot2::element_text(face = "bold"))
 
@@ -229,10 +239,10 @@ plot_compare_ts <- function(model1, model2,
         years <- info$m$year
         ss <- .acl_plot_estimates(info$m, q, length(years))
         label <- ifelse(q %in% names(qty_labels), qty_labels[q], q)
+        bounds <- .acl_interval(ss[, "Estimate"], ss[, "Std. Error"], interval)
         ribbon_list[[length(ribbon_list) + 1]] <- data.frame(
           Year = years, estimate = ss[, "Estimate"],
-          lower = ss[, "Estimate"] - 1.96 * ss[, "Std. Error"],
-          upper = ss[, "Estimate"] + 1.96 * ss[, "Std. Error"],
+          lower = bounds$lower, upper = bounds$upper,
           Model = info$name, Quantity = label, stringsAsFactors = FALSE)
       }
     }
@@ -260,8 +270,12 @@ plot_compare_ts <- function(model1, model2,
 #'
 #' @inheritParams plot_compare_ts
 #' @param palette Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them.
-#' @details ACL rows use the ages stored in each fit. Older fits without age
-#'   metadata show age-group numbers. ALSCL rows follow the fitted length bins.
+#' @details ACL rows use the ages stored in each fit. The oldest age class is a
+#'   plus group and is marked with a plus sign, for example "Age 15+". Older
+#'   fits without age metadata show age-group numbers. ALSCL rows follow the
+#'   fitted length bins. An ACL fit and an ALSCL fit have different rows, so
+#'   their heatmaps cannot be compared row by row. For a summary of both fits
+#'   over the same ages, use \code{plot_compare_F_ts(basis = "age")}.
 #' @return A ggplot object.
 #' @export
 plot_compare_F <- function(model1, model2,
@@ -288,7 +302,9 @@ plot_compare_F <- function(model1, model2,
         if (!is.numeric(age) || !is.null(dim(age)) || length(age) != nrow(Fmat) ||
             any(!is.finite(age)) || any(diff(age) <= 0))
           stop(mname, " ages must be finite, increasing and match the F matrix rows.", call. = FALSE)
+        # The oldest age class of an ACL fit is a plus group.
         labels <- paste("Age", age)
+        labels[length(labels)] <- paste0(labels[length(labels)], "+")
       }
       dim_type <- "age"
     }
@@ -309,11 +325,17 @@ plot_compare_F <- function(model1, model2,
 
   # Warn if comparing different dimensions
   if (attr(df1, "dim_type") != attr(df2, "dim_type")) {
-    message("Note: ", model1_name, " uses F-at-", attr(df1, "dim_type"),
-            " while ", model2_name, " uses F-at-", attr(df2, "dim_type"),
-            ". The heatmap y-axes are not directly comparable.\n",
-            "  Use plot_compare_F_ts() for a comparable summary.")
+    message("Note: ", model1_name, " reports F at ", attr(df1, "dim_type"),
+            " and ", model2_name, " reports F at ", attr(df2, "dim_type"),
+            ". The heatmap rows are not directly comparable.\n",
+            "  plot_compare_F_ts(basis = \"age\") summarizes F at age over the ages ",
+            "and time steps that both fits share.")
   }
+  dim_types <- unique(c(attr(df1, "dim_type"), attr(df2, "dim_type")))
+  row_label <- if (length(dim_types) > 1L) "Age class or length bin" else
+    if (dim_types == "age") "Age class" else "Length bin"
+  bases <- unique(c(.acl_rate_basis(model1), .acl_rate_basis(model2)))
+  fill_label <- paste0("F (", if (length(bases) == 1L) bases else "per time step", ")")
 
   df <- rbind(df1, df2)
   # Combining factors appends new levels. Reorder ages numerically so panels
@@ -327,11 +349,11 @@ plot_compare_F <- function(model1, model2,
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Label, fill = F_value)) +
     ggplot2::geom_tile() +
-    .acl_fill_continuous(palette, name = "F") +
+    .acl_fill_continuous(palette, name = fill_label) +
     ggplot2::facet_wrap(~Model, scales = "free_y") +
     ggplot2::labs(title = .acl_title("compare_F", model1_name, model2_name),
-                  x = .acl_lab("x", "year"), y = "") +
-    .acl_base_theme() + .acl_scale_x() +
+                  x = .acl_lab("x", "year"), y = row_label) +
+    .acl_base_theme() + .acl_scale_x(values = df$Year) +
     ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
                    legend.position = acl_theme("compare_legend_pos"))
 
@@ -345,11 +367,14 @@ plot_compare_F <- function(model1, model2,
 
 #' Compare Residual Diagnostics Between Two Models
 #'
-#' Four panels: histogram, QQ plot, mean residual by year, |residual| by length.
+#' Four panels of log residuals (log observed survey index minus log fitted
+#' index): histogram, normal quantile-quantile (QQ) plot, mean residual by time
+#' step, and absolute residual by length bin.
 #' A single unified color legend is displayed (default: bottom center).
 #'
 #' @inheritParams plot_compare_ts
-#' @param data.CatL Catch-at-length data frame.
+#' @param data.CatL Survey index table used for both fits: a length-bin column
+#'   followed by one column of survey indices per time step.
 #' @param bins Integer. Histogram bins. Default 35.
 #' @param point_size Numeric or NULL. Size of QQ and mean-residual points.
 #'   NULL inherits the comparison point-size override, if set, or global point_size.
@@ -413,7 +438,8 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::geom_histogram(alpha = 0.5, position = "identity", bins = bins) +
     ggplot2::scale_fill_manual(values = cfg$colors) +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
-    ggplot2::labs(title = "Residual distribution", x = "Residual", y = "Count") +
+    ggplot2::labs(title = "Residual distribution", x = .acl_lab("y", "residual"),
+                  y = "Number of observations") +
     base_layers +
     no_legend
 
@@ -423,7 +449,8 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
     ggplot2::stat_qq_line(ggplot2::aes(linetype = Model)) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::scale_color_manual(values = cfg$colors) +
-    ggplot2::labs(title = "QQ plot", x = "Theoretical", y = "Sample") +
+    ggplot2::labs(title = "QQ plot", x = "Theoretical normal quantile",
+                  y = "Sample quantile") +
     base_layers + no_legend
 
   # P3: Mean residual by year
@@ -449,9 +476,10 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
                            width = errorbar_width, alpha = 0.5, show.legend = FALSE) +
     ggplot2::scale_color_manual(values = cfg$colors, limits = model_names) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes, limits = model_names) +
-    ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"), y = "Mean residual",
+    ggplot2::labs(title = "Mean residual by year", x = .acl_lab("x", "year"),
+                  y = "Mean log residual (bars: 1 SD)",
                   color = NULL, linetype = NULL) +
-    base_layers + .acl_scale_x() + ggplot2::theme(legend.position = "bottom") +
+    base_layers + .acl_scale_x(values = year) + ggplot2::theme(legend.position = "bottom") +
     ggplot2::expand_limits(x = range(year))
 
   # P4: |Residual| by length bin
@@ -461,7 +489,8 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
   p4 <- ggplot2::ggplot(df, ggplot2::aes(x = LenBin, y = abs_resid, fill = Model)) +
     ggplot2::geom_boxplot(alpha = 0.6, outlier.size = 0.5) +
     ggplot2::scale_fill_manual(values = cfg$colors) +
-    ggplot2::labs(title = "|Residual| by length bin", x = "Length bin", y = "|Residual|") +
+    ggplot2::labs(title = "|Residual| by length bin", x = "Length bin",
+                  y = "Absolute log residual") +
     base_layers + no_legend +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 
@@ -486,11 +515,16 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 
 #' Compare Growth Curves and Length-at-Age Matrices
 #'
-#' Left panel: VB growth curves from each model. Optionally overlay a VB curve
-#' fitted independently from observed age-length data via \code{nls()}.
-#' Right panel: static pla heatmaps side-by-side. These compare VB parameters
-#' and static length-at-age probabilities. Realized length distributions at age
-#' in ALSCL also depend on growth transitions and survival.
+#' Left panel: von Bertalanffy (VB) growth curves from each model. Optionally
+#' overlay a VB curve fitted independently from observed age-length data via
+#' \code{nls()}. Right panel: heatmaps of the static probability of length
+#' given age (pla), side by side. Both panels use fitted ages and lengths:
+#' the heatmap cells sit at the ages in \code{model$age} and at the length-bin
+#' midpoints in \code{model$len_mid}. If either fit lacks this metadata, the
+#' heatmaps use age-class and length-bin positions and say so on their axes.
+#' The panels compare VB parameters and static length-at-age probabilities.
+#' Realized length distributions at age in ALSCL also depend on growth
+#' transitions and survival.
 #'
 #' @inheritParams plot_compare_ts
 #' @param age_range Numeric vector of length 2, or NULL. NULL uses the combined
@@ -703,15 +737,43 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
                   x = .acl_lab("x", "age"), y = .acl_lab("y", "growth")) +
     .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
 
-  pla1 <- reshape2::melt(model1$report$pla); pla1$Model <- model1_name
-  pla2 <- reshape2::melt(model2$report$pla); pla2$Model <- model2_name
-  pla_df <- rbind(pla1, pla2)
-  colnames(pla_df) <- c("Length", "Age", "Probability", "Model")
+  # Heatmap cells at fitted ages and length-bin midpoints, on the same axes
+  # as the growth curves. Without that metadata in both fits, use positions.
+  pla_parts <- lapply(list(model1, model2), function(model) {
+    pla <- as.matrix(model$report$pla)
+    mids <- model$len_mid
+    if (!is.numeric(mids) || length(mids) != nrow(pla) || any(!is.finite(mids)) ||
+        any(diff(mids) <= 0)) mids <- NULL
+    list(pla = pla, ages = .acl_fitted_ages(model, ncol(pla)), mids = mids)
+  })
+  use_ages <- all(vapply(pla_parts, function(x) !is.null(x$ages), logical(1)))
+  use_mids <- all(vapply(pla_parts, function(x) !is.null(x$mids), logical(1)))
+  # Cell size from the spacing of the coordinates; edge cells mirror their
+  # inner half-width.
+  cell_size <- function(x) {
+    if (length(x) < 2L) return(rep(1, length(x)))
+    half <- diff(x) / 2
+    c(half[1L], half) + c(half, half[length(half)])
+  }
+  pla_df <- do.call(rbind, Map(function(part, name) {
+    long <- .acl_matrix_long(part$pla, c("Length", "Age", "Probability"))
+    ages <- if (use_ages) part$ages else seq_len(ncol(part$pla))
+    mids <- if (use_mids) part$mids else seq_len(nrow(part$pla))
+    long$Width <- cell_size(ages)[long$Age]
+    long$Height <- cell_size(mids)[long$Length]
+    long$Age <- ages[long$Age]
+    long$Length <- mids[long$Length]
+    long$Model <- rep(name, nrow(long))
+    long
+  }, pla_parts, list(model1_name, model2_name)))
+  pla_df$Model <- factor(pla_df$Model, levels = c(model1_name, model2_name))
 
   p_pla <- ggplot2::ggplot(pla_df, ggplot2::aes(x = Age, y = Length, fill = Probability)) +
-    ggplot2::geom_tile() + .acl_fill_continuous() +
+    ggplot2::geom_tile(ggplot2::aes(width = Width, height = Height)) + .acl_fill_continuous() +
     ggplot2::facet_wrap(~Model) +
-    ggplot2::labs(title = "Length-at-age probability (pla)", x = "Age group", y = "Length bin") +
+    ggplot2::labs(title = "Probability of length given age",
+                  x = if (use_ages) .acl_lab("x", "age") else "Age group",
+                  y = if (use_mids) .acl_lab("y", "length") else "Length bin") +
     .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
                                     legend.position = cfg$legend_pos)
 
@@ -729,7 +791,8 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 #' Compare Observed and Fitted Survey Indices at Length
 #'
 #' @inheritParams plot_compare_ts
-#' @param data.CatL Catch-at-length data frame.
+#' @param data.CatL Survey index table used for both fits: a length-bin column
+#'   followed by one column of survey indices per time step.
 #' @param years Numeric vector of years to show. Default NULL = all years.
 #'   Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.
 #' @param facet_ncol Integer. Facet columns. Default 4.
@@ -815,7 +878,7 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred1[, yi], Source = model1_name, Year = y)
     df_list[[length(df_list) + 1]] <- data.frame(Length = len_mid, Value = pred2[, yi], Source = model2_name, Year = y)
   }
-  df <- do.call(rbind, df_list); df$year_fct <- .acl_period_factor(df$Year, year)
+  df <- do.call(rbind, df_list); df$year_fct <- .acl_period_factor(df$Year, year, model1$growth_step)
   color_vals <- c("Observed" = obs_color, cfg$colors)
   has_observed <- any(df$Source == "Observed")
   legend_order <- c(model1_name, model2_name, if (has_observed) "Observed")
@@ -847,10 +910,14 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 #' Compare Goodness-of-Fit Metrics
 #'
 #' @inheritParams plot_compare_ts
-#' @param data.CatL Catch-at-length data frame.
+#' @param data.CatL Survey index table used for both fits: a length-bin column
+#'   followed by one column of survey indices per time step.
 #' @param metrics Character vector selecting which panels to show. Options:
-#'   \code{"error"} (RMSE, MAE), \code{"R2"}, \code{"MAPE"},
-#'   \code{"IC"} (AIC, BIC, NLL), \code{"npar"}.
+#'   \code{"error"} (root mean squared error, RMSE, and mean absolute error,
+#'   MAE), \code{"R2"} (coefficient of determination), \code{"MAPE"} (mean
+#'   absolute percentage error), \code{"IC"} (Akaike information criterion,
+#'   AIC, Bayesian information criterion, BIC, and the negative
+#'   log-likelihood), \code{"npar"} (number of estimated parameters).
 #'   Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.
 #' @param facet_ncol Integer or NULL. Columns of panels. NULL uses up to three.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
@@ -919,11 +986,11 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 
   # Define available panels
   all_panels <- list(
-    error = list(metrics = c("RMSE", "MAE"),                        title = "Error metrics"),
+    error = list(metrics = c("RMSE", "MAE"),                        title = "Error (survey index units)"),
     R2    = list(metrics = "R2",                                     title = "R-squared"),
-    MAPE  = list(metrics = "MAPE",                                   title = "MAPE (%)"),
+    MAPE  = list(metrics = "MAPE",                                   title = "Mean absolute percentage error (%)"),
     IC    = list(metrics = c("AIC", "BIC", "Neg. Log-Likelihood"),   title = "Information criteria"),
-    npar  = list(metrics = "N. Parameters",                          title = "Parameters")
+    npar  = list(metrics = "N. Parameters",                          title = "Number of parameters")
   )
 
   # Select panels
@@ -1028,17 +1095,28 @@ plot_compare_selectivity <- function(model1, model2,
 
 #' Compare Fishing Mortality by Time Step
 #'
-#' One summary value of F per model time step for each fit, on the same axes.
-#' Quarterly fits stay quarterly; nothing is annualized.
+#' One summary value of the fishing mortality rate (F) per model time step for
+#' each fit, on the same axes. Quarterly fits stay quarterly; nothing is
+#' annualized. The y-axis label gives the time basis of the rate and the
+#' caption states the groups that each summary covers.
 #'
 #' @inheritParams plot_compare_ts
-#' @param method Character. How to summarize F across age/length groups each model
+#' @param method Character. How to summarize F across groups in each model
 #'   time step.
 #'   \code{"apical"} (default): maximum F across groups.
 #'   \code{"mean"}: unweighted arithmetic mean across groups.
-#'   ACL uses age groups and ALSCL length bins; both summaries depend on that
-#'   grouping. An age-group maximum need not equal a length-bin maximum, because
-#'   age-specific F combines survival across lengths.
+#' @param basis Character. The groups over which F is summarized.
+#'   \code{"native"} (default) uses the F matrix that each model estimates: F at
+#'   age for ACL and F at length for ALSCL. An ACL summary and an ALSCL summary
+#'   then cover different groups. An unweighted mean depends on the number of
+#'   low-F groups, and a maximum over ages need not equal a maximum over length
+#'   bins, because F at age combines survival across lengths. Read the time
+#'   pattern of such a pair, not the difference in level.
+#'   \code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
+#'   derived \code{report$FA} for ALSCL. Only the fitted ages and the time
+#'   steps present in both fits are summarized. ALSCL F at age has no plus-group
+#'   row and no value for the last time step, so a comparison with an ALSCL fit
+#'   leaves out the ACL plus group and the last time step.
 #' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
@@ -1047,36 +1125,88 @@ plot_compare_selectivity <- function(model1, model2,
 plot_compare_F_ts <- function(model1, model2,
                               model1_name = NULL, model2_name = NULL,
                               method = c("apical", "mean"),
-                              colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL) {
+                              colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL,
+                              basis = c("native", "age")) {
 
   renamed <- .acl_renamed(list(...), "plot_compare_F_ts")
   if (is.null(line_size)) line_size <- renamed$line_size
   method <- match.arg(method)
+  basis <- match.arg(basis)
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
+  summarize <- function(Fmat) if (method == "apical") apply(Fmat, 2, max) else colMeans(Fmat)
+  summary_name <- if (method == "apical") "maximum" else "mean"
 
   get_F <- function(m, mname) {
     Fmat <- if (!is.null(m$report$FL)) m$report$FL else m$report[["F"]]
     if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat))
       stop(mname, " must contain a numeric F or FL matrix.", call. = FALSE)
     years <- .acl_plot_year(m, ncol(Fmat), mname)
-    values <- if (method == "apical") apply(Fmat, 2, max) else colMeans(Fmat)
-    data.frame(Year = years, MeanF = values, Model = mname)
+    list(data = data.frame(Year = years, MeanF = summarize(Fmat), Model = mname),
+         groups = paste(nrow(Fmat), if (!is.null(m$report$FL)) "length bins" else "ages"))
   }
-  df <- rbind(get_F(model1, model1_name), get_F(model2, model2_name))
+  # F at age with its fitted ages and time steps. ALSCL F at age (FA) has no
+  # plus-group row and no column for the last time step.
+  get_F_age <- function(m, mname) {
+    alscl <- !is.null(m$report$FL)
+    Fmat <- if (alscl) m$report$FA else m$report[["F"]]
+    if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat) ||
+        any(!is.finite(Fmat)))
+      stop(mname, " has no finite F-at-age matrix (", if (alscl) "report$FA" else "report$F",
+           "), which basis = \"age\" needs. Use basis = \"native\".", call. = FALSE)
+    years <- .acl_plot_year(m, ncol(Fmat) + alscl, mname)
+    ages <- .acl_fitted_ages(m, nrow(Fmat), plus_group = !alscl)
+    if (is.null(ages))
+      stop(mname, " has no age metadata matching its F-at-age matrix, so basis = \"age\" ",
+           "cannot match ages between the fits. Use basis = \"native\".", call. = FALSE)
+    list(F = Fmat, years = years[seq_len(ncol(Fmat))], ages = ages,
+         plus = if (alscl) rep(FALSE, length(ages)) else seq_along(ages) == length(ages))
+  }
 
-  ylab <- if (method == "apical") "Apical F (max across groups)" else "Mean F"
+  if (basis == "native") {
+    f1 <- get_F(model1, model1_name); f2 <- get_F(model2, model2_name)
+    df <- rbind(f1$data, f2$data)
+    caption <- paste0(model1_name, ": ", summary_name, " across ", f1$groups, ". ",
+                      model2_name, ": ", summary_name, " across ", f2$groups, ".")
+  } else {
+    a1 <- get_F_age(model1, model1_name); a2 <- get_F_age(model2, model2_name)
+    key <- function(x) round(x, 8)
+    ages <- intersect(key(a1$ages), key(a2$ages))
+    # An age that is a plus group in only one fit covers different fish.
+    same_kind <- a1$plus[match(ages, key(a1$ages))] == a2$plus[match(ages, key(a2$ages))]
+    ages <- ages[same_kind]
+    years <- intersect(key(a1$years), key(a2$years))
+    if (!length(ages) || !length(years))
+      stop("basis = \"age\" needs at least one fitted age and one time step present in both fits. ",
+           "The fits share ", length(ages), " age(s) and ", length(years),
+           " time step(s). Use basis = \"native\".", call. = FALSE)
+    age_summary <- function(a, mname) {
+      Fmat <- a$F[match(ages, key(a$ages)), match(years, key(a$years)), drop = FALSE]
+      data.frame(Year = a$years[match(years, key(a$years))], MeanF = summarize(Fmat), Model = mname)
+    }
+    df <- rbind(age_summary(a1, model1_name), age_summary(a2, model2_name))
+    plus <- any(a1$plus[match(ages, key(a1$ages))])
+    caption <- paste0("Both fits: ", summary_name, " across ", length(ages),
+      if (length(ages) == 1L) " age (" else " ages (", min(ages),
+      if (length(ages) > 1L) paste0(" to ", max(ages), if (plus) "+"), "), in the ",
+      length(years), " time steps that both fits share.")
+  }
+
+  bases <- unique(c(.acl_rate_basis(model1), .acl_rate_basis(model2)))
+  rate_basis <- if (length(bases) == 1L) bases else "per time step"
+  ylab <- paste0(if (method == "apical") "Apical fishing mortality rate (" else
+    "Mean fishing mortality rate (", rate_basis, ")")
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = MeanF, color = Model, linetype = Model)) +
     ggplot2::geom_line(linewidth = cfg$line_size) +
     ggplot2::geom_point(size = cfg$point_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_title("compare_F_ts", model1_name, model2_name),
-                  x = .acl_lab("x", "year"), y = ylab) +
-    .acl_base_theme() + .acl_scale_x() +
+                  x = .acl_lab("x", "year"), y = ylab, caption = caption) +
+    .acl_base_theme() + .acl_scale_x(values = df$Year) +
     ggplot2::theme(legend.position = cfg$legend_pos)
   return(p)
 }

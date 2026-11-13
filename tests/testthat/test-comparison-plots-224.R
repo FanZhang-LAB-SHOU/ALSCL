@@ -94,7 +94,13 @@ test_that("time-series and F plots preserve each fit's calendar and dimensions",
   expect_equal(ts$data$Value, c(m1$report$SSB, m2$report$SSB))
   ribbon <- ts$plot$layers[[2L]]$data
   expect_equal(ribbon$Year, c(m1$year, m2$year))
+  # The default interval is lognormal: exp(log(estimate) + 1.96 SE / estimate).
   expect_equal(ribbon$upper,
+               c(m1$est_std[, 1L] * exp(1.96 * m1$est_std[, 2L] / m1$est_std[, 1L]),
+                 m2$est_std[, 1L] * exp(1.96 * m2$est_std[, 2L] / m2$est_std[, 1L])),
+               ignore_attr = TRUE)
+  wald <- plot_compare_ts(m1, m2, quantities = "SSB", se = TRUE, interval = "wald")
+  expect_equal(wald$layers[[2L]]$data$upper,
                c(m1$est_std[, 1L] + 1.96 * m1$est_std[, 2L],
                  m2$est_std[, 1L] + 1.96 * m2$est_std[, 2L]), ignore_attr = TRUE)
   expect_silent(ggplot2::ggplot_build(ts$plot))

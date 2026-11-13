@@ -83,10 +83,12 @@ test_that("F heatmaps use fitted ages and order overlapping age grids independen
     for (model in seq_along(fits)) {
       original <- fits[[model]]
       breaks <- built$layout$panel_params[[model]]$y$get_labels()
-      expect_equal(breaks, paste("Age", rev(original$age)))
+      # The oldest age class is a plus group and carries a plus sign.
+      age_labels <- paste("Age", original$age)
+      age_labels[length(age_labels)] <- paste0(age_labels[length(age_labels)], "+")
+      expect_equal(breaks, rev(age_labels))
       model_data <- plot$data[as.integer(plot$data$Model) == model, ]
-      expect_equal(as.character(model_data$Label), rep(paste("Age", original$age),
-                                                       length(original$year)))
+      expect_equal(as.character(model_data$Label), rep(age_labels, length(original$year)))
       expect_equal(model_data$F_value, as.numeric(original$report$F))
     }
   }

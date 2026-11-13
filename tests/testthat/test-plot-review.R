@@ -90,7 +90,8 @@ test_that("age facets retain numeric order when confidence intervals are added",
     interval <- spec$fun(m, type = spec$type, se = TRUE, return_data = TRUE)
     expect_identical(plain$data$AgeGroup, interval$data$AgeGroup)
     panels <- ggplot2::ggplot_build(interval$plot)$layout$layout$AgeGroup
-    expect_equal(as.character(panels), paste("Age bin", seq_len(15)))
+    # Fitted ages label the panels and the oldest age is the plus group.
+    expect_equal(as.character(panels), c(paste("Age", seq_len(14)), "Age 15+"))
   }
 })
 
@@ -101,7 +102,8 @@ test_that("stored singleton F results retain dimensions and validate plot inputs
     for (type in types) {
       result <- plot_fishing_mortality(m, type = type, se = TRUE, return_data = TRUE)
       expect_equal(nrow(result$data), 1L)
-      expect_equal(result$data$upper - result$data$lower, .0392)
+      # Lognormal interval: log(upper / lower) = 3.92 SE / estimate.
+      expect_equal(log(result$data$upper / result$data$lower) * result$data$estimate, .0392)
     }
     expect_error(plot_fishing_mortality(m, se = NA), "se must be TRUE or FALSE")
     m$year <- NA_real_
@@ -194,7 +196,7 @@ test_that("default time-series comparison works for both real models with uncert
   acl <- fit_fixture("ACL")$result
   alscl <- fit_fixture("ALSCL")$result
   expect_identical(eval(formals(plot_compare_ts)$quantities), c("SSB", "R", "B", "N", "CN"))
-  labels <- c("Spawning biomass", "Recruitment", "Total biomass",
+  labels <- c("Spawning stock biomass (SSB)", "Recruitment", "Total biomass",
               "Total abundance", "Catch numbers")
   for (models in list(list(acl, alscl), list(acl, acl), list(alscl, alscl))) {
     for (se in c(FALSE, TRUE)) {
