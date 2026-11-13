@@ -1,4 +1,4 @@
-utils::globalVariables(c("Variable", "RetrospectiveYear"))
+utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 
 # Time-dependent maps describe the complete input grid. Truncate their
 # column-major entries with each peel, retaining ties and fixed (NA) entries.
@@ -470,6 +470,18 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #'   Native colors are interpolated when there are more peels than colors.
 #' @param colors Character vector or NULL. Explicit period colors, ordered by
 #'   descending terminal period or named by terminal period. Overrides palette.
+#'   Names are the numeric terminal periods, for example "2019" or "2019.75".
+#' @details Each line is one fit and is identified by the terminal period of
+#'   its data. The legend is titled "Terminal year" for annual steps and
+#'   "Terminal period" for shorter steps, where quarterly periods are labelled
+#'   as in "2019 Q4". Default colors follow the retrospective peel, so the fit
+#'   with a given terminal period has the same color whether or not another
+#'   fit returned estimates. A fit that failed the numerical screen is drawn
+#'   with a dashed line and a "Numerical screen" legend is added. A requested
+#'   fit without estimates, for example after a fit error, stays in the legend
+#'   and is marked "(no estimates)". The subtitle names both kinds of fit, and
+#'   each panel states how many requested peels are valid when Mohn's rho is
+#'   withheld.
 #' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @export
 #' @examples
@@ -504,12 +516,30 @@ plot_retro <- function(retro_result,
     stop("No retrospective estimates are available to plot; inspect fit_diagnostics and errors.",
          call. = FALSE)
 
-  # Stable color mapping by terminal period.
-  periods <- sort(unique(as.character(results$RetrospectiveYear)), decreasing = TRUE)
+  # Colors are keyed to the peel index when it is recorded, so a terminal
+  # period keeps its color when another peel has no estimates. Periods of
+  # requested fits without estimates stay in the legend.
+  as_period <- function(x) as.character(x)
+  periods <- unique(as_period(results$RetrospectiveYear))
+  peel_of <- stats::setNames(rep(NA_integer_, length(periods)), periods)
+  if (!is.null(results$Peel))
+    peel_of[periods] <- as.integer(results$Peel[match(periods, as_period(results$RetrospectiveYear))])
+  requested <- retro_result$fit_diagnostics
+  if (is.data.frame(requested) && all(c("Peel", "RetrospectiveYear") %in% names(requested))) {
+    listed <- as_period(requested$RetrospectiveYear)
+    keep <- !is.na(listed) & !duplicated(listed)
+    peel_of[listed[keep]] <- as.integer(requested$Peel[keep])
+  }
+  periods <- sort(names(peel_of), decreasing = TRUE)
   numeric_periods <- suppressWarnings(as.numeric(periods))
   if (all(is.finite(numeric_periods))) periods <- periods[order(numeric_periods, decreasing = TRUE)]
+  peel_of <- peel_of[periods]
+  present <- periods %in% as_period(results$RetrospectiveYear[is.finite(results$Value)])
   if (is.null(colors)) {
-    colors <- stats::setNames(.acl_palette(palette %||% acl_theme("palette"), length(periods)), periods)
+    index <- if (anyNA(peel_of) || anyDuplicated(peel_of)) seq_along(periods) else peel_of + 1L
+    requested_peels <- suppressWarnings(max(rho_text$RequestedPeels, na.rm = TRUE))
+    n_colors <- max(index, if (is.finite(requested_peels)) requested_peels + 1L else 1L)
+    colors <- stats::setNames(.acl_palette(palette %||% acl_theme("palette"), n_colors)[index], periods)
   } else {
     if (length(colors) < length(periods)) stop("colors must cover every retrospective period.")
     if (!is.null(names(colors))) {
@@ -519,8 +549,25 @@ plot_retro <- function(retro_result,
     if (anyNA(colors)) stop("colors must not contain missing values.")
     grDevices::col2rgb(colors)
   }
-  results$RetrospectiveYear <- factor(results$RetrospectiveYear, levels = periods)
-  last_points$RetrospectiveYear <- factor(last_points$RetrospectiveYear, levels = periods)
+  results$RetrospectiveYear <- factor(as_period(results$RetrospectiveYear), levels = periods)
+  last_points$RetrospectiveYear <- factor(as_period(last_points$RetrospectiveYear), levels = periods)
+
+  # Legend text: quarter labels for quarterly steps, and a statement for a
+  # requested fit that returned no estimates.
+  all_times <- c(numeric_periods, results$Year)
+  annual <- all(is.finite(numeric_periods)) &&
+    all(abs(all_times - round(all_times)) < 1e-8, na.rm = TRUE)
+  period_labels <- if (annual || !all(is.finite(numeric_periods))) periods else
+    .acl_time_labels(numeric_periods)
+  legend_title <- if (annual) "Terminal year" else "Terminal period"
+  screen_ok <- if (is.null(results$NumericalOK)) rep(TRUE, nrow(results)) else
+    results$NumericalOK %in% TRUE
+  failed_periods <- period_labels[periods %in% as_period(results$RetrospectiveYear[!screen_ok])]
+  absent_periods <- period_labels[!present]
+  period_labels[!present] <- paste(period_labels[!present], "(no estimates)")
+  mark_screen <- any(!screen_ok)
+  results$Screen <- factor(ifelse(screen_ok, "Passed", "Failed"), levels = c("Passed", "Failed"))
+  last_points$Screen <- factor("Passed", levels = c("Passed", "Failed"))
 
   x_min <- min(results$Year, na.rm = TRUE)
   x_max <- max(results$Year, na.rm = TRUE)
@@ -548,11 +595,17 @@ plot_retro <- function(retro_result,
     .acl_title("retro")
   }
 
+  # A fit that failed the numerical screen is drawn with a dashed line.
+  line_layer <- if (mark_screen)
+    ggplot2::geom_line(ggplot2::aes(linetype = Screen), linewidth = line_size,
+                       show.legend = TRUE) else
+    ggplot2::geom_line(linewidth = line_size, show.legend = TRUE)
   p <- ggplot2::ggplot(results, ggplot2::aes(x = Year, y = Value,
                                               color = RetrospectiveYear,
                                               group = RetrospectiveYear)) +
-    ggplot2::geom_line(linewidth = line_size) +
-    ggplot2::scale_color_manual(values = colors, breaks = periods) +
+    line_layer +
+    ggplot2::scale_color_manual(values = colors, breaks = periods,
+                                labels = period_labels, drop = FALSE) +
     ggplot2::geom_point(data = last_points, size = point_size, shape = point_shape) +
     ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_ncol, nrow = facet_nrow) +
     .acl_scale_x(x_breaks, n_breaks = 10) +
@@ -561,22 +614,35 @@ plot_retro <- function(retro_result,
                     base_theme = base_theme, title_hjust = title_hjust) +
     ggplot2::theme(legend.position = "bottom") +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
-                  y = if (!is.null(ylab)) ylab else "Value", color = "Retrospective Year",
+                  y = if (!is.null(ylab)) ylab else "Value", color = legend_title,
                   title = if (!is.null(title)) title else auto_title)
+  if (mark_screen)
+    p <- p + ggplot2::scale_linetype_manual(name = "Numerical screen",
+      values = c(Passed = "solid", Failed = "dashed"), drop = FALSE) +
+      ggplot2::theme(legend.box = "vertical")
 
+  # State how many requested peels are valid when Mohn's rho is withheld.
+  counts <- if (all(c("ValidPeels", "RequestedPeels") %in% names(rho_text)))
+    paste0(" (", rho_text$ValidPeels, " of ", rho_text$RequestedPeels, " peels valid)") else ""
+  rho_text$Label <- ifelse(is.finite(rho_text$Rho),
+    paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), rho_text$Rho)),
+    paste0("rho unavailable", counts, ": check diagnostics"))
   p <- p + ggplot2::geom_text(
     data = rho_text,
-    ggplot2::aes(x = Year,
-                 label = ifelse(is.finite(Rho),
-                   paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), Rho)),
-                   "rho unavailable: check diagnostics")),
+    ggplot2::aes(x = Year, label = Label),
     y = rho_y, hjust = rho_hjust, vjust = rho_vjust,
     size = rho_size, family = font_family,
     inherit.aes = FALSE
   )
-  if (any(!is.finite(rho_text$Rho)))
-    p <- p + ggplot2::labs(subtitle =
-      "Available estimates shown; numerical checks or terminal estimates are incomplete.")
+  if (any(!is.finite(rho_text$Rho)) || mark_screen || length(absent_periods)) {
+    unit <- if (annual) "terminal year" else "terminal period"
+    p <- p + ggplot2::labs(subtitle = paste(c(
+      "Available estimates shown; numerical checks or terminal estimates are incomplete.",
+      if (length(failed_periods)) paste0("Failed the numerical screen: ", unit, " ",
+        paste(failed_periods, collapse = ", "), "."),
+      if (length(absent_periods)) paste0("No estimates: ", unit, " ",
+        paste(absent_periods, collapse = ", "), ".")), collapse = "\n"))
+  }
 
   return(p)
 }
