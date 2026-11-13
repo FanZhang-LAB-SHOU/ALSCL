@@ -72,7 +72,7 @@ Survey fit by length bin, residuals by year, and observed and fitted length comp
 | Fishing mortality | Estimated by age | Estimated by length; F at age is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 
-Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
+Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. Survey catchability has a fixed maximum of 1, so abundance, biomass and recruitment are on the scale of the survey index: they are absolute only when the index is an absolute abundance estimate. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
 
 ## Documentation
 

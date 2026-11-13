@@ -11,7 +11,7 @@
 | `rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border` | 生物学、调查可捕性和时间步 | `x$fit_args`，两个模型共用 |
 | `zero_action` | 调查零值按缺失处理（默认 `"missing"`）或终止拟合（`"error"`） | `x$fit_args` |
 | `parameters`、`parameters.L`、`parameters.U` | 标量参数在优化器尺度上的初值和边界 | `x$fit_config$acl` 或 `x$fit_config$alscl` |
-| `map` | 哪些参数固定在初值、哪些参数共享 | `x$fit_config$acl` 或 `x$fit_config$alscl` |
+| `map` | 哪些参数固定在初值、哪些默认固定的参数被释放 | `x$fit_config$acl` 或 `x$fit_config$alscl` |
 | `F_structure` | `"group_year"`（默认）：F 随年龄或体长及时间步变化；`"year"`：每个时间步一个 F | `x$fit_args` 或调用 |
 | `nstarts`、`ncores` | 独立初值的个数和运行它们的工作进程数 | 调用 |
 | `train_times` | 每个初值连续优化的轮数（默认 1） | 调用 |
@@ -41,7 +41,7 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 | 补充量在时间上的相关 | `logit_log_R` | `logit_log_R` |
 | 初始总死亡率；调查观测 SD | `log_init_Z`、`log_std_index` | `log_init_Z`、`log_sigma_index` |
 
-默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，其余都估计。`YTF_example` 固定得更多（生长参数和两个过程 SD），因为它的教学配置以运行快为目标；你自己的输入列表从默认设置开始。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 按数据维度生成，默认作为随机效应估计。它们的 `map` 可以固定某些偏差，或让多个偏差共享一个估计值；查看 `n_free`、`n_fixed` 和 `n_tied`，确认每个块中还有多少自由值。
+默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，其余都估计。`YTF_example` 固定得更多，因为它的教学配置以运行快为目标：生长参数（`log_Linf`、`log_vbk`、`t0` 或 `log_t0`、`log_cv_len`，ALSCL 还有 `log_cv_grow`）、F 偏差和初始丰度偏差的标准差，以及全部 AR(1) 相关系数（`logit_log_R`、`logit_log_F_y`，以及 `logit_log_F_a` 或 `logit_log_F_l`）。于是每个模型只估计五个标量参数：`log_init_Z`、`mean_log_R`、`mean_log_F`、补充量偏差的标准差和调查观测标准差。示例的区间以所有这些固定值为条件。你自己的输入列表从默认设置开始。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 按数据维度生成，作为随机效应估计；第 3 步说明为什么它们的 `map` 应保持默认。`n_free`、`n_fixed` 和 `n_tied` 列给出每个块中被估计的偏差数量。
 
 <h2 id="map">3. 用 map 固定或释放参数</h2>
 
@@ -51,14 +51,17 @@ my_map <- list(log_Linf = factor(NA), log_vbk = factor(NA), logit_log_F_y = NULL
 a_map <- run_acl(x, map = my_map, silent = TRUE)
 extract_parameters(a_map)
 # 把选择存入输入列表，供之后的分析使用
+# 未提供 fit_config 的输入列表没有保存的配置：
+# 第一次赋值前先为两个模型各建一项
+if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$map <- my_map
 ```
 
-`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。Hessian 不正定或相关系数接近边界时，先检查梯度、参数尺度、边界、其他初值和剖面。在这些检查支持固定参数，且外部估计或生物学假设能提供合理取值时，再固定该参数；每个固定值的依据都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。
+`factor(NA)` 把参数固定在初值；具名 `NULL` 释放一个模型默认固定的参数。调用中或 `x$fit_config` 中给出的 `map` 会整体替换保存的 map，所以每次都要列出全部想固定的项。Hessian 不正定或相关系数接近边界时，先检查梯度、参数尺度、边界、其他初值和剖面。在这些检查支持固定参数，且外部估计或生物学假设能提供合理取值时，再固定该参数；每个固定值的依据都要随评估一起记录。`generate_map()` 把列表与 ACL 默认设置合并，但会丢掉 `NULL` 项，所以释放参数的列表要直接作为 `map` 传入。保存的 `fit_config` 必须包含你要拟合的模型：对没有 `fit_config` 的输入列表直接给 `x$fit_config$acl$map` 赋值，只会建立 ACL 一项，之后所有 ALSCL 调用都会报错终止。上面的 `if` 一行为两个模型各建一项；空项表示使用模型默认设置。
 
-对过程偏差块，提供与偏差数量相同的因子：`NA` 将对应偏差固定在初值（零），重复的因子水平让对应偏差共享一个估计值。`simulate_fit(process = "resample")` 要求过程偏差不受这类限制；条件模拟也支持固定或共享的 map。`hindcast_model()` 要求随时间变化的 `dev_log_R` 和 `dev_log_F` 不受这类限制，但支持固定或共享的静态 `dev_log_N0`。在验证研究中使用这些限制前，见[模拟调查数据并检验预测](case-model-validation.html)。
+不要把过程偏差块 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 写进 `map`。模型对每个块的全部偏差计算过程似然。因此，用 `NA` 固定其中一些偏差，或让多个偏差使用同一个因子水平，得到的并不是偏差更少的模型的似然。除非该过程的标准差和 AR(1) 相关系数也都固定，否则这样的 map 会被拒绝。即使固定了，目标函数也不能与其他拟合比较，不要用 AIC 比较。要让所有年龄组或体长组在每个时间步共用一个捕捞死亡率，使用 `F_structure = "year"`（第 5 步），它有自己的一维 AR(1) 似然。`simulate_fit(process = "resample")` 要求过程偏差不受限制，`hindcast_model()` 要求 `dev_log_R` 和 `dev_log_F` 不受限制。见[模拟调查数据并检验预测](case-model-validation.html)。
 
-用具名 `NULL` 释放参数时，从 `inspect_parameters(x, model)` 复制该模型的参数名。名称有误会报错。截取映射因子的子集后，程序会去掉未使用的水平，保留其余单元的绑定关系和固定位置。
+用具名 `NULL` 释放参数时，从 `inspect_parameters(x, model)` 复制该模型的参数名。名称有误会报错。截取映射因子的子集后，程序会去掉未使用的水平，其余单元保持原来的固定或估计状态。
 
 <h2 id="starts">4. 设置初值和边界</h2>
 
@@ -66,12 +69,13 @@ x$fit_config$acl$map <- my_map
 p <- create_parameters(model_type = "acl", species = "flatfish")
 p$parameters$log_Linf <- log(65)
 p$parameters.U$log_Linf <- log(90)
+if (is.null(x$fit_config)) x$fit_config <- list(acl = list(), alscl = list())
 x$fit_config$acl$parameters <- p$parameters
 x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
 ```
 
-初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，因此 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间。超出边界的初值会在拟合前移到最近的边界。[估计参数清单](estimation-parameters.html)给出完整列表和变换方式。
+初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，因此 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间。超出边界的初值会在拟合前移到最近的边界。[估计参数清单](estimation-parameters.html)给出完整列表和变换方式。
 
 <h2 id="f-structure">5. 选择 F 结构</h2>
 
