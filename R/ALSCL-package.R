@@ -7,9 +7,8 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon geom_tile
 #'   geom_smooth geom_hline geom_text facet_wrap labs theme theme_minimal
 #'   element_text scale_fill_gradient ggsave
-#' @importFrom reshape2 melt
 #' @importFrom dplyr mutate group_by filter summarise ungroup first pull distinct %>%
-#' @importFrom tidyr pivot_longer gather
+#' @importFrom tidyr pivot_longer
 #' @importFrom TMB compile MakeADFun sdreport
 #' @importFrom RColorBrewer brewer.pal
 NULL

@@ -108,7 +108,11 @@ is retained. Explicit ylab takes priority.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically. The
+automatic number of breaks decreases as the number of facet columns
+increases, and tick labels that would overprint are omitted.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
@@ -130,6 +134,9 @@ Facets separate length groups or time periods.
 Predicted and observed matrices are aligned by position with fitted
 year and length metadata, independently of optional matrix dimnames. Missing
 and zero observations leave gaps. An isolated observation is drawn as a point.
+With \code{facet_by = "year"} the panels have no legend. A caption states
+which line is fitted and which is observed, from the line widths or, for
+equal widths, the transparencies in use. No caption is drawn when both are equal.
 Dimensions and metadata must agree;
 predictions must be finite, including after an exponential transformation.
 }

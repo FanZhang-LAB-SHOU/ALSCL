@@ -28,6 +28,10 @@ A ggplot object.
 Compare Fishing Mortality Heatmaps Between Two Models
 }
 \details{
-ACL rows use the ages stored in each fit. Older fits without age
-metadata show age-group numbers. ALSCL rows follow the fitted length bins.
+ACL rows use the ages stored in each fit. The oldest age class is a
+plus group and is marked with a plus sign, for example "Age 15+". Older
+fits without age metadata show age-group numbers. ALSCL rows follow the
+fitted length bins. An ACL fit and an ALSCL fit have different rows, so
+their heatmaps cannot be compared row by row. For a summary of both fits
+over the same ages, use \code{plot_compare_F_ts(basis = "age")}.
 }

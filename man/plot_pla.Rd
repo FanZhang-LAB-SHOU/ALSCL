@@ -48,9 +48,11 @@ and length-group metadata.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Integer age-bin positions to label (between 1 and the number
-of age bins). This changes tick labels only, never the heatmap cells.
-NULL inherits global x_breaks; when both are NULL all age bins are labelled.}
+\item{x_breaks}{Integer positions of the age classes to label (between 1
+and the number of age classes). This changes tick labels only, never the
+heatmap cells. NULL inherits the global x_breaks setting when all of its
+values are such positions; a global setting meant for another axis, for
+example calendar years, is ignored. Otherwise every age class is labelled.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
@@ -68,6 +70,12 @@ in every time step. ALSCL uses it for initialization and recruitment;
 subsequent length distributions follow growth and survival. Normalize the
 corresponding length vector in NLA to obtain the realized distribution
 at a given age and time in ALSCL.
+}
+\details{
+Columns are labelled with the fitted ages in \code{model_result$age}.
+The oldest age class is a plus group and is marked with a plus sign, for
+example "15+". Results saved without age metadata keep the position
+labels "Age bin 1", "Age bin 2" and so on.
 }
 \examples{
 \dontrun{

@@ -2,11 +2,11 @@
 % Please edit documentation in R/plot_SSB_Rec.R
 \name{plot_SSB_Rec}
 \alias{plot_SSB_Rec}
-\title{Plot spawning biomass against recruitment}
+\title{Plot spawning stock biomass against recruitment}
 \usage{
 plot_SSB_Rec(
   model_result,
-  age_at_recruitment = 1,
+  age_at_recruitment = NULL,
   point_size = NULL,
   point_color = NULL,
   point_shape = 16,
@@ -28,12 +28,17 @@ plot_SSB_Rec(
 \arguments{
 \item{model_result}{A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec".}
 
-\item{age_at_recruitment}{Numeric. Recruitment age in years, used to pair SSB
-with later recruitment. Must be nonnegative and an exact multiple of the
-model's \code{growth_step}. Default is 1 year (four periods for quarterly
-fits). A value of 0 pairs SSB and recruitment in the same period. For older
-fits without \code{growth_step}, the time step is inferred from \code{year},
-or defaults to 1 year when no time metadata are available.}
+\item{age_at_recruitment}{Numeric or NULL. Recruitment age in years, used to
+pair SSB with later recruitment. NULL (default) uses the youngest fitted
+age, \code{model_result$age[1]}: 1 year for an annual fit with
+\code{rec.age = 1}, and one quarter for a quarterly fit with
+\code{rec.age = 0.25}. Results saved without age metadata use 1 year. A
+supplied value must be nonnegative and an exact multiple of the model's
+\code{growth_step}; 0 pairs SSB and recruitment in the same period. If the
+youngest fitted age is not a whole number of time steps, the default uses
+the nearest whole number and reports it with a message. For older fits
+without \code{growth_step}, the time step is inferred from \code{year}, or
+defaults to 1 year when no time metadata are available.}
 
 \item{point_size}{Numeric or NULL. NULL inherits the global point_size setting (default 2.5).}
 
@@ -61,18 +66,22 @@ or defaults to 1 year when no time metadata are available.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }
 \value{
-A ggplot object representing the scatter plot of SSB versus Recruitment.
+A ggplot object representing the scatter plot of SSB versus recruitment.
 }
 \description{
-Scatter plot of spawning biomass against the recruitment it
-produced, paired by the recruitment age.
+Scatter plot of spawning stock biomass (SSB) against the
+recruitment it produced. Recruitment in a time step is the number of fish
+at the youngest fitted age, so each SSB value is paired with the
+recruitment that many years later.
 }
 \examples{
 \dontrun{

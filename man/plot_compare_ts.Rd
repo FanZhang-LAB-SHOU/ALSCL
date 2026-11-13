@@ -17,7 +17,8 @@ plot_compare_ts(
   facet_ncol = NULL,
   facet_scales = NULL,
   return_data = FALSE,
-  ...
+  ...,
+  interval = NULL
 )
 }
 \arguments{
@@ -32,13 +33,16 @@ requested explicitly when both supplied results contain it.
 For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 mean or apical summary; F is not a scalar time series in the model reports.}
 
-\item{se}{Logical. Show confidence intervals. Default FALSE.}
+\item{se}{Logical. Show 95\% confidence intervals. Default FALSE.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -50,14 +54,21 @@ mean or apical summary; F is not a scalar time series in the model reports.}
 
 \item{...}{Former argument names, accepted with a warning: linewidth for
 line_size, ncol for facet_ncol and scales for facet_scales.}
+
+\item{interval}{Character or NULL. The interval drawn when \code{se = TRUE}.
+\code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+fall below zero. NULL inherits the global \code{interval} setting (default
+"lognormal"). Point estimates are the same for both.}
 }
 \value{
 A ggplot object (can be further modified with + theme(), + labs(), etc.)
 }
 \description{
-Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
-on the same axes. The plot uses the global theme and can be
-extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
+Plots spawning stock biomass (SSB), recruitment, total biomass, total
+abundance and catch from two models on the same axes. The plot uses the
+global theme and can be extended with \code{+ ggplot2::theme()} or any
+ggplot2 layer.
 }
 \details{
 Every requested quantity must be a finite series matching its model's

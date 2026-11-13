@@ -25,15 +25,21 @@ plot_compare_metrics(
 
 \item{model2}{Second model result (alternative).}
 
-\item{data.CatL}{Catch-at-length data frame.}
+\item{data.CatL}{Survey index table used for both fits: a length-bin column
+followed by one column of survey indices per time step.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
 \item{metrics}{Character vector selecting which panels to show. Options:
-\code{"error"} (RMSE, MAE), \code{"R2"}, \code{"MAPE"},
-\code{"IC"} (AIC, BIC, NLL), \code{"npar"}.
+\code{"error"} (root mean squared error, RMSE, and mean absolute error,
+MAE), \code{"R2"} (coefficient of determination), \code{"MAPE"} (mean
+absolute percentage error), \code{"IC"} (Akaike information criterion,
+AIC, Bayesian information criterion, BIC, and the negative
+log-likelihood), \code{"npar"} (number of estimated parameters).
 Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
 
 \item{facet_ncol}{Integer or NULL. Columns of panels. NULL uses up to three.}

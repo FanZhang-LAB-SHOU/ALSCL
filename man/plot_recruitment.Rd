@@ -25,7 +25,8 @@ plot_recruitment(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  interval = NULL
 )
 }
 \arguments{
@@ -41,7 +42,8 @@ plot_recruitment(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
+global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
 
@@ -65,11 +67,19 @@ plot_recruitment(
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{interval}{Character or NULL. The 95\% interval drawn when \code{se = TRUE}.
+\code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+fall below zero. NULL inherits the global \code{interval} setting (default
+"lognormal"). Point estimates are the same for both.}
 }
 \value{
 A ggplot object representing the plot.
@@ -77,7 +87,8 @@ A ggplot object representing the plot.
 \description{
 Plot the estimated recruitment, the number of fish entering the youngest
 age class, in each time step. With \code{se = TRUE} a ribbon shows the 95\%
-interval from the standard errors.
+interval. The default interval is lognormal and cannot fall below zero;
+see the \code{interval} argument.
 }
 \details{
 With se = TRUE, the standard-error table must have one finite

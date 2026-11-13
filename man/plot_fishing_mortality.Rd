@@ -28,7 +28,8 @@ plot_fishing_mortality(
   axis_text_size = NULL,
   strip_text_size = NULL,
   legend_text_size = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  interval = NULL
 )
 }
 \arguments{
@@ -48,7 +49,8 @@ plot_fishing_mortality(
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
+global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
@@ -61,17 +63,21 @@ labelled "Year 2000", or "2000 Q2" for quarterly fits.}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks; NULL inherits
-the global x_breaks setting. Expansion follows global x_expand.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks. NULL inherits
+the global x_breaks setting when at least one of its values lies on this
+axis; otherwise the breaks are chosen automatically. Expansion follows
+global x_expand.}
 
 \item{title}{Character or NULL. Custom plot title; NULL inherits the global
 F_year, F_age or F_length title, with _se appended for interval plots.}
 
 \item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
-year, age or length label. Uncustomized age axes are labeled Age group
-because the plotted coordinates are group positions.}
+year, age or length label. Results saved without age metadata are plotted
+against group positions, and their uncustomized age axis is labeled Age group.}
 
-\item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.}
+\item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
+The default label gains the time basis of the fit, for example
+"Fishing mortality rate (per year)".}
 
 \item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
@@ -92,13 +98,24 @@ grids are removed for every base theme.}
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{interval}{Character or NULL. The 95\% interval drawn when \code{se = TRUE}.
+\code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+fall below zero. NULL inherits the global \code{interval} setting (default
+"lognormal"). Point estimates are the same for both. An estimate that is
+not positive, which can occur for ALSCL F at age because it is derived as
+total mortality minus natural mortality, keeps the Wald bounds.}
 }
 \value{
 A ggplot object, or a list with plot and data if return_data = TRUE.
 }
 \description{
 This function takes the output from \code{run_acl} or \code{run_alscl}
-and plots fishing mortality over time steps, ages, or length-bin midpoints using ggplot2.
+and plots the fishing mortality rate (F) over time steps, ages, or length-bin
+midpoints using ggplot2. F is an instantaneous rate per model time step:
+per year for annual fits and per quarter for quarterly fits. The default
+y-axis label states this time basis.
 For ACL models, F is at the age level (A x Y).
 For ALSCL models, F is at the length level (FL: L x Y) and
 F at age (FA: (A-1) x (Y-1)) is the negative log of the proportion
@@ -108,6 +125,18 @@ surviving within each age class over the time step, minus natural mortality.
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
 The point uses the global point_size setting and the estimate's line colour.
+
+Age axes and age panels use the fitted ages in \code{model_result$age}.
+The oldest age class of an ACL fit is a plus group and is marked with a
+plus sign, for example "Age 15+" or the tick label "15+". ALSCL F at age has
+no plus-group row. With \code{return_data = TRUE} and \code{type = "age"}, the
+data keep the group position in \code{AgeGroup} and add the fitted age in
+\code{Age}.
+
+When F is shared across groups (\code{F_structure = "year"}), every
+group has the same series. \code{type = "year"} then draws one panel
+labelled "Shared F" instead of one identical panel per group. The returned
+data still hold every group.
 
 Matrix positions are matched to fitted time and group metadata;
 optional matrix dimnames do not replace these coordinates. Intervals require

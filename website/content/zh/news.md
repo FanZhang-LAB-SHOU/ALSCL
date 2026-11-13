@@ -1,5 +1,20 @@
 ## 未发布
 
+- 完整代码审查后的修复。默认拟合的估计值不变；会改变结果的改动列在前面。结果有变的地方：(1) `sim_model()`、`sim_acl()` 和 `sim_alscl()` 用每个重复文件中记录的自然死亡率拟合（原默认 `M = 0.2`）；给定的 `M` 与记录不同时报错，除非 `allow_M_mismatch = TRUE`。(2) `retro_model()` 中，通过 `map` 固定但未给值的 `mean_log_R` 在每个 peel 中都使用全数据的值。(3) 区间图默认绘制对数正态区间（见下）。(4) `plot_SSB_Rec()` 按最小拟合年龄配对 SSB 与补充量，`rec.age = 0.25` 的季度拟合滞后一个季度，而不是四个。(5) ACL 的 Linf 默认值不适合体长组时，`run_acl()` 使用按数据推导的起点和边界。
+- `run_acl()`、`run_alscl()` 和 `retro_model()` 新增 `structure` 参数，用于选择可选的模型结构；默认为已发表的结构。`initial_plus_group = "equilibrium"` 使第一期的 plus group 等于在 init_Z 下所有更老世代之和。ALSCL 另有三项：`initial_length = "growth"` 由生长转移推算第一期各年龄的体长分布，`growth_increment = "von_bertalanffy"` 采用一个时间步长内的 von Bertalanffy 增量，`growth_transition = "bin"` 在原体长组内对转移概率积分。采用一致的初始状态时，补充量恒定且无捕捞的种群保持不变；已发表的结构做不到这一点。`sim_cal()` 和 `sim_data()` 通过 `params$structure` 接受同一列表。
+- map 把 dev_log_R、dev_log_F 或 dev_log_N0 的元素设为共享值或固定值时，如果对应的标准差或相关系数仍在估计，现在会报错，因为这些估计有偏（标准差可能落到边界）。这些参数固定时仍然接受，拟合结果在 `restricted_random` 中列出涉及的数组。每个时间步长只用一个 F 偏差时，请用 `F_structure = "year"`。
+- ACL 的 Linf 默认值（起点 60，边界 10 到 100）不适合数据的体长组时（例如以 cm 计的金枪鱼体长），改用按数据推导的值。被移入边界的起点会报告（用户给定的起点给出警告，默认起点给出提示），并列在 `clamped_starts` 中。M 较大时，init_Z 的默认起点不再落在上界。
+- 新增 `start_spread` 参数，控制第二个及之后起点的离散程度。拟合结果记录 `start_summary`；收敛的起点之间目标函数相差超过 2 时，写入 `diagnostics$issues`。帮助页说明单个起点可能停在通过全部数值检查的局部最优。顺序多起点拟合共用一个 TMB 对象，结果完全相同。
+- 拟合时报告被当作缺失的零观测个数。数值型体长标签间距不等且未提供 `len_border` 时给出警告。拒绝逻辑型的调查、体重或成熟度列。`create_parameters()` 的报错指出未知参数名及其在另一模型中的名称。`read_survey_excel()` 遇到 Excel 错误单元格（#DIV/0!、#N/A）时停止，并指出工作表和单元格。`len_lower` 和 `len_upper` 已弃用。
+- `sim_data()` 和 `simulate_example_data(seed = )` 不再改变调用者的随机数流。每个重复记录种子、随机数发生器设置和包版本，相同的重复编号在任何会话设置下给出相同数据。全部重复通过检查后才写文件，文件名为整数形式（`sim_rep100000`）。AR(1) 系数为零时不再出现警告，`initialize_params()$years` 结束于最后一个观测期，穹顶形选择性不连续时给出警告。`simulate_example_data()` 改用 `message()` 报告。
+- `sim_model()`、`sim_acl()` 和 `sim_alscl()` 的结果不再保存 TMB 对象（每个 ALSCL 重复约 0.9 GiB）；需要时用 `refit_model()`。新增 `simulation_to_tables()`，把一个 `sim_data()` 重复转换为拟合用的表。`summarize_simulations()` 另外返回 `summary_converged` 和 `failures`。批量拟合的失败记录属于 `alscl_fit_error` 类，有 print、summary、coef 和 vcov 方法。
+- 对 2.4.3 保存的评估结果，`print()`、`summary()`、`extract_parameters()` 和 `refit_model()` 恢复可用。各处汇总对同一拟合只给出一个数值检查结论。`save_assessment(x = )` 保留旧拟合的观测数据和时间信息；存档使用 RDS 第 3 版。协方差非有限或非正定时，`vcov()` 返回 NULL。新增 `fitted()`、`logLik()`（因此可用 `AIC()` 和 `BIC()`）和 `nobs()` 方法。`extract_estimates()` 新增最后一列 `extrapolated`，标出没有观测支持的末期 F 和渔获量。
+- `retro_model()`：新增 `peel_step`（例如季度模型按年剥离时设为 4）；各拟合的警告记录在 `fit_diagnostics$warnings`；接受 `retro_acl(x, 3)`；全数据拟合与各 peel 在同一批中运行；跳过回溯用不到的 delta 方法标准误（`hindcast_model()` 不保存拟合时同样跳过）。`plot_retro()` 用虚线绘制未通过数值检查的拟合，图例保留没有估计值的拟合，颜色随 peel 固定，季度 peel 标为"2001 Q4"。
+- `compare_models()` 记录 `delta_aic`、`aic_threshold` 和 `reason`，并如实报告失败的拟合。`fit_config` 只含一个模型设置的数据包可以用另一个模型拟合；放错位置的顶层拟合参数给出警告。`check_fit()` 正确说明 QQ 图的参照：模型正确时，标准化条件残差的标准差小于 1。
+- 绘图：丰度、生物量、SSB、补充量、渔获量和捕捞死亡率的区间默认为对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；用 `interval = "wald"` 或 `acl_theme_set(interval = "wald")` 恢复原区间。年龄分面和坐标轴显示拟合年龄，并标出 plus group（"Age 15+"）。`plot_compare_F_ts()` 新增 `basis = "age"`，在共同的年龄基础上比较。全局 `x_breaks` 只作用于包含这些值的坐标轴。分面调查图的年份标签不再重叠。误差线默认不透明。`plot_ridges()` 只有一个总标题，并使用季度标签。共享 F 只画一个分面。标签注明 F 的时间基准，SSB 写出全称。`acl_theme_set()` 拒绝不支持的设置。
+- 速度与基础设施：编译缓存的键包含平台和 C++ 设置，编译结果以原子方式安装（已有的持久缓存会重建一次）。`sd_cores = "auto"` 遵守 `SLURM_CPUS_PER_TASK` 和 `options(mc.cores)`，使用多线程 BLAS 时不 fork。顺序批量拟合使用会话的 `sd_cores`。速度选项写错时，拟合停止并指出该选项。诊断报告未完成的收尾和接近零的标准差。socket worker 加载的 TMB 版本与主进程不同时停止。提供内部选项 `ALSCL.se_level` 和 `ALSCL.delta_method`。
+- 开发版本号为 2.4.3.9000。不再依赖 `reshape2` 和 `cowplot`。构建的包不再包含未使用的图片。文档说明：除非指数是绝对丰度，输出都在调查指数的尺度上；更正了 `growth_step` 默认值和过程偏差 map 的说明；维护脚本会检查已加载的包与当前代码一致。
+- 测试用独立的 R 实现核对联合似然、生长转移矩阵、种群动态和 Mohn's rho，检查操作模型与模板一致，并拟合 `YTF_example` 检查能否恢复模拟真值。
 - 单个估计值显示为点，请求区间时显示误差棒。边界观测缺失时，山脊图保留完整体长范围，平均残差比较图保留完整时间范围。校验山脊高度缩放参数，补充实际渲染回归测试和无网格线的双语示例。
 - 平均残差比较线和观测山脊图在缺测处断开，保留孤立观测，并统一山脊图两栏的坐标与时间配色。Brewer 配色支持两个时期的结果；补充绘图回归测试，重新生成受影响配图并保持无网格线。
 - 选择 fork 进程的会话中，优化收尾使用已验证的并行 Hessian，失败时退回顺序计算，并逐次记录计算方法。拟合过程模拟省去未使用的导数构建；拟合接口和模型方程保持不变。

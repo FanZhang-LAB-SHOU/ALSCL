@@ -6,8 +6,12 @@
 \usage{
 acl_theme_reset()
 }
+\value{
+\code{NULL}, invisibly.
+}
 \description{
-Reset ALSCL Plot Theme to Defaults
+Restores every theme setting to the package default and reports this with
+a message, which \code{suppressMessages()} silences.
 }
 \examples{
 acl_theme_reset()
