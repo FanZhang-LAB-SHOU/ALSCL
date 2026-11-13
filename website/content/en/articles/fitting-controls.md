@@ -92,17 +92,15 @@ With `"year"` the correlation across groups (`logit_log_F_a` or `logit_log_F_l`)
 <h2 id="structure">6. Choose an optional model structure</h2>
 
 ```r
-b_structure <- run_alscl(x, structure = list(
-  growth_increment = "von_bertalanffy", growth_transition = "bin",
-  initial_length = "growth", initial_plus_group = "equilibrium"),
-  silent = TRUE)
+b_structure <- run_alscl(x, structure = "consistent", silent = TRUE)
 b_structure$structure
+b_structure$growth_check$stalled
 a_structure <- run_acl(x, structure = list(initial_plus_group = "equilibrium"),
                        silent = TRUE)
 a_structure$structure
 ```
 
-The `structure` argument selects optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022), so a call without `structure` fits the same model as before. Each setting replaces one part of that structure, and you can choose the settings one at a time. ACL has the first and the last setting of the table; ALSCL has all five.
+The `structure` argument selects optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022), so a call without `structure` fits the same model as before. `structure = "consistent"` selects the first four settings of the table together, so that the first time step and the growth transition follow one growth model; `structure = "published"` is the default structure. A named list selects single settings, and a list can name a set and add settings to it, for example `list(set = "consistent", correlation_range = "symmetric")`. ACL has the first and the last setting of the table; ALSCL has all five.
 
 | Setting | Published structure (default) | Optional structure |
 |---|---|---|
@@ -113,6 +111,8 @@ The `structure` argument selects optional model structures. The default, an empt
 | `correlation_range` (ACL and ALSCL) | `"positive"`: the AR(1) correlations of recruitment and of F lie between 0 and 1, as the logistic transform of the `logit_*` parameters | `"symmetric"`: they lie between -1 and 1, as 2 times the logistic transform minus 1, so a correlation of zero is an interior value and a negative correlation can be estimated |
 
 Two pairs of settings give a property that the published structure does not have. With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`, a population with constant recruitment, no fishing and `init_Z` equal to `M` stays constant over time. With `growth_increment = "von_bertalanffy"` and `growth_transition = "bin"`, the mean length of a cohort follows the von Bertalanffy curve closely when the length bins are a few times wider than the growth increment per time step. With much wider bins it remains approximate, because fish are spread evenly over their bin after every time step. Under the published structure the mean length falls well below the curve when the increment per time step is small relative to the bin width, as with quarterly time steps and wide length bins. As an example, take a cohort that starts in the length bin nearest 40 cm, with quarterly time steps, `Linf` of 152 cm, `vbk` of 0.38 per year and a coefficient of variation of the growth increment of 0.3. After 10 years the von Bertalanffy curve gives 149.5 cm. With `"von_bertalanffy"` and `"bin"` the mean length is 149.6 cm with 1-cm bins, 148.3 cm with 5-cm bins and 146.6 cm with 10-cm bins. With the published structure it is 143.0 cm with 1-cm bins, 121.7 cm with 5-cm bins and 105.3 cm with 10-cm bins.
+
+Use the four settings of `"consistent"` together. With `growth_transition = "midpoint"`, growth stops at the length where the growth increment in one time step falls well below half the bin width, whatever the value of `Linf`. In simulation tests with quarterly time steps and 5-cm length bins (`Linf` of 152 cm), growth under the published structure stopped between 113 and 120 cm. Fits with only the two initial-state settings or only the two growth settings then failed the numerical checks or gave strongly biased estimates of the fishing mortality rate, because the first time step and the later time steps followed different growth models. When the fitted transition has a length bin, with a midpoint below 90% of the estimated `Linf`, in which fish stay with a probability of at least 0.99 per time step, `run_alscl()` reports it in a message (unless `silent = TRUE`), `summary()` prints it, and `growth_check` in the fit stores the result. The published structure and the `"consistent"` set have the same number of parameters, so fit both and compare their objective values.
 
 `b_structure$structure` and `a_structure$structure` list the value used for every setting, and a saved fit keeps them. A fit with an optional structure is a different model, so compare its numerical checks, residuals and estimates with those of the default fit before you choose it ([Diagnostics](diagnostics.html)). If `run_acl()` stops because a setting "applies to ALSCL only", remove the growth and initial-length settings from the ACL call: ACL has no growth transition matrix. Store the choice under the model it belongs to, for example in `x$fit_config$alscl$structure`, so that later fits of the bundle, including the retrospective peels, use it. To simulate data with the same structure, see [Simulate survey data](simulation.html#generate).
 

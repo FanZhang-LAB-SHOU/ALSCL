@@ -167,12 +167,45 @@
   growth_transition = c("midpoint", "bin"),
   correlation_range = c("positive", "symmetric"))
 
+# Named sets of settings. "published" is the structure of Zhang and Cadigan
+# (2022). "consistent" makes the first period follow the same growth and
+# mortality as later periods and uses the von Bertalanffy increment integrated
+# over the length bin. The four settings are meant to be used together.
+.acl_structure_sets <- list(
+  published = list(),
+  consistent = list(initial_plus_group = "equilibrium", initial_length = "growth",
+                    growth_increment = "von_bertalanffy", growth_transition = "bin"))
+
+# Expand a set name, or a list with a `set` element, to a plain list of
+# settings. Settings given next to `set` replace those of the set. ACL keeps
+# the settings of a set that apply to it.
+.acl_structure_expand <- function(structure, model = "ALSCL") {
+  if (is.null(structure)) return(list())
+  pick <- function(name, label) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) || !name %in% names(.acl_structure_sets))
+      stop(label, " must be \"published\" or \"consistent\" (the name of a set); use a named list for ",
+           "single settings, for example list(growth_transition = \"bin\").", call. = FALSE)
+    set <- .acl_structure_sets[[name]]
+    if (toupper(model) == "ACL") set <- set[intersect(names(set), c("initial_plus_group", "correlation_range"))]
+    set
+  }
+  if (is.character(structure)) return(pick(structure, "A character structure"))
+  if (is.list(structure) && !is.data.frame(structure) && "set" %in% names(structure)) {
+    if (sum(names(structure) == "set") > 1L) stop("structure has more than one `set` element.", call. = FALSE)
+    set <- pick(structure$set, "structure$set")
+    extra <- structure[names(structure) != "set"]
+    return(c(set[setdiff(names(set), names(extra))], extra))
+  }
+  structure
+}
+
 # Settings that decide how optimizer-scale values map to natural values:
 # whether AR(1) correlations lie between -1 and 1, and the lower limit of the
 # ALSCL t0. `x` is a fit, a recipe argument list or a prepared input.
 .acl_scale_settings <- function(x = NULL) {
   structure <- x$structure
   if (is.null(structure)) structure <- x$recipe$args$structure
+  structure <- tryCatch(.acl_structure_expand(structure), error = function(e) list())
   t0_lower <- x$t0_lower
   if (is.null(t0_lower)) t0_lower <- x$recipe$args$t0_lower
   if (is.null(t0_lower)) t0_lower <- 0
@@ -183,13 +216,14 @@
 # and the data entries passed to the template (non-default settings only, so a
 # default fit passes exactly the same data as earlier versions).
 .acl_structure <- function(structure = list(), model = "ALSCL") {
-  if (is.null(structure)) structure <- list()
   model <- toupper(model)
+  structure <- .acl_structure_expand(structure, model)
   available <- if (model == "ACL") c("initial_plus_group", "correlation_range") else names(.acl_structure_choices)
   if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
       (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
        anyDuplicated(names(structure)))))
-    stop("structure must be a named list, for example list(growth_increment = \"von_bertalanffy\").", call. = FALSE)
+    stop("structure must be \"published\", \"consistent\" or a named list, for example ",
+         "list(set = \"consistent\", correlation_range = \"symmetric\").", call. = FALSE)
   unknown <- setdiff(names(structure), names(.acl_structure_choices))
   if (length(unknown))
     stop("Unknown structure setting: ", paste(unknown, collapse = ", "), ". Available settings: ",

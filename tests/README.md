@@ -6,7 +6,7 @@ Run one group with, for example, `devtools::test(filter = "retro")`.
 
 | Part of the package | Test files (`test-*.R`) |
 |:--|:--|
-| Model equations of the TMB templates, checked against independent R code | `model-core`, `review-tests-reference-likelihood`, `review-tests-growth-matrix`, `review-tests-stationarity`, `review-core-structure`, `review-core-options` |
+| Model equations of the TMB templates, checked against independent R code | `model-core`, `review-tests-reference-likelihood`, `review-tests-growth-matrix`, `review-tests-stationarity`, `review-core-structure`, `review-core-structure-sets`, `review-core-options` |
 | Fitting: starts, bounds, maps, refinement, multistart, parallel starts | `fit`, `review-core-fitting`, `map-controls-followup`, `refinement`, `parallel`, `parallel-refinement`, `fit-state-review`, `core-225`, `core-performance`, `review-tests-estimation` |
 | Standard errors, speed settings, compile cache, workers | `speed`, `speed-single-quantity`, `review-infra-speed`, `review-infra-compile`, `review-infra-workers`, `review-infra-diagnostics` |
 | Input reading and checks (tables, CSV, Excel, bundles, length bins) | `input`, `input-precision`, `input-workflow`, `bin-bounds-227`, `fit-bundle`, `review-workflows-bundle`, `review-workflows-excel` |

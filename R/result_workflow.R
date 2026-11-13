@@ -427,6 +427,9 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
 #'   status and boundary status. A stored assessment whose inputs do not pass
 #'   the current input checks is still summarized: the parameter table then
 #'   contains the estimated parameters only, and notes gives the reason.
+#'   For an ALSCL fit in which growth stops below Linf under the midpoint
+#'   growth transition, growth_check holds the message described in the
+#'   Details of [run_alscl()].
 #' @examples
 #' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
@@ -451,6 +454,7 @@ summary.alscl_fit <- function(object, ...) {
   if (!is.null(problem))
     out$notes <- paste0("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
                         problem, ").")
+  if (isTRUE(object$growth_check$stalled)) out$growth_check <- object$growth_check$message
   structure(out, class = "summary.alscl_fit")
 }
 
@@ -466,6 +470,7 @@ print.summary.alscl_fit <- function(x, digits = NULL, ...) {
   cat("\nFixed-effect parameters (natural scale):\n")
   print(x$parameters, row.names = FALSE, digits = digits)
   if (length(x$notes)) cat("\nNote: ", paste(x$notes, collapse = " "), "\n", sep = "")
+  if (length(x$growth_check)) cat("\nGrowth check: ", x$growth_check, "\n", sep = "")
   invisible(x)
 }
 

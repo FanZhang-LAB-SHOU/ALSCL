@@ -114,9 +114,18 @@ On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
 
-\item{structure}{Named list of optional model structures. The default, an
-empty list, is the published structure of Zhang and Cadigan (2022) for
-every setting. Settings and values (default first):
+\item{structure}{Optional model structures: the name of a set or a named
+list of settings. The default, an empty list, and \code{"published"} are the
+published structure of Zhang and Cadigan (2022) for every setting.
+\code{"consistent"} selects \code{growth_increment = "von_bertalanffy"},
+\code{growth_transition = "bin"}, \code{initial_length = "growth"} and
+\code{initial_plus_group = "equilibrium"} together, so that the first period
+and the growth transition follow one growth model. A list can name a set
+and add single settings, for example
+\code{list(set = "consistent", correlation_range = "symmetric")}. Use the four
+settings of \code{"consistent"} together: a fit with only some of them can
+fail when the growth increment per time step is small relative to the
+bin width. Settings and values (default first):
 \describe{
 \item{\code{growth_increment}}{\code{"logistic"}: the expected growth increment is a
 decreasing logistic function of length, multiplied by \code{growth_step}.
@@ -189,6 +198,9 @@ parameters, including sequential and fallback paths. Its report describes
 the same fitted state as report. Saved estimates and standard errors are
 unchanged by this restoration; refit serialized results before using obj.
 recipe stores the complete resolved fitting inputs and software settings.
+growth_check reports whether growth stops below Linf under the midpoint
+growth transition (stalled, the length and the probability of staying in
+that length bin per time step); see Details.
 Use summary(), extract_parameters(), extract_estimates(), save_assessment()
 and refit_model() for inspection, portable storage and reproducible refitting.
 }
@@ -220,6 +232,20 @@ corresponding list; NULL is preserved. Other top-level fields in a structured
 bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.
+
+With \code{growth_transition = "midpoint"} every fish of a length bin
+grows from the bin midpoint. Growth then stops at the length where the
+increment in one time step falls well below half the bin width, whatever
+the value of Linf; this happens with short time steps and wide bins (for
+example quarterly steps with 5 cm bins, or annual steps with 5 cm bins
+for a slow-growing stock). The fit stores \code{growth_check}. When the
+fitted transition has a length bin, with a midpoint below 90\% of the
+estimated Linf, in which fish stay with a probability of at least 0.99
+per time step, the fit reports it in a message (unless \code{silent = TRUE})
+and \code{summary()} prints it. Consider a refit with
+\code{structure = "consistent"} in that case. The published structure and the
+\code{"consistent"} set have the same number of parameters, so their objective
+values can be compared directly.
 
 A single start can stop at a local optimum that passes every
 numerical check, particularly for the growth parameters of ALSCL. The

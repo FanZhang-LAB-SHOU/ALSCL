@@ -403,8 +403,40 @@
       result$start_summary$objective_range, result$start_summary$converged))
   if (!silent && length(result$diagnostics$issues))
     message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "))
+  result$growth_check <- .acl_growth_check(result)
+  if (!silent && isTRUE(result$growth_check$stalled)) message(result$growth_check$message)
   if (output) .acl_save_output(result, prepared$data.CatL)
   result
+}
+# With growth_transition = "midpoint" every fish of a length bin grows from the
+# bin midpoint, so a bin is not left when the growth increment in one time
+# step is well below half the bin width. Growth then stops at that length
+# whatever the value of Linf. The check finds the smallest length bin, with a
+# midpoint below 90% of the estimated Linf, in which fish stay with a
+# probability of at least 0.99 per time step. With starting lengths spread
+# over the bin this probability is one minus the increment divided by the bin
+# width, which is far below 0.99 at such lengths.
+.acl_growth_check <- function(fit, threshold = 0.99, fraction = 0.9) {
+  if (!identical(fit$model_type, "ALSCL")) return(NULL)
+  G <- fit$report$G; Linf <- fit$report$Linf; mid <- fit$len_mid
+  transition <- fit$structure$growth_transition
+  if (is.null(transition)) transition <- "midpoint"
+  out <- list(stalled = FALSE, growth_transition = transition, length = NA_real_,
+              stay_probability = NA_real_, Linf = Linf, message = "")
+  if (transition != "midpoint" || !is.matrix(G) || length(mid) != nrow(G) || nrow(G) < 2L ||
+      length(Linf) != 1L || !is.finite(Linf) || any(!is.finite(diag(G)))) return(out)
+  stay <- diag(G)[-nrow(G)]
+  hit <- which(stay >= threshold & mid[-nrow(G)] < fraction * Linf)
+  if (!length(hit)) return(out)
+  j <- hit[1L]
+  out$stalled <- TRUE; out$length <- mid[j]; out$stay_probability <- stay[j]
+  out$message <- sprintf(paste0(
+    "Growth stops near length %s in this fit: fish in the length bin with midpoint %s stay in it with ",
+    "probability %.3f per time step, and the estimated Linf is %s. With growth_transition = \"midpoint\" ",
+    "this happens when the growth increment in one time step is small relative to the width of the length bins. ",
+    "Consider a refit with structure = \"consistent\" and compare the objective values; see ?run_alscl."),
+    format(mid[j]), format(mid[j]), stay[j], format(signif(Linf, 4)))
+  out
 }
 .acl_save_output <- function(result, data.CatL) {
   dir.create("output/figures/result", recursive = TRUE, showWarnings = FALSE)

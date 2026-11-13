@@ -36,45 +36,64 @@
   }, error = function(e) NULL)
   initial <- evaluate(par); current <- initial
   if (enabled && is.null(current)) status <- "nonfinite_evaluation"
-  if (enabled && !is.null(current)) for (i in seq_len(5L)) {
-    if (current$mgc < 1e-6) {status <- "gradient_tolerance"; break}
-    if (any(par - lower <= 1e-7 | upper - par <= 1e-7)) {
-      status <- "parameter_boundary"; break
-    }
-    step <- tryCatch({
-      calculation <- .acl_refinement_hessian(obj, par)
-      hessians <- rbind(hessians, data.frame(iteration = i,
-        method = calculation$method, cores = calculation$cores,
-        note = calculation$note))
-      h <- calculation$value
-      h <- (h + t(h))/2
-      if (any(!is.finite(h))) stop("nonfinite Hessian")
-      # chol both checks positive definiteness and avoids an unstable inverse.
-      r <- chol(h)
-      as.numeric(backsolve(r, forwardsolve(t(r), current$gradient)))
-    }, error = function(e) {
-      hessian_message <<- conditionMessage(e)
-      NULL
-    })
-    if (is.null(step) || any(!is.finite(step))) {
-      status <- "hessian_unusable"; break
-    }
-    accepted <- FALSE
-    for (scale in 2^-(0:15)) {
-      trial <- par - scale * step
-      if (any(!is.finite(trial)) || any(trial <= lower | trial >= upper)) next
-      candidate <- evaluate(trial)
-      if (!is.null(candidate) && candidate$value <= current$value + 1e-8 &&
-          candidate$mgc < current$mgc) {
-        par <- trial; current <- candidate; accepted <- TRUE
-        history <- rbind(history, data.frame(iteration = i,
-          objective = current$value, max_gradient = current$mgc, step_scale = scale))
-        break
+  # Newton steps with a finite-difference Hessian. A step is accepted when it
+  # lowers the largest gradient component and does not raise the objective by
+  # more than `tolerance`.
+  newton <- function(iterations, tolerance) {
+    for (i in iterations) {
+      if (current$mgc < 1e-6) {status <<- "gradient_tolerance"; break}
+      if (any(par - lower <= 1e-7 | upper - par <= 1e-7)) {
+        status <<- "parameter_boundary"; break
       }
+      step <- tryCatch({
+        calculation <- .acl_refinement_hessian(obj, par)
+        hessians <<- rbind(hessians, data.frame(iteration = i,
+          method = calculation$method, cores = calculation$cores,
+          note = calculation$note))
+        h <- calculation$value
+        h <- (h + t(h))/2
+        if (any(!is.finite(h))) stop("nonfinite Hessian")
+        # chol both checks positive definiteness and avoids an unstable inverse.
+        r <- chol(h)
+        as.numeric(backsolve(r, forwardsolve(t(r), current$gradient)))
+      }, error = function(e) {
+        hessian_message <<- conditionMessage(e)
+        NULL
+      })
+      if (is.null(step) || any(!is.finite(step))) {
+        status <<- "hessian_unusable"; break
+      }
+      accepted <- FALSE
+      for (scale in 2^-(0:15)) {
+        trial <- par - scale * step
+        if (any(!is.finite(trial)) || any(trial <= lower | trial >= upper)) next
+        candidate <- evaluate(trial)
+        if (!is.null(candidate) && candidate$value <= current$value + tolerance(current$value) &&
+            candidate$mgc < current$mgc) {
+          par <<- trial; current <<- candidate; accepted <- TRUE
+          history <<- rbind(history, data.frame(iteration = i,
+            objective = current$value, max_gradient = current$mgc, step_scale = scale))
+          break
+        }
+      }
+      if (!accepted) {status <<- "no_acceptable_step"; break}
+      status <<- if (current$mgc < 1e-6) "gradient_tolerance" else "iteration_limit"
     }
-    if (!accepted) {status <- "no_acceptable_step"; break}
-    status <- if (current$mgc < 1e-6) "gradient_tolerance" else "iteration_limit"
   }
+  if (enabled && !is.null(current)) newton(seq_len(5L), function(value) 1e-8)
+  # Second pass, only for a fit that would otherwise fail the gradient check
+  # (largest component 1e-3 or more). The Laplace objective is reproducible
+  # to about 1e-7 because the random-effect mode is found numerically. Where
+  # the likelihood is very sharp in one parameter, a gradient of this size
+  # corresponds to an objective change far below that precision, and the
+  # first pass rejects the full Newton step because the objective appears to
+  # rise. The second pass allows a rise within the working precision of the
+  # objective, sqrt(machine epsilon) times its size. Iterations 6 to 10 of
+  # `history` belong to this pass.
+  second_pass <- enabled && !is.null(current) && current$mgc >= 1e-3 &&
+    status %in% c("no_acceptable_step", "iteration_limit")
+  if (second_pass)
+    newton(5L + seq_len(5L), function(value) sqrt(.Machine$double.eps) * max(1, abs(value)))
   # Restore the objective's random-effect mode after Hessian/trial evaluations.
   final <- evaluate(par)
   list(par = par, enabled = enabled, status = status, steps = nrow(history),
@@ -83,7 +102,7 @@
     initial_max_gradient = if (is.null(initial)) NA_real_ else initial$mgc,
     final_max_gradient = if (is.null(final)) NA_real_ else final$mgc,
     history = history, hessian_calculations = hessians,
-    hessian_message = hessian_message)
+    hessian_message = hessian_message, second_pass = second_pass)
 }
 
 .acl_fit_diagnostics <- function(fit) {

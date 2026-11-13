@@ -92,17 +92,15 @@ plot_deviance(a_year, type = "F", se = TRUE)
 <h2 id="structure">6. 选择可选的模型结构</h2>
 
 ```r
-b_structure <- run_alscl(x, structure = list(
-  growth_increment = "von_bertalanffy", growth_transition = "bin",
-  initial_length = "growth", initial_plus_group = "equilibrium"),
-  silent = TRUE)
+b_structure <- run_alscl(x, structure = "consistent", silent = TRUE)
 b_structure$structure
+b_structure$growth_check$stalled
 a_structure <- run_acl(x, structure = list(initial_plus_group = "equilibrium"),
                        silent = TRUE)
 a_structure$structure
 ```
 
-`structure` 参数选择可选的模型结构。默认值（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构，所以不带 `structure` 的调用拟合的模型与以前相同。每项设置替换该结构的一个部分，可以逐项选择。ACL 有表中的第一项和最后一项设置，ALSCL 五项都有。
+`structure` 参数选择可选的模型结构。默认值（空列表）是 Zhang 和 Cadigan (2022) 已发表的结构，所以不带 `structure` 的调用拟合的模型与以前相同。`structure = "consistent"` 同时选用表中前四项设置，使第一个时间步和生长转移遵循同一个生长模型；`structure = "published"` 即默认结构。命名列表可以选择单项设置，也可以先指定一组设置再追加，例如 `list(set = "consistent", correlation_range = "symmetric")`。ACL 有表中的第一项和最后一项设置，ALSCL 五项都有。
 
 | 设置 | 已发表的结构（默认） | 可选的结构 |
 |---|---|---|
@@ -113,6 +111,8 @@ a_structure$structure
 | `correlation_range`（ACL 和 ALSCL） | `"positive"`：补充量和 F 的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换 | `"symmetric"`：相关系数在 -1 和 1 之间，等于 logistic 变换的 2 倍减 1，因此相关系数为零不在边界上，也可以估计负相关 |
 
 有两对设置具有已发表的结构所没有的性质。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、没有捕捞且 `init_Z` 等于 `M` 的种群保持不变。`growth_increment = "von_bertalanffy"` 与 `growth_transition = "bin"` 同时使用时，组宽为每个时间步生长增量的几倍时，世代的平均体长与 von Bertalanffy 曲线接近。组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。在已发表的结构下，每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），平均体长明显低于该曲线。举一个例子：一个世代从最接近 40 cm 的体长组开始，时间步为季度，`Linf` 为 152 cm，`vbk` 为每年 0.38，生长增量的变异系数为 0.3。10 年后 von Bertalanffy 曲线给出 149.5 cm。使用 `"von_bertalanffy"` 和 `"bin"` 时，组宽 1 cm 的平均体长为 149.6 cm，组宽 5 cm 为 148.3 cm，组宽 10 cm 为 146.6 cm。在已发表的结构下，组宽 1 cm 为 143.0 cm，组宽 5 cm 为 121.7 cm，组宽 10 cm 为 105.3 cm。
+
+`"consistent"` 的四项设置要一起使用。`growth_transition = "midpoint"` 时，在每个时间步的生长增量远小于半个组宽的体长处，个体不再生长，与 `Linf` 的取值无关。在季度时间步、组宽 5 cm 的模拟检验中（`Linf` 为 152 cm），已发表结构下的生长在 113 到 120 cm 之间停止。这时只用两项初始状态设置或只用两项生长设置的拟合，要么不能通过数值检查，要么对捕捞死亡率的估计有很大偏差，因为第一个时间步与之后各时间步遵循不同的生长模型。拟合得到的转移矩阵中，如果有中点低于 `Linf` 估计值 90% 的体长组，且个体每个时间步留在该组的概率不低于 0.99，`run_alscl()` 会给出提示（`silent = TRUE` 时不显示），`summary()` 会显示这条提示，拟合结果中的 `growth_check` 保存这项检查的结果。已发表的结构与 `"consistent"` 的参数个数相同，可以两种各拟合一次并比较目标函数值。
 
 `b_structure$structure` 和 `a_structure$structure` 列出每项设置实际采用的取值，保存的拟合结果也保留它们。采用可选结构的拟合是另一个模型，选用之前先把它的数值检查、残差和估计值与默认拟合比较（[诊断](diagnostics.html)）。如果 `run_acl()` 因某项设置“applies to ALSCL only”而停止，请从 ACL 的调用中去掉生长和初始体长的设置：ACL 没有生长转移矩阵。把选择存在所属模型之下，例如 `x$fit_config$alscl$structure`，这样该输入列表之后的拟合（包括回溯分析的每一轮）都会使用它。要用同样的结构模拟数据，见[模拟调查数据](simulation.html#generate)。
 

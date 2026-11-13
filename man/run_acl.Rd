@@ -104,9 +104,14 @@ On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
 
-\item{structure}{Named list of optional model structures. The default, an
-empty list, is the published structure of Zhang and Cadigan (2022).
-ACL has one setting, \code{initial_plus_group}: \code{"single_cohort"} (default;
+\item{structure}{Optional model structures: the name of a set or a named
+list of settings. The default, an empty list, and \code{"published"} are the
+published structure of Zhang and Cadigan (2022). \code{"consistent"} selects
+\code{initial_plus_group = "equilibrium"} for ACL (see \code{\link[=run_alscl]{run_alscl()}} for the
+ALSCL settings of this set), and a list can name a set and add single
+settings, for example
+\code{list(set = "consistent", correlation_range = "symmetric")}. ACL has the
+setting \code{initial_plus_group}: \code{"single_cohort"} (default;
 the first-period plus group holds one cohort) or \code{"equilibrium"} (it
 holds the sum of all older cohorts at total mortality init_Z, so a
 population with constant recruitment, no fishing and init_Z equal to M

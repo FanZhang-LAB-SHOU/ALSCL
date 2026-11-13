@@ -36,6 +36,9 @@ diagnostics is screened from its stored optimizer code, gradient, Hessian
 status and boundary status. A stored assessment whose inputs do not pass
 the current input checks is still summarized: the parameter table then
 contains the estimated parameters only, and notes gives the reason.
+For an ALSCL fit in which growth stops below Linf under the midpoint
+growth transition, growth_check holds the message described in the
+Details of \code{\link[=run_alscl]{run_alscl()}}.
 }
 \examples{
 \donttest{
