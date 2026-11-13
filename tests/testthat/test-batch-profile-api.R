@@ -97,11 +97,21 @@ test_that("profiles fix the target, refit nuisance parameters and preserve paral
     expect_length(unique(b$grid$pid), 2L)
     expect_false(Sys.getpid() %in% b$grid$pid)
     expect_equal(a$grid$delta_nll, a$grid$objective - as.numeric(fit$opt$objective))
+    # The fixture data were generated without noise at Linf = 60, and the
+    # estimate is close to 60. The profile is therefore lowest at 60, no grid
+    # value falls below the fitted objective, and 58 and 62 are clearly worse.
+    expect_true(all(a$grid$delta_nll > -1e-6))
+    expect_identical(which.min(a$grid$delta_nll), 2L)
+    expect_lt(a$grid$delta_nll[2], .5)
+    expect_gt(min(a$grid$delta_nll[c(1, 3)]), 1)
+    # The nuisance parameter stays free and is estimated again at each value.
+    nuisance <- vapply(a$fits, function(f) f$opt$par[["mean_log_R"]], numeric(1))
+    expect_gt(min(abs(diff(nuisance))), 1e-4)
     expect_identical(a$parameter, "log_Linf")
     expect_equal(a$settings[[1]]$parameters$mean_log_R, unname(fit$opt$par[["mean_log_R"]]))
     for (i in seq_along(values)) {
       expect_equal(a$fits[[i]]$report$Linf, values[i], tolerance = 1e-12)
-      expect_false("log_Linf" %in% names(a$fits[[i]]$opt$par))
+      expect_identical(names(a$fits[[i]]$opt$par), "mean_log_R")
       direct <- do.call(if (model == "ACL") run_acl else run_alscl, a$settings[[i]])
       expect_equal(a$grid$objective[i], as.numeric(direct$opt$objective), tolerance = 1e-8)
       expect_null(b$fits[[i]]$obj)

@@ -21,7 +21,7 @@ test_that("diagnostics use maximum absolute gradients and valid observation pair
   expect_equal(x$Value[x$Metric=="MASE"],2)
   a<-diagnose_model(d,m);expect_equal(a$Value[a$Metric=="Final Outer mgc"],.4)
   m$final_outer_mgc<-.5
-  expect_equal(diagnose_model(d,m)$Value[15],.5)
+  a<-diagnose_model(d,m);expect_equal(a$Value[a$Metric=="Final Outer mgc"],.5)
   d[1,2]<-NA;d[2,2]<-0
   expect_true(all(is.finite(diagnostic_metrics(d,m)$Value)))
   d[-1]<-10;m$report$Elog_index[,]<-log(10)
