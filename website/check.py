@@ -13,6 +13,9 @@ from bs4 import BeautifulSoup
 
 ROOT=Path(__file__).resolve().parents[1]
 SITE=ROOT/'_site'
+# Report problems even when the console encoding cannot show a character.
+for stream in (sys.stdout,sys.stderr):
+    if hasattr(stream,'reconfigure'):stream.reconfigure(errors='replace')
 errors=[]
 for command in [
     [sys.executable, str(ROOT/'scripts/test_manual_builder.py')],

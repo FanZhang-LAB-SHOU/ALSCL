@@ -435,5 +435,8 @@ def build(out):
     print(f'Built {len(list(out.rglob("*.html")))} pages, {len(FUNCTIONS)} functions per language → {out}')
 
 if __name__=='__main__':
+    # Print progress even when the console encoding cannot show a character.
+    for stream in (sys.stdout,sys.stderr):
+        if hasattr(stream,'reconfigure'):stream.reconfigure(errors='replace')
     parser=argparse.ArgumentParser(); parser.add_argument('--output',type=Path,default=ROOT/'_site')
     build(parser.parse_args().output.resolve())
