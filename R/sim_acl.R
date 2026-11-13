@@ -231,6 +231,39 @@ sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts 
   list(L50 = unname(L50), L95 = unname(L95))
 }
 
+#' Convert one simulated replicate to the tables used for fitting
+#'
+#' Converts the output of \code{\link{sim_data}} to the three tables that
+#' \code{\link{run_acl}} and \code{\link{run_alscl}} take. Rows are length
+#' bins, labelled by the length-bin midpoints. Columns are the model time
+#' steps recorded in the replicate.
+#'
+#' @param sm A simulated replicate: the list returned by \code{sim_data()} or
+#'   the \code{sim.data} object loaded from a \code{sim_rep<id>} file.
+#' @param pa Optional parameter list from \code{\link{initialize_params}} that
+#'   generated the replicate. It supplies \code{len_mid}, \code{growth_step}
+#'   and \code{first.year} for older replicates that do not record them.
+#'   Length-bin midpoints in \code{pa} must match those recorded in \code{sm}.
+#' @param first_year Optional first observation year. It replaces the years
+#'   recorded in \code{sm}.
+#' @return A list with data frames \code{data.CatL} (survey catch at length),
+#'   \code{data.wgt} (weight at length) and \code{data.mat} (proportion mature
+#'   at length). Each has a \code{LengthBin} column followed by one column per
+#'   model time step.
+#' @details The function stops when the dimensions of \code{SN_at_len},
+#'   \code{weight} or \code{mat} do not match the time and length coordinates,
+#'   so rows are never recycled. \code{\link{sim_model}}, \code{\link{sim_acl}}
+#'   and \code{\link{sim_alscl}} apply the same conversion to saved replicates.
+#' @examples
+#' pa <- initialize_params(species = "flatfish", nyear = 6, burn_in = 2)
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1, output_dir = tempdir())
+#' tables <- simulation_to_tables(sm, pa)
+#' names(tables)
+#' dim(tables$data.CatL)
+#' @export
+simulation_to_tables <- function(sm, pa = NULL, first_year = NULL)
+  .acl_simulation_to_tables(sm, pa, first_year)
+
 # Shared by the repository tutorial and batch fitting; validate coordinates
 # before converting matrices to tables so rows can never be silently recycled.
 .acl_simulation_to_tables <- function(sm, pa = NULL, first_year = NULL) {
