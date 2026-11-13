@@ -43,7 +43,10 @@ test_that("default Linf start and bounds follow the data when the ACL defaults d
   expect_equal(linf(setup(seq(1, 5, .5))), c(start = 5.5, lower = 3.5, upper = 10))
   # Supplied values are kept.
   kept <- linf(setup(seq(40, 120, 10), parameters = list(log_Linf = log(150)), parameters.U = list(log_Linf = log(300))))
-  expect_equal(kept, c(start = 150, lower = 84, upper = 300))
+  expect_equal(kept, c(start = 150, lower = 10, upper = 300))
+  # A supplied start with unsuitable default bounds gets data-based bounds.
+  expect_equal(linf(setup(seq(40, 120, 10), parameters = list(log_Linf = log(150)))),
+               c(start = 150, lower = 84, upper = 240))
   expect_null(setup(seq(40, 120, 10))$clamped_starts)
 })
 
@@ -74,7 +77,7 @@ test_that("sequential starts on one reused object equal starts on new objects", 
   for (model in c("ACL", "ALSCL")) {
     example <- fit_fixture(model)
     mapping <- example$map; mapping$log_init_Z <- NULL
-    mapping[[if (model == "ACL") "log_std_index" else "log_sigma_index"]] <- NULL
+    mapping$mean_log_F <- NULL
     args <- c(example$input, list(parameters = example$parameters, map = mapping, silent = TRUE))
     run <- if (model == "ACL") run_acl else run_alscl
     reused <- do.call(run, c(args, list(nstarts = 3)))
@@ -95,7 +98,7 @@ test_that("sequential starts on one reused object equal starts on new objects", 
     single <- do.call(run, c(args, list(nstarts = 1)))
     expect_identical(reused$starts[[1]]$par, single$starts[[1]]$par)
     expect_identical(reused$start_summary$nstarts, 3L)
-    expect_true(reused$start_summary$converged >= 1L)
+    expect_equal(reused$start_summary$best_objective, min(vapply(reused$starts, `[[`, numeric(1), "objective")))
     expect_identical(reused$start_spread, .15)
     wide <- do.call(run, c(args, list(nstarts = 2, start_spread = .5)))
     expect_equal((wide$starts[[2]]$initial - wide$starts[[1]]$initial) /

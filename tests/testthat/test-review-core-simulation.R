@@ -15,7 +15,8 @@ test_that("sim_data leaves the caller's random numbers unchanged and records the
   expect_identical(first$provenance$RNGkind, c("Mersenne-Twister", "Inversion", "Rejection"))
   expect_identical(first$provenance$ALSCL_version, as.character(utils::packageVersion("ALSCL")))
   # The same replicate ID gives the same data under another generator.
-  withr::local_rng_version("3.5.0")
+  previous <- RNGkind("L'Ecuyer-CMRG")
+  withr::defer(do.call(RNGkind, as.list(previous)))
   utils::capture.output(second <- sim_data(bio, params, output_dir = out, iter_range = 5))
   expect_identical(second$SN_at_len, first$SN_at_len)
 })
@@ -24,13 +25,19 @@ test_that("replicate files have integer names and are written only when every re
   params <- initialize_params(species = "flatfish", nyear = 30, burn_in = 20)
   bio <- sim_cal(params)
   out <- withr::local_tempdir()
-  withr::local_options(scipen = -10)
+  withr::local_options(scipen = -9)
   utils::capture.output(sim_data(bio, params, output_dir = out, iter_range = c(4, 100000)))
   expect_setequal(list.files(out), c("sim_rep4", "sim_rep100000"))
   expect_identical(basename(ALSCL:::.acl_simulation_file(out, 1e5)), "sim_rep100000")
   stamp <- tools::md5sum(file.path(out, "sim_rep4"))
-  bad <- params; bad$R_init <- Inf
-  expect_error(utils::capture.output(sim_data(bio, bad, output_dir = out, iter_range = 4:6)),
+  # A later replicate fails validation: no file of that call is written.
+  validate <- ALSCL:::.acl_validate_simulated_result
+  local_mocked_bindings(.acl_validate_simulated_result = function(simulation, iter) {
+    if (iter == 6) stop("Simulation replicate 6 produced nonfinite values.", call. = FALSE)
+    validate(simulation, iter)
+  })
+  changed <- params; changed$R_init <- 2 * params$R_init
+  expect_error(utils::capture.output(sim_data(bio, changed, output_dir = out, iter_range = 4:6)),
                "files already in output_dir are unchanged")
   expect_setequal(list.files(out), c("sim_rep4", "sim_rep100000"))
   expect_identical(tools::md5sum(file.path(out, "sim_rep4")), stamp)
