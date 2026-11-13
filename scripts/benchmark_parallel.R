@@ -2,7 +2,10 @@
 # From the repository root, after R CMD INSTALL .:
 # Rscript scripts/benchmark_parallel.R [output_dir] [repeats] [years]
 # No optimizer limits, dummy work, sleeps, or discarded slow starts are used.
-suppressPackageStartupMessages(library(ALSCL))
+# The installed package is timed. The guard stops unless its functions, templates
+# and data equal this checkout, so that source_hashes.csv describes the timed code.
+source('scripts/checkout_guard.R')
+use_checkout_alscl(installed = TRUE)
 args <- commandArgs(trailingOnly = TRUE)
 out <- if (length(args)) args[1] else 'docs/results/parallel'
 repeats <- if (length(args) > 1) as.integer(args[2]) else 3L

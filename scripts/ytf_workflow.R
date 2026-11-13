@@ -1,15 +1,19 @@
 # GitHub 图谱：所有拟合图使用内置 YTF_example / All fitted plots use YTF_example.
 # 从仓库根目录运行 / Run from the repository root:
 # Rscript scripts/ytf_workflow.R
-library(ALSCL)
-# The figures must come from this checkout: stop when an older installation is loaded.
-if (packageVersion("ALSCL") < read.dcf("DESCRIPTION", "Version")[[1]])
-  stop("Installed ALSCL ", packageVersion("ALSCL"), " is older than this checkout; run R CMD INSTALL . first.")
+# 拟合结果另存到 output/ytf-guide/fits.rds，供 scripts/refresh_manual_figures.R 使用。
+# The fits are also saved to output/ytf-guide/fits.rds for scripts/refresh_manual_figures.R.
+# The figures and tables must come from the code of this checkout. The guard
+# loads the checkout with pkgload, or stops when the installed package has
+# different functions, templates or data. A version number cannot show that.
+source("scripts/checkout_guard.R")
+use_checkout_alscl()
 library(ggplot2)
 library(patchwork)
 source("scripts/plot_helpers.R")
 
-run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
+run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL,
+                          fits_file = file.path("output", "ytf-guide", "fits.rds")) {
   cache <- Sys.getenv("ALSCL_MANUAL_CACHE")
   if (nzchar(cache)) options(ALSCL.tmb.cache = cache)
   for (d in c("figures/ytf", "results", "data"))
@@ -168,6 +172,16 @@ write.csv(retro_b$rho_text,file.path(out,'results','rho_ALSCL.csv'),row.names=FA
   write.csv(estimates,file.path(out,"results","estimates.csv"),row.names=FALSE)
   writeLines(trimws(capture.output(sessionInfo()), which="right"),file.path(out,"results","sessionInfo.txt"))
   message("COMPLETE: ",length(registry)," YTF figures")
-  invisible(list(acl=a,alscl=b,retro_acl=retro_a,retro_alscl=retro_b,inputs=inputs))
+  result <- list(acl=a,alscl=b,retro_acl=retro_a,retro_alscl=retro_b,inputs=inputs)
+  # 保存新拟合（不含当前会话的 TMB 对象）/ Save new fits without the session's TMB objects.
+  # run_ytf_guide(fits = readRDS(fits_file)) redraws every figure without refitting.
+  if (is.null(fits) && !is.null(fits_file)) {
+    dir.create(dirname(fits_file), recursive=TRUE, showWarnings=FALSE)
+    saved <- result
+    saved$acl$obj <- saved$alscl$obj <- NULL
+    saveRDS(saved, fits_file)
+    message("Saved the fits to ", fits_file)
+  }
+  invisible(result)
 }
 if (sys.nframe() == 0L) run_ytf_guide()
