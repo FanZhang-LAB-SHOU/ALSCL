@@ -93,10 +93,12 @@ From the repository root, install the updated source first:
 R CMD INSTALL .
 Rscript scripts/benchmark_parallel.R docs/results/parallel 3 10
 Rscript scripts/plot_parallel_benchmark.R
-Rscript -e 'library(ALSCL); testthat::test_dir("tests/testthat", reporter="summary")'
+Rscript -e 'testthat::test_local(reporter = "summary")'
 ```
 
-The complete local regression suite passed **256 assertions, with zero failures, errors or warnings**; see [regression test results](results/parallel/regression_tests.csv). / 本机完整回归测试通过 **256 项检查，零失败、错误或警告**。
+`testthat::test_local()` loads the source checkout with pkgload, so the tests can reach internal functions; `devtools::test()` and `R CMD check` do the same. Running `testthat::test_dir()` after `library(ALSCL)` reports spurious errors, because unexported helpers are not visible to the tests. / `testthat::test_local()` 用 pkgload 加载源代码，测试才能访问内部函数；`devtools::test()` 和 `R CMD check` 也是如此。先 `library(ALSCL)` 再运行 `testthat::test_dir()` 会因为看不到未导出的辅助函数而出现虚假错误。
+
+When this benchmark was recorded for ALSCL 2.0.0, the regression suite of that version passed **256 assertions, with zero failures, errors or warnings**; see [regression test results](results/parallel/regression_tests.csv). The current suite is larger; its result is the one reported by the command above. / 本基准为 ALSCL 2.0.0 记录时，该版本的回归测试通过 **256 项检查，零失败、错误或警告**。当前测试集更大，结果以上述命令的输出为准。
 
 The benchmark stops on failed convergence, different starting values/objectives/biomass, missing worker PIDs, or absent CPU activity. Unit tests also cover legacy defaults, worker caps, RNG preservation, failed-start diagnostics, retrospective ACL/ALSCL results at 1/2/4 workers, and actual `sim_acl()` replicate fits at 1/2/4 workers.
 
@@ -104,3 +106,5 @@ The benchmark stops on failed convergence, different starting values/objectives/
 - [Summary](results/parallel/summary.csv) · [All timed runs](results/parallel/runs.csv) · [Per-start PID/CPU/timing](results/parallel/starts.csv)
 - [Starting and fitted parameters](results/parallel/parameters.csv) · [Source hashes](results/parallel/source_hashes.csv) · [Package versions](results/parallel/package_versions.csv)
 - [Original-version timings](results/parallel/original_baseline.csv) · [Validation](results/parallel/validation.txt)
+
+`benchmark_parallel.R` writes the summary, runs, starts, parameters, source hashes, environment, package versions and validation files. `original_baseline.csv` and `regression_tests.csv` were recorded separately for the ALSCL 2.0.0 report and are not rewritten by the script; a rerun into `docs/results/parallel` leaves them as they are, so keep them only together with the 2.0.0 results. / `benchmark_parallel.R` 写出 summary、runs、starts、parameters、source hashes、environment、package versions 和 validation 文件。`original_baseline.csv` 和 `regression_tests.csv` 是为 ALSCL 2.0.0 报告另行记录的，脚本不会重写；重新运行并写入 `docs/results/parallel` 时它们保持原样，因此只应与 2.0.0 的结果一同保留。

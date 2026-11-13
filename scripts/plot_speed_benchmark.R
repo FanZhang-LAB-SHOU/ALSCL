@@ -10,6 +10,17 @@ figures <- if (length(args) > 1) args[2] else 'docs/figures/speed'
 dir.create(figures, recursive = TRUE, showWarnings = FALSE)
 runs <- read.csv(file.path(results, 'runs.csv'))
 summary <- read.csv(file.path(results, 'summary.csv'))
+# Facts for the captions come from the result files, not from this script.
+environment_file <- file.path(results, 'environment.txt')
+recorded <- if (file.exists(environment_file)) readLines(environment_file) else character()
+field <- function(name) {
+  line <- grep(paste0('^', name, ': '), recorded, value = TRUE)
+  if (length(line)) sub(paste0('^', name, ': '), '', line[1L]) else NA_character_
+}
+n_runs <- unique(as.vector(table(runs$case, runs$model, runs$config)))
+runs_text <- if (length(n_runs) == 1L) sprintf('median of %d runs', n_runs) else 'median of the runs'
+computer <- if (is.na(field('CPU'))) 'Computer' else field('CPU')
+cores <- if (is.na(field('Logical CPUs'))) '' else sprintf(' on %s cores', field('Logical CPUs'))
 settings <- c(original = 'Original code (ALSCL 2.0.0)',
               cppad_par = 'Default: parallel standard errors (CppAD)',
               tmbad_par = 'Option: framework = "TMBad"')
@@ -53,9 +64,9 @@ render('timing', function() {
   legend('bottom', legend = settings, pch = pchs, pt.bg = cols, col = 'white', pt.cex = 1.4,
          ncol = 3, bty = 'n', cex = .8, text.col = ink, inset = c(0, .07), x.intersp = .7,
          text.width = max(strwidth(settings, cex = .8)) * 1.12)
-  mtext(sprintf(paste('Large symbol: median of 3 runs; small dots: each run; (x): speed-up relative to',
-                      'the original code. Apple M2 Pro, shared with other jobs (load average %.0f-%.0f on 10 cores).'),
-                load[1], load[2]), side = 1, line = -1.2, cex = .68, col = muted)
+  mtext(sprintf(paste('Large symbol: %s; small dots: each run; (x): speed-up relative to',
+                      'the original code. %s, shared with other jobs (load average %.0f-%.0f%s).'),
+                runs_text, computer, load[1], load[2], cores), side = 1, line = -1.2, cex = .68, col = muted)
 }, height = 5.4)
 
 # The agreement file holds the original values and the exact differences of
@@ -91,10 +102,15 @@ if (file.exists(agreement)) {
     }
     mtext('Results before and after the speed settings: ALSCL fitted to YTF_example', side = 3,
           outer = TRUE, font = 2, col = ink, line = .6)
+    exact_default <- all(a$cppad_par_estimate_diff == 0, na.rm = TRUE) &&
+      all(a$cppad_par_std_error_diff == 0, na.rm = TRUE)
     mtext(sprintf(paste('Each point is one row of summary(sdreport) (%s rows: fixed effects, random effects and',
                         'ADREPORT quantities; positive values shown on log scales).\nPoints on the grey line are',
-                        'equal; the default settings reproduce the original code exactly.'),
-                  format(nrow(a), big.mark = ',')), side = 1, outer = TRUE, line = 2.6, cex = .72, col = muted)
+                        'equal; %s'),
+                  format(nrow(a), big.mark = ','),
+                  if (exact_default) 'the default settings reproduce the original code exactly.'
+                  else 'the legends give the largest relative difference of each setting.'),
+          side = 1, outer = TRUE, line = 2.6, cex = .72, col = muted)
   }, height = 5.4)
 }
 cat('Figures written to', figures, '\n')
