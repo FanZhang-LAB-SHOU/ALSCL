@@ -116,8 +116,13 @@ residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
                                 x_breaks = pretty(len_mid, n = 4))
 # Hessian 非正定时省略近似 95% 区间 / Omit approximate 95% intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
-print(residual_plot)
-print(ssb_plot)
+# 交互会话中显示图形；非交互运行只保存下面的 PNG（否则会在工作目录写出 Rplots.pdf）。
+# Show the plots in an interactive session. A non-interactive run only saves the
+# PNG files below; printing without a screen device would write Rplots.pdf.
+if (interactive()) {
+  print(residual_plot)
+  print(ssb_plot)
+}
 # obj 是当前会话的 TMB 指针，不包含在可移植结果中。
 portable <- function(fit) {
   fit$obj <- NULL
