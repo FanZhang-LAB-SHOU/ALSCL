@@ -55,8 +55,14 @@ an abundance that the data inform and this predicted F. These rows have
 extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
 (FA). When the last periods have no positive survey observation, F is
 a prediction from the last period with an observation onwards, and those
-periods are marked as well. FA from fits made by earlier versions has no
-terminal period and no plus group.
+periods are marked as well.
+
+For ALSCL, FA covers every age, including the plus group, and every
+period. The fitted report (\code{fit$report$FA}) holds the ages before
+the plus group and the periods before the last, with standard errors; the
+other cells are computed from the reported numbers at length and age and
+total mortality at length by the same formula, and their standard errors
+are NA.
 }
 \examples{
 \donttest{

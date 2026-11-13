@@ -53,15 +53,19 @@ test_that("population extraction preserves physical coordinates and available un
       expect_equal(joint$age[1:9], rep(fit$age[1], 9))
       expect_true(all(is.na(joint$std_error)))
       fa <- extract_estimates(fit, "FA")
+      # F at age is completed with the plus group and the last period; the
+      # cells the model reports keep their standard errors.
       expect_equal(unique(fa$year), fit$year)
       expect_equal(unique(fa$age), fit$age)
-      # A fit from an earlier version has no plus-group row and no last period.
-      earlier <- fit
-      earlier$report$FA <- fit$report$FA[-length(fit$age), -length(fit$year), drop = FALSE]
-      earlier$est_std <- NULL
+      reported <- fa$year < max(fit$year) & fa$age < max(fit$age)
+      expect_equal(fa$estimate[reported], as.numeric(fit$report$FA))
+      expect_true(all(is.na(fa$std_error[!reported])))
+      # A result without numbers at length and age keeps the reported cells.
+      earlier <- fit; earlier$report$NLA <- NULL
       old_fa <- extract_estimates(earlier, "FA")
       expect_equal(unique(old_fa$year), head(fit$year, -1))
       expect_equal(unique(old_fa$age), head(fit$age, -1))
+      expect_equal(old_fa$estimate, as.numeric(fit$report$FA))
       expect_false(any(old_fa$extrapolated))
     }
     fit$obj <- NULL

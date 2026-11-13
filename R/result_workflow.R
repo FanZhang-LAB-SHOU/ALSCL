@@ -157,6 +157,33 @@
 # One numerical-screen verdict for every consumer of a fitted result. A fit
 # without stored diagnostics is screened from its stored fields, exactly as in
 # summary(), compare_models() and the batch status tables.
+# ALSCL F at age and total mortality at age for every age and period. The
+# template reports them, with standard errors, for the ages before the plus
+# group and the periods before the last. The other cells follow from the
+# reported numbers at length and age (NLA) and total mortality at length (ZL)
+# by the same formula; they are computed here and not in the template, where
+# the extra operations would change fitted values at rounding level. Returns
+# the reported matrices with complete = FALSE when the report lacks NLA or ZL.
+.acl_F_at_age <- function(fit) {
+  r <- fit$report
+  FA <- r$FA; ZA <- r$ZA; NLA <- r$NLA; ZL <- r$ZL
+  if (!is.matrix(FA) || !is.numeric(FA)) return(NULL)
+  reported <- list(FA = FA, ZA = ZA, complete = FALSE)
+  if (!is.array(NLA) || length(dim(NLA)) != 3L || !is.matrix(ZL) || !is.matrix(ZA) ||
+      !identical(dim(ZA), dim(FA)) || any(!is.finite(NLA)) || any(!is.finite(ZL)))
+    return(reported)
+  L <- dim(NLA)[1L]; A <- dim(NLA)[2L]; Y <- dim(NLA)[3L]
+  if (!identical(dim(FA), c(A - 1L, Y - 1L)) || !identical(dim(ZL), c(L, Y))) return(reported)
+  before <- matrix(apply(NLA, c(2L, 3L), sum), A, Y)
+  after <- matrix(vapply(seq_len(Y), function(y)
+    colSums(matrix(NLA[, , y], L, A) * exp(-ZL[, y])), numeric(A)), A, Y)
+  all_Z <- log(pmax(before, 1e-300)) - log(pmax(after, 1e-300))
+  all_F <- all_Z - mean(ZA - FA)   # ZA - FA is the natural mortality rate
+  old <- cbind(rep(seq_len(A - 1L), Y - 1L), rep(seq_len(Y - 1L), each = A - 1L))
+  all_Z[old] <- ZA; all_F[old] <- FA  # keep the reported values in their cells
+  list(FA = all_F, ZA = all_Z, complete = TRUE)
+}
+
 .acl_numerical_ok <- function(fit) {
   isTRUE(tryCatch(.acl_fit_status(fit)$numerical_ok, error = function(e) FALSE))
 }
@@ -290,8 +317,14 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
 #'   (FA). When the last periods have no positive survey observation, F is
 #'   a prediction from the last period with an observation onwards, and those
-#'   periods are marked as well. FA from fits made by earlier versions has no
-#'   terminal period and no plus group.
+#'   periods are marked as well.
+#'
+#'   For ALSCL, FA covers every age, including the plus group, and every
+#'   period. The fitted report (\code{fit$report$FA}) holds the ages before
+#'   the plus group and the periods before the last, with standard errors; the
+#'   other cells are computed from the reported numbers at length and age and
+#'   total mortality at length by the same formula, and their standard errors
+#'   are NA.
 #' @examples
 #' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
@@ -327,6 +360,8 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
     if (!nm %in% c(time_only, age_time, length_time, joint))
       stop("Unsupported population quantity: ", quantity, call. = FALSE)
     value <- fit$report[[nm]]
+    # F at age is completed with the plus group and the last period.
+    if (nm == "FA" && isTRUE(.acl_F_at_age(fit)$complete)) value <- .acl_F_at_age(fit)$FA
     if (!is.numeric(value) || !length(value) || any(!is.finite(value)))
       stop("Quantity '", quantity, "' is unavailable or contains nonfinite estimates.", call. = FALSE)
     # F at age from earlier versions has no plus-group row and no last period.
@@ -362,6 +397,13 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
     if (length(dim(tab)) == 2L && !is.null(rownames(tab)) && "Std. Error" %in% colnames(tab)) {
       selected <- tab[which(rownames(tab) == nm), "Std. Error"]
       if (is.numeric(selected) && length(selected) == length(value) && all(is.finite(selected)) && all(selected >= 0)) se <- as.numeric(selected)
+      # Standard errors of F at age exist for the cells the template reports.
+      if (nm == "FA" && is.matrix(value) && is.matrix(fit$report$FA) && length(selected) == length(fit$report$FA) &&
+          length(selected) < length(value) && is.numeric(selected) && all(is.finite(selected)) && all(selected >= 0)) {
+        placed <- matrix(NA_real_, nrow(value), ncol(value))
+        placed[seq_len(nrow(fit$report$FA)), seq_len(ncol(fit$report$FA))] <- selected
+        se <- as.numeric(placed)
+      }
     }
     data.frame(quantity = quantity, report_name = if (quantity == "N_at_age") quantity else nm,
       coords, estimate = as.numeric(value),

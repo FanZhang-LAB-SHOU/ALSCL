@@ -110,8 +110,8 @@ Scores use natural-log survey indices; zero and missing withheld observations ar
 
 | Prediction | Scored observations | Log RMSE | Log MAE | Log MASE |
 |---|---:|---:|---:|---:|
-| ACL | 46 | 0.096 | 0.080 | 0.42 |
-| ALSCL | 46 | 0.26 | 0.20 | 1.07 |
+| ACL | 46 | 0.097 | 0.081 | 0.42 |
+| ALSCL | 46 | 0.22 | 0.18 | 0.95 |
 | Persistence | 46 | 0.17 | 0.15 | 0.74 |
 
 On this synthetic dataset, with the teaching maps and two origins, ACL predicts better than persistence and ALSCL worse, although both optimizations converged: a difference worth investigating, while two validation time steps give no general ranking of the models.

@@ -47,9 +47,9 @@ In the recorded run all three fits passed ([scenario-status.csv](https://github.
 
 | Scenario | Spawning biomass 2019 | Mean F per time step |
 |---|---:|---:|
-| `reference` | 75.7 | 0.318 |
-| `low_M` | 75.6 | 0.369 |
-| `shared_F` | 74.3 | 0.331 |
+| `reference` | 75.5 | 0.320 |
+| `low_M` | 75.4 | 0.371 |
+| `shared_F` | 74.1 | 0.335 |
 
 The lower M raises the estimated F while terminal spawning biomass hardly moves, and the three curves nearly coincide; with your own data the spread between the curves is the sensitivity to report.
 
@@ -70,7 +70,7 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
 
 ![Illustrative profile of the free F process baseline](../assets/manual/figures/workflows/profile-F.png)
 
-In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.281, 0.312 and 0.344 gave changes of 0.93, about 0 (-8e-11, rounding) and 0.76, all passing the checks: a 10% change of the baseline F costs 0.8 to 0.9 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
+In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-1e-10, rounding) and 0.35, all passing the checks: a 10% change of the baseline F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
 
 <h2 id="project">4. Project future F scenarios</h2>
 
@@ -101,7 +101,7 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 ![Conditional ALSCL SSB scenarios with explicitly held future biology](../assets/manual/figures/workflows/projection-SSB.png)
 
-In the recorded run ([projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)) both scenarios start at a spawning biomass of 65.0 in 2020; in 2023 it is 115 under F = 0.10 and 73.3 under F = 0.25, in the units implied by the example's weights and conditional on the held recruitment and biology.
+In the recorded run ([projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)) both scenarios start at a spawning biomass of 66.1 in 2020; in 2023 it is 114 under F = 0.10 and 73.0 under F = 0.25, in the units implied by the example's weights and conditional on the held recruitment and biology.
 
 <h2 id="next">What next</h2>
 

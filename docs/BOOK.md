@@ -1023,9 +1023,9 @@ x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
 ```
 
-初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`（相关系数取默认范围时；取值在 -1 和 1 之间时的写法见第 6 步）。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此默认 `t0_lower = 0` 时 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间；允许 `t0` 为负的做法见第 6 步。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界，做法与 `run_alscl()` 相同：初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍。[估计参数清单](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)给出完整列表和变换方式。
+初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`（相关系数取默认范围时；取值在 -1 和 1 之间时的写法见第 6 步）。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此默认 `t0_lower = 0` 时 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间；允许 `t0` 为负的做法见第 6 步。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界。初值是这样一个体长的 1.1 倍：调查指数合计值的 99% 位于该体长以下。上界为最大体长组中点的 2 倍。下界取默认值（10）与该 99% 体长的一半两者中较小的一个，因此体长组延伸到最大个体以上时，真实的 `Linf` 不会被排除在外。`run_alscl()` 对你没有给定的值总是按数据设置：初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍，所以体长组远超最大个体时请给出 `parameters.L$log_Linf`。[估计参数清单](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)给出完整列表和变换方式。
 
-Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5 (with the default range of the correlations; step 6 gives the value for correlations between -1 and 1). `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. The presets are starting configurations taken from simulation operating models, not validated settings for a stock. The `"tuna"` preset, for example, is the tuna-like operating model M6 of the simulation study: 20 quarterly age classes with a plus group at 5 years, an asymptotic length of 152 cm and constant natural mortality. ACL uses `t0` directly, while ALSCL uses `log_t0` with `t0 = t0_lower + exp(log_t0)`, so with the default `t0_lower = 0` an ALSCL `t0` must lie between 0 and `rec.age`; step 6 shows how to allow a negative `t0`. A starting value outside its bounds is moved to the nearest bound before fitting, with a warning when you supplied the start and with a message for a default start; the fit lists these values in `clamped_starts`. The ACL defaults for `Linf` (start 60, bounds 10 to 100) are in the length units of the yellowtail flounder example. When they do not suit your length bins, for example tuna lengths in cm, `run_acl()` sets the start and bounds that you did not supply from the data, as `run_alscl()` does: the start is 1.1 times the largest length-bin midpoint and the bounds are 0.7 and 2 times that midpoint. [Estimation parameter lists](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) gives the full list with transformations.
+Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5 (with the default range of the correlations; step 6 gives the value for correlations between -1 and 1). `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. The presets are starting configurations taken from simulation operating models, not validated settings for a stock. The `"tuna"` preset, for example, is the tuna-like operating model M6 of the simulation study: 20 quarterly age classes with a plus group at 5 years, an asymptotic length of 152 cm and constant natural mortality. ACL uses `t0` directly, while ALSCL uses `log_t0` with `t0 = t0_lower + exp(log_t0)`, so with the default `t0_lower = 0` an ALSCL `t0` must lie between 0 and `rec.age`; step 6 shows how to allow a negative `t0`. A starting value outside its bounds is moved to the nearest bound before fitting, with a warning when you supplied the start and with a message for a default start; the fit lists these values in `clamped_starts`. The ACL defaults for `Linf` (start 60, bounds 10 to 100) are in the length units of the yellowtail flounder example. When they do not suit your length bins, for example tuna lengths in cm, `run_acl()` sets the start and bounds that you did not supply from the data. The start is 1.1 times the length below which 99 percent of the summed survey index lies. The upper bound is 2 times the largest length-bin midpoint. The lower bound is the smaller of the default (10) and half of that 99 percent length, so that length bins extending beyond the largest fish do not exclude the true `Linf`. `run_alscl()` always sets the values you did not supply from the data: the start is 1.1 times the largest length-bin midpoint and the bounds are 0.7 and 2 times that midpoint, so supply `parameters.L$log_Linf` when the bins extend well beyond the largest fish. [Estimation parameter lists](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) gives the full list with transformations.
 
 <a id="fitting-controls-f-structure"></a>
 
@@ -1069,13 +1069,13 @@ The `structure` argument selects optional model structures. The default, an empt
 |---|---|---|
 | `initial_plus_group`（ACL 和 ALSCL） / `initial_plus_group` (ACL and ALSCL) | `"single_cohort"`：第一个时间步的末组（plus group）只含一个世代 / `"single_cohort"`: the plus group of the first time step holds one cohort | `"equilibrium"`：末组等于在初始总死亡率 `init_Z` 下所有更老世代之和 / `"equilibrium"`: it holds the sum of all older cohorts at the initial total mortality rate `init_Z` |
 | `initial_length`（ALSCL） / `initial_length` (ALSCL) | `"length_at_age"`：第一个时间步每个年龄都采用变异系数为 `cv_len` 的年龄别体长分布 / `"length_at_age"`: in the first time step every age has the length-at-age distribution with coefficient of variation `cv_len` | `"growth"`：第一个年龄采用该分布，其后每个年龄由前一年龄按 `init_Z` 存活并生长一步得到，与之后各时间步相同 / `"growth"`: the first age has that distribution, and each older age is the previous age after survival at `init_Z` and one growth step, as in all later time steps |
-| `growth_increment`（ALSCL） / `growth_increment` (ALSCL) | `"logistic"`：期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step` / `"logistic"`: the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step` | `"von_bertalanffy"`：体长 `L` 低于 `Linf` 时，一个时间步的期望增量为 `(Linf - L) * (1 - exp(-vbk * growth_step))`，高于 `Linf` 时平滑降到零，因此 `Linf` 和 `vbk` 的含义与年龄别体长曲线中相同 / `"von_bertalanffy"`: the expected increment over one time step is `(Linf - L) * (1 - exp(-vbk * growth_step))` for a length `L` below `Linf` and declines smoothly to zero above `Linf`, so `Linf` and `vbk` have the same meaning as in the length-at-age curve |
-| `growth_transition`（ALSCL） / `growth_transition` (ALSCL) | `"midpoint"`：体长组内所有个体都从组中点开始生长 / `"midpoint"`: every fish in a length bin grows from the bin midpoint | `"bin"`：起始体长在组内均匀分布，期望生长量不依赖体长组的宽度 / `"bin"`: starting lengths are uniform within the bin, so the expected growth does not depend on the bin width |
+| `growth_increment`（ALSCL） / `growth_increment` (ALSCL) | `"logistic"`：期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step` / `"logistic"`: the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step` | `"von_bertalanffy"`：体长 `L` 低于 `Linf` 时，一个时间步的期望增量为 `(Linf - L) * (1 - exp(-vbk * growth_step))`，高于 `Linf` 时平滑降到零，因此 `Linf` 和 `vbk` 的含义与年龄别体长曲线中相同。这时个体长到 `Linf` 附近就停止生长，`Linf` 在第一个时间步之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，`Linf` 的标准误可能非常小。logistic 增量在 `Linf` 以上仍为正 / `"von_bertalanffy"`: the expected increment over one time step is `(Linf - L) * (1 - exp(-vbk * growth_step))` for a length `L` below `Linf` and declines smoothly to zero above `Linf`, so `Linf` and `vbk` have the same meaning as in the length-at-age curve. Fish then stop growing at about `Linf`, so `Linf` acts as an upper limit of length after the first time step: data with many fish larger than the mean asymptotic length fit poorly, and the standard error of `Linf` can be very small. The logistic increment stays positive above `Linf` |
+| `growth_transition`（ALSCL） / `growth_transition` (ALSCL) | `"midpoint"`：体长组内所有个体都从组中点开始生长 / `"midpoint"`: every fish in a length bin grows from the bin midpoint | `"bin"`：起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的生长增量相对组宽较小时，个体仍会进入下一个体长组 / `"bin"`: starting lengths are uniform within the bin and the transition is integrated over the bin, so fish keep moving to the next bin when the growth increment per time step is small relative to the bin width |
 | `correlation_range`（ACL 和 ALSCL） / `correlation_range` (ACL and ALSCL) | `"positive"`：补充量和 F 的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换 / `"positive"`: the AR(1) correlations of recruitment and of F lie between 0 and 1, as the logistic transform of the `logit_*` parameters | `"symmetric"`：相关系数在 -1 和 1 之间，等于 logistic 变换的 2 倍减 1，因此相关系数为零不在边界上，也可以估计负相关 / `"symmetric"`: they lie between -1 and 1, as 2 times the logistic transform minus 1, so a correlation of zero is an interior value and a negative correlation can be estimated |
 
-有两对设置具有已发表的结构所没有的性质。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、没有捕捞且 `init_Z` 等于 `M` 的种群保持不变。`growth_increment = "von_bertalanffy"` 与 `growth_transition = "bin"` 同时使用时，世代的平均体长沿 von Bertalanffy 曲线变化，与体长组的宽度无关。在已发表的结构下，每个时间步的生长增量相对组宽较小时（例如季度时间步配较宽的体长组），组宽会影响结果：体长组宽 5 cm 时，一个季度金枪鱼世代 10 年后的平均体长为 122 cm，而 von Bertalanffy 曲线给出 150 cm。
+有两对设置具有已发表的结构所没有的性质。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、没有捕捞且 `init_Z` 等于 `M` 的种群保持不变。`growth_increment = "von_bertalanffy"` 与 `growth_transition = "bin"` 同时使用时，组宽为每个时间步生长增量的几倍时，世代的平均体长与 von Bertalanffy 曲线接近。组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。在已发表的结构下，每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），平均体长明显低于该曲线。举一个例子：一个世代从最接近 40 cm 的体长组开始，时间步为季度，`Linf` 为 152 cm，`vbk` 为每年 0.38，生长增量的变异系数为 0.3。10 年后 von Bertalanffy 曲线给出 149.5 cm。使用 `"von_bertalanffy"` 和 `"bin"` 时，组宽 1 cm 的平均体长为 149.6 cm，组宽 5 cm 为 148.3 cm，组宽 10 cm 为 146.6 cm。在已发表的结构下，组宽 1 cm 为 143.0 cm，组宽 5 cm 为 121.7 cm，组宽 10 cm 为 105.3 cm。
 
-Two pairs of settings give a property that the published structure does not have. With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`, a population with constant recruitment, no fishing and `init_Z` equal to `M` stays constant over time. With `growth_increment = "von_bertalanffy"` and `growth_transition = "bin"`, the mean length of a cohort follows the von Bertalanffy curve independently of the bin width. Under the published structure the bin width matters when the growth increment per time step is small relative to it, as with quarterly time steps and wide length bins: with 5-cm bins, a quarterly tuna cohort reached a mean length of 122 cm after 10 years, where the von Bertalanffy curve gives 150 cm.
+Two pairs of settings give a property that the published structure does not have. With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`, a population with constant recruitment, no fishing and `init_Z` equal to `M` stays constant over time. With `growth_increment = "von_bertalanffy"` and `growth_transition = "bin"`, the mean length of a cohort follows the von Bertalanffy curve closely when the length bins are a few times wider than the growth increment per time step. With much wider bins it remains approximate, because fish are spread evenly over their bin after every time step. Under the published structure the mean length falls well below the curve when the increment per time step is small relative to the bin width, as with quarterly time steps and wide length bins. As an example, take a cohort that starts in the length bin nearest 40 cm, with quarterly time steps, `Linf` of 152 cm, `vbk` of 0.38 per year and a coefficient of variation of the growth increment of 0.3. After 10 years the von Bertalanffy curve gives 149.5 cm. With `"von_bertalanffy"` and `"bin"` the mean length is 149.6 cm with 1-cm bins, 148.3 cm with 5-cm bins and 146.6 cm with 10-cm bins. With the published structure it is 143.0 cm with 1-cm bins, 121.7 cm with 5-cm bins and 105.3 cm with 10-cm bins.
 
 `b_structure$structure` 和 `a_structure$structure` 列出每项设置实际采用的取值，保存的拟合结果也保留它们。采用可选结构的拟合是另一个模型，选用之前先把它的数值检查、残差和估计值与默认拟合比较（[诊断](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)）。如果 `run_acl()` 因某项设置“applies to ALSCL only”而停止，请从 ACL 的调用中去掉生长和初始体长的设置：ACL 没有生长转移矩阵。把选择存在所属模型之下，例如 `x$fit_config$alscl$structure`，这样该输入列表之后的拟合（包括回溯分析的每一轮）都会使用它。要用同样的结构模拟数据，见[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation-generate)。
 
@@ -5139,9 +5139,9 @@ A single start can stop at a local optimum that passes every numerical check, pa
 
 The process densities are evaluated on the complete arrays of deviations. A map that ties entries of `dev_log_R`, `dev_log_F` or `dev_log_N0` to shared values, or fixes entries with NA, is therefore accepted only when the matching standard deviation and correlation parameters are fixed too; otherwise their estimates would be biased and the fit is rejected. For one F deviation per time step shared by all groups, use `F_structure = "year"`, which has its own correctly normalized density. With tied entries the shared value has a smaller prior standard deviation than the stated one, and the objective of a fit with tied or fixed entries cannot be compared (for example by AIC) with fits that use another map for these deviations. `restricted_random` in the fit names the arrays concerned.
 
-超出边界的初值会被移到最近的边界：用户给定的初值给出警告，默认初值给出提示，拟合结果的 `clamped_starts` 列出这些初值。ACL 中 Linf 的默认初值（60）和边界（10 到 100）采用黄尾鲽示例的体长单位。上界低于最大体长组中点的 1.2 倍，或初值不在该中点的 0.7 到 2 倍之间时，未由用户给定的初值和边界按数据设置，与 `run_alscl()` 相同：初值为最大中点的 1.1 倍，边界为 0.7 倍和 2 倍。
+超出边界的初值会被移到最近的边界：用户给定的初值给出警告，默认初值给出提示，拟合结果的 `clamped_starts` 列出这些初值。ACL 中 Linf 的默认初值（60）和边界（10 到 100）采用黄尾鲽示例的体长单位。上界低于最大体长组中点的 1.2 倍，或初值不在该中点的 0.7 到 2 倍之间时，未由用户给定的初值和边界按数据设置。初值是这样一个体长的 1.1 倍：调查指数合计值的 99% 位于该体长以下。上界为最大中点的 2 倍。下界取默认值（10）与该 99% 体长的一半两者中较小的一个，因此体长组延伸到最大个体以上时，真实的 Linf 不会被排除在外。
 
-Starting values outside their bounds are moved to the nearest bound: with a warning when the start was supplied, and with a message for default starts. `clamped_starts` in the fit lists them. The default start (60) and bounds (10 to 100) of Linf are in the length units of the yellowtail flounder example. When the upper bound is below 1.2 times the largest length-bin midpoint, or the start is outside 0.7 to 2 times that midpoint, the start and bounds that were not supplied are set from the data as in `run_alscl()`: start 1.1, bounds 0.7 and 2 times the largest midpoint.
+Starting values outside their bounds are moved to the nearest bound: with a warning when the start was supplied, and with a message for default starts. `clamped_starts` in the fit lists them. The default start (60) and bounds (10 to 100) of Linf are in the length units of the yellowtail flounder example. When the upper bound is below 1.2 times the largest length-bin midpoint, or the start is outside 0.7 to 2 times that midpoint, the start and bounds that were not supplied are set from the data. The start is 1.1 times the length below which 99 percent of the summed survey index lies, the upper bound is 2 times the largest midpoint, and the lower bound is the smaller of the default (10) and half of that 99 percent length, so that length bins extending beyond the largest fish do not exclude the true Linf.
 
 **示例 / Example:**
 
@@ -5200,7 +5200,7 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `nstarts` | `ncores` | 初始点总数；默认等于 ncores 以兼容旧用法。固定此值可公平比较不同并行数；后续起点仅扰动自由参数。 | Total independent starts; defaults to ncores for compatibility. Fix this value for equal-work comparisons. Later starts deterministically jitter free parameters only. |
 | `F_structure` | `c("group_year", "year")` | 默认二维组别 × 时间；year 为每期共用的一维 F 过程，组别相关自动排除。 | Original group-by-time AR1 field or one shared F per step with a 1D AR1 density. |
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
-| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）在每项设置上都是 Zhang 和 Cadigan (2022) 已发表的结构。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`；"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，期望生长量不依赖组宽。每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组）使用 "bin"。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；已发表的结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022) for every setting. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`; "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin, so the expected advance does not depend on the bin width. Use "bin" when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the published structure it does not. The settings used are stored in the `structure` element of the fit. |
+| `structure` | `list()` | 可选模型结构的命名列表。默认（空列表）在每项设置上都是 Zhang 和 Cadigan (2022) 已发表的结构。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`；"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。这时个体长到 Linf 附近就停止生长，Linf 在第一期之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，Linf 的标准误可能非常小。logistic 增量在 Linf 以上仍为正。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），个体仍会进入下一个体长组。这时，组宽为增量的几倍时，世代的平均体长与生长曲线接近；组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；已发表的结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Named list of optional model structures. The default, an empty list, is the published structure of Zhang and Cadigan (2022) for every setting. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`; "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. Fish then stop growing at about Linf, so Linf acts as an upper limit of length after the first period: data with many fish larger than the mean asymptotic length fit poorly, and the standard error of Linf can be very small. The logistic increment stays positive above Linf. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin and the transition is integrated over the bin, so fish keep moving to the next bin when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). The mean length of a cohort then follows the growth curve closely for bins a few times wider than the increment; with much wider bins it remains approximate, because fish are spread evenly over their bin after every step. `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the published structure it does not. The settings used are stored in the `structure` element of the fit. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
 | `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是已发表的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. |
 
@@ -5625,7 +5625,7 @@ checks$plots$lag
 checks$plots$qq
 ```
 
-![示例图 / Example figure: `check_fit(b, max_lag = 4)$plots$heatmap`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=2dbeb4799a6c)
+![示例图 / Example figure: `check_fit(b, max_lag = 4)$plots$heatmap`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=b89654696b0c)
 
 
 <a id="extract_estimates"></a>
@@ -5736,7 +5736,7 @@ z$status
 z$estimates
 ```
 
-![示例图 / Example figure: `fit_scenarios(x, list(reference = list(), low_M = list(M = 0.15), high_M = list(M = 0.25)), model = "acl")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
+![示例图 / Example figure: `fit_scenarios(x, list(reference = list(), low_M = list(M = 0.15), high_M = list(M = 0.25)), model = "acl")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=82822c10d451)
 
 
 <a id="inspect_parameters"></a>
@@ -5846,7 +5846,7 @@ p <- profile_model(a, "mean_log_F", values, scale = "natural", ncores = 2)
 p$grid
 ```
 
-![示例图 / Example figure: `profile_model(a, "mean_log_F", values = grid, scale = "natural")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
+![示例图 / Example figure: `profile_model(a, "mean_log_F", values = grid, scale = "natural")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=af0ad2bde956)
 
 
 <a id="project_model"></a>
@@ -5896,7 +5896,7 @@ scenario$summary
 # F is per model step; supplied recruitment and biology are assumptions.
 ```
 
-![示例图 / Example figure: `project_model(a, F = F_future, recruitment = R_future, weight = w, maturity = m)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
+![示例图 / Example figure: `project_model(a, F = F_future, recruitment = R_future, weight = w, maturity = m)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=5d77f980c1d6)
 
 
 <a id="read_assessment"></a>
@@ -6262,7 +6262,7 @@ refitted <- run_acl(simulated$simulations[[1]]$x, silent = TRUE)
 simulated$simulations[[1]]$truth$SSB
 ```
 
-![示例图 / Example figure: `simulate_fit(b, nsim = 3, seed = 42, process = "resample")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=79b8f645c515)
+![示例图 / Example figure: `simulate_fit(b, nsim = 3, seed = 42, process = "resample")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=ae560ca7a72d)
 
 
 <a id="hindcast_model"></a>
@@ -6306,7 +6306,7 @@ validation$scores
 head(validation$predictions)
 ```
 
-![示例图 / Example figure: `hindcast_model(x, model = "acl", horizon = 1, nfolds = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=6808289fa0c6)
+![示例图 / Example figure: `hindcast_model(x, model = "acl", horizon = 1, nfolds = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=716598d5441e)
 
 <a id="chapter-15"></a>
 ## 15 复现与故障处理 · Reproducibility and troubleshooting
@@ -6563,11 +6563,11 @@ checks$plots$lag
 checks$plots$qq
 ```
 
-![按体长组和时间步排列的标准化残差 / Standardized residuals by length bin and time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=2dbeb4799a6c)
+![按体长组和时间步排列的标准化残差 / Standardized residuals by length bin and time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true&v=b89654696b0c)
 
-![同一体长组残差相隔一到四个时间步的相关系数 / Correlation between residuals of one length bin at lags of one to four time steps](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true&v=9fb18704faa7)
+![同一体长组残差相隔一到四个时间步的相关系数 / Correlation between residuals of one length bin at lags of one to four time steps](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true&v=4d830e7f72f0)
 
-![合并标准化残差的 QQ 图 / QQ plot of the pooled standardized residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true&v=0cb3f965161c)
+![合并标准化残差的 QQ 图 / QQ plot of the pooled standardized residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true&v=44b5c3c314ee)
 
 `check_fit()` 把对数残差标准化（观测减拟合的对数指数，再除以拟合的观测 SD），并画三种图。热图按体长组和时间步排列（被排除的零值和空白为灰色），同色成块表示相邻体长组或时间步的残差方向一致。滞后图对每个体长组画出相隔一到 `max_lag` 个时间步的残差相关系数；没有调查的时间步仍是空缺，`checks$lag_correlations` 给出每个点背后的配对数。QQ 图把合并后的残差与标准正态分布 N(0,1) 比较。即使模型设定正确，标准化条件残差的标准差也略小于 1（模拟检验中约为 0.91 到 0.96），所以两端的点略微落在参考线内侧属于预期。教学拟合中，16 cm 体长组几乎每年都是正残差，最大体长组从 2013 年起为正且滞后一步的相关系数接近 0.8，QQ 图正尾偏重：虽然数值检查通过，这些规律仍值得查看。残差以拟合的过程偏差为条件，所以把这些图当作提示而不是检验；[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)说明某种规律通常指向哪项设置。
 
@@ -6601,7 +6601,7 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![三个 ACL 情景的产卵生物量 / Spawning biomass of the three ACL scenarios](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
+![三个 ACL 情景的产卵生物量 / Spawning biomass of the three ACL scenarios](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=82822c10d451)
 
 每个情景是一个具名的参数列表，用来替换 `x` 中的设置；空列表就是参考情景，`map` 这类列表会整体替换保存的列表，三张表保持不变。先看 `scenarios$status` 再看曲线：它每个情景一行，记录耗时、错误、警告和数值检查。未通过检查的情景仍留在 `scenarios$estimates` 中且 `numerical_ok = FALSE`；因错误停止的情景没有估计值。估计值表按情景和年份给出产卵生物量、补充量和 F，其中 F 由 `F_summary = "mean"` 在每个时间步内对各年龄（或体长组）取平均，或由 `"apical"` 取最大值。`ncores` 把各情景放在不同的工作进程上运行，每个情景使用 `x` 中保存的初值个数，否则一个初值。这里三条曲线几乎重合：较低的 M 和共用的 F 使产卵生物量至多变动百分之几；换成自己的数据，曲线之间的差距就是要报告的敏感性。
 
@@ -6622,7 +6622,7 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![F 过程基准水平在三个网格值上的剖面 / Profile of the F process baseline over three grid values](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
+![F 过程基准水平在三个网格值上的剖面 / Profile of the F process baseline over three grid values](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=af0ad2bde956)
 
 `profile_model()` 接受 `names(a$opt$par)` 中的一个名称，即拟合估计的标量参数；`YTF_example` 固定了 `log_Linf`，对它做剖面会以「parameter must name one free scalar」停止。`scale = "natural"` 时网格按自然尺度给出，且必须落在优化器边界内。`profile_F$grid` 列出每个值的目标函数值、`delta_nll`（相对原拟合的负对数似然增量）和该次重新拟合的数值检查。两侧陡升表示该参数在当前模型及固定参数设置下受到较强约束；这里基准 F 变动 10% 使负对数似然上升 0.8 到 0.9。`delta_nll` 小于 `-1e-6` 时会警告，表示某个网格拟合得到更低的目标函数值。解读剖面前，应检查该次拟合的数值状态，并用更多初值重新拟合原模型；很小的负差值可能来自舍入误差。用于报告的剖面需要更密的网格，并且每个点的拟合都通过检查。
 
@@ -6653,7 +6653,7 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
   theme_bw() + theme(panel.grid = element_blank())
 ```
 
-![两种未来 F 水平下的投影产卵生物量 / Projected spawning biomass under two future F levels](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
+![两种未来 F 水平下的投影产卵生物量 / Projected spawning biomass under two future F levels](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=5d77f980c1d6)
 
 `project_model()` 用你提供的值把最后一个拟合的种群向未来时间步推进：`F`（每步一个值、各组共用，或组乘时间步的矩阵）、`recruitment`（它的长度决定投影期数），以及完整的 `weight` 和 `maturity` 矩阵，每个未来时间步一列。函数不替你延续任何值；代码重复最后一列观测的体重和成熟比例以及最后一个拟合的补充量，这是需要在报告中说明的选择。`M` 保持拟合时的值，除非另外传入。`low_F$summary` 对每个未来时间步列出丰度、生物量、产卵生物量、补充量、尾数和重量计的渔获以及 F 的平均值和最大值；`low_F$assumptions` 记录每项选择。
 
@@ -6822,7 +6822,7 @@ simulated_x <- resampled$simulations[[1]]$x
 
 `process = "resample"` also draws new process deviations of recruitment, fishing mortality and initial abundance at the fitted scalar parameter values: recruitment and F follow the fitted stationary AR(1) processes (one shared F time series across groups, with one F value per time step, under `F_structure = "year"`), numbers at age are initialized recursively with independent normal increments on the log scale, and the C++ population model turns the draws into a new population. Conditional draws use the source fit's `Elog_index`; resampled draws use `Elog_index` recomputed from the new process states. Each mode adds observation noise on the log scale using the fitted observation SD, so `exp(Elog_index)` for that state is the observation median; scalar parameters, biology and survey catchability stay fixed, so neither mode carries parameter uncertainty. Each element of `$simulations` holds `observations` (length bins by time steps), `truth` (population quantities, scalar parameters and the deviations used) and `x`, an input bundle for `run_alscl()` that keeps the fitting configuration of `b` except `output`, `ncores` and `silent`, which you choose when fitting it. Missing and zero cells of the original survey stay as they are unless `preserve_missing = FALSE`; the seed makes the draws repeatable, and the caller's random-number state is restored afterwards. A `map` that fixes or ties the process deviations stops the resample mode, while conditional draws still work. For an operating model with its own recruitment assumptions, use [Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation).
 
-![给定状态或重新抽取过程后生成的 ALSCL 调查观测 / ALSCL observations simulated conditionally or with resampled processes](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=79b8f645c515)
+![给定状态或重新抽取过程后生成的 ALSCL 调查观测 / ALSCL observations simulated conditionally or with resampled processes](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=ae560ca7a72d)
 
 图中为三个体长组在两种模式下各三次抽样；虚线是拟合的对数中位数。条件抽样围绕相同的拟合状态散布，重抽过程的抽样还会移动轨迹。每条曲线是一次抽样，是生成分布的一个例子。
 
@@ -6879,7 +6879,7 @@ head(alscl_validation$predictions)
 
 `horizon` and `min_train` count time steps (quarters for quarterly data); each fold truncates the three tables and the time-varying maps, and a `map` that fixes or ties the process deviations over time stops the call. Read `$diagnostics` first: one row per fold with `origin`, the numerical checks, `prediction_ok`, warnings and errors; a fold that failed stays in the table and contributes no predictions or scores. `$predictions` lists every withheld cell with the observed, predicted and persistence log index and an inclusion flag.
 
-![留出的调查指数与模型预测及朴素预测 / Withheld survey indices and model and persistence predictions](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=6808289fa0c6)
+![留出的调查指数与模型预测及朴素预测 / Withheld survey indices and model and persistence predictions](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/hindcast-predictions.png?raw=true&v=716598d5441e)
 
 图中按三个体长组比较留出的对数调查指数和两种预测。朴素预测对每个体长组沿用训练期内最近一次大于零的调查观测值。模型预测先将补充量和 F 的末期对数偏差分别乘以各自 AR(1) 相关系数的预测步数次方，再按种群方程推进数量。各体长组的预测尾数乘以预先指定的调查可捕系数，得到这条种群轨迹下原尺度调查指数的条件中位数。计算生物量时沿用训练末期的体重和成熟比例。这些点预测固定参数，并将未来过程扰动设为零。请只用训练期资料选择固定值和初值，并对同一起点、预测期和观测比较模型。[朴素预测的定义](https://otexts.com/fppcn/toolbox.html)。
 
@@ -6906,8 +6906,8 @@ Scores use natural-log survey indices; zero and missing withheld observations ar
 
 | 预测 / Prediction | 评分观测数 / Scored observations | 对数 RMSE / Log RMSE | 对数 MAE / Log MAE | 对数 MASE / Log MASE |
 |---|---:|---:|---:|---:|
-| ACL | 46 | 0.096 | 0.080 | 0.42 |
-| ALSCL | 46 | 0.26 | 0.20 | 1.07 |
+| ACL | 46 | 0.097 | 0.081 | 0.42 |
+| ALSCL | 46 | 0.22 | 0.18 | 0.95 |
 | 朴素预测 / Persistence | 46 | 0.17 | 0.15 | 0.74 |
 
 在这份模拟数据、教学 map 和两个起点下，ACL 的预测好于朴素预测，ALSCL 差于基准，尽管两者的优化都收敛了：这个差异值得追查，而两个检验时间步给不出模型的一般排序。
@@ -7568,7 +7568,7 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
 
 `fit_scenarios()` refits the same three tables under named changes of the inputs the model takes as given: each scenario is a list of arguments that replace the settings of `x`, an empty list is the reference, and a list such as `map` replaces the stored list completely. `low_M` lowers natural mortality from 0.20 to 0.15 per time step; `shared_F` sets `F_structure = "year"`, one F per time step shared by all ages (one per quarter for quarterly data), leaving the correlation across ages inactive. `ncores` runs scenarios on separate workers, each fit with one worker and the bundle's or the call's `nstarts` (one start when neither sets it); `F_summary = "mean"` averages F over the ages of each time step and `"apical"` takes the maximum. Read `scenarios$status` first: one row per scenario with time taken, warnings, errors and the numerical checks. A scenario that failed the checks stays in `scenarios$estimates` with `numerical_ok = FALSE`, and one that stopped with an error has no estimates.
 
-![ACL 对输入 M 与共享 F 结构的敏感性 / ACL sensitivity to the supplied M and shared-F structure](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=7ee6fd0e12d8)
+![ACL 对输入 M 与共享 F 结构的敏感性 / ACL sensitivity to the supplied M and shared-F structure](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true&v=82822c10d451)
 
 在记录运行中三个拟合都通过检查（[scenario-status.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-status.csv)），最后一个时间步（2019 年）的结果如下（[scenario-estimates.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/scenario-estimates.csv)）：
 
@@ -7576,9 +7576,9 @@ In the recorded run all three fits passed ([scenario-status.csv](https://github.
 
 | 情景 / Scenario | 2019 年产卵生物量 / Spawning biomass 2019 | 每时间步平均 F / Mean F per time step |
 |---|---:|---:|
-| `reference` | 75.7 | 0.318 |
-| `low_M` | 75.6 | 0.369 |
-| `shared_F` | 74.3 | 0.331 |
+| `reference` | 75.5 | 0.320 |
+| `low_M` | 75.4 | 0.371 |
+| `shared_F` | 74.1 | 0.335 |
 
 较低的 M 抬高了估计的 F，而末期产卵生物量几乎没变，三条曲线几乎重合；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
 
@@ -7603,11 +7603,11 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
 
 `profile_model()` fixes one estimated scalar parameter at each grid value and refits the other scalar parameters and the process deviations; the name must be in `names(a$opt$par)`, so `log_Linf`, fixed in `YTF_example`, stops with an error, while `mean_log_F` is estimated. With `scale = "natural"` the grid is on the natural scale, here 0.9, 1 and 1.1 times the fitted baseline, and must lie within the optimizer bounds. `profile_F$grid` gives each value with its objective, `delta_nll` (the rise in negative log likelihood relative to the original fit) and the numerical checks of that refit; failed points stay visible. Negative `delta_nll` values are retained; a value below `-1e-6` triggers a warning about a lower objective. Check that grid fit's numerical status and rerun the original with more starts. Tiny negative differences can reflect roundoff. Fixed inputs such as `M` and survey catchability belong in step 2.
 
-![自由 F 过程基准水平的示例剖面 / Illustrative profile of the free F process baseline](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=cc2a75644194)
+![自由 F 过程基准水平的示例剖面 / Illustrative profile of the free F process baseline](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true&v=af0ad2bde956)
 
-在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.281、0.312 和 0.344 三个点的增量分别为 0.93、约 0（-8e-11，舍入误差）和 0.76，全部通过检查：基准 F 改变 10% 要付出 0.8 到 0.9 个单位。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
+在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-1e-10，舍入误差）和 0.35，全部通过检查：基准 F 改变 10% 要付出约 0.4 个单位。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
 
-In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.281, 0.312 and 0.344 gave changes of 0.93, about 0 (-8e-11, rounding) and 0.76, all passing the checks: a 10% change of the baseline F costs 0.8 to 0.9 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
+In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-1e-10, rounding) and 0.35, all passing the checks: a 10% change of the baseline F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
 
 <a id="case-sensitivity-projection-project"></a>
 
@@ -7640,11 +7640,11 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 `project_model()` advances the last fitted population through future time steps under values you supply: `F` (one value per step shared by all groups, or a group by step matrix), `recruitment` (its length sets the horizon), and complete `weight` and `maturity` matrices with one column per future step; `M` stays at the fitted value unless you pass another. Nothing is carried forward for you: the code repeats the last observed weight and maturity columns and the last fitted recruitment for four steps, a choice to state in the report. Each row of `summary` describes the start of a time step: the first future state is the last fitted population survived through the last fitted F and M plus the first supplied recruitment, and a future `F[t]` sets the catch of step `t` and the survival into step `t + 1`, so the two scenarios share the first future spawning biomass and separate from the second step on, though their first catches differ. The projection is deterministic and conditional on the fit, without intervals, a stock-recruitment relationship or reference points; `low_F$assumptions` records every choice. A fit that failed the numerical checks is refused unless `allow_failed_fit = TRUE`, which records the override.
 
-![显式保持未来生物学输入的 ALSCL 条件 SSB 情景 / Conditional ALSCL SSB scenarios with explicitly held future biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=a1acd1f6ce98)
+![显式保持未来生物学输入的 ALSCL 条件 SSB 情景 / Conditional ALSCL SSB scenarios with explicitly held future biology](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true&v=5d77f980c1d6)
 
-在记录运行（[projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)）中，两个情景 2020 年都从产卵生物量 65.0 开始；2023 年在 F = 0.10 下为 115，在 F = 0.25 下为 73.3，单位由示例的体重决定，并以保持不变的补充量和生物学设置为条件。
+在记录运行（[projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)）中，两个情景 2020 年都从产卵生物量 66.1 开始；2023 年在 F = 0.10 下为 114，在 F = 0.25 下为 73.0，单位由示例的体重决定，并以保持不变的补充量和生物学设置为条件。
 
-In the recorded run ([projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)) both scenarios start at a spawning biomass of 65.0 in 2020; in 2023 it is 115 under F = 0.10 and 73.3 under F = 0.25, in the units implied by the example's weights and conditional on the held recruitment and biology.
+In the recorded run ([projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)) both scenarios start at a spawning biomass of 66.1 in 2020; in 2023 it is 114 under F = 0.10 and 73.0 under F = 0.25, in the units implied by the example's weights and conditional on the held recruitment and biology.
 
 <a id="case-sensitivity-projection-next"></a>
 

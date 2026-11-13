@@ -111,20 +111,38 @@ test_that("t0_lower shifts the ALSCL t0 and leaves the default untouched", {
   expect_equal(ALSCL:::.acl_parameter_transform("log_vbk", log(.3), settings = settings), .3)
 })
 
-test_that("ALSCL reports F at age for every age and period", {
+test_that("ALSCL F at age is completed for the plus group and the last period", {
   skip_on_cran()
-  f <- options_fixture("ALSCL")
-  r <- f$report; A <- f$data$A; Y <- f$data$Y
-  expect_identical(dim(r$FA), c(A, Y))
-  expect_identical(dim(r$ZA), c(A, Y))
-  for (a in c(1L, A)) for (y in c(1L, Y)) {
+  fit <- fit_fixture("ALSCL")$result
+  r <- fit$report; A <- length(fit$age); Y <- length(fit$year)
+  # The template reports the ages before the plus group and the periods before the last.
+  expect_identical(dim(r$FA), c(A - 1L, Y - 1L))
+  completed <- ALSCL:::.acl_F_at_age(fit)
+  expect_true(completed$complete)
+  expect_identical(dim(completed$FA), c(A, Y))
+  expect_identical(completed$FA[seq_len(A - 1L), seq_len(Y - 1L)], r$FA)
+  expect_identical(completed$ZA[seq_len(A - 1L), seq_len(Y - 1L)], r$ZA)
+  M <- fit$recipe$args$M
+  for (a in seq_len(A)) for (y in seq_len(Y)) {
     cohort <- r$NLA[, a, y]
-    expect_equal(r$ZA[a, y], log(sum(cohort)) - log(sum(cohort * exp(-r$ZL[, y]))), tolerance = 1e-12)
+    expected <- log(sum(cohort)) - log(sum(cohort * exp(-r$ZL[, y])))
+    expect_equal(completed$ZA[a, y], expected, tolerance = 1e-10)
+    expect_equal(completed$FA[a, y], expected - M, tolerance = 1e-10)
   }
-  expect_equal(r$FA, r$ZA - f$data$M, tolerance = 1e-14)
   # Survivors of the last two age classes form the next plus group.
-  expect_equal(sum(r$NLA[, A, 2]), sum(r$NLA[, A - 1L, 1]) * exp(-r$ZA[A - 1L, 1]) +
-                 sum(r$NLA[, A, 1]) * exp(-r$ZA[A, 1]), tolerance = 1e-10)
+  expect_equal(sum(r$NLA[, A, 2]), sum(r$NLA[, A - 1L, 1]) * exp(-completed$ZA[A - 1L, 1]) +
+                 sum(r$NLA[, A, 1]) * exp(-completed$ZA[A, 1]), tolerance = 1e-10)
+  # Plots without intervals show every age and period; with intervals, the reported cells.
+  all_cells <- plot_fishing_mortality(fit, type = "age", return_data = TRUE)$data
+  expect_equal(sort(unique(all_cells$Year)), fit$year)
+  expect_equal(nrow(all_cells), A * Y)
+  with_se <- plot_fishing_mortality(fit, type = "age", se = TRUE, return_data = TRUE)$data
+  expect_equal(nrow(with_se), (A - 1L) * (Y - 1L))
+  # A result without numbers at length and age returns what was reported.
+  bare <- fit; bare$report$NLA <- NULL
+  expect_false(ALSCL:::.acl_F_at_age(bare)$complete)
+  expect_identical(ALSCL:::.acl_F_at_age(bare)$FA, r$FA)
+  expect_null(ALSCL:::.acl_F_at_age(fit_fixture("ACL")$result))
 })
 
 test_that("numbers at age can be requested as N_at_age", {

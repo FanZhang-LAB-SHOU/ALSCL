@@ -54,10 +54,10 @@ pattern of such a pair, not the difference in level.
 \code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
 derived \code{report$FA} for ALSCL. Only the fitted ages and the time
 steps present in both fits are summarized. ALSCL F at age covers every age
-and time step; in fits made by earlier versions it has no plus-group row
-and no value for the last time step, and a comparison with such a fit
-leaves out the ACL plus group and the last time step. The two fits must
-have the same time step.}
+and time step when the fit holds numbers at length and age; otherwise it
+has no plus-group row and no value for the last time step, and the
+comparison leaves out the ACL plus group and the last time step. The two
+fits must have the same time step.}
 }
 \value{
 A ggplot object.

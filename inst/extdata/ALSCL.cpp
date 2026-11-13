@@ -295,12 +295,14 @@ Type objective_function<Type>::operator()()
 
 	// ==================== EMERGENT F-AT-AGE ====================
 	// Derived from population abundance at age, NOT a direct parameter
-	// All ages (including the plus group) and all periods. In the last period
-	// F at length is predicted by the AR(1) process, not informed by data.
-	matrix<Type> ZA(A,Y);
-	matrix<Type> FA(A,Y);
-	for(int i=0; i<A; ++i){
-		for(int j=0; j<Y; ++j){
+	// Ages before the plus group and periods before the last. The remaining
+	// cells are computed in R from NLA and ZL (see .acl_F_at_age): computing
+	// them here would add operations to the tape and structural entries to the
+	// random-effect Hessian, which changes fitted values at rounding level.
+	matrix<Type> ZA(A-1,Y-1);
+	matrix<Type> FA(A-1,Y-1);
+	for(int i=0; i<A-1; ++i){
+		for(int j=0; j<Y-1; ++j){
 			vector<Type> cohort = NLA.col(j).col(i);
 			vector<Type> survivors = cohort * exp(-ZL.col(j).array());
 			ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors.sum()));

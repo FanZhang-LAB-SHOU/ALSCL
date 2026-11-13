@@ -70,7 +70,7 @@ test_that("single-period population panels draw estimates and intervals", {
   }
 })
 
-test_that("a real two-age ALSCL fit in the earlier F-at-age layout draws its one-age F panels", {
+test_that("a real two-age ALSCL fit draws its one-age F panels", {
   withr::local_options(list(acl.theme = NULL, ALSCL.sd_cores = 1L))
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   x <- fixture_frames(); x$nage <- 2L
@@ -86,15 +86,18 @@ test_that("a real two-age ALSCL fit in the earlier F-at-age layout draws its one
   x$data.CatL[-1L] <- exp(obj$report(obj$par)$Elog_index)
   fit <- run_alscl(c(x, list(parameters = p, map = mapping)), silent = TRUE)
   expect_true(fit$diagnostics$numerical_ok)
-  expect_equal(dim(fit$report$FA), c(2L, 5L))
-  # Fits made before F at age covered the plus group and the last period hold
-  # one age and four periods here; such results must still be drawn.
-  fa_rows <- which(rownames(fit$est_std) == "FA")
-  fit$est_std <- fit$est_std[-setdiff(fa_rows, fa_rows[c(1L, 3L, 5L, 7L)]), , drop = FALSE]
-  fit$report$FA <- fit$report$FA[1L, 1:4, drop = FALSE]
+  expect_equal(dim(fit$report$FA), c(1L, 4L))
   fit$obj <- NULL
+  # Without intervals the plot is completed with the plus group and the last
+  # period, so each panel has both ages.
+  completed <- plot_fishing_mortality(fit, type = "age", return_data = TRUE)$data
+  expect_equal(completed$F, as.numeric(ALSCL:::.acl_F_at_age(fit)$FA))
+  expect_equal(nrow(completed), 10L)
+  # A result without numbers at length and age, and every plot with
+  # intervals, shows the reported cells: one age in each of four panels.
+  reported <- fit; reported$report$NLA <- NULL
   for (interval in c("none", "ribbon", "errorbar")) {
-    p <- plot_fishing_mortality(fit, type = "age", se = interval != "none",
+    p <- plot_fishing_mortality(if (interval == "none") reported else fit, type = "age", se = interval != "none",
       se_type = if (interval == "none") "ribbon" else interval)
     expect_silent(ggplot2::ggplotGrob(p))
     expect_length(singleton_panel_grobs(p, "points"), 4L)

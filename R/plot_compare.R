@@ -1184,10 +1184,10 @@ plot_compare_selectivity <- function(model1, model2,
 #'   \code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
 #'   derived \code{report$FA} for ALSCL. Only the fitted ages and the time
 #'   steps present in both fits are summarized. ALSCL F at age covers every age
-#'   and time step; in fits made by earlier versions it has no plus-group row
-#'   and no value for the last time step, and a comparison with such a fit
-#'   leaves out the ACL plus group and the last time step. The two fits must
-#'   have the same time step.
+#'   and time step when the fit holds numbers at length and age; otherwise it
+#'   has no plus-group row and no value for the last time step, and the
+#'   comparison leaves out the ACL plus group and the last time step. The two
+#'   fits must have the same time step.
 #' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
@@ -1237,12 +1237,14 @@ plot_compare_F_ts <- function(model1, model2,
     list(data = data.frame(Year = years, MeanF = summarize(Fmat), Model = mname),
          groups = paste(nrow(Fmat), if (!is.null(m$report$FL)) "length bins" else "ages"))
   }
-  # F at age with its fitted ages and time steps. ALSCL F at age (FA) from
-  # earlier versions has no plus-group row and no column for the last time step.
+  # F at age with its fitted ages and time steps. ALSCL F at age (FA) is
+  # completed with the plus group and the last time step when the fit holds
+  # numbers at length and age; otherwise it has neither.
   get_F_age <- function(m, mname) {
     alscl <- !is.null(m$report$FL)
-    Fmat <- if (alscl) m$report$FA else m$report[["F"]]
-    short <- alscl && is.matrix(Fmat) && !(is.numeric(m$year) && ncol(Fmat) == length(m$year))
+    completed <- if (alscl) .acl_F_at_age(m)
+    Fmat <- if (alscl) (if (is.null(completed)) m$report$FA else completed$FA) else m$report[["F"]]
+    short <- alscl && !isTRUE(completed$complete)
     if (!is.matrix(Fmat) || !is.numeric(Fmat) || !nrow(Fmat) || !ncol(Fmat) ||
         any(!is.finite(Fmat)))
       stop(mname, " has no finite F-at-age matrix (", if (alscl) "report$FA" else "report$F",

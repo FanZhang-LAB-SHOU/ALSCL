@@ -7,11 +7,13 @@
 #' y-axis label states this time basis.
 #' For ACL models, F is at the age level (A x Y).
 #' For ALSCL models, F is at the length level (FL: L x Y) and
-#' F at age (FA: A x Y) is the negative log of the proportion
+#' F at age (FA) is the negative log of the proportion
 #' surviving within each age class over the time step, minus natural mortality.
-#' Fits made by earlier versions hold FA without the plus group and without
-#' the last period; both forms are drawn. F in the last period is predicted
-#' by the F process and is not informed by observations.
+#' Without intervals the plot shows every age, including the plus group, and
+#' every period. With \code{se = TRUE} it shows the ages before the plus group
+#' and the periods before the last, for which the model reports standard
+#' errors. F in the last period is predicted by the F process and is not
+#' informed by observations.
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
@@ -70,7 +72,7 @@
 #' @details Age axes and age panels use the fitted ages in \code{model_result$age}.
 #'   The oldest age class of an ACL fit is a plus group and is marked with a
 #'   plus sign, for example "Age 15+" or the tick label "15+". ALSCL F at age
-#'   includes the plus group, except in fits made by earlier versions. With \code{return_data = TRUE} and \code{type = "age"}, the
+#'   includes the plus group when it is drawn without intervals. With \code{return_data = TRUE} and \code{type = "age"}, the
 #'   data keep the group position in \code{AgeGroup} and add the fitted age in
 #'   \code{Age}.
 #' @details When F is shared across groups (\code{F_structure = "year"}), every
@@ -193,7 +195,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   plus_age <- NULL   # age of the plus group when the axis includes it
 
   # ===================================================================
-  # ALSCL model: FL (L x Y) and FA (A x Y; (A-1) x (Y-1) in older fits)
+  # ALSCL model: FL (L x Y) and FA ((A-1) x (Y-1) reported; completed to A x Y)
   # ===================================================================
   if (is_alscl) {
 
@@ -249,10 +251,13 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
 
     } else if (type == "age") {
       # --- Emergent F at age (FA), faceted by year ---
-      # Current fits report F at age for every age and period. Fits made by
-      # earlier versions have no plus-group row and no last period.
-      fa_full <- is.matrix(model_result$report$FA) && ncol(model_result$report$FA) == length(Year)
-      FA <- checked_matrix("FA", length(Year) - !fa_full)
+      # Without intervals, show every age (with the plus group) and every
+      # period. Standard errors exist only for the cells the model reports
+      # (ages before the plus group, periods before the last), so the plot
+      # with intervals covers those cells.
+      completed <- if (se) NULL else .acl_F_at_age(model_result)
+      fa_full <- isTRUE(completed$complete) && ncol(completed$FA) == length(Year)
+      FA <- if (fa_full) completed$FA else checked_matrix("FA", length(Year) - 1L)
       fa_years <- if (fa_full) Year else head(Year, -1L)
       ages <- .acl_fitted_ages(model_result, nrow(FA), plus_group = fa_full)
 
