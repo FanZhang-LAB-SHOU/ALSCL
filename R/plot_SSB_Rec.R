@@ -1,15 +1,22 @@
-#' @title Plot spawning biomass against recruitment
+#' @title Plot spawning stock biomass against recruitment
 #'
-#' @description Scatter plot of spawning biomass against the recruitment it
-#' produced, paired by the recruitment age.
+#' @description Scatter plot of spawning stock biomass (SSB) against the
+#' recruitment it produced. Recruitment in a time step is the number of fish
+#' at the youngest fitted age, so each SSB value is paired with the
+#' recruitment that many years later.
 #'
 #' @param model_result A list containing the model results. It includes a component "report" that comprises "SSB" and "Rec".
-#' @param age_at_recruitment Numeric. Recruitment age in years, used to pair SSB
-#'   with later recruitment. Must be nonnegative and an exact multiple of the
-#'   model's \code{growth_step}. Default is 1 year (four periods for quarterly
-#'   fits). A value of 0 pairs SSB and recruitment in the same period. For older
-#'   fits without \code{growth_step}, the time step is inferred from \code{year},
-#'   or defaults to 1 year when no time metadata are available.
+#' @param age_at_recruitment Numeric or NULL. Recruitment age in years, used to
+#'   pair SSB with later recruitment. NULL (default) uses the youngest fitted
+#'   age, \code{model_result$age[1]}: 1 year for an annual fit with
+#'   \code{rec.age = 1}, and one quarter for a quarterly fit with
+#'   \code{rec.age = 0.25}. Results saved without age metadata use 1 year. A
+#'   supplied value must be nonnegative and an exact multiple of the model's
+#'   \code{growth_step}; 0 pairs SSB and recruitment in the same period. If the
+#'   youngest fitted age is not a whole number of time steps, the default uses
+#'   the nearest whole number and reports it with a message. For older fits
+#'   without \code{growth_step}, the time step is inferred from \code{year}, or
+#'   defaults to 1 year when no time metadata are available.
 #' @param point_color Character or NULL. NULL inherits the global point_color setting.
 #' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle).
@@ -24,10 +31,12 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
-#' @return A ggplot object representing the scatter plot of SSB versus Recruitment.
+#' @return A ggplot object representing the scatter plot of SSB versus recruitment.
 #'
 #' @examples
 #' \dontrun{
@@ -43,7 +52,7 @@
 #' print(p)
 #' }
 #' @export
-plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
+plot_SSB_Rec <- function(model_result, age_at_recruitment = NULL,
                          point_size = NULL, point_color = NULL, point_shape = 16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   # NULL inherits the global palette.
   if (is.null(point_size)) point_size <- acl_theme("point_size")
@@ -55,6 +64,14 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
   SSB_data <- model_result[["report"]][["SSB"]]
   Rec_data <- model_result[["report"]][["Rec"]]
 
+  # Recruitment in a time step is the number at the youngest fitted age, so
+  # the default lag is that age. Results without age metadata keep 1 year.
+  default_age <- is.null(age_at_recruitment)
+  if (default_age) {
+    fitted_age <- model_result$age
+    age_at_recruitment <- if (is.numeric(fitted_age) && length(fitted_age) &&
+                              is.finite(fitted_age[1L]) && fitted_age[1L] >= 0) fitted_age[1L] else 1
+  }
   if (!is.numeric(age_at_recruitment) || length(age_at_recruitment) != 1L ||
       !is.finite(age_at_recruitment) || age_at_recruitment < 0)
     stop("age_at_recruitment must be one finite, nonnegative number of years.", call. = FALSE)
@@ -74,8 +91,13 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
   if (length(years) > 1L && any(abs(diff(years) - growth_step) > 1e-8 * max(1, growth_step)))
     stop("Time column spacing must equal growth_step to align SSB and recruitment.", call. = FALSE)
   lag <- age_at_recruitment / growth_step
-  if (!is.finite(lag) || abs(lag - round(lag)) > 1e-8 * max(1, abs(lag)))
-    stop("age_at_recruitment must be an exact multiple of growth_step.", call. = FALSE)
+  if (!is.finite(lag) || abs(lag - round(lag)) > 1e-8 * max(1, abs(lag))) {
+    if (!default_age || !is.finite(lag))
+      stop("age_at_recruitment must be an exact multiple of growth_step.", call. = FALSE)
+    message("The youngest fitted age (", age_at_recruitment, " years) is not a whole number of ",
+            "time steps of ", growth_step, " years. SSB is paired with recruitment ",
+            round(lag), " time step(s) later; set age_at_recruitment to choose another lag.")
+  }
   lag <- round(lag)
   if (lag >= length(SSB_data))
     stop("age_at_recruitment is too large compared to the time span of the data.", call. = FALSE)
@@ -89,10 +111,10 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = 1,
   plot_data <- data.frame(SSB = SSB_adjusted, Rec = Rec_adjusted)
 
   # Create the plot
-  p <-  ggplot2::ggplot(plot_data, aes(x = SSB, y = Rec)) +
+  p <-  ggplot2::ggplot(plot_data, ggplot2::aes(x = SSB, y = Rec)) +
     ggplot2::geom_point(size= point_size, color= point_color,shape=point_shape) +
     ggplot2:: labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "ssb"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), title = if (!is.null(title)) title else .acl_title("SSB_Rec"))+
-    .acl_scale_x(x_breaks, n_breaks = 8) +
+    .acl_scale_x(x_breaks, n_breaks = 8, values = plot_data$SSB) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
   data_out <-plot_data

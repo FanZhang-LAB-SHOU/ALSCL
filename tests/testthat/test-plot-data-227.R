@@ -69,7 +69,11 @@ test_that("single-period and single-group plots retain SE dimensions", {
     for (name in names(plot_calls_227(m))) {
       p <- plot_calls_227(m)[[name]](TRUE)
       expect_equal(nrow(p$data), 1L, info = paste(model, name))
-      expect_equal(p$data$upper - p$data$lower, .0392, ignore_attr = TRUE)
+      # Deviations keep Wald intervals on the log scale. Positive quantities
+      # use the lognormal interval, whose log ratio is 3.92 SE / estimate.
+      width <- if (startsWith(name, "dev_")) p$data$upper - p$data$lower else
+        log(p$data$upper / p$data$lower) * p$data$estimate
+      expect_equal(width, .0392, ignore_attr = TRUE)
     }
     expect_equal(as.character(plot_deviance(m, type = "F")$data$Group),
       if (shared) "Shared F" else if (model == "ALSCL") "Length 10" else "Age bin 1")

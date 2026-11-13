@@ -72,7 +72,6 @@ test_that("survey plot labels identify the data scale and honor user settings", 
 })
 
 test_that("ridge compositions remain normalized under extreme finite log offsets", {
-  testthat::local_mocked_bindings(plot_grid = function(...) list(...), .package = "cowplot")
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   fit <- plot_semantics_fixture_229()
   fit$report$Elog_index <- matrix(rep(c(0, -1, -2), 3), 3L, 3L)

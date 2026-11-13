@@ -117,6 +117,9 @@ NULL
   se_color    = .acl_palette_roles("npg")$se_color,
   se_alpha    = 0.2,
 
+  # --- Interval for positive quantities: "lognormal" or "wald" -------------
+  interval    = "lognormal",
+
   # --- Comparison plot settings (plot_compare_* functions) ------------------
   # Colors/linetypes: positional (1st = model1, 2nd = model2).
   # Names are optional; if provided they override positional matching.
@@ -152,19 +155,19 @@ NULL
     BA_se   = "Estimated biomass at age with 95% CI",
 
     # plot_SSB
-    SSB     = "Estimated spawning biomass (SSB)",
-    SSB_se  = "Estimated spawning biomass (SSB) with 95% CI",
-    SBL     = "Estimated spawning biomass at length",
-    SBL_se  = "Estimated spawning biomass at length with 95% CI",
-    SBA     = "Estimated spawning biomass at age",
-    SBA_se  = "Estimated spawning biomass at age with 95% CI",
+    SSB     = "Estimated spawning stock biomass (SSB)",
+    SSB_se  = "Estimated spawning stock biomass (SSB) with 95% CI",
+    SBL     = "Estimated spawning stock biomass at length",
+    SBL_se  = "Estimated spawning stock biomass at length with 95% CI",
+    SBA     = "Estimated spawning stock biomass at age",
+    SBA_se  = "Estimated spawning stock biomass at age with 95% CI",
 
     # plot_recruitment
     Rec     = "Estimated recruitment (R)",
     Rec_se  = "Estimated recruitment (R) with 95% CI",
 
     # plot_SSB_Rec
-    SSB_Rec = "Spawning biomass and recruitment",
+    SSB_Rec = "Spawning stock biomass and recruitment",
 
     # plot_catch
     CN      = "Estimated catch numbers (CN)",
@@ -201,14 +204,14 @@ NULL
     CatL_by_year   = "Fitted and observed survey indices at length",
 
     # plot_residuals
-    resid_length = "Residuals by length bin",
-    resid_year   = "Residuals by year",
+    resid_length = "Log residuals of the survey index by length bin",
+    resid_year   = "Log residuals of the survey index by time step",
 
     # plot_retro; the model type is appended in parentheses
     retro    = "Retrospective analysis",
 
     # plot_pla
-    pla      = "Age-length probability matrix",
+    pla      = "Probability of length given age",
 
     # Comparison plot titles
     compare_ts      = "{m1} vs {m2}",
@@ -222,27 +225,31 @@ NULL
   ),
 
   # --- Axis labels ---------------------------------------------------------
+  # Ages are in years because the fitted time step is in years. The package
+  # holds no unit metadata for length, weight or the survey index, so those
+  # labels carry no unit; set them with acl_theme_set(xlab = , ylab = ).
   xlab = list(
     year   = "Year",
-    age    = "Age",
+    age    = "Age (years)",
     length = "Length",
-    ssb    = "SSB"
+    ssb    = "Spawning stock biomass (SSB)"
   ),
 
   ylab = list(
     year      = "Year",
     abundance = "Abundance",
     biomass   = "Biomass",
-    ssb       = "SSB",
+    ssb       = "Spawning stock biomass (SSB)",
     rec       = "Recruitment",
     catch     = "Catch numbers",
     survey    = NULL, # NULL preserves legacy custom abundance labels for survey plots.
-    F         = "Fishing mortality",
+    # The time basis, such as "(per year)", is appended from the fit.
+    F         = "Fishing mortality rate",
     dev_R     = "Log recruitment deviation",
     dev_F     = "Log fishing mortality deviation",
     dev_R_multiplier = "Recruitment multiplier",
     dev_F_multiplier = "Fishing mortality multiplier",
-    residual  = "Residual",
+    residual  = "Log residual",
     growth    = "Length",
     length    = "Length"
   )
@@ -285,7 +292,9 @@ acl_theme <- function(what = NULL) {
 #' only the fields you specify will be changed; all others keep their
 #' current values.
 #'
-#' @param base_theme Character. Base ggplot2 theme name.
+#' @param base_theme Character. Base ggplot2 theme name: "bw", "minimal",
+#'   "classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or
+#'   without the "theme_" prefix. Any other value is an error.
 #' @param font_family Character. Font family for all text.
 #' @param title_size Numeric. Plot title size in pt.
 #' @param title_hjust Numeric. Title alignment (0=left, 0.5=center, 1=right).
@@ -293,9 +302,12 @@ acl_theme <- function(what = NULL) {
 #' @param axis_text_size Numeric. Axis tick label size.
 #' @param strip_text_size Numeric. Facet label size.
 #' @param legend_text_size Numeric. Legend text size.
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks. Pass NULL
-#'   explicitly to restore automatically selected breaks; omitting the argument
-#'   leaves the current setting unchanged.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks. One setting
+#'   serves time, age and length axes. A plot uses it only when at least one
+#'   break lies within the range of its x axis; otherwise that plot chooses its
+#'   breaks automatically. Calendar-year breaks therefore do not blank age or
+#'   length axes. Pass NULL explicitly to restore automatically selected breaks;
+#'   omitting the argument leaves the current setting unchanged.
 #' @param x_expand Numeric vector of length 2. X-axis expansion.
 #' @param line_color Character. Default line color for single-model plots.
 #' @param line_size Numeric. Default line width for single-model plots (1.5).
@@ -304,10 +316,16 @@ acl_theme <- function(what = NULL) {
 #'   Plot arguments set to NULL inherit this value unless a comparison-specific
 #'   override is set. Explicit per-call sizes take priority.
 #' @param se_color Character. Default CI color.
-#' @param se_alpha Numeric. Default CI transparency (0.2).
+#' @param se_alpha Numeric. Default transparency of interval ribbons (0.2).
 #'   Plot arguments set to NULL inherit this value; explicit alpha takes priority.
+#'   Error bars are drawn opaque unless a plot call supplies se_alpha.
+#' @param interval Character. Default 95% interval for positive quantities
+#'   (abundance, biomass, spawning stock biomass, recruitment, catch and
+#'   fishing mortality): \code{"lognormal"} (default) or \code{"wald"}. See
+#'   \code{\link{plot_abundance}} for the formulas.
 #' @param compare_colors Character vector of 2 colors. Can be unnamed (positional)
-#'   or named. The first color is always model1, second is model2.
+#'   or named. The first color is always model1, second is model2. A vector
+#'   with fewer than two colors is an error.
 #'   Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 #'   \code{c("M=0" = "steelblue", "M=0.5" = "tomato")}.
 #' @param compare_linetypes Character vector of 2 linetypes. Same rules as colors.
@@ -331,7 +349,10 @@ acl_theme <- function(what = NULL) {
 #'   \code{acl_theme("titles")}; the former keys CatL_year, CatL_year_dist and
 #'   compare_annualF are accepted with a warning.
 #' @param xlab Named list. Override specific x-axis labels.
-#' @param ylab Named list. Override specific y-axis labels. The survey key
+#' @param ylab Named list. Override specific y-axis labels. The default
+#'   fishing mortality label gains the time basis of the fit, for example
+#'   "(per year)" or "(per quarter)"; a customized \code{F} label is used verbatim.
+#'   The survey key
 #'   labels survey indices independently of catch abundance; when unset,
 #'   survey plots retain a legacy customized abundance label or use Survey index.
 #'   Set a named label to NULL to restore its default, for example
@@ -378,7 +399,7 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
                           titles = NULL, xlab = NULL, ylab = NULL,
                           palette = NULL, point_color = NULL, observed_color = NULL,
                           smooth_color = NULL, hline_color = NULL,
-                          low_col = NULL, high_col = NULL, ...) {
+                          low_col = NULL, high_col = NULL, ..., interval = NULL) {
 
   current <- acl_theme()
   old <- current
@@ -394,7 +415,19 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
     if (!is.null(value)) current[[key]] <- value
   }
 
+  # Reject settings that no plot could use, before any of them is stored.
+  if (!is.null(base_theme)) .acl_theme_name(base_theme, "base_theme")
+  if (!is.null(interval)) interval <- .acl_interval_type(interval)
+  for (key in c("compare_colors", "compare_linetypes")) {
+    value <- get(key)
+    if (!is.null(value) && length(value) < 2L)
+      stop(key, " must contain two values, one per model; it has ", length(value),
+           ". Supply both, for example c(\"", if (key == "compare_colors")
+             "steelblue\", \"tomato" else "solid\", \"dashed", "\").", call. = FALSE)
+  }
+
   if (!is.null(base_theme))           current$base_theme           <- base_theme
+  if (!is.null(interval))             current$interval             <- interval
   if (!is.null(font_family))          current$font_family          <- font_family
   if (!is.null(title_size))           current$title_size           <- title_size
   if (!is.null(title_hjust))          current$title_hjust          <- title_hjust
@@ -428,12 +461,17 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
 
 #' Reset ALSCL Plot Theme to Defaults
 #'
+#' Restores every theme setting to the package default and reports this with
+#' a message, which \code{suppressMessages()} silences.
+#'
+#' @return \code{NULL}, invisibly.
 #' @export
 #' @examples
 #' acl_theme_reset()
 acl_theme_reset <- function() {
   options(acl.theme = .acl_defaults)
-  cat("ALSCL plot theme reset to defaults.\n")
+  message("ALSCL plot theme reset to defaults.")
+  invisible(NULL)
 }
 
 
@@ -488,19 +526,20 @@ acl_theme_reset <- function() {
   sts <- if (!is.null(strip_text_size))   strip_text_size  else acl_theme("strip_text_size")
   lts <- if (!is.null(legend_text_size))  legend_text_size else acl_theme("legend_text_size")
 
-  if (!startsWith(bt, "theme_")) bt <- paste0("theme_", bt)
-  theme_fn <- switch(bt,
-                     "theme_bw"        = ggplot2::theme_bw,
-                     "theme_minimal"   = ggplot2::theme_minimal,
-                     "theme_classic"   = ggplot2::theme_classic,
-                     "theme_gray"      = ggplot2::theme_gray,
-                     "theme_grey"      = ggplot2::theme_grey,
-                     "theme_light"     = ggplot2::theme_light,
-                     "theme_linedraw"  = ggplot2::theme_linedraw,
-                     "theme_dark"      = ggplot2::theme_dark,
-                     "theme_void"      = ggplot2::theme_void,
-                     ggplot2::theme_bw
-  )
+  # An unsupported name in the call falls back to the active global theme,
+  # and an unsupported global value (set through options()) to theme_bw.
+  # Both are reported instead of being replaced without notice.
+  resolved <- .acl_theme_name(bt, "base_theme", error = FALSE)
+  if (is.null(resolved)) {
+    active <- if (is.null(base_theme)) NULL else
+      .acl_theme_name(acl_theme("base_theme"), "base_theme", error = FALSE)
+    fallback <- active %||% "theme_bw"
+    warning("base_theme ", .acl_describe_value(bt), " is not a supported theme name; using \"",
+            fallback, "\". Supported names: ",
+            paste(sub("^theme_", "", .acl_theme_names), collapse = ", "), ".", call. = FALSE)
+    resolved <- fallback
+  }
+  theme_fn <- getExportedValue("ggplot2", resolved)
 
   list(
     theme_fn(),
@@ -521,24 +560,82 @@ acl_theme_reset <- function() {
 }
 
 
+# Supported base themes. Names are accepted with or without the prefix.
+.acl_theme_names <- paste0("theme_", c("bw", "minimal", "classic", "gray", "grey",
+                                        "light", "linedraw", "dark", "void"))
+
+.acl_describe_value <- function(x) {
+  if (is.character(x) && length(x) == 1L && !is.na(x)) paste0("\"", x, "\"") else
+    paste0("of class ", class(x)[1L])
+}
+
+# Full name of a supported ggplot2 theme; an error or NULL for anything else.
+.acl_theme_name <- function(x, arg = "base_theme", error = TRUE) {
+  if (is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x)) {
+    name <- if (startsWith(x, "theme_")) x else paste0("theme_", x)
+    if (name %in% .acl_theme_names) return(name)
+  }
+  if (!error) return(NULL)
+  stop(arg, " ", .acl_describe_value(x), " is not a supported theme name. Use one of: ",
+       paste(sub("^theme_", "", .acl_theme_names), collapse = ", "),
+       ". Add other themes to a plot with + ggplot2::theme().", call. = FALSE)
+}
+
 #' Build x-axis scale with breaks and expand
+#'
+#' Explicit breaks from the plot call are always used. The global x_breaks
+#' setting is used only when at least one of its values lies within the range
+#' of \code{values}, the x coordinates of the plot; one global setting cannot
+#' fit time, age and length axes at once. Otherwise the breaks are
+#' \code{auto_breaks}, or pretty breaks when that is NULL.
+#' @param x_breaks Breaks given in the plot call, or NULL.
+#' @param n_breaks Target number of automatic breaks.
+#' @param values Numeric x coordinates of the plot, or NULL when unknown.
+#' @param auto_breaks Numeric vector of automatic breaks, or NULL.
+#' @param labels Labels or labelling function passed to the scale.
+#' @param check_overlap Logical. Omit automatic tick labels that would
+#'   overprint in narrow facets.
 #' @keywords internal
-.acl_scale_x <- function(x_breaks = NULL, n_breaks = 10) {
-  brks <- if (!is.null(x_breaks)) x_breaks else acl_theme("x_breaks")
+.acl_scale_x <- function(x_breaks = NULL, n_breaks = 10, values = NULL,
+                         auto_breaks = NULL, labels = ggplot2::waiver(),
+                         check_overlap = FALSE) {
+  brks <- if (!is.null(x_breaks)) x_breaks else
+    .acl_global_breaks(values)
   expd <- acl_theme("x_expand")
   if (is.null(expd)) expd <- c(0.01, 0.01)
+  automatic <- is.null(brks)
+  if (automatic)
+    brks <- if (is.null(auto_breaks)) scales::pretty_breaks(n = n_breaks) else auto_breaks
+  ggplot2::scale_x_continuous(
+    breaks = brks, labels = labels,
+    expand = ggplot2::expansion(mult = expd),
+    guide = if (automatic && check_overlap)
+      ggplot2::guide_axis(check.overlap = TRUE) else ggplot2::waiver()
+  )
+}
 
-  if (is.null(brks)) {
-    ggplot2::scale_x_continuous(
-      breaks = scales::pretty_breaks(n = n_breaks),
-      expand = ggplot2::expansion(mult = expd)
-    )
-  } else {
-    ggplot2::scale_x_continuous(
-      breaks = brks,
-      expand = ggplot2::expansion(mult = expd)
-    )
-  }
+# The global x_breaks setting, or NULL when none of its values lies on an
+# axis with these coordinates.
+.acl_global_breaks <- function(values = NULL) {
+  breaks <- acl_theme("x_breaks")
+  if (is.null(breaks) || is.null(values)) return(breaks)
+  values <- suppressWarnings(as.numeric(values))
+  values <- values[is.finite(values)]
+  if (!length(values) || !is.numeric(breaks)) return(breaks)
+  limits <- range(values)
+  tolerance <- 1e-8 * max(1, abs(limits))
+  if (any(breaks >= limits[1L] - tolerance & breaks <= limits[2L] + tolerance, na.rm = TRUE))
+    breaks else NULL
+}
+
+# Number of automatic axis breaks that fit one panel of a facet_wrap() layout
+# with this many panels. `budget` is the number of tick labels that fit across
+# the whole figure: about 12 four-digit years, or 20 shorter age or length labels.
+.acl_facet_n_breaks <- function(n_panels, facet_ncol = NULL, max_breaks = 10, budget = 12) {
+  columns <- if (is.null(facet_ncol)) ggplot2::wrap_dims(max(1L, n_panels))[2L] else facet_ncol
+  if (!is.numeric(columns) || length(columns) != 1L || !is.finite(columns) || columns < 1)
+    return(max_breaks)
+  as.integer(max(2, min(max_breaks, floor(budget / columns))))
 }
 
 
@@ -582,12 +679,26 @@ acl_theme_reset <- function() {
 
   # Helper: resolve a 2-element vector (color or linetype) to named c(m1=..., m2=...)
   resolve_pair <- function(user_val, theme_key, fallback) {
-    # Priority 1: per-call argument
+    argument <- sub("^compare_", "", theme_key)
+    # Priority 1: per-call argument. A value that cannot describe two models
+    # is reported and replaced by the active theme, not by package defaults.
     val <- user_val
+    if (!is.null(val) && length(val) < 2L) {
+      warning(argument, " must contain two values, one per model; it has ", length(val),
+              ". Using the global ", theme_key, " setting.", call. = FALSE)
+      val <- NULL
+    }
     # Priority 2: global theme
-    if (is.null(val)) val <- acl_theme(theme_key)
+    if (is.null(val)) {
+      val <- acl_theme(theme_key)
+      if (!is.null(val) && length(val) < 2L) {
+        warning("The global ", theme_key, " setting must contain two values, one per model; it has ",
+                length(val), ". Using the package defaults.", call. = FALSE)
+        val <- NULL
+      }
+    }
     # Priority 3: fallback
-    if (is.null(val) || length(val) < 2) val <- fallback
+    if (is.null(val)) val <- fallback
 
     # If named and both model names match, use by name
     if (!is.null(names(val)) && m1 %in% names(val) && m2 %in% names(val)) {
@@ -629,23 +740,97 @@ acl_theme_reset <- function() {
 }
 
 
-# Facet strips for time steps: "Year 2000" for annual labels, "2000 Q2" for
-# quarterly labels, otherwise the time label itself.
-.acl_time_labels <- function(times) {
+# Labels for time steps: "Year 2000" for annual labels, "2000 Q2" for
+# quarterly labels, otherwise the time label itself. Quarter labels require a
+# quarterly time step: `step` when the caller knows it (the fitted
+# growth_step), otherwise the spacing of the labels. Semiannual or annual
+# series recorded at .25 or .75 keep their decimal labels. `prefix = FALSE`
+# drops "Year" for axes whose title already names the unit.
+.acl_time_labels <- function(times, step = NULL, prefix = TRUE) {
   times <- as.numeric(times)
-  if (all(abs(times - round(times)) < 1e-8))
-    return(paste("Year", format(round(times), trim = TRUE)))
+  if (all(abs(times - round(times)) < 1e-8)) {
+    years <- format(round(times), trim = TRUE)
+    return(if (prefix) paste("Year", years) else years)
+  }
   quarters <- (times - floor(times + 1e-8)) / 0.25
   on_grid <- all(abs(quarters - round(quarters)) < 1e-6)
-  if (on_grid && any(abs(round(quarters) - 1) < 1e-6 | abs(round(quarters) - 3) < 1e-6))
+  if (!is.numeric(step) || length(step) != 1L || !is.finite(step)) {
+    spacing <- diff(sort(unique(times)))
+    step <- if (length(spacing)) min(spacing) else NA_real_
+  }
+  quarterly <- is.finite(step) && abs(step - 0.25) < 1e-6
+  if (on_grid && quarterly)
     return(sprintf("%d Q%d", as.integer(floor(times + 1e-8)), as.integer(round(quarters)) + 1L))
   as.character(times)
 }
 
 # Factor of time-step labels in time order, for facet_wrap().
-.acl_period_factor <- function(values, times = sort(unique(values))) {
-  labels <- .acl_time_labels(times)
+.acl_period_factor <- function(values, times = sort(unique(values)), step = NULL) {
+  labels <- .acl_time_labels(times, step = step)
   factor(labels[match(values, times)], levels = labels)
+}
+
+# Fitted ages of the first n age classes. `plus_group = FALSE` is for
+# matrices without the last age class (ALSCL FA). NULL when the fit has no
+# usable age metadata, as in results saved by older versions.
+.acl_fitted_ages <- function(model_result, n, plus_group = TRUE) {
+  age <- model_result$age
+  if (!is.numeric(age) || !is.null(dim(age)) || n < 1L ||
+      length(age) != n + !plus_group || any(!is.finite(age)) || any(diff(age) <= 0))
+    return(NULL)
+  as.numeric(age[seq_len(n)])
+}
+
+# Labels for age classes: "Age 1", ..., "Age 15+". The last age class of both
+# models accumulates older fish, so it is marked as a plus group. Fits
+# without age metadata keep the position labels "Age bin 1", ...
+.acl_age_labels <- function(model_result, n, plus_group = TRUE, prefix = "Age") {
+  age <- .acl_fitted_ages(model_result, n, plus_group)
+  if (is.null(age)) return(paste("Age bin", seq_len(n)))
+  labels <- as.character(age)
+  if (plus_group) labels[n] <- paste0(labels[n], "+")
+  if (nzchar(prefix)) paste(prefix, labels) else labels
+}
+
+# Automatic breaks on a numeric age axis: at most n_breaks fitted ages,
+# evenly spaced and always including the oldest age class, which carries
+# the plus-group mark.
+.acl_age_breaks <- function(age, n_breaks = 8) {
+  step <- max(1L, ceiling(length(age) / n_breaks))
+  rev(rev(age)[seq.int(1L, length(age), by = step)])
+}
+
+# Tick labels for a numeric age axis, marking the plus-group age.
+.acl_age_axis_labels <- function(plus_age = NULL) {
+  function(breaks) {
+    labels <- as.character(breaks)
+    if (!is.null(plus_age)) {
+      plus <- !is.na(breaks) & abs(breaks - plus_age) < 1e-8
+      labels[plus] <- paste0(labels[plus], "+")
+    }
+    labels[is.na(breaks)] <- NA_character_
+    labels
+  }
+}
+
+# Time basis of the instantaneous rates, which the models define per time
+# step. The step length in years comes from the fit.
+.acl_rate_basis <- function(model_result) {
+  step <- model_result$growth_step
+  if (is.null(step)) {
+    years <- model_result$year
+    step <- if (is.numeric(years) && length(years) > 1L) diff(years)[1L] else NA_real_
+  }
+  if (!is.numeric(step) || length(step) != 1L || !is.finite(step)) return("per time step")
+  if (abs(step - 1) < 1e-8) "per year" else if (abs(step - 0.5) < 1e-8) "per half year" else
+    if (abs(step - 0.25) < 1e-8) "per quarter" else if (abs(step - 1 / 12) < 1e-6) "per month" else
+      "per time step"
+}
+
+# Default fishing mortality label with its time basis. A customized label
+# is used verbatim.
+.acl_F_label <- function(basis, label = .acl_lab("y", "F")) {
+  if (identical(label, .acl_defaults$ylab$F)) paste0(label, " (", basis, ")") else label
 }
 
 

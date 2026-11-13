@@ -23,11 +23,17 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Integer age-bin positions to label (between 1 and the number
-#'   of age bins). This changes tick labels only, never the heatmap cells.
-#'   NULL inherits global x_breaks; when both are NULL all age bins are labelled.
+#' @param x_breaks Integer positions of the age classes to label (between 1
+#'   and the number of age classes). This changes tick labels only, never the
+#'   heatmap cells. NULL inherits the global x_breaks setting when all of its
+#'   values are such positions; a global setting meant for another axis, for
+#'   example calendar years, is ignored. Otherwise every age class is labelled.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
+#' @details Columns are labelled with the fitted ages in \code{model_result$age}.
+#'   The oldest age class is a plus group and is marked with a plus sign, for
+#'   example "15+". Results saved without age metadata keep the position
+#'   labels "Age bin 1", "Age bin 2" and so on.
 #' @return A ggplot heatmap of the probability of length given age.
 #'
 #' @export
@@ -53,25 +59,38 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
 
   df <- as.data.frame(pla)
 
-  age_labels <- paste("Age bin", seq_len(ncol(df)))
+  age_labels <- .acl_age_labels(model_result, ncol(df))
   colnames(df) <- age_labels
-  breaks <- if (is.null(x_breaks)) acl_theme("x_breaks") else x_breaks
-  if (!is.null(breaks) && (!is.numeric(breaks) || any(!is.finite(breaks)) ||
-      any(breaks != trunc(breaks)) || any(breaks < 1 | breaks > length(age_labels)) ||
-      anyDuplicated(breaks)))
+  valid_positions <- function(breaks) is.numeric(breaks) && all(is.finite(breaks)) &&
+    all(breaks == trunc(breaks)) && all(breaks >= 1 & breaks <= length(age_labels)) &&
+    !anyDuplicated(breaks)
+  breaks <- x_breaks
+  if (!is.null(breaks) && !valid_positions(breaks))
     stop("x_breaks must contain unique integer age-bin positions within the PLA matrix.", call. = FALSE)
+  # The global setting also serves time and length axes. Use it here only
+  # when it can be read as age-class positions.
+  if (is.null(breaks)) {
+    global <- acl_theme("x_breaks")
+    if (!is.null(global) && valid_positions(global)) breaks <- global
+  }
   age_breaks <- if (is.null(breaks)) age_labels else age_labels[breaks]
 
   len_levels <- .acl_fix_len_labels(len_label)
   df$LengthGroup <- factor(len_levels, levels = len_levels)
 
-  dfm <- reshape2::melt(df, id.vars = "LengthGroup")
-  dfm$variable <- factor(dfm$variable, levels = age_labels)
+  dfm <- data.frame(
+    LengthGroup = rep(df$LengthGroup, times = length(age_labels)),
+    variable = factor(rep(age_labels, each = nrow(df)), levels = age_labels),
+    value = unlist(df[age_labels], use.names = FALSE))
 
   #
   p <- ggplot2::ggplot(dfm, ggplot2::aes(x=variable, y=LengthGroup, fill=value)) +
     ggplot2::geom_tile() +
-    ggplot2::scale_x_discrete(breaks = age_breaks, drop = FALSE) +
+    # The axis title names the unit, so fitted ages need no "Age" prefix on
+    # every tick. Position labels of results without age metadata are kept.
+    ggplot2::scale_x_discrete(breaks = age_breaks, drop = FALSE,
+      labels = if (is.null(.acl_fitted_ages(model_result, length(age_labels))))
+        ggplot2::waiver() else function(x) sub("^Age ", "", x)) +
     ggplot2::scale_fill_gradient(low = low_col, high = high_col) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
