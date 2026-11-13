@@ -71,13 +71,13 @@ The quantities are total biomass `B`, recruitment `Rec`, spawning biomass `SSB` 
 plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
-![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 `plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板，`facet_ncol = 2` 把它们排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式。未通过数值检查的拟合用虚线绘制，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 rho 与完整拟合比较的那个值；面板标签给出保留 `rho_digits` 位小数的 Mohn rho。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
 `plot_retro()` draws the stored series without refitting, one panel per quantity in the two columns set by `facet_ncol = 2`. Each line is one fit, colored by its last time step: the full fit ends in 2019, the peels in 2018, 2017 and 2016. The legend is titled "Terminal year" for annual time steps and "Terminal period" for shorter ones, where quarters are labelled as in "2019 Q4". A fit that failed the numerical checks is drawn with a dashed line, and a fit without estimates stays in the legend marked "(no estimates)". The open point marks each fit's terminal estimate, the value rho compares with the full fit, and the panel label gives Mohn's rho with `rho_digits` decimals. The figures on this page add `rho_size = 3`, `point_size = 1` and `line_size = 0.6`.
 
-![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=a6c651d2e0de)
+![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
 
 两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见 [ggsci 配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md)；全部参数见 [plot_retro 参考](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)。
 

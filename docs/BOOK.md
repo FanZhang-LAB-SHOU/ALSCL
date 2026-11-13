@@ -668,7 +668,7 @@ comparison$comparison
 comparison$fit_diagnostics
 ```
 
-![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计 / ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)
+![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计 / ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
 
 图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；若估计尺度持续不同，应进一步比较两种结构的生长、死亡率和年龄–体长转换假设。
 
@@ -1358,7 +1358,7 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-[![各时间步的调查指数（对数尺度） / Survey index by time step (log scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=27b8dc9d9c6c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=27b8dc9d9c6c)
+[![各时间步的调查指数（对数尺度） / Survey index by time step (log scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=207341ada444)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=207341ada444)
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。 / In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
@@ -1380,7 +1380,7 @@ plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
   ylab = "Survey index")
 ```
 
-[![各时间步的调查指数（原尺度） / Survey index by time step (original scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true&v=77c9b0f4936a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true&v=77c9b0f4936a)
+[![各时间步的调查指数（原尺度） / Survey index by time step (original scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true&v=889ebf145f18)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true&v=889ebf145f18)
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。 / In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
@@ -1404,7 +1404,7 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![丰度 N / Abundance N](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=028b3b37517a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=028b3b37517a)
+[![丰度 N / Abundance N](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=cdb2d0472558)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=cdb2d0472558)
 
 总丰度是每个时间步各组估计尾数之和。阴影为近似 95% 区间，默认是对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，其中 SE 是估计值的标准误。该区间不会低于零；`interval = "wald"` 绘制早期版本使用的对称区间 `estimate +/- 1.96 * SE`。本例总丰度在 2012 年上升，同年估计补充量达到峰值。
 
@@ -1422,7 +1422,7 @@ plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![丰度 NA / Abundance NA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=f592f60070a5)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=f592f60070a5)
+[![丰度 NA / Abundance NA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=d54031d9f543)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NA.png?raw=true&v=d54031d9f543)
 
 每个面板显示一个年龄组的估计尾数和近似 95% 区间。面板用拟合年龄标注，最大的年龄组是末组（plus group），用加号标出（“Age 15+”）。追踪同一世代时，将某期该年龄组的尾数与下一期相邻较高年龄组的尾数对照。各面板使用各自的纵轴尺度。
 
@@ -1440,7 +1440,7 @@ plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![丰度 NL / Abundance NL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NL.png?raw=true&v=d58b6e23d412)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NL.png?raw=true&v=d58b6e23d412)
+[![丰度 NL / Abundance NL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NL.png?raw=true&v=3b384dc4add7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_NL.png?raw=true&v=3b384dc4add7)
 
 每个面板显示一个体长组的估计尾数和近似 95% 区间。本例中，小体长组在 2012 年前后先出现峰值，大体长组的峰值出现得较晚。一个体长组可包含多个年龄组的个体。
 
@@ -1502,7 +1502,7 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![生物量 B / Biomass B](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=3d2df45029c9)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=3d2df45029c9)
+[![生物量 B / Biomass B](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=697d33075a88)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=697d33075a88)
 
 总生物量随时间步变化，带近似 95% 区间。与总丰度对照，可看出平均个体体重如何影响生物量估计。补充个体从进入模型的第一个时间步就贡献生物量，其贡献可随生长增加。生物量不一定比丰度更平滑。
 
@@ -1520,7 +1520,7 @@ plot_biomass(b, type = "BA", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![生物量 BA / Biomass BA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BA.png?raw=true&v=b8101e73f537)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BA.png?raw=true&v=b8101e73f537)
+[![生物量 BA / Biomass BA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BA.png?raw=true&v=68cfaeeda4bb)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BA.png?raw=true&v=68cfaeeda4bb)
 
 年龄别生物量，每个年龄组一个面板，纵轴各自取值，带 95% 区间。用它看生物量集中在哪些年龄；注意各面板的纵轴刻度，自由刻度会让数量很小的老龄组看起来和大的年轻组一样多变。
 
@@ -1538,7 +1538,7 @@ plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![生物量 BL / Biomass BL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BL.png?raw=true&v=28b1f767c765)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BL.png?raw=true&v=28b1f767c765)
+[![生物量 BL / Biomass BL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BL.png?raw=true&v=786098d747ac)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_BL.png?raw=true&v=786098d747ac)
 
 每个面板显示一个体长组的生物量和近似 95% 区间。按各面板纵轴的数值比较体长组对总生物量的贡献。本例中，多个较大体长组的生物量在 2013 年后上升。
 
@@ -1556,7 +1556,7 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![产卵生物量 SSB / Spawning biomass SSB](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d3d36a38c338)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d3d36a38c338)
+[![产卵生物量 SSB / Spawning biomass SSB](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d9b4f4e332d7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d9b4f4e332d7)
 
 产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。
 
@@ -1596,7 +1596,7 @@ plot_SSB(b, type = "SBA", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![产卵生物量 SBA / Spawning biomass SBA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true&v=d8d67e4ff498)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true&v=d8d67e4ff498)
+[![产卵生物量 SBA / Spawning biomass SBA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true&v=e8b2d9161da4)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true&v=e8b2d9161da4)
 
 年龄别产卵生物量，每个年龄组一个面板，带 95% 区间。用它看产卵来自哪些年龄；最小的几个年龄组接近零，因为成熟比例表几乎不给它们成熟个体，比较面板时看纵轴数值而不是曲线形状。
 
@@ -1614,7 +1614,7 @@ plot_SSB(b, type = "SBL", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![产卵生物量 SBL / Spawning biomass SBL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true&v=2f29017a0895)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true&v=2f29017a0895)
+[![产卵生物量 SBL / Spawning biomass SBL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true&v=e301e13fd6ef)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true&v=e301e13fd6ef)
 
 体长别产卵生物量，每个体长组一个面板，带 95% 区间。用它看产卵来自哪些体长；小体长组同样接近零，30 以上的成熟组走势与总产卵生物量一致。
 
@@ -1632,7 +1632,7 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CN / Catch numbers CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=c03ee7bf1c85)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=c03ee7bf1c85)
+[![捕获尾数 CN / Catch numbers CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=44ba7e881cc8)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=44ba7e881cc8)
 
 模型推导的捕捞尾数（`CN`）随时间步变化，带近似 95% 区间。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。
 
@@ -1650,7 +1650,7 @@ plot_catch(b, type = "CNA", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CNA / Catch numbers CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true&v=0b5e6a3a5865)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true&v=0b5e6a3a5865)
+[![捕获尾数 CNA / Catch numbers CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true&v=f957b9956688)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true&v=f957b9956688)
 
 每个面板显示一个年龄组的估计渔获尾数和近似 95% 区间。本例中，较年轻的年龄组渔获尾数较高。比较时请看各面板纵轴的数值。
 
@@ -1668,7 +1668,7 @@ plot_catch(b, type = "CNL", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CNL / Catch numbers CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true&v=f03eacc1a60f)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true&v=f03eacc1a60f)
+[![捕获尾数 CNL / Catch numbers CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true&v=168c3f347cb7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true&v=168c3f347cb7)
 
 每个面板显示一个体长组的预期渔获尾数和近似 95% 区间。设组内期初尾数为 N，F 和 M 分别为每个时间步的瞬时捕捞死亡率和自然死亡率。按 Baranov 渔获方程，`C = N × (F/Z) × (1 − exp(−Z))`，其中 `Z = F + M`。ALSCL 将同一体长组各年龄的渔获尾数相加。[Baranov 渔获方程，式（15）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
@@ -1685,7 +1685,7 @@ Each panel shows the expected catch in numbers for one length bin, with an appro
 plot_recruitment(b, se = TRUE)
 ```
 
-[![补充量 / Recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=f3b37834bb1a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=f3b37834bb1a)
+[![补充量 / Recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=764bb52a57ef)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=764bb52a57ef)
 
 补充量表示每个时间步进入最小年龄组的估计尾数，阴影为近似 95% 区间。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
 
@@ -1706,7 +1706,7 @@ Recruitment is the estimated number entering the youngest age class per time ste
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-[![亲体与补充关系 / Spawning biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=1ba690a33945)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=1ba690a33945)
+[![亲体与补充关系 / Spawning biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=4343a7828e9a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=4343a7828e9a)
 
 每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
@@ -1735,7 +1735,7 @@ acl_theme_set(palette="npg", base_theme="theme_bw")
 plot_VB(b, se = TRUE)
 ```
 
-[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=e2a1e504fa32)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=e2a1e504fa32)
+[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)
 
 von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。
 
@@ -1756,7 +1756,7 @@ The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-[![年龄—体长概率矩阵 / Age–length probability matrix](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=3f17714c7721)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=3f17714c7721)
+[![年龄—体长概率矩阵 / Age–length probability matrix](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=736cfc4bb05d)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=736cfc4bb05d)
 
 静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾；横轴 1 至 15 是年龄组序号。
 
@@ -1782,7 +1782,7 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=12c599aa4391)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=12c599aa4391)
+[![ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=449f66340f22)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true&v=449f66340f22)
 
 每个面板显示 ACL 一个年龄组的瞬时捕捞死亡率（`F`）及其近似 95% 区间。F 的时间单位由模型时间步决定，本例为一年，季度拟合则为一个季度。
 
@@ -1800,7 +1800,7 @@ plot_fishing_mortality(a, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=d94d92433096)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=d94d92433096)
+[![ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=8eecba060bfc)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true&v=8eecba060bfc)
 
 每个面板显示 ACL 在一个时间步的估计值及其近似 95% 区间，横轴为拟合年龄（末组标为“15+”）。本例中曲线较平，表示该时间步各年龄组的估计捕捞死亡率相近。
 
@@ -1818,7 +1818,7 @@ plot_fishing_mortality(b, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=098d37cae7d1)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=098d37cae7d1)
+[![ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=336db1035cf1)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=336db1035cf1)
 
 每个面板显示一个体长组的捕捞死亡率（`FL`）随时间的变化及其近似 95% 区间。本例在 2008 年前后的高值以中等体长组最为明显。
 
@@ -1836,7 +1836,7 @@ plot_fishing_mortality(b, type = "age",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=80c608c9f9b8)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=80c608c9f9b8)
+[![ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=787593352391)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true&v=787593352391)
 
 ALSCL 先把同一年龄组各体长组的存活尾数相加，再除以该年龄组的期初尾数，得到存活比例。年龄别捕捞死亡率为 `FA = -log(存活比例) - M`。每个面板显示一个时间步的估计值和近似 95% 区间。`FA` 的输出不含最高年龄组和最后一个时间步。
 
@@ -1854,7 +1854,7 @@ plot_fishing_mortality(b, type = "length",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-[![ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=2afc5a8f35d0)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=2afc5a8f35d0)
+[![ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=35cb4b2dfbc9)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true&v=35cb4b2dfbc9)
 
 每个面板显示一个时间步各体长组的捕捞死亡率及其近似 95% 区间。横轴按体长组中点（`len_mid`）的实际间距绘制。本例中，体长约 20 至 35 的组估计捕捞死亡率较高。
 
@@ -1872,7 +1872,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
-[![按体长组分面的对数残差 / Log residuals by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=649d9ca9500a)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=649d9ca9500a)
+[![按体长组分面的对数残差 / Log residuals by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=74810e33a25c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true&v=74810e33a25c)
 
 对数残差，即观测对数调查指数减拟合值，每个体长组一个面板，横轴为时间：深蓝线连接残差，灰线为零，青绿色虚线为平滑线。用它找模型拟合不好的体长组（零值和缺失观测没有残差）；多年同号的残差（如本例 16 组为正、20 组为负）说明系统性偏差，序列末端的趋势（如 50 组）提示模型没有跟上的变化。
 
@@ -1894,7 +1894,7 @@ plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(10, 30, 50))
 ```
 
-[![按时间步分面的对数残差 / Log residuals by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=d23449a96976)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=d23449a96976)
+[![按时间步分面的对数残差 / Log residuals by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=f424d49deb2e)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=f424d49deb2e)
 
 同一组残差按体长排列：每个时间步一个面板，横轴为体长，带零线和平滑线。观察哪些体长范围的残差持续高于或低于零。本例 2015 年起最大体长组的正尖峰表示那几年的观测指数高于拟合值。重复出现的符号变化可提示偏差随体长变化；平滑线在某个体长穿过零线，本身不表示该体长存在偏差。
 
@@ -1991,7 +1991,7 @@ Both ridge panels retain the full model length range, even when the shortest or 
 plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
 ```
 
-[![长度组成山脊图 / Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=d0da9259fa6c)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=d0da9259fa6c)
+[![长度组成山脊图 / Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=355293f5ee2d)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=355293f5ee2d)
 
 每条曲线表示一个时间步各体长组调查指数的相对组成，左图为观测值，右图为拟合值。`plot_ridges()` 返回 patchwork 对象，整张图有一个总标题，两个面板各有标题；`p[[1]]` 和 `p[[2]]` 分别取出观测面板和拟合面板。时间轴在年度拟合中显示年份，在季度拟合中显示季度（如“2000 Q2”）。2012 年之后，峰值向较大的体长组移动。可比较两图的峰值位置和分布宽度。某期全部缺测时不绘制该期的观测曲线，部分缺测时仅用有观测的体长组计算观测比例。
 
@@ -2051,7 +2051,7 @@ Each model is handled separately: a single estimate uses a point and error bar, 
 plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 ```
 
-[![种群时间序列比较 / Population time series comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)
+[![种群时间序列比较 / Population time series comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
 
 两组拟合的产卵生物量、补充量、总生物量、总丰度和捕获尾数时间序列，每个量一个面板，纵轴各自取值：ACL 为深蓝实线，ALSCL 为朱红虚线（`compare_colors`、`compare_linetypes`），`se = TRUE` 时加上各自的 95% 区间。用它看两个模型在哪里分歧；本例生物量和产卵生物量在 2014 年后分开，自由纵轴使振幅只能在面板内比较，不能跨面板比较。
 
@@ -2068,7 +2068,7 @@ Time series of spawning biomass, recruitment, total biomass, total abundance and
 plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 ```
 
-[![死亡率矩阵比较 / Fishing mortality matrices](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=416cab4229d5)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=416cab4229d5)
+[![死亡率矩阵比较 / Fishing mortality matrices](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)
 
 两组拟合各一张捕捞死亡率热图，横轴为时间，纵轴为各自的组（ACL 为年龄组，ALSCL 为体长组），共用一个 `F` 色标。用它看每个模型中捕捞在何时、哪些组最重；两图的行是不同维度，所以比较深色列的时间（本例 2007 至 2010 年）而不是逐格比较，F 汇总图可比较各模型的组间最大值或均值，解读时须区分年龄组和体长组的定义。 ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄；最大的年龄组是末组（plus group），用加号标出（“Age 15+”）。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
 
@@ -2089,7 +2089,7 @@ The mean-residual panel retains the full fitted time range, including unobserved
 plot_compare_residuals(a, b, dat)
 ```
 
-[![残差联合诊断 / Combined residual diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
+[![残差联合诊断 / Combined residual diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)
 
 四个面板显示两组拟合的样本内对数残差：直方图、以正态分布为参照的 QQ 图、各时间步的平均残差及加减一个标准差的误差棒，以及各体长组绝对残差的箱线图。ACL 为深蓝，ALSCL 为朱红。直方图较宽表示离散程度较大；QQ 图中看点的弯曲和不对称，它们提示偏斜或重尾，不要看斜率：这些残差以拟合的过程偏差为条件，即使模型设定正确，标准化条件残差的标准差也只有约 0.91 到 0.96。绝对残差较大的体长组拟合较差，例如本例 ALSCL 的 16 组和 50 组。标准差误差棒表示残差的离散程度，不是均值的置信区间。
 
@@ -2127,7 +2127,7 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-[![生长与外部参照接口 / Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=bfb640833596)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=bfb640833596)
+[![生长与外部参照接口 / Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e68a0ef8fb70)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e68a0ef8fb70)
 
 左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。
 
@@ -2174,7 +2174,7 @@ plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = ex
     0.3)))
 ```
 
-[![拟合指标比较 / Fit metric comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=f429da60dffc)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=f429da60dffc)
+[![拟合指标比较 / Fit metric comparison](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=9ff1d578e5f7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=9ff1d578e5f7)
 
 柱图汇总 `diagnostic_metrics()` 的样本内拟合指标：RMSE、MAE、R 平方、MAPE、AIC、BIC、负对数似然和标量参数个数。ACL 为深蓝，ALSCL 为朱红。按各指标的定义解读：误差指标较低、R 平方较高表示对这些观测的拟合较近；AIC 和 BIC 还惩罚参数数量。信息准则只应在同一观测、相容似然的拟合之间比较。本例 ACL 的指标值较好；一个模拟数据集不能证明普遍优势，也不能确定差异原因。
 
@@ -2213,7 +2213,7 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-[![每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)
+[![每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=07fdc7e90395)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=07fdc7e90395)
 
 每个时间步内，ACL 取各年龄组捕捞死亡率的最大值，ALSCL 取各体长组的最大值，即 apical F。图中每个点对应该模型在该期估计 F 最高的组。即使针对同一种群，年龄组最大值与体长组最大值也未必相同，因为年龄别 F 汇总了各体长的存活；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都汇总年龄别 F，只用两者共有的拟合年龄和时间步；ALSCL 的年龄别 F 没有末组一行，也没有最后一个时间步的值。季度拟合得到每季度的瞬时率，纵轴标签注明捕捞死亡率的时间基准。[BAM 模型中的 apical F，式（14b）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
@@ -2231,7 +2231,7 @@ plot_compare_F_ts(a, b, method = "mean") +
   labs(title = "Mean fishing mortality")
 ```
 
-[![每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=25c951b5bd17)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=25c951b5bd17)
+[![每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=c4be14c4b278)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_mean.png?raw=true&v=c4be14c4b278)
 
 两组拟合的平均捕捞死亡率，即每个时间步各组 `F` 的非加权平均，样式同上。当关心整个选择模式而不是其峰值时用它；平均值取决于模型有多少低 F 的组（本例 15 个年龄组对 23 个体长组），所以看时间模式（两者都在 2008 年达峰）而不是水平高低。
 
@@ -2339,13 +2339,13 @@ The quantities are total biomass `B`, recruitment `Rec`, spawning biomass `SSB` 
 plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
-![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 `plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板，`facet_ncol = 2` 把它们排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式。未通过数值检查的拟合用虚线绘制，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 rho 与完整拟合比较的那个值；面板标签给出保留 `rho_digits` 位小数的 Mohn rho。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
 `plot_retro()` draws the stored series without refitting, one panel per quantity in the two columns set by `facet_ncol = 2`. Each line is one fit, colored by its last time step: the full fit ends in 2019, the peels in 2018, 2017 and 2016. The legend is titled "Terminal year" for annual time steps and "Terminal period" for shorter ones, where quarters are labelled as in "2019 Q4". A fit that failed the numerical checks is drawn with a dashed line, and a fit without estimates stays in the legend marked "(no estimates)". The open point marks each fit's terminal estimate, the value rho compares with the full fit, and the panel label gives Mohn's rho with `rho_digits` decimals. The figures on this page add `rho_size = 3`, `point_size = 1` and `line_size = 0.6`.
 
-![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=a6c651d2e0de)
+![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
 
 两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。rho 为 `NA` 时，面板显示 `rho unavailable: check diagnostics`；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见 [ggsci 配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md)；全部参数见 [plot_retro 参考](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)。
 
@@ -3423,7 +3423,7 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=028b3b37517a)
+![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true&v=cdb2d0472558)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_abundance)。
 
@@ -3500,7 +3500,7 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=3d2df45029c9)
+![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_biomass_B.png?raw=true&v=697d33075a88)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_biomass)。
 
@@ -3577,7 +3577,7 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=c03ee7bf1c85)
+![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true&v=44ba7e881cc8)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_catch)。
 
@@ -3660,7 +3660,7 @@ plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
   ylab = "Log survey index")
 ```
 
-![示例图 / Example figure: `plot_CatL(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=27b8dc9d9c6c)
+![示例图 / Example figure: `plot_CatL(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true&v=207341ada444)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_CatL)。
 
@@ -3780,7 +3780,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
 ```
 
-![示例图 / Example figure: `plot_compare_F(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=416cab4229d5)
+![示例图 / Example figure: `plot_compare_F(a, b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F)。
 
@@ -3829,7 +3829,7 @@ plot_compare_F_ts(a, b, method = "apical") +
   labs(title = "Apical fishing mortality")
 ```
 
-![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=04d0e9ec5dd1)
+![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F_apical.png?raw=true&v=07fdc7e90395)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_F_ts)。
 
@@ -3900,7 +3900,7 @@ plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
     ref_name = "Synthetic reference", nls_start = list(Linf = 60, k = 0.2, t0 = 1/60))
 ```
 
-![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=bfb640833596)
+![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e68a0ef8fb70)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
 
@@ -3949,7 +3949,7 @@ plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = ex
     0.3)))
 ```
 
-![示例图 / Example figure: `plot_compare_metrics(a, b, dat, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=f429da60dffc)
+![示例图 / Example figure: `plot_compare_metrics(a, b, dat, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_metrics.png?raw=true&v=9ff1d578e5f7)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_metrics)。
 
@@ -4004,7 +4004,7 @@ A wholly unobserved period breaks the mean-residual line. Isolated observed peri
 plot_compare_residuals(a, b, dat)
 ```
 
-![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
+![示例图 / Example figure: `plot_compare_residuals(a, b, dat)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_residuals)。
 
@@ -4108,7 +4108,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
 ```
 
-![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)
+![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_ts)。
 
@@ -4252,7 +4252,7 @@ plot_fishing_mortality(a, type = "year",
   se = TRUE, facet_ncol = 4, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=098d37cae7d1)
+![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true&v=336db1035cf1)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_fishing_mortality)。
 
@@ -4307,7 +4307,7 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 ```
 
-![示例图 / Example figure: `plot_pla(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=3f17714c7721)
+![示例图 / Example figure: `plot_pla(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=736cfc4bb05d)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_pla)。
 
@@ -4371,7 +4371,7 @@ With `se = TRUE` the default interval is lognormal. The log of a positive estima
 plot_recruitment(b, se = TRUE)
 ```
 
-![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=f3b37834bb1a)
+![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=764bb52a57ef)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_recruitment)。
 
@@ -4444,7 +4444,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
   x_breaks = c(2000, 2010, 2015))
 ```
 
-![示例图 / Example figure: `plot_residuals(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=d23449a96976)
+![示例图 / Example figure: `plot_residuals(b, facet_by = "year", facet_ncol = 4)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true&v=f424d49deb2e)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_residuals)。
 
@@ -4505,7 +4505,7 @@ Each line is one fit and is identified by the terminal period of its data. The l
 plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 ```
 
-![示例图 / Example figure: `plot_retro(rb, facet_ncol = 2, rho_digits = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![示例图 / Example figure: `plot_retro(rb, facet_ncol = 2, rho_digits = 3)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_retro)。
 
@@ -4571,7 +4571,7 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 plot_ridges(b)
 ```
 
-![示例图 / Example figure: `plot_ridges(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=d0da9259fa6c)
+![示例图 / Example figure: `plot_ridges(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true&v=355293f5ee2d)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_ridges)。
 
@@ -4648,7 +4648,7 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
   line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d3d36a38c338)
+![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true&v=d9b4f4e332d7)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB)。
 
@@ -4701,7 +4701,7 @@ Recruitment in a time step is the number of fish at the youngest fitted age, so 
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-![示例图 / Example figure: `plot_SSB_Rec(b, age_at_recruitment = 1)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=1ba690a33945)
+![示例图 / Example figure: `plot_SSB_Rec(b, age_at_recruitment = 1)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true&v=4343a7828e9a)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
 
@@ -4766,7 +4766,7 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 plot_VB(b, se = TRUE)
 ```
 
-![示例图 / Example figure: `plot_VB(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=e2a1e504fa32)
+![示例图 / Example figure: `plot_VB(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_VB)。
 
@@ -4860,7 +4860,7 @@ ra$fit_diagnostics
 ra$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=a6c651d2e0de)
+![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
 
 <a id="retro_alscl"></a>
 ## `retro_alscl()`
@@ -4917,7 +4917,7 @@ rb$fit_diagnostics
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 <a id="retro_model"></a>
 ## `retro_model()`
@@ -5028,7 +5028,7 @@ rb$rho_by_peel
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_ncol = 2)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 <a id="run_acl"></a>
 ## `run_acl()`
@@ -7293,7 +7293,7 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 Read the numerical checks first ([Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.7. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
-![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
+![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)
 
 四个面板分别是残差直方图、QQ 图、逐年平均残差（误差线为一个标准差）和按体长组的绝对残差；[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-residuals)解释这些规律。
 
@@ -7322,7 +7322,7 @@ Points are the observations and curves the fitted medians in the four selected y
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-![模拟 YTF 示例的条件种群估计 / Conditional population estimates from the synthetic YTF example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)
+![模拟 YTF 示例的条件种群估计 / Conditional population estimates from the synthetic YTF example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
 
 先比较点估计的时间位置、趋势和大小，再检查不确定性；`se = TRUE` 加上各拟合的近似区间。仅凭重叠不能说明点估计接近：很宽的区间即使点估计差异很大也可能重叠。定量比较时，报告同一时间的估计差或比值。由于两次拟合使用同一数据，对差异作统计推断时需要考虑其联合不确定性。本例只描述这一组数据。
 
@@ -7336,7 +7336,7 @@ Compare the timing, trends and magnitudes of the point estimates, then inspect t
 plot_compare_F(a, b)
 ```
 
-![模拟 YTF：年龄别与体长别捕捞死亡率 / Synthetic YTF: age-based and length-based fishing mortality](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=416cab4229d5)
+![模拟 YTF：年龄别与体长别捕捞死亡率 / Synthetic YTF: age-based and length-based fishing mortality](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)
 
 ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_F_ts()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
@@ -7401,7 +7401,7 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 `retro_alscl()` reads the input bundle `x` as `run_alscl(x)` does, fits the full series and then three peels: peel 1 removes the last time step, peel 2 the last two, peel 3 the last three. `nyear` is the number of peels. Each peel removes one more time step, which is one quarter for quarterly data unless `peel_step = 4` asks for annual peels, and every peel must keep at least two time steps. Arguments in the call reach every fit, and `ncores` on this call runs the peels in parallel ([Run a retrospective analysis](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospectives-run)). Read `rb$fit_diagnostics` first: one row per fit (`Peel` 0 is the full fit) with the numerical checks and any error. `rb$rho_text$Rho` gives Mohn's rho per quantity only when the full fit and all peels passed the checks and every terminal comparison is finite with a nonzero reference; otherwise it is `NA` with a warning, `rb$errors` lists the failed fits and `rb$raw_rho_text` keeps the unchecked mean for diagnosis. With the teaching data the four fits take about six to ten minutes, depending on the computer and its load, and all pass ([retro_diagnostics_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/retro_diagnostics_ALSCL.csv)).
 
-![仓库提供的 ALSCL 回溯示例 / Bundled ALSCL retrospective example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![仓库提供的 ALSCL 回溯示例 / Bundled ALSCL retrospective example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 每条线是一次拟合，按其最后一个时间步着色；空心点标出末端估计，rho 把它与完整拟合在同一时间步的值比较。像这里一样，各轮的线在大部分序列上与完整拟合重合、只在最后几年分开，说明图中较明显的修订集中在近期。在记录运行中，生物量的 rho 为 0.033，产卵生物量 0.017，丰度 0.027，补充量 0.0018（[rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)）；正值表示截短拟合的末期估计平均高于完整拟合对同一期的估计。符号相反的项在均值中会抵消，所以也要读 `rb$rho_by_peel`。若没有任何拟合给出估计，`plot_retro()` 会停止并提示你读 `fit_diagnostics` 和 `errors`。
 
@@ -7418,7 +7418,7 @@ ra$rho_text
 plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 ```
 
-![模拟 YTF：ACL 回溯轨迹 / Synthetic YTF: ACL retrospective trajectories](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=a6c651d2e0de)
+![模拟 YTF：ACL 回溯轨迹 / Synthetic YTF: ACL retrospective trajectories](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
 
 两个模型使用相同的观测和三轮截短拟合。对于生物量、产卵生物量和总丰度，ACL 的 Mohn’s ρ 绝对值较小，其 ρ 依次为 0.0069、0.0079 和 −0.00025。补充量的 ρ 在 ACL 中为 −0.0104，在 ALSCL 中为 +0.0018，平均修订方向相反，ACL 的绝对值较大。可在 `rho_by_peel` 中查看每一轮末期修订的方向和幅度。[ACL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv) · [ALSCL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)。
 

@@ -391,7 +391,7 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 Read the numerical checks first ([Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.7. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
-![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=f97bb9ff3e81)
+![模拟 YTF：ACL 与 ALSCL 的残差比较 / Synthetic YTF: residual comparison for ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_residuals.png?raw=true&v=599fd45cb0a8)
 
 四个面板分别是残差直方图、QQ 图、逐年平均残差（误差线为一个标准差）和按体长组的绝对残差；[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-residuals)解释这些规律。
 
@@ -420,7 +420,7 @@ Points are the observations and curves the fitted medians in the four selected y
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-![模拟 YTF 示例的条件种群估计 / Conditional population estimates from the synthetic YTF example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=6e0c7883ce7f)
+![模拟 YTF 示例的条件种群估计 / Conditional population estimates from the synthetic YTF example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=7ce98ebec8a0)
 
 先比较点估计的时间位置、趋势和大小，再检查不确定性；`se = TRUE` 加上各拟合的近似区间。仅凭重叠不能说明点估计接近：很宽的区间即使点估计差异很大也可能重叠。定量比较时，报告同一时间的估计差或比值。由于两次拟合使用同一数据，对差异作统计推断时需要考虑其联合不确定性。本例只描述这一组数据。
 
@@ -434,7 +434,7 @@ Compare the timing, trends and magnitudes of the point estimates, then inspect t
 plot_compare_F(a, b)
 ```
 
-![模拟 YTF：年龄别与体长别捕捞死亡率 / Synthetic YTF: age-based and length-based fishing mortality](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=416cab4229d5)
+![模拟 YTF：年龄别与体长别捕捞死亡率 / Synthetic YTF: age-based and length-based fishing mortality](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_F.png?raw=true&v=812ad0daddce)
 
 ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_F_ts()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
@@ -499,7 +499,7 @@ plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 
 `retro_alscl()` reads the input bundle `x` as `run_alscl(x)` does, fits the full series and then three peels: peel 1 removes the last time step, peel 2 the last two, peel 3 the last three. `nyear` is the number of peels. Each peel removes one more time step, which is one quarter for quarterly data unless `peel_step = 4` asks for annual peels, and every peel must keep at least two time steps. Arguments in the call reach every fit, and `ncores` on this call runs the peels in parallel ([Run a retrospective analysis](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#retrospectives-run)). Read `rb$fit_diagnostics` first: one row per fit (`Peel` 0 is the full fit) with the numerical checks and any error. `rb$rho_text$Rho` gives Mohn's rho per quantity only when the full fit and all peels passed the checks and every terminal comparison is finite with a nonzero reference; otherwise it is `NA` with a warning, `rb$errors` lists the failed fits and `rb$raw_rho_text` keeps the unchecked mean for diagnosis. With the teaching data the four fits take about six to ten minutes, depending on the computer and its load, and all pass ([retro_diagnostics_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/retro_diagnostics_ALSCL.csv)).
 
-![仓库提供的 ALSCL 回溯示例 / Bundled ALSCL retrospective example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=a15f447d44dc)
+![仓库提供的 ALSCL 回溯示例 / Bundled ALSCL retrospective example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=8580ec183d41)
 
 每条线是一次拟合，按其最后一个时间步着色；空心点标出末端估计，rho 把它与完整拟合在同一时间步的值比较。像这里一样，各轮的线在大部分序列上与完整拟合重合、只在最后几年分开，说明图中较明显的修订集中在近期。在记录运行中，生物量的 rho 为 0.033，产卵生物量 0.017，丰度 0.027，补充量 0.0018（[rho_ALSCL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)）；正值表示截短拟合的末期估计平均高于完整拟合对同一期的估计。符号相反的项在均值中会抵消，所以也要读 `rb$rho_by_peel`。若没有任何拟合给出估计，`plot_retro()` 会停止并提示你读 `fit_diagnostics` 和 `errors`。
 
@@ -516,7 +516,7 @@ ra$rho_text
 plot_retro(ra, facet_ncol = 2, rho_digits = 3)
 ```
 
-![模拟 YTF：ACL 回溯轨迹 / Synthetic YTF: ACL retrospective trajectories](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=a6c651d2e0de)
+![模拟 YTF：ACL 回溯轨迹 / Synthetic YTF: ACL retrospective trajectories](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=7c0dfa183b66)
 
 两个模型使用相同的观测和三轮截短拟合。对于生物量、产卵生物量和总丰度，ACL 的 Mohn’s ρ 绝对值较小，其 ρ 依次为 0.0069、0.0079 和 −0.00025。补充量的 ρ 在 ACL 中为 −0.0104，在 ALSCL 中为 +0.0018，平均修订方向相反，ACL 的绝对值较大。可在 `rho_by_peel` 中查看每一轮末期修订的方向和幅度。[ACL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ACL.csv) · [ALSCL 结果](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/rho_ALSCL.csv)。
 
