@@ -120,6 +120,49 @@ print.alscl_speed_info <- function(x, ...) {
 # workers already run in parallel.
 .acl_worker_options <- function() list(ALSCL.framework = .acl_framework(), ALSCL.sd_cores = 1L)
 
+# How much of the standard-error step a fit runs. Internal setting, read from
+# options(ALSCL.se_level = ):
+#   "full"    (default) the covariance of the fixed effects and the
+#             delta-method standard errors of all ADREPORT quantities;
+#   "hessian" the covariance of the fixed effects and the positive-definite
+#             check only (TMB::sdreport(skip.delta.method = TRUE)); standard
+#             errors of ADREPORT quantities are NA;
+#   "none"    nothing; the fit has no covariance and no Hessian check.
+# Batch workflows that discard standard errors scope a reduced level around
+# their fits. .acl_cluster_lapply() passes the level to socket workers. The
+# level is not stored in the fit recipe, so refit_model() uses the session's.
+.acl_se_levels <- c("full", "hessian", "none")
+.acl_se_level <- function(x = getOption("ALSCL.se_level", "full")) {
+  if (!is.character(x) || length(x) != 1L || is.na(x) || !x %in% .acl_se_levels)
+    stop("options(ALSCL.se_level = ) must be \"full\", \"hessian\" or \"none\".", call. = FALSE)
+  x
+}
+
+# How the delta method is computed. Internal setting, read from
+# options(ALSCL.delta_method = ): "exact" (default) repeats TMB's calculation
+# for each ADREPORT quantity and is identical to TMB::sdreport(); "blocked"
+# is faster and agrees to rounding error (see .acl_delta_blocked()).
+.acl_delta_method <- function(x = getOption("ALSCL.delta_method", "exact")) {
+  if (!is.character(x) || length(x) != 1L || is.na(x) || !x %in% c("exact", "blocked"))
+    stop("options(ALSCL.delta_method = ) must be \"exact\" or \"blocked\".", call. = FALSE)
+  x
+}
+
+# Validate every speed option once, with the message of the option at fault.
+# A fit calls this before optimizer refinement, whose Hessian step would
+# otherwise report a malformed option as an unusable Hessian.
+.acl_check_speed_options <- function() {
+  .acl_framework()
+  .acl_cores()
+  choice <- getOption("ALSCL.sd_backend", "auto")
+  if (!is.character(choice) || length(choice) != 1L || is.na(choice) ||
+      !choice %in% c("auto", "fork", "socket"))
+    stop("options(ALSCL.sd_backend = ) must be \"auto\", \"fork\" or \"socket\".", call. = FALSE)
+  .acl_se_level()
+  .acl_delta_method()
+  invisible(TRUE)
+}
+
 .acl_check_cores <- function(x, name) {
   ok <- identical(x, "auto") ||
     (is.numeric(x) && length(x) == 1L && is.finite(x) && x >= 1 &&
@@ -324,19 +367,17 @@ print.alscl_speed_info <- function(x, ...) {
   term1 + term2
 }
 
-# Delta-method standard errors of the ADREPORT quantities, one quantity per
-# task. Must be called right after TMB::sdreport(), which leaves the Cholesky
-# factor of the random-effect Hessian at `par` in obj$env$L.created.by.newton.
-# Returns the ADREPORT values, the standard errors and how they were computed.
-.acl_delta_sd <- function(obj, par, Vtheta, ncores, backend = "fork",
-                          min_seconds = getOption("ALSCL.sd_socket_min_seconds", 3)) {
+# What the delta method needs at the joint mode `par`: the ADREPORT object
+# and values, the objective's evaluation function, the random-effect indices
+# and Hessian (with the Cholesky factor that sdreport() left) and the
+# fixed-effect covariance. NULL when the model reports no ADREPORT quantity.
+.acl_delta_state <- function(obj, par, Vtheta) {
   env <- obj$env
   r <- env$random
   obj2 <- TMB::MakeADFun(env$data, env$parameters, type = "ADFun", ADreport = TRUE,
                          DLL = env$DLL, silent = env$silent)
   phi <- try(obj2$fn(par), silent = TRUE)
-  if (is.character(phi) || length(phi) == 0)
-    return(list(value = numeric(0), sd = numeric(0), method = "sequential", cores = 1L))
+  if (is.character(phi) || length(phi) == 0) return(NULL)
   hessian.random <- NULL
   if (!is.null(r)) {
     hessian.random <- env$spHess(par, random = TRUE)
@@ -346,8 +387,20 @@ print.alscl_speed_info <- function(x, ...) {
     # only reverse sweeps (doforward = 0).
     env$f(par, order = 0, type = "ADGrad")
   }
-  s <- list(obj2 = obj2, f = env$f, r = r, par = par, phi = phi, Vtheta = Vtheta,
-            hessian.random = hessian.random)
+  list(obj2 = obj2, f = env$f, r = r, par = par, phi = phi, Vtheta = Vtheta,
+       hessian.random = hessian.random)
+}
+
+# Delta-method standard errors of the ADREPORT quantities, one quantity per
+# task. Must be called right after TMB::sdreport(), which leaves the Cholesky
+# factor of the random-effect Hessian at `par` in obj$env$L.created.by.newton.
+# Returns the ADREPORT values, the standard errors and how they were computed.
+.acl_delta_sd <- function(obj, par, Vtheta, ncores, backend = "fork",
+                          min_seconds = getOption("ALSCL.sd_socket_min_seconds", 3)) {
+  s <- .acl_delta_state(obj, par, Vtheta)
+  if (is.null(s))
+    return(list(value = numeric(0), sd = numeric(0), method = "sequential", cores = 1L))
+  phi <- s$phi
   if (backend == "socket") {
     res <- .acl_delta_socket(obj, s, ncores, min_seconds)
     return(list(value = phi, sd = sqrt(as.numeric(unlist(res$variances))),
@@ -452,6 +505,65 @@ print.alscl_speed_info <- function(x, ...) {
   list(variances = out, method = "socket workers", cores = workers)
 }
 
+# Blocked delta method: variances of all ADREPORT quantities in `chunk` from
+# one sparse solve with several right-hand sides. `s` is the list built by
+# .acl_delta_sd() plus H_fixed_random, the block of the joint Hessian of the
+# objective between the fixed effects (rows) and the random effects (columns),
+# which .acl_delta_blocked() computes once from one reverse sweep of the
+# gradient tape per fixed effect. TMB instead repeats a reverse sweep of that
+# tape for every ADREPORT quantity. With J the Jacobian of the quantities
+# (J_r, J_f its random- and fixed-effect columns), H_rr the random-effect
+# Hessian and S = solve(H_rr, t(J_r)), the variance of quantity i is
+#   sum(J_r[i, ] * S[, i]) + A[i, ] V_theta t(A[i, ]),  A = J_f - t(S) t(H_fr).
+# This is the calculation of TMB::sdreport() in a different order of
+# floating-point operations, so the results agree to rounding error (about
+# 1e-14 relative) and are not identical.
+.acl_delta_block <- function(chunk, s) {
+  phi <- s$phi; r <- s$r; par <- s$par; Vtheta <- s$Vtheta; obj2 <- s$obj2
+  w <- rep(0, length(phi))
+  J <- t(vapply(chunk, function(i) {
+    w[i] <- 1
+    as.numeric(obj2$env$f(par, order = 1, rangeweight = w, doforward = 0))
+  }, numeric(length(par))))
+  if (is.null(r)) return(rowSums((J %*% Vtheta) * J))
+  Jr <- J[, r, drop = FALSE]; A <- J[, -r, drop = FALSE]
+  term1 <- numeric(length(chunk))
+  active <- which(rowSums(Jr != 0) > 0)
+  if (length(active)) {
+    S <- as.matrix(Matrix::solve(s$hessian.random, t(Jr[active, , drop = FALSE])))
+    term1[active] <- colSums(t(Jr[active, , drop = FALSE]) * S)
+    A[active, ] <- A[active, , drop = FALSE] - t(S) %*% t(s$H_fixed_random)
+  }
+  term1 + rowSums((A %*% Vtheta) * A)
+}
+
+# Blocked delta-method standard errors of all ADREPORT quantities, in chunks
+# of `chunk_size` quantities so that memory stays bounded. With several cores
+# and forked processes the chunks are shared out between the processes. Call
+# it in the state that .acl_delta_sd() requires.
+.acl_delta_blocked <- function(obj, par, Vtheta, ncores = 1L, chunk_size = 500L) {
+  s <- .acl_delta_state(obj, par, Vtheta)
+  if (is.null(s)) return(list(value = numeric(0), sd = numeric(0), method = "sequential", cores = 1L))
+  r <- s$r
+  if (!is.null(r)) {
+    fixed <- seq_along(par)[-r]
+    w <- rep(0, length(par))
+    s$H_fixed_random <- t(vapply(fixed, function(k) {
+      w[k] <- 1
+      as.numeric(s$f(par, order = 1, type = "ADGrad", rangeweight = w, doforward = 0))[r]
+    }, numeric(length(r))))
+  }
+  index <- seq_along(s$phi)
+  chunks <- split(index, ceiling(index / chunk_size))
+  if (ncores > 1L && length(chunks) < ncores && length(index) >= ncores)
+    chunks <- split(index, cut(index, ncores, labels = FALSE))
+  ncores <- min(ncores, length(chunks))
+  variances <- if (ncores > 1L) .acl_mclapply(chunks, .acl_delta_block, ncores, s = s)
+               else lapply(chunks, .acl_delta_block, s = s)
+  list(value = s$phi, sd = sqrt(as.numeric(unlist(variances, use.names = FALSE))),
+       method = if (ncores > 1L) "forked processes" else "sequential", cores = ncores)
+}
+
 # TMB::sdreport(obj, par.fixed, getReportCovariance = FALSE) with the
 # fixed-effect Hessian and the per-quantity delta method computed in
 # parallel; the returned object is identical to the sequential one. TMB
@@ -462,28 +574,52 @@ print.alscl_speed_info <- function(x, ...) {
 # version, and fallback = FALSE so that a parallel failure is an error rather
 # than a silent comparison of TMB with itself. The attribute "acl_sd_info"
 # records how the standard errors were computed and how long they took.
+#
+# `level` (see .acl_se_level()) reduces the work: "hessian" stops after the
+# fixed-effect covariance, identical to TMB::sdreport(skip.delta.method =
+# TRUE), with the Hessian still computed in forked processes where that is
+# selected; "none" returns NULL, which .acl_fit() treats as standard errors
+# not available. `delta` (see .acl_delta_method()) = "blocked" replaces the
+# per-quantity delta method by .acl_delta_blocked() for checked TMB versions;
+# only that choice gives up identity with TMB::sdreport().
 .acl_sdreport <- function(obj, par.fixed, ncores = .acl_cores(), check_version = TRUE,
-                          fallback = TRUE, backend = .acl_sd_backend()) {
+                          fallback = TRUE, backend = .acl_sd_backend(),
+                          level = .acl_se_level(), delta = .acl_delta_method()) {
+  if (level == "none") return(NULL)
+  skip <- level == "hessian"
   started <- proc.time()[["elapsed"]]
   done <- function(ans, method, cores, note = NULL) {
     force(ans)  # evaluate sdreport() before the time is taken
-    attr(ans, "acl_sd_info") <- list(method = method, cores = as.integer(cores),
-                                     seconds = proc.time()[["elapsed"]] - started, note = note)
+    info <- list(method = method, cores = as.integer(cores),
+                 seconds = proc.time()[["elapsed"]] - started, note = note)
+    # Fits with the default settings keep the fields above only.
+    if (skip) info$level <- "hessian" else if (delta == "blocked") info$delta_method <- blocked_used
+    attr(ans, "acl_sd_info") <- info
     ans
   }
-  sequential <- function(note) done(TMB::sdreport(obj, par.fixed = par.fixed, getReportCovariance = FALSE),
-                                    "sequential", 1L, note)
-  if (ncores <= 1L) return(sequential("one core"))
-  if (length(par.fixed) == 0L) return(sequential("no fixed effects"))
+  blocked_used <- "exact"
+  sequential <- function(note) done(
+    if (skip) TMB::sdreport(obj, par.fixed = par.fixed, getReportCovariance = FALSE,
+                            skip.delta.method = TRUE)
+    else TMB::sdreport(obj, par.fixed = par.fixed, getReportCovariance = FALSE),
+    "sequential", 1L, note)
+  blocked <- !skip && delta == "blocked"
+  if (length(par.fixed) == 0L) return(sequential(if (ncores <= 1L) "one core" else "no fixed effects"))
+  if (ncores <= 1L && !blocked) return(sequential("one core"))
   if (check_version && !.acl_tmb_supported())
     return(sequential(paste("TMB", utils::packageVersion("TMB"), "was not checked")))
+  # With socket workers the Hessian is computed in the main process, so the
+  # "hessian" level has nothing to run in parallel.
+  if (skip && backend != "fork") return(sequential("fixed-effect covariance only"))
   in_parallel <- function() {
     # Socket workers would each have to rebuild TMB's sparse Hessian tape to
     # compute gradients, which costs more than the Hessian itself, so with
     # socket workers the Hessian is computed here.
-    hessian.fixed <- .acl_optimhess(obj, par.fixed, if (backend == "fork") ncores else 1L)
+    fork_cores <- if (backend == "fork") ncores else 1L
+    hessian.fixed <- .acl_optimhess(obj, par.fixed, fork_cores)
     ans <- TMB::sdreport(obj, par.fixed = par.fixed, hessian.fixed = hessian.fixed,
                          getReportCovariance = FALSE, skip.delta.method = TRUE)
+    if (skip) return(done(ans, "forked processes", ncores))
     # sdreport() left obj$env$last.par at the joint mode for par.fixed, the
     # point at which it evaluated everything; the checks below confirm it.
     par <- obj$env$last.par
@@ -491,14 +627,20 @@ print.alscl_speed_info <- function(x, ...) {
     same <- if (is.null(r)) identical(unname(par), unname(par.fixed))
             else identical(unname(par[-r]), unname(par.fixed)) &&
                  identical(unname(par[r]), unname(ans$par.random))
-    delta <- if (same) .acl_delta_sd(obj, par, ans$cov.fixed, ncores, backend)
-    if (!same || !identical(unname(delta$value), unname(ans$value)))
+    delta_sd <- if (!same) NULL
+                else if (blocked) .acl_delta_blocked(obj, par, ans$cov.fixed, fork_cores)
+                else .acl_delta_sd(obj, par, ans$cov.fixed, ncores, backend)
+    if (!same || !identical(unname(delta_sd$value), unname(ans$value)))
       stop(.acl_parallel_error("state differs from sdreport()"))
-    ans$sd <- delta$sd
+    ans$sd <- delta_sd$sd
+    if (blocked) {
+      blocked_used <<- "blocked"
+      return(done(ans, delta_sd$method, delta_sd$cores))
+    }
     method <- if (backend == "fork") "forked processes"
-              else if (delta$method == "socket workers") "socket workers (delta method)"
+              else if (delta_sd$method == "socket workers") "socket workers (delta method)"
               else "sequential"
-    done(ans, method, if (method == "sequential") 1L else if (backend == "fork") ncores else delta$cores,
+    done(ans, method, if (method == "sequential") 1L else if (backend == "fork") ncores else delta_sd$cores,
          if (method == "sequential") "too little work to start socket workers")
   }
   if (!fallback) return(in_parallel())
@@ -516,5 +658,9 @@ print.alscl_speed_info <- function(x, ...) {
     "forked processes" = sprintf("forked processes on %d cores", info$cores),
     "socket workers (delta method)" = sprintf("%d socket workers for the delta method", info$cores),
     "sequential" = paste0("sequential", if (!is.null(info$note)) paste0(" (", info$note, ")")))
-  sprintf("Standard errors: %s, %.1f s.", how, info$seconds)
+  what <- if (identical(info$level, "hessian"))
+    "Covariance of the fixed effects only (no standard errors of derived quantities)"
+    else if (identical(info$delta_method, "blocked")) "Standard errors (blocked delta method)"
+    else "Standard errors"
+  sprintf("%s: %s, %.1f s.", what, how, info$seconds)
 }

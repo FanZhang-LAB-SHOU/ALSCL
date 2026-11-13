@@ -1,6 +1,12 @@
 # Apply FUN over X on socket workers (or sequentially for one worker). Shared by
 # the scenario, profile, hindcast, retrospective and simulation batches. The
 # model is compiled in the parent so that workers never write the same cache.
+# With one worker the fits run in this process and keep the session's setting
+# for standard errors (ALSCL.sd_cores). Socket workers compute standard errors
+# on one core each (.acl_worker_options()), so processes do not multiply. The
+# results are identical in both cases. Workers also receive the caller's
+# standard-error level (see .acl_se_level()), so that a workflow that scopes
+# options(ALSCL.se_level = ) gets the same level in both modes.
 .acl_cluster_lapply <- function(X, FUN, ncores, model, ...) {
   ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(X)))
   if (ncores == 1L) return(lapply(X, FUN, ...))
@@ -8,7 +14,7 @@
   cl <- parallel::makeCluster(ncores)
   on.exit(parallel::stopCluster(cl), add = TRUE)
   .acl_initialize_workers(cl, cache = dirname(dirname(info$cpp_path)),
-                          settings = .acl_worker_options())
+    settings = c(.acl_worker_options(), list(ALSCL.se_level = .acl_se_level())))
   parallel::parLapply(cl, X, FUN, ...)
 }
 
