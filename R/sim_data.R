@@ -82,12 +82,52 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       !is.finite(return_iter) || !(return_iter %in% iter_range))
     stop("return_iter must identify one seed in iter_range.")
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  # Each replicate sets its own seed; leave the caller's random-number stream
+  # and generator settings as they were.
+  restore_rng <- .acl_preserve_rng()
+  on.exit(restore_rng(), add = TRUE)
 
   if (model_type == "length_based") {
     .sim_data_length_based(bio_vars, params, sim_year, output_dir, iter_range, return_iter)
   } else {
     .sim_data_age_based(bio_vars, params, sim_year, output_dir, iter_range, return_iter)
   }
+}
+
+# Seed one replicate with fixed generator settings, so a replicate ID gives the
+# same data whatever generator the session uses.
+.acl_simulation_seed <- function(iter) {
+  set.seed(iter, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  list(seed = as.integer(iter), RNGkind = RNGkind(),
+       ALSCL_version = as.character(utils::packageVersion("ALSCL")))
+}
+
+# AR(1) series with unit innovation variance. A zero coefficient is white
+# noise; stats::arima.sim() returns it but warns about the polynomial root.
+.acl_simulation_ar1 <- function(ar, n) {
+  if (isTRUE(ar == 0)) return(suppressWarnings(arima.sim(list(order = c(1, 0, 0), ar = ar), n = n)))
+  arima.sim(list(order = c(1, 0, 0), ar = ar), n = n)
+}
+
+# Replicate file name; the ID is formatted as an integer so that the name does
+# not depend on options(scipen) or on the storage type of the ID.
+.acl_simulation_file <- function(output_dir, iter)
+  file.path(output_dir, paste0("sim_rep", sprintf("%d", as.integer(iter))))
+
+# Write all replicates after every one has been generated and validated, each
+# through a temporary file, so a failed run leaves no partly updated set.
+.acl_simulation_write <- function(replicates, output_dir) {
+  for (iter in names(replicates)) {
+    sim.data <- replicates[[iter]]
+    target <- .acl_simulation_file(output_dir, as.numeric(iter))
+    temporary <- tempfile(".sim_rep-", tmpdir = output_dir)
+    save(sim.data, file = temporary)
+    if (!file.rename(temporary, target)) {
+      unlink(temporary)
+      stop("Could not write simulation replicate ", iter, " to ", target, call. = FALSE)
+    }
+  }
+  invisible(NULL)
 }
 
 
@@ -121,6 +161,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_sd    <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar    <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
+  structure <- .acl_structure(params$structure, "ACL")$choices
   grid <- .acl_simulation_grid(params, sim_year, "age_based")
   sim_year <- grid$nstep
   # Observation window indices use integer steps, never fractional subscripts.
@@ -134,16 +175,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("return_iter = ", return_iter, " is not in iter_range")
 
   return_data <- NULL
+  replicates <- list()
 
   for (iter in iter_range) {
 
     # --- Recruitment deviations (AR1) ---
-    set.seed(iter)
-    dev_logR <- arima.sim(list(order = c(1, 0, 0), ar = R_ar), n = sim_year) * std_logR
+    provenance <- .acl_simulation_seed(iter)
+    dev_logR <- .acl_simulation_ar1(R_ar, sim_year) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = sim_year) * F_sd)
+    F_yr <- F_mean * exp(.acl_simulation_ar1(F_ar, sim_year) * F_sd)
 
     Z_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
     F_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -160,6 +202,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     for (i in 2:nage) {
       N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
     }
+    if (structure$initial_plus_group == "equilibrium")
+      N0_at_age[nage] <- N0_at_age[nage] / (1 - exp(-init_Z))
 
     # --- Pre-allocate ---
     N_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -261,13 +305,16 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
-    .acl_validate_simulated_result(sim.data, iter)
-    save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
+    sim.data$provenance <- provenance
+    tryCatch(.acl_validate_simulated_result(sim.data, iter), error = function(e)
+      stop(conditionMessage(e), " No replicate file of this call was written; files already in output_dir are unchanged.", call. = FALSE))
+    replicates[[sprintf("%d", as.integer(iter))]] <- sim.data
     if (iter == return_iter) {
       return_data <- sim.data
       return_data$iter <- iter
     }
   }
+  .acl_simulation_write(replicates, output_dir)
 
   cat("Simulated iterations:", min(iter_range), "to", max(iter_range),
       "(", length(iter_range), "replicates )\n")
@@ -311,6 +358,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_sd      <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar      <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
+  structure <- .acl_structure(params$structure, "ALSCL")$choices
   grid <- .acl_simulation_grid(params, sim_year, "length_based")
   nstep <- grid$nstep
 
@@ -325,16 +373,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("return_iter = ", return_iter, " is not in iter_range")
 
   return_data <- NULL
+  replicates <- list()
 
   for (iter in iter_range) {
 
     # --- Recruitment deviations (AR1, at quarterly resolution) ---
-    set.seed(iter)
-    dev_logR <- arima.sim(list(order = c(1, 0, 0), ar = R_ar), n = nstep) * std_logR
+    provenance <- .acl_simulation_seed(iter)
+    dev_logR <- .acl_simulation_ar1(R_ar, nstep) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Length-dependent fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = nstep) * F_sd)
+    F_yr <- F_mean * exp(.acl_simulation_ar1(F_ar, nstep) * F_sd)
 
     Z_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     F_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
@@ -368,8 +417,22 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     SSB <- TN <- TB <- CN_tot <- CB_tot <- rep(NA, nstep)
 
     # --- Step 1: Initialize from age structure ---
+    if (structure$initial_length == "growth") {
+      # Each age is the previous age after survival at init_Z and one growth
+      # step; the plus group optionally sums all older cohorts.
+      state <- N0_at_age[1] * pla[, 1]
+      nla[, 1] <- state
+      for (a in 2:nage) {
+        state <- as.vector(Gij %*% state) * exp(-init_Z + dev_logN0[a - 1])
+        if (a == nage && structure$initial_plus_group == "equilibrium")
+          state <- as.vector(solve(diag(nlen) - exp(-init_Z) * Gij, state))
+        nla[, a] <- state
+      }
+    } else if (structure$initial_plus_group == "equilibrium") {
+      N0_at_age[nage] <- N0_at_age[nage] / (1 - exp(-init_Z))
+    }
     for (a in 1:nage) {
-      nla[, a]  <- N0_at_age[a] * pla[, a]
+      if (structure$initial_length != "growth") nla[, a]  <- N0_at_age[a] * pla[, a]
       bla[, a]  <- nla[, a] * W_at_len
       sbla[, a] <- bla[, a] * mat
       cnla[, a] <- .acl_baranov_catch(nla[, a], F_at_len[1, ], Z_at_len[1, ])
@@ -497,13 +560,16 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
-    .acl_validate_simulated_result(sim.data, iter)
-    save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
+    sim.data$provenance <- provenance
+    tryCatch(.acl_validate_simulated_result(sim.data, iter), error = function(e)
+      stop(conditionMessage(e), " No replicate file of this call was written; files already in output_dir are unchanged.", call. = FALSE))
+    replicates[[sprintf("%d", as.integer(iter))]] <- sim.data
     if (iter == return_iter) {
       return_data <- sim.data
       return_data$iter <- iter
     }
   }
+  .acl_simulation_write(replicates, output_dir)
 
   cat("Simulated iterations:", min(iter_range), "to", max(iter_range),
       "(", length(iter_range), "replicates )\n")

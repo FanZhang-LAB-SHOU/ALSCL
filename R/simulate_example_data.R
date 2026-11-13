@@ -53,6 +53,15 @@
 #'   simulated values are rejected before any CSV files are created or replaced.
 #'   The age-length key uses the same open-tail probabilities as the ACL core;
 #'   this does not make the quick recruitment process identical to a fitted model.
+#'   The simulated population differs from the default fitting assumptions in
+#'   three ways: t0 is -0.1 (the ACL default map fixes t0 at 1/60), the initial
+#'   numbers at age have no deviations, and fishing mortality follows a smooth
+#'   deterministic curve without process error. Recruitment is independent
+#'   between years. A fit with all defaults therefore estimates a biased vbk
+#'   and usually fails the numerical checks, because the standard deviation of
+#'   the initial deviations or the recruitment correlation goes to zero; see
+#'   the example for settings that match the data. Progress is reported with
+#'   `message()`.
 #' @export
 #'
 #' @examples
@@ -68,14 +77,23 @@
 #' sim3 <- simulate_example_data(bin_breaks = c(0, 15, 25, 35, 45, 60))
 #'
 #' \dontrun{
-#' # Run ACL with simulated data
+#' # Run ACL with simulated data. The simulated population has t0 = -0.1, no
+#' # deviations in the initial numbers at age, independent recruitment and
+#' # smooth changes in F. Settings that match it: t0 at its true value (the
+#' # ACL default fixes it at 1/60, which biases vbk), a small fixed standard
+#' # deviation for the initial deviations, a recruitment correlation fixed
+#' # near zero, and a smaller fixed standard deviation of log F. With these
+#' # the fit passes the numerical checks and recovers Linf and vbk.
 #' sim <- simulate_example_data(seed = 123)
 #' result <- run_acl(
 #'   data.CatL = sim$data.CatL,
 #'   data.wgt  = sim$data.wgt,
 #'   data.mat  = sim$data.mat,
 #'   rec.age = 1, nage = 7, M = 0.8,
-#'   sel_L50 = 28, sel_L95 = 36
+#'   sel_L50 = 28, sel_L95 = 36,
+#'   parameters = list(t0 = sim$true_params$t0, log_std_log_N0 = log(0.1),
+#'                     log_std_log_F = log(0.3), logit_log_R = qlogis(0.01)),
+#'   map = list(log_std_log_N0 = factor(NA), logit_log_R = factor(NA))
 #' )
 #'
 #' # Save CSVs for sharing
@@ -182,7 +200,12 @@ simulate_example_data <- function(years      = 2000:2025,
     pla[, a] <- pmax(pla[, a], 1e-300)
     pla[, a] <- pla[, a] / sum(pla[, a])
   }
-  if (!is.null(seed)) set.seed(seed)
+  if (!is.null(seed)) {
+    # A supplied seed must not change the caller's random-number stream.
+    restore_rng <- .acl_preserve_rng()
+    on.exit(restore_rng(), add = TRUE)
+    set.seed(seed)
+  }
 
   # --- Time-varying fishing mortality ---
   F_shape <- 1 + 0.5 * sin(seq(-pi/2, 3*pi/2, length.out = nY))
@@ -244,8 +267,7 @@ simulate_example_data <- function(years      = 2000:2025,
     utils::write.csv(data.CatL, file.path(output_dir, "sim_CatL.csv"), row.names = FALSE)
     utils::write.csv(data.wgt,  file.path(output_dir, "sim_wgt.csv"),  row.names = FALSE)
     utils::write.csv(data.mat,  file.path(output_dir, "sim_mat.csv"),  row.names = FALSE)
-    cat("Saved to:", output_dir, "\n")
-    cat("  sim_CatL.csv\n  sim_wgt.csv\n  sim_mat.csv\n")
+    message("Saved to: ", output_dir, "\n  sim_CatL.csv\n  sim_wgt.csv\n  sim_mat.csv")
   }
 
   # --- Return ---
@@ -268,11 +290,11 @@ simulate_example_data <- function(years      = 2000:2025,
     true_params = true_params
   )
 
-  cat(sprintf("Simulated data: %d length bins x %d years\n", nL, nY))
-  cat(sprintf("  Bins: %s\n", paste(len_labels, collapse = ", ")))
-  cat(sprintf("  Years: %s-%s\n", as.character(min(years)), as.character(max(years))))
-  cat(sprintf("  True VB: Linf=%.1f, k=%.3f, t0=%.2f\n", Linf, vbk, t0))
-  cat(sprintf("  True M=%.2f, mean F=%.2f\n", M, mean_F))
+  message(sprintf("Simulated data: %d length bins x %d years\n", nL, nY),
+    sprintf("  Bins: %s\n", paste(len_labels, collapse = ", ")),
+    sprintf("  Years: %s-%s\n", as.character(min(years)), as.character(max(years))),
+    sprintf("  True VB: Linf=%.1f, k=%.3f, t0=%.2f\n", Linf, vbk, t0),
+    sprintf("  True M=%.2f, mean F=%.2f", M, mean_F))
 
   invisible(result)
 }

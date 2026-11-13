@@ -335,7 +335,7 @@ initialize_params <- function(nyear      = NULL,
   grid <- .acl_simulation_grid(sp, sp$nyear, sp$model_type)
   sp$observation_years <- grid$years
   sp$ages <- sp$rec.age + seq.int(0L, sp$nage-1L) * sp$growth_step
-  sp$years <- sp$first.year + seq.int(0L, grid$nstep-1L) * sp$growth_step
+  sp$years <- grid$first.year - grid$burn_in + seq.int(0L, grid$nstep-1L) * sp$growth_step
 
   return(sp)
 }
