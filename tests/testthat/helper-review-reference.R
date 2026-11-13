@@ -18,8 +18,8 @@
 #   ref_alscl_dynamics()      ALSCL population, catch and survey predictions
 #   ref_joint_nll()           joint negative log-likelihood and its components
 # ref_acl_dynamics() and ref_alscl_dynamics() take the parts as function
-# arguments (`key`, `growth`, `initial`), so a corrected structure is tested by
-# passing its own R function for that part.
+# arguments (`key`, `growth`, `initial_numbers`, `initial_state`), so a
+# corrected structure is tested by passing its own R function for that part.
 
 # ---------------------------------------------------------------------------
 # Small numerical pieces
@@ -182,7 +182,7 @@ ref_alscl_initial_state <- function(numbers_at_age, key, G = NULL, Z_at_length =
 # `data` is the TMB data list and `p` the TMB parameter list of the ACL
 # template. Returns the reported quantities under the template's names.
 ref_acl_dynamics <- function(data, p, key = ref_length_age_key,
-                             initial = ref_initial_numbers) {
+                             initial_numbers = ref_initial_numbers) {
   q <- ref_natural_parameters("ACL", p)
   A <- data$A; Y <- data$Y
   pla <- key(data$len_border, data$age, q$Linf, q$vbk, q$t0, q$cv_len)
@@ -191,7 +191,7 @@ ref_acl_dynamics <- function(data, p, key = ref_length_age_key,
   Z <- FA + data$M
   Rec <- exp(q$mean_log_R + q$dev_log_R)
   N_at_age <- matrix(0, A, Y)
-  N_at_age[, 1L] <- initial(Rec[1L], q$init_Z, q$dev_log_N0)
+  N_at_age[, 1L] <- initial_numbers(Rec[1L], q$init_Z, q$dev_log_N0)
   for (y in seq_len(Y)[-1L]) {
     N_at_age[1L, y] <- Rec[y]
     if (A > 2L) N_at_age[2:(A - 1L), y] <-
