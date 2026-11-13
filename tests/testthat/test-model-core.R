@@ -21,6 +21,22 @@ test_that("ALSCL conserves survivors and recovers constant F including the plus 
  expect_equal(r$B,apply(r$BLA,3,sum),tolerance=1e-12)
  expect_equal(r$CNL,apply(r$CNLA,c(1,3),sum),tolerance=1e-12)
  expect_equal(r$FA,matrix(.2,A-1,Y-1),tolerance=1e-10)
+ # Constant F gives F at age 0.2 for any cohort and any indexing. Let F vary
+ # by length bin and time step, so that F at age depends on each cohort's own
+ # length composition, and compare with the independent R dynamics.
+ p<-x$parameters;p$dev_log_F<-array(.6*sin(seq_len(L*Y)),c(L,Y))
+ o<-TMB::MakeADFun(x$data,p,DLL=x$info$dll_name,silent=TRUE);v<-o$report(o$par)
+ ref<-ref_alscl_dynamics(x$data,p);M<-x$data$M
+ expected<-matrix(0,A-1,Y-1)
+ for(a in seq_len(A-1)) for(y in seq_len(Y-1))
+  expected[a,y]<- -log(sum(ref$NLA[,a,y]*exp(-ref$ZL[,y]))/sum(ref$NLA[,a,y]))-M
+ expect_equal(v$FA,expected,tolerance=1e-10)
+ expect_equal(v$ZA,v$FA+M,tolerance=1e-12)
+ expect_gt(min(apply(v$FA,1,function(z) diff(range(z)))),.01)
+ expect_gt(min(apply(v$FA,2,function(z) diff(range(z)))),.01)
+ # Growth moves survivors between length bins without loss, so total mortality
+ # at age links numbers at age in consecutive time steps.
+ expect_equal(v[["NA"]][2:(A-1),2:Y],v[["NA"]][1:(A-2),1:(Y-1)]*exp(-v$ZA[1:(A-2),]),tolerance=1e-10)
  for(y in 2:Y) expect_equal(sum(r$NLA[,,y]),r$Rec[y]+sum(r$NLA[,,y-1]*exp(-r$ZL[,y-1])),tolerance=1e-10)
  # Compare AD with finite differences at ordinary, non-tail parameters.
  idx<-which(names(x$obj$par)%in%c("log_vbk","log_Linf","log_cv_len","log_cv_grow"))

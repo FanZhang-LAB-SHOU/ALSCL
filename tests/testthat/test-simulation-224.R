@@ -105,14 +105,38 @@ test_that("global-script batch arguments work on actual socket workers", {
     weight = as.matrix(f$data.wgt[-1]), mat = as.matrix(f$data.mat[-1]),
     q_surv_L50 = f$sel_L50, q_surv_L95 = f$sel_L95)
   for (i in 1:2) save(sim.data, file = file.path(folder, paste0("sim_rep", i)))
+  # The child process must load the package under test. An installed package
+  # is found through its own library. A source checkout (devtools::test(),
+  # testthat::test_local()) is on no library path, so the child would load
+  # whichever ALSCL is installed, or fail without one; install the checkout
+  # into a temporary library for the child instead.
+  loaded <- getNamespaceInfo(asNamespace("ALSCL"), "path")
+  if (file.exists(file.path(loaded, "Meta", "package.rds"))) {
+    child_library <- dirname(loaded)
+  } else {
+    child_library <- file.path(folder, "library")
+    dir.create(child_library)
+    install_log <- file.path(folder, "install.log")
+    status <- system2(file.path(R.home("bin"), "R"),
+      c("CMD", "INSTALL", "--no-docs", "--no-html", "--no-test-load",
+        shQuote(paste0("--library=", child_library)), shQuote(loaded)),
+      stdout = install_log, stderr = install_log)
+    expect_equal(status, 0L, info = paste(readLines(install_log, warn = FALSE), collapse = "\n"))
+    if (status != 0L) return(invisible(NULL))
+  }
   setup <- file.path(folder, "setup.rds")
-  saveRDS(list(paths = .libPaths(), folder = folder, parameters = x$parameters,
+  saveRDS(list(paths = unique(c(child_library, .libPaths())), folder = folder,
+    expected = normalizePath(file.path(child_library, "ALSCL"), winslash = "/"),
+    parameters = x$parameters,
     map = x$map, M = f$M, cache = getOption("ALSCL.tmb.cache")), setup)
   script <- file.path(folder, "batch.R")
   writeLines(c(
     "cfg <- readRDS(commandArgs(TRUE)[1])",
     ".libPaths(cfg$paths)",
     "library(ALSCL)",
+    "loaded <- normalizePath(getNamespaceInfo(asNamespace('ALSCL'), 'path'), winslash = '/')",
+    "if (!identical(loaded, cfg$expected))",
+    "  stop('The child process loaded ALSCL from ', loaded, ', not from ', cfg$expected)",
     "options(ALSCL.tmb.cache = cfg$cache, ALSCL.sd_cores = 1L)",
     "inpath <- cfg$folder; outpath <- file.path(cfg$folder, 'fits')",
     "p <- cfg$parameters; lower <- list(mean_log_R = 0); upper <- list(mean_log_R = 20)",
