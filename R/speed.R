@@ -46,14 +46,14 @@
 #'   at the same parameters. This is not a cross-version identity guarantee.
 #'   \code{"TMBad"} evaluates the Laplace approximation and its gradient
 #'   several times faster, but results are not identical: in the tests in
-#'   \file{docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
+#'   \url{https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
 #'   5 fixed effects were estimated and by up to 3e-8 when 10 were estimated.
 #'   A change takes effect at the next fit, which compiles the model once for
 #'   each library.
 #' @return The previous settings, invisibly, so that \code{options(old)}
 #'   restores them.
 #' @seealso \code{\link{alscl_speed_info}}; the user guide
-#'   \file{docs/SPEED_GUIDE.md}.
+#'   \url{https://fanzhang-lab-shou.github.io/ALSCL/articles/speed.html}.
 #' @examples
 #' old <- alscl_speed(sd_cores = 1)  # sequential standard errors
 #' alscl_speed(framework = "TMBad")  # faster, results not identical

@@ -193,6 +193,12 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
   settings <- lapply(origins, function(origin) .acl_hindcast_args(args, origin, model))
   names(settings) <- paste0("fold_", seq_along(settings))
   started <- proc.time()[["elapsed"]]
+  # Forecast scores use point estimates and the numerical screen only; skip
+  # the delta-method standard errors unless the fits are returned.
+  if (!save_fits && is.null(getOption("ALSCL.se_level"))) {
+    old_se <- options(ALSCL.se_level = "hessian")
+    on.exit(options(old_se), add = TRUE)
+  }
   results <- .acl_batch_apply(settings, model, ncores)
   names(results) <- names(settings)
   diagnostics <- .acl_batch_status(results)

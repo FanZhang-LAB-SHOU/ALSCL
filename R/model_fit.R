@@ -283,6 +283,7 @@
   F_structure <- match.arg(F_structure)
   start_spread <- .acl_start_spread(if (is.null(prepared$start_spread)) .15 else prepared$start_spread)
   .acl_check_fit_flags(polish, silent, output)
+  .acl_check_speed_options()
   control <- .acl_fit_control(control)
   train_times <- .acl_positive_integer(train_times, "train_times")
   ncores <- .acl_positive_integer(ncores, "ncores")

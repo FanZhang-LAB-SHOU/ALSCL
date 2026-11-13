@@ -352,6 +352,12 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   t_grand <- proc.time()
   # The full fit is one task of the batch, so no worker waits for it.
   ncores_use <- .acl_workers(min(ncores, nyear + 1L))
+  # Retrospective results use point estimates and the numerical screen only,
+  # so skip the delta-method standard errors of derived quantities.
+  if (is.null(getOption("ALSCL.se_level"))) {
+    old_se <- options(ALSCL.se_level = "hessian")
+    on.exit(options(old_se), add = TRUE)
+  }
   if (ncores_use == 1L) {
     progress(sprintf("Fitting full %s model...", toupper(model_type)))
     full <- .acl_retro_fit(0L, fit_args, model_type, silent, peel_step)
