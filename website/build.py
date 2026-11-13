@@ -9,6 +9,7 @@ import posixpath
 import re
 import shutil
 import subprocess
+import sys
 import urllib.parse
 
 import markdown
@@ -17,15 +18,18 @@ from pygments.formatters import HtmlFormatter
 from vendor import prepare_katex
 
 ROOT = Path(__file__).resolve().parents[1]
+# The manual builder owns the splitter that keeps hashes inside R strings as code.
+sys.path.insert(0, str(ROOT / 'scripts'))
+from build_manual import code_lines
 WEB = ROOT / 'website'
 REPO = 'https://github.com/FanZhang-LAB-SHOU/ALSCL'
 BASE = 'https://fanzhang-lab-shou.github.io/ALSCL/'
 LOGO_VERSION = hashlib.sha256((ROOT / 'ALSCLlogo.png').read_bytes()).hexdigest()[:12]
-VERSION = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(), re.M)[1]
-ARTICLES = json.loads((WEB / 'articles.json').read_text())
-ARTICLE_GROUPS = json.loads((WEB / 'article-groups.json').read_text())
+VERSION = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(encoding='utf-8'), re.M)[1]
+ARTICLES = json.loads((WEB / 'articles.json').read_text(encoding='utf-8'))
+ARTICLE_GROUPS = json.loads((WEB / 'article-groups.json').read_text(encoding='utf-8'))
 ARTICLES_BY_SLUG = {article['slug']: article for article in ARTICLES}
-CASES = json.loads((WEB / 'cases.json').read_text())
+CASES = json.loads((WEB / 'cases.json').read_text(encoding='utf-8'))
 UI = {
     'en': dict(reference='Reference', articles='Articles', start='Get started', news='Changelog',
                search='Search documentation', contents='On this page', source='View source',
@@ -80,12 +84,14 @@ def choose(label, lang):
     return label
 
 def code_language(code, lang):
+    """Keep one language of each bilingual comment; a hash inside an R string is code."""
     lines = []
-    for line in code.splitlines():
-        if '#' in line:
-            left, comment = line.split('#', 1)
-            line = left + '#' + choose(comment, lang)
-        lines.append(line)
+    for code_part, comment, _ in code_lines(code.splitlines()):
+        if comment is None:
+            lines.append(code_part)
+        else:
+            comment = choose(comment, lang).strip()
+            lines.append(code_part + ('# ' + comment if comment else '#'))
     return '\n'.join(lines)
 
 def rel(route, target):
@@ -261,15 +267,15 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
 <label class="sr-only" for="search-input">{ui['search']}</label><input id="search-input" type="search" autocomplete="off" placeholder="{'Function, argument or topic…' if lang=='en' else '函数、参数或主题…'}">
 <p id="search-status" aria-live="polite"></p><div id="search-results"></div></dialog>
 </body></html>'''
-    path = out / route; path.parent.mkdir(parents=True, exist_ok=True); path.write_text(document)
+    path = out / route; path.parent.mkdir(parents=True, exist_ok=True); path.write_text(document, encoding='utf-8')
 
 def help_sections(name, meta):
     path = WEB / '.build/api' / (name + '.Rd.html')
     if not path.exists():
         candidates = list((WEB / '.build/api').glob('*.html'))
-        path = next((p for p in candidates if re.search(r'\b'+re.escape(name)+r'\(', p.read_text())), None)
+        path = next((p for p in candidates if re.search(r'\b'+re.escape(name)+r'\(', p.read_text(encoding='utf-8'))), None)
     if not path: return {}
-    soup = BeautifulSoup(path.read_text(), 'html.parser')
+    soup = BeautifulSoup(path.read_text(encoding='utf-8'), 'html.parser')
     result = {}
     for heading in soup.select('h3'):
         nodes = []
@@ -280,9 +286,9 @@ def help_sections(name, meta):
     return result
 
 def load_reference():
-    pieces = re.split(r'<a id="([^"]+)"></a>', (ROOT / 'docs/FUNCTION_REFERENCE.md').read_text())
+    pieces = re.split(r'<a id="([^"]+)"></a>', (ROOT / 'docs/FUNCTION_REFERENCE.md').read_text(encoding='utf-8'))
     blocks = dict(zip(pieces[1::2],pieces[2::2]))
-    extracted = json.loads((WEB / '.build/api/functions.json').read_text())
+    extracted = json.loads((WEB / '.build/api/functions.json').read_text(encoding='utf-8'))
     reference = {}
     for entry in extracted:
         name = entry['name']; block = blocks[name]
@@ -337,7 +343,6 @@ def reference_body(name, entry, lang, supplements):
         for arg,row in entry['arguments'].items():
             default=entry['defaults'][arg] or ('…' if arg=='...' else ui['required'])
             explanation=row[3 if lang=='en' else 2]
-            if arg=='growth_step' and name=='run_alscl': explanation='Years per model step; default 1. Use 0.25 for quarterly data.' if lang=='en' else '每个模型时间步包含的年数，默认 1；季度数据显式设为 0.25。'
             body+=f'<tr><th scope="row"><code>{html.escape(arg)}</code></th><td><code>{html.escape(default)}</code></td><td>{md(explanation)}</td></tr>'
         body+='</tbody></table>'
     body += f'<h2 id="value">{ui["returns"]}</h2>'+md(extra['value'][lang])
@@ -365,7 +370,7 @@ def build(out):
     global FUNCTIONS, SEARCH
     subprocess.run(['Rscript',str(WEB/'export_reference.R')],cwd=ROOT,check=True)
     FUNCTIONS=load_reference(); SEARCH={'en':[],'zh':[]}
-    supplements=json.loads((WEB/'reference-notes.json').read_text())
+    supplements=json.loads((WEB/'reference-notes.json').read_text(encoding='utf-8'))
     if set(supplements)!=set(FUNCTIONS): raise ValueError('Each public function must have bilingual editorial notes.')
     grouped=[n for group in GROUPS for n in group[3]]
     assert len(grouped)==len(set(grouped)) and set(grouped)==set(FUNCTIONS)
@@ -377,18 +382,18 @@ def build(out):
     shutil.copy2(ROOT/'ALSCLlogo.png',out/'assets/ALSCLlogo.png')
     for folder in ['figures','data']:
         shutil.copytree(ROOT/'docs'/folder,out/'assets/manual'/folder,dirs_exist_ok=True)
-    (out/'assets/syntax.css').write_text(HtmlFormatter(style='friendly').get_style_defs('.highlight'))
+    (out/'assets/syntax.css').write_text(HtmlFormatter(style='friendly').get_style_defs('.highlight'), encoding='utf-8')
     for lang in ['en','zh']:
-        home=(WEB/'content'/lang/'index.md').read_text().replace('{{VERSION}}', VERSION)
+        home=(WEB/'content'/lang/'index.md').read_text(encoding='utf-8').replace('{{VERSION}}', VERSION)
         category_contents = ''
         for group in ARTICLE_GROUPS:
             category_contents += '- [' + group['title'][lang] + '](#guide-' + group['id'] + ')\n'
             category_contents += ''.join('    - [' + ARTICLES_BY_SLUG[slug]['title'][lang] + '](#basic-' + slug + ')\n' for slug in group['articles'])
         home = home.replace('<!-- ARTICLE_CONTENTS -->', category_contents)
         home_body = md(home).replace('<!-- ARTICLE_GUIDE -->', article_sections(lang, home=True))
-        render_page(out,'index.html',lang,'ALSCL',home_body,'DESCRIPTION','home')
+        render_page(out,'index.html',lang,'ALSCL',home_body,'website/content/'+lang+'/index.md','home')
         for i,article in enumerate(ARTICLES):
-            text=(WEB/'content'/lang/'articles'/(article['slug']+'.md')).read_text()
+            text=(WEB/'content'/lang/'articles'/(article['slug']+'.md')).read_text(encoding='utf-8')
             text=re.sub(r'^# [^\n]+\n','',text)
             body=md(text)
             previous=ARTICLES[i-1] if i else None; following=ARTICLES[i+1] if i+1<len(ARTICLES) else None
@@ -396,14 +401,16 @@ def build(out):
             if previous: body+=f'<a href="{previous["slug"]}.html">← {previous["title"][lang]}</a>'
             if following: body+=f'<a href="{following["slug"]}.html">{following["title"][lang]} →</a>'
             body+='</nav>'
-            render_page(out,'articles/'+article['slug']+'.html',lang,article['title'][lang],body,article['source'])
+            # 'View source' opens the file this page is rendered from, not a generated copy.
+            render_page(out,'articles/'+article['slug']+'.html',lang,article['title'][lang],body,
+                        'website/content/'+lang+'/articles/'+article['slug']+'.md')
         case_index = md('Worked cases organized around a concrete question, with inputs, steps and interpretation. For individual tools and basic usage, start with the [homepage Contents](../index.html#contents).' if lang=='en' else '围绕具体问题组织的案例，逐步说明输入、操作与结果解释。各项工具与基本使用方法见 [首页目录](../index.html#contents)。')
         for group in case_groups():
             cases = [case for case in CASES if case['group']==group]
             case_index += f'<h2 id="{group}">{html.escape(cases[0]["group_title"][lang])}</h2>'
             for case in cases:
                 case_index += f'<h3><a href="{case["slug"]}.html">{html.escape(case["title"][lang])}</a></h3><p>{html.escape(case["description"][lang])}</p>'
-                text = (WEB/'content'/lang/'articles'/(case['slug']+'.md')).read_text()
+                text = (WEB/'content'/lang/'articles'/(case['slug']+'.md')).read_text(encoding='utf-8')
                 body = md(re.sub(r'^# [^\n]+\n','',text))
                 render_page(out,'articles/'+case['slug']+'.html',lang,case['title'][lang],body,
                             'website/content/'+lang+'/articles/'+case['slug']+'.md','case')
@@ -418,13 +425,13 @@ def build(out):
             reference_index+='</tbody></table>'
         reference_index+='<h2 id="data">'+('Datasets' if lang=='en' else '内置数据')+'</h2>'+md('See [the worked YTF example](../articles/first-model.html) for `YTF_example`, the biological parameter list `YTF`, and the legacy tables `example_data`.' if lang=='en' else '参见 [YTF 完整示例](../articles/first-model.html)，了解 `YTF_example`、生物参数列表 `YTF` 以及旧版输入表 `example_data` 的区别。')
         render_page(out,'reference/index.html',lang,UI[lang]['functions'],reference_index,'NAMESPACE','reference')
-        render_page(out,'news/index.html',lang,UI[lang]['news'],md((WEB/'content'/lang/'news.md').read_text()),'NEWS.md')
+        render_page(out,'news/index.html',lang,UI[lang]['news'],md((WEB/'content'/lang/'news.md').read_text(encoding='utf-8')),'website/content/'+lang+'/news.md')
         render_page(out,'404.html',lang,'Page not found' if lang=='en' else '页面未找到',md('[Return to the home page](index.html) or use the search in the navigation bar.' if lang=='en' else '[返回首页](index.html)，或使用导航栏中的搜索功能。'))
-        (out/lang_route(lang,'search.json')).write_text(json.dumps(SEARCH[lang],ensure_ascii=False))
+        (out/lang_route(lang,'search.json')).write_text(json.dumps(SEARCH[lang],ensure_ascii=False), encoding='utf-8')
     (out/'.nojekyll').touch()
     urls=[BASE+p.relative_to(out).as_posix() for p in sorted(out.rglob('*.html')) if p.name!='404.html']
-    (out/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+u+'</loc></url>' for u in urls)+'</urlset>')
-    (out/'robots.txt').write_text('User-agent: *\nAllow: /\nSitemap: '+BASE+'sitemap.xml\n')
+    (out/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+u+'</loc></url>' for u in urls)+'</urlset>', encoding='utf-8')
+    (out/'robots.txt').write_text('User-agent: *\nAllow: /\nSitemap: '+BASE+'sitemap.xml\n', encoding='utf-8')
     print(f'Built {len(list(out.rglob("*.html")))} pages, {len(FUNCTIONS)} functions per language → {out}')
 
 if __name__=='__main__':

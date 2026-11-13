@@ -3,7 +3,8 @@
 Use --check to compare the generated text without writing files.
 """
 from pathlib import Path
-import re,json,posixpath,hashlib,argparse,sys
+import re,posixpath,hashlib,argparse,sys
+from build_manual import USER_GUIDE,DOCUMENTS
 root=Path(__file__).resolve().parents[1]; docs=root/'docs'; out=docs/'wiki'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--check', action='store_true', help='Fail on stale outputs without writing files.')
@@ -12,8 +13,8 @@ outputs={}
 def write_output(path,text):
  outputs[path]=text
 base='https://github.com/FanZhang-LAB-SHOU/ALSCL'
-version=re.search(r'^Version: (.+)$', (root/'DESCRIPTION').read_text(), re.M)[1]
-read=lambda name:(docs/name).read_text()
+version=re.search(r'^Version: (.+)$', (root/'DESCRIPTION').read_text(encoding='utf-8'), re.M)[1]
+read=lambda name:(docs/name).read_text(encoding='utf-8')
 g=read('USER_GUIDE.md')
 sections={}
 parts=re.split(r'<a id="([a-z]+)"></a>\n',g)
@@ -21,14 +22,6 @@ for i in range(1,len(parts),2):sections[parts[i]]=parts[i+1]
 # Strip just the chapter heading; leave code comments and subsections intact.
 def no_title(s):return re.sub(r'^#{1,2} [^\n]+\n','',s.strip(),count=1).strip()
 def linkify(s,source='docs/USER_GUIDE.md'):
- def target(m):
-  label,url=m.group(1),m.group(2)
-  if url.startswith(('http:','https:','mailto:','#')):return m.group(0)
-  path,sep,anchor=url.partition('#'); path=posixpath.normpath(posixpath.join(posixpath.dirname(source),path))
-  resolved=root/path
-  dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
-  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
-  return ']('+dest+('#'+anchor if sep else '')+')'
  return re.sub(r']\(([^\s()]*(?:\([^)]*\))?[^\s()]*)\)',lambda m: fix_url(m.group(1),source),s)
 def fix_url(url,source):
  if url.startswith(('http:','https:','mailto:','#')):return ']('+url+')'
@@ -37,16 +30,30 @@ def fix_url(url,source):
  dest=base+('/tree/main/' if resolved.is_dir() else '/blob/main/')+path
  if resolved.suffix.lower() in ('.png','.svg','.jpg'):dest+='?raw=true&v='+hashlib.sha256(resolved.read_bytes()).hexdigest()[:12]
  return ']('+dest+('#'+anchor if sep else '')+')'
-# Map the gallery's 44 numbered sections, keeping function anchors and executable code.
+# Map the gallery's numbered sections, keeping function anchors and executable code.
 gallery=read('PLOT_GALLERY.md'); marks=list(re.finditer(r'(?m)^## (\d+)\. ',gallery));blocks={}
 for i,m in enumerate(marks):
  block=gallery[m.start():marks[i+1].start() if i+1<len(marks) else len(gallery)]
  # trailing anchors belong to the next page and are redundant in the Wiki.
  block=re.sub(r'<a id="[^"]+"></a>\s*','',block)
  blocks[int(m[1])]=block
+# Gallery sections of each plot chapter. Sections 42 and 43 are the retrospective
+# figures, which chapter 11 already shows from USER_GUIDE.md. A gallery section
+# that is neither placed nor listed as omitted stops the build, so that a new
+# section cannot be dropped from the Wiki and the book without notice.
+gallery_chapters={'08-Population-Plots':list(range(1,19)),'09-Growth-and-Mortality':list(range(19,33)),
+ '10-Model-Comparisons':list(range(33,42))+[44]}
+gallery_omitted=[42,43]
+placed=[n for numbers in gallery_chapters.values() for n in numbers]+gallery_omitted
+if len(placed)!=len(set(placed)) or set(placed)!=set(blocks):
+ sys.exit('docs/PLOT_GALLERY.md sections and the Wiki chapters disagree. Not assigned in scripts/build_wiki.py: '
+  +(', '.join(map(str,sorted(set(blocks)-set(placed)))) or 'none')+'. Assigned but absent from the gallery: '
+  +(', '.join(map(str,sorted(set(placed)-set(blocks)))) or 'none')+'. Assigned twice: '
+  +(', '.join(map(str,sorted({n for n in placed if placed.count(n)>1}))) or 'none')+'.')
+def gallery_chapter(slug):return plot_context+'\n\n'.join(blocks[n] for n in gallery_chapters[slug])
 # Keep plot chapters independently runnable after the fitting chapter.
-plot_context='''先完成第 04 章的 YTF 拟合，得到 `a`、`b`、`x`、`inputs`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra/rb`。
-First complete chapter 04, define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 defines retrospective objects.
+plot_context='''先完成第 04 章的 YTF 拟合，得到输入列表 `x` 和拟合结果 `a`、`b`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra` 和 `rb`。
+First complete chapter 04 to create the input bundle `x` and the fits `a` and `b`. Define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 creates the retrospective objects `ra` and `rb`.
 
 ```r
 library(ggplot2)
@@ -63,9 +70,9 @@ chapters=[
 ('05-Simulation','模拟与批量实验 · Simulation',no_title(sections['simulation'])),
 ('06-Fitting','选择拟合设置 · Choose the fitting settings',no_title(sections['fitting'])),
 ('07-Diagnostics','判断拟合是否可用 · Judge whether a fit can be used',no_title(sections['diagnostics'])),
-('08-Population-Plots','调查与种群图 · Survey and population plots',plot_context+'\n\n'.join(blocks[i] for i in range(1,19))),
-('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',plot_context+'\n\n'.join(blocks[i] for i in range(19,33))),
-('10-Model-Comparisons','模型比较与真值 · Model comparisons',plot_context+'\n\n'.join(blocks[i] for i in list(range(33,42))+[44])),
+('08-Population-Plots','调查与种群图 · Survey and population plots',gallery_chapter('08-Population-Plots')),
+('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',gallery_chapter('09-Growth-and-Mortality')),
+('10-Model-Comparisons','模型比较与真值 · Model comparisons',gallery_chapter('10-Model-Comparisons')),
 ('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
@@ -74,6 +81,23 @@ chapters=[
 ('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md'))),
 ('17-Model-Validation','模型模拟与预测验证 · Model simulation and prediction checks',no_title(read('MODEL_VALIDATION.md'))),
 ('18-Worked-Cases','应用案例 · Worked cases',no_title(read('CASES.md')))]
+# Every generated page names the files to edit instead. The manuals carry the
+# banner of scripts/build_manual.py; it is replaced, because a Wiki page is one step further.
+article_pairs=lambda slugs:', '.join('website/content/{en,zh}/articles/'+slug+'.md' for slug in slugs)
+guide_source={anchor:article_pairs(slugs) for anchor,slugs in USER_GUIDE}
+document_source={name:article_pairs(slugs) for name,_,slugs in DOCUMENTS}
+edit_source={'01-Start':guide_source['start'],'02-Theory':guide_source['theory'],'03-Data-and-Excel':guide_source['excel'],
+ '04-Built-in-YTF':guide_source['builtin'],'05-Simulation':guide_source['simulation'],'06-Fitting':guide_source['fitting'],
+ '07-Diagnostics':guide_source['diagnostics'],'08-Population-Plots':'docs/PLOT_GALLERY.md',
+ '09-Growth-and-Mortality':'docs/PLOT_GALLERY.md','10-Model-Comparisons':'docs/PLOT_GALLERY.md',
+ '11-Retrospectives':guide_source['retrospective'],'12-Case-Studies':document_source['CASE_STUDIES.md'],
+ '13-Colors-and-Export':document_source['PLOT_STYLE.md'],'14-Function-Reference':'docs/FUNCTION_REFERENCE.md',
+ '15-Reproducibility':document_source['ADVANCED_WORKFLOWS.md'],'16-Assessment-Workflows':document_source['ASSESSMENT_WORKFLOWS.md'],
+ '17-Model-Validation':document_source['MODEL_VALIDATION.md'],'18-Worked-Cases':document_source['CASES.md']}
+assert set(edit_source)=={slug for slug,_,_ in chapters}
+manual_banner=re.compile(r'<!-- Generated by scripts/build_manual\.py.*?-->\n*')
+generated=lambda source:f'<!-- Generated by scripts/build_wiki.py. Edit {source}, then rebuild; do not edit this file. -->'
+chapters=[(slug,title,manual_banner.sub('',body)) for slug,title,body in chapters]
 # Internal anchor links inherited from a source refer to that source if not on this chapter.
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)
@@ -89,7 +113,7 @@ for i,(slug,title,body) in enumerate(chapters):
  if i:nav.insert(0,f'[← 上一章 · Previous]({base}/wiki/{chapters[i-1][0]})')
  if i<len(chapters)-1:nav.append(f'[下一章 · Next →]({base}/wiki/{chapters[i+1][0]})')
  navigation=' · '.join(nav)
- content=f'# {i+1:02d} {title}\n\n{navigation}\n\n**ALSCL {version} · 简体中文 / English**\n\n'+body+'\n\n---\n\n'+navigation+'\n'
+ content=f'# {i+1:02d} {title}\n\n{generated(edit_source[slug])}\n\n{navigation}\n\n**ALSCL {version} · 简体中文 / English**\n\n'+body+'\n\n---\n\n'+navigation+'\n'
  write_output(out/(slug+'.md'),content)
 contents='\n'.join(f'| {i+1:02d} | [{title}]({base}/wiki/{slug}) |' for i,(slug,title,_) in enumerate(chapters))
 home=f'''# ALSCL 完整使用手册 · Complete user manual
@@ -141,13 +165,12 @@ Use these task-based entry points without reading every chapter in numerical ord
 
 理论来源 / Reference: Zhang & Cadigan (2022), *Fish and Fisheries* 23,1121–1135. [Paper and Appendix S1](https://doi.org/10.1111/faf.12673).
 '''
-write_output(out/'Home.md',home)
+write_output(out/'Home.md',home.replace('\n\n','\n\n'+generated('scripts/build_wiki.py')+'\n\n',1))
 write_output(out/'_Sidebar.md','**ALSCL · 使用手册 / Manual**\n\n'+f'[首页与目录 · Home]({base}/wiki)\n\n'+'\n'.join(f'- [{i+1:02d} {title}]({base}/wiki/{slug})' for i,(slug,title,_) in enumerate(chapters))+f'\n\n[代码与数据 · Code and data]({base}/tree/main)\n')
 write_output(out/'_Footer.md',f'[目录 · Contents]({base}/wiki) · [代码 · Code]({base}/tree/main) · [问题反馈 · Issues]({base}/issues)\n\nALSCL {version} · 简体中文 / English · [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673)\n')
-book=[home.split('## 目录 · Contents')[0], '## 全书目录 · Book contents','']
+book=[home.split('## 目录 · Contents')[0].replace('\n\n','\n\n'+generated('the sources named at the top of each docs/wiki chapter')+'\n\n',1), '## 全书目录 · Book contents','']
 book+= [f'- [{i+1:02d} {title}](#chapter-{i+1:02d})' for i,(_,title,_) in enumerate(chapters)]
 for i,(slug,title,body) in enumerate(chapters):
- if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)
  body=linkify(body)
  body=re.sub(r']\(#(theory|builtin|simulation|excel|observations|fitting|diagnostics|plotting|retrospective)\)', lambda m: ']('+base+'/blob/main/docs/USER_GUIDE.md#'+m[1]+')', body)
