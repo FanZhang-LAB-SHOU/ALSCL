@@ -203,6 +203,8 @@ read_survey_excel <- function(file) {
 #' @param format Input format: "tables", "csv" or "excel".
 #' @param fit_args Named list of shared fitting arguments, including rec.age,
 #'   nage, M, sel_L50 and sel_L95. Keep the three tables outside this list.
+#'   The ALSCL-only arguments len_lower and len_upper are deprecated: they
+#'   cannot change a fit, ACL fits ignore them, and they will be removed.
 #' @param fit_config Optional named list with acl and/or alscl model-specific
 #'   settings. A model without an entry uses the shared fit_args only.
 #' @details Settings follow the ordinary bundle precedence: shared fit_args,
@@ -211,6 +213,13 @@ read_survey_excel <- function(file) {
 #'   Zeros remain zeros; the model's zero_action decides whether to exclude or
 #'   reject them. Missing survey periods must be explicit columns with complete
 #'   weights and maturity. This constructor never fills or reorders periods.
+#'
+#'   Only the three tables, fit_args and fit_config are fitting settings. A
+#'   fitting argument stored at the top level of the returned list, for example
+#'   `x$M <- 0.3` or `x$map <- ...`, is not used, and fitting warns about it.
+#'   Store such a setting in `x$fit_args` or `x$fit_config$acl` or
+#'   `x$fit_config$alscl`. A top-level `parameters` entry is not reported:
+#'   example bundles such as YTF_example keep their simulation settings there.
 #' @return A structured input list with the three tables, fit_args and optional
 #'   fit_config. It can be saved with saveRDS() and reused in either model.
 #' @examples
@@ -232,6 +241,9 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
       .acl_input_list(fit_config[[model]], paste0("fit_config$", model),
         setdiff(names(formals(if (model == "acl") run_acl else run_alscl)), table_names))
   }
+  bounds <- c("len_lower", "len_upper")
+  if (any(bounds %in% names(fit_args)) || any(bounds %in% names(fit_config$alscl)))
+    .acl_deprecated_bin_bounds("prepare_alscl_data")
   if (format == "tables") {
     if (!is.null(file)) stop("file is only used with format = 'csv' or 'excel'.", call. = FALSE)
     tables <- if (is.list(data.CatL) && !is.data.frame(data.CatL)) {
