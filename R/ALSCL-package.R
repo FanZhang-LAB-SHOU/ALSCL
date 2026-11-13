@@ -1,7 +1,7 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' @importFrom stats arima.sim nlminb pnorm rnorm var
+#' @importFrom stats arima.sim nlminb pnorm rnorm var fitted logLik nobs
 #' @importFrom scales pretty_breaks
 #' @importFrom utils head modifyList tail write.csv
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon geom_tile

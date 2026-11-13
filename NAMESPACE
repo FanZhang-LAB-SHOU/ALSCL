@@ -119,7 +119,10 @@ importFrom(ggplot2,
 importFrom(scales,pretty_breaks)
 importFrom(stats,
   arima.sim,
+  fitted,
+  logLik,
   nlminb,
+  nobs,
   pnorm,
   rnorm,
   var
