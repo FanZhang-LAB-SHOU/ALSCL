@@ -23,8 +23,6 @@
 .acl_batch_fit <- function(args, model) {
   started <- proc.time()[["elapsed"]]
   warnings <- character()
-  old <- options(ALSCL.sd_cores = 1L)
-  on.exit(options(old), add = TRUE)
   result <- tryCatch(withCallingHandlers({
     value <- do.call(if (model == "acl") run_acl else run_alscl, args)
     value$obj <- NULL
@@ -32,7 +30,7 @@
   }, warning = function(w) {
     warnings <<- c(warnings, conditionMessage(w))
     invokeRestart("muffleWarning")
-  }), error = function(e) list(converge = "FAILED", error = conditionMessage(e)))
+  }), error = function(e) .acl_fit_error(conditionMessage(e)))
   list(fit = result, elapsed = unname(proc.time()[["elapsed"]] - started),
        pid = Sys.getpid(), warnings = unique(warnings))
 }
@@ -90,10 +88,14 @@
 #'   These are descriptive summaries, not abundance-weighted mortality, and
 #'   subannual F remains per model step rather than being annualized.
 #' @param ... Common overrides of the fitting arguments, applied before scenarios.
-#' @return A list with named portable fits (including error records), resolved
+#' @return A list with named portable fits (including error records of class
+#'   "alscl_fit_error"), resolved
 #'   settings, status, batch elapsed time, estimates and model. The estimates
 #'   table retains failed numerical screens rather than silently discarding them.
-#' @details Inner fitting uses one worker and sequential standard errors. Each
+#' @details Each scenario is fitted by one worker. When scenarios run on
+#'   parallel workers (ncores greater than 1), each worker computes standard
+#'   errors on one core. With ncores = 1 the standard errors use the session
+#'   setting of alscl_speed(); the results are identical. Each
 #'   scenario runs the nstarts of the bundle or of the call; when neither sets
 #'   it, one start is used, the rule of hindcast_model() and retro_model().
 #'   Warnings are recorded in status.
