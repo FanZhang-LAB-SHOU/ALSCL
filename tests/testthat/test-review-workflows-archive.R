@@ -14,6 +14,19 @@ test_that("print and summary work when the stored inputs fail the current input 
   # A named NULL release of a parameter that the model has still changes the status.
   expect_identical(nrow(extract_parameters(old)), 15L)
 
+  # refit_model() drops the ignored entry, so the stored recipe still refits.
+  seen <- NULL
+  mock <- run_alscl
+  body(mock) <- quote({
+    seen <<- map
+    "refitted"
+  })
+  environment(mock) <- environment()
+  local_mocked_bindings(run_alscl = mock, .package = "ALSCL")
+  expect_identical(refit_model(old), "refitted")
+  expect_identical(seen, fit$recipe$args$map)
+  expect_false("t0" %in% names(seen))
+
   # Any other rejected input gives the estimated parameters and states the reason.
   broken <- fit
   broken$recipe$args$rec.age <- -1

@@ -132,21 +132,26 @@
 # version: an archive written by an earlier release can hold inputs that the
 # current checks reject. Return the condition in that case, never stop.
 .acl_recipe_inspection <- function(recipe) {
-  args <- recipe$args
+  args <- .acl_recipe_map_compat(recipe$args, recipe$model)
   # Optimizer controls do not affect the parameter map. Older archives can
   # contain controls accepted by an earlier fitting implementation.
   args$control <- list()
-  # A named NULL map entry only releases a default restriction. Release 2.4.3
-  # accepted such an entry for a parameter that the model does not have (for
-  # example t0 in a map shared by ACL and ALSCL) and ignored it.
-  if (is.list(args$map) && !is.data.frame(args$map) && length(args$map) &&
-      !is.null(names(args$map))) {
-    known <- c(names(create_parameters(model_type = recipe$model)$parameters),
-               "dev_log_R", "dev_log_F", "dev_log_N0")
-    ignored <- vapply(args$map, is.null, logical(1)) & !names(args$map) %in% known
-    args$map <- args$map[!ignored]
-  }
   tryCatch(inspect_parameters(args, model = recipe$model), error = function(e) e)
+}
+
+# A named NULL map entry only releases a default restriction. Release 2.4.3
+# accepted such an entry for a parameter that the model does not have (for
+# example t0 in a map shared by ACL and ALSCL) and ignored it. Drop these
+# entries from a stored recipe so that it describes the same fit as before.
+.acl_recipe_map_compat <- function(args, model) {
+  mapping <- args$map
+  if (!is.list(mapping) || is.data.frame(mapping) || !length(mapping) ||
+      is.null(names(mapping))) return(args)
+  known <- c(names(create_parameters(model_type = model)$parameters),
+             "dev_log_R", "dev_log_F", "dev_log_N0")
+  ignored <- vapply(mapping, is.null, logical(1)) & !names(mapping) %in% known
+  if (any(ignored)) args["map"] <- list(mapping[!ignored])
+  args
 }
 
 # One numerical-screen verdict for every consumer of a fitted result. A fit
@@ -680,14 +685,18 @@ read_assessment <- function(file) {
 #'   source revision, or ALSCL, TMB, Matrix or RcppEigen version produces a
 #'   warning before fitting. Missing metadata in older archives remains
 #'   supported. Platform and build information is retained for inspection;
-#'   it does not establish cross-platform numerical equality.
+#'   it does not establish cross-platform numerical equality. A stored map can
+#'   hold a named NULL entry for a parameter that the model does not have,
+#'   which release 2.4.3 accepted and ignored; such an entry is dropped before
+#'   refitting unless map is overridden.
 #' @export
 refit_model <- function(fit, ...) {
   recipe <- .acl_recipe(fit)
   .acl_check_implementation(recipe)
   overrides <- list(...)
   if (!"output" %in% names(overrides)) overrides$output <- FALSE
-  args <- .acl_bundle_args(recipe$args, recipe$model, overrides)
+  args <- .acl_bundle_args(.acl_recipe_map_compat(recipe$args, recipe$model),
+                           recipe$model, overrides)
   previous <- options(recipe$settings); on.exit(options(previous), add = TRUE)
   do.call(if (recipe$model == "acl") run_acl else run_alscl, args)
 }
