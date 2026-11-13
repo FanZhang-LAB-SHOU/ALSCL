@@ -32,7 +32,9 @@
   if (!is.finite(objective)) issues <- c(issues, "nonfinite or unavailable objective")
   if (!is.finite(gradient) || gradient >= 1e-3)
     issues <- c(issues, "large or nonfinite gradient")
-  if (!isTRUE(hessian)) issues <- c(issues, "Hessian unavailable or not positive definite")
+  # The stored diagnostics already name a Hessian or covariance failure.
+  if (!isTRUE(hessian) && !any(grepl("^Hessian", issues)))
+    issues <- c(issues, "Hessian unavailable or not positive definite")
   if (is.na(boundary)) issues <- c(issues, "optimizer boundary status unavailable")
   else if (boundary) issues <- c(issues, "optimizer-scale boundary")
   if (is.na(natural)) issues <- c(issues, "natural boundary status unavailable")

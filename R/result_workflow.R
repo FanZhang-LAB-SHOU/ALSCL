@@ -127,6 +127,35 @@
   stats::qnorm((1 + x) / 2)
 }
 
+# Inspect the stored recipe to list fixed and inactive parameters. Printing a
+# stored assessment must not depend on the input checks of the installed
+# version: an archive written by an earlier release can hold inputs that the
+# current checks reject. Return the condition in that case, never stop.
+.acl_recipe_inspection <- function(recipe) {
+  args <- recipe$args
+  # Optimizer controls do not affect the parameter map. Older archives can
+  # contain controls accepted by an earlier fitting implementation.
+  args$control <- list()
+  # A named NULL map entry only releases a default restriction. Release 2.4.3
+  # accepted such an entry for a parameter that the model does not have (for
+  # example t0 in a map shared by ACL and ALSCL) and ignored it.
+  if (is.list(args$map) && !is.data.frame(args$map) && length(args$map) &&
+      !is.null(names(args$map))) {
+    known <- c(names(create_parameters(model_type = recipe$model)$parameters),
+               "dev_log_R", "dev_log_F", "dev_log_N0")
+    ignored <- vapply(args$map, is.null, logical(1)) & !names(args$map) %in% known
+    args$map <- args$map[!ignored]
+  }
+  tryCatch(inspect_parameters(args, model = recipe$model), error = function(e) e)
+}
+
+# One numerical-screen verdict for every consumer of a fitted result. A fit
+# without stored diagnostics is screened from its stored fields, exactly as in
+# summary(), compare_models() and the batch status tables.
+.acl_numerical_ok <- function(fit) {
+  isTRUE(tryCatch(.acl_fit_status(fit)$numerical_ok, error = function(e) FALSE))
+}
+
 #' Extract fixed-effect parameter estimates on a specified scale
 #' @param fit A fitted ACL or ALSCL result. Older lists remain supported.
 #' @param scale Natural scale (default), or the internal optimizer scale.
@@ -143,8 +172,15 @@
 #'   not arithmetic averages over time. Parameter names retain their exact
 #'   internal spelling to make the transformation explicit. Unavailable or
 #'   invalid covariance entries produce NA uncertainty, never zero uncertainty.
-#'   numerical_ok records the existing fit screen; intervals from a fit failing
+#'   numerical_ok records the numerical screen of the fit, the same verdict
+#'   that summary() reports; intervals from a fit failing
 #'   this screen must not be interpreted as validated uncertainty.
+#'
+#'   Fixed and inactive parameters are listed by inspecting the stored recipe
+#'   with [inspect_parameters()]. An archive written by an earlier release can
+#'   hold inputs that the current input checks reject. In that case the table
+#'   contains the estimated parameters only, a warning gives the reason, and
+#'   the reason is stored in the "inspection_error" attribute.
 #' @examples
 #' \dontrun{
 #' fit <- run_acl(YTF_example, silent = TRUE)
@@ -154,28 +190,37 @@
 #' @export
 extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level = .95) {
   scale <- match.arg(scale); z <- .acl_conf_level(conf_level)
+  out <- .acl_extract_parameters(fit, scale, z)
+  problem <- attr(out, "inspection_error")
+  if (!is.null(problem))
+    warning("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
+            problem, "). The table contains the estimated parameters only.", call. = FALSE)
+  out
+}
+
+.acl_extract_parameters <- function(fit, scale, z) {
   par <- fit$opt$par
   if (!is.numeric(par) || !length(par) || is.null(names(par)) ||
       anyDuplicated(names(par)) || any(!is.finite(par)))
     stop("fit must contain finite, uniquely named fixed-effect estimates in opt$par.", call. = FALSE)
   values <- par; status <- rep("estimated", length(par)); names(status) <- names(par)
+  problem <- NULL
   if (!is.null(fit$recipe)) {
     recipe <- .acl_recipe(fit)
-    # Optimizer controls do not affect the parameter map. Older archives can
-    # contain controls accepted by an earlier fitting implementation.
-    inspection_args <- recipe$args
-    inspection_args$control <- list()
-    inspection <- inspect_parameters(inspection_args, model = recipe$model)
+    inspection <- .acl_recipe_inspection(recipe)
+    if (inherits(inspection, "error")) {
+      problem <- conditionMessage(inspection)
+      inspection <- NULL
+    }
     # Inspection is also authoritative for data-adjusted fixed starting values.
-    scalars <- inspection[inspection$kind == "fixed_effect", , drop = FALSE]
-    if (nrow(scalars)) {
-      fixed <- scalars[!scalars$parameter %in% names(par), , drop = FALSE]
-      if (nrow(fixed)) {
-        fixed_values <- vapply(fixed$start, function(v) as.numeric(v)[1L], numeric(1))
-        names(fixed_values) <- fixed$parameter
-        values <- c(values, fixed_values)
-        status <- c(status, stats::setNames(ifelse(fixed$status == "inactive", "inactive", "fixed"), fixed$parameter))
-      }
+    fixed <- if (is.null(inspection)) NULL else
+      inspection[inspection$kind == "fixed_effect" &
+                 !inspection$parameter %in% names(par), , drop = FALSE]
+    if (!is.null(fixed) && nrow(fixed)) {
+      fixed_values <- vapply(fixed$start, function(v) as.numeric(v)[1L], numeric(1))
+      names(fixed_values) <- fixed$parameter
+      values <- c(values, fixed_values)
+      status <- c(status, stats::setNames(ifelse(fixed$status == "inactive", "inactive", "fixed"), fixed$parameter))
     }
   }
   se <- rep(NA_real_, length(values)); names(se) <- names(values)
@@ -196,9 +241,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
       abs(.acl_parameter_transform(names(values)[i], values[i], derivative = TRUE)), numeric(1))
     lo <- transform(lo); hi <- transform(hi); values <- stats::setNames(transform(values), names(values))
   }
-  data.frame(parameter = names(values), scale = scale, status = unname(status),
+  out <- data.frame(parameter = names(values), scale = scale, status = unname(status),
     estimate = unname(values), std_error = unname(se), conf_low = unname(lo),
-    conf_high = unname(hi), numerical_ok = isTRUE(fit$diagnostics$numerical_ok), row.names = NULL)
+    conf_high = unname(hi), numerical_ok = .acl_numerical_ok(fit), row.names = NULL)
+  attr(out, "inspection_error") <- problem
+  out
 }
 
 #' Extract population estimates with explicit time and group coordinates
@@ -210,12 +257,26 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #' @param conf_level Nominal confidence level of approximate normal intervals
 #'   on the reported scale, strictly between zero and one.
 #' @return A long data frame with quantity, report_name, year, age, length,
-#'   length_label, estimate, std_error, conf_low, conf_high and numerical_ok.
-#'   Unavailable SEs remain NA. No averaging of F or annualization is performed.
+#'   length_label, estimate, std_error, conf_low, conf_high, numerical_ok and
+#'   extrapolated. Unavailable SEs remain NA. No averaging of F or annualization
+#'   is performed. numerical_ok is the numerical screen of the fit, the same
+#'   verdict that summary() reports. extrapolated is TRUE for rows that depend
+#'   on the fishing mortality rate (F) of the terminal period (see Details).
 #' @details Estimates come from report. Complete finite nonnegative standard errors
 #'   come from exact matching rows of est_std. Incomplete uncertainty for a quantity
 #'   remains NA. Normal intervals are not truncated at zero. FA uses source ages
 #'   and source periods of the cohort-survival interval, not destination labels.
+#'
+#'   No observation informs F in the terminal period. The survey index of a
+#'   period measures abundance at the start of that period, and abundance at
+#'   the start of a period depends on F in earlier periods only. The reported
+#'   terminal-period F (F and FL) is therefore the first-order autoregressive
+#'   (AR(1)) prediction from the preceding period, and its standard error
+#'   reflects the F process, not data. Terminal-period catch in number (CN,
+#'   CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
+#'   an abundance that the data inform and this predicted F. These rows have
+#'   extrapolated = TRUE. FA omits the terminal period, so none of its rows is
+#'   marked.
 #' @examples
 #' \dontrun{
 #' fit <- run_alscl(YTF_example, silent = TRUE)
@@ -232,7 +293,9 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
   age_time <- c("NA", "BA", "SBA", "CNA", "CBA", "F", "FA")
   length_time <- c("NL", "BL", "SBL", "CNL", "CBL", "FL")
   joint <- c("NLA", "BLA", "SBLA", "CNLA", "CBLA")
-  numerical_ok <- isTRUE(fit$diagnostics$numerical_ok)
+  numerical_ok <- .acl_numerical_ok(fit)
+  # Terminal-period F enters no likelihood term; catch depends on it.
+  terminal_F <- c("F", "FL", "CN", "CNA", "CNL", "CNLA", "CB", "CBA", "CBL", "CBLA")
   rows <- lapply(quantities, function(quantity) {
     nm <- if (quantity == "F" && is.null(fit$report[["F"]])) "FL" else quantity
     if (!nm %in% c(time_only, age_time, length_time, joint))
@@ -274,33 +337,56 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
     }
     data.frame(quantity = quantity, report_name = nm, coords, estimate = as.numeric(value),
       std_error = se, conf_low = as.numeric(value) - z * se,
-      conf_high = as.numeric(value) + z * se, numerical_ok = numerical_ok, row.names = NULL)
+      conf_high = as.numeric(value) + z * se, numerical_ok = numerical_ok,
+      extrapolated = nm %in% terminal_F & coords$year == max(years), row.names = NULL)
   })
   do.call(rbind, rows)
 }
 
 #' Summarize an assessment fit
 #' @param object A fitted alscl_fit object.
+#' @param digits Number of significant digits to print; NULL uses
+#'   getOption("digits").
 #' @param ... Reserved for future methods.
 #' @return summary returns a summary.alscl_fit list with numerical diagnostics and
 #'   a natural-scale parameter table. print returns its input invisibly.
+#' @details The numerical screen is computed once and is the same in the
+#'   diagnostics row and in the parameter table. A fit without stored
+#'   diagnostics is screened from its stored optimizer code, gradient, Hessian
+#'   status and boundary status. A stored assessment whose inputs do not pass
+#'   the current input checks is still summarized: the parameter table then
+#'   contains the estimated parameters only, and notes gives the reason.
 #' @export
 summary.alscl_fit <- function(object, ...) {
-  structure(list(model = object$model_type, periods = range(object$year),
+  years <- object$year
+  periods <- if (is.numeric(years) && any(is.finite(years)))
+    range(years[is.finite(years)]) else c(NA_real_, NA_real_)
+  parameters <- .acl_extract_parameters(object, "natural", .acl_conf_level(.95))
+  problem <- attr(parameters, "inspection_error")
+  attr(parameters, "inspection_error") <- NULL
+  diagnostics <- .acl_fit_status(object)
+  parameters$numerical_ok <- rep(isTRUE(diagnostics$numerical_ok), nrow(parameters))
+  out <- list(model = object$model_type, periods = periods,
     F_structure = object$F_structure, elapsed = object$elapsed,
-    diagnostics = .acl_fit_status(object), parameters = extract_parameters(object)),
-    class = "summary.alscl_fit")
+    diagnostics = diagnostics, parameters = parameters)
+  if (!is.null(problem))
+    out$notes <- paste0("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
+                        problem, ").")
+  structure(out, class = "summary.alscl_fit")
 }
 
 #' @rdname summary.alscl_fit
 #' @param x A fitted object or its summary.
 #' @export
-print.summary.alscl_fit <- function(x, ...) {
+print.summary.alscl_fit <- function(x, digits = NULL, ...) {
+  structure_label <- if (length(x$F_structure) == 1L && !is.na(x$F_structure))
+    x$F_structure else "not recorded"
   cat(x$model, "assessment; periods", paste(x$periods, collapse = " to "),
-      "; F structure:", x$F_structure, "\n")
-  print(x$diagnostics, row.names = FALSE)
+      "; F structure:", structure_label, "\n")
+  print(x$diagnostics, row.names = FALSE, digits = digits)
   cat("\nFixed-effect parameters (natural scale):\n")
-  print(x$parameters, row.names = FALSE)
+  print(x$parameters, row.names = FALSE, digits = digits)
+  if (length(x$notes)) cat("\nNote: ", paste(x$notes, collapse = " "), "\n", sep = "")
   invisible(x)
 }
 
@@ -311,18 +397,181 @@ print.alscl_fit <- function(x, ...) {
   invisible(x)
 }
 
+# A stored covariance is usable only when it is finite, has the dimension of
+# the free fixed effects and is positive definite. TMB fills the matrix with
+# NaN when the Hessian cannot be inverted.
+.acl_valid_vcov <- function(fit) {
+  cov <- fit$vcov; par <- fit$opt$par
+  if (!is.matrix(cov) || !is.numeric(cov) || !length(par) ||
+      !identical(dim(cov), c(length(par), length(par))) ||
+      any(!is.finite(cov)) || any(diag(cov) <= 0)) return(FALSE)
+  all(eigen((cov + t(cov)) / 2, symmetric = TRUE, only.values = TRUE)$values > 0)
+}
+
 #' Extract optimizer coefficients and covariance
 #' @param object A fitted alscl_fit object.
 #' @param ... Reserved for future methods.
 #' @return coef returns free fixed effects on the optimizer scale. vcov returns
 #'   their covariance matrix, or NULL when unavailable. Fixed and random effects
 #'   are excluded; use extract_parameters for natural-scale estimates.
+#' @details vcov returns NULL when no covariance was stored, and when the
+#'   stored matrix contains nonfinite values or is not positive definite, as
+#'   happens when the Hessian is singular. The stored matrix remains available
+#'   as object$vcov for inspection.
 #' @export
 coef.alscl_fit <- function(object, ...) object$opt$par
 
 #' @rdname coef.alscl_fit
 #' @export
-vcov.alscl_fit <- function(object, ...) object$vcov
+vcov.alscl_fit <- function(object, ...) {
+  if (.acl_valid_vcov(object)) object$vcov else NULL
+}
+
+#' Fitted values, log-likelihood and number of observations of an assessment fit
+#' @param object A fitted alscl_fit object, including a portable saved result.
+#' @param ... Reserved for future methods; unused arguments are rejected.
+#' @return fitted returns a data frame with year, length, length_label and
+#'   fitted_log, the fitted natural-log survey index, with rows ordered by
+#'   time and then length as in [residuals.alscl_fit()]. logLik returns an
+#'   object of class logLik: the negative of the minimized objective, with df
+#'   equal to the number of free fixed-effect parameters and nobs equal to the
+#'   number of observations in the likelihood. nobs returns that number of
+#'   observations.
+#' @details The objective is the Laplace approximation of the marginal
+#'   negative log-likelihood, with random effects integrated out. AIC() and
+#'   BIC() computed from logLik therefore equal the values reported by
+#'   [diagnostic_metrics()] and [compare_models()]. They count fixed effects
+#'   only and are valid for comparing fits to the same observations. Zero and
+#'   missing observations are excluded from the likelihood and from nobs.
+#' @examples
+#' \dontrun{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' head(fitted(fit))
+#' logLik(fit)
+#' AIC(fit)
+#' nobs(fit)
+#' }
+#' @export
+fitted.alscl_fit <- function(object, ...) {
+  if (length(list(...))) stop("Unused arguments to fitted().", call. = FALSE)
+  expected <- object$report$Elog_index
+  if (!is.numeric(expected) || !is.matrix(expected))
+    stop("The fit does not contain a fitted log index matrix (report$Elog_index).", call. = FALSE)
+  coordinates <- .acl_check_coordinates(object, nrow(expected), ncol(expected))
+  data.frame(year = rep(coordinates$year, each = nrow(expected)),
+    length = rep(coordinates$length, times = ncol(expected)),
+    length_label = rep(coordinates$labels, times = ncol(expected)),
+    fitted_log = as.vector(expected), stringsAsFactors = FALSE)
+}
+
+#' @rdname fitted.alscl_fit
+#' @export
+nobs.alscl_fit <- function(object, ...) {
+  if (length(list(...))) stop("Unused arguments to nobs().", call. = FALSE)
+  as.integer(sum(is.finite(.acl_observed_log(object))))
+}
+
+#' @rdname fitted.alscl_fit
+#' @export
+logLik.alscl_fit <- function(object, ...) {
+  if (length(list(...))) stop("Unused arguments to logLik().", call. = FALSE)
+  objective <- object$opt$objective
+  npar <- .acl_npar(object)
+  if (!is.numeric(objective) || length(objective) != 1L || !is.finite(objective) || is.na(npar))
+    stop("The fit must contain a finite objective (opt$objective) and finite free parameters (opt$par).",
+         call. = FALSE)
+  n <- tryCatch(nobs.alscl_fit(object), error = function(e) NA_integer_)
+  structure(-as.numeric(objective), df = npar, nobs = n, class = "logLik")
+}
+
+#' Methods for a failed fit record
+#'
+#' Batch functions such as [sim_model()] and [fit_scenarios()] keep a record of
+#' class alscl_fit_error for a fit that stopped with an error. The record is a
+#' list with converge = "FAILED" and the error message in error.
+#' @param object,x A failure record of class alscl_fit_error.
+#' @param ... Reserved for future methods.
+#' @return print and summary report the error message. summary returns a
+#'   summary.alscl_fit_error list with the error, the replicate number when
+#'   recorded, and a one-row diagnostics table with numerical_ok = FALSE.
+#'   coef and vcov return NULL, so a loop over a batch of results does not stop
+#'   at a failed fit.
+#' @export
+summary.alscl_fit_error <- function(object, ...) {
+  message_text <- .acl_error_text(object)
+  structure(list(error = message_text, iter = object$iter,
+    diagnostics = .acl_fit_status(unclass(object), error = message_text)),
+    class = "summary.alscl_fit_error")
+}
+
+.acl_error_text <- function(object) {
+  value <- object$error
+  if (is.character(value) && length(value) == 1L && !is.na(value) && nzchar(value)) value else
+    "no error message was recorded"
+}
+
+#' @rdname summary.alscl_fit_error
+#' @export
+print.summary.alscl_fit_error <- function(x, ...) {
+  cat("Failed fit", if (length(x$iter) == 1L) paste0("(replicate ", x$iter, ")"), "\n")
+  cat("Error:", x$error, "\n")
+  invisible(x)
+}
+
+#' @rdname summary.alscl_fit_error
+#' @export
+print.alscl_fit_error <- function(x, ...) {
+  print(summary(x), ...)
+  invisible(x)
+}
+
+#' @rdname summary.alscl_fit_error
+#' @export
+coef.alscl_fit_error <- function(object, ...) NULL
+
+#' @rdname summary.alscl_fit_error
+#' @export
+vcov.alscl_fit_error <- function(object, ...) NULL
+
+# An older fit can lack fields that later functions read from the result. Its
+# observations may exist only in the live TMB object, which an archive drops.
+# Fill absent fields from the supplied inputs; never replace a stored field.
+.acl_legacy_metadata <- function(fit, args) {
+  notes <- character()
+  prepared <- tryCatch(do.call(.acl_prepare_data,
+    args[intersect(names(formals(.acl_prepare_data)), names(args))]),
+    error = function(e) e)
+  if (inherits(prepared, "error"))
+    return(list(fit = fit, notes = paste0(
+      "Missing result fields were not filled from x: ", conditionMessage(prepared), ".")))
+  if (is.null(fit$observations)) {
+    supplied <- prepared$observations
+    positive <- is.finite(supplied) & supplied > 0
+    fitted_log <- tryCatch(.acl_observed_log(fit), error = function(e) NULL)
+    if (!is.null(fitted_log)) {
+      used <- is.finite(fitted_log)
+      if (!identical(dim(fitted_log), dim(supplied)) || !identical(unname(used), unname(positive)) ||
+          any(abs(fitted_log[used] - log(supplied[positive])) > 1e-8))
+        stop("x$data.CatL does not match the observations in the fitted TMB object. ",
+             "Supply the survey table that was used for this fit.", call. = FALSE)
+      notes <- c(notes, "Observations were copied from x after they matched the data in the fitted TMB object.")
+    } else {
+      notes <- c(notes, "Observations were copied from x and could not be compared with the data used in the fit.")
+    }
+    fit$observations <- supplied
+  }
+  fill <- list(year = prepared$year, len_mid = prepared$bins$mid,
+    len_label = prepared$bins$labels, len_border = prepared$bins$border,
+    len_lower = prepared$bins$lower, len_upper = prepared$bins$upper,
+    growth_step = prepared$growth_step, age = prepared$data$age,
+    F_structure = match.arg(args$F_structure %||% "group_year", c("group_year", "year")))
+  absent <- names(fill)[vapply(names(fill), function(nm) is.null(fit[[nm]]), logical(1))]
+  if (length(absent)) {
+    fit[absent] <- fill[absent]
+    notes <- c(notes, paste0("Fields taken from x: ", paste(absent, collapse = ", "), "."))
+  }
+  list(fit = fit, notes = notes)
+}
 
 #' Save a portable assessment and its complete refit recipe
 #' @param fit A fitted result.
@@ -339,7 +588,14 @@ vcov.alscl_fit <- function(object, ...) object$vcov
 #'   the working tree was clean. R source-file hashes are also recorded when
 #'   available in a source tree; ordinary installed packages need not retain
 #'   those files. Missing source metadata remains unavailable, and no
-#'   source revision is inferred for an older fit supplied with x.
+#'   source revision is inferred for an older fit supplied with x. For such a
+#'   fit, result fields that it lacks (observations, time labels, ages, length
+#'   bins, time step and F structure) are filled from x, so that residuals,
+#'   estimates and plots remain available after the live TMB object is
+#'   dropped. Observations are compared with the data in the live TMB object
+#'   when it is present, and a mismatch is an error. recipe$provenance lists
+#'   the fields that came from x. The file uses R serialization version 3,
+#'   which records the character encoding of length labels and column names.
 #'   Concurrent saves to the same path use a temporary lock directory during
 #'   the final rename. With overwrite = FALSE, only the first save can publish
 #'   the archive. If an interrupted process leaves a lock, confirm that the
@@ -367,18 +623,22 @@ save_assessment <- function(fit, file, x = NULL, overwrite = FALSE) {
     if (!model %in% c("acl", "alscl")) stop("An explicit ACL or ALSCL model_type is required.", call. = FALSE)
     args <- .acl_resolved_args(x, model)
     unknown <- .acl_validate_survey_fit(fit, .acl_survey_data(args$data.CatL))
-    fit <- .acl_attach_recipe(fit, model, args)
+    filled <- .acl_legacy_metadata(fit, args)
+    fit <- .acl_attach_recipe(filled$fit, model, args)
     # Current source metadata cannot establish which implementation fitted legacy results.
     fit$recipe$implementation <- NULL
-    fit$recipe$provenance <- paste("User-supplied recipe for legacy fit; original biology, weights, maturity, maps, bounds, starts, software and computational settings unverified.",
-      if (length(unknown)) paste("Observation checks incomplete:", paste(unknown, collapse = "; ")) else "Stored observations match supplied observations.")
+    fit$recipe$provenance <- paste(c("User-supplied recipe for legacy fit; original biology, weights, maturity, maps, bounds, starts, software and computational settings unverified.",
+      if (length(unknown)) paste0("Observation checks incomplete: ", paste(unknown, collapse = "; "), ".") else "Stored observations match supplied observations.",
+      filled$notes), collapse = " ")
   }
   .acl_recipe(fit)
   portable <- fit; portable$obj <- NULL
   class(portable) <- c("alscl_fit", "list")
   temporary <- tempfile(".alscl-archive-", tmpdir = dirname(file))
   on.exit(unlink(temporary, expand = FALSE), add = TRUE)
-  saveRDS(list(format = "ALSCL assessment", schema_version = 1L, fit = portable), temporary, version = 2)
+  # Serialization version 3 records the native encoding of the writing session,
+  # so labels with non-ASCII characters are converted when read elsewhere.
+  saveRDS(list(format = "ALSCL assessment", schema_version = 1L, fit = portable), temporary, version = 3)
   # Two writers may both have observed an absent archive before serialization.
   # Acquire an exclusive directory only for the existence check and rename.
   lock <- file.path(dirname(file), paste0(".", basename(file), ".alscl-lock"))
