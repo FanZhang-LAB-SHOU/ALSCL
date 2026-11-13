@@ -60,13 +60,20 @@ utils::globalVariables("survey_run")
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically. The
+#'   automatic number of breaks decreases as the number of facet columns
+#'   increases, and tick labels that would overprint are omitted.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the plot.
 #' @details Predicted and observed matrices are aligned by position with fitted
 #'   year and length metadata, independently of optional matrix dimnames. Missing
 #'   and zero observations leave gaps. An isolated observation is drawn as a point.
+#'   With \code{facet_by = "year"} the panels have no legend. A caption states
+#'   which line is fitted and which is observed, from the line widths or, for
+#'   equal widths, the transparencies in use. No caption is drawn when both are equal.
 #'   Dimensions and metadata must agree;
 #'   predictions must be finite, including after an exponential transformation.
 #'
@@ -145,11 +152,12 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
 
     # Plot Elog_index over the years using ggplot2
     p <- ggplot2::ggplot() +
-      ggplot2::geom_point(logN_at_len_long, mapping=aes(x = Year, y = Count), na.rm = TRUE, size= point_size, color= point_color,shape=point_shape) +
-      ggplot2::geom_line(Elog_index_long,  mapping=aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
+      ggplot2::geom_point(logN_at_len_long, mapping = ggplot2::aes(x = Year, y = Count), na.rm = TRUE, size= point_size, color= point_color,shape=point_shape) +
+      ggplot2::geom_line(Elog_index_long,  mapping = ggplot2::aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_by_length")) +
-      .acl_scale_x(x_breaks, n_breaks = 10) +
+      .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(nrow(Elog_index), facet_ncol),
+                   values = Year, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
 
@@ -177,34 +185,39 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
     df2$len_mid <- len_mid
 
     # Reshape the data from wide to long format
-    df_long1 <- df1 %>%
-      tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
+    df_long1 <- tidyr::pivot_longer(df1, -len_mid, names_to = "year", values_to = "Abundance")
 
-    year_levels <- .acl_time_labels(year)
+    year_levels <- .acl_time_labels(year, step = model_result$growth_step)
     df_long1$year <- factor(year_levels[match(as.numeric(df_long1$year), year)], levels = year_levels)
 
-    df_long2 <- df2 %>%
-      tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
+    df_long2 <- tidyr::pivot_longer(df2, -len_mid, names_to = "year", values_to = "Abundance")
 
     df_long2$year <- factor(year_levels[match(as.numeric(df_long2$year), year)], levels = year_levels)
 
     runs <- .acl_observed_plot_runs(df_long2, "year", "len_mid", "Abundance")
     auto_title <- .acl_title("CatL_by_year")
+    # The panels have no legend, so the caption is the key. It follows the
+    # line widths and transparencies in use.
+    caption <- if (line_size1 > line_size2) "Thicker line: fitted; thinner line: observed" else
+      if (line_size1 < line_size2) "Thinner line: fitted; thicker line: observed" else
+        if (line_alpha1 > line_alpha2) "Opaque line: fitted; more transparent line: observed" else
+          if (line_alpha1 < line_alpha2) "More transparent line: fitted; opaque line: observed" else NULL
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
-        mapping = aes(x = len_mid, y = Abundance, group = survey_run),
+        mapping = ggplot2::aes(x = len_mid, y = Abundance, group = survey_run),
         linewidth = line_size2, color = line_color2, linetype = line_type2, alpha = line_alpha2) +
-      ggplot2::geom_line(data=df_long1, mapping=aes(x = len_mid, y = Abundance),linewidth=line_size1,color=line_color1,linetype=line_type1,alpha=line_alpha1) +
+      ggplot2::geom_line(data=df_long1, mapping = ggplot2::aes(x = len_mid, y = Abundance),linewidth=line_size1,color=line_color1,linetype=line_type1,alpha=line_alpha1) +
       ggplot2::facet_wrap(~year, scales = facet_scales,ncol=facet_ncol) +
-      ggplot2::labs(caption = "Thicker line: estimated; thinner line: observed (default widths)", x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = if (!is.null(title)) title else auto_title) +
-      .acl_scale_x(x_breaks, n_breaks = 10) +
+      ggplot2::labs(caption = caption, x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = if (!is.null(title)) title else auto_title) +
+      .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, budget = 20),
+                   values = len_mid, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
 
     if (any(runs$run_size == 1L)) {
       p <- p + ggplot2::geom_point(data = runs[runs$run_size == 1L, , drop = FALSE],
-        mapping = aes(x = len_mid, y = Abundance), size = point_size, shape = point_shape,
+        mapping = ggplot2::aes(x = len_mid, y = Abundance), size = point_size, shape = point_shape,
         color = line_color2, fill = line_color2, alpha = line_alpha2)
     }
     if (return_data) {
