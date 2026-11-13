@@ -38,6 +38,17 @@
 #'       rerun sim_cal(params) after changing biological inputs.}
 #'   }
 #'
+#' @examples
+#' pa <- initialize_params(species = "flatfish")
+#' bio <- sim_cal(pa)
+#' bio$model_type
+#'
+#' # Length at age
+#' round(bio$LatA, 1)
+#'
+#' # Probability of length given age: one row per age, and each row sums to one
+#' dim(bio$pla)
+#' range(rowSums(bio$pla))
 #' @export
 sim_cal <- function(params) {
 
@@ -113,6 +124,12 @@ sim_cal <- function(params) {
     asc_idx  <- which(len_mid <= mid_len)
     desc_idx <- which(len_mid > mid_len)
 
+    step_at_break <- abs(mat_func(L50_asc, L95_asc, mid_len) - mat_func(L50_desc, L95_desc, mid_len))
+    if (step_at_break > 0.05)
+      warning(sprintf(paste0("Dome selectivity is discontinuous: the ascending and descending limbs differ by %.2f ",
+        "where they join (length %.4g). Move sel_L95_asc and sel_L95_desc further apart so that both limbs are near 1 there."),
+        step_at_break, mid_len), call. = FALSE)
+
     sel <- numeric(nlen)
     sel[asc_idx]  <- mat_func(L50_asc, L95_asc, len_mid[asc_idx])
     sel[desc_idx] <- mat_func(L50_desc, L95_desc, len_mid[desc_idx])
@@ -126,7 +143,12 @@ sim_cal <- function(params) {
   # Uses decreasing logistic growth increment model from M6 (tuna)
   # =========================================================================
   Gij <- NULL
-  if (model_type == "length_based") {
+  structure <- .acl_structure(params$structure, if (model_type == "length_based") "ALSCL" else "ACL")$choices
+  if (model_type == "length_based" && (structure$growth_increment != "logistic" ||
+                                       structure$growth_transition != "midpoint")) {
+    Gij <- .acl_growth_matrix(len_mid, len_upper[-nlen], Linf, vbk, cv_inc, growth_step,
+      structure$growth_increment, structure$growth_transition)
+  } else if (model_type == "length_based") {
     Gij <- matrix(NA, nrow = nlen, ncol = nlen)
 
     for (j in 1:nlen) {
@@ -181,6 +203,71 @@ sim_cal <- function(params) {
   result
 }
 
+# Expected growth increment over one time step for fish of length x; the R
+# counterpart of growth_increment_mean() in inst/extdata/model_math.hpp.
+.acl_growth_increment <- function(x, Linf, vbk, growth_step, increment = "logistic") {
+  if (increment == "von_bertalanffy") {
+    scale <- .01 * Linf
+    u <- (Linf - x) / scale
+    remaining <- ifelse(u > 30, Linf - x, scale * log(1 + exp(pmin(u, 30))))
+    return((1 - exp(-vbk * growth_step)) * remaining)
+  }
+  growth_step * (1 - exp(-vbk)) * Linf /
+    (1 + exp(-log(19) * (x - .5 * Linf) / (.05 * Linf - .5 * Linf)))
+}
+
+# Mean of the standard normal CDF over the interval between u_hi and u_lo; the
+# R counterpart of mean_pnorm() in inst/extdata/model_math.hpp.
+.acl_mean_pnorm <- function(u_lo, u_hi) {
+  H <- function(u) u * stats::pnorm(u) + stats::dnorm(u)
+  du <- u_lo - u_hi
+  short <- abs(du) < 1e-8
+  ifelse(short, stats::pnorm(.5 * (u_lo + u_hi)), (H(u_lo) - H(u_hi)) / ifelse(short, 1, du))
+}
+
+# Growth transition matrix G[i, j]: probability of moving from length bin j to
+# bin i in one time step; the R counterpart of growth_matrix() in
+# inst/extdata/model_math.hpp. len_border holds the interior borders.
+# transition "midpoint": every fish starts at the bin midpoint.
+# transition "bin": starting lengths are uniform within the bin, which is cut
+# into eight pieces; within a piece the expected end length is linear in the
+# starting length and the increment SD is constant, so the probability of
+# ending below a border has a closed form.
+.acl_growth_matrix <- function(len_mid, len_border, Linf, vbk, cv_inc, growth_step,
+                               increment = "logistic", transition = "midpoint") {
+  L <- length(len_mid); K <- 8L
+  sd_floor <- 1e-12 * Linf
+  mean_inc <- function(x) .acl_growth_increment(x, Linf, vbk, growth_step, increment)
+  G <- matrix(0, L, L)
+  G[L, L] <- 1
+  for (j in seq_len(L - 1L)) {
+    if (transition != "bin") {
+      x <- len_mid[j]
+      m <- mean_inc(x); s <- m * cv_inc + sd_floor
+      z <- (len_border - x - m) / s
+      for (i in j:L) G[i, j] <- if (i == L) stats::pnorm(-z[L - 1L]) else if (i == j) stats::pnorm(z[i]) else
+        max(0, if (z[i - 1L] > 0) stats::pnorm(-z[i - 1L]) - stats::pnorm(-z[i]) else stats::pnorm(z[i]) - stats::pnorm(z[i - 1L]))
+    } else {
+      lower <- if (j == 1L) 2 * len_mid[1L] - len_border[1L] else len_border[j - 1L]
+      upper <- len_border[j]
+      below <- above <- numeric(L - 1L)
+      for (k in seq_len(K)) {
+        a <- lower + (upper - lower) * (k - 1L) / K
+        b <- lower + (upper - lower) * k / K
+        end_a <- a + mean_inc(a); end_b <- b + mean_inc(b)
+        s <- cv_inc * mean_inc(.5 * (a + b)) + sd_floor
+        u_a <- (len_border - end_a) / s; u_b <- (len_border - end_b) / s
+        below <- below + .acl_mean_pnorm(u_a, u_b) / K
+        above <- above + .acl_mean_pnorm(-u_b, -u_a) / K
+      }
+      for (i in j:L) G[i, j] <- if (i == L) above[L - 1L] else if (i == j) below[i] else
+        max(0, if (below[i - 1L] > .5) above[i - 1L] - above[i] else below[i] - below[i - 1L])
+    }
+    G[, j] <- G[, j] / sum(G[, j])
+  }
+  G
+}
+
 # Compute each bin mass from its nearer tail so small positive right-tail
 # probabilities are retained even when both lower-tail CDFs round to one.
 .acl_normal_interval <- function(lower, upper, mean, sd) {
@@ -224,7 +311,12 @@ sim_cal <- function(params) {
            call. = FALSE)
     fields <- c(fields, limbs)
   }
-  c(list(model_type = model_type, nage = nage, rec.age = rec_age, ages = ages,
+  inputs <- c(list(model_type = model_type, nage = nage, rec.age = rec_age, ages = ages,
     growth_step = step, len_mid = bins$mid, len_border = c(-Inf, bins$border, Inf),
     sel_type = unname(sel_type)), params[fields])
+  # Growth structures other than the published one determine the growth matrix.
+  structure <- .acl_structure(params$structure, if (model_type == "length_based") "ALSCL" else "ACL")$choices
+  growth <- structure[intersect(c("growth_increment", "growth_transition"), names(structure))]
+  growth <- growth[!vapply(names(growth), function(nm) growth[[nm]] == .acl_structure_choices[[nm]][1L], logical(1))]
+  c(inputs, growth)
 }

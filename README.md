@@ -72,7 +72,7 @@ Survey fit by length bin, residuals by year, and observed and fitted length comp
 | Fishing mortality | Estimated by age | Estimated by length; F at age is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 
-Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
+Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. Survey catchability has a fixed maximum of 1, so abundance, biomass and recruitment are on the scale of the survey index: they are absolute only when the index is an absolute abundance estimate. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
 
 ## Documentation
 
@@ -86,7 +86,7 @@ Every page states its purpose, the code to run, what to expect and what to do wh
 
 | Entry | Contents |
 |---|---|
-| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 65 functions |
+| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 66 functions |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Single-page book](docs/BOOK.md) | The same content with Chinese and English side by side, 18 chapters |
 | [User guide](docs/USER_GUIDE.md) | From installation to retrospectives |
 | [Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [Model validation](docs/MODEL_VALIDATION.md) · [Worked cases](docs/CASES.md) | Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |

@@ -4,9 +4,34 @@
 \alias{.acl_scale_x}
 \title{Build x-axis scale with breaks and expand}
 \usage{
-.acl_scale_x(x_breaks = NULL, n_breaks = 10)
+.acl_scale_x(
+  x_breaks = NULL,
+  n_breaks = 10,
+  values = NULL,
+  auto_breaks = NULL,
+  labels = ggplot2::waiver(),
+  check_overlap = FALSE
+)
+}
+\arguments{
+\item{x_breaks}{Breaks given in the plot call, or NULL.}
+
+\item{n_breaks}{Target number of automatic breaks.}
+
+\item{values}{Numeric x coordinates of the plot, or NULL when unknown.}
+
+\item{auto_breaks}{Numeric vector of automatic breaks, or NULL.}
+
+\item{labels}{Labels or labelling function passed to the scale.}
+
+\item{check_overlap}{Logical. Omit automatic tick labels that would
+overprint in narrow facets.}
 }
 \description{
-Build x-axis scale with breaks and expand
+Explicit breaks from the plot call are always used. The global x_breaks
+setting is used only when at least one of its values lies within the range
+of \code{values}, the x coordinates of the plot; one global setting cannot
+fit time, age and length axes at once. Otherwise the breaks are
+\code{auto_breaks}, or pretty breaks when that is NULL.
 }
 \keyword{internal}

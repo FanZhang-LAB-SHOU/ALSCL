@@ -30,16 +30,20 @@ plot_compare_CatL(
 
 \item{model2}{Second model result (alternative).}
 
-\item{data.CatL}{Catch-at-length data frame.}
+\item{data.CatL}{Survey index table used for both fits: a length-bin column
+followed by one column of survey indices per time step.}
 
 \item{years}{Numeric vector of years to show. Default NULL = all years.
 Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -84,16 +88,25 @@ If survey is unset, a legacy custom abundance label is retained; otherwise
 the default is Survey index. The plotted predictions are exp(Elog_index).
 }
 \examples{
-\dontrun{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
 # All years (default)
-plot_compare_CatL(result_acl, result_alscl, data.CatL)
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL)
 
 # Select specific years
-plot_compare_CatL(result_acl, result_alscl, data.CatL,
-  years = c(1991, 1995, 2000, 2005, 2011))
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
+  years = c(2010, 2015, 2019))
 
 # Customize layout
-plot_compare_CatL(result_acl, result_alscl, data.CatL,
+plot_compare_CatL(fit_acl, fit_alscl, x$data.CatL,
   facet_ncol = 5, obs_color = "black", point_size = 2)
 }
 }

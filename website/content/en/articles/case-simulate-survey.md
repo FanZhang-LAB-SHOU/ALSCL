@@ -1,6 +1,6 @@
 # How do I simulate survey data?
 
-On this page you generate survey tables from a known population, fit ACL and ALSCL to one replicate and compare the estimates with the truth. You need the package installed ([Install ALSCL](getting-started.html)) and a copy of the repository, with R running from its root because step 2 sources `scripts/simulation_workflow.R`. At the end you have the tables, one replicate with its truth, two fits and a figure of their estimates against the truth. The figures show the flatfish preset, replicate 4, drawn by [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R).
+On this page you generate survey tables from a known population, fit ACL and ALSCL to one replicate and compare the estimates with the truth. You need the package installed ([Install ALSCL](getting-started.html)). At the end you have the tables, one replicate with its truth, two fits and a figure of their estimates against the truth. The figures show the flatfish preset, replicate 4, drawn by [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R).
 
 <h2 id="quick">1. Create annual input tables with the quick simulator</h2>
 
@@ -21,7 +21,6 @@ str(quick, max.level = 1)
 <h2 id="replicate">2. Generate one replicate with the full operating model</h2>
 
 ```r
-source("scripts/simulation_workflow.R", encoding = "UTF-8")
 pa <- initialize_params(species = "flatfish", first.year = 2000,
                         observation_error = "independent")
 bio <- sim_cal(pa)

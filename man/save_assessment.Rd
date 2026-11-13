@@ -31,7 +31,14 @@ recorded source files; a checkout revision alone does not establish that
 the working tree was clean. R source-file hashes are also recorded when
 available in a source tree; ordinary installed packages need not retain
 those files. Missing source metadata remains unavailable, and no
-source revision is inferred for an older fit supplied with x.
+source revision is inferred for an older fit supplied with x. For such a
+fit, result fields that it lacks (observations, time labels, ages, length
+bins, time step and F structure) are filled from x, so that residuals,
+estimates and plots remain available after the live TMB object is
+dropped. Observations are compared with the data in the live TMB object
+when it is present, and a mismatch is an error. recipe$provenance lists
+the fields that came from x. The file uses R serialization version 3,
+which records the character encoding of length labels and column names.
 Concurrent saves to the same path use a temporary lock directory during
 the final rename. With overwrite = FALSE, only the first save can publish
 the archive. If an interrupted process leaves a lock, confirm that the
@@ -41,11 +48,12 @@ TMB pointer. refit_model rebuilds a live model; cross-version numerical
 equality is not promised. Only read archives from trusted sources.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 path <- tempfile(fileext = ".rds")
 save_assessment(fit, path)
 saved <- read_assessment(path)
 summary(saved)
+unlink(path)
 }
 }

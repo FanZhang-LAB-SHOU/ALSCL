@@ -37,6 +37,8 @@
       stop(invalid_message, call. = FALSE)
     original <- value
     if (is.factor(value)) value <- as.character(value)
+    # TRUE/FALSE are not observations; only an all-missing logical column is accepted.
+    if (is.logical(value) && any(!is.na(value))) stop(invalid_message, call. = FALSE)
     if (!is.numeric(value) && !is.logical(value)) value <- as.character(value)
     value <- suppressWarnings(as.numeric(value))
     if (any(is.na(value) & !is.na(original)))
@@ -60,6 +62,10 @@
   if (all(single)) {
     mid <- as.numeric(labels)
     edges <- (mid[-n] + mid[-1L]) / 2
+    if (is.null(len_border) && n > 2L && diff(range(diff(mid))) > 1e-8 * max(abs(mid)))
+      warning("Length labels are single numbers with unequal spacing, and len_border is not supplied. ",
+              "Boundaries were set halfway between adjacent labels, which is correct only for equal-width bins. ",
+              "Supply len_border, or use interval labels such as \"20-25\".", call. = FALSE)
     lower <- c(-Inf, edges); upper <- c(edges, Inf)
   } else {
     for (i in seq_len(n)) {
@@ -108,7 +114,8 @@
 .acl_prepare_data <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M,
                               sel_L50, sel_L95, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
-                              len_upper = NULL, zero_action = c("missing", "error")) {
+                              len_upper = NULL, zero_action = c("missing", "error"),
+                              structure = list(), start_spread = 0.15, t0_lower = 0) {
   zero_action <- match.arg(zero_action)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
@@ -146,7 +153,96 @@
   list(data = list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
                   len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
                   Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
-       bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl)
+       bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
+       structure = structure, start_spread = start_spread, t0_lower = t0_lower,
+       zero_observations = sum(obs == 0, na.rm = TRUE))
+}
+
+# Optional model structures. The first choice of each setting is the published
+# structure of Zhang and Cadigan (2022) and is the default.
+.acl_structure_choices <- list(
+  initial_plus_group = c("single_cohort", "equilibrium"),
+  initial_length = c("length_at_age", "growth"),
+  growth_increment = c("logistic", "von_bertalanffy"),
+  growth_transition = c("midpoint", "bin"),
+  correlation_range = c("positive", "symmetric"))
+
+# Named sets of settings. "published" is the structure of Zhang and Cadigan
+# (2022). "consistent" makes the first period follow the same growth and
+# mortality as later periods and uses the von Bertalanffy increment integrated
+# over the length bin. The four settings are meant to be used together.
+.acl_structure_sets <- list(
+  published = list(),
+  consistent = list(initial_plus_group = "equilibrium", initial_length = "growth",
+                    growth_increment = "von_bertalanffy", growth_transition = "bin"))
+
+# Expand a set name, or a list with a `set` element, to a plain list of
+# settings. Settings given next to `set` replace those of the set. ACL keeps
+# the settings of a set that apply to it.
+.acl_structure_expand <- function(structure, model = "ALSCL") {
+  if (is.null(structure)) return(list())
+  pick <- function(name, label) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) || !name %in% names(.acl_structure_sets))
+      stop(label, " must be \"published\" or \"consistent\" (the name of a set); use a named list for ",
+           "single settings, for example list(growth_transition = \"bin\").", call. = FALSE)
+    set <- .acl_structure_sets[[name]]
+    if (toupper(model) == "ACL") set <- set[intersect(names(set), c("initial_plus_group", "correlation_range"))]
+    set
+  }
+  if (is.character(structure)) return(pick(structure, "A character structure"))
+  if (is.list(structure) && !is.data.frame(structure) && "set" %in% names(structure)) {
+    if (sum(names(structure) == "set") > 1L) stop("structure has more than one `set` element.", call. = FALSE)
+    set <- pick(structure$set, "structure$set")
+    extra <- structure[names(structure) != "set"]
+    return(c(set[setdiff(names(set), names(extra))], extra))
+  }
+  structure
+}
+
+# Settings that decide how optimizer-scale values map to natural values:
+# whether AR(1) correlations lie between -1 and 1, and the lower limit of the
+# ALSCL t0. `x` is a fit, a recipe argument list or a prepared input.
+.acl_scale_settings <- function(x = NULL) {
+  structure <- x$structure
+  if (is.null(structure)) structure <- x$recipe$args$structure
+  structure <- tryCatch(.acl_structure_expand(structure), error = function(e) list())
+  t0_lower <- x$t0_lower
+  if (is.null(t0_lower)) t0_lower <- x$recipe$args$t0_lower
+  if (is.null(t0_lower)) t0_lower <- 0
+  list(symmetric = identical(structure$correlation_range, "symmetric"), t0_lower = t0_lower)
+}
+
+# Validate a structure list for one model. Returns the complete named choices
+# and the data entries passed to the template (non-default settings only, so a
+# default fit passes exactly the same data as earlier versions).
+.acl_structure <- function(structure = list(), model = "ALSCL") {
+  model <- toupper(model)
+  structure <- .acl_structure_expand(structure, model)
+  available <- if (model == "ACL") c("initial_plus_group", "correlation_range") else names(.acl_structure_choices)
+  if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
+      (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
+       anyDuplicated(names(structure)))))
+    stop("structure must be \"published\", \"consistent\" or a named list, for example ",
+         "list(set = \"consistent\", correlation_range = \"symmetric\").", call. = FALSE)
+  unknown <- setdiff(names(structure), names(.acl_structure_choices))
+  if (length(unknown))
+    stop("Unknown structure setting: ", paste(unknown, collapse = ", "), ". Available settings: ",
+         paste(names(.acl_structure_choices), collapse = ", "), ".", call. = FALSE)
+  choices <- lapply(.acl_structure_choices[available], `[`, 1L)
+  for (nm in names(structure)) {
+    value <- structure[[nm]]
+    allowed <- .acl_structure_choices[[nm]]
+    if (!is.character(value) || length(value) != 1L || is.na(value) || !value %in% allowed)
+      stop("structure$", nm, " must be one of: ", paste0("\"", allowed, "\"", collapse = ", "), ".", call. = FALSE)
+    if (!nm %in% available) {
+      if (value != allowed[1L])
+        stop("structure$", nm, " applies to ALSCL only; ACL has no growth transition matrix.", call. = FALSE)
+      next
+    }
+    choices[[nm]] <- value
+  }
+  codes <- vapply(names(choices), function(nm) match(choices[[nm]], .acl_structure_choices[[nm]]) - 1L, integer(1))
+  list(choices = choices, data = as.list(codes[codes > 0L]))
 }
 .acl_observed_log <- function(model_result) {
   observed <- model_result$observations

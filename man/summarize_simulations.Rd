@@ -33,6 +33,13 @@ replicates (numerical status, elapsed seconds and errors), and estimates
 Summary denominators distinguish attempted replicates, valid fits, valid
 estimate pairs and usable intervals. Bias and RMSE use valid estimate pairs;
 coverage uses only valid fits with available finite standard errors.
+summary_converged repeats the statistics of summary for all converged
+fits, whether or not they pass the numerical screen. failures counts the
+replicates that fail the screen by reason: n_replicates is the number of
+replicates with that reason and n_sole the number for which it is the only
+reason. In replicates, converged marks converged fits and failure_reasons
+lists the reasons of each replicate. In estimates, converged and
+covered_converged give the same information for each estimate pair.
 }
 \description{
 Summarize simulation bias, uncertainty coverage and fitting failures
@@ -41,7 +48,37 @@ Summarize simulation bias, uncertainty coverage and fitting failures
 Numerical failures remain in the output but do not enter bias, RMSE
 or coverage. This conditional summary must be interpreted together with the
 reported failure rate. Missing uncertainty is not treated as a failed interval.
+A converged fit returned no error and has a finite objective and a maximum
+absolute gradient below 1e-3, the gradient threshold of the numerical
+screen. Such a fit can still fail the screen, for example because an
+estimated correlation or SD lies at a natural-scale boundary or the
+Hessian is not positive definite. Compare summary with summary_converged
+to see whether the fits excluded by the screen change bias, RMSE or
+coverage, and read failures before treating the failure rate as a
+convergence rate.
 Relative bias excludes zero truth values. F and grouped arrays are excluded
 because aggregation requires an explicit definition and its uncertainty.
 Operating-model simulations are not automatically a fitted parametric bootstrap.
+}
+\examples{
+\donttest{
+# Simulate two replicates of a ten-year survey and fit ACL to each
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+bio <- sim_cal(pa)
+sims <- lapply(1:2, function(i)
+  sim_data(bio, pa, iter_range = i, output_dir = folder))
+cfg <- YTF_example$fit_config$acl
+fits <- sim_acl(iter_range = 1:2, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map)
+
+# Simulated spawning stock biomass (SSB) and recruitment of each replicate,
+# named like the fits
+truth <- lapply(sims, function(sm)
+  list(year = sm$years, SSB = as.numeric(sm$SSB), Rec = as.numeric(sm$Rec)))
+names(truth) <- names(fits)
+performance <- summarize_simulations(fits, truth, quantities = c("SSB", "Rec"))
+performance$summary
+unlink(folder, recursive = TRUE)
+}
 }

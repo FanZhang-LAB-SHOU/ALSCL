@@ -193,9 +193,9 @@
     "id": "pla",
     "zh": "年龄—体长概率矩阵",
     "en": "Age–length probability matrix",
-    "code": "plot_pla(b) + scale_x_discrete(labels = as.character(1:15))",
-    "note_zh": "颜色表示给定年龄时落入各体长组的概率。每列合计为 1，最高体长组包含该年龄体长分布的右尾。横轴标签为年龄组序号。",
-    "note_en": "Each column gives length-bin probabilities for one age and sums to one. The last bin includes the upper tail for that age. Age labels are class indices.",
+    "code": "plot_pla(b)",
+    "note_zh": "颜色表示给定年龄时落入各体长组的概率。每列合计为 1，最高体长组包含该年龄体长分布的右尾。横轴为拟合年龄，最后一个年龄为 plus group（标为 15+）。",
+    "note_en": "Each column gives length-bin probabilities for one age and sums to one. The last bin includes the upper tail for that age. The x axis shows the fitted ages; the last age is the plus group (15+).",
     "warnings": [],
     "status": "PASS"
   },

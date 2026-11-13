@@ -33,7 +33,7 @@ plot_SSB(saved, se = TRUE)
 b_again <- refit_model(saved, silent = TRUE)
 ```
 
-`extract_parameters()` 每个标量参数返回一行：`status`（`estimated`、`fixed` 或 `inactive`）、自然尺度上的估计值、标准误和 95% 区间（固定参数为 `NA`）；`exp(mean_log_F)` 是 F 过程的基准水平，各年的 F 由它乘以指数化的偏差得到。`extract_estimates()` 返回种群量的长表，带 `year`、`age` 或 `length` 和每个值的区间；ALSCL 的 `F` 按体长组给出（`report_name` 为 `FL`），ACL 按年龄给出，不取平均。
+`extract_parameters()` 每个标量参数返回一行：`status`（`estimated`、`fixed` 或 `inactive`）、自然尺度上的估计值、标准误和 95% 区间（固定参数为 `NA`）；`exp(mean_log_F)` 是 F 过程的基准水平，各年的 F 由它乘以指数化的偏差得到。`extract_estimates()` 返回种群量的长表，带 `year`、`age` 或 `length` 和每个值的区间；ALSCL 的 `F` 按体长组给出（`report_name` 为 `FL`），ACL 按年龄给出，不取平均。`extrapolated` 列在最后一个时间步的捕捞死亡率和渔获量上为 `TRUE`，没有观测为它们提供信息：它们是由 F 过程得到的预测，标准误反映的也是这一过程。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的各行也会被标记。其他量按名称请求：`extract_estimates(b, c("FA", "N_at_age"))` 返回 ALSCL 每个年龄和每个时间步的年龄别 F，以及年龄别尾数。拟合报告（`b$report$FA`）只包含末组（plus group）之前的年龄和最后一个时间步之前的各时间步的年龄别 F，并带有标准误；其余单元格由 `extract_estimates()` 从报告的体长—年龄别尾数算出，标准误为 `NA`。`N_at_age` 是 `NA` 的别名；标签为“NA”的表写入 CSV 文件后再用 `read.csv()` 的默认设置读回时，这个标签会丢失。`fitted(b)`、`logLik(b)`、`AIC(b)`、`BIC(b)` 和 `nobs(b)` 也可用于拟合结果；保存的协方差非有限或非正定时，`vcov(b)` 返回 `NULL`。
 
 `save_assessment()` 写出保存的拟合结果：`b` 中除 TMB 对象 `b$obj` 以外的全部内容，以及重新拟合所需的信息（三张表、设置、`map`、边界、初值、软件包版本和模型源码的哈希值）。`summary()`、提取函数和绘图函数都能直接用于 `read_assessment()` 读回的对象，同事无需重新拟合就能读你的结果；需要可执行模型时，`refit_model()` 使用保存的输入和设置重新拟合，例如用 `refit_model(saved, M = 0.25)` 改变一项假设，并在软件包、TMB 或模型源码与保存时不同时发出警告。文件已存在时 `save_assessment()` 会停止（传入 `overwrite = TRUE`），拟合结果缺少原始输入和设置时也会停止（把它的输入列表作为 `x` 传入）。
 
@@ -56,7 +56,7 @@ checks$plots$qq
 
 ![合并标准化残差的 QQ 图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true)
 
-`check_fit()` 把对数残差标准化（观测减拟合的对数指数，再除以拟合的观测 SD），并画三种图。热图按体长组和时间步排列（被排除的零值和空白为灰色），同色成块表示相邻体长组或时间步的残差方向一致。滞后图对每个体长组画出相隔一到 `max_lag` 个时间步的残差相关系数；没有调查的时间步仍是空缺，`checks$lag_correlations` 给出每个点背后的配对数。QQ 图把合并后的残差与正态分布比较。教学拟合中，16 cm 体长组几乎每年都是正残差，最大体长组从 2013 年起为正且滞后一步的相关系数接近 0.8，QQ 图正尾偏重：虽然数值检查通过，这些规律仍值得查看。残差以拟合的过程偏差为条件，所以把这些图当作提示而不是检验；[判断拟合是否可用](diagnostics.html)说明某种规律通常指向哪项设置。
+`check_fit()` 把对数残差标准化（观测减拟合的对数指数，再除以拟合的观测 SD），并画三种图。热图按体长组和时间步排列（被排除的零值和空白为灰色），同色成块表示相邻体长组或时间步的残差方向一致。滞后图对每个体长组画出相隔一到 `max_lag` 个时间步的残差相关系数；没有调查的时间步仍是空缺，`checks$lag_correlations` 给出每个点背后的配对数。QQ 图把合并后的残差与标准正态分布 N(0,1) 比较。即使模型设定正确，标准化条件残差的标准差也略小于 1（模拟检验中约为 0.91 到 0.96），所以两端的点略微落在参考线内侧属于预期。教学拟合中，16 cm 体长组几乎每年都是正残差，最大体长组从 2013 年起为正且滞后一步的相关系数接近 0.8，QQ 图正尾偏重：虽然数值检查通过，这些规律仍值得查看。残差以拟合的过程偏差为条件，所以把这些图当作提示而不是检验；[判断拟合是否可用](diagnostics.html)说明某种规律通常指向哪项设置。
 
 <h2 id="section-6">4. 敏感性情景与参数剖面</h2>
 

@@ -36,6 +36,9 @@ local({
   cat('PASS: valid and nested exports; all 12 invalid-grid exports rejected; existing file preserved.\n')
 })
 
+# The guard used by the figure scripts must accept this checkout and report changed code.
+source('scripts/test_checkout_guard.R')
+
 # Exercise every maintained styling block in all three documentation copies.
 # Fits are built from the package's teaching data when CI has no local cache.
 source('scripts/test_plot_examples.R')

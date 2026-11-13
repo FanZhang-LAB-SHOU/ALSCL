@@ -2,7 +2,8 @@
 #'
 #' Plot the estimated recruitment, the number of fish entering the youngest
 #' age class, in each time step. With `se = TRUE` a ribbon shows the 95%
-#' interval from the standard errors.
+#' interval. The default interval is lognormal and cannot fall below zero;
+#' see the `interval` argument.
 #'
 #' @param model_result A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
@@ -10,7 +11,14 @@
 #' @param line_type Character. Specifies the type of the line in the plot. Default is "solid".
 #' @param se Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
+#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
+#'   global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.
+#' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
+#'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+#'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
+#'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   fall below zero. NULL inherits the global \code{interval} setting (default
+#'   "lognormal"). Point estimates are the same for both.
 #' @param se_type Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #'
@@ -23,7 +31,9 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @details With se = TRUE, the standard-error table must have one finite
@@ -36,26 +46,27 @@
 #' @return A ggplot object representing the plot.
 #'
 #' @examples
-#' \dontrun{
-#' # Use 'run_acl' to obtain 'model_result'
-#' model_result <- run_acl(...)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #'
-#' # Plot recruitment without standard error
-#' plot_recruitment(model_result)
+#' # Recruitment without confidence intervals
+#' plot_recruitment(fit)
 #'
-#' # Plot recruitment with standard error
-#' plot_recruitment(model_result, se = TRUE)
+#' # Recruitment with 95% confidence intervals
+#' plot_recruitment(fit, se = TRUE)
 #' }
-#'
 #' @export
 
-plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
-  # NULL 继承全局色板 / NULL inherits the global palette.
+plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, interval = NULL){
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
+  # Error bars are thin lines: draw them opaque unless the call sets se_alpha.
+  errorbar_alpha <- if (is.null(se_alpha)) 1 else se_alpha
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
+  interval <- .acl_interval_type(interval)
   quantity <- .acl_plot_population_data(model_result, "Rec", "Rec", se)
   se_type <- match.arg(se_type)
   # Extract the validated recruitment data.
@@ -70,10 +81,10 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
   recruitment$Year <- model_result[["year"]]
   if (!se){
     # Plot recruitment over the years using ggplot2
-    p <- ggplot2::ggplot(recruitment, aes(x = Year, y = recruitment)) +
+    p <- ggplot2::ggplot(recruitment, ggplot2::aes(x = Year, y = recruitment)) +
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), title = if (!is.null(title)) title else .acl_title("Rec")) +
-      .acl_scale_x(x_breaks, n_breaks = 10) +
+      .acl_scale_x(x_breaks, n_breaks = 10, values = model_result[["year"]]) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
     data_out <-recruitment
@@ -87,21 +98,21 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
     # Calculate confidence intervals
     confidence_intervals_rec <- data.frame(
       estimate = ss_rec[, "Estimate"],
-      lower = ss_rec[, "Estimate"] - 1.96 * ss_rec[, "Std. Error"],
-      upper = ss_rec[, "Estimate"] + 1.96 * ss_rec[, "Std. Error"]
+      lower = .acl_interval(ss_rec[, "Estimate"], ss_rec[, "Std. Error"], interval)$lower,
+      upper = .acl_interval(ss_rec[, "Estimate"], ss_rec[, "Std. Error"], interval)$upper
     )
 
     confidence_intervals_rec$Year <-  model_result[["year"]]
 
     # Plot recruitment over the years with confidence intervals using ggplot2
-    p <- ggplot2::ggplot(confidence_intervals_rec, aes(x = Year, y = estimate)) +
+    p <- ggplot2::ggplot(confidence_intervals_rec, ggplot2::aes(x = Year, y = estimate)) +
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
       { if (se_type[1] == "ribbon")
           ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
         else
-          ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = se_alpha, width = 0.3) } +
+          ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, alpha = errorbar_alpha, width = 0.3) } +
       ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), title = if (!is.null(title)) title else .acl_title("Rec_se")) +
-      .acl_scale_x(x_breaks, n_breaks = 10) +
+      .acl_scale_x(x_breaks, n_breaks = 10, values = model_result[["year"]]) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
     data_out <-confidence_intervals_rec

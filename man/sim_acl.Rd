@@ -12,19 +12,21 @@ sim_acl(
   parameters.L = NULL,
   parameters.U = NULL,
   map = NULL,
-  M = 0.2,
+  M = NULL,
   ncores = 1,
   train_times = 1,
   control = list(),
   F_structure = c("group_year", "year"),
   polish = TRUE,
-  nstarts = 1
+  nstarts = 1,
+  allow_M_mismatch = FALSE
 )
 }
 \arguments{
 \item{iter_range}{A numeric vector of distinct nonnegative integer replicate
 IDs to fit (default 4:100). Zero is valid, matching the seeds accepted by
-sim_data().}
+sim_data(). File names use the integer form of each ID, for example
+sim_rep100000 for 1e5, whatever the number formatting options are.}
 
 \item{sim_data_path}{A character string specifying the path to the folder containing the simulation data files (default is the current working directory).
 Recorded observation years are retained. Older files without time metadata
@@ -40,7 +42,10 @@ use a first observation year of 2000.}
 
 \item{map}{A list containing the custom values for the map elements (default is NULL).}
 
-\item{M}{Numeric, natural mortality (default: 0.2)}
+\item{M}{Natural mortality rate per model time step used in every fit. The
+default, NULL, uses the natural mortality rate recorded in each replicate
+file by sim_data(). A supplied value must equal the recorded rate unless
+allow_M_mismatch is TRUE. Files without a recorded rate require M.}
 
 \item{ncores}{Integer. Number of CPU cores to use. 1 = sequential (default).
 Uses socket workers on all platforms.
@@ -70,10 +75,28 @@ refinement$hessian_calculations records methods, cores and fallback notes.}
 \item{nstarts}{Positive integer; number of independent optimization starts
 per simulated dataset. Defaults to 1, independently of ncores. Starts run
 sequentially within each replicate; ncores controls parallel replicates.}
+
+\item{allow_M_mismatch}{Logical. FALSE (default) stops when a supplied M
+differs from the natural mortality rate recorded in a replicate file.
+TRUE fits the supplied M, for a study of misspecified natural mortality.}
 }
 \value{
 The named list of replicate fits or error records returned by sim_model().
 }
 \description{
 Fit simulation replicates with ACL
+}
+\examples{
+\donttest{
+# Simulate two replicates of a ten-year survey and fit ACL to each, with
+# the growth parameters fixed as in the YTF_example settings.
+pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+folder <- tempfile("simulation")
+sm <- sim_data(sim_cal(pa), pa, iter_range = 1:2, output_dir = folder)
+cfg <- YTF_example$fit_config$acl
+fits <- sim_acl(iter_range = 1:2, sim_data_path = folder, output_dir = folder,
+  parameters = cfg$parameters, map = cfg$map)
+sapply(fits, function(fit) fit$diagnostics$numerical_ok)
+unlink(folder, recursive = TRUE)
+}
 }

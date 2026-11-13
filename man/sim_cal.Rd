@@ -47,3 +47,15 @@ age-length probability matrix for the selected operating model. Both
 pathways construct pla, the probability of length given age. The length-based
 pathway additionally constructs Gij, the growth transition matrix.
 }
+\examples{
+pa <- initialize_params(species = "flatfish")
+bio <- sim_cal(pa)
+bio$model_type
+
+# Length at age
+round(bio$LatA, 1)
+
+# Probability of length given age: one row per age, and each row sums to one
+dim(bio$pla)
+range(rowSums(bio$pla))
+}

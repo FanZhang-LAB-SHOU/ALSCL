@@ -9,6 +9,9 @@
 *.tar.gz
 *.Rcheck/
 output/
+Rplots.pdf
+simulation_examples/
+my_cases/
 _site/
 website/.build/
 website/__pycache__/

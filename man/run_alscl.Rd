@@ -30,7 +30,10 @@ run_alscl(
   control = list(),
   nstarts = ncores,
   F_structure = c("group_year", "year"),
-  polish = TRUE
+  polish = TRUE,
+  structure = list(),
+  start_spread = 0.15,
+  t0_lower = 0
 )
 }
 \arguments{
@@ -110,6 +113,72 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
+
+\item{structure}{Optional model structures: the name of a set or a named
+list of settings. The default, an empty list, and \code{"published"} are the
+published structure of Zhang and Cadigan (2022) for every setting.
+\code{"consistent"} selects \code{growth_increment = "von_bertalanffy"},
+\code{growth_transition = "bin"}, \code{initial_length = "growth"} and
+\code{initial_plus_group = "equilibrium"} together, so that the first period
+and the growth transition follow one growth model. A list can name a set
+and add single settings, for example
+\code{list(set = "consistent", correlation_range = "symmetric")}. Use the four
+settings of \code{"consistent"} together: a fit with only some of them can
+fail when the growth increment per time step is small relative to the
+bin width. Settings and values (default first):
+\describe{
+\item{\code{growth_increment}}{\code{"logistic"}: the expected growth increment is a
+decreasing logistic function of length, multiplied by \code{growth_step}.
+\code{"von_bertalanffy"}: the expected increment over one time step is
+(Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
+declines smoothly to zero above Linf, so Linf and vbk have the same
+meaning as in the length-at-age curve. Fish then stop growing at about
+Linf, so Linf acts as an upper limit of length after the first period:
+data with many fish larger than the mean asymptotic length fit poorly,
+and the standard error of Linf can be very small. The logistic
+increment stays positive above Linf.}
+\item{\code{growth_transition}}{\code{"midpoint"}: every fish in a length bin grows
+from the bin midpoint. \code{"bin"}: starting lengths are uniform within the
+bin and the transition is integrated over the bin, so fish keep moving
+to the next bin when the increment per time step is small relative to
+the bin width (for example quarterly steps with wide bins). The mean
+length of a cohort then follows the growth curve closely for bins a
+few times wider than the increment; with much wider bins it remains
+approximate, because fish are spread evenly over their bin after every
+step.}
+\item{\code{initial_length}}{\code{"length_at_age"}: in the first period every age
+has the length-at-age distribution with coefficient of variation
+cv_len. \code{"growth"}: the first age has that distribution and each older
+age is the previous age after survival at init_Z and one growth step,
+as in all later periods.}
+\item{\code{initial_plus_group}}{\code{"single_cohort"}: the first-period plus group
+holds one cohort. \code{"equilibrium"}: it holds the sum of all older cohorts
+at total mortality init_Z.}
+\item{\code{correlation_range}}{\code{"positive"}: the AR(1) correlations of
+recruitment and of F over time and length lie between 0 and 1, as the
+logistic transform of the \verb{logit_*} parameters. \code{"symmetric"}: they
+lie between -1 and 1, as 2 * logistic - 1, so a \verb{logit_*} value of 0
+means no correlation and negative correlation can be estimated. A
+\verb{logit_*} start or fixed value has a different meaning under the two
+settings: a correlation rho is \code{qlogis(rho)} under \code{"positive"} and
+\code{qlogis((rho + 1) / 2)} under \code{"symmetric"}.}
+}
+With \code{initial_length = "growth"} and \code{initial_plus_group = "equilibrium"}
+a population with constant recruitment, no fishing and init_Z equal to M
+stays constant over time; with the published structure it does not.
+The settings used are stored in the \code{structure} element of the fit.}
+
+\item{start_spread}{Standard deviation of the normal deviates added to the
+starting values (on the scale of the optimizer, mostly logarithms) of
+the second and later starts. The default 0.15 keeps the starts used by
+earlier versions. See Details for when to use a larger value.}
+
+\item{t0_lower}{Lower limit of the von Bertalanffy parameter t0 in years.
+The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published
+parameterization, in which t0 is positive. Set a negative value, for
+example -1, to allow negative t0; a known t0 is then supplied as
+\code{parameters = list(log_t0 = log(t0 - t0_lower))}. Reported t0 values are
+always on the natural scale.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -129,6 +198,9 @@ parameters, including sequential and fallback paths. Its report describes
 the same fitted state as report. Saved estimates and standard errors are
 unchanged by this restoration; refit serialized results before using obj.
 recipe stores the complete resolved fitting inputs and software settings.
+growth_check reports whether growth stops below Linf under the midpoint
+growth transition (stalled, the length and the probability of staying in
+that length bin per time step); see Details.
 Use summary(), extract_parameters(), extract_estimates(), save_assessment()
 and refit_model() for inspection, portable storage and reproducible refitting.
 }
@@ -161,13 +233,62 @@ bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.
 
+With \code{growth_transition = "midpoint"} every fish of a length bin
+grows from the bin midpoint. Growth then stops at the length where the
+increment in one time step falls well below half the bin width, whatever
+the value of Linf; this happens with short time steps and wide bins (for
+example quarterly steps with 5 cm bins, or annual steps with 5 cm bins
+for a slow-growing stock). The fit stores \code{growth_check}. When the
+fitted transition has a length bin, with a midpoint below 90\% of the
+estimated Linf, in which fish stay with a probability of at least 0.99
+per time step, the fit reports it in a message (unless \code{silent = TRUE})
+and \code{summary()} prints it. Consider a refit with
+\code{structure = "consistent"} in that case. The published structure and the
+\code{"consistent"} set have the same number of parameters, so their objective
+values can be compared directly.
+
+A single start can stop at a local optimum that passes every
+numerical check, particularly for the growth parameters of ALSCL. The
+checks in \code{diagnostics} are local: they do not show whether a better
+optimum exists. For results that will be reported, use several starts
+(for example \code{nstarts = 5}) with a wider \code{start_spread} (for example
+0.5) and compare the objectives in \code{start_diagnostics}. \code{start_summary}
+gives the number of converged starts, the range of their objectives and
+the number that agree with the best one; a range above 2 is added to
+\code{diagnostics$issues}.
+
+The process densities are evaluated on the complete arrays of
+deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
+to shared values, or fixes entries with NA, is therefore accepted only
+when the matching standard deviation and correlation parameters are fixed
+too; otherwise their estimates would be biased and the fit is rejected.
+For one F deviation per time step shared by all groups, use
+\code{F_structure = "year"}, which has its own correctly normalized density.
+With tied entries the shared value has a smaller prior standard deviation
+than the stated one, and the objective of a fit with tied or fixed
+entries cannot be compared (for example by AIC) with fits that use
+another map for these deviations. \code{restricted_random} in the fit names
+the arrays concerned.
+
+Starting values outside their bounds are moved to the nearest
+bound: with a warning when the start was supplied, and with a message for
+default starts. \code{clamped_starts} in the fit lists them.
+Unless supplied, the start of Linf is 1.1 times the largest length-bin
+midpoint and its bounds are 0.7 and 2 times that midpoint. Supply
+\code{parameters.L$log_Linf} when the bins extend well beyond the largest
+fish, because Linf below 0.7 times the largest midpoint is otherwise
+excluded.
+
 ALSCL tracks joint length-age abundance and F at length; FA summarizes
 effective cohort survival. log_t0 represents a positive t0 below rec.age.
 }
 \examples{
-\dontrun{
+\donttest{
+# One fishing mortality rate (F) shared by all lengths in each year keeps
+# this example short. The default, F by length and year, takes several
+# times longer for these data.
 x <- YTF_example
-fit <- run_alscl(x)
-fit <- run_alscl(x, nstarts = 4, ncores = 2, silent = TRUE)
+fit <- run_alscl(x, F_structure = "year", silent = TRUE)
+fit
 }
 }

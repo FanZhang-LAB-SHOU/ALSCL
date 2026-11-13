@@ -30,8 +30,13 @@ test_that("length biomass and SSB intervals use available SEs and actual coordin
     expect_equal(out$data$Year, rep(model$year, each = 3L))
     expect_equal(as.character(out$data$LengthGroup), rep(paste("Length bin", c(10, 20, 30)), 3L))
     expect_equal(out$data$estimate, expected, ignore_attr = TRUE)
-    expect_equal(out$data$lower, expected - 1.96 * errors, ignore_attr = TRUE)
-    expect_equal(out$data$upper, expected + 1.96 * errors, ignore_attr = TRUE)
+    # The default interval is lognormal; interval = "wald" keeps the symmetric one.
+    expect_equal(out$data$lower, expected * exp(-1.96 * errors / expected), ignore_attr = TRUE)
+    expect_equal(out$data$upper, expected * exp(1.96 * errors / expected), ignore_attr = TRUE)
+    wald <- fun(model, type = type, se = TRUE, return_data = TRUE, interval = "wald")
+    expect_equal(wald$data$estimate, out$data$estimate)
+    expect_equal(wald$data$lower, expected - 1.96 * errors, ignore_attr = TRUE)
+    expect_equal(wald$data$upper, expected + 1.96 * errors, ignore_attr = TRUE)
     expect_length(out$plot$layers, 2L)
     built <- ggplot2::ggplot_build(out$plot)
     sorted <- order(out$data$LengthGroup, out$data$Year)
@@ -92,8 +97,12 @@ test_that("real ACL and ALSCL outputs follow the documented plot support matrix"
         expect_length(out$plot$layers, if (se) 2L else 1L)
         if (se) {
           errors <- fit$est_std[rownames(fit$est_std) == type, "Std. Error"]
-          expect_equal(out$data$upper - out$data$lower, 3.92 * errors,
-            ignore_attr = TRUE)
+          # Lognormal interval: log(upper / lower) = 3.92 SE / estimate.
+          expect_true(all(out$data$estimate > 0))
+          expect_equal(log(out$data$upper / out$data$lower) * out$data$estimate,
+            3.92 * errors, ignore_attr = TRUE)
+          wald <- spec$fun(fit, type = type, se = TRUE, return_data = TRUE, interval = "wald")
+          expect_equal(wald$data$upper - wald$data$lower, 3.92 * errors, ignore_attr = TRUE)
         }
       }
     }

@@ -58,6 +58,16 @@
 #'   by default (or rejects them with zero_action = "error"); an all-zero survey
 #'   cannot be fitted by the lognormal observation model.
 #'
+#' @examples
+#' pa <- initialize_params(species = "flatfish", nyear = 12, burn_in = 2)
+#' folder <- tempfile("simulation")
+#' sm <- sim_data(sim_cal(pa), pa, iter_range = 1:2, output_dir = folder)
+#'
+#' # One file per replicate; the replicate with the largest ID is returned
+#' list.files(folder)
+#' sm$years
+#' round(sm$SSB, 1)
+#' unlink(folder, recursive = TRUE)
 #' @export
 sim_data <- function(bio_vars, params, sim_year = NULL,
                      output_dir = ".", iter_range = 4:100, return_iter = NULL) {
@@ -82,12 +92,71 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       !is.finite(return_iter) || !(return_iter %in% iter_range))
     stop("return_iter must identify one seed in iter_range.")
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  # Each replicate sets its own seed; leave the caller's random-number stream
+  # and generator settings as they were.
+  restore_rng <- .acl_preserve_rng()
+  on.exit(restore_rng(), add = TRUE)
 
   if (model_type == "length_based") {
     .sim_data_length_based(bio_vars, params, sim_year, output_dir, iter_range, return_iter)
   } else {
     .sim_data_age_based(bio_vars, params, sim_year, output_dir, iter_range, return_iter)
   }
+}
+
+# Seed one replicate with fixed generator settings, so a replicate ID gives the
+# same data whatever generator the session uses.
+.acl_simulation_seed <- function(iter) {
+  set.seed(iter, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  list(seed = as.integer(iter), RNGkind = RNGkind(),
+       ALSCL_version = as.character(utils::packageVersion("ALSCL")))
+}
+
+# Draws for one process of a replicate under random_numbers = "by_process":
+# each process (recruitment, F, initial numbers, survey error) has its own
+# stream and a fixed number of standard normal draws, so changing the settings
+# of one process leaves the draws of the others unchanged. With `ar`, the
+# result is a stationary AR(1) series with unit innovation variance.
+.acl_simulation_streams <- function(params) {
+  if (!identical(params$random_numbers, "by_process")) return(NULL)
+  sample.int(.Machine$integer.max, 4L)
+}
+.acl_simulation_normal <- function(n, streams, process, ar = NULL) {
+  set.seed(streams[process], kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  z <- rnorm(n)
+  if (is.null(ar)) return(z)
+  x <- numeric(n)
+  x[1L] <- z[1L] / sqrt(1 - ar^2)
+  if (n > 1L) for (t in 2:n) x[t] <- ar * x[t - 1L] + z[t]
+  x
+}
+
+# AR(1) series with unit innovation variance. A zero coefficient is white
+# noise; stats::arima.sim() returns it but warns about the polynomial root.
+.acl_simulation_ar1 <- function(ar, n) {
+  if (isTRUE(ar == 0)) return(suppressWarnings(arima.sim(list(order = c(1, 0, 0), ar = ar), n = n)))
+  arima.sim(list(order = c(1, 0, 0), ar = ar), n = n)
+}
+
+# Replicate file name; the ID is formatted as an integer so that the name does
+# not depend on options(scipen) or on the storage type of the ID.
+.acl_simulation_file <- function(output_dir, iter)
+  file.path(output_dir, paste0("sim_rep", sprintf("%d", as.integer(iter))))
+
+# Write all replicates after every one has been generated and validated, each
+# through a temporary file, so a failed run leaves no partly updated set.
+.acl_simulation_write <- function(replicates, output_dir) {
+  for (iter in names(replicates)) {
+    sim.data <- replicates[[iter]]
+    target <- .acl_simulation_file(output_dir, as.numeric(iter))
+    temporary <- tempfile(".sim_rep-", tmpdir = output_dir)
+    save(sim.data, file = temporary)
+    if (!file.rename(temporary, target)) {
+      unlink(temporary)
+      stop("Could not write simulation replicate ", iter, " to ", target, call. = FALSE)
+    }
+  }
+  invisible(NULL)
 }
 
 
@@ -121,6 +190,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_sd    <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar    <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
+  structure <- .acl_structure(params$structure, "ACL")$choices
   grid <- .acl_simulation_grid(params, sim_year, "age_based")
   sim_year <- grid$nstep
   # Observation window indices use integer steps, never fractional subscripts.
@@ -134,16 +204,21 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("return_iter = ", return_iter, " is not in iter_range")
 
   return_data <- NULL
+  replicates <- list()
 
   for (iter in iter_range) {
 
     # --- Recruitment deviations (AR1) ---
-    set.seed(iter)
-    dev_logR <- arima.sim(list(order = c(1, 0, 0), ar = R_ar), n = sim_year) * std_logR
+    provenance <- .acl_simulation_seed(iter)
+    streams <- .acl_simulation_streams(params)
+    provenance$random_numbers <- if (is.null(streams)) "sequential" else "by_process"
+    dev_logR <- (if (is.null(streams)) .acl_simulation_ar1(R_ar, sim_year) else
+      .acl_simulation_normal(sim_year, streams, 1L, R_ar)) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = sim_year) * F_sd)
+    F_yr <- F_mean * exp((if (is.null(streams)) .acl_simulation_ar1(F_ar, sim_year) else
+      .acl_simulation_normal(sim_year, streams, 2L, F_ar)) * F_sd)
 
     Z_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
     F_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -155,11 +230,14 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Initial age structure ---
     N0_at_age <- rep(NA, nage)
-    dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
+    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
     N0_at_age[1] <- Rec[1]
     for (i in 2:nage) {
       N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
     }
+    if (structure$initial_plus_group == "equilibrium")
+      N0_at_age[nage] <- N0_at_age[nage] / (1 - exp(-init_Z))
 
     # --- Pre-allocate ---
     N_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -217,7 +295,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     # --- Survey index ---
     RVN_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
-    surv_error <- matrix(rnorm(sim_year * nlen, 0, std_SN), sim_year, nlen)
+    surv_error <- matrix(if (is.null(streams)) rnorm(sim_year * nlen, 0, std_SN) else
+      .acl_simulation_normal(sim_year * nlen, streams, 4L) * std_SN, sim_year, nlen)
     if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:sim_year) {
       RVN_at_len[i, ] <- N_at_len[i, ] * q_surv * exp(surv_error[i, ])
@@ -261,13 +340,16 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
-    .acl_validate_simulated_result(sim.data, iter)
-    save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
+    sim.data$provenance <- provenance
+    tryCatch(.acl_validate_simulated_result(sim.data, iter), error = function(e)
+      stop(conditionMessage(e), " No replicate file of this call was written; files already in output_dir are unchanged.", call. = FALSE))
+    replicates[[sprintf("%d", as.integer(iter))]] <- sim.data
     if (iter == return_iter) {
       return_data <- sim.data
       return_data$iter <- iter
     }
   }
+  .acl_simulation_write(replicates, output_dir)
 
   cat("Simulated iterations:", min(iter_range), "to", max(iter_range),
       "(", length(iter_range), "replicates )\n")
@@ -311,6 +393,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   F_sd      <- if (!is.null(params$F_sd))   params$F_sd   else 0.2
   R_ar      <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
+  structure <- .acl_structure(params$structure, "ALSCL")$choices
   grid <- .acl_simulation_grid(params, sim_year, "length_based")
   nstep <- grid$nstep
 
@@ -325,16 +408,21 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     stop("return_iter = ", return_iter, " is not in iter_range")
 
   return_data <- NULL
+  replicates <- list()
 
   for (iter in iter_range) {
 
     # --- Recruitment deviations (AR1, at quarterly resolution) ---
-    set.seed(iter)
-    dev_logR <- arima.sim(list(order = c(1, 0, 0), ar = R_ar), n = nstep) * std_logR
+    provenance <- .acl_simulation_seed(iter)
+    streams <- .acl_simulation_streams(params)
+    provenance$random_numbers <- if (is.null(streams)) "sequential" else "by_process"
+    dev_logR <- (if (is.null(streams)) .acl_simulation_ar1(R_ar, nstep) else
+      .acl_simulation_normal(nstep, streams, 1L, R_ar)) * std_logR
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Length-dependent fishing mortality (AR1) ---
-    F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = nstep) * F_sd)
+    F_yr <- F_mean * exp((if (is.null(streams)) .acl_simulation_ar1(F_ar, nstep) else
+      .acl_simulation_normal(nstep, streams, 2L, F_ar)) * F_sd)
 
     Z_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     F_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
@@ -346,7 +434,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 
     # --- Initial age structure ---
     N0_at_age <- rep(NA, nage)
-    dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
+    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
     N0_at_age[1] <- Rec[1]
     for (i in 2:nage) {
       N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
@@ -368,8 +457,22 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     SSB <- TN <- TB <- CN_tot <- CB_tot <- rep(NA, nstep)
 
     # --- Step 1: Initialize from age structure ---
+    if (structure$initial_length == "growth") {
+      # Each age is the previous age after survival at init_Z and one growth
+      # step; the plus group optionally sums all older cohorts.
+      state <- N0_at_age[1] * pla[, 1]
+      nla[, 1] <- state
+      for (a in 2:nage) {
+        state <- as.vector(Gij %*% state) * exp(-init_Z + dev_logN0[a - 1])
+        if (a == nage && structure$initial_plus_group == "equilibrium")
+          state <- as.vector(solve(diag(nlen) - exp(-init_Z) * Gij, state))
+        nla[, a] <- state
+      }
+    } else if (structure$initial_plus_group == "equilibrium") {
+      N0_at_age[nage] <- N0_at_age[nage] / (1 - exp(-init_Z))
+    }
     for (a in 1:nage) {
-      nla[, a]  <- N0_at_age[a] * pla[, a]
+      if (structure$initial_length != "growth") nla[, a]  <- N0_at_age[a] * pla[, a]
       bla[, a]  <- nla[, a] * W_at_len
       sbla[, a] <- bla[, a] * mat
       cnla[, a] <- .acl_baranov_catch(nla[, a], F_at_len[1, ], Z_at_len[1, ])
@@ -451,7 +554,8 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     # --- Survey index (3D-aware, like M6 original) ---
     RVN_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
-    surv_error <- matrix(rnorm(nstep * nlen, 0, std_SN), nstep, nlen)
+    surv_error <- matrix(if (is.null(streams)) rnorm(nstep * nlen, 0, std_SN) else
+      .acl_simulation_normal(nstep * nlen, streams, 4L) * std_SN, nstep, nlen)
     if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:nstep) {
       # Apply q_surv to each age column, then sum across ages
@@ -497,13 +601,16 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
       SSB        = SSB[idx]
     )
 
-    .acl_validate_simulated_result(sim.data, iter)
-    save(sim.data, file = file.path(output_dir, paste0("sim_rep", iter)))
+    sim.data$provenance <- provenance
+    tryCatch(.acl_validate_simulated_result(sim.data, iter), error = function(e)
+      stop(conditionMessage(e), " No replicate file of this call was written; files already in output_dir are unchanged.", call. = FALSE))
+    replicates[[sprintf("%d", as.integer(iter))]] <- sim.data
     if (iter == return_iter) {
       return_data <- sim.data
       return_data$iter <- iter
     }
   }
+  .acl_simulation_write(replicates, output_dir)
 
   cat("Simulated iterations:", min(iter_range), "to", max(iter_range),
       "(", length(iter_range), "replicates )\n")
@@ -531,6 +638,9 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     F_sd = 0.2, F_ar = 0.75, R_ar = 0.1)
   for (name in c("R_init", "F_mean", "F_sd"))
     .acl_scalar(params[[name]] %||% defaults[[name]], name, 0)
+  if (!is.null(params$random_numbers) && !(is.character(params$random_numbers) &&
+      length(params$random_numbers) == 1L && params$random_numbers %in% c("sequential", "by_process")))
+    stop("random_numbers must be \"sequential\" or \"by_process\".", call. = FALSE)
   for (name in c("F_ar", "R_ar")) {
     value <- .acl_scalar(params[[name]] %||% defaults[[name]], name)
     if (abs(value) >= 1)

@@ -28,7 +28,9 @@ run_acl(
   control = list(),
   nstarts = ncores,
   F_structure = c("group_year", "year"),
-  polish = TRUE
+  polish = TRUE,
+  structure = list(),
+  start_spread = 0.15
 )
 }
 \arguments{
@@ -101,6 +103,29 @@ remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
+
+\item{structure}{Optional model structures: the name of a set or a named
+list of settings. The default, an empty list, and \code{"published"} are the
+published structure of Zhang and Cadigan (2022). \code{"consistent"} selects
+\code{initial_plus_group = "equilibrium"} for ACL (see \code{\link[=run_alscl]{run_alscl()}} for the
+ALSCL settings of this set), and a list can name a set and add single
+settings, for example
+\code{list(set = "consistent", correlation_range = "symmetric")}. ACL has the
+setting \code{initial_plus_group}: \code{"single_cohort"} (default;
+the first-period plus group holds one cohort) or \code{"equilibrium"} (it
+holds the sum of all older cohorts at total mortality init_Z, so a
+population with constant recruitment, no fishing and init_Z equal to M
+stays constant over time). \code{correlation_range}: \code{"positive"} (default;
+AR(1) correlations between 0 and 1, the logistic transform of the
+\verb{logit_*} parameters) or \code{"symmetric"} (between -1 and 1, as
+2 * logistic - 1; a correlation rho is then \code{qlogis((rho + 1) / 2)} on the
+optimizer scale). The settings used are stored in the \code{structure}
+element of the fit.}
+
+\item{start_spread}{Standard deviation of the normal deviates added to the
+starting values (on the scale of the optimizer, mostly logarithms) of
+the second and later starts. The default 0.15 keeps the starts used by
+earlier versions. See Details for when to use a larger value.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -151,11 +176,51 @@ corresponding list; NULL is preserved. Other top-level fields in a structured
 bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.
+
+A single start can stop at a local optimum that passes every
+numerical check, particularly for the growth parameters of ALSCL. The
+checks in \code{diagnostics} are local: they do not show whether a better
+optimum exists. For results that will be reported, use several starts
+(for example \code{nstarts = 5}) with a wider \code{start_spread} (for example
+0.5) and compare the objectives in \code{start_diagnostics}. \code{start_summary}
+gives the number of converged starts, the range of their objectives and
+the number that agree with the best one; a range above 2 is added to
+\code{diagnostics$issues}.
+
+The process densities are evaluated on the complete arrays of
+deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
+to shared values, or fixes entries with NA, is therefore accepted only
+when the matching standard deviation and correlation parameters are fixed
+too; otherwise their estimates would be biased and the fit is rejected.
+For one F deviation per time step shared by all groups, use
+\code{F_structure = "year"}, which has its own correctly normalized density.
+With tied entries the shared value has a smaller prior standard deviation
+than the stated one, and the objective of a fit with tied or fixed
+entries cannot be compared (for example by AIC) with fits that use
+another map for these deviations. \code{restricted_random} in the fit names
+the arrays concerned.
+
+Starting values outside their bounds are moved to the nearest
+bound: with a warning when the start was supplied, and with a message for
+default starts. \code{clamped_starts} in the fit lists them.
+The default start (60) and bounds (10 to 100) of Linf are in the length
+units of the yellowtail flounder example. When the upper bound is below
+1.2 times the largest length-bin midpoint, or the start is outside 0.7 to
+2 times that midpoint, the start and bounds that were not supplied are
+set from the data. The start is 1.1 times the length below which 99
+percent of the summed survey index lies, the upper bound is 2 times the
+largest midpoint, and the lower bound is the smaller of the default (10)
+and half of that 99 percent length, so that length bins extending beyond
+the largest fish do not exclude the true Linf.
 }
 \examples{
-\dontrun{
+\donttest{
 x <- YTF_example
-fit <- run_acl(x)
-fit <- run_acl(x, nstarts = 4, ncores = 2, silent = TRUE)
+fit <- run_acl(x, silent = TRUE)
+fit
+
+# Two independent starts; compare their objectives
+fit <- run_acl(x, nstarts = 2, silent = TRUE)
+fit$start_diagnostics[, c("start_id", "objective", "convergence")]
 }
 }

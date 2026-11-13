@@ -17,7 +17,8 @@ plot_compare_ts(
   facet_ncol = NULL,
   facet_scales = NULL,
   return_data = FALSE,
-  ...
+  ...,
+  interval = NULL
 )
 }
 \arguments{
@@ -32,13 +33,16 @@ requested explicitly when both supplied results contain it.
 For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 mean or apical summary; F is not a scalar time series in the model reports.}
 
-\item{se}{Logical. Show confidence intervals. Default FALSE.}
+\item{se}{Logical. Show 95\% confidence intervals. Default FALSE.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -50,14 +54,22 @@ mean or apical summary; F is not a scalar time series in the model reports.}
 
 \item{...}{Former argument names, accepted with a warning: linewidth for
 line_size, ncol for facet_ncol and scales for facet_scales.}
+
+\item{interval}{Character or NULL. The interval drawn when \code{se = TRUE}.
+\code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+stays above zero (an estimate of exactly zero keeps the Wald upper bound
+with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+fall below zero. NULL inherits the global \code{interval} setting (default
+"lognormal"). Point estimates are the same for both.}
 }
 \value{
 A ggplot object (can be further modified with + theme(), + labs(), etc.)
 }
 \description{
-Plots SSB, Recruitment, Biomass, Abundance, Catch from two models
-on the same axes. The plot uses the global theme and can be
-extended with \code{+ ggplot2::theme()} or any ggplot2 layer.
+Plots spawning stock biomass (SSB), recruitment, total biomass, total
+abundance and catch from two models on the same axes. The plot uses the
+global theme and can be extended with \code{+ ggplot2::theme()} or any
+ggplot2 layer.
 }
 \details{
 Every requested quantity must be a finite series matching its model's
@@ -69,25 +81,34 @@ A model with one estimate in a panel is drawn as a point, with an error
 bar when se = TRUE. Models with multiple estimates retain lines and ribbons.
 }
 \examples{
-\dontrun{
-# Basic usage
-plot_compare_ts(result_acl, result_alscl)
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_ts(fit_acl, fit_alscl)
 
-# With CI
-plot_compare_ts(result_acl, result_alscl, se = TRUE)
+# With 95\% confidence intervals
+plot_compare_ts(fit_acl, fit_alscl, quantities = c("SSB", "R"), se = TRUE)
 
-# Per-call override + ggplot2 layering
-plot_compare_ts(result_acl, result_alscl,
+# Colors for one call, followed by ggplot2 layers
+plot_compare_ts(fit_acl, fit_alscl,
   colors = c(ACL = "darkgreen", ALSCL = "orange")) +
   ggplot2::theme(legend.position = "top") +
   ggplot2::labs(title = "My Title")
 
-# Or set globally once
-acl_theme_set(
+# Or set the style of all comparison plots, then restore the previous
+# settings
+old <- acl_theme_set(
   compare_colors = c(ACL = "steelblue", ALSCL = "tomato"),
   compare_linetypes = c(ACL = "solid", ALSCL = "longdash"),
   base_theme = "theme_classic"
 )
-plot_compare_ts(result_acl, result_alscl)  # uses global settings
+plot_compare_ts(fit_acl, fit_alscl)
+do.call(acl_theme_set, old)
 }
 }

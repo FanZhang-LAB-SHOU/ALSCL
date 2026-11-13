@@ -81,7 +81,8 @@ plot_retro(
 Native colors are interpolated when there are more peels than colors.}
 
 \item{colors}{Character vector or NULL. Explicit period colors, ordered by
-descending terminal period or named by terminal period. Overrides palette.}
+descending terminal period or named by terminal period. Overrides palette.
+Names are the numeric terminal periods, for example "2019" or "2019.75".}
 
 \item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }
@@ -92,11 +93,25 @@ A ggplot object.
 Generate or re-generate the retrospective plot from stored results.
 This allows changing display options without re-running the computation.
 }
+\details{
+Each line is one fit and is identified by the terminal period of
+its data. The legend is titled "Terminal year" for annual steps and
+"Terminal period" for shorter steps, where quarterly periods are labelled
+as in "2019 Q4". Default colors follow the retrospective peel, so the fit
+with a given terminal period has the same color whether or not another
+fit returned estimates. A fit that failed the numerical screen is drawn
+with a dashed line and a "Numerical screen" legend is added. A requested
+fit without estimates, for example after a fit error, stays in the legend
+and is marked "(no estimates)". The subtitle names both kinds of fit, and
+each panel states how many requested peels are valid when Mohn's rho is
+withheld.
+}
 \examples{
-\dontrun{
-retro <- retro_acl(nyear = 5, data.CatL, data.wgt, data.mat,
-                   rec.age = 1, nage = 7, M = 0.8,
-                   sel_L50 = 28, sel_L95 = 36)
+\donttest{
+retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
 plot_retro(retro)
+
+# Change the display without fitting again
+plot_retro(retro, rho_digits = 2, facet_ncol = 2)
 }
 }

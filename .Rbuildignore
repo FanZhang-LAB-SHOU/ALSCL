@@ -2,8 +2,6 @@
 ^\.Rproj\.user$
 ^\.github$
 ^LICENSE\.md$
-^ALSCL_User_Guide\.Rmd$
-^scr$
 ^output$
 ^.*\.Rcheck$
 ^.*\.tar\.gz$
@@ -16,5 +14,10 @@
 ^website$
 ^_site$
 ^\.venv-docs$
+^man/figures$
+^Rplots\.pdf$
+^simulation_examples$
+^my_cases$
 ^tests/testthat/_problems$
 ^tests/testthat/testthat-problems\.rds$
+^\.git$

@@ -101,6 +101,15 @@ the weight coefficient must be nonnegative. Invalid inputs and nonfinite
 simulated values are rejected before any CSV files are created or replaced.
 The age-length key uses the same open-tail probabilities as the ACL core;
 this does not make the quick recruitment process identical to a fitted model.
+The simulated population differs from the default fitting assumptions in
+three ways: t0 is -0.1 (the ACL default map fixes t0 at 1/60), the initial
+numbers at age have no deviations, and fishing mortality follows a smooth
+deterministic curve without process error. Recruitment is independent
+between years. A fit with all defaults therefore estimates a biased vbk
+and usually fails the numerical checks, because the standard deviation of
+the initial deviations or the recruitment correlation goes to zero; see
+the example for settings that match the data. Progress is reported with
+\code{message()}.
 }
 \examples{
 # Quick usage with defaults (9 bins like real krill data)
@@ -114,18 +123,32 @@ sim2 <- simulate_example_data(bin_breaks = seq(10, 60, by = 5))
 # Custom unequal bins
 sim3 <- simulate_example_data(bin_breaks = c(0, 15, 25, 35, 45, 60))
 
-\dontrun{
-# Run ACL with simulated data
+# Save CSVs for sharing
+folder <- tempfile("example_data")
+sim <- simulate_example_data(seed = 42, save_csv = TRUE, output_dir = folder)
+list.files(folder)
+unlink(folder, recursive = TRUE)
+
+\donttest{
+# Run ACL with simulated data. The simulated population has t0 = -0.1, no
+# deviations in the initial numbers at age, independent recruitment and
+# smooth changes in F. Settings that match it: t0 at its true value (the
+# ACL default fixes it at 1/60, which biases vbk), a small fixed standard
+# deviation for the initial deviations, a recruitment correlation fixed
+# near zero, and a smaller fixed standard deviation of log F. With these
+# the fit passes the numerical checks and recovers Linf and vbk.
 sim <- simulate_example_data(seed = 123)
 result <- run_acl(
   data.CatL = sim$data.CatL,
   data.wgt  = sim$data.wgt,
   data.mat  = sim$data.mat,
   rec.age = 1, nage = 7, M = 0.8,
-  sel_L50 = 28, sel_L95 = 36
+  sel_L50 = 28, sel_L95 = 36,
+  parameters = list(t0 = sim$true_params$t0, log_std_log_N0 = log(0.1),
+                    log_std_log_F = log(0.3), logit_log_R = qlogis(0.01)),
+  map = list(log_std_log_N0 = factor(NA), logit_log_R = factor(NA)),
+  silent = TRUE
 )
-
-# Save CSVs for sharing
-sim <- simulate_example_data(save_csv = TRUE, output_dir = "example_data")
+result$diagnostics$numerical_ok
 }
 }

@@ -12,9 +12,10 @@ survey_gap_panels <- function(p) {
   ans
 }
 
+# plot_ridges() returns a patchwork object holding the observed and fitted panels.
 survey_ridge_panels <- function(fit, ...) {
-  testthat::local_mocked_bindings(plot_grid = function(...) list(...), .package = "cowplot")
-  Filter(function(x) inherits(x, "ggplot"), plot_ridges(fit, ...))
+  p <- plot_ridges(fit, ...)
+  Filter(function(x) inherits(x, "ggplot"), list(p[[1L]], p[[2L]]))
 }
 
 test_that("ridge panels retain the full length grid when edge bins are unobserved", {
@@ -33,7 +34,7 @@ test_that("ridge panels retain the full length grid when edge bins are unobserve
     expect_equal(axes[[1]]$x$breaks, c(10, 30, 50, 70, 90))
     expect_equal(axes[[1]]$y.range, axes[[2]]$y.range)
     expect_equal(nrow(built[[1]]$data[[1]]), if (all_missing) 0L else 15L)
-    expect_silent(ggplot2::ggplotGrob(plot_ridges(fit)))
+    expect_silent(patchwork::patchworkGrob(plot_ridges(fit)))
   }
 })
 
@@ -138,7 +139,7 @@ test_that("observed ridge polygons stop at gaps and isolated bins remain visible
   drawn <- Filter(function(x) inherits(x, "points"), as.list(children))
   expect_length(drawn, 1L)
   expect_length(drawn[[1L]]$x, 2L)
-  expect_silent(ggplot2::ggplotGrob(plot_ridges(fit)))
+  expect_silent(patchwork::patchworkGrob(plot_ridges(fit)))
 })
 
 test_that("ridge panels share limits, time colors and grid-free axes with sparse observations", {
@@ -161,7 +162,7 @@ test_that("ridge panels share limits, time colors and grid-free axes with sparse
         expect_s3_class(ggplot2::calc_element(paste0("panel.grid.", axis),
                                               b[[i]]$plot$theme), "element_blank")
     }
-    expect_silent(ggplot2::ggplotGrob(plot_ridges(fit, ridges_scale = scale)))
+    expect_silent(patchwork::patchworkGrob(plot_ridges(fit, ridges_scale = scale)))
   }
 })
 
@@ -171,6 +172,6 @@ test_that("Brewer ridge palettes support two periods without warnings", {
   fit <- survey_gap_fixture(periods = 2L)
   for (palette in c("spectral", "BrBG", "RdYlBu", "RdYlGn", "PiYG", "PRGn", "RdBu")) {
     expect_silent(p <- plot_ridges(fit, palette = palette))
-    expect_silent(ggplot2::ggplotGrob(p))
+    expect_silent(patchwork::patchworkGrob(p))
   }
 })

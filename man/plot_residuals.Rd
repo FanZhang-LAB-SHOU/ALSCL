@@ -82,7 +82,11 @@ are affected when using capping.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically. The
+automatic number of breaks decreases as the number of facet columns
+increases, and tick labels that would overprint are omitted.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
@@ -105,20 +109,13 @@ a live TMB object. Saved fits use the observation mask in the TMB data.
 }
 }
 \examples{
-\dontrun{
-# Use 'run_acl' to get 'model_result'
-model_result <- run_acl(...)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 
-# One panel per length bin
-p_length <- plot_residuals(model_result, facet_by = "length")
+# Residuals over time, one panel per length bin
+plot_residuals(fit, facet_by = "length")
 
-# Print the plot for "length"
-print(p_length)
-
-# One panel per time step
-p_year <- plot_residuals(model_result, facet_by = "year")
-
-# Print the plot for "year"
-print(p_year)
+# Residuals across lengths, one panel per year
+plot_residuals(fit, facet_by = "year")
 }
 }

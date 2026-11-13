@@ -14,7 +14,8 @@ plot_compare_F_ts(
   linetypes = NULL,
   line_size = NULL,
   ...,
-  point_size = NULL
+  point_size = NULL,
+  basis = c("native", "age")
 )
 }
 \arguments{
@@ -24,17 +25,17 @@ plot_compare_F_ts(
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{method}{Character. How to summarize F across age/length groups each model
+\item{method}{Character. How to summarize F across groups in each model
 time step.
 \code{"apical"} (default): maximum F across groups.
-\code{"mean"}: unweighted arithmetic mean across groups.
-ACL uses age groups and ALSCL length bins; both summaries depend on that
-grouping. An age-group maximum need not equal a length-bin maximum, because
-age-specific F combines survival across lengths.}
+\code{"mean"}: unweighted arithmetic mean across groups.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -42,11 +43,47 @@ age-specific F combines survival across lengths.}
 
 \item{point_size}{Numeric or NULL. Point size. NULL inherits the comparison
 point-size override, if set, or the global point_size setting.}
+
+\item{basis}{Character. The groups over which F is summarized.
+\code{"native"} (default) uses the F matrix that each model estimates: F at
+age for ACL and F at length for ALSCL. An ACL summary and an ALSCL summary
+then cover different groups. An unweighted mean depends on the number of
+low-F groups, and a maximum over ages need not equal a maximum over length
+bins, because F at age combines survival across lengths. Read the time
+pattern of such a pair, not the difference in level.
+\code{"age"} uses F at age for both fits: \code{report$F} for ACL and the
+derived \code{report$FA} for ALSCL. Only the fitted ages and the time
+steps present in both fits are summarized. ALSCL F at age covers every age
+and time step when the fit holds numbers at length and age; otherwise it
+has no plus-group row and no value for the last time step, and the
+comparison leaves out the ACL plus group and the last time step. The two
+fits must have the same time step.}
 }
 \value{
 A ggplot object.
 }
 \description{
-One summary value of F per model time step for each fit, on the same axes.
-Quarterly fits stay quarterly; nothing is annualized.
+One summary value of the fishing mortality rate (F) per model time step for
+each fit, on the same axes. Quarterly fits stay quarterly; nothing is
+annualized. The y-axis label gives the time basis of the rate and the
+caption states the groups that each summary covers.
+}
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
+# Largest fishing mortality rate over ages (ACL) or lengths (ALSCL) in
+# each year
+plot_compare_F_ts(fit_acl, fit_alscl)
+
+# Mean fishing mortality rate at age over the ages that both fits share
+plot_compare_F_ts(fit_acl, fit_alscl, method = "mean", basis = "age")
+}
 }

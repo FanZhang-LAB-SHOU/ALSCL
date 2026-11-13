@@ -36,9 +36,12 @@ range must be finite, increasing and start at or after both t0 values.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -72,24 +75,38 @@ auto-detection from data range.}
 A ggplot object.
 }
 \description{
-Left panel: VB growth curves from each model. Optionally overlay a VB curve
-fitted independently from observed age-length data via \code{nls()}.
-Right panel: static pla heatmaps side-by-side. These compare VB parameters
-and static length-at-age probabilities. Realized length distributions at age
-in ALSCL also depend on growth transitions and survival.
+Left panel: von Bertalanffy (VB) growth curves from each model. Optionally
+overlay a VB curve fitted independently from observed age-length data via
+\code{nls()}. Right panel: heatmaps of the static probability of length
+given age (pla), side by side. Both panels use fitted ages and lengths:
+the heatmap cells sit at the ages in \code{model$age} and at the length-bin
+midpoints in \code{model$len_mid}. If either fit lacks this metadata, the
+heatmaps use age-class and length-bin positions and say so on their axes.
+The panels compare VB parameters and static length-at-age probabilities.
+Realized length distributions at age in ALSCL also depend on growth
+transitions and survival.
 }
 \examples{
-\dontrun{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
 # Without reference data
-plot_compare_growth(result_acl, result_alscl)
+plot_compare_growth(fit_acl, fit_alscl)
 
 # With observed age-length data
 obs <- data.frame(Age = c(1,1,2,2,3,3,4,5,6,7),
                   Length = c(20,22,30,28,38,35,42,48,50,52))
-plot_compare_growth(result_acl, result_alscl, ref_data = obs)
+plot_compare_growth(fit_acl, fit_alscl, ref_data = obs)
 
 # Customize reference
-plot_compare_growth(result_acl, result_alscl,
+plot_compare_growth(fit_acl, fit_alscl,
   ref_data = obs, ref_name = "Otolith data",
   ref_color = "forestgreen", show_points = TRUE)
 }

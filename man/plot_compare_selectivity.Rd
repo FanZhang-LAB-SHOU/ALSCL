@@ -23,9 +23,12 @@ plot_compare_selectivity(
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -46,4 +49,17 @@ Saved assessments are supported without refitting. Survey
 catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
 at the fitted length midpoints. Older fits without a recipe use log_q from
 their live TMB object.
+}
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_selectivity(fit_acl, fit_alscl)
+}
 }

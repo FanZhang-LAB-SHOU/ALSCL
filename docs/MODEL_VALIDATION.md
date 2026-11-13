@@ -156,8 +156,8 @@ Scores use natural-log survey indices; zero and missing withheld observations ar
 
 | 预测 / Prediction | 评分观测数 / Scored observations | 对数 RMSE / Log RMSE | 对数 MAE / Log MAE | 对数 MASE / Log MASE |
 |---|---:|---:|---:|---:|
-| ACL | 46 | 0.096 | 0.080 | 0.42 |
-| ALSCL | 46 | 0.26 | 0.20 | 1.07 |
+| ACL | 46 | 0.097 | 0.081 | 0.42 |
+| ALSCL | 46 | 0.22 | 0.18 | 0.95 |
 | 朴素预测 / Persistence | 46 | 0.17 | 0.15 | 0.74 |
 
 在这份模拟数据、教学 map 和两个起点下，ACL 的预测好于朴素预测，ALSCL 差于基准，尽管两者的优化都收敛了：这个差异值得追查，而两个检验时间步给不出模型的一般排序。

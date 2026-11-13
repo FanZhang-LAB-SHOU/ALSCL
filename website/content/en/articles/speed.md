@@ -58,11 +58,11 @@ alscl_speed_info()
 alscl_speed(sd_cores = "auto")   # back to the default
 ```
 
-- `"auto"` (default) uses up to four physical cores and keeps one free for the rest of the computer. More than four cores shortened fits little in tests, because the optimization itself runs on one core.
+- `"auto"` (default) uses up to four cores and keeps one free for the rest of the computer. It counts physical cores on macOS and Windows, and it does not exceed the cores given to the job by Slurm (`SLURM_CPUS_PER_TASK`) or by `options(mc.cores = )`. More than four cores shortened fits little in tests, because the optimization itself runs on one core.
 - A number uses that many cores. On a computing cluster, use the number of cores your job was given; `parallel::detectCores()` may report all cores of the node.
 - Memory: forked processes share the memory of the R session until they change it. Each socket worker holds its own copy of the model and its data; with large models, fewer workers use less memory.
 - Starts: `ncores` in `run_acl()` and `run_alscl()` sets how many starts run at once; the standard errors are computed afterwards, once, with `sd_cores`.
-- Your own parallel loops: if you run many fits in parallel yourself (for example with `parallel::mclapply()`, `foreach` or `future`), set `alscl_speed(sd_cores = 1)` inside the workers, so that each fit uses one core. `retro_model()` and `sim_acl()` do this for their workers automatically.
+- Your own parallel loops: if you run many fits in parallel yourself (for example with `parallel::mclapply()`, `foreach` or `future`), set `alscl_speed(sd_cores = 1)` inside the workers, so that each fit uses one core. `retro_model()`, `sim_acl()` and `fit_scenarios()` do this for their workers automatically when `ncores` is greater than 1. With `ncores = 1` they fit one after another in the main session and use the `sd_cores` of the session; the results are identical.
 - RStudio on macOS or Linux: `options(ALSCL.sd_backend = "fork")` uses forked processes for the full speed-up. R's documentation advises against it, so use it only if your session runs fits without problems.
 
 `alscl_speed_info()` confirms the choice. Memory errors with many cores mean fewer cores, for example `alscl_speed(sd_cores = 2)`.
@@ -95,7 +95,7 @@ In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfis
 
 ![Fit time before and after the speed settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
 
-The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision.
+The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision. The benchmark fits also fixed the standard deviation of log F at 0.2; the `fit_config` of `YTF_example` now fixes it at 0.302, the marginal SD of the generating AR(1) process, so current fits of the example take other times.
 
 ![Estimates and standard errors before and after the speed settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 
@@ -120,6 +120,8 @@ These options are for testing and special cases; the defaults suit normal use. R
 | `options(ALSCL.sd_backend = "socket")` | Use socket workers even where forking is safe |
 | `options(ALSCL.sd_socket_min_seconds = 3)` | Minimum estimated time of the delta method, in seconds, before socket workers are started; `0` always starts them |
 | `options(ALSCL.tmb.cache = path)` | Folder for compiled models |
+| `options(ALSCL.se_level = "hessian")` | Compute the covariance of the scalar parameters and the Hessian check only, so that standard errors of derived quantities are `NA`; `"none"` skips the standard-error step and `"full"` is the default. `retro_model()` and `hindcast_model()` without `save_fits` use `"hessian"` for their fits, because they do not use those standard errors |
+| `options(ALSCL.delta_method = "blocked")` | Compute the delta-method standard errors in blocks, which is faster and agrees with the default `"exact"` calculation to rounding error |
 
 <h2 id="next">What next</h2>
 

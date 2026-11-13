@@ -28,10 +28,19 @@ These are conditional residuals evaluated at the fitted latent
 effects. Standardizing does not make them independent or provide calibrated
 model tests. Observation SD is on the log scale. A live TMB object is not
 required when observations and reports were retained in the saved result.
+
+Standardized conditional residuals do not have unit standard deviation
+when the model is correct. The fitted random effects absorb part of the
+observation error, so the residuals are smaller than the observation
+errors. In simulation tests with the package examples, where data were
+simulated from a fitted model and the same model was refitted, their
+standard deviation was 0.91 to 0.96. A standard deviation close to one
+is therefore not evidence of a good fit, and a value below one is not
+evidence of overestimated observation error.
 }
 \examples{
-\dontrun{
-fit <- run_acl(YTF_example)
-residuals(fit, type = "standardized")
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+head(residuals(fit, type = "standardized"))
 }
 }

@@ -82,18 +82,18 @@ alscl_speed_info()
 alscl_speed(sd_cores = "auto")   # 恢复默认 / back to the default
 ```
 
-- `"auto"`（默认）最多使用 4 个物理核，并为电脑的其他工作保留 1 个。测试中超过 4 个核提升很小，因为优化本身只在一个核上运行。
+- `"auto"`（默认）最多使用 4 个核，并为电脑的其他工作保留 1 个。在 macOS 和 Windows 上按物理核计数，并且不超过 Slurm（`SLURM_CPUS_PER_TASK`）或 `options(mc.cores = )` 分配给作业的核数。测试中超过 4 个核提升很小，因为优化本身只在一个核上运行。
 - 指定一个数即使用这么多核。在计算集群上，请使用作业实际分配到的核数；`parallel::detectCores()` 可能报告整个节点的核数。
 - 内存：分叉进程与 R 会话共享内存，直到内容被修改。每个 socket 进程都保存一份模型和数据；模型很大时，减少进程数可以节省内存。
 - 初值：`run_acl()` 与 `run_alscl()` 中的 `ncores` 决定同时运行多少个初值；标准误在之后用 `sd_cores` 计算一次。
-- 自己的并行循环：如果你自己并行运行许多拟合（例如用 `parallel::mclapply()`、`foreach` 或 `future`），请在工作进程中设置 `alscl_speed(sd_cores = 1)`，让每个拟合只用 1 个核。`retro_model()` 与 `sim_acl()` 会自动为其工作进程这样设置。
+- 自己的并行循环：如果你自己并行运行许多拟合（例如用 `parallel::mclapply()`、`foreach` 或 `future`），请在工作进程中设置 `alscl_speed(sd_cores = 1)`，让每个拟合只用 1 个核。`ncores` 大于 1 时，`retro_model()`、`sim_acl()` 和 `fit_scenarios()` 会自动为其工作进程这样设置。`ncores = 1` 时它们在主会话中依次拟合，使用会话的 `sd_cores`；结果完全相同。
 - macOS 或 Linux 上的 RStudio：`options(ALSCL.sd_backend = "fork")` 改用分叉进程，获得完整的加速。这是 R 文档不建议的做法，只有在你的会话运行拟合没有问题时才使用。
 
-- `"auto"` (default) uses up to four physical cores and keeps one free for the rest of the computer. More than four cores shortened fits little in tests, because the optimization itself runs on one core.
+- `"auto"` (default) uses up to four cores and keeps one free for the rest of the computer. It counts physical cores on macOS and Windows, and it does not exceed the cores given to the job by Slurm (`SLURM_CPUS_PER_TASK`) or by `options(mc.cores = )`. More than four cores shortened fits little in tests, because the optimization itself runs on one core.
 - A number uses that many cores. On a computing cluster, use the number of cores your job was given; `parallel::detectCores()` may report all cores of the node.
 - Memory: forked processes share the memory of the R session until they change it. Each socket worker holds its own copy of the model and its data; with large models, fewer workers use less memory.
 - Starts: `ncores` in `run_acl()` and `run_alscl()` sets how many starts run at once; the standard errors are computed afterwards, once, with `sd_cores`.
-- Your own parallel loops: if you run many fits in parallel yourself (for example with `parallel::mclapply()`, `foreach` or `future`), set `alscl_speed(sd_cores = 1)` inside the workers, so that each fit uses one core. `retro_model()` and `sim_acl()` do this for their workers automatically.
+- Your own parallel loops: if you run many fits in parallel yourself (for example with `parallel::mclapply()`, `foreach` or `future`), set `alscl_speed(sd_cores = 1)` inside the workers, so that each fit uses one core. `retro_model()`, `sim_acl()` and `fit_scenarios()` do this for their workers automatically when `ncores` is greater than 1. With `ncores = 1` they fit one after another in the main session and use the `sd_cores` of the session; the results are identical.
 - RStudio on macOS or Linux: `options(ALSCL.sd_backend = "fork")` uses forked processes for the full speed-up. R's documentation advises against it, so use it only if your session runs fits without problems.
 
 `alscl_speed_info()` 可确认选择。多核时内存不足就减少核数，例如 `alscl_speed(sd_cores = 2)`。
@@ -138,9 +138,9 @@ In a benchmark of 90 fits (ACL and ALSCL fitted to `YTF_example` and the flatfis
 
 ![速度设置前后的拟合耗时 / Fit time before and after the speed settings](figures/speed/timing.png)
 
-CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。
+CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。基准测试中的拟合还把对数 F 的标准差固定在 0.2；`YTF_example` 的 `fit_config` 现在把它固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以示例数据当前的拟合耗时与表中不同。
 
-The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision.
+The CppAD comparison matched the pre-change estimates and standard errors exactly; the figure below compares all 4,365 rows of `summary(sdreport)` for the ALSCL `YTF_example` fit. The TMBad results have the small differences described in step 3. These timings predate the optimizer finishing step, enabled by `polish = TRUE` in current fits, so they do not measure the current default workflow. That step can change estimates at numerical precision. The benchmark fits also fixed the standard deviation of log F at 0.2; the `fit_config` of `YTF_example` now fixes it at 0.302, the marginal SD of the generating AR(1) process, so current fits of the example take other times.
 
 ![速度设置前后的估计值与标准误 / Estimates and standard errors before and after the speed settings](figures/speed/agreement.png)
 
@@ -173,6 +173,8 @@ These options are for testing and special cases; the defaults suit normal use. R
 | `options(ALSCL.sd_backend = "socket")` | 即使可以安全分叉，也使用 socket 进程 / Use socket workers even where forking is safe |
 | `options(ALSCL.sd_socket_min_seconds = 3)` | 启动 socket 进程前 delta 方法的最短预计耗时（秒）；设为 `0` 时总是启动 / Minimum estimated time of the delta method, in seconds, before socket workers are started; `0` always starts them |
 | `options(ALSCL.tmb.cache = path)` | 存放已编译模型的文件夹 / Folder for compiled models |
+| `options(ALSCL.se_level = "hessian")` | 只计算标量参数的协方差并检查 Hessian，派生量的标准误为 `NA`；`"none"` 跳过标准误计算，默认为 `"full"`。`retro_model()` 和不保存拟合的 `hindcast_model()` 对其拟合使用 `"hessian"`，因为它们用不到这些标准误 / Compute the covariance of the scalar parameters and the Hessian check only, so that standard errors of derived quantities are `NA`; `"none"` skips the standard-error step and `"full"` is the default. `retro_model()` and `hindcast_model()` without `save_fits` use `"hessian"` for their fits, because they do not use those standard errors |
+| `options(ALSCL.delta_method = "blocked")` | 分块计算 delta 方法标准误，速度更快，与默认的 `"exact"` 计算只差舍入误差 / Compute the delta-method standard errors in blocks, which is faster and agrees with the default `"exact"` calculation to rounding error |
 
 <a id="speed-next"></a>
 

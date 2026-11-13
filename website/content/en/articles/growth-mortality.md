@@ -1,6 +1,6 @@
 # Growth, mortality and residuals
 
-First complete the [worked YTF example](first-model.html) to create `a`, `b`, `x` and `inputs`. Define `dat <- x$data.CatL` and load ggplot2 and patchwork. The [retrospective guide](retrospectives.html) creates `ra` and `rb`.
+First complete the [worked YTF example](first-model.html) to create the input bundle `x` and the fits `a` and `b`. Define `dat <- x$data.CatL` and load ggplot2 and patchwork. The [retrospective guide](retrospectives.html) creates `ra` and `rb`.
 
 ```r
 library(ggplot2)
@@ -27,20 +27,20 @@ The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `
 
 ```r
 # Draw this figure
-plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
+plot_pla(b)
 ```
 
 [![Distribution of length at age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true)
 
-Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The colour shows the probability in each bin, and the last bin includes the upper tail. Labels 1 to 15 identify the age classes.
+Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The colour shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads Age group.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_pla)
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the estimate ± 1.96 standard errors because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
 
 ## ACL fishing mortality over time by age class
 
-`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal coordinate is the position of the age class, so the default label reads Age group unless you set `xlab$age`; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
+`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal axis shows the fitted ages, and the plus group is marked as in "15+"; an ALSCL plot with intervals (`se = TRUE`) shows the ages before the plus group. A result saved without age metadata is plotted against the position of the age class, and its default label reads Age group unless you set `xlab$age`. The default `ylab$F` label states the time basis of the rate, for example "Fishing mortality rate (per year)"; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
 
 ```r
 # Draw this figure
@@ -64,7 +64,7 @@ plot_fishing_mortality(a, type = "age",
 
 [![ACL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)
 
-Each panel shows the same ACL estimates for one time step, with age-class indices on the horizontal axis and approximate 95% intervals. The nearly flat profiles in this example indicate similar estimated fishing mortality across ages.
+Each panel shows the same ACL estimates for one time step, with the fitted ages on the horizontal axis (the plus group is marked "15+") and approximate 95% intervals. In most years of this example the profiles are nearly flat, which indicates similar estimated fishing mortality across ages; from 2007 to 2010 the estimates are higher at the younger ages.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -92,7 +92,7 @@ plot_fishing_mortality(b, type = "age",
 
 [![ALSCL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true)
 
-For each age class, ALSCL sums the numbers surviving across length bins and divides by the number present at the start of the step. Fishing mortality at age is `FA = -log(survival proportion) - M`. Each panel shows the estimates and approximate 95% intervals for one time step. The oldest age class and the final time step are omitted from `FA`.
+For each age class, ALSCL sums the numbers surviving across length bins and divides by the number present at the start of the step. Fishing mortality at age is `FA = -log(survival proportion) - M`. Each panel shows the estimates and approximate 95% intervals for one time step. The figure is drawn with `se = TRUE`, so it shows the cells that have standard errors: the ages before the plus group (ages 1 to 14) and the time steps before the last (2000 to 2018). These are the cells of `report$FA`, and `report$ZA` holds the matching total mortality at age. Without intervals (`se = FALSE`) the function also draws the plus group ("15+") and the last time step, which it computes from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula. F in the last time step is predicted by the F process; no observation informs it. `extract_estimates(b, "FA")` returns F at age for every age and time step; its standard errors are `NA` for the plus group and the last time step.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
@@ -166,7 +166,7 @@ plot_deviance(b, type = "R", log = FALSE, se = TRUE,
 
 [![Recruitment relative to the process median](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)
 
-With `log = FALSE`, each point is recruitment divided by the process median. A ratio of 1.7, as in 2012, means that estimated recruitment was about 70% above that median. The interval endpoints are exponentiated from the log scale.
+With `log = FALSE`, each point is recruitment divided by the process median. A ratio of 1.77, as in 2012, means that estimated recruitment was 77% above that median. The interval endpoints are exponentiated from the log scale.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
 
@@ -209,7 +209,7 @@ plot_ridges(b) # Default viridis gradient
 
 [![Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true)
 
-Each ridge shows the relative survey index across lengths in one time step, with observations on the left and the fit on the right. The peak shifts toward larger lengths after 2012. Compare the position and spread of the distributions. A step with no observations has no observed ridge, and a partially observed step is normalized over the observed bins only.
+Each ridge shows the relative survey index across lengths in one time step, with observations on the left and the fit on the right. `plot_ridges()` returns a patchwork object with one figure title and a title on each panel; `p[[1]]` and `p[[2]]` extract the observed and the fitted panel. The time axis shows years for annual fits and quarters, as in "2000 Q2", for quarterly fits. The peak shifts toward larger lengths after 2012. Compare the position and spread of the distributions. A step with no observations has no observed ridge, and a partially observed step is normalized over the observed bins only.
 
 Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that period. Both panels keep the same time positions, vertical range and time colors, including periods without observations. Brewer palettes such as `spectral` also support two-period results.
 

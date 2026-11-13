@@ -66,9 +66,8 @@ test_that("survey titles identify indices and normalized compositions and honor 
   }
   acl_theme_set(titles = list(CatL_by_year = "By survey period"))
   expect_equal(plot_CatL(fit, facet_by = "year")$labels$title, "By survey period")
-  testthat::local_mocked_bindings(plot_grid = function(...) list(...), .package = "cowplot")
   p <- plot_ridges(fit, ridges_scale = 1)
-  for (panel in p[1:2]) {
+  for (panel in list(p[[1L]], p[[2L]])) {
     expect_match(panel$labels$title, "survey length composition")
     expect_equal(as.numeric(tapply(panel$data$Abundance, panel$data$year, sum)), rep(1, 3))
     expect_s3_class(panel$theme$panel.grid.major, "element_blank")

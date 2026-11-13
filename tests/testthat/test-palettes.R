@@ -60,7 +60,9 @@ test_that("ridges keep ordered gradient colors independently of categorical them
     acl_theme_set(palette=pal)
     expect_equal(ALSCL:::.acl_ridges_palette(NULL,3)$palette(3), expected)
     expect_equal(ALSCL:::.acl_ridges_palette("viridis",3)$palette(3), expected)
-    expect_no_warning(ggplot2::ggplot_build(plot_ridges(f)))
+    # Build both panels of the patchwork that plot_ridges() returns.
+    p <- plot_ridges(f)
+    expect_no_warning(for (panel in list(p[[1L]], p[[2L]])) ggplot2::ggplot_build(panel))
   }
   expect_identical(formals(plot_ridges)$palette, "viridis")
   expect_equal(ALSCL:::.acl_ridges_palette("cividis",3)$palette(3),

@@ -82,7 +82,9 @@ ratios to the process median, obtained by exponentiating the deviations.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
@@ -103,8 +105,23 @@ objects without these reported quantities may use the finite Estimate
 column in est_std. With se = TRUE, a complete table of finite estimates
 and finite nonnegative standard errors is required. Groups and periods
 must match the model metadata, including the single group for shared F.
+ACL age panels are labelled with the fitted ages in \code{model_result$age};
+the oldest age class is a plus group and is marked with a plus sign, for
+example "Age 15+". Results saved without age metadata keep the position
+labels "Age bin 1", "Age bin 2" and so on.
 Titles and y-axis labels use the global dev_R/dev_F keys on the log
 scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
 theme label, and the typography arguments replace the corresponding theme settings.
+}
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+
+# Log recruitment deviations with 95\% intervals
+plot_deviance(fit, se = TRUE)
+
+# Log deviations of the fishing mortality rate, one panel per age
+plot_deviance(fit, type = "F")
+}
 }

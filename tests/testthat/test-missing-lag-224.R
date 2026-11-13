@@ -13,15 +13,15 @@ missing_lag_fixture <- function() {
 }
 
 test_that("ridge observations exclude missing periods and zero observations in portable fits", {
-  testthat::local_mocked_bindings(plot_grid = function(...) list(...), .package = "cowplot")
   fit <- missing_lag_fixture()
   fit$obj <- NULL
   panels <- plot_ridges(fit, ridges_scale = 1)
   observed <- panels[[1L]]$data
   expected <- matrix(c(1, NA, NA, NA, NA, NA, 1/6, 1/3, 1/2), 3L, 3L)
   expect_equal(observed$Abundance, as.vector(t(expected)))
-  expect_true(all(is.na(observed$Abundance[observed$year == "2000.25"])))
-  expect_equal(levels(observed$year), as.character(fit$year))
+  # Quarterly periods are labelled as quarters on the ridge axis.
+  expect_true(all(is.na(observed$Abundance[observed$year == "2000 Q2"])))
+  expect_equal(levels(observed$year), c("2000 Q1", "2000 Q2", "2000 Q3"))
   expect_false(panels[[1L]]$scales$get_scales("y")$drop)
   expect_true(all(is.finite(panels[[2L]]$data$Abundance)))
   expect_equal(as.numeric(tapply(panels[[2L]]$data$Abundance,
@@ -40,11 +40,13 @@ test_that("ridge observations exclude missing periods and zero observations in p
 })
 
 test_that("ridge auto scaling and rendering tolerate an entirely missing period", {
+  # Build both panels of the patchwork that plot_ridges() returns.
+  build_panels <- function(p) for (panel in list(p[[1L]], p[[2L]])) ggplot2::ggplot_build(panel)
   fit <- missing_lag_fixture()
   fit$obj <- NULL
-  expect_no_warning(ggplot2::ggplot_build(plot_ridges(fit)))
+  expect_no_warning(build_panels(plot_ridges(fit)))
   fit$observations[,] <- NA_real_
-  expect_no_warning(ggplot2::ggplot_build(plot_ridges(fit)))
+  expect_no_warning(build_panels(plot_ridges(fit)))
   fit$observations <- NULL
   expect_error(plot_ridges(fit), "Observed data are unavailable")
 })

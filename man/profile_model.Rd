@@ -31,6 +31,7 @@ errors use one worker, retaining the original number of starts.}
 A list with parameter, scale, grid (including objective, delta_nll,
 numerical diagnostics, warnings and errors), named portable fits and settings.
 delta_nll is relative to the original fit; negative values are not clipped.
+workers is the number of socket workers that were used.
 }
 \description{
 Fix one scalar at each grid value and refit the remaining free parameters and
@@ -48,11 +49,10 @@ conditional on the model and fixed-parameter settings. No confidence intervals o
 cutoffs are inferred, and failed numerical screens remain visible.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- run_acl(YTF_example, silent = TRUE)
 grid <- exp(fit$opt$par[["mean_log_F"]]) * c(0.9, 1, 1.1)
-p <- profile_model(fit, "mean_log_F", values = grid,
-                   scale = "natural", ncores = 2)
-p$grid
+p <- profile_model(fit, "mean_log_F", values = grid, scale = "natural")
+p$grid[, c("value", "objective", "delta_nll", "numerical_ok")]
 }
 }

@@ -29,7 +29,9 @@ plot_ridges(
 \item{ridges_alpha}{Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.}
 
 \item{ridges_scale}{One finite positive number or NULL. Multiplier for ridge height. When NULL (default),
-auto-scales so the tallest peak fills ~80\\% of inter-year spacing. Increase for
+auto-scales so the tallest peak fills ~80\% of inter-year spacing. The
+automatic scale uses the fitted compositions and the observed compositions
+of periods with at least two observed bins. Increase for
 taller ridges, decrease for flatter. Useful when many length bins make proportions
 small (e.g. tuna with 22 bins).}
 
@@ -45,7 +47,11 @@ independently of the global categorical palette. Also accepts "npg", "aaas", "ne
 Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 which will be interpolated to match the number of years.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character or NULL. One title for the whole figure. NULL uses
+the global \code{ridges} title; an empty string draws none. The two panels
+keep their own titles, from the global \code{CatL_obs_length} and
+\code{CatL_est_length} keys, so observed and fitted panels stay labelled.
+See \code{acl_theme_set()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -63,14 +69,17 @@ which will be interpolated to match the number of years.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }
 \value{
-A grid arranged ggplot object.
+A patchwork object holding the observed panel and the fitted panel. Extract
+a panel with \code{p[[1]]} or \code{p[[2]]}.
 }
 \description{
 This function takes the model result as an input and creates two ridgeline plots to
@@ -85,25 +94,26 @@ including missing edge bins and wholly unobserved periods. Predicted
 compositions use all length bins. Normalization is stable for large or small
 finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 a live TMB object; saved fits use the observation mask in the TMB data.
+
+The observed composition of a period is taken over its observed bins and
+the fitted composition over all bins, so the two panels compare the
+position and spread of each distribution, not exact heights. A period with
+a single observed bin has an observed composition of 1 by construction.
+Under the automatic height scale such a period does not set the scale, and
+its point is drawn at the height of the tallest ridge.
+
+The time axis shows whole years for annual fits ("2000") and quarters for
+quarterly fits ("2000 Q2"). Other time steps keep their decimal labels.
 }
 \examples{
-\dontrun{
-# Assume model_result is the result obtained from function 'run_acl'.
-p <- plot_ridges(model_result)
-print(p)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+plot_ridges(fit)
 
-# Built-in palettes
-plot_ridges(model_result, palette = "viridis")   # purple-yellow
-plot_ridges(model_result, palette = "ocean")      # deep blue-teal
-plot_ridges(model_result, palette = "sunset")     # dark purple-red-gold
-plot_ridges(model_result, palette = "forest")     # dark green-light green
-plot_ridges(model_result, palette = "fire")       # black-red-gold
-plot_ridges(model_result, palette = "spectral")   # red-yellow-blue
-plot_ridges(model_result, palette = "turbo")      # rainbow-like
-plot_ridges(model_result, palette = "plasma")     # purple-orange-yellow
+# A built-in palette
+plot_ridges(fit, palette = "ocean")
 
-# Custom colors (auto-interpolated)
-plot_ridges(model_result, palette = c("#0D1B2A", "#2E86AB", "#72EFDD"))
-plot_ridges(model_result, palette = c("navy", "white", "firebrick"))
+# Custom colors, interpolated over the years
+plot_ridges(fit, palette = c("navy", "white", "firebrick"))
 }
 }

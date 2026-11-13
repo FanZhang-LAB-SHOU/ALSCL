@@ -15,3 +15,17 @@ An alscl_fit object with a recipe and no live TMB obj.
 \description{
 Read a portable assessment archive
 }
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+path <- tempfile(fileext = ".rds")
+save_assessment(fit, path)
+saved <- read_assessment(path)
+
+# The archive has no TMB object, and the estimates are unchanged
+is.null(saved$obj)
+all.equal(coef(saved), coef(fit))
+plot_SSB(saved)
+unlink(path)
+}
+}

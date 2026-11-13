@@ -25,15 +25,21 @@ plot_compare_metrics(
 
 \item{model2}{Second model result (alternative).}
 
-\item{data.CatL}{Catch-at-length data frame.}
+\item{data.CatL}{Survey index table used for both fits: a length-bin column
+followed by one column of survey indices per time step.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
 \item{metrics}{Character vector selecting which panels to show. Options:
-\code{"error"} (RMSE, MAE), \code{"R2"}, \code{"MAPE"},
-\code{"IC"} (AIC, BIC, NLL), \code{"npar"}.
+\code{"error"} (root mean squared error, RMSE, and mean absolute error,
+MAE), \code{"R2"} (coefficient of determination), \code{"MAPE"} (mean
+absolute percentage error), \code{"IC"} (Akaike information criterion,
+AIC, Bayesian information criterion, BIC, and the negative
+log-likelihood), \code{"npar"} (number of estimated parameters).
 Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
 
 \item{facet_ncol}{Integer or NULL. Columns of panels. NULL uses up to three.}
@@ -55,16 +61,21 @@ A ggplot object.
 Compare Goodness-of-Fit Metrics
 }
 \examples{
-\dontrun{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+
 # All panels (default)
-plot_compare_metrics(result_acl, result_alscl, data.CatL)
+plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL)
 
 # Only error and information criteria
-plot_compare_metrics(result_acl, result_alscl, data.CatL,
+plot_compare_metrics(fit_acl, fit_alscl, x$data.CatL,
   metrics = c("error", "IC"))
-
-# Just R2 and MAPE
-plot_compare_metrics(result_acl, result_alscl, data.CatL,
-  metrics = c("R2", "MAPE"))
 }
 }

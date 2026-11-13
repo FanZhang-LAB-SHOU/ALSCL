@@ -48,7 +48,7 @@ retro_acl(
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of time columns to peel. Default is 5.}
+\item{nyear}{Integer. Number of retrospective peels. Default is 5.}
 
 \item{data.CatL}{Survey abundance indices at length or a named input bundle, as in
 \code{retro_acl(x, nyear = 3)}.}
@@ -133,10 +133,11 @@ per start. Default is 1; nstarts controls the number of independent starts.}
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
-\item{ncores}{Integer. Number of CPU cores for parallel peel computation.
-Default is 1. A bundle's fitting ncores is ignored: specify this argument
-explicitly for peel workers. Each fit runs its nstarts sequentially with
-ncores = 1, avoiding nested fitting workers.}
+\item{ncores}{Integer. Number of socket workers for the full fit and the
+peels. Default is 1. With more than one worker, the full fit and the peels
+run in one batch; estimates are the same as with one worker. A bundle's
+fitting ncores is ignored: specify this argument explicitly. Each fit runs
+its nstarts sequentially with ncores = 1, avoiding nested fitting workers.}
 
 \item{...}{Additional arguments passed to \code{\link[=retro_model]{retro_model()}}.}
 }
@@ -146,6 +147,13 @@ A list. See \code{\link[=retro_model]{retro_model()}}.
 \description{
 Convenience wrapper that calls \code{retro_model(..., model_type = "acl")}.
 See \code{\link[=retro_model]{retro_model()}} for full documentation of all parameters.
+}
+\examples{
+\donttest{
+retro <- retro_acl(YTF_example, nyear = 2, silent = TRUE)
+retro$rho_text
+retro$rho_by_peel
+}
 }
 \seealso{
 \code{\link[=retro_model]{retro_model()}}, \code{\link[=retro_alscl]{retro_alscl()}}, \code{\link[=plot_retro]{plot_retro()}}

@@ -13,10 +13,22 @@
 #' finite log predictions; nonfinite predicted values are rejected. Stored observations support saved fits without
 #' a live TMB object; saved fits use the observation mask in the TMB data.
 #'
+#' The observed composition of a period is taken over its observed bins and
+#' the fitted composition over all bins, so the two panels compare the
+#' position and spread of each distribution, not exact heights. A period with
+#' a single observed bin has an observed composition of 1 by construction.
+#' Under the automatic height scale such a period does not set the scale, and
+#' its point is drawn at the height of the tallest ridge.
+#'
+#' The time axis shows whole years for annual fits ("2000") and quarters for
+#' quarterly fits ("2000 Q2"). Other time steps keep their decimal labels.
+#'
 #' @param model_result A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year.
 #' @param ridges_alpha Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8.
 #' @param ridges_scale One finite positive number or NULL. Multiplier for ridge height. When NULL (default),
-#'   auto-scales so the tallest peak fills ~80\% of inter-year spacing. Increase for
+#'   auto-scales so the tallest peak fills ~80% of inter-year spacing. The
+#'   automatic scale uses the fitted compositions and the observed compositions
+#'   of periods with at least two observed bins. Increase for
 #'   taller ridges, decrease for flatter. Useful when many length bins make proportions
 #'   small (e.g. tuna with 22 bins).
 #' @param palette Character or character vector. Color palette for the fill.
@@ -31,7 +43,11 @@
 #'   Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 #'   which will be interpolated to match the number of years.
 #'
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character or NULL. One title for the whole figure. NULL uses
+#'   the global \code{ridges} title; an empty string draws none. The two panels
+#'   keep their own titles, from the global \code{CatL_obs_length} and
+#'   \code{CatL_est_length} keys, so observed and fitted panels stay labelled.
+#'   See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -40,30 +56,24 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
-#' @return A grid arranged ggplot object.
+#' @return A patchwork object holding the observed panel and the fitted panel. Extract
+#'   a panel with \code{p[[1]]} or \code{p[[2]]}.
 #'
 #' @examples
-#' \dontrun{
-#' # Assume model_result is the result obtained from function 'run_acl'.
-#' p <- plot_ridges(model_result)
-#' print(p)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' plot_ridges(fit)
 #'
-#' # Built-in palettes
-#' plot_ridges(model_result, palette = "viridis")   # purple-yellow
-#' plot_ridges(model_result, palette = "ocean")      # deep blue-teal
-#' plot_ridges(model_result, palette = "sunset")     # dark purple-red-gold
-#' plot_ridges(model_result, palette = "forest")     # dark green-light green
-#' plot_ridges(model_result, palette = "fire")       # black-red-gold
-#' plot_ridges(model_result, palette = "spectral")   # red-yellow-blue
-#' plot_ridges(model_result, palette = "turbo")      # rainbow-like
-#' plot_ridges(model_result, palette = "plasma")     # purple-orange-yellow
+#' # A built-in palette
+#' plot_ridges(fit, palette = "ocean")
 #'
-#' # Custom colors (auto-interpolated)
-#' plot_ridges(model_result, palette = c("#0D1B2A", "#2E86AB", "#72EFDD"))
-#' plot_ridges(model_result, palette = c("navy", "white", "firebrick"))
+#' # Custom colors, interpolated over the years
+#' plot_ridges(fit, palette = c("navy", "white", "firebrick"))
 #' }
 #' @export
 plot_ridges <- function(model_result, ridges_alpha = 0.8,
@@ -93,7 +103,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   if (length(len_mid) != nrow(Elog_index) || length(year) != ncol(Elog_index))
     stop("Length and time metadata must match the abundance matrix dimensions.", call. = FALSE)
   # 两侧按输入时间顺序使用同一渐变 / Share ordered time colors across panels.
-  year_levels <- as.character(year)
+  # Axis labels: whole years, or quarters for quarterly fits.
+  year_levels <- .acl_time_labels(year, step = model_result[["growth_step"]], prefix = FALSE)
+  if (anyDuplicated(year_levels)) year_levels <- as.character(year)
+  time_factor <- function(x) factor(year_levels[match(x, as.character(year))], levels = year_levels)
   n_years <- length(year)
 
   # --- Build fill scale from palette ---
@@ -114,7 +127,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
     }
     out
   }
-  df_observed <- as.data.frame(composition(logN_at_len))
+  observed_composition <- composition(logN_at_len)
+  df_observed <- as.data.frame(observed_composition)
   colnames(df_observed) <- year
   df_observed$len_mid <- len_mid
 
@@ -125,8 +139,13 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   # Auto-scale: ridges_scale makes peak height ~1 unit on y-axis
   # When many length bins exist (e.g. tuna: 22 bins), proportions are small (~0.04)
   # and ridges become invisible without scaling
+  # A period with one observed bin has composition 1 whatever was observed.
+  # It must not set the automatic scale and flatten every other ridge.
+  single_bin <- character()
   if (is.null(ridges_scale)) {
-    proportions <- c(as.matrix(df_observed[, -ncol(df_observed), drop = FALSE]),
+    single <- colSums(is.finite(observed_composition)) == 1L
+    single_bin <- as.character(year)[single]
+    proportions <- c(observed_composition[, !single, drop = FALSE],
                      as.matrix(df_estimated[, -ncol(df_estimated), drop = FALSE]))
     finite_proportions <- proportions[is.finite(proportions)]
     max_prop <- if (length(finite_proportions)) max(finite_proportions) else 0
@@ -135,14 +154,15 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   }
 
   # Reshape the data from wide to long format
-  df_observed_long <- df_observed %>%
-    tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
-  df_observed_long$year <- factor(df_observed_long$year, levels = year_levels)
+  df_observed_long <- tidyr::pivot_longer(df_observed, -len_mid, names_to = "year", values_to = "Abundance")
+  single_rows <- df_observed_long$year %in% single_bin
+  df_observed_long$year <- time_factor(df_observed_long$year)
   df_observed_long$Abundance <- df_observed_long$Abundance * ridges_scale
+  # Draw the point of a single-bin period at the height of the tallest ridge.
+  df_observed_long$Abundance[single_rows] <- pmin(df_observed_long$Abundance[single_rows], 0.8)
 
-  df_estimated_long <- df_estimated %>%
-    tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
-  df_estimated_long$year <- factor(df_estimated_long$year, levels = year_levels)
+  df_estimated_long <- tidyr::pivot_longer(df_estimated, -len_mid, names_to = "year", values_to = "Abundance")
+  df_estimated_long$year <- time_factor(df_estimated_long$year)
   df_estimated_long$Abundance <- df_estimated_long$Abundance * ridges_scale
 
   runs <- .acl_observed_plot_runs(df_observed_long, "year", "len_mid", "Abundance")
@@ -152,38 +172,48 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   y_limits <- c(0.4, max(n_years + 0.6, max(ridge_tops, na.rm = TRUE) + 0.1))
 
   # Plot the data using ggplot2 with ggridges
-  p_observed <- ggplot2::ggplot(df_observed_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
+  p_observed <- ggplot2::ggplot(df_observed_long, ggplot2::aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(data = runs[runs$run_size > 1L, , drop = FALSE],
-      mapping = aes(group = survey_run), alpha = ridges_alpha, na.rm = TRUE) +
+      mapping = ggplot2::aes(group = survey_run), alpha = ridges_alpha, na.rm = TRUE) +
     ggplot2::scale_y_discrete(limits = year_levels, drop = FALSE,
       expand = ggplot2::expansion(add = 0)) +
     ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_obs_length")) +
-    .acl_scale_x(x_breaks, n_breaks = 8) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_title("CatL_obs_length")) +
+    .acl_scale_x(x_breaks, n_breaks = 8, values = len_mid) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
-  p_estimated <- ggplot2::ggplot(df_estimated_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
+  p_estimated <- ggplot2::ggplot(df_estimated_long, ggplot2::aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
     ggplot2::scale_y_discrete(limits = year_levels, drop = FALSE,
       expand = ggplot2::expansion(add = 0)) +
     ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_est_length")) +
-    .acl_scale_x(x_breaks, n_breaks = 8) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_title("CatL_est_length")) +
+    .acl_scale_x(x_breaks, n_breaks = 8, values = len_mid) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
   if (any(runs$run_size == 1L)) {
     p_observed <- p_observed + ggplot2::geom_point(
       data = runs[runs$run_size == 1L, , drop = FALSE], inherit.aes = FALSE,
-      mapping = aes(x = len_mid, y = as.numeric(year) + Abundance, fill = year),
+      mapping = ggplot2::aes(x = len_mid, y = as.numeric(year) + Abundance, fill = year),
       shape = 21, size = acl_theme("point_size"), alpha = ridges_alpha, show.legend = FALSE)
   }
   # Train both axes on the complete length grid even if edge bins, or all
   # observations, are missing. Blank layers retain the configured expansion.
   p_observed <- p_observed + ggplot2::expand_limits(x = range(len_mid))
   p_estimated <- p_estimated + ggplot2::expand_limits(x = range(len_mid))
-  p <- cowplot::plot_grid(p_observed, p_estimated, ncol = 2, align = "hv", axis = "tblr")
+  # One title for the figure; the panel titles tell observed from fitted.
+  overall <- if (!is.null(title)) title else .acl_title("ridges")
+  if (!is.character(overall) || length(overall) != 1L || is.na(overall) || !nzchar(overall))
+    overall <- NULL
+  annotation_theme <- ggplot2::theme(
+    text = ggplot2::element_text(family = if (is.null(font_family)) acl_theme("font_family") else font_family),
+    plot.title = ggplot2::element_text(
+      size = if (is.null(title_size)) acl_theme("title_size") else title_size,
+      hjust = if (is.null(title_hjust)) acl_theme("title_hjust") else title_hjust))
+  p <- patchwork::wrap_plots(p_observed, p_estimated, ncol = 2) +
+    patchwork::plot_annotation(title = overall, theme = annotation_theme)
 
   return(p)
 }

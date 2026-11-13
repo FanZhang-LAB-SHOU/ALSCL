@@ -27,7 +27,7 @@ comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-先读每次拟合的数值检查（[理解第一次拟合](first-model.html#checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低者，仅在两者都合格时给出）和 `issues`。在记录运行（[comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，调查指数 RMSE 也更小，为 2.5 对 4.7。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
+先读每次拟合的数值检查（[理解第一次拟合](first-model.html#checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。在记录运行（[comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，调查指数 RMSE 也更小，为 2.5 对 4.4。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
 
 ![模拟 YTF：ACL 与 ALSCL 的残差比较](../assets/manual/figures/ytf/compare_residuals.png)
 

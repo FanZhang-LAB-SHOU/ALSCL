@@ -27,7 +27,8 @@ plot_SSB(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  interval = NULL
 )
 }
 \arguments{
@@ -71,11 +72,20 @@ plot_SSB(
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{interval}{Character or NULL. The 95\% interval drawn when \code{se = TRUE}.
+\code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+stays above zero (an estimate of exactly zero keeps the Wald upper bound
+with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+fall below zero. NULL inherits the global \code{interval} setting (default
+"lognormal"). Point estimates are the same for both.}
 }
 \value{
 A ggplot object or a list with plot and data.
@@ -87,10 +97,21 @@ at age (SBA) from ACL or ALSCL model results.
 \details{
 ALSCL reports SSB, SBL and SBA with standard errors. ACL reports SSB
 with standard errors and SBL estimates only; SBA is unavailable. A missing
-quantity or requested standard error produces an explicit error. With
-\code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
-on the reported scale. They are not truncated at zero. Inspect fit
-diagnostics before using uncertainty intervals.
+quantity or requested standard error produces an explicit error. With \code{se = TRUE}
+the default interval is lognormal:
+\code{exp(log(estimate) +/- 1.96 * SE / estimate)}, where the estimate and
+its standard error (SE) are those stored in \code{model_result$est_std}.
+It cannot fall below zero. \code{interval = "wald"}, or
+\code{acl_theme_set(interval = "wald")}, restores the symmetric interval
+\code{estimate +/- 1.96 * SE} used by earlier versions. An estimate that is
+exactly zero, such as spawning stock biomass in a length bin with no
+mature fish, keeps the Wald bounds. Inspect fit diagnostics before using
+uncertainty intervals.
+
+Age panels are labelled with the fitted ages in \code{model_result$age}.
+The oldest age class is a plus group and is marked with a plus sign, for
+example "Age 15+". Results saved without age metadata keep the position
+labels "Age bin 1", "Age bin 2" and so on.
 
 Titles, axis labels, time-axis breaks and expansion inherit
 \code{acl_theme_set()}. Title keys are SSB, SBL and SBA;
@@ -103,4 +124,15 @@ theme label, and the typography arguments replace the corresponding theme settin
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
 The point uses the global point_size setting and the estimate's line colour.
+}
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+
+# Spawning stock biomass (SSB) with 95\% confidence intervals
+plot_SSB(fit, se = TRUE)
+
+# Spawning stock biomass at length, one panel per length bin
+plot_SSB(fit, type = "SBL")
+}
 }

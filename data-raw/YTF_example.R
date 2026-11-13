@@ -37,12 +37,15 @@ build_ytf_example <- function() {
     ans
   }
   # 条件拟合固定已知生物参数；不用于证明可识别性 / Conditional teaching fits.
+  # F_sd 是新息标准差；模型的 F 标准差是边际标准差 / F_sd is the innovation SD;
+  # the models take the marginal SD of the AR(1) process.
+  F_marginal_sd <- pa$F_sd / sqrt(1 - pa$F_ar^2)
   p_acl <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk),
-    t0 = pa$t0, log_cv_len = log(pa$cv_L), log_std_log_F = log(pa$F_sd),
+    t0 = pa$t0, log_cv_len = log(pa$cv_L), log_std_log_F = log(F_marginal_sd),
     log_std_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
   p_alscl <- list(log_Linf = log(pa$Linf), log_vbk = log(pa$vbk),
     log_t0 = log(pa$t0), log_cv_len = log(pa$cv_L),
-    log_cv_grow = log(pa$cv_inc), log_sigma_log_F = log(pa$F_sd),
+    log_cv_grow = log(pa$cv_inc), log_sigma_log_F = log(F_marginal_sd),
     log_sigma_log_N0 = log(pa$std_logN0), logit_log_R = qlogis(pa$R_ar))
   fixed <- function(x) setNames(rep(list(factor(NA)), length(x)), names(x))
   m_acl <- fixed(p_acl)
@@ -74,6 +77,10 @@ build_ytf_example <- function() {
       doi = "10.1111/faf.12673"))
 }
 
+# The stored data were generated with ALSCL 2.0.0. Rebuilding with a later
+# version reproduces them to about 3e-15 (relative), not bit for bit, so in
+# 2.4.3.9000 only fit_config was updated in the stored object (the fixed log F
+# standard deviation became the marginal SD); the data tables were kept.
 YTF_example <- build_ytf_example()
 dir.create("data", showWarnings = FALSE)
 save(YTF_example, file = "data/YTF_example.rda", compress = "xz", version = 2)

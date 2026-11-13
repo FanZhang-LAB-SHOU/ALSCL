@@ -38,11 +38,14 @@ acl_theme_set(
   hline_color = NULL,
   low_col = NULL,
   high_col = NULL,
-  ...
+  ...,
+  interval = NULL
 )
 }
 \arguments{
-\item{base_theme}{Character. Base ggplot2 theme name.}
+\item{base_theme}{Character. Base ggplot2 theme name: "bw", "minimal",
+"classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or
+without the "theme_" prefix. Any other value is an error.}
 
 \item{font_family}{Character. Font family for all text.}
 
@@ -58,9 +61,12 @@ acl_theme_set(
 
 \item{legend_text_size}{Numeric. Legend text size.}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks. Pass NULL
-explicitly to restore automatically selected breaks; omitting the argument
-leaves the current setting unchanged.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks. One setting
+serves time, age and length axes. A plot uses it only when at least one
+break lies within the range of its x axis; otherwise that plot chooses its
+breaks automatically. Calendar-year breaks therefore do not blank age or
+length axes. Pass NULL explicitly to restore automatically selected breaks;
+omitting the argument leaves the current setting unchanged.}
 
 \item{x_expand}{Numeric vector of length 2. X-axis expansion.}
 
@@ -75,11 +81,13 @@ override is set. Explicit per-call sizes take priority.}
 
 \item{se_color}{Character. Default CI color.}
 
-\item{se_alpha}{Numeric. Default CI transparency (0.2).
-Plot arguments set to NULL inherit this value; explicit alpha takes priority.}
+\item{se_alpha}{Numeric. Default transparency of interval ribbons (0.2).
+Plot arguments set to NULL inherit this value; explicit alpha takes priority.
+Error bars are drawn opaque unless a plot call supplies se_alpha.}
 
 \item{compare_colors}{Character vector of 2 colors. Can be unnamed (positional)
-or named. The first color is always model1, second is model2.
+or named. The first color is always model1, second is model2. A vector
+with fewer than two colors is an error.
 Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 \code{c("M=0" = "steelblue", "M=0.5" = "tomato")}.}
 
@@ -106,7 +114,10 @@ compare_annualF are accepted with a warning.}
 
 \item{xlab}{Named list. Override specific x-axis labels.}
 
-\item{ylab}{Named list. Override specific y-axis labels. The survey key
+\item{ylab}{Named list. Override specific y-axis labels. The default
+fishing mortality label gains the time basis of the fit, for example
+"(per year)" or "(per quarter)"; a customized \code{F} label is used verbatim.
+The survey key
 labels survey indices independently of catch abundance; when unset,
 survey plots retain a legacy customized abundance label or use Survey index.
 Set a named label to NULL to restore its default, for example
@@ -123,6 +134,11 @@ Default point, observation, smoother and reference-line colors.}
 \item{low_col, high_col}{Character or NULL. Continuous heatmap endpoints.}
 
 \item{...}{The former argument name compare_linewidth, accepted with a warning.}
+
+\item{interval}{Character. Default 95\% interval for positive quantities
+(abundance, biomass, spawning stock biomass, recruitment, catch and
+fishing mortality): \code{"lognormal"} (default) or \code{"wald"}. See
+\code{\link{plot_abundance}} for the formulas.}
 }
 \value{
 Invisible previous settings. Save these or the result of acl_theme(),
@@ -135,7 +151,8 @@ current values.
 }
 \examples{
 # --- Set just one thing ---
-acl_theme_set(base_theme = "theme_classic")
+# The first call returns the previous settings, which are restored at the end.
+old <- acl_theme_set(base_theme = "theme_classic")
 acl_theme_set(font_family = "Times New Roman")
 acl_theme_set(compare_line_size = 2)
 
@@ -157,4 +174,7 @@ acl_theme_set(
 # plot_compare_ts(result1, result2,
 #   model1_name = "Run A", model2_name = "Run B",
 #   colors = c("darkgreen", "purple"))
+
+# --- Restore the previous settings ---
+do.call(acl_theme_set, old)
 }

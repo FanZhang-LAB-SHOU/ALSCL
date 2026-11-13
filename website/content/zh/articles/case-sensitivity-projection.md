@@ -47,9 +47,9 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
 
 | 情景 | 2019 年产卵生物量 | 每时间步平均 F |
 |---|---:|---:|
-| `reference` | 75.7 | 0.318 |
-| `low_M` | 75.6 | 0.369 |
-| `shared_F` | 74.3 | 0.331 |
+| `reference` | 75.5 | 0.320 |
+| `low_M` | 75.4 | 0.371 |
+| `shared_F` | 74.1 | 0.335 |
 
 较低的 M 抬高了估计的 F，而末期产卵生物量几乎没变，三条曲线几乎重合；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
 
@@ -70,7 +70,7 @@ ggplot(profile_F$grid, aes(value, delta_nll)) +
 
 ![自由 F 过程基准水平的示例剖面](../assets/manual/figures/workflows/profile-F.png)
 
-在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.281、0.312 和 0.344 三个点的增量分别为 0.93、约 0（-8e-11，舍入误差）和 0.76，全部通过检查：基准 F 改变 10% 要付出 0.8 到 0.9 个单位。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
+在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-1e-10，舍入误差）和 0.35，全部通过检查：基准 F 改变 10% 要付出约 0.4 个单位。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
 
 <h2 id="project">4. 投影未来 F 情景</h2>
 
@@ -101,7 +101,7 @@ ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
 
 ![显式保持未来生物学输入的 ALSCL 条件 SSB 情景](../assets/manual/figures/workflows/projection-SSB.png)
 
-在记录运行（[projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)）中，两个情景 2020 年都从产卵生物量 65.0 开始；2023 年在 F = 0.10 下为 115，在 F = 0.25 下为 73.3，单位由示例的体重决定，并以保持不变的补充量和生物学设置为条件。
+在记录运行（[projections.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/projections.csv)）中，两个情景 2020 年都从产卵生物量 66.1 开始；2023 年在 F = 0.10 下为 114，在 F = 0.25 下为 73.0，单位由示例的体重决定，并以保持不变的补充量和生物学设置为条件。
 
 <h2 id="next">下一步</h2>
 

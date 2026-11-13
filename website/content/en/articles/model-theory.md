@@ -56,7 +56,7 @@ Initial recruitment defines the youngest class; the other classes follow a recur
 u_{i-1}\sim N(0,\sigma_{N0}^2).
 ```
 
-The initial log abundance of a class therefore contains the cumulative sum of the deviations of the younger classes, so the total deviations of neighbouring classes are correlated. ALSCL allocates these initial numbers across length using age-length probabilities.
+The initial log abundance of a class therefore contains the cumulative sum of the deviations of the younger classes, so the total deviations of neighbouring classes are correlated. ALSCL allocates these initial numbers across length using age-length probabilities. In this published structure the plus group of the first time step holds one cohort. The `structure` argument offers an equilibrium plus group and, for ALSCL, initial lengths at age built from the growth transition ([Choose the fitting settings](fitting-controls.html#structure)).
 
 <h3 id="pla">Age-to-length conversion (ACL)</h3>
 
@@ -92,7 +92,7 @@ Growth increments use the following smooth decreasing mean, with SD $`CV_G\mu_{\
 {1+\exp\!\left(-\log(19)\frac{L-0.5L_\infty}{0.05L_\infty-0.5L_\infty}\right)}.
 ```
 
-This curve differs from the exact von Bertalanffy increment $`(L_\infty-L)(1-e^{-k\Delta t})`$. `pla` describes length given age, while G describes a one-step transition given source length; each model uses its own. `FL` is length-specific F; `FA` is derived from the survival proportion of the same cohort over the model time step.
+This curve differs from the exact von Bertalanffy increment $`(L_\infty-L)(1-e^{-k\Delta t})`$, and every fish in a length bin grows from the bin midpoint. With `structure = list(growth_increment = "von_bertalanffy", growth_transition = "bin")`, ALSCL uses the von Bertalanffy increment and starting lengths that are uniform within the bin ([Choose the fitting settings](fitting-controls.html#structure)). `pla` describes length given age, while G describes a one-step transition given source length; each model uses its own. `FL` is length-specific F; `FA` is derived from the survival proportion of the same cohort over the model time step. The report holds `FA` and the matching total mortality at age `ZA` for the ages before the plus group and the time steps before the last. `extract_estimates(fit, "FA")` returns F at age for every age, including the plus group, and every time step: it computes the other cells from the reported numbers at length and age (`NLA`) and total mortality at length (`ZL`) with the same formula. These cells are computed after fitting, because computing them in the model template changed fitted values at rounding level.
 
 <h3 id="derived">Derived quantities</h3>
 
@@ -103,7 +103,7 @@ b_{l,t}=N_{l,t}w_{l,t},\qquad sb_{l,t}=b_{l,t}m_{l,t},\qquad
 B_t=\sum_l b_{l,t},\qquad SSB_t=\sum_l sb_{l,t}.
 ```
 
-`CN` and `CB` are derived fishery catch numbers and biomass, distinct from the input survey number index. Biomass units depend on the weight units and the abundance scale.
+`CN` and `CB` are derived fishery catch numbers and biomass, distinct from the input survey number index. Biomass units depend on the weight units and the abundance scale. The abundance scale is the scale of the survey index, because survey catchability has a fixed maximum of 1 (next section). Abundance, biomass, spawning biomass, recruitment, `CN` and `CB` are absolute only when the index is an absolute abundance estimate; with a relative index they are relative values.
 
 <h3 id="survey">Survey observations</h3>
 
@@ -118,7 +118,7 @@ Let $`I_{l,t}`$ denote the survey number index and $`N_{l,t}`$ population abunda
 q_l=\left[1+\exp\!\left(-\log(19)\frac{L_l-L_{50}}{L_{95}-L_{50}}\right)\right]^{-1}.
 ```
 
-`sel_L50` and `sel_L95` fix survey catchability at 0.5 and 0.95 at the specified lengths; they describe the survey, and fishery selectivity is a separate quantity. `exp(report$Elog_index)` is the original-scale median; the arithmetic mean also includes $`\exp(\sigma_I^2/2)`$.
+`sel_L50` and `sel_L95` fix survey catchability at 0.5 and 0.95 at the specified lengths, and catchability approaches 1 for large fish; they describe the survey, and fishery selectivity is a separate quantity. No catchability scale is estimated: multiplying the index by a constant multiplies the abundance, biomass, recruitment and catch estimates by the same constant and leaves fishing mortality unchanged. `exp(report$Elog_index)` is the original-scale median; the arithmetic mean also includes $`\exp(\sigma_I^2/2)`$.
 
 <h3 id="estimation">Estimation and uncertainty</h3>
 

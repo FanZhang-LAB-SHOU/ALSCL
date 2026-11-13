@@ -27,5 +27,18 @@ When recorded metadata is available, a change in model- or R-source hashes,
 source revision, or ALSCL, TMB, Matrix or RcppEigen version produces a
 warning before fitting. Missing metadata in older archives remains
 supported. Platform and build information is retained for inspection;
-it does not establish cross-platform numerical equality.
+it does not establish cross-platform numerical equality. A stored map can
+hold a named NULL entry for a parameter that the model does not have,
+which release 2.4.3 accepted and ignored; such an entry is dropped before
+refitting unless map is overridden.
+}
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+
+# Refit with a lower natural mortality rate; other settings are unchanged
+low_M <- refit_model(fit, M = 0.15)
+low_M$recipe$args$M
+extract_parameters(low_M)[1:5, c("parameter", "estimate")]
+}
 }

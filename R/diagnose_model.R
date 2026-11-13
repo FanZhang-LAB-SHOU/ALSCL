@@ -7,6 +7,11 @@
 #'   optimizer code alone does not establish reliable statistical inference.
 #'   Input observations are checked against available fitted time, length and
 #'   observation metadata by \code{diagnostic_metrics()}; known mismatches are errors.
+#' @examples
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
+#' diagnose_model(YTF_example$data.CatL, fit)
+#' }
 #' @export
 diagnose_model <- function(data.CatL, model_result) {
   if (!is.list(model_result)) stop("Model output should be a list.")

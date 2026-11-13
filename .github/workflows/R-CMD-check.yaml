@@ -30,7 +30,34 @@ jobs:
           # https://pak.r-lib.org/reference/faq.html
           extra-packages: ${{ runner.os == 'macOS' && 'any::rcmdcheck, knitr=?source, xfun=?source' || 'any::rcmdcheck' }}
           needs: check
+      # Every R process otherwise compiles the TMB templates into its own
+      # temporary folder. One folder shared by the steps below is named here;
+      # ALSCL_TEST_CACHE is read by tests/testthat/helper-fixtures.R and
+      # ALSCL_MANUAL_CACHE by the documentation scripts. Compiled templates are
+      # stored under a key of the template sources, R, TMB, RcppEigen and the
+      # automatic differentiation library, so a stale entry is never loaded.
+      - name: Locate the shared TMB compile folder
+        id: tmb-cache
+        shell: Rscript {0}
+        run: |
+          folder <- gsub("\\", "/", file.path(Sys.getenv("RUNNER_TEMP"), "alscl-tmb"), fixed = TRUE)
+          dir.create(folder, recursive = TRUE, showWarnings = FALSE)
+          versions <- paste(R.version$major, R.version$minor, R.version$platform,
+            packageVersion("TMB"), packageVersion("RcppEigen"), packageVersion("Matrix"), sep = "-")
+          cat(sprintf("ALSCL_TEST_CACHE=%s\nALSCL_MANUAL_CACHE=%s\n", folder, folder),
+              file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          cat(sprintf("folder=%s\nversions=%s\n", folder, versions),
+              file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
+      - name: Restore compiled TMB templates
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.tmb-cache.outputs.folder }}
+          key: alscl-tmb-${{ runner.os }}-${{ runner.arch }}-${{ steps.tmb-cache.outputs.versions }}-${{ hashFiles('inst/extdata/**') }}
+      # The plot export guards and the documented plotting examples refit the
+      # teaching models and one ALSCL retrospective. They test the documentation
+      # scripts, not the platform, so one operating system is enough.
       - name: Check manual plot export guards
+        if: runner.os == 'Linux'
         run: Rscript scripts/test_plot_exports.R
       - name: Check source checkout socket workers
         shell: Rscript {0}
@@ -39,5 +66,7 @@ jobs:
           testthat::test_local(filter = "parallel|core-225", stop_on_failure = TRUE)
       - uses: r-lib/actions/check-r-package@v2
         with:
-          args: 'c("--no-manual")'
+          # The examples that fit models are in \donttest blocks; run them on
+          # one operating system so that documented calls are tested.
+          args: ${{ runner.os == 'Linux' && 'c("--no-manual", "--run-donttest")' || 'c("--no-manual")' }}
           error-on: '"warning"'

@@ -26,13 +26,17 @@ plot_compare_residuals(
 
 \item{model2}{Second model result (alternative).}
 
-\item{data.CatL}{Catch-at-length data frame.}
+\item{data.CatL}{Survey index table used for both fits: a length-bin column
+followed by one column of survey indices per time step.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{colors}{Named character vector of 2 colors. NULL = use global theme.}
+\item{colors}{Character vector of 2 colors, named by model or in model
+order. NULL = use global theme. A vector with fewer than two colors gives
+a warning and the global setting is used.}
 
-\item{linetypes}{Named character vector of 2 linetypes. NULL = use global theme.}
+\item{linetypes}{Character vector of 2 linetypes, with the same rules as
+\code{colors}. NULL = use global theme.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
@@ -53,7 +57,9 @@ NULL inherits the comparison point-size override, if set, or global point_size.}
 A ggplot object (combined 4-panel via patchwork).
 }
 \description{
-Four panels: histogram, QQ plot, mean residual by year, |residual| by length.
+Four panels of log residuals (log observed survey index minus log fitted
+index): histogram, normal quantile-quantile (QQ) plot, mean residual by time
+step, and absolute residual by length bin.
 A single unified color legend is displayed (default: bottom center).
 }
 \details{
@@ -67,4 +73,17 @@ The mean-residual axis retains the full fitted time range, including
 unobserved first or last periods. The line breaks at unobserved periods. Isolated
 observed periods remain visible as points; an SD bar requires at least
 two observed length bins in that period.
+}
+\examples{
+\donttest{
+# Fit both models to the last ten years of the example data. The shorter
+# series and one fishing mortality rate (F) shared by all lengths in each
+# year keep the ALSCL fit short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+fit_acl <- run_acl(x, silent = TRUE)
+fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
+plot_compare_residuals(fit_acl, fit_alscl, x$data.CatL)
+}
 }

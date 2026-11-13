@@ -1,6 +1,6 @@
 # 如何模拟调查数据？
 
-本页带你从已知的种群生成调查表，对一次重复拟合 ACL 和 ALSCL，并把估计值与真值比较。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）和一份仓库副本，并从仓库根目录运行 R，因为第 2 步要加载 `scripts/simulation_workflow.R`。结束时你会有这些表、一次重复及其真值、两个拟合，以及估计值与真值对照的图。本页配图是 flatfish 预设的第 4 次重复，由 [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R) 绘制。
+本页带你从已知的种群生成调查表，对一次重复拟合 ACL 和 ALSCL，并把估计值与真值比较。你需要已安装的软件包（[安装 ALSCL](getting-started.html)）。结束时你会有这些表、一次重复及其真值、两个拟合，以及估计值与真值对照的图。本页配图是 flatfish 预设的第 4 次重复，由 [scripts/case_studies.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R) 绘制。
 
 <h2 id="quick">1. 用快速模拟器生成年度输入表</h2>
 
@@ -21,7 +21,6 @@ str(quick, max.level = 1)
 <h2 id="replicate">2. 用完整操作模型生成一次重复</h2>
 
 ```r
-source("scripts/simulation_workflow.R", encoding = "UTF-8")
 pa <- initialize_params(species = "flatfish", first.year = 2000,
                         observation_error = "independent")
 bio <- sim_cal(pa)

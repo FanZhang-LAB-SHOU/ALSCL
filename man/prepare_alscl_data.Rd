@@ -26,10 +26,12 @@ prepare_alscl_data(
 \item{format}{Input format: "tables", "csv" or "excel".}
 
 \item{fit_args}{Named list of shared fitting arguments, including rec.age,
-nage, M, sel_L50 and sel_L95. Keep the three tables outside this list.}
+nage, M, sel_L50 and sel_L95. Keep the three tables outside this list.
+The ALSCL-only arguments len_lower and len_upper are deprecated: they
+cannot change a fit, ACL fits ignore them, and they will be removed.}
 
 \item{fit_config}{Optional named list with acl and/or alscl model-specific
-settings. When supplied, it must contain the model selected for fitting.}
+settings. A model without an entry uses the shared fit_args only.}
 }
 \value{
 A structured input list with the three tables, fit_args and optional
@@ -49,6 +51,13 @@ overrides replace complete lists. Named NULL map releases are preserved.
 Zeros remain zeros; the model's zero_action decides whether to exclude or
 reject them. Missing survey periods must be explicit columns with complete
 weights and maturity. This constructor never fills or reorders periods.
+
+Only the three tables, fit_args and fit_config are fitting settings. A
+fitting argument stored at the top level of the returned list, for example
+\code{x$M <- 0.3} or \code{x$map <- ...}, is not used, and fitting warns about it.
+Store such a setting in \code{x$fit_args} or \code{x$fit_config$acl} or
+\code{x$fit_config$alscl}. A top-level \code{parameters} entry is not reported:
+example bundles such as YTF_example keep their simulation settings there.
 }
 \examples{
 x <- prepare_alscl_data(YTF_example[c("data.CatL", "data.wgt", "data.mat")],

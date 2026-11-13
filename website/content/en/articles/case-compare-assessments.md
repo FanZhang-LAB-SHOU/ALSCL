@@ -27,7 +27,7 @@ comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-Read the numerical checks first ([Understand your first fit](first-model.html#checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the lower AIC, given only when both are eligible) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.7. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
+Read the numerical checks first ([Understand your first fit](first-model.html#checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.4. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
 ![Synthetic YTF: residual comparison for ACL and ALSCL](../assets/manual/figures/ytf/compare_residuals.png)
 

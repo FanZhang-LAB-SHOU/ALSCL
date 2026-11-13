@@ -16,15 +16,24 @@ extract_estimates(
 \item{quantities}{Character vector of reported population quantities. F resolves
 to age-specific F for ACL and length-specific FL for ALSCL. Supported outputs
 include SSB, Rec, B, N, CN, CB, NA, NL, BA, BL, SBA, SBL, CNA, CNL, CBA,
-CBL, F, FL, FA and the joint NLA/BLA/SBLA/CNLA/CBLA arrays when reported.}
+CBL, F, FL, FA and the joint NLA/BLA/SBLA/CNLA/CBLA arrays when reported.
+Numbers at age can be requested as N_at_age, an alias of NA: a table with
+the label "NA" loses that label when it is written to a CSV file and read
+back with the default settings of \code{read.csv()}, which read "NA" as a
+missing value (use N_at_age, or \code{na.strings = ""} when reading).
+In the fitted report the matrix is \code{fit$report[["NA"]]}; the
+double brackets are needed because NA is a reserved word in R.}
 
 \item{conf_level}{Nominal confidence level of approximate normal intervals
 on the reported scale, strictly between zero and one.}
 }
 \value{
 A long data frame with quantity, report_name, year, age, length,
-length_label, estimate, std_error, conf_low, conf_high and numerical_ok.
-Unavailable SEs remain NA. No averaging of F or annualization is performed.
+length_label, estimate, std_error, conf_low, conf_high, numerical_ok and
+extrapolated. Unavailable SEs remain NA. No averaging of F or annualization
+is performed. numerical_ok is the numerical screen of the fit, the same
+verdict that summary() reports. extrapolated is TRUE for rows that depend
+on the fishing mortality rate (F) of the terminal period (see Details).
 }
 \description{
 Extract population estimates with explicit time and group coordinates
@@ -34,11 +43,34 @@ Estimates come from report. Complete finite nonnegative standard errors
 come from exact matching rows of est_std. Incomplete uncertainty for a quantity
 remains NA. Normal intervals are not truncated at zero. FA uses source ages
 and source periods of the cohort-survival interval, not destination labels.
+
+No observation informs F in the terminal period. The survey index of a
+period measures abundance at the start of that period, and abundance at
+the start of a period depends on F in earlier periods only. The reported
+terminal-period F (F and FL) is therefore the first-order autoregressive
+(AR(1)) prediction from the preceding period, and its standard error
+reflects the F process, not data. Terminal-period catch in number (CN,
+CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
+an abundance that the data inform and this predicted F. These rows have
+extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
+(FA). When the last periods have no positive survey observation, F is
+a prediction from the last period with an observation onwards, and those
+periods are marked as well.
+
+For ALSCL, FA covers every age, including the plus group, and every
+period. The fitted report (\code{fit$report$FA}) holds the ages before
+the plus group and the periods before the last, with standard errors; the
+other cells are computed from the reported numbers at length and age and
+total mortality at length by the same formula, and their standard errors
+are NA.
 }
 \examples{
-\dontrun{
-fit <- run_alscl(YTF_example, silent = TRUE)
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
 estimates <- extract_estimates(fit, c("SSB", "Rec", "F"))
-write.csv(estimates, tempfile(fileext = ".csv"), row.names = FALSE)
+head(estimates)
+path <- tempfile(fileext = ".csv")
+write.csv(estimates, path, row.names = FALSE)
+unlink(path)
 }
 }

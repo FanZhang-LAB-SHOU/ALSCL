@@ -24,11 +24,11 @@ Each entry summarizes **three runs**, with **four identical starts** and **two s
 ## Data and machine / 数据与环境
 
 - Synthetic `YTF_example`, seed 4: first 10 annual columns (2000–2009), all 23 length bins and 15 age classes. These are teaching data, not empirical stock observations.
-- The same bundled `fit_args` and model-specific `fit_config` were used at every worker count. Known biological assumptions stay fixed; other configured fixed effects and random effects are estimated. These conditional fits do not establish performance for every full assessment.
+- The same bundled `fit_args` and model-specific `fit_config` were used at every worker count. Known biological assumptions stay fixed; other configured fixed effects and random effects are estimated. These conditional fits do not establish performance for every full assessment. The `fit_config` bundled at the time of the measurement fixed the standard deviation of log F at 0.2; the current one fixes it at 0.302, the marginal SD of the generating AR(1) process, so current fits take other times.
 - Apple M2 Pro, 10 logical CPUs, 32 GiB RAM; R 4.6.0, TMB 1.9.21, RcppEigen 0.3.4.0.2; optimized C++ templates compiled with `-O2`, without template OpenMP.
 - Worker order rotates (1,2,4; 2,4,1; 4,1,2), and model order alternates. Other user analyses shared the machine. These are shared-machine measurements, not an isolated hardware benchmark or a universal speed guarantee.
 
-使用内置模拟数据前 10 年，保留 23 个体长组和 15 个年龄组；不同并行数使用相同数据、参数映射、初始值与默认优化控制。机器为 Apple M2 Pro / 32 GiB，测试期间有其他分析在运行。计时顺序轮换以降低顺序偏差，但不能排除系统负载影响。具体环境见 [environment.txt](results/parallel/environment.txt)。
+使用内置模拟数据前 10 年，保留 23 个体长组和 15 个年龄组；不同并行数使用相同数据、参数映射、初始值与默认优化控制。测试时随包的 `fit_config` 把对数 F 的标准差固定在 0.2；当前的配置固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以当前拟合的耗时与表中不同。机器为 Apple M2 Pro / 32 GiB，测试期间有其他分析在运行。计时顺序轮换以降低顺序偏差，但不能排除系统负载影响。具体环境见 [environment.txt](results/parallel/environment.txt)。
 
 ## Evidence of real computation / 真实运算证据
 
@@ -93,10 +93,12 @@ From the repository root, install the updated source first:
 R CMD INSTALL .
 Rscript scripts/benchmark_parallel.R docs/results/parallel 3 10
 Rscript scripts/plot_parallel_benchmark.R
-Rscript -e 'library(ALSCL); testthat::test_dir("tests/testthat", reporter="summary")'
+Rscript -e 'testthat::test_local(reporter = "summary")'
 ```
 
-The complete local regression suite passed **256 assertions, with zero failures, errors or warnings**; see [regression test results](results/parallel/regression_tests.csv). / 本机完整回归测试通过 **256 项检查，零失败、错误或警告**。
+`testthat::test_local()` loads the source checkout with pkgload, so the tests can reach internal functions; `devtools::test()` and `R CMD check` do the same. Running `testthat::test_dir()` after `library(ALSCL)` reports spurious errors, because unexported helpers are not visible to the tests. / `testthat::test_local()` 用 pkgload 加载源代码，测试才能访问内部函数；`devtools::test()` 和 `R CMD check` 也是如此。先 `library(ALSCL)` 再运行 `testthat::test_dir()` 会因为看不到未导出的辅助函数而出现虚假错误。
+
+When this benchmark was recorded for ALSCL 2.0.0, the regression suite of that version passed **256 assertions, with zero failures, errors or warnings**; see [regression test results](results/parallel/regression_tests.csv). The current suite is larger; its result is the one reported by the command above. / 本基准为 ALSCL 2.0.0 记录时，该版本的回归测试通过 **256 项检查，零失败、错误或警告**。当前测试集更大，结果以上述命令的输出为准。
 
 The benchmark stops on failed convergence, different starting values/objectives/biomass, missing worker PIDs, or absent CPU activity. Unit tests also cover legacy defaults, worker caps, RNG preservation, failed-start diagnostics, retrospective ACL/ALSCL results at 1/2/4 workers, and actual `sim_acl()` replicate fits at 1/2/4 workers.
 
@@ -104,3 +106,5 @@ The benchmark stops on failed convergence, different starting values/objectives/
 - [Summary](results/parallel/summary.csv) · [All timed runs](results/parallel/runs.csv) · [Per-start PID/CPU/timing](results/parallel/starts.csv)
 - [Starting and fitted parameters](results/parallel/parameters.csv) · [Source hashes](results/parallel/source_hashes.csv) · [Package versions](results/parallel/package_versions.csv)
 - [Original-version timings](results/parallel/original_baseline.csv) · [Validation](results/parallel/validation.txt)
+
+`benchmark_parallel.R` writes the summary, runs, starts, parameters, source hashes, environment, package versions and validation files. `original_baseline.csv` and `regression_tests.csv` were recorded separately for the ALSCL 2.0.0 report and are not rewritten by the script; a rerun into `docs/results/parallel` leaves them as they are, so keep them only together with the 2.0.0 results. / `benchmark_parallel.R` 写出 summary、runs、starts、parameters、source hashes、environment、package versions 和 validation 文件。`original_baseline.csv` 和 `regression_tests.csv` 是为 ALSCL 2.0.0 报告另行记录的，脚本不会重写；重新运行并写入 `docs/results/parallel` 时它们保持原样，因此只应与 2.0.0 的结果一同保留。

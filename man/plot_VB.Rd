@@ -48,9 +48,14 @@ explicit range must start at or after t0 to avoid negative-length extrapolation.
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
+global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
 
-\item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
+\item{se_type}{Character. Type of interval display: "ribbon" (shaded area) or
+"errorbar" (error bars). Error bars are drawn at the fitted ages in
+model_result$age that lie within age_range. Results saved without age
+metadata, and ranges that contain no fitted age, use every plotted age.
+Default is "ribbon".}
 
 \item{text_color}{Character. Color of the growth-parameter annotation in all
 display modes. Default is "black".}
@@ -76,7 +81,9 @@ display modes. Default is 5.}
 
 \item{legend_text_size}{Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).}
 
-\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.}
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+NULL inherits the global x_breaks setting when at least one of its values
+lies on this axis; otherwise the breaks are chosen automatically.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
@@ -86,8 +93,10 @@ display modes. Default is 5.}
 A ggplot object representing the plot.
 }
 \description{
-Plot a reference curve using Linf, vbk and t0 from a fitted result.
-The parameter t0 is the theoretical age at zero length. In ALSCL, realized
+Plot a reference curve using the asymptotic length (Linf), the growth
+coefficient (vbk, per year) and t0 from a fitted result.
+The parameter t0 is the theoretical age at zero length. The annotation
+gives Linf in the length units of the data and k per year. In ALSCL, realized
 length distributions at age also depend on growth transitions and
 length-specific mortality, so this curve does not summarize the evolving
 population.
@@ -102,7 +111,9 @@ An automatic age range with no positive span at or above t0 is rejected;
 supply an explicit biologically meaningful age_range in that case.
 }
 \examples{
-\dontrun{
-plot_VB(model_result, age_range = c(1, 25))
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+plot_VB(fit)
+plot_VB(fit, age_range = c(1, 25))
 }
 }

@@ -19,7 +19,7 @@ retro_alscl(
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of time columns to peel. Default is 5.}
+\item{nyear}{Integer. Number of retrospective peels. Default is 5.}
 
 \item{data.CatL}{Survey abundance indices at length or a named input bundle, as in
 \code{retro_alscl(x, nyear = 3)}.}
@@ -49,6 +49,18 @@ A list. See \code{\link[=retro_model]{retro_model()}}.
 \description{
 Convenience wrapper that calls \code{retro_model(..., model_type = "alscl")}.
 See \code{\link[=retro_model]{retro_model()}} for full documentation of all parameters.
+}
+\examples{
+\donttest{
+# The last ten years of the example data and one fishing mortality rate
+# shared by all lengths in each year keep the three ALSCL fits short.
+x <- YTF_example
+tables <- c("data.CatL", "data.wgt", "data.mat")
+x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
+retro <- retro_alscl(x, nyear = 2, F_structure = "year", silent = TRUE)
+retro$rho_text
+retro$fit_diagnostics[, c("Peel", "RetrospectiveYear", "numerical_ok")]
+}
 }
 \seealso{
 \code{\link[=retro_model]{retro_model()}}, \code{\link[=retro_acl]{retro_acl()}}, \code{\link[=plot_retro]{plot_retro()}}

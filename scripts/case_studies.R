@@ -26,6 +26,11 @@ case_fit_bundle <- function(inputs,pa) {
 }
 
 run_case_studies <- function(out='docs') {
+  # Committed figures and tables must come from the code of this checkout.
+  if (grepl('^(\\./)?docs(/|$)', out)) {
+    source('scripts/checkout_guard.R', local = TRUE)
+    require_checkout_alscl()
+  }
   cache <- Sys.getenv('ALSCL_MANUAL_CACHE')
   if(nzchar(cache)) options(ALSCL.tmb.cache=cache)
   old <- acl_theme(); on.exit(do.call(acl_theme_set,old),add=TRUE)

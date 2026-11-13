@@ -1,6 +1,12 @@
 # Apply FUN over X on socket workers (or sequentially for one worker). Shared by
 # the scenario, profile, hindcast, retrospective and simulation batches. The
 # model is compiled in the parent so that workers never write the same cache.
+# With one worker the fits run in this process and keep the session's setting
+# for standard errors (ALSCL.sd_cores). Socket workers compute standard errors
+# on one core each (.acl_worker_options()), so processes do not multiply. The
+# results are identical in both cases. Workers also receive the caller's
+# standard-error level (see .acl_se_level()), so that a workflow that scopes
+# options(ALSCL.se_level = ) gets the same level in both modes.
 .acl_cluster_lapply <- function(X, FUN, ncores, model, ...) {
   ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(X)))
   if (ncores == 1L) return(lapply(X, FUN, ...))
@@ -8,7 +14,8 @@
   cl <- parallel::makeCluster(ncores)
   on.exit(parallel::stopCluster(cl), add = TRUE)
   .acl_initialize_workers(cl, cache = dirname(dirname(info$cpp_path)),
-                          settings = .acl_worker_options())
+    settings = c(.acl_worker_options(), list(ALSCL.se_level = .acl_se_level(),
+                                             ALSCL.delta_method = .acl_delta_method())))
   parallel::parLapply(cl, X, FUN, ...)
 }
 
@@ -17,8 +24,6 @@
 .acl_batch_fit <- function(args, model) {
   started <- proc.time()[["elapsed"]]
   warnings <- character()
-  old <- options(ALSCL.sd_cores = 1L)
-  on.exit(options(old), add = TRUE)
   result <- tryCatch(withCallingHandlers({
     value <- do.call(if (model == "acl") run_acl else run_alscl, args)
     value$obj <- NULL
@@ -26,7 +31,7 @@
   }, warning = function(w) {
     warnings <<- c(warnings, conditionMessage(w))
     invokeRestart("muffleWarning")
-  }), error = function(e) list(converge = "FAILED", error = conditionMessage(e)))
+  }), error = function(e) .acl_fit_error(conditionMessage(e)))
   list(fit = result, elapsed = unname(proc.time()[["elapsed"]] - started),
        pid = Sys.getpid(), warnings = unique(warnings))
 }
@@ -84,22 +89,26 @@
 #'   These are descriptive summaries, not abundance-weighted mortality, and
 #'   subannual F remains per model step rather than being annualized.
 #' @param ... Common overrides of the fitting arguments, applied before scenarios.
-#' @return A list with named portable fits (including error records), resolved
+#' @return A list with named portable fits (including error records of class
+#'   "alscl_fit_error"), resolved
 #'   settings, status, batch elapsed time, estimates and model. The estimates
 #'   table retains failed numerical screens rather than silently discarding them.
-#' @details Inner fitting uses one worker and sequential standard errors. Each
+#' @details Each scenario is fitted by one worker. When scenarios run on
+#'   parallel workers (ncores greater than 1), each worker computes standard
+#'   errors on one core. With ncores = 1 the standard errors use the session
+#'   setting of alscl_speed(); the results are identical. Each
 #'   scenario runs the nstarts of the bundle or of the call; when neither sets
 #'   it, one start is used, the rule of hindcast_model() and retro_model().
 #'   Warnings are recorded in status.
 #'   Results omit session-specific obj pointers in both serial and parallel modes;
 #'   use refit_model() when a live TMB objective is needed. No ranking is applied.
 #' @examples
-#' \dontrun{
-#' z <- fit_scenarios(YTF_example, list(reference = list(),
-#'   low_M = list(M = 0.15), common_F = list(F_structure = "year")),
-#'   model = "alscl", ncores = 2, F_summary = "mean", silent = TRUE)
-#' z$status
-#' z$estimates
+#' \donttest{
+#' z <- fit_scenarios(YTF_example,
+#'   list(reference = list(), low_M = list(M = 0.15)),
+#'   model = "acl", F_summary = "mean", silent = TRUE)
+#' z$status[, c("scenario", "elapsed", "numerical_ok")]
+#' head(z$estimates)
 #' }
 #' @export
 fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,

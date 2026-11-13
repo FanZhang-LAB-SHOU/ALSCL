@@ -40,27 +40,24 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically. The
+#'   automatic number of breaks decreases as the number of facet columns
+#'   increases, and tick labels that would overprint are omitted.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the facet plot of residuals.
 #'
 #' @examples
-#' \dontrun{
-#' # Use 'run_acl' to get 'model_result'
-#' model_result <- run_acl(...)
+#' \donttest{
+#' fit <- run_acl(YTF_example, silent = TRUE)
 #'
-#' # One panel per length bin
-#' p_length <- plot_residuals(model_result, facet_by = "length")
+#' # Residuals over time, one panel per length bin
+#' plot_residuals(fit, facet_by = "length")
 #'
-#' # Print the plot for "length"
-#' print(p_length)
-#'
-#' # One panel per time step
-#' p_year <- plot_residuals(model_result, facet_by = "year")
-#'
-#' # Print the plot for "year"
-#' print(p_year)
+#' # Residuals across lengths, one panel per year
+#' plot_residuals(fit, facet_by = "year")
 #' }
 #' @export
 plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol = NULL, facet_by = c("length", "year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {
@@ -128,7 +125,8 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       trend_layers(runs) +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
-      .acl_scale_x(x_breaks, n_breaks = 8) +
+      .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(num_indices, facet_ncol, 8),
+                   values = plot_data$year, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
       ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "year") else xlab,
         y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,
@@ -148,8 +146,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     colnames(df) <- year
     df$len_mid <- len_mid
     # Reshape the data from wide to long format
-    df_long <- df %>%
-      tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "residuals")
+    df_long <- tidyr::pivot_longer(df, -len_mid, names_to = "year", values_to = "residuals")
     colnames(df_long) <- c("length", "Year","residual")
 
     # Cap extreme residuals (common in tail bins with few observations)
@@ -162,7 +159,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       df_long$residual <- pmax(pmin(df_long$residual, resid_cap), -resid_cap)
     }
 
-    year_levels <- .acl_time_labels(year)
+    year_levels <- .acl_time_labels(year, step = model_result$growth_step)
     df_long$Year <- factor(year_levels[match(as.numeric(df_long$Year), year)], levels = year_levels)
     runs <- .acl_observed_plot_runs(df_long, "Year", "length", "residual")
     p <- ggplot2::ggplot(df_long, ggplot2::aes(x=length, y=residual)) +
@@ -171,7 +168,8 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       trend_layers(runs) +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
-      .acl_scale_x(x_breaks, n_breaks = 8) +
+      .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, 8, budget = 20),
+                   values = df_long$length, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
       ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "length") else xlab,
         y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,

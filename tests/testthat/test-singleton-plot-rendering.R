@@ -58,7 +58,10 @@ test_that("single-period population panels draw estimates and intervals", {
       if (se) {
         bars <- which(vapply(p$layers, function(x) inherits(x$geom, "GeomErrorbar"), logical(1)))
         expect_length(bars, 1L)
-        expect_equal(built$data[[bars]]$ymax - built$data[[bars]]$ymin, rep(.196, nrow(result$data)))
+        # Lognormal interval: log(upper / lower) = 3.92 SE / estimate, with SE = .05.
+        expect_equal(log(built$data[[bars]]$ymax / built$data[[bars]]$ymin) * built$data[[bars]]$y,
+          rep(.196, nrow(result$data)))
+        expect_true(all(built$data[[bars]]$ymin > 0))
         expect_equal(unique(built$data[[bars]]$colour), "orange")
         expect_true(length(singleton_panel_grobs(p, "polyline")) >= 1L)
       }
@@ -85,8 +88,16 @@ test_that("a real two-age ALSCL fit draws its one-age F panels", {
   expect_true(fit$diagnostics$numerical_ok)
   expect_equal(dim(fit$report$FA), c(1L, 4L))
   fit$obj <- NULL
+  # Without intervals the plot is completed with the plus group and the last
+  # period, so each panel has both ages.
+  completed <- plot_fishing_mortality(fit, type = "age", return_data = TRUE)$data
+  expect_equal(completed$F, as.numeric(ALSCL:::.acl_F_at_age(fit)$FA))
+  expect_equal(nrow(completed), 10L)
+  # A result without numbers at length and age, and every plot with
+  # intervals, shows the reported cells: one age in each of four panels.
+  reported <- fit; reported$report$NLA <- NULL
   for (interval in c("none", "ribbon", "errorbar")) {
-    p <- plot_fishing_mortality(fit, type = "age", se = interval != "none",
+    p <- plot_fishing_mortality(if (interval == "none") reported else fit, type = "age", se = interval != "none",
       se_type = if (interval == "none") "ribbon" else interval)
     expect_silent(ggplot2::ggplotGrob(p))
     expect_length(singleton_panel_grobs(p, "points"), 4L)
@@ -121,7 +132,8 @@ test_that("singletons are identified separately for each comparison model", {
     if (se) {
       bars <- which(vapply(p$layers, function(x) inherits(x$geom, "GeomErrorbar"), logical(1)))
       expect_length(bars, 1L)
-      expect_equal(b$data[[bars]]$ymax - b$data[[bars]]$ymin,
+      # Lognormal interval around the single SSB estimate of 5.5, with SE = .05.
+      expect_equal(log(b$data[[bars]]$ymax / b$data[[bars]]$ymin) * single$report$SSB[1L],
         rep(.196, if (length(other$year) == 1L) 2L else 1L))
     }
     singleton_assert_grid_free(p)

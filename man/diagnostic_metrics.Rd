@@ -28,3 +28,9 @@ results without this metadata remain usable, but their alignment cannot be
 fully verified. Nonfinite predictions at observed cells are rejected,
 including overflow when converting log predictions to the response scale.
 }
+\examples{
+\donttest{
+fit <- run_acl(YTF_example, silent = TRUE)
+diagnostic_metrics(YTF_example$data.CatL, fit)
+}
+}

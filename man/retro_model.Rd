@@ -55,12 +55,18 @@ retro_model(
   control = list(),
   nstarts = 1,
   model = NULL,
+  peel_step = 1,
+  structure = list(),
+  start_spread = 0.15,
+  t0_lower = 0,
   ...
 )
 }
 \arguments{
-\item{nyear}{Integer. Number of time columns to peel sequentially. Default is
-5. One peel removes one model time step (one quarter for quarterly data).}
+\item{nyear}{Integer. Number of retrospective peels. Default is 5. Each
+successive peel removes peel_step further model time steps. With the
+default peel_step = 1, one peel removes one model time step (one quarter
+for quarterly data).}
 
 \item{data.CatL}{Survey abundance indices at length or the same named input bundle used
 by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. For example, \code{retro_acl(x, nyear = 3)}.}
@@ -100,19 +106,22 @@ including dev_log_N0 and named NULL releases, are unchanged.}
 
 \item{len_border}{Optional numeric vector of length bin borders.}
 
-\item{len_lower}{Optional lower bin boundaries (ALSCL only). The first entry must be
--Inf and the remaining entries must match len_border.}
+\item{len_lower}{Deprecated. Optional lower bin boundaries (ALSCL only). The
+first entry must be -Inf and the remaining entries must match len_border,
+so the argument cannot change a fit. It will be removed.}
 
-\item{len_upper}{Optional upper bin boundaries (ALSCL only). The final entry must be
-Inf and the preceding entries must match len_border.}
+\item{len_upper}{Deprecated. Optional upper bin boundaries (ALSCL only). The
+final entry must be Inf and the preceding entries must match len_border,
+so the argument cannot change a fit. It will be removed.}
 
 \item{train_times}{Positive integer. Number of consecutive optimization passes
 per start. Default is 1; nstarts controls the number of independent starts.}
 
-\item{ncores}{Integer. Number of CPU cores for parallel peel computation.
-Default is 1. A bundle's fitting ncores is ignored: specify this argument
-explicitly for peel workers. Each fit runs its nstarts sequentially with
-ncores = 1, avoiding nested fitting workers.}
+\item{ncores}{Integer. Number of socket workers for the full fit and the
+peels. Default is 1. With more than one worker, the full fit and the peels
+run in one batch; estimates are the same as with one worker. A bundle's
+fitting ncores is ignored: specify this argument explicitly. Each fit runs
+its nstarts sequentially with ncores = 1, avoiding nested fitting workers.}
 
 \item{silent}{Logical. Suppress progress messages when TRUE. Numerical-screen
 warnings are still reported. Default is FALSE.}
@@ -191,6 +200,14 @@ fit, run sequentially within each fit. Defaults to 1 or the bundle's nstarts.}
 \item{model}{Same as model_type, accepted for consistency with the other
 workflow functions. Supply one of the two.}
 
+\item{peel_step}{Positive integer. Number of model time steps that each
+successive peel removes. Default is 1. For quarterly data, peel_step = 4
+gives annual peels: peel k then ends k years before the terminal period.}
+
+\item{structure, start_spread, t0_lower}{Passed to every full and peel fit; see
+\code{\link{run_alscl}}. A bundle's own settings are used unless these are
+supplied explicitly.}
+
 \item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }
 \value{
@@ -198,7 +215,8 @@ A list containing \code{results}, \code{rho_text}, \code{last_points}, \code{mod
 and optionally \code{plot}. \code{fit_diagnostics} records the full fit (Peel = 0)
 and every requested peel, including errors and numerical status.
 It also retains the selected optimizer message and pass, all pass codes
-and messages, and the refinement status, steps and pre-refinement gradient.
+and messages, the refinement status, steps and pre-refinement gradient,
+and the warnings raised by each fit.
 Missing records from older or failed fits remain NA. A successful pass can
 coexist with a failed restart in the history; read the selected pass and
 final numerical screen together.
@@ -207,6 +225,8 @@ quantity and peel. \code{rho_text$Rho} is NA when any required fit or endpoint
 is invalid. \code{raw_rho_text} retains an unscreened mean for diagnosis only;
 it is NA if any terminal comparison is missing. \code{errors} lists fit errors.
 \code{results} retains available estimates, with NumericalOK and RawRho flags.
+\code{peel_step} records the number of time steps removed per peel and
+\code{workers} the number of workers used.
 }
 \description{
 Conduct a retrospective analysis by sequentially removing the most recent
@@ -222,15 +242,29 @@ NULL. zero_action, control and nstarts are forwarded to every full/peel fit.
 The full fit and every requested peel must pass the numerical screen, and
 have finite terminal estimates with a nonzero reference, before a quantity's
 Mohn's rho is reported. Invalid or failed fits are not silently dropped.
+
+A parameter that the map fixes has the same value in the full fit and in
+every peel. When map fixes mean_log_R and parameters gives no value for
+it, the value is derived once from the complete observations (the log of
+the mean total survey index over periods) and used in every fit. Earlier
+versions derived it again from the truncated data of each peel.
+
+Warnings raised while fitting are recorded in fit_diagnostics$warnings for
+the fit that raised them, including fits on socket workers, and one
+summary warning names these fits.
+
+Mohn's rho is the mean over peels of the relative difference between the
+terminal estimate of a peel and the estimate of the full fit for the same
+period. With peel_step = 1 on quarterly data this is a mean over quarterly
+peels. Use peel_step = 4 for a rho based on annual peels.
 }
 \examples{
-\dontrun{
-retro <- retro_model(nyear = 5, data.CatL, data.wgt, data.mat,
-                     rec.age = 1, nage = 7, M = 0.8,
-                     sel_L50 = 28, sel_L95 = 36, model_type = "acl")
+\donttest{
+# Two retrospective peels of the ACL model
+retro <- retro_model(nyear = 2, data.CatL = YTF_example, model_type = "acl",
+                     silent = TRUE)
+retro$rho_text
+retro$fit_diagnostics[, c("Peel", "RetrospectiveYear", "numerical_ok")]
 plot_retro(retro)
-retro <- retro_alscl(YTF_example, nyear = 3, F_structure = "year")
-retro$fit_diagnostics
-retro$rho_by_peel
 }
 }

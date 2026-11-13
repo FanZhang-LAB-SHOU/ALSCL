@@ -72,7 +72,7 @@ save_assessment(a, "ytf_acl.rds")
 | 捕捞死亡率 | 按年龄估计 | 按体长估计，年龄别 F 由模型推导 |
 | 拟合函数 | `run_acl()` | `run_alscl()` |
 
-两个模型读取相同的三张表，按年或按季度：体长别调查尾数、体长别平均体重和体长别成熟比例。自然死亡率和调查可捕性作为设置给出。[Excel 填表示例](docs/data/ALSCL_Data_Entry_Example.xlsx)展示了表格格式。
+两个模型读取相同的三张表，按年或按季度：体长别调查尾数、体长别平均体重和体长别成熟比例。自然死亡率和调查可捕性作为设置给出。调查可捕性的最大值固定为 1，因此丰度、生物量和补充量的尺度就是调查指数的尺度：只有当指数是绝对丰度估计时，它们才是绝对量。[Excel 填表示例](docs/data/ALSCL_Data_Entry_Example.xlsx)展示了表格格式。
 
 ## 文档
 
@@ -86,7 +86,7 @@ save_assessment(a, "ytf_acl.rds")
 
 | 入口 | 内容 |
 |---|---|
-| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 65 个函数的参考 |
+| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 66 个函数的参考 |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿](docs/BOOK.md) | 同一内容的中英对照版本，18 章 |
 | [使用指南](docs/USER_GUIDE.md) | 从安装到回溯分析的双语手册 |
 | [评估工作流](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证](docs/MODEL_VALIDATION.md) · [应用案例](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 |

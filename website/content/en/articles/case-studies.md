@@ -103,7 +103,7 @@ Growth runs from 13 cm at age 0.25 to 129 cm at age 5 (`vbk` 0.38 per year); mat
 
 ![Tuna generating truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass; ACL lies below the truth for biomass, starts spawning biomass far too low in 2000-2001 and overestimates most quarterly recruitments. The case uses length-based growth transitions; the fitted process assumptions still differ from the operating model, so one replicate cannot rank the two models.
+Recruitment is per quarter. ALSCL follows the truth for biomass and spawning biomass, with estimates within about 11% of the truth. ACL lies below the truth for biomass and spawning biomass in every quarter. Its spawning biomass is lowest relative to the truth at the start of 2000 and again in 2002-2003 (about 0.68 to 0.77 of the truth) and comes close to the truth only from late 2003. Both models overestimate recruitment in 19 of the 20 quarters, on average by 9% for ALSCL and by 31% for ACL. The case uses length-based growth transitions; the fitted process assumptions still differ from the operating model, so one replicate cannot rank the two models.
 
 <h2 id="simulation">4. Extend to a simulation study</h2>
 

@@ -1,15 +1,19 @@
 # GitHub 图谱：所有拟合图使用内置 YTF_example / All fitted plots use YTF_example.
 # 从仓库根目录运行 / Run from the repository root:
 # Rscript scripts/ytf_workflow.R
-library(ALSCL)
-# The figures must come from this checkout: stop when an older installation is loaded.
-if (packageVersion("ALSCL") < read.dcf("DESCRIPTION", "Version")[[1]])
-  stop("Installed ALSCL ", packageVersion("ALSCL"), " is older than this checkout; run R CMD INSTALL . first.")
+# 拟合结果另存到 output/ytf-guide/fits.rds，供 scripts/refresh_manual_figures.R 使用。
+# The fits are also saved to output/ytf-guide/fits.rds for scripts/refresh_manual_figures.R.
+# The figures and tables must come from the code of this checkout. The guard
+# loads the checkout with pkgload, or stops when the installed package has
+# different functions, templates or data. A version number cannot show that.
+source("scripts/checkout_guard.R")
+use_checkout_alscl()
 library(ggplot2)
 library(patchwork)
 source("scripts/plot_helpers.R")
 
-run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL) {
+run_ytf_guide <- function(out = "docs", npeels = 3L, fits = NULL,
+                          fits_file = file.path("output", "ytf-guide", "fits.rds")) {
   cache <- Sys.getenv("ALSCL_MANUAL_CACHE")
   if (nzchar(cache)) options(ALSCL.tmb.cache = cache)
   for (d in c("figures/ytf", "results", "data"))
@@ -96,7 +100,7 @@ for(fun in c('plot_abundance','plot_biomass','plot_SSB','plot_catch')) {
 render('recruitment','补充量','Recruitment',plot_recruitment(b,se=TRUE),note_zh='补充量对应最小年龄组；受设定的补充年龄和时间步长影响。',note_en='Recruitment enters the youngest age class; its interpretation depends on recruitment age and time step.')
 render('SSB_Rec','亲体与补充关系','Spawning biomass and recruitment',plot_SSB_Rec(b,age_at_recruitment=1),note_zh='横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。',note_en='Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.')
 render('VB','生长曲线与区间','Growth curve and interval',plot_VB(b,se=TRUE),note_zh='生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。',note_en='Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.')
-render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b)+scale_x_discrete(labels=as.character(1:15)),note_zh='颜色表示给定年龄时落入各体长组的概率。每列合计为 1，最高体长组包含该年龄体长分布的右尾。横轴标签为年龄组序号。',note_en='Each column gives length-bin probabilities for one age and sums to one. The last bin includes the upper tail for that age. Age labels are class indices.')
+render('pla','年龄—体长概率矩阵','Age–length probability matrix',plot_pla(b),note_zh='颜色表示给定年龄时落入各体长组的概率。每列合计为 1，最高体长组包含该年龄体长分布的右尾。横轴为拟合年龄，最后一个年龄为 plus group（标为 15+）。',note_en='Each column gives length-bin probabilities for one age and sums to one. The last bin includes the upper tail for that age. The x axis shows the fitted ages; the last age is the plus group (15+).')
 for(model in c('ACL','ALSCL'))for(typ in c('year','age','length')) {
  if(model=='ACL' && typ=='length') next # ACL has no F at length; type = 'length' is an alias of 'age'
  fit<-if(model=='ACL')a else b
@@ -168,6 +172,16 @@ write.csv(retro_b$rho_text,file.path(out,'results','rho_ALSCL.csv'),row.names=FA
   write.csv(estimates,file.path(out,"results","estimates.csv"),row.names=FALSE)
   writeLines(trimws(capture.output(sessionInfo()), which="right"),file.path(out,"results","sessionInfo.txt"))
   message("COMPLETE: ",length(registry)," YTF figures")
-  invisible(list(acl=a,alscl=b,retro_acl=retro_a,retro_alscl=retro_b,inputs=inputs))
+  result <- list(acl=a,alscl=b,retro_acl=retro_a,retro_alscl=retro_b,inputs=inputs)
+  # 保存新拟合（不含当前会话的 TMB 对象）/ Save new fits without the session's TMB objects.
+  # run_ytf_guide(fits = readRDS(fits_file)) redraws every figure without refitting.
+  if (is.null(fits) && !is.null(fits_file)) {
+    dir.create(dirname(fits_file), recursive=TRUE, showWarnings=FALSE)
+    saved <- result
+    saved$acl$obj <- saved$alscl$obj <- NULL
+    saveRDS(saved, fits_file)
+    message("Saved the fits to ", fits_file)
+  }
+  invisible(result)
 }
 if (sys.nframe() == 0L) run_ytf_guide()

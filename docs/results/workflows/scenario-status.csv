@@ -1,4 +1,4 @@
 "scenario","elapsed","pid","error","warnings","convergence_code","max_abs_gradient","pdHess","bound_hit","natural_boundary","numerical_ok","issues"
-"reference",6.429,57173,"","",0,2.80135026287098e-10,TRUE,FALSE,FALSE,TRUE,""
-"low_M",7.14,57172,"","",0,7.45217221265193e-11,TRUE,FALSE,FALSE,TRUE,""
-"shared_F",1.724,57172,"","",0,4.88462603698281e-10,TRUE,FALSE,FALSE,TRUE,""
+"reference",6.844,17480,"","",0,5.60559884621448e-09,TRUE,FALSE,FALSE,TRUE,""
+"low_M",6.681,17479,"","",0,3.69107411302139e-10,TRUE,FALSE,FALSE,TRUE,""
+"shared_F",1.748,17479,"","",0,5.70314628856039e-11,TRUE,FALSE,FALSE,TRUE,""

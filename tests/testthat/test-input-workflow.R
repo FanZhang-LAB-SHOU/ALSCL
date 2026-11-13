@@ -149,10 +149,19 @@ test_that("inspection explains explicit releases, shared F, fixed and tied rando
   x$F_structure <- "year"
   x$map <- list(log_sigma_log_F = NULL,
     dev_log_F = factor(c(NA, 1, 1, 2, 2)), dev_log_R = factor(rep(NA, 5)))
+  # Tied or fixed deviations with an estimated process SD give a biased
+  # likelihood; preflight and inspection reject that combination.
+  expect_error(inspect_parameters(x, "alscl"), "dev_log_R fixes deviations while log_sigma_log_R")
+  expect_false(check_alscl_data(x, "alscl")$valid)
+  x$map <- list(log_sigma_log_F = NULL)
+  released <- inspect_parameters(x, "alscl")
+  expect_identical(released$status[released$parameter == "log_sigma_log_F"], "free")
+  expect_identical(released$map_source[released$parameter == "log_sigma_log_F"], "explicit")
+  x$map <- list(dev_log_F = factor(c(NA, 1, 1, 2, 2)), dev_log_R = factor(rep(NA, 5)),
+    logit_log_F_y = factor(NA), log_sigma_log_R = factor(NA), logit_log_R = factor(NA))
   table <- inspect_parameters(x, "alscl")
   row <- function(nm) table[table$parameter == nm, , drop = FALSE]
-  expect_identical(row("log_sigma_log_F")$status, "free")
-  expect_identical(row("log_sigma_log_F")$map_source, "explicit")
+  expect_identical(row("log_sigma_log_F")$status, "fixed")
   expect_identical(row("log_t0")$map_source, "default")
   expect_identical(row("logit_log_F_l")$status, "inactive")
   expect_identical(row("logit_log_F_l")$map_source, "F_structure")

@@ -58,11 +58,11 @@ alscl_speed_info()
 alscl_speed(sd_cores = "auto")   # 恢复默认
 ```
 
-- `"auto"`（默认）最多使用 4 个物理核，并为电脑的其他工作保留 1 个。测试中超过 4 个核提升很小，因为优化本身只在一个核上运行。
+- `"auto"`（默认）最多使用 4 个核，并为电脑的其他工作保留 1 个。在 macOS 和 Windows 上按物理核计数，并且不超过 Slurm（`SLURM_CPUS_PER_TASK`）或 `options(mc.cores = )` 分配给作业的核数。测试中超过 4 个核提升很小，因为优化本身只在一个核上运行。
 - 指定一个数即使用这么多核。在计算集群上，请使用作业实际分配到的核数；`parallel::detectCores()` 可能报告整个节点的核数。
 - 内存：分叉进程与 R 会话共享内存，直到内容被修改。每个 socket 进程都保存一份模型和数据；模型很大时，减少进程数可以节省内存。
 - 初值：`run_acl()` 与 `run_alscl()` 中的 `ncores` 决定同时运行多少个初值；标准误在之后用 `sd_cores` 计算一次。
-- 自己的并行循环：如果你自己并行运行许多拟合（例如用 `parallel::mclapply()`、`foreach` 或 `future`），请在工作进程中设置 `alscl_speed(sd_cores = 1)`，让每个拟合只用 1 个核。`retro_model()` 与 `sim_acl()` 会自动为其工作进程这样设置。
+- 自己的并行循环：如果你自己并行运行许多拟合（例如用 `parallel::mclapply()`、`foreach` 或 `future`），请在工作进程中设置 `alscl_speed(sd_cores = 1)`，让每个拟合只用 1 个核。`ncores` 大于 1 时，`retro_model()`、`sim_acl()` 和 `fit_scenarios()` 会自动为其工作进程这样设置。`ncores = 1` 时它们在主会话中依次拟合，使用会话的 `sd_cores`；结果完全相同。
 - macOS 或 Linux 上的 RStudio：`options(ALSCL.sd_backend = "fork")` 改用分叉进程，获得完整的加速。这是 R 文档不建议的做法，只有在你的会话运行拟合没有问题时才使用。
 
 `alscl_speed_info()` 可确认选择。多核时内存不足就减少核数，例如 `alscl_speed(sd_cores = 2)`。
@@ -95,7 +95,7 @@ TMBad 适合探索性拟合、大量拟合（模拟研究、敏感性分析）�
 
 ![速度设置前后的拟合耗时](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/timing.png?raw=true)
 
-CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。
+CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 ALSCL 拟合 `YTF_example` 时 `summary(sdreport)` 的全部 4,365 行。TMBad 结果存在第 3 步所述的微小差异。这些耗时测于引入优化收尾步骤之前；当前拟合通过 `polish = TRUE` 启用该步骤，因此旧耗时不代表当前默认流程。收尾步骤可能在数值精度上改变估计值。基准测试中的拟合还把对数 F 的标准差固定在 0.2；`YTF_example` 的 `fit_config` 现在把它固定在 0.302，即生成数据的 AR(1) 过程的边际标准差，所以示例数据当前的拟合耗时与表中不同。
 
 ![速度设置前后的估计值与标准误](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/speed/agreement.png?raw=true)
 
@@ -120,6 +120,8 @@ CppAD 比较中的估计值和标准误与改动前完全一致；下图比较 A
 | `options(ALSCL.sd_backend = "socket")` | 即使可以安全分叉，也使用 socket 进程 |
 | `options(ALSCL.sd_socket_min_seconds = 3)` | 启动 socket 进程前 delta 方法的最短预计耗时（秒）；设为 `0` 时总是启动 |
 | `options(ALSCL.tmb.cache = path)` | 存放已编译模型的文件夹 |
+| `options(ALSCL.se_level = "hessian")` | 只计算标量参数的协方差并检查 Hessian，派生量的标准误为 `NA`；`"none"` 跳过标准误计算，默认为 `"full"`。`retro_model()` 和不保存拟合的 `hindcast_model()` 对其拟合使用 `"hessian"`，因为它们用不到这些标准误 |
+| `options(ALSCL.delta_method = "blocked")` | 分块计算 delta 方法标准误，速度更快，与默认的 `"exact"` 计算只差舍入误差 |
 
 <h2 id="next">下一步</h2>
 
