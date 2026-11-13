@@ -29,7 +29,9 @@
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #'
@@ -39,6 +41,10 @@
 #'   column in est_std. With se = TRUE, a complete table of finite estimates
 #'   and finite nonnegative standard errors is required. Groups and periods
 #'   must match the model metadata, including the single group for shared F.
+#'   ACL age panels are labelled with the fitted ages in \code{model_result$age};
+#'   the oldest age class is a plus group and is marked with a plus sign, for
+#'   example "Age 15+". Results saved without age metadata keep the position
+#'   labels "Age bin 1", "Age bin 2" and so on.
 #'   Titles and y-axis labels use the global dev_R/dev_F keys on the log
 #'   scale, and dev_R_multiplier/dev_F_multiplier keys after exponentiation.
 #'   A \code{title}, \code{xlab} or \code{ylab} given in the call replaces the
@@ -106,7 +112,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
       labels <- .acl_fix_len_labels(labels, prefix = "Length")
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     } else {
-      labels <- paste("Age bin", seq_len(n_groups))
+      labels <- .acl_age_labels(model_result, n_groups)
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     }
     ci <- ci[c("Group", "Year", "estimate", "lower", "upper")]
@@ -123,7 +129,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
     ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", label_key),
       x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
       title = if (!is.null(title)) title else .acl_title(label_key)) +
-    .acl_scale_x(x_breaks, n_breaks = 5) +
+    .acl_scale_x(x_breaks, n_breaks = 5, values = years) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
   if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = facet_scales)

@@ -13,6 +13,11 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
+#' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
+#'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
+#'   stays above zero. \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
+#'   fall below zero. NULL inherits the global \code{interval} setting (default
+#'   "lognormal"). Point estimates are the same for both.
 #' @param facet_ncol Numeric. Columns in facet wrap. Default is NULL.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
 #' @param type Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN".
@@ -26,16 +31,29 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
 #' @param strip_text_size Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10).
 #' @param legend_text_size Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10).
-#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}). NULL = auto.
+#' @param x_breaks Numeric vector or NULL. Custom x-axis breaks (e.g. \code{seq(1, 20, by = 2)}).
+#'   NULL inherits the global x_breaks setting when at least one of its values
+#'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #'
 #' @details ALSCL reports CN, CNA and CNL with standard errors. ACL reports CN
 #'   with standard errors and CNA estimates only; CNL is unavailable. A missing
-#'   quantity or requested standard error produces an explicit error. With
-#'   \code{se = TRUE}, intervals are the estimate plus or minus 1.96 standard errors
-#'   on the reported scale. They are not truncated at zero. Inspect fit
-#'   diagnostics before using uncertainty intervals.
+#'   quantity or requested standard error produces an explicit error. With \code{se = TRUE}
+#'   the default interval is lognormal:
+#'   \code{exp(log(estimate) +/- 1.96 * SE / estimate)}, where the estimate and
+#'   its standard error (SE) are those stored in \code{model_result$est_std}.
+#'   It cannot fall below zero. \code{interval = "wald"}, or
+#'   \code{acl_theme_set(interval = "wald")}, restores the symmetric interval
+#'   \code{estimate +/- 1.96 * SE} used by earlier versions. An estimate that is
+#'   exactly zero, such as spawning stock biomass in a length bin with no
+#'   mature fish, keeps the Wald bounds. Inspect fit diagnostics before using
+#'   uncertainty intervals.
+#'
+#' @details Age panels are labelled with the fitted ages in \code{model_result$age}.
+#'   The oldest age class is a plus group and is marked with a plus sign, for
+#'   example "Age 15+". Results saved without age metadata keep the position
+#'   labels "Age bin 1", "Age bin 2" and so on.
 #'
 #' @details Titles, axis labels, time-axis breaks and expansion inherit
 #'   \code{acl_theme_set()}. Title keys are CN, CNA and CNL;
@@ -55,8 +73,8 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
                        type = c("CN", "CNA", "CNL"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL,
                        font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                        strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
-                       title_hjust = NULL) {
-  # NULL 继承全局色板 / NULL inherits the global palette.
+                       title_hjust = NULL, interval = NULL) {
+  # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
@@ -64,6 +82,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
 
 
   type <- match.arg(type)
+  interval <- .acl_interval_type(interval)
   quantity <- .acl_plot_population_data(model_result, type, c("CN", "CNA", "CNL"), se)
   Year <- model_result[["year"]]
   len_label <- model_result[["len_label"]]
@@ -89,8 +108,8 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       ci <- data.frame(
         Year     = Year,
         estimate = ss_CN[, "Estimate"],
-        lower    = ss_CN[, "Estimate"] - 1.96 * ss_CN[, "Std. Error"],
-        upper    = ss_CN[, "Estimate"] + 1.96 * ss_CN[, "Std. Error"]
+        lower    = .acl_interval(ss_CN[, "Estimate"], ss_CN[, "Std. Error"], interval)$lower,
+        upper    = .acl_interval(ss_CN[, "Estimate"], ss_CN[, "Std. Error"], interval)$upper
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
@@ -105,11 +124,10 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
   if (type == "CNA") {
     CNA <- quantity$value
 
-    AgeLabels <- factor(paste("Age bin", seq_len(nrow(CNA))),
-                        levels = paste("Age bin", seq_len(nrow(CNA))))
+    age_labels <- .acl_age_labels(model_result, nrow(CNA))
+    AgeLabels <- factor(age_labels, levels = age_labels)
 
-    CNA_long <- reshape2::melt(CNA)
-    colnames(CNA_long) <- c("AgeGroup", "Year", "CNA")
+    CNA_long <- .acl_matrix_long(CNA, c("AgeGroup", "Year", "CNA"))
     CNA_long$Year <- Year[as.numeric(CNA_long$Year)]
     CNA_long$AgeGroup <- AgeLabels[as.numeric(CNA_long$AgeGroup)]
 
@@ -125,8 +143,8 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
         AgeGroup = rep(AgeLabels, times = ncol(CNA)),
         Year     = rep(Year, each = nrow(CNA)),
         estimate = ss_cna[, "Estimate"],
-        lower    = ss_cna[, "Estimate"] - 1.96 * ss_cna[, "Std. Error"],
-        upper    = ss_cna[, "Estimate"] + 1.96 * ss_cna[, "Std. Error"]
+        lower    = .acl_interval(ss_cna[, "Estimate"], ss_cna[, "Std. Error"], interval)$lower,
+        upper    = .acl_interval(ss_cna[, "Estimate"], ss_cna[, "Std. Error"], interval)$upper
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
@@ -145,8 +163,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
 
     LengthLabels <- .acl_fix_len_labels(len_label)
 
-    CNL_long <- reshape2::melt(CNL)
-    colnames(CNL_long) <- c("LengthGroup", "Year", "CNL")
+    CNL_long <- .acl_matrix_long(CNL, c("LengthGroup", "Year", "CNL"))
     CNL_long$Year <- Year[as.numeric(CNL_long$Year)]
     CNL_long$LengthGroup <- factor(LengthLabels[as.numeric(CNL_long$LengthGroup)],
                                    levels = LengthLabels)
@@ -163,8 +180,8 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
         LengthGroup = factor(rep(LengthLabels, times = ncol(CNL)), levels = LengthLabels),
         Year        = rep(Year, each = nrow(CNL)),
         estimate    = ss_cnl[, "Estimate"],
-        lower       = ss_cnl[, "Estimate"] - 1.96 * ss_cnl[, "Std. Error"],
-        upper       = ss_cnl[, "Estimate"] + 1.96 * ss_cnl[, "Std. Error"]
+        lower       = .acl_interval(ss_cnl[, "Estimate"], ss_cnl[, "Std. Error"], interval)$lower,
+        upper       = .acl_interval(ss_cnl[, "Estimate"], ss_cnl[, "Std. Error"], interval)$upper
       )
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
@@ -178,7 +195,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
   p <- p + ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
                          y = if (!is.null(ylab)) ylab else .acl_lab("y", "catch"),
                          title = if (!is.null(title)) title else .acl_title(title_key)) +
-    .acl_scale_x(x_breaks, n_breaks = 5) + current_theme
+    .acl_scale_x(x_breaks, n_breaks = 5, values = Year) + current_theme
 
   p <- .acl_show_singletons(p, intersect(c("AgeGroup", "LengthGroup"), names(p$data)))
 

@@ -60,10 +60,10 @@ test_that("length fishing-mortality plots use actual midpoints and facet by year
                                   se_type = se_type, return_data = TRUE)
     expect_equal(out$data$Length, rep(model$len_mid, 2L))
     expect_equal(out$data$estimate, as.numeric(model$report$FL))
-    expect_equal(out$data$lower, model$est_std[, "Estimate"] - 1.96 * model$est_std[, "Std. Error"],
-                 ignore_attr = TRUE)
-    expect_equal(out$data$upper, model$est_std[, "Estimate"] + 1.96 * model$est_std[, "Std. Error"],
-                 ignore_attr = TRUE)
+    # The default interval is lognormal: exp(log(estimate) +/- 1.96 SE / estimate).
+    cv <- model$est_std[, "Std. Error"] / model$est_std[, "Estimate"]
+    expect_equal(out$data$lower, model$est_std[, "Estimate"] * exp(-1.96 * cv), ignore_attr = TRUE)
+    expect_equal(out$data$upper, model$est_std[, "Estimate"] * exp(1.96 * cv), ignore_attr = TRUE)
     built <- ggplot2::ggplot_build(out$plot)
     expect_equal(as.character(built$layout$layout$Period), ALSCL:::.acl_time_labels(model$year))
     expect_equal(built$data[[2L]]$x, rep(model$len_mid, 2L))
