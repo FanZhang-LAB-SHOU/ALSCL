@@ -21,12 +21,22 @@
 #'   and with Apple's Accelerate BLAS, the delta method runs on socket workers
 #'   when it would take more than about 3 seconds, and the Hessian is computed
 #'   in the main process, because each new R process would first have to
-#'   rebuild TMB's derivative tapes. \code{"auto"} uses up to four physical
-#'   cores and keeps one free. This setting is separate from the
+#'   rebuild TMB's derivative tapes. Forking is also avoided with a BLAS
+#'   library that may use OpenMP threads (OpenBLAS built with OpenMP, BLIS,
+#'   FlexiBLAS, Intel MKL), unless the number of threads is limited to one, for
+#'   example with the environment variable \code{OMP_NUM_THREADS=1}.
+#'   \code{"auto"} uses up to four cores and keeps one free. It counts
+#'   physical cores where R can tell them from logical cores (macOS and
+#'   Windows). It does not exceed the number of cores given to the job by
+#'   Slurm (\code{SLURM_CPUS_PER_TASK}) or by \code{options(mc.cores = )}.
+#'   This setting is separate from the
 #'   \code{ncores} argument of \code{run_acl()} and \code{run_alscl()}, which
-#'   sets the number of workers for multiple starts. Fits that already run on
-#'   parallel workers (\code{retro_model()}, \code{sim_acl()}) use one core
-#'   each; set \code{sd_cores = 1} when you run fits in your own parallel loop.
+#'   sets the number of workers for multiple starts. Fits that run on
+#'   parallel socket workers (for example \code{retro_model()},
+#'   \code{sim_acl()} or \code{fit_scenarios()} with \code{ncores} greater
+#'   than 1) use one core each. The same functions with \code{ncores = 1} fit
+#'   in the main process and use this setting. Set \code{sd_cores = 1} when
+#'   you run fits in your own parallel loop.
 #'   Parallel standard errors are enabled for checked TMB versions 1.9.21 and
 #'   1.9.25; other versions use sequential standard errors until validated.
 #' @param framework Automatic-differentiation library that TMB compiles the
@@ -88,7 +98,7 @@ alscl_speed_info <- function() {
   info <- data.frame(stringsAsFactors = FALSE,
     item = c("sd_cores setting", "cores for standard errors", "standard errors computed by",
              "refinement Hessian", "reason", "framework", "cross-version numerical identity", "TMB version"),
-    value = c(format(setting), cores, method, refinement, .acl_fork_reason(), framework,
+    value = c(format(setting), cores, method, refinement, .acl_sd_reason(cores, backend), framework,
               "not guaranteed across package versions (the optimizer finishing step can change estimates at numerical precision)",
               paste0(utils::packageVersion("TMB"),
                      if (.acl_tmb_supported()) " (checked)" else " (not checked: sequential standard errors)")))
@@ -122,20 +132,52 @@ print.alscl_speed_info <- function(x, ...) {
 # discourages forking in GUI and embedded front-ends and with multithreaded
 # libraries in the parent process; Apple's Accelerate BLAS is multithreaded.
 .acl_fork_ok <- "forked processes are safe here (macOS or Linux outside a GUI front-end)"
+# A BLAS library that runs OpenMP threads can deadlock in a forked child (GNU
+# OpenMP does not survive fork()). The file name tells which libraries may do
+# so: OpenBLAS built with OpenMP, BLIS, FlexiBLAS (its default backend is
+# often OpenMP OpenBLAS) and Intel MKL (with the GNU threading layer). OpenBLAS
+# built with pthreads shuts its threads down before a fork and stays eligible.
+# One thread, set through the usual environment variables, makes forking safe.
+.acl_blas_thread_limit <- function()
+  Sys.getenv(c("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_NUM_THREADS"))
 .acl_fork_reason <- function(os = .Platform$OS.type, gui = .Platform$GUI,
                              front_ends = Sys.getenv(c("RSTUDIO", "POSITRON")),
-                             blas = tryCatch(extSoftVersion()[["BLAS"]], error = function(e) "")) {
+                             blas = tryCatch(extSoftVersion()[["BLAS"]], error = function(e) ""),
+                             threads = .acl_blas_thread_limit()) {
   if (!identical(os, "unix")) return("Windows: forked processes are not available, so socket workers are used")
   if (gui %in% c("AQUA", "Rgui", "RStudio") || any(front_ends == "1"))
     return("GUI front-end (R.app, RGui, RStudio or Positron): forking is discouraged, so socket workers are used")
   if (isTRUE(grepl("Accelerate|vecLib", blas)))
     return("Apple's Accelerate BLAS is multithreaded: forking is discouraged, so socket workers are used")
+  library_name <- paste(basename(dirname(blas)), basename(blas))
+  if (isTRUE(grepl("openblas[-_]?(openmp|omp)|openblaso|blis|flexiblas|mkl", library_name,
+                   ignore.case = TRUE)) && !any(threads == "1"))
+    return(paste("the BLAS library may run OpenMP threads: forking is discouraged, so socket workers are used",
+                 "(set OMP_NUM_THREADS=1 before starting R to allow forked processes)"))
   .acl_fork_ok
 }
 .acl_fork_safe <- function(os = .Platform$OS.type, gui = .Platform$GUI,
                            front_ends = Sys.getenv(c("RSTUDIO", "POSITRON")),
-                           blas = tryCatch(extSoftVersion()[["BLAS"]], error = function(e) ""))
-  identical(.acl_fork_reason(os, gui, front_ends, blas), .acl_fork_ok)
+                           blas = tryCatch(extSoftVersion()[["BLAS"]], error = function(e) ""),
+                           threads = .acl_blas_thread_limit())
+  identical(.acl_fork_reason(os, gui, front_ends, blas, threads), .acl_fork_ok)
+
+# The reason shown by alscl_speed_info(), for the backend that fits will use.
+# `automatic` is the reason for the automatic choice; an override through
+# options(ALSCL.sd_backend = ) is named when it changes that choice.
+.acl_sd_reason <- function(cores, backend, choice = getOption("ALSCL.sd_backend", "auto"),
+                           supported = .acl_tmb_supported(), automatic = .acl_fork_reason()) {
+  if (cores <= 1L) return("one core for standard errors, so no parallel workers are started")
+  if (!supported)
+    return("this TMB version was not checked against the parallel calculation, so TMB::sdreport() is used")
+  fork_auto <- identical(automatic, .acl_fork_ok)
+  if (identical(choice, "auto") || (backend == "fork") == fork_auto) return(automatic)
+  if (backend == "fork")
+    return(paste0("options(ALSCL.sd_backend = \"fork\") is set, so forked processes are used; the automatic ",
+                  "choice would be socket workers (", sub(", so socket workers are used.*$", "", automatic), ")"))
+  paste0("options(ALSCL.sd_backend = \"socket\") is set, so socket workers are used; the automatic ",
+         "choice would be forked processes")
+}
 
 # R CMD check limits a package to two simultaneous processes when
 # _R_CHECK_LIMIT_CORES_ is set (parallel's .check_ncores()). Every worker
@@ -146,15 +188,35 @@ print.alscl_speed_info <- function(x, ...) {
 }
 .acl_workers <- function(n) as.integer(min(n, .acl_core_limit()))
 
-# Resolve a core request to an integer. "auto" uses up to four physical cores
-# and keeps one free.
-.acl_cores <- function(x = getOption("ALSCL.sd_cores", "auto")) {
+# Cores that this R process was given: the Slurm allocation of the task
+# (SLURM_CPUS_PER_TASK) and the user's limit for forked processes
+# (options(mc.cores = )). parallel::detectCores() reports the cores of the
+# whole node and knows neither. NA when neither is set.
+.acl_core_allocation <- function(slurm = Sys.getenv("SLURM_CPUS_PER_TASK", ""),
+                                 mc = getOption("mc.cores")) {
+  count <- function(x) {
+    x <- suppressWarnings(as.numeric(x))
+    if (length(x) == 1L && is.finite(x) && x >= 1) floor(x) else NA_real_
+  }
+  limits <- c(count(slurm), if (!is.null(mc)) count(mc))
+  limits <- limits[!is.na(limits)]
+  if (length(limits)) as.integer(min(limits, .Machine$integer.max)) else NA_integer_
+}
+
+# Resolve a core request to an integer. "auto" uses up to four cores, keeps
+# one of the detected cores free and stays within the cores given to this
+# process (.acl_core_allocation()). detectCores(logical = FALSE) counts
+# physical cores on macOS and Windows; on Linux it counts logical cores.
+.acl_cores <- function(x = getOption("ALSCL.sd_cores", "auto"),
+                       allocation = .acl_core_allocation(),
+                       detected = parallel::detectCores(logical = FALSE)) {
   .acl_check_cores(x, "sd_cores")
   if (!identical(x, "auto")) return(.acl_workers(x))
-  n <- parallel::detectCores(logical = FALSE)
-  if (is.na(n)) n <- parallel::detectCores()
-  if (is.na(n)) return(1L)
-  .acl_workers(max(1L, min(4L, n - 1L)))
+  if (is.na(detected)) detected <- parallel::detectCores()
+  available <- c(detected - 1L, allocation)
+  available <- available[!is.na(available)]
+  if (!length(available)) return(1L)
+  .acl_workers(max(1L, min(4L, available)))
 }
 
 # How standard errors run in parallel: "fork" (forked processes for the
@@ -297,6 +359,25 @@ print.alscl_speed_info <- function(x, ...) {
        method = if (ncores > 1L) "forked processes" else "sequential", cores = ncores)
 }
 
+# Library paths and versions that socket workers need to load the TMB and
+# Matrix of this process. A package loaded with library(lib.loc = ) from a
+# library that is not on .libPaths() would otherwise be replaced in the
+# workers by the first copy on the search path. Such a library is put first;
+# the order of the libraries already on the path is kept. Only installed
+# packages add a path: the parent folder of a source checkout is not a library.
+.acl_dependency_paths <- function(packages = c("TMB", "Matrix"), paths = .libPaths()) {
+  normal <- function(x) normalizePath(x, winslash = "/", mustWork = FALSE)
+  extra <- unlist(lapply(packages, function(package) {
+    path <- getNamespaceInfo(asNamespace(package), "path")
+    if (file.exists(file.path(path, "Meta", "package.rds"))) dirname(path)
+  }), use.names = FALSE)
+  extra <- unique(extra[!normal(extra) %in% normal(paths)])
+  c(extra, paths)
+}
+.acl_dependency_versions <- function(packages = c("TMB", "Matrix"))
+  stats::setNames(lapply(packages, function(package) as.character(utils::packageVersion(package))),
+                  packages)
+
 # Delta method on socket workers, for sessions where forking is unsafe. The
 # first quantities are computed here to measure the time per quantity; the
 # rest go to socket workers only if computing them here would take longer
@@ -325,9 +406,18 @@ print.alscl_speed_info <- function(x, ...) {
   workers <- min(ncores, length(rest))
   path <- getLoadedDLLs()[[env$DLL]][["path"]]
   one <- utils::removeSource(.acl_delta_one); environment(one) <- globalenv()
-  setup <- function(paths, path, dll, data, parameters, random, par, Vtheta, hessian.random, one) {
+  setup <- function(paths, versions, path, dll, data, parameters, random, par, Vtheta, hessian.random, one) {
     .libPaths(paths)
     loadNamespace("TMB"); loadNamespace("Matrix")
+    # The delta method uses TMB internals, so a worker must run the TMB and
+    # Matrix versions of the main process. A difference stops the worker; the
+    # main process then computes the standard errors itself.
+    for (package in names(versions)) {
+      loaded <- as.character(utils::packageVersion(package))
+      if (!identical(loaded, versions[[package]]))
+        stop("a socket worker loaded ", package, " ", loaded, " but the main process uses ",
+             versions[[package]])
+    }
     if (!dll %in% names(getLoadedDLLs())) dyn.load(path)
     obj <- TMB::MakeADFun(data, parameters, random = random, DLL = dll, silent = TRUE)
     obj2 <- TMB::MakeADFun(data, parameters, type = "ADFun", ADreport = TRUE, DLL = dll, silent = TRUE)
@@ -350,7 +440,8 @@ print.alscl_speed_info <- function(x, ...) {
                  error = function(e) stop(.acl_parallel_error(conditionMessage(e))))
   on.exit(parallel::stopCluster(cl), add = TRUE)
   tryCatch({
-    phis <- parallel::clusterCall(cl, setup, .libPaths(), path, env$DLL, env$data, env$parameters,
+    phis <- parallel::clusterCall(cl, setup, .acl_dependency_paths(), .acl_dependency_versions(),
+                                  path, env$DLL, env$data, env$parameters,
                                   s$r, s$par, s$Vtheta, s$hessian.random, one)
     # The workers' ADREPORT values must be those of this session.
     if (!all(vapply(phis, identical, logical(1), s$phi)))
