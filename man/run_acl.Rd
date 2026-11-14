@@ -138,8 +138,19 @@ stays constant over time). \code{correlation_range}: \code{"positive"} (default;
 AR(1) correlations between 0 and 1, the logistic transform of the
 \verb{logit_*} parameters) or \code{"symmetric"} (between -1 and 1, as
 2 * logistic - 1; a correlation rho is then \code{qlogis((rho + 1) / 2)} on the
-optimizer scale). The settings used are stored in the \code{structure}
-element of the fit.}
+optimizer scale). \code{initial_deviations}: \code{"cumulative"} (default; the
+log numbers at age in the first period are those of the previous age
+minus init_Z plus a normal deviation, so the deviations accumulate over
+ages and \code{dev_log_N0} has \code{nage - 1} entries) or \code{"independent"}
+(Equation 11 of Zhang and Cadigan 2022: log N(a) = log R(1) -
+init_Z (a - 1) + e(a) for ages a = 1 to \code{nage}, with independent normal
+deviations e(a), so \code{dev_log_N0} has \code{nage} entries and the numbers at
+the first age in the first period differ from the reported recruitment
+of that period; with an equilibrium plus group, the deviation of the
+plus group multiplies the sum of the older cohorts). The settings used
+are stored in the \code{structure} element of the fit; \code{initial_deviations}
+is stored only when it is \code{"independent"}, so that the stored structure
+of a fit with the default form is the same as in earlier versions.}
 
 \item{start_spread}{Standard deviation of the normal deviates added to the
 starting values (on the scale of the optimizer, mostly logarithms) of

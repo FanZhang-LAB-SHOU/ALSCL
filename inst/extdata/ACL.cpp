@@ -8,9 +8,15 @@
 // - Recruitment deviations follow an AR(1) process; log-F deviations follow a
 //   separable AR(1) process over ages and time steps, or one AR(1) series
 //   shared by all ages when dev_log_F has a single row.
-// - Initial numbers at age (ages after the first) have iid normal deviations.
+// - Initial log numbers at age (ages after the first) are those of the previous
+//   age minus init_Z plus an iid normal deviation.
 // - Optional data entry initial_plus_group = 1 makes the first-period plus
 //   group the equilibrium sum of all older cohorts at init_Z.
+// - Optional data entry initial_deviations = 1 gives the first-period numbers
+//   at age independent deviations, Equation 11 of the paper:
+//   log N(a,1) = log R(1) - init_Z (a-1) + dev(a), a = 1, ..., A, so
+//   dev_log_N0 has A entries. Absent or 0 keeps the original form, in which
+//   the deviations accumulate over ages and dev_log_N0 has A-1 entries.
 // - Optional data entry correlation_range = 1 lets the AR(1) correlations
 //   take values between -1 and 1.
 // - Optional data entry M_AY (A x Y) is the natural mortality rate by age and
@@ -74,7 +80,7 @@ Type objective_function<Type>::operator() ()
   // random effects
   PARAMETER_VECTOR(dev_log_R); // recruitment deviation
   PARAMETER_ARRAY(dev_log_F); // deviation of fishing moratlity across years and ages
-  PARAMETER_VECTOR(dev_log_N0); // deviation of initial number at age (except for the first age), so size = A-1
+  PARAMETER_VECTOR(dev_log_N0); // deviation of initial number at age: A-1 (all ages but the first), or A with initial_deviations = 1
 
   // derived parameters
   Type init_Z = exp(log_init_Z);
@@ -136,9 +142,19 @@ Type objective_function<Type>::operator() ()
   log_NA(0,0) = log_Rec(0);
   NA(0,0) = Rec(0);
   //Type cz=zero;
+  if (optional_setting(this->data, "initial_deviations") == 0) {
   for(int i = 1;i < A;++i){
     log_NA(i,0) = log_NA(i-1,0) -init_Z  + dev_log_N0(i-1);
 	NA(i,0) = exp(log_NA(i,0));
+  }
+  } else {
+    // Independent deviations (Equation 11 of the paper), first age included.
+    if (dev_log_N0.size() != A)
+      Rf_error("With independent initial deviations dev_log_N0 must have A entries.");
+    for(int i = 0;i < A;++i){
+      log_NA(i,0) = log_Rec(0) - init_Z * Type(i) + dev_log_N0(i);
+      NA(i,0) = exp(log_NA(i,0));
+    }
   }
   // Optional: the first-period plus group is the equilibrium sum of all older
   // cohorts at init_Z (absent or 0 keeps the original single-cohort value).

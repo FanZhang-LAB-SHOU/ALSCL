@@ -159,11 +159,31 @@
 #'     `logit_*` start or fixed value has a different meaning under the two
 #'     settings: a correlation rho is `qlogis(rho)` under `"positive"` and
 #'     `qlogis((rho + 1) / 2)` under `"symmetric"`.}
+#'   \item{`initial_deviations`}{Deviations of the log numbers at age in the
+#'     first period (the initial numbers). `"cumulative"`: the log numbers of
+#'     each age after the first are those of the previous age minus init_Z
+#'     plus a normal deviation, so the deviations accumulate over ages and
+#'     `dev_log_N0` has `nage - 1` entries. `"independent"`: Equation 11 of
+#'     Zhang and Cadigan (2022), log N(a) = log R(1) - init_Z (a - 1) + e(a)
+#'     for ages a = 1 to `nage`, where R(1) is the recruitment of the first
+#'     period and the deviations e(a) are independent normal with the
+#'     standard deviation of the initial deviations; `dev_log_N0` then has
+#'     `nage` entries. The first age also has a deviation, so the numbers at
+#'     the first age in the first period differ from the reported recruitment
+#'     `Rec` of that period. With `initial_plus_group = "equilibrium"` the
+#'     deviation of the plus group multiplies the sum of the older cohorts.
+#'     With `initial_length = "growth"` the length distribution of each age
+#'     follows from growth and survival at init_Z without deviations, and the
+#'     deviation of an age multiplies the numbers of that age only. This
+#'     setting does not belong to the set `"von_bertalanffy"`.}
 #'   }
 #'   With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`
 #'   a population with constant recruitment, no fishing and init_Z equal to M
 #'   stays constant over time; with the original structure it does not.
-#'   The settings used are stored in the `structure` element of the fit.
+#'   The settings used are stored in the `structure` element of the fit;
+#'   `initial_deviations` is stored only when it is `"independent"`, so that
+#'   the stored structure of a fit with the default form is the same as in
+#'   earlier versions.
 #' @param t0_lower Lower limit of the von Bertalanffy parameter t0 in years.
 #'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 #'   parameterization, in which t0 is positive. Set a negative value, for

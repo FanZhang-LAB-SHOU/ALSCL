@@ -199,7 +199,15 @@
   initial_length = c("length_at_age", "growth"),
   growth_increment = c("logistic", "von_bertalanffy"),
   growth_transition = c("midpoint", "bin"),
-  correlation_range = c("positive", "symmetric"))
+  correlation_range = c("positive", "symmetric"),
+  initial_deviations = c("cumulative", "independent"))
+
+# Settings that apply to ACL as well as ALSCL.
+.acl_structure_acl <- c("initial_plus_group", "correlation_range", "initial_deviations")
+
+# Settings that a fit stores only when they differ from the default, so that
+# the stored structure of a default fit is the same as in earlier versions.
+.acl_structure_stored_if_set <- "initial_deviations"
 
 # Named sets of settings. "original" is the structure of the package as first
 # released, the implementation of the model of Zhang and Cadigan (2022). Two
@@ -237,7 +245,7 @@
       stop(label, " must be \"original\" or \"von_bertalanffy\" (the name of a set); use a named list for ",
            "single settings, for example list(correlation_range = \"symmetric\").", call. = FALSE)
     set <- .acl_structure_sets[[name]]
-    if (toupper(model) == "ACL") set <- set[intersect(names(set), c("initial_plus_group", "correlation_range"))]
+    if (toupper(model) == "ACL") set <- set[intersect(names(set), .acl_structure_acl)]
     set
   }
   if (is.character(structure)) return(pick(structure, "A character structure"))
@@ -269,7 +277,7 @@
 .acl_structure <- function(structure = list(), model = "ALSCL") {
   model <- toupper(model)
   structure <- .acl_structure_expand(structure, model)
-  available <- if (model == "ACL") c("initial_plus_group", "correlation_range") else names(.acl_structure_choices)
+  available <- if (model == "ACL") .acl_structure_acl else names(.acl_structure_choices)
   if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
       (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
        anyDuplicated(names(structure)))))
@@ -293,8 +301,22 @@
     choices[[nm]] <- value
   }
   codes <- vapply(names(choices), function(nm) match(choices[[nm]], .acl_structure_choices[[nm]]) - 1L, integer(1))
-  list(choices = choices, data = as.list(codes[codes > 0L]))
+  unset <- names(codes)[codes == 0L & names(codes) %in% .acl_structure_stored_if_set]
+  list(choices = choices[setdiff(names(choices), unset)], data = as.list(codes[codes > 0L]))
 }
+
+# The form of the deviations of the initial numbers at age in a list of
+# structure choices. Fits with the default form and fits of earlier versions
+# do not store the setting.
+.acl_initial_deviations <- function(choices) {
+  value <- choices$initial_deviations
+  if (is.null(value)) .acl_structure_choices$initial_deviations[1L] else value
+}
+
+# Number of deviations of the initial numbers at age: A - 1 (all ages but the
+# first) with cumulative deviations, A with independent deviations.
+.acl_initial_deviation_count <- function(choices, nage)
+  if (.acl_initial_deviations(choices) == "independent") nage else nage - 1L
 .acl_observed_log <- function(model_result) {
   observed <- model_result$observations
   if (!is.null(observed)) {

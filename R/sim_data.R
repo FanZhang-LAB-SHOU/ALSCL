@@ -52,6 +52,23 @@
 #'   Process settings (including mortality, recruitment and observation error),
 #'   simulation duration and output controls can change without recalculating
 #'   biology. These checks run before creating files or drawing random numbers.
+#'   The initial numbers at age, in the first simulated year (before the
+#'   burn-in), are recruitment times exp(-init_Z (a - 1)) times a lognormal
+#'   deviation. With the default form the deviations accumulate over ages:
+#'   log N(a) = log N(a - 1) - init_Z + d(a - 1), with nage - 1 independent
+#'   normal increments d of SD std_logN0. With
+#'   `params$structure = list(initial_deviations = "independent")` every age,
+#'   the first included, has one independent deviation of SD std_logN0, as in
+#'   Equation 11 of Zhang and Cadigan (2022). The deviations of ages 2 to nage
+#'   are then the draws that the default form uses for its increments, so the
+#'   two forms share their random numbers; with `random_numbers =
+#'   "sequential"` the extra draw of the first age changes the draws that
+#'   follow (survey errors), whereas with `"by_process"` it does not. Other
+#'   settings of `params$structure` (`initial_plus_group`, `initial_length`)
+#'   combine with either form as in [run_alscl()]. After a long burn-in, such
+#'   as the 80 years of the "flatfish" preset, the initial numbers have
+#'   little effect on the returned years; use burn_in = 0 in
+#'   [initialize_params()] to return the first simulated year.
 #'   Survey observations retain true zeros and small positive values; no
 #'   artificial positive floor is applied. Survey biomass equals survey
 #'   abundance times weight at length. Fitting still treats zeros as missing
@@ -131,6 +148,15 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   x
 }
 
+# Deviations of the initial log numbers at age 1 to nage in the independent
+# form (Equation 11 of Zhang and Cadigan 2022). Ages 2 to nage take the draws
+# that the cumulative form uses for its nage - 1 increments, and age 1 takes
+# one more draw, so the two forms share their random numbers.
+.acl_simulation_initial_deviations <- function(nage, sd, streams) {
+  z <- if (is.null(streams)) rnorm(nage, 0, sd) else .acl_simulation_normal(nage, streams, 3L) * sd
+  z[c(nage, seq_len(nage - 1L))]
+}
+
 # AR(1) series with unit innovation variance. A zero coefficient is white
 # noise; stats::arima.sim() returns it but warns about the polynomial root.
 .acl_simulation_ar1 <- function(ar, n) {
@@ -191,6 +217,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   R_ar    <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
   structure <- .acl_structure(params$structure, "ACL")$choices
+  independent <- .acl_initial_deviations(structure) == "independent"
   grid <- .acl_simulation_grid(params, sim_year, "age_based")
   sim_year <- grid$nstep
   # Observation window indices use integer steps, never fractional subscripts.
@@ -229,12 +256,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     }
 
     # --- Initial age structure ---
-    N0_at_age <- rep(NA, nage)
-    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
-      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
-    N0_at_age[1] <- Rec[1]
-    for (i in 2:nage) {
-      N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
+    if (independent) {
+      dev_logN0 <- .acl_simulation_initial_deviations(nage, std_logN0, streams)
+      N0_at_age <- Rec[1] * exp(-init_Z * (seq_len(nage) - 1) + dev_logN0)
+    } else {
+      N0_at_age <- rep(NA, nage)
+      dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+        .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
+      N0_at_age[1] <- Rec[1]
+      for (i in 2:nage) {
+        N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
+      }
     }
     if (structure$initial_plus_group == "equilibrium")
       N0_at_age[nage] <- N0_at_age[nage] / (1 - exp(-init_Z))
@@ -394,6 +426,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
   R_ar      <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
 
   structure <- .acl_structure(params$structure, "ALSCL")$choices
+  independent <- .acl_initial_deviations(structure) == "independent"
   grid <- .acl_simulation_grid(params, sim_year, "length_based")
   nstep <- grid$nstep
 
@@ -433,12 +466,17 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     }
 
     # --- Initial age structure ---
-    N0_at_age <- rep(NA, nage)
-    dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
-      .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
-    N0_at_age[1] <- Rec[1]
-    for (i in 2:nage) {
-      N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
+    if (independent) {
+      dev_logN0 <- .acl_simulation_initial_deviations(nage, std_logN0, streams)
+      N0_at_age <- Rec[1] * exp(-init_Z * (seq_len(nage) - 1) + dev_logN0)
+    } else {
+      N0_at_age <- rep(NA, nage)
+      dev_logN0 <- if (is.null(streams)) rnorm(nage - 1, 0, std_logN0) else
+        .acl_simulation_normal(nage - 1, streams, 3L) * std_logN0
+      N0_at_age[1] <- Rec[1]
+      for (i in 2:nage) {
+        N0_at_age[i] <- N0_at_age[i - 1] * exp(-init_Z + dev_logN0[i - 1])
+      }
     }
 
     # --- 3D arrays: nla[nlen, nage] at each step ---
@@ -457,7 +495,20 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
     SSB <- TN <- TB <- CN_tot <- CB_tot <- rep(NA, nstep)
 
     # --- Step 1: Initialize from age structure ---
-    if (structure$initial_length == "growth") {
+    if (structure$initial_length == "growth" && independent) {
+      # Length distributions follow from growth and survival at init_Z
+      # without deviations; the deviation of an age multiplies the numbers of
+      # that age only (for an equilibrium plus group, the sum of the older
+      # cohorts).
+      state <- Rec[1] * pla[, 1]
+      nla[, 1] <- state * exp(dev_logN0[1])
+      for (a in 2:nage) {
+        state <- as.vector(Gij %*% state) * exp(-init_Z)
+        if (a == nage && structure$initial_plus_group == "equilibrium")
+          state <- as.vector(solve(diag(nlen) - exp(-init_Z) * Gij, state))
+        nla[, a] <- state * exp(dev_logN0[a])
+      }
+    } else if (structure$initial_length == "growth") {
       # Each age is the previous age after survival at init_Z and one growth
       # step; the plus group optionally sums all older cohorts.
       state <- N0_at_age[1] * pla[, 1]

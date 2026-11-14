@@ -110,8 +110,19 @@
 #'   AR(1) correlations between 0 and 1, the logistic transform of the
 #'   `logit_*` parameters) or `"symmetric"` (between -1 and 1, as
 #'   2 * logistic - 1; a correlation rho is then `qlogis((rho + 1) / 2)` on the
-#'   optimizer scale). The settings used are stored in the `structure`
-#'   element of the fit.
+#'   optimizer scale). `initial_deviations`: `"cumulative"` (default; the
+#'   log numbers at age in the first period are those of the previous age
+#'   minus init_Z plus a normal deviation, so the deviations accumulate over
+#'   ages and `dev_log_N0` has `nage - 1` entries) or `"independent"`
+#'   (Equation 11 of Zhang and Cadigan 2022: log N(a) = log R(1) -
+#'   init_Z (a - 1) + e(a) for ages a = 1 to `nage`, with independent normal
+#'   deviations e(a), so `dev_log_N0` has `nage` entries and the numbers at
+#'   the first age in the first period differ from the reported recruitment
+#'   of that period; with an equilibrium plus group, the deviation of the
+#'   plus group multiplies the sum of the older cohorts). The settings used
+#'   are stored in the `structure` element of the fit; `initial_deviations`
+#'   is stored only when it is `"independent"`, so that the stored structure
+#'   of a fit with the default form is the same as in earlier versions.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by

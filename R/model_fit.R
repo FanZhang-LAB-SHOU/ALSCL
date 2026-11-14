@@ -240,7 +240,7 @@
   if ((if (model == "ACL") p$t0 else t0_lower + exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.", call. = FALSE)
   p$dev_log_R <- rep(0, d$Y)
   p$dev_log_F <- array(0, c(if (F_structure == "year") 1L else if (model == "ACL") d$A else d$L, d$Y))
-  p$dev_log_N0 <- rep(0, d$A-1L)
+  p$dev_log_N0 <- rep(0, .acl_initial_deviation_count(structure$choices, d$A))
   mapping <- .acl_map(p, map, model)
   if (F_structure == "year") {
     group_parameter <- if (model == "ACL") "logit_log_F_a" else "logit_log_F_l"
