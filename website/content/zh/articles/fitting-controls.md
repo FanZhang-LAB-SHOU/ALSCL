@@ -123,7 +123,7 @@ a_structure <- run_acl(x, structure = list(initial_plus_group = "equilibrium"),
 a_structure$structure
 ```
 
-`structure` 参数选择可选的模型结构。默认值（空列表）是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。所以不带 `structure` 的调用拟合的模型与以前相同。原始结构的生长增量有两处细节只在代码里，论文没有给出。论文定义了下表中的 logistic 函数，但没有给出增量等于最大值 50% 和 95% 时的体长（代码取 0.5 `Linf` 和 0.05 `Linf`），也没有说明增量怎样换算到短于一年的时间步（代码把它乘以 `growth_step`）。`structure = "von_bertalanffy"` 同时选用表中前四项设置，使第一个时间步和生长转移遵循同一个生长模型；`structure = "original"` 即默认结构。命名列表可以选择单项设置，也可以先指定一组设置再追加，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。`"published"` 和 `"consistent"` 是 `"original"` 和 `"von_bertalanffy"` 以前的名称，仍然可以使用。ACL 有表中的第一项和最后一项设置，ALSCL 五项都有。
+`structure` 参数选择可选的模型结构。默认值（空列表）是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。所以不带 `structure` 的调用拟合的模型与以前相同。原始结构的生长增量有两处细节只在代码里，论文没有给出。论文定义了下表中的 logistic 函数，但没有给出增量等于最大值 50% 和 95% 时的体长（代码取 0.5 `Linf` 和 0.05 `Linf`），也没有说明增量怎样换算到短于一年的时间步（代码把它乘以 `growth_step`）。`structure = "von_bertalanffy"` 同时选用表中前四项设置，使第一个时间步和生长转移遵循同一个生长模型；`structure = "original"` 即默认结构。命名列表可以选择单项设置，也可以先指定一组设置再追加，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。`"published"` 和 `"consistent"` 是 `"original"` 和 `"von_bertalanffy"` 以前的名称，仍然可以使用。ACL 有表中的第一项和最后两项设置，ALSCL 六项都有。
 
 | 设置 | 原始结构（默认） | 可选的结构 |
 |---|---|---|
@@ -132,12 +132,15 @@ a_structure$structure
 | `growth_increment`（ALSCL） | `"logistic"`：期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step` | `"von_bertalanffy"`：体长 `L` 低于 `Linf` 时，一个时间步的期望增量为 `(Linf - L) * (1 - exp(-vbk * growth_step))`，高于 `Linf` 时平滑降到零，因此 `Linf` 和 `vbk` 的含义与年龄别体长曲线中相同。这时个体长到 `Linf` 附近就停止生长，`Linf` 在第一个时间步之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，`Linf` 的标准误可能非常小。logistic 增量在 `Linf` 以上仍为正 |
 | `growth_transition`（ALSCL） | `"midpoint"`：体长组内所有个体都从组中点开始生长 | `"bin"`：起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的生长增量相对组宽较小时，个体仍会进入下一个体长组 |
 | `correlation_range`（ACL 和 ALSCL） | `"positive"`：补充量和 F 的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换 | `"symmetric"`：相关系数在 -1 和 1 之间，等于 logistic 变换的 2 倍减 1，因此相关系数为零不在边界上，也可以估计负相关 |
+| `initial_deviations`（ACL 和 ALSCL） | `"cumulative"`：第一个时间步每个年龄组的对数尾数等于前一年龄组的对数尾数减去 `init_Z` 再加一个偏差，因此偏差沿年龄组累加（`nage - 1` 个偏差） | `"independent"`：Zhang 和 Cadigan (2022) 的式 11。每个年龄组的对数尾数等于第一个时间步的对数补充量减去 `init_Z` 乘以它之前的年龄组个数，再加该年龄组自己的偏差；第一个年龄组也有偏差（`nage` 个偏差） |
 
 有两对设置具有原始结构所没有的性质。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、没有捕捞且 `init_Z` 等于 `M` 的种群保持不变。`growth_increment = "von_bertalanffy"` 与 `growth_transition = "bin"` 同时使用时，组宽为每个时间步生长增量的几倍时，世代的平均体长与 von Bertalanffy 曲线接近。组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。在原始结构下，每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），平均体长明显低于该曲线。举一个例子：一个世代从最接近 40 cm 的体长组开始，时间步为季度，`Linf` 为 152 cm，`vbk` 为每年 0.38，生长增量的变异系数为 0.3。10 年后 von Bertalanffy 曲线给出 149.5 cm。使用 `"von_bertalanffy"` 和 `"bin"` 时，组宽 1 cm 的平均体长为 149.6 cm，组宽 5 cm 为 148.3 cm，组宽 10 cm 为 146.6 cm。在原始结构下，组宽 1 cm 为 143.0 cm，组宽 5 cm 为 121.7 cm，组宽 10 cm 为 105.3 cm。
 
 `"von_bertalanffy"` 的四项设置要一起使用。`growth_transition = "midpoint"` 时，在每个时间步的生长增量远小于半个组宽的体长处，个体不再生长，与 `Linf` 的取值无关。在季度时间步、组宽 5 cm 的模拟检验中（`Linf` 为 152 cm），原始结构下的生长在 113 到 120 cm 之间停止。这时只用两项初始状态设置或只用两项生长设置的拟合，要么不能通过数值检查，要么对捕捞死亡率的估计有很大偏差，因为第一个时间步与之后各时间步遵循不同的生长模型。`"von_bertalanffy"` 既是这组设置的名称，也是单项设置 `growth_increment` 的一个取值：`structure = list(growth_increment = "von_bertalanffy")` 只改一项，`structure = "von_bertalanffy"` 四项都改。ALSCL 拟合的 `structure` 列表只改了四项中的一项、两项或三项时，拟合会给出一条提示，列出仍为原始取值的设置（`silent = TRUE` 时不显示；`fit_scenarios()`、`hindcast_model()` 和 `retro_model()` 每次调用只提示一次）。先指定这组设置再替换其中一项的列表，例如 `list(set = "von_bertalanffy", growth_transition = "midpoint")`，视为有意的选择，不给提示。拟合得到的转移矩阵中，如果有中点低于 `Linf` 估计值 90% 的体长组，且个体每个时间步留在该组的概率不低于 0.99，`run_alscl()` 会给出提示（`silent = TRUE` 时不显示），`summary()` 会显示这条提示，拟合结果中的 `growth_check` 保存这项检查的结果。原始结构与 `"von_bertalanffy"` 这组设置的参数个数相同，可以两种各拟合一次并比较目标函数值。
 
-`b_structure$structure` 和 `a_structure$structure` 列出每项设置实际采用的取值，保存的拟合结果也保留它们。采用可选结构的拟合是另一个模型，选用之前先把它的数值检查、残差和估计值与默认拟合比较（[诊断](diagnostics.html)）。如果 `run_acl()` 因某项设置“applies to ALSCL only”而停止，请从 ACL 的调用中去掉生长和初始体长的设置：ACL 没有生长转移矩阵。把选择存在所属模型之下，例如 `x$fit_config$alscl$structure`，这样该输入列表之后的拟合（包括回溯分析的每一轮）都会使用它。要用同样的结构模拟数据，见[模拟调查数据](simulation.html#generate)。
+`initial_deviations` 不属于 `"von_bertalanffy"` 这组设置，单独使用时不给提示。它可以与其他设置组合。`initial_plus_group = "equilibrium"` 时，plus group 的偏差乘在所有更老世代之和上。`initial_length = "growth"` 时，每个年龄组的体长分布由不含偏差的生长和按 `init_Z` 的存活得到，某个年龄组的偏差只乘在该年龄组的尾数上。取 `"independent"` 时，第一个时间步的第一个年龄组也有偏差，因此它的尾数与拟合报告的该时间步补充量不同。两种形式的固定效应参数相同，可以各拟合一次并比较目标函数值。[包与论文的差别](model-theory.html#difference-initial)给出一项模拟检验和三个北海种群重新拟合的结果。
+
+`b_structure$structure` 和 `a_structure$structure` 列出每项设置实际采用的取值；`initial_deviations` 只在取 `"independent"` 时列出，因此默认拟合保存的结构与以前的版本相同。保存的拟合结果也保留它们。采用可选结构的拟合是另一个模型，选用之前先把它的数值检查、残差和估计值与默认拟合比较（[诊断](diagnostics.html)）。如果 `run_acl()` 因某项设置“applies to ALSCL only”而停止，请从 ACL 的调用中去掉生长和初始体长的设置：ACL 没有生长转移矩阵。把选择存在所属模型之下，例如 `x$fit_config$alscl$structure`，这样该输入列表之后的拟合（包括回溯分析的每一轮）都会使用它。要用同样的结构模拟数据，见[模拟调查数据](simulation.html#generate)。
 
 <h3 id="correlation-range">允许 AR(1) 相关系数为负</h3>
 
