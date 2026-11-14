@@ -164,12 +164,22 @@
     !(is.finite(fit$max_abs_gradient) && fit$max_abs_gradient < 1e-6)
   if (refinement_unfinished) issues <- c(issues, paste0(
     "optimizer refinement stopped before its gradient tolerance (", refinement_status, ")"))
+  # A parameter at its limit in practice is treated as a bound hit: the fit
+  # fails the screen. Plausibility notes do not change the verdict. See
+  # R/fit_checks.R.
+  limits <- .acl_limit_parameters(fit, natural$parameter[natural$near_boundary])
+  if (nrow(limits)) issues <- c(issues, paste0(
+    if (nrow(limits) > 1L) "parameters at their limit in practice: " else "parameter at its limit in practice: ",
+    paste(limits$description, collapse = ", ")))
   # This numerical screen is not a claim of model adequacy or identifiability.
   list(stationary = stationary, numerical_ok = stationary && isTRUE(fit$pdHess) &&
-      covariance_ok && !isTRUE(fit$bound_hit) && !any(natural$near_boundary),
+      covariance_ok && !isTRUE(fit$bound_hit) && !any(natural$near_boundary) && !nrow(limits),
     natural_parameters = natural, natural_boundary = any(natural$near_boundary),
     covariance_condition = condition, high_correlations = correlations, issues = issues,
     sd_near_zero = sd_near_zero, refinement_unfinished = refinement_unfinished,
     thresholds = list(gradient = 1e-3, natural_boundary = 1e-4, correlation = .95,
-                      sd_near_zero = 1e-3, refinement_gradient = 1e-6))
+                      sd_near_zero = 1e-3, refinement_gradient = 1e-6),
+    limit_parameters = limits, at_limit = nrow(limits) > 0L,
+    advice = c(limits$advice, .acl_bound_advice(fit)),
+    plausibility = .acl_plausibility(fit), check_thresholds = .acl_check_thresholds)
 }

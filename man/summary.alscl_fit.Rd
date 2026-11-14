@@ -39,6 +39,12 @@ contains the estimated parameters only, and notes gives the reason.
 For an ALSCL fit in which growth stops below Linf under the midpoint
 growth transition, growth_check holds the message described in the
 Details of \code{\link[=run_alscl]{run_alscl()}}.
+advice holds what to do about parameters that are at their limit in
+practice and about upper bounds that can be widened, and plausibility
+holds the plausibility notes of the fit; both are described in the
+Details of \code{\link[=run_acl]{run_acl()}} and are absent when the fit has none. A fit of an
+earlier version stores neither and is summarized from its stored
+diagnostics.
 }
 \examples{
 \donttest{

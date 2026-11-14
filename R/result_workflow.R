@@ -430,6 +430,12 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
 #'   For an ALSCL fit in which growth stops below Linf under the midpoint
 #'   growth transition, growth_check holds the message described in the
 #'   Details of [run_alscl()].
+#'   advice holds what to do about parameters that are at their limit in
+#'   practice and about upper bounds that can be widened, and plausibility
+#'   holds the plausibility notes of the fit; both are described in the
+#'   Details of [run_acl()] and are absent when the fit has none. A fit of an
+#'   earlier version stores neither and is summarized from its stored
+#'   diagnostics.
 #' @examples
 #' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
@@ -455,6 +461,11 @@ summary.alscl_fit <- function(object, ...) {
     out$notes <- paste0("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
                         problem, ").")
   if (isTRUE(object$growth_check$stalled)) out$growth_check <- object$growth_check$message
+  advice <- object$diagnostics$advice
+  if (is.character(advice) && length(advice)) out$advice <- advice
+  plausibility <- object$diagnostics$plausibility
+  if (is.data.frame(plausibility) && nrow(plausibility) && is.character(plausibility$note))
+    out$plausibility <- plausibility$note
   structure(out, class = "summary.alscl_fit")
 }
 
@@ -471,6 +482,8 @@ print.summary.alscl_fit <- function(x, digits = NULL, ...) {
   print(x$parameters, row.names = FALSE, digits = digits)
   if (length(x$notes)) cat("\nNote: ", paste(x$notes, collapse = " "), "\n", sep = "")
   if (length(x$growth_check)) cat("\nGrowth check: ", x$growth_check, "\n", sep = "")
+  if (length(x$advice)) cat("\n", paste0("Advice: ", x$advice, "\n"), sep = "")
+  if (length(x$plausibility)) cat("\n", paste0("Plausibility note: ", x$plausibility, "\n"), sep = "")
   invisible(x)
 }
 
