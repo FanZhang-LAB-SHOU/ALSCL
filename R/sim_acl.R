@@ -91,6 +91,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
       any(iter_range < 0 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
       anyDuplicated(iter_range))
     stop("iter_range must contain distinct nonnegative integer replicate IDs.", call. = FALSE)
+  .acl_single_M(M, "sim_model()")
   if (!is.null(M)) .acl_scalar(M, "M", 0)
   if (!is.logical(allow_M_mismatch) || length(allow_M_mismatch) != 1L || is.na(allow_M_mismatch))
     stop("allow_M_mismatch must be TRUE or FALSE.", call. = FALSE)

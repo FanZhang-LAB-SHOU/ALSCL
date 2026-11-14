@@ -112,17 +112,31 @@
        upper = c(edges, Inf), labels = labels)
 }
 .acl_prepare_data <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M,
-                              sel_L50, sel_L95, growth_step = NULL,
+                              sel_L50 = NULL, sel_L95 = NULL, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
                               len_upper = NULL, zero_action = c("missing", "error"),
-                              structure = list(), start_spread = 0.15, t0_lower = 0) {
+                              structure = list(), start_spread = 0.15, t0_lower = 0,
+                              survey_q = NULL, survey_q_age = NULL) {
   zero_action <- match.arg(zero_action)
   nage <- .acl_positive_integer(nage, "nage", 2L)
-  rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
+  rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE)
+  # A single number is the constant natural mortality rate. The other forms
+  # (see .acl_M_input) are checked below, once the data dimensions are known.
+  M_single <- is.null(M) || (is.atomic(M) && length(M) == 1L)
+  if (M_single) M <- .acl_scalar(M, "M", 0)
   if (is.null(growth_step)) growth_step <- if (rec.age < 1) rec.age else 1
   growth_step <- .acl_scalar(growth_step, "growth_step", 0, TRUE)
-  .acl_scalar(sel_L50, "sel_L50"); .acl_scalar(sel_L95, "sel_L95")
-  if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.", call. = FALSE)
+  if (is.null(survey_q)) {
+    if (is.null(sel_L50) || is.null(sel_L95))
+      stop("sel_L50 and sel_L95 are required unless survey catchability at length is supplied as survey_q.",
+           call. = FALSE)
+    .acl_scalar(sel_L50, "sel_L50"); .acl_scalar(sel_L95, "sel_L95")
+    if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.", call. = FALSE)
+  } else if (!is.null(sel_L50) || !is.null(sel_L95)) {
+    stop("survey_q replaces the logistic survey catchability curve, so it cannot be combined with sel_L50 or sel_L95. ",
+         "Supply either survey_q or both sel_L50 and sel_L95. When an input bundle or a stored fit already holds ",
+         "sel_L50 and sel_L95, add sel_L50 = NULL and sel_L95 = NULL to the call.", call. = FALSE)
+  }
   frames <- list(data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat)
   if (any(vapply(frames, function(x) length(dim(x)) != 2L || ncol(x) < 3L || nrow(x) < 2L, logical(1)))) stop("Inputs require a length-label column, at least two time columns and two length bins.", call. = FALSE)
   frames <- lapply(frames, as.data.frame, stringsAsFactors = FALSE); catl <- frames$data.CatL
@@ -149,13 +163,30 @@
     stop("Time column spacing must equal growth_step (", growth_step,
          " years). Include every model period; use NA survey observations for missing periods,",
          " and provide weights and maturity for the complete time grid.", call. = FALSE)
-  log_q <- stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE)
-  list(data = list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
-                  len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
-                  Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
+  supplied_q <- if (is.null(survey_q)) NULL else .acl_survey_q(survey_q, nrow(obs), ncol(obs), years)
+  # With survey catchability by length and time step the templates read
+  # log_q_LY (added below); log_q then holds the first time step.
+  log_q <- if (is.null(survey_q))
+    stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE) else
+    if (supplied_q$form == "length") log(supplied_q$q) else log(supplied_q$q[, 1L])
+  data <- list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
+               len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
+               Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M)
+  out <- list(data = data,
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
        structure = structure, start_spread = start_spread, t0_lower = t0_lower,
        zero_observations = sum(obs == 0, na.rm = TRUE))
+  # The entries below exist only for the non-default input forms, so the
+  # prepared input of a default fit is the same as in earlier versions.
+  if (!M_single) {
+    out$natural_mortality <- .acl_M_input(M, nage, nrow(obs), ncol(obs), years)
+    # The templates still read the single number M; with a non-scalar M it is
+    # used only for the default start of init_Z.
+    out$data$M <- .acl_M_summary(out$natural_mortality)
+  }
+  if (!is.null(survey_q_age)) out$data$q_age <- .acl_survey_q_age(survey_q_age, nage)
+  if (!is.null(supplied_q) && supplied_q$form == "length_time") out$data$log_q_LY <- log(supplied_q$q)
+  out
 }
 
 # Optional model structures. The first choice of each setting is the published

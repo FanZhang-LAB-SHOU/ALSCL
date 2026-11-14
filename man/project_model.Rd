@@ -33,7 +33,15 @@ must match future times.}
 \item{M}{Future natural mortality per model time step, a nonnegative scalar
 or one value per future period. NULL uses the original fitted M stored in
 the fit recipe. Legacy fits without a recipe require explicit M; its first
-value also specifies the terminal fitted interval's natural mortality.}
+value also specifies the terminal fitted interval's natural mortality.
+A matrix with one row per age class and one column per future period, or
+one column that is used for every future period, gives the future rate by
+age. For a fit with a natural mortality rate by age and time step (see
+\code{\link[=run_acl]{run_acl()}}), NULL uses the fitted rate by age when it is the same in
+every time step; when it varies over time the future rate must be
+supplied, because no value is carried forward. For an ALSCL fit with a
+rate by length, NULL uses that rate by length. The terminal fitted
+interval uses the fitted rate of the last time step.}
 
 \item{allow_failed_fit}{Logical; default FALSE. A fit with
 \code{diagnostics$numerical_ok = FALSE} is rejected unless this is TRUE. An

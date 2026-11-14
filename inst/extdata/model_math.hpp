@@ -58,6 +58,19 @@ inline double optional_value(SEXP data, const char* name) {
   if (Rf_isNull(value) || Rf_length(value) < 1) return 0.0;
   return Rf_asReal(value);
 }
+// Optional numeric data entry (vector, matrix or array) as plain numbers in
+// column-major order. An absent entry gives an empty vector, so data lists
+// built for earlier versions remain valid. `expected` is the required number
+// of values of an entry that is present.
+inline std::vector<double> optional_numbers(SEXP data, const char* name, size_t expected) {
+  SEXP value = getListElement(data, name);
+  std::vector<double> out;
+  if (Rf_isNull(value)) return out;
+  if (!Rf_isReal(value) || (size_t) XLENGTH(value) != expected)
+    Rf_error("Data entry '%s' must hold %d real values.", name, (int) expected);
+  out.assign(REAL(value), REAL(value) + XLENGTH(value));
+  return out;
+}
 // AR(1) correlation from its optimizer-scale parameter.
 // range 0: logistic, between 0 and 1 (published structure).
 // range 1: 2 * logistic - 1, between -1 and 1.

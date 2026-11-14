@@ -630,6 +630,7 @@ sim_data <- function(bio_vars, params, sim_year = NULL,
 # Validate process scales before random draws or output writes. Missing optional
 # fields retain the defaults used by each simulation engine.
 .acl_simulation_process <- function(params, model_type) {
+  .acl_single_M(params$M, "sim_data()")
   for (name in c("M", "init_Z", "std_logR", "std_logN0", "std_SN", "alpha"))
     .acl_scalar(params[[name]], name, 0)
   .acl_scalar(params$beta, "beta", 0, TRUE)

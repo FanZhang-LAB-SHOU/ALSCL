@@ -19,6 +19,19 @@
 //                          all older cohorts at init_Z
 //   correlation_range  1 = AR(1) correlations between -1 and 1
 //   t0_lower           lower limit of t0: t0 = t0_lower + exp(log_t0)
+//   M_LAY              natural mortality rate by length, age and time step
+//                      (L x A x Y). It replaces the single rate M in survival,
+//                      in the catch equation and in Z and F at age. FA is then
+//                      ZA minus the mean of M over lengths weighted by numbers
+//                      at length of that age, and ZL is FL plus the mean of M
+//                      over ages weighted by numbers at age of that length.
+//   q_age              survey catchability multiplier by age (A): the expected
+//                      index at length is q(length) times the sum over ages of
+//                      q_age(age) * NLA(length, age, time step).
+//   log_q_LY           log survey catchability by length and time step (L x Y);
+//                      it replaces log_q, for example after a change of gear.
+// The code for these three entries sits in branches that a fit without them
+// does not enter, so such a fit is computed exactly as before.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -102,6 +115,17 @@ Type objective_function<Type>::operator()()
 	Type sigma_index = exp(log_sigma_index);
 
 	using namespace density;
+
+	// Optional natural mortality rate by length, age and time step, and survey
+	// catchability multiplier by age (absent = published structure).
+	std::vector<double> M_values = optional_numbers(this->data, "M_LAY", (size_t) L * A * Y);
+	std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
+	std::vector<double> log_q_time = optional_numbers(this->data, "log_q_LY", (size_t) L * Y);
+	bool M_varies = M_values.size() > 0;
+	bool q_by_age = q_age.size() > 0;
+	bool q_by_time = log_q_time.size() > 0;
+	// M at length bin k, age class j and time step i (used only when M_varies).
+	auto M_at = [&](int k, int j, int i) { return Type(M_values[k + L * (j + A * i)]); };
 
 	// ==================== F AND Z AT LENGTH ====================
 	matrix<Type> ZL(L,Y);
@@ -206,15 +230,53 @@ Type objective_function<Type>::operator()()
 		// Ages 2 to A-1: survive then grow through G
 		for(int j = 1;j < (A-1);++j){
 			vector<Type> previous = NLA.col(i-1).col(j-1);
-			vector<Type> survival = previous * exp(-ZL.col(i-1).array());
-			NLA.col(i).col(j) = G * survival;
+			if (!M_varies) {
+				vector<Type> survival = previous * exp(-ZL.col(i-1).array());
+				NLA.col(i).col(j) = G * survival;
+			} else {
+				vector<Type> survival(L);
+				for (int k=0; k<L; ++k)
+					survival(k) = previous(k) * exp(-(FL(k,i-1) + M_at(k,j-1,i-1)));
+				NLA.col(i).col(j) = G * survival;
+			}
 		}
 
 		// Plus group: accumulate A-1 and A survivors
 		vector<Type> previous_1 = NLA.col(i-1).col(A-2);
 		vector<Type> previous_2 = NLA.col(i-1).col(A-1);
-		vector<Type> survival = (previous_1 + previous_2) * exp(-ZL.col(i-1).array());
-		NLA.col(i).col(A-1) = G * survival;
+		if (!M_varies) {
+			vector<Type> survival = (previous_1 + previous_2) * exp(-ZL.col(i-1).array());
+			NLA.col(i).col(A-1) = G * survival;
+		} else {
+			// The two source ages have their own natural mortality rates.
+			vector<Type> survival(L);
+			for (int k=0; k<L; ++k)
+				survival(k) = previous_1(k) * exp(-(FL(k,i-1) + M_at(k,A-2,i-1))) +
+				              previous_2(k) * exp(-(FL(k,i-1) + M_at(k,A-1,i-1)));
+			NLA.col(i).col(A-1) = G * survival;
+		}
+	}
+
+	// With M by length, age and time step, total mortality at length is not a
+	// single rate. ZL is then FL plus the mean of M over ages, weighted by
+	// numbers at age of that length (the unweighted mean where numbers are 0).
+	// M_LAY is reported so that R can complete F at age (.acl_F_at_age).
+	if (M_varies) {
+		array<Type> M_LAY(L,A,Y);
+		for(int i=0; i<Y; ++i){
+			for(int k=0; k<L; ++k){
+				Type weighted = zero;
+				Type total = zero;
+				for(int j=0; j<A; ++j){
+					M_LAY(k,j,i) = M_at(k,j,i);
+					Type w = NLA(k,j,i) + Type(1e-300);
+					weighted += w * M_at(k,j,i);
+					total += w;
+				}
+				ZL(k,i) = FL(k,i) + weighted / total;
+			}
+		}
+		REPORT(M_LAY);
 	}
 
 	// ==================== BIOMASS AND SSB (3D) ====================
@@ -271,7 +333,8 @@ Type objective_function<Type>::operator()()
 	for(int i=0; i<Y; ++i){
 		for(int j=0; j<A; ++j){
 			for(int k=0; k<L; ++k){
-				CNLA(k,j,i) = NLA(k,j,i) * FL(k,i) * survival_integral(ZL(k,i));
+				if (!M_varies) CNLA(k,j,i) = NLA(k,j,i) * FL(k,i) * survival_integral(ZL(k,i));
+				else CNLA(k,j,i) = NLA(k,j,i) * FL(k,i) * survival_integral(FL(k,i) + M_at(k,j,i));
 				CBLA(k,j,i) = CNLA(k,j,i)*weight(k,i);
 			}
 		}
@@ -304,9 +367,25 @@ Type objective_function<Type>::operator()()
 	for(int i=0; i<A-1; ++i){
 		for(int j=0; j<Y-1; ++j){
 			vector<Type> cohort = NLA.col(j).col(i);
-			vector<Type> survivors = cohort * exp(-ZL.col(j).array());
-			ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors.sum()));
-			FA(i,j) = ZA(i,j) - M;
+			if (!M_varies) {
+				vector<Type> survivors = cohort * exp(-ZL.col(j).array());
+				ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors.sum()));
+				FA(i,j) = ZA(i,j) - M;
+			} else {
+				// F at age is Z at age minus the mean of M over lengths, weighted
+				// by numbers at length of this age (see also .acl_F_at_age in R).
+				Type survivors = zero;
+				Type weighted = zero;
+				Type total = zero;
+				for (int k=0; k<L; ++k) {
+					survivors += cohort(k) * exp(-(FL(k,j) + M_at(k,i,j)));
+					Type w = cohort(k) + Type(1e-300);
+					weighted += w * M_at(k,i,j);
+					total += w;
+				}
+				ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors));
+				FA(i,j) = ZA(i,j) - weighted / total;
+			}
 		}
 	}
 
@@ -329,7 +408,17 @@ Type objective_function<Type>::operator()()
 	matrix<Type> resid_index(L,Y);
 	for(int i = 0;i < L;++i){
 		for(int j=0; j<Y; ++j){
-			Elog_index(i,j) = log_q(i) + log(positive_probability(NL(i,j)));
+			if (!q_by_age && !q_by_time) {
+				Elog_index(i,j) = log_q(i) + log(positive_probability(NL(i,j)));
+			} else {
+				Type seen = NL(i,j);
+				if (q_by_age) {
+					seen = zero;
+					for(int a=0; a<A; ++a) seen += Type(q_age[a]) * NLA(i,a,j);
+				}
+				Type log_q_now = q_by_time ? Type(log_q_time[i + L * j]) : Type(log_q(i));
+				Elog_index(i,j) = log_q_now + log(positive_probability(seen));
+			}
 			resid_index(i,j) = zero;
 		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j))* na_matrix(i,j);
 		}

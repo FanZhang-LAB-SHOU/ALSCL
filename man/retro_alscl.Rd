@@ -32,7 +32,7 @@ retro_alscl(
 
 \item{nage}{The number of age classes.}
 
-\item{M}{Natural mortality per model time step.}
+\item{M}{Natural mortality rate per model time step; see \code{\link[=retro_model]{retro_model()}}.}
 
 \item{sel_L50}{Length at 50 percent survey catchability.}
 

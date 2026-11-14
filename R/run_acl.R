@@ -6,8 +6,21 @@
 #' @param data.mat Maturity-at-length between 0 and 1, with the same layout.
 #' @param rec.age Recruitment age in years, greater than t0.
 #' @param nage Number of age classes including the plus group (at least two).
-#' @param M Nonnegative natural mortality per model time step.
-#' @param sel_L50,sel_L95 Lengths at 50 and 95 percent survey catchability.
+#' @param M Nonnegative natural mortality rate (M) per model time step (for
+#'   quarterly time steps, the annual rate divided by 4), in one of two
+#'   forms. A single number is one rate for all ages and time steps. A matrix
+#'   with one row per age class (`nage` rows) and one column per time step,
+#'   or one column that is used for every time step, is M by age and time
+#'   step; M by age that is constant over time is `matrix(M_at_age, ncol = 1)`.
+#'   A numeric vector without dimensions is read as M by length, which
+#'   [run_alscl()] accepts and ACL rejects, because ACL follows numbers at age
+#'   only and assigns lengths from the length-at-age distribution in every
+#'   time step. Fish therefore do not keep their length, and a rate by length
+#'   cannot be applied to them. Any other object is rejected with the
+#'   expected dimensions. See Details.
+#' @param sel_L50,sel_L95 Lengths at 50 and 95 percent survey catchability,
+#'   which define a logistic survey catchability curve with a maximum of 1.
+#'   Leave both as NULL when `survey_q` is supplied.
 #' @param parameters Named list of initial fixed-effect values.
 #' @param parameters.L,parameters.U Named lower and upper bounds. Bounds are aligned
 #'   with free parameters after applying map. Initial free values are clamped to bounds.
@@ -152,19 +165,57 @@
 #'   recipe stores the complete resolved fitting inputs and software settings.
 #'   Use summary(), extract_parameters(), extract_estimates(), save_assessment()
 #'   and refit_model() for inspection, portable storage and reproducible refitting.
+#' @param survey_q Optional survey catchability at length: a numeric vector
+#'   with one positive value per length bin. It is used in place of the
+#'   logistic curve from `sel_L50` and `sel_L95`, for example for a
+#'   dome-shaped curve; [survey_catchability()] computes logistic and
+#'   dome-shaped curves. A matrix with one row per length bin and one column
+#'   per time step gives survey catchability by length and time step, for
+#'   example after a change of survey gear; a matrix with one column is read
+#'   as the vector. Supplying survey_q together with `sel_L50` or `sel_L95`
+#'   is an error; when an input bundle or a stored fit already holds these
+#'   two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are
+#'   fixed inputs and are not estimated.
+#' @param survey_q_age Optional survey catchability multiplier by age: a
+#'   numeric vector with one positive value per age class. The default NULL
+#'   is 1 for every age. The expected survey index at length is then
+#'   q(length) times the sum over ages of `survey_q_age[age]` times numbers
+#'   at age times the probability of that length at that age, where
+#'   q(length) is the survey catchability at length from `sel_L50` and
+#'   `sel_L95` or from `survey_q`. When `survey_q_age` is supplied and
+#'   `parameters` holds no start for mean_log_R, the default start of
+#'   mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then
+#'   sees only that fraction of the recruits.
+#' @details With M by age and time step, total mortality at age (`Z`) is F
+#'   plus the M of that age and time step, in survival and in the catch
+#'   equation. The default start of init_Z uses the median of M in the first
+#'   time step. A constant given as a matrix, `survey_q` equal to the
+#'   logistic curve, a `survey_q` matrix with equal columns, or
+#'   `survey_q_age` of ones gives the fit of the default inputs up to
+#'   rounding error.
+#'
+#'   M is an assumption. The survey index informs total mortality but not its
+#'   split into fishing and natural mortality, so an error in M enters F
+#'   directly, and the objective of a fit is not a basis for choosing M.
+#'   Supply M by age and time step only when independent estimates exist, for
+#'   example from a multispecies model. `survey_q` and `survey_q_age` are
+#'   assumptions of the same kind. A survey catchability that declines with
+#'   length or age is otherwise fitted as higher mortality.
 #' @export
-run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
                     train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
                     zero_action = c("missing", "error"), control = list(), nstarts = ncores,
                       F_structure = c("group_year", "year"), polish = TRUE,
-                    structure = list(), start_spread = 0.15) {
+                    structure = list(), start_spread = 0.15,
+                    survey_q = NULL, survey_q_age = NULL) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "acl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, zero_action = zero_action,
-    structure = structure, start_spread = start_spread)
+    structure = structure, start_spread = start_spread,
+    survey_q = survey_q, survey_q_age = survey_q_age)
   result <- .acl_fit("ACL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
   .acl_attach_recipe(result, model = "acl",
