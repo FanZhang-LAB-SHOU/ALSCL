@@ -111,6 +111,16 @@ test_that("length_at_age reads catchability from a saved assessment and through 
   with_age$obj <- list(env = list(data = c(fit$obj$env$data, list(q_age = c(.1, .5, 1, 1)))))
   expect_identical(ALSCL:::.acl_survey_catchability(with_age)$age, c(.1, .5, 1, 1))
   expect_equal(length_at_age(with_age), length_at_age(fit), tolerance = 1e-12)
+  # Catchability by length and time step: each time step uses its own column.
+  data <- fit$obj$env$data; L <- length(data$log_q); Y <- dim(fit$report$NLA)[3L]
+  by_time <- matrix(data$log_q, L, Y); by_time[, Y] <- by_time[, Y] + log(seq(1, .2, length.out = L))
+  with_time <- fit; with_time$obj <- list(env = list(data = c(data, list(log_q_LY = by_time))))
+  varying <- length_at_age(with_time, "survey"); constant <- length_at_age(fit, "survey")
+  last <- varying$year == max(varying$year)
+  expect_equal(varying$mean_length[!last], constant$mean_length[!last], tolerance = 1e-12)
+  weights <- fit$report$NLA[, , Y] * exp(by_time[, Y])
+  expect_equal(varying$mean_length[last], as.numeric(colSums(weights * fit$len_mid) / colSums(weights)), tolerance = 1e-12)
+  expect_true(all(varying$mean_length[last] < constant$mean_length[last]))
   # Without a TMB object or a recipe the population basis remains available.
   bare <- fit; bare$obj <- NULL; bare$recipe <- NULL
   expect_error(length_at_age(bare), "Survey catchability at length is unavailable")

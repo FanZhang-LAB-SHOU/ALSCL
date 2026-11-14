@@ -45,7 +45,11 @@
   if (!is.numeric(log_q) || !length(log_q) || anyNA(log_q))
     stop("Survey catchability at length is unavailable: fit has neither a live TMB object nor a stored recipe. ",
          "Use basis = \"population\", or save the fit with save_assessment() and its inputs.", call. = FALSE)
-  list(length = exp(as.numeric(log_q)), age = data$q_age)
+  # Catchability that differs among time steps is stored as a matrix by length
+  # bin and time step (log_q_LY); log_q then holds the first time step only.
+  by_time <- data$log_q_LY
+  list(length = exp(as.numeric(log_q)), age = data$q_age,
+       length_time = if (is.matrix(by_time) && nrow(by_time) == length(log_q)) exp(by_time) else NULL)
 }
 
 # Numbers by length bin, age class and time step (L x A x Y). ALSCL reports
@@ -96,7 +100,9 @@
     q <- .acl_survey_catchability(fit)
     if (length(q$length) != length(mid))
       stop("Survey catchability at length does not match the length bins of fit.", call. = FALSE)
-    numbers <- sweep(numbers, 1L, q$length, "*")
+    if (!is.null(q$length_time) && ncol(q$length_time) == dim(numbers)[3L]) {
+      for (a in seq_len(dim(numbers)[2L])) numbers[, a, ] <- numbers[, a, ] * q$length_time
+    } else numbers <- sweep(numbers, 1L, q$length, "*")
     # A multiplier by age class scales all lengths of an age class equally: it
     # changes the survey index at age but cancels in the moments of length.
     if (!is.null(q$age)) numbers <- sweep(numbers, 2L, as.numeric(q$age), "*")
