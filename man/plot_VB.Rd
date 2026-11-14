@@ -195,7 +195,9 @@ the curve computed from Linf, k and t0 with an annotation of Linf and k.
 The annotation is now drawn only with that curve, under the heading
 "Curve from Linf, k and t0". \code{se = TRUE} without \code{parameter_curve = TRUE} gives a
 warning and draws the estimate only, because the model reports no
-standard error for mean length at age from the fitted numbers. An
+standard error for mean length at age from the fitted numbers. Scripts
+that used the interval of the earlier figure must add
+\code{parameter_curve = TRUE}, which draws that curve with its interval. An
 explicit \code{age_range} that starts before t0 is no longer an error for
 these fits, because the fitted numbers are not extrapolated.
 
