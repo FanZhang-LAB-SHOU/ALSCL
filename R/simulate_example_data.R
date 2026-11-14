@@ -133,6 +133,7 @@ simulate_example_data <- function(years      = 2000:2025,
   .acl_scalar(Linf, "Linf", 0, TRUE)
   .acl_scalar(vbk, "vbk", 0, TRUE)
   .acl_scalar(t0, "t0")
+  .acl_single_M(M, "simulate_example_data()")
   .acl_scalar(M, "M", 0)
   .acl_scalar(rec_sigma, "rec_sigma", 0)
   .acl_scalar(wgt_a, "wgt_a", 0)

@@ -327,6 +327,7 @@ initialize_params <- function(nyear      = NULL,
   sp$nyear <- .acl_positive_integer(sp$nyear, "nyear", 2L)
   .acl_scalar(sp$growth_step, "growth_step", 0, TRUE)
   .acl_scalar(sp$rec.age, "rec.age", 0, TRUE)
+  .acl_single_M(sp$M, "initialize_params()")
   .acl_scalar(sp$M, "M", 0)
   if (sp$t0 >= sp$rec.age) stop("t0 must be below rec.age.")
   bins <- .acl_simulation_bins(sp$len_mid, sp$len_border, normalize_outer = TRUE)
