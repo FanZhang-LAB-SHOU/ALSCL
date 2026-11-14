@@ -19,7 +19,8 @@ sim_acl(
   F_structure = c("group_year", "year"),
   polish = TRUE,
   nstarts = 1,
-  allow_M_mismatch = FALSE
+  allow_M_mismatch = FALSE,
+  structure = list()
 )
 }
 \arguments{
@@ -79,6 +80,14 @@ sequentially within each replicate; ncores controls parallel replicates.}
 \item{allow_M_mismatch}{Logical. FALSE (default) stops when a supplied M
 differs from the natural mortality rate recorded in a replicate file.
 TRUE fits the supplied M, for a study of misspecified natural mortality.}
+
+\item{structure}{Optional model structures of the fitted model, as in
+\code{\link[=run_acl]{run_acl()}} and \code{\link[=run_alscl]{run_alscl()}}. The default, an empty list, is the
+original structure. The value need not equal the \code{structure} element of
+the parameter list that generated the replicates: a different value
+fits a model with another structure, for example
+\code{list(initial_deviations = "independent")} for data simulated with
+cumulative initial deviations.}
 }
 \value{
 The named list of replicate fits or error records returned by sim_model().

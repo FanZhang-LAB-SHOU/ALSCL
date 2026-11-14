@@ -97,8 +97,11 @@
 #'   fixed. Neither includes parameter-estimation uncertainty. In resample mode,
 #'   recruitment follows a stationary AR(1), fishing mortality follows the
 #'   fitted stationary separable group-by-time AR(1) (or one time series for
-#'   F_structure = "year"), and numbers at age are initialized recursively
-#'   with independent normal increments on the log scale. The process scales are marginal SDs; AR(1) innovation SDs are the
+#'   F_structure = "year"), and the initial numbers at age have new
+#'   independent normal deviations on the log scale in the form of the fit
+#'   (`structure$initial_deviations`): accumulated over ages for
+#'   `"cumulative"`, the default, or one per age for `"independent"`.
+#'   The process scales are marginal SDs; AR(1) innovation SDs are the
 #'   marginal SD multiplied by sqrt(1 - phi^2). Recruitment and F use
 #'   exp(mean_log + deviation), without a lognormal mean correction.
 #'
@@ -214,7 +217,7 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
       parameters$dev_log_R <- as.numeric(.acl_simulate_ar1_field(1L, d$Y, 0, phi_r, scales[1L]))
       parameters$dev_log_F <- .acl_simulate_ar1_field(nrow(parameters$dev_log_F), d$Y,
         phi_g, phi_t, scales[2L])
-      parameters$dev_log_N0 <- stats::rnorm(d$A - 1L, 0, scales[3L])
+      parameters$dev_log_N0 <- stats::rnorm(length(parameters$dev_log_N0), 0, scales[3L])
       report <- evaluator$report(unlist(parameters[parameter_order], use.names = FALSE))
       random_effects <- parameters[random_names]
     }
