@@ -116,7 +116,9 @@ year of hatching.
 \strong{ICES tables.} \code{ices$M} and \code{ices$maturity} are the input tables of the
 assessment of whiting in Subarea 4 and Division 7.d (ICES 2026), with ages
 6 and older in one group; \code{ices$assessment} is the summary of that
-assessment. The assessment uses catch data and several surveys, so it is an
+assessment. \code{ices$M} (1983 to 2022) and \code{ices$maturity} (1991 to 2021)
+were checked against Tables 22.15 and 22.14 of the whiting section of the
+report (ICES 2026) and equal them in every cell. The assessment uses catch data and several surveys, so it is an
 external comparison and not a true value.
 
 The script \code{data-raw/whiting_example.R} builds the object from the files in
