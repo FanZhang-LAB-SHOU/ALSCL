@@ -6,11 +6,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.4.3.9000 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.4.4 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.3.9000。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.4。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.3.9000.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.4.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -2738,6 +2738,28 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 Biomass, recruitment and spawning biomass of the generating simulation (black dashed) and the ACL (navy) and ALSCL (vermilion) fits, one panel per quantity. The code above constructs `truth` and `estimates` from `x$truth` and the two reports. ACL follows the simulated truth closely here, while ALSCL biomass and spawning biomass fall below it after 2013. This is one realization from the age-based operating model under the stated fitting settings. Repeated simulations under alternative generating assumptions are needed to assess how performance depends on model structure.
 
 
+
+## 48. 自检的相对误差 / Relative errors of a self-test
+
+```r
+# 用 ACL 拟合模拟五套数据并重新拟合 / Simulate five data sets from the ACL fit and refit them
+st <- self_test(a, nsim = 5, seed = 20261101)
+```
+
+```r
+# 绘制本图 / Draw this figure
+plot_self_test(st)
+```
+
+[![自检的相对误差 / Relative errors of a self-test](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)
+
+`self_test()` 从 ACL 拟合模拟五套调查数据，用相同设置重新拟合，并把估计值与模拟所用的值比较。上面三幅图给出 SSB、补充量和各年龄平均 F 每年相对误差的中位数（线）和第 10 至第 90 百分位数（带），下图给出估计参数的同样内容，虚线表示误差为零。本例各年份的中位数在真值的 8% 以内；五套数据只演示函数的用法，用于报告的自检需要更多套数据。自检只说明模型假设成立时参数能否估计，不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差。
+
+`self_test()` simulates five survey data sets from the ACL fit, refits them with the same settings and compares the estimates with the values used to simulate them. The three upper panels show the median relative error of SSB, recruitment and mean F over ages by year (line) and its 10th to 90th percentiles (band); the lower panel shows the same for the estimated parameters, and the dashed lines mark no error. Here the medians stay within 8% of the truth in every year; five data sets show how the function works, and a self-test for a report needs more. A self-test shows only whether the parameters can be estimated when the assumptions of the model hold, not the bias from a wrong natural mortality rate, survey catchability or growth form.
+
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_self_test)
+
+
 <a id="chapter-11"></a>
 ## 11 回溯分析 · Retrospectives
 
@@ -3233,9 +3255,9 @@ Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is uns
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.4.3.9000，覆盖 **75 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.4，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **75 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **77 exported functions** of ALSCL 2.4.4 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -3258,6 +3280,7 @@ dat <- x$data.CatL
 ## 索引 / Index
 
 - [simulate_fit](#simulate_fit) — 给定拟合种群状态，或重新抽取其过程偏差后，模拟调查观测。 / Simulate survey observations conditionally on a fitted population or after resampling its process deviations.
+- [self_test](#self_test) — 用拟合模型模拟数据，以相同设置重新拟合同一模型，并把估计值与模拟所用的值比较。 / Simulate data from a fitted model, refit the same model with the same settings and compare the estimates with the values used to simulate.
 - [summarize_simulations](#summarize_simulations) — 使用明确分母汇总模拟偏差、RMSE、区间覆盖率、拟合失败与耗时。 / Summarize simulation bias, RMSE, interval coverage, fitting failures and timing with explicit denominators.
 - [sim_model](#sim_model) — 使用统一批次流程，把 ACL 或 ALSCL 拟合到已保存的模拟重复数据。 / Fit ACL or ALSCL to saved simulation replicates using the same batch pipeline.
 - [sim_alscl](#sim_alscl) — 使用 ALSCL 拟合模拟批次的便捷入口。 / Convenience interface for simulation batches fitted with ALSCL.
@@ -3312,6 +3335,7 @@ dat <- x$data.CatL
 - [plot_residuals](#plot_residuals) — 按时间步或体长组绘制调查指数的对数残差 / Log survey-index residuals by time step or length bin
 - [plot_retro](#plot_retro) — 截短拟合与完整拟合的比较 / Retrospective estimates and the full fit
 - [plot_ridges](#plot_ridges) — 长度组成山脊图 / Length composition ridges
+- [plot_self_test](#plot_self_test) — 自检的相对误差 / Relative errors of a self-test
 - [plot_SSB](#plot_SSB) — 产卵生物量 SSB / Spawning stock biomass (SSB)
 - [plot_SSB_Rec](#plot_SSB_Rec) — 亲体与补充关系 / Spawning stock biomass against recruitment
 - [plot_survey_catchability](#plot_survey_catchability) — 拟合所用的调查可捕性 / Survey catchability used in a fit
@@ -5429,6 +5453,65 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
 
+<a id="plot_self_test"></a>
+## `plot_self_test()`
+
+自检的相对误差 / Relative errors of a self-test
+
+上图按时间序列给出各时间步相对误差的中位数（线）和两个百分位数之间的带，下图给出各估计参数的中位数和同样的百分位数，虚线表示误差为零。只画通过数值检查的重新拟合，副标题给出画出的个数。参数取 `extract_parameters()` 的自然尺度和名称；真值为零的参数没有相对误差，不画。标题使用主题键 `self_test`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_error`。
+
+The upper panels show, for each time series, the median relative error by time step (line) and a band between two percentiles; the lower panel shows the median and the same percentiles for each estimated parameter. A dashed line marks no error. Only refits that pass the numerical checks are drawn, and the subtitle gives their number. Parameters are on the natural scale of `extract_parameters()` and keep its names; a parameter whose truth is zero has no relative error and is not drawn. The title uses the theme key `self_test`; the axis labels use `xlab$year` and `ylab$relative_error`.
+
+```r
+plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9), line_size = NULL,
+    line_color = NULL, se_color = NULL, se_alpha = NULL, point_size = NULL, facet_ncol = NULL,
+    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `x` | `必填 / required` | `self_test()` 返回的对象。 | An `alscl_self_test` object from `self_test()`. |
+| `what` | `c("both", "series", "parameters")` | both 把时间序列画在参数之上；series 或 parameters 只画一部分。 | both draws the time series above the parameters; series or parameters draws one part. |
+| `probs` | `c(0.1, 0.9)` | 带的下、上百分位对应的两个概率，默认第 10 和第 90 百分位数。 | Two probabilities, the lower and upper percentiles of the band; default the 10th and 90th percentiles. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_color` | `NULL` | 中位数线和点的颜色；NULL 继承全局 line_color。 | Colour of the median line and points; NULL inherits the global line_color setting. |
+| `se_color` | `NULL` | 带的颜色；NULL 继承全局 se_color。 | Colour of the band; NULL inherits the global se_color setting. |
+| `se_alpha` | `NULL` | 带的不透明度；NULL 继承全局 se_alpha。 | Opacity of the band; NULL inherits the global se_alpha setting. |
+| `point_size` | `NULL` | 参数中位数点的大小；NULL 继承全局 point_size。 | Size of the median of a parameter; NULL inherits the global point_size setting. |
+| `facet_ncol` | `NULL` | 时间序列分面的列数；NULL 时一行最多三幅。 | Columns of the time-series panels; NULL puts up to three panels in a row. |
+| `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
+| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
+| `ylab` | `NULL` | 自定义相对误差轴标签；NULL 继承主题。 | Character or NULL. Custom label of the relative-error axis. If NULL, uses global theme setting. |
+| `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
+| `title_size` | `NULL` | 图标题字号。 | Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14). |
+| `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
+| `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
+| `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
+| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+
+**返回 / Returns:** ggplot 对象（`what = "both"` 时为 patchwork）；`return_data = TRUE` 时返回列表，含 `plot`、`series` 和 `parameters`（画出的中位数和百分位数，单位为 %）。
+
+A ggplot object (a patchwork for `what = "both"`), or a list with `plot`, `series` and `parameters` (the plotted medians and percentiles, in percent) when `return_data = TRUE`.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+st <- self_test(a, nsim = 5, seed = 20261101)
+plot_self_test(st)
+plot_self_test(st, what = "series", probs = c(0.05, 0.95))
+```
+
+![示例图 / Example figure: `plot_self_test(st)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)
+
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_self_test)。
+
 <a id="plot_survey_catchability"></a>
 ## `plot_survey_catchability()`
 
@@ -7057,6 +7140,59 @@ simulated$simulations[[1]]$truth$SSB
 ![示例图 / Example figure: `simulate_fit(b, nsim = 3, seed = 42, process = "resample")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=ae560ca7a72d)
 
 
+<a id="self_test"></a>
+## `self_test`
+
+用拟合模型模拟数据，以相同设置重新拟合同一模型，并把估计值与模拟所用的值比较。 / Simulate data from a fitted model, refit the same model with the same settings and compare the estimates with the values used to simulate.
+
+```r
+self_test (fit, nsim = 20, seed = NULL, process = c("conditional", "resample"), start = c("original",
+    "estimates"), nstarts = NULL, ncores = 1, quantities = c("SSB", "Rec", "F"),
+    F_summary = c("mean", "apical"), conf_level = 0.95, interval = c("lognormal", "wald"),
+    preserve_missing = TRUE, silent = TRUE, save_fits = FALSE)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | 含完整输入设置的 ACL 或 ALSCL 拟合，可为 `read_assessment()` 读取的结果；必须通过数值检查。 | ACL or ALSCL fit with its recipe, including a saved assessment read with `read_assessment()`; it must pass the numerical checks. |
+| `nsim` | `20` | 模拟数据集的套数。 | Number of simulated data sets. |
+| `seed` | `NULL` | 模拟用的非负整数种子，见 `simulate_fit()`；重新拟合是确定的，所以给定种子即可重复整个自检。 | Nonnegative integer seed of the simulation, see `simulate_fit()`; the refits are deterministic, so a seed makes the whole self-test repeatable. |
+| `process` | `c("conditional", "resample")` | conditional 保留拟合的种群，只重抽观测误差；resample 按估计的分布重抽补充量、F 和初始偏差。 | conditional keeps the fitted population and draws observation errors only; resample also draws recruitment, F and initial deviations from their estimated distribution. |
+| `start` | `c("original", "estimates")` | original 从源拟合的初值出发，初值个数相同；estimates 从模拟所用的值（源拟合的估计值）出发。 | original starts from the starting values of the source fit, with its number of starts; estimates starts at the values used to simulate (the estimates of the source fit). |
+| `nstarts` | `NULL` | NULL 用源拟合的初值个数；正整数设定每次重新拟合的初值个数。 | NULL uses the number of starts of the source fit; a positive integer sets it for every refit. |
+| `ncores` | `1` | socket 并行进程的最大数；每个进程一次拟合一套数据，一次重新拟合的各初值依次运行。 | Maximum number of socket workers; each fits one data set at a time, and the starts of a refit run one after another. |
+| `quantities` | `c("SSB", "Rec", "F")` | 比较的时间序列，取自 SSB、Rec、F、B、N。 | Time series to compare, from SSB, Rec, F, B and N. |
+| `F_summary` | `c("mean", "apical")` | 每个时间步 F 在各年龄（ACL）或各体长组（ALSCL）上的汇总：不加权平均值或最大值。 | Summary of F over ages (ACL) or length bins (ALSCL) at each time step: the unweighted mean or the maximum. |
+| `conf_level` | `0.95` | 计算覆盖率的区间的名义置信水平。 | Nominal confidence level of the intervals whose coverage is reported. |
+| `interval` | `c("lognormal", "wald")` | 时间序列区间的形式，与绘图函数相同。 | Form of the interval of a time series, as in the plots. |
+| `preserve_missing` | `TRUE` | 传给 `simulate_fit()`；保留原来缺失和为零的调查格。 | Passed to `simulate_fit()`; keeps missing and zero survey cells as they are. |
+| `silent` | `TRUE` | 不显示拟合过程信息。 | Suppress fitting progress messages. |
+| `save_fits` | `FALSE` | 是否在结果中保留各次重新拟合（不含 TMB 对象）。 | Keep the refits, without the TMB object, in the result. |
+
+**返回 / Returns:** `alscl_self_test` 对象：`replicates`（每次重新拟合的数值检查、耗时、报错和警告）、`series` 和 `parameters`（每个重复、量和时间步或参数的真值、估计值、标准误、区间、误差、相对误差和是否覆盖）、`by_year`、`series_summary` 和 `parameter_summary`（通过检查的重新拟合的中位相对误差、第 10 和第 90 百分位数、中位绝对相对误差和覆盖率）、`screen`（通过检查的比例）、`failures`、`settings`、`simulation`（`simulate_fit()` 的 metadata）和 `fits`。`print()` 和 `summary()` 显示汇总，`plot_self_test()` 画相对误差。
+
+An `alscl_self_test` object: `replicates` (numerical checks, time, error and warnings of each refit), `series` and `parameters` (truth, estimate, standard error, interval, error, relative error and coverage for each replicate and quantity and time step, or parameter), `by_year`, `series_summary` and `parameter_summary` (median relative error, 10th and 90th percentiles, median absolute relative error and coverage over the refits that pass the checks), `screen` (the share that pass), `failures`, `settings`, `simulation` (the metadata of `simulate_fit()`) and `fits`. `print()` and `summary()` show the summaries; `plot_self_test()` draws the relative errors.
+
+conditional 时每个重复的真值都是源拟合的种群；resample 时每个重复有自己的种群，由模型从新抽取的偏差算出，检验也包括估计的过程方差。conditional 时偏差是拟合值，而不是从其分布中抽取的值，其均值不一定为零，所以重新拟合可能在过程的均值参数（如 mean_log_F）和偏差之间转移过程的水平，此时时间序列比过程参数更能说明问题。两种情形下标量参数的真值都是源拟合的估计值，固定参数、自然死亡率、调查可捕性、生长和成熟度保持不变。每次重新拟合使用源拟合的模型、结构、map、边界、固定值和固定输入。original 时停在局部最优的重新拟合算作误差，与实际数据的情形一样；estimates 更快，但可能掩盖局部最优和数据不能确定的参数。相对误差为 (估计值 - 真值) / 真值；真值为零时没有定义，真值接近零（如 t0 或接近零的相关系数）时很大，此时看 `error`。时间序列有标准误时（SSB、补充量、总生物量和总丰度，不含 F 的汇总）和估计参数（区间同 `extract_parameters()`）计算覆盖率。
+
+With conditional, the truth of every replicate is the population of the source fit; with resample, each replicate has its own population, computed by the model from the new deviations, and the test also covers the estimated process variances. In conditional mode the deviations are the fitted values, not a draw from their distribution: their mean need not be zero, so the refits can move the level of a process between its mean parameter (for example mean_log_F) and the deviations, and the time series are then a better measure than the process parameters. In both, the truth of a scalar parameter is its estimate in the source fit, and fixed parameters, natural mortality, survey catchability, growth and maturity are unchanged. Each refit uses the model, structure, map, bounds, fixed values and fixed inputs of the source fit. With original, a refit that stops at a local optimum counts as an error, as it would with real data; estimates is faster but can hide local optima and parameters that the data do not determine. The relative error is (estimate - truth) / truth; it is undefined for a zero truth and large for a truth near zero (t0, or a correlation near zero), where `error` is the measure to read. Coverage is computed for series with standard errors (SSB, recruitment, total biomass and abundance, not the summary of F) and for the estimated parameters, with the interval of `extract_parameters()`.
+
+估计值能恢复真值的自检说明，在模型假设成立时，模型能从与此类似的数据估计其参数（Deroba et al. 2015）。它不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差；检验这些需要用假设不同的操作模型做模拟（`sim_model()`）。并行进程的个数不改变结果。
+
+A self-test in which the estimates recover the truth shows that the model can estimate its parameters from data like these when its assumptions hold (Deroba et al. 2015). It says nothing about the bias from a wrong natural mortality rate, survey catchability or growth form; testing those needs simulations from an operating model with different assumptions (`sim_model()`). The number of workers does not change the results.
+
+**示例 / Example:**
+
+```r
+st <- self_test(a, nsim = 5, seed = 1)
+st
+head(st$by_year)
+summary(st)$parameter_summary
+```
+
+![示例图 / Example figure: `plot_self_test(self_test(a, nsim = 5, seed = 20261101))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)
+
+
 <a id="hindcast_model"></a>
 ## `hindcast_model`
 
@@ -7839,9 +7975,9 @@ resampled$simulations[[1]]$truth$SSB
 simulated_x <- resampled$simulations[[1]]$x
 ```
 
-`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差：补充量和 F 遵循拟合的平稳 AR(1) 过程（`F_structure = "year"` 时各组共用一条 F 时间序列，每个时间步有一个 F 值），初始尾数在对数尺度上加入独立正态扰动后逐龄递推。C++ 种群模型根据抽得的偏差计算新的种群状态。条件抽样使用源拟合的 `Elog_index`，过程重抽样则从新的过程状态重新计算 `Elog_index`。两种模式均按拟合的观测标准差添加对数尺度的观测误差，因此对应状态的 `exp(Elog_index)` 是观测中位数；标量参数、生物学设置和调查可捕性保持固定，因此两种模式都没有参数不确定性。`$simulations` 的每个元素包含 `observations`（体长组 × 时间步）、`truth`（种群量、标量参数和所用的偏差）和 `x`，后者是可交给 `run_alscl()` 的输入列表，保留 `b` 的拟合配置，但 `output`、`ncores` 和 `silent` 除外，由你在拟合时指定。原始调查的缺失和零值单元保持原样，除非 `preserve_missing = FALSE`；种子让抽样可以重复，结束后恢复调用者的随机数状态。固定或绑定过程偏差的 `map` 会使重抽模式终止，条件抽样仍可使用。若要用有自己补充量假设的操作模型，见[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation)。
+`process = "resample"` 还在拟合的标量参数值下重新抽取补充量、捕捞死亡率和初始丰度的过程偏差：补充量和 F 遵循拟合的平稳 AR(1) 过程（`F_structure = "year"` 时各组共用一条 F 时间序列，每个时间步有一个 F 值），初始各龄尾数的偏差按拟合所用的写法抽取（默认逐龄累加；`structure = list(initial_deviations = "independent")` 时各龄独立）。C++ 种群模型根据抽得的偏差计算新的种群状态。条件抽样使用源拟合的 `Elog_index`，过程重抽样则从新的过程状态重新计算 `Elog_index`。两种模式均按拟合的观测标准差添加对数尺度的观测误差，因此对应状态的 `exp(Elog_index)` 是观测中位数；标量参数、生物学设置和调查可捕性保持固定，因此两种模式都没有参数不确定性。`$simulations` 的每个元素包含 `observations`（体长组 × 时间步）、`truth`（种群量、标量参数和所用的偏差）和 `x`，后者是可交给 `run_alscl()` 的输入列表，保留 `b` 的拟合配置，但 `output`、`ncores` 和 `silent` 除外，由你在拟合时指定。原始调查的缺失和零值单元保持原样，除非 `preserve_missing = FALSE`；种子让抽样可以重复，结束后恢复调用者的随机数状态。固定或绑定过程偏差的 `map` 会使重抽模式终止，条件抽样仍可使用。若要用有自己补充量假设的操作模型，见[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation)。
 
-`process = "resample"` also draws new process deviations of recruitment, fishing mortality and initial abundance at the fitted scalar parameter values: recruitment and F follow the fitted stationary AR(1) processes (one shared F time series across groups, with one F value per time step, under `F_structure = "year"`), numbers at age are initialized recursively with independent normal increments on the log scale, and the C++ population model turns the draws into a new population. Conditional draws use the source fit's `Elog_index`; resampled draws use `Elog_index` recomputed from the new process states. Each mode adds observation noise on the log scale using the fitted observation SD, so `exp(Elog_index)` for that state is the observation median; scalar parameters, biology and survey catchability stay fixed, so neither mode carries parameter uncertainty. Each element of `$simulations` holds `observations` (length bins by time steps), `truth` (population quantities, scalar parameters and the deviations used) and `x`, an input bundle for `run_alscl()` that keeps the fitting configuration of `b` except `output`, `ncores` and `silent`, which you choose when fitting it. Missing and zero cells of the original survey stay as they are unless `preserve_missing = FALSE`; the seed makes the draws repeatable, and the caller's random-number state is restored afterwards. A `map` that fixes or ties the process deviations stops the resample mode, while conditional draws still work. For an operating model with its own recruitment assumptions, use [Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation).
+`process = "resample"` also draws new process deviations of recruitment, fishing mortality and initial abundance at the fitted scalar parameter values: recruitment and F follow the fitted stationary AR(1) processes (one shared F time series across groups, with one F value per time step, under `F_structure = "year"`), the deviations of the initial numbers at age are drawn in the form that the fit uses (accumulated over age classes by default, independent by age class with `structure = list(initial_deviations = "independent")`), and the C++ population model turns the draws into a new population. Conditional draws use the source fit's `Elog_index`; resampled draws use `Elog_index` recomputed from the new process states. Each mode adds observation noise on the log scale using the fitted observation SD, so `exp(Elog_index)` for that state is the observation median; scalar parameters, biology and survey catchability stay fixed, so neither mode carries parameter uncertainty. Each element of `$simulations` holds `observations` (length bins by time steps), `truth` (population quantities, scalar parameters and the deviations used) and `x`, an input bundle for `run_alscl()` that keeps the fitting configuration of `b` except `output`, `ncores` and `silent`, which you choose when fitting it. Missing and zero cells of the original survey stay as they are unless `preserve_missing = FALSE`; the seed makes the draws repeatable, and the caller's random-number state is restored afterwards. A `map` that fixes or ties the process deviations stops the resample mode, while conditional draws still work. For an operating model with its own recruitment assumptions, use [Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation).
 
 ![给定状态或重新抽取过程后生成的 ALSCL 调查观测 / ALSCL observations simulated conditionally or with resampled processes](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/fitted-simulation.png?raw=true&v=ae560ca7a72d)
 
@@ -7868,6 +8004,32 @@ performance$summary
 每次重新拟合都是对模拟输入列表的普通拟合，这里用 `run_alscl(s$x)`，来自 ACL 拟合的抽样用 `run_acl(s$x)`，各用两个初值；`tryCatch()` 保留失败重复的报错信息，使它留在汇总中。`summarize_simulations()` 按重复名和年份把拟合与真值对齐，返回 `replicates`（每次拟合的数值检查、耗时和报错）和 `summary`（每个量的失败率、偏差、相对偏差、RMSE 和区间覆盖率及其分母）；偏差和 RMSE 使用通过检查的拟合，覆盖率只使用标准误有限的区间（[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation-fit)解释了这些分母）。在记录运行中三次重新拟合都通过检查，60 对数值的覆盖率为产卵生物量 1.0、补充量 0.95（[simulation-performance.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/simulation-performance.csv)）。`performance$replicates` 的 `elapsed` 列记录每次重新拟合的秒数。三个重复只演示流程；研究偏差或覆盖率需要足够多的重复，失败率才有意义，参数自助法还需要写明重新拟合的规程和区间构造方法，`simulate_fit()` 只提供生成数据这一步。磁盘上已有的重复数据可用 `sim_model()` 批量拟合（[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation-fit)）。
 
 Each refit is an ordinary fit of the simulated bundle, `run_alscl(s$x)` here and `run_acl(s$x)` for draws from an ACL fit, with two starts each; `tryCatch()` keeps the error message of a failed replicate so that it stays in the summary. `summarize_simulations()` matches the fits with the truth by replicate name and year and returns `replicates` (numerical checks, time and error of each fit) and `summary` (per quantity: failure rate, bias, relative bias, RMSE and interval coverage with their denominators); bias and RMSE use the fits that passed the checks, and coverage uses only intervals with a finite standard error ([Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation-fit) explains the denominators). In the recorded run all three refits passed, with coverage 1.0 for spawning biomass and 0.95 for recruitment over 60 pairs ([simulation-performance.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/simulation-performance.csv)). The `elapsed` column of `performance$replicates` records seconds per refit. Three replicates show the mechanics; a study of bias or coverage needs enough replicates for the failure rate to mean something, and a parametric bootstrap also needs a stated refitting protocol and interval construction, for which `simulate_fit()` supplies only the generating step. For replicates already on disk, `sim_model()` fits them in batch ([Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation-fit)).
+
+<a id="case-model-validation-self-test"></a>
+
+#### 一次调用完成自检 / Run a self-test in one call
+
+```r
+a <- run_acl(x, silent = TRUE)
+st <- self_test(a, nsim = 5, seed = 20261101, process = "conditional")
+st
+head(st$by_year)
+plot_self_test(st)
+```
+
+`self_test()` 一次完成第 2、3 步：用 `simulate_fit()` 模拟 `nsim` 套数据，用拟合中保存的设置对每套数据重新拟合同一个模型，再把估计值与生成数据时所用的值比较。示例用 ACL 拟合 `a`，因为一次 ACL 拟合只需几秒；对 ALSCL 用 `self_test(b)`，用法相同。`process` 的含义与第 2 步相同。取 `"conditional"` 时种群保持源拟合的种群，所以每个重复的真值相同；取 `"resample"` 时按估计的分布重新抽取补充量、F 和初始偏差，所以每个重复有自己的真值，检验也包括估计的过程方差。默认每次重新拟合从源拟合的初值出发，初值个数也与源拟合相同，这样停在局部最优的重新拟合会算作误差，与实际数据的情形一样。`start = "estimates"` 让每次重新拟合从生成数据所用的值出发；这样更快，但可能掩盖局部最优和数据不能确定的参数。`ncores` 让多套数据并行拟合。
+
+`self_test()` does steps 2 and 3 in one call: it simulates `nsim` data sets with `simulate_fit()`, refits the same model to each with the settings stored in the fit, and compares the estimates with the values used to simulate them. The example uses an ACL fit, `a`, because one ACL fit takes a few seconds; `self_test(b)` works in the same way for ALSCL. `process` has the meaning of step 2. With `"conditional"` the population stays that of the source fit, so the truth is the same in every replicate; with `"resample"` new recruitment, F and initial deviations are drawn from their estimated distribution, so each replicate has its own truth and the test also covers the estimated process variances. By default each refit starts from the starting values of the source fit, with its number of starts, so that a refit that stops at a local optimum counts as an error, as it would with real data. `start = "estimates"` starts each refit at the values used to simulate; this is faster but can hide local optima and parameters that the data do not determine. `ncores` fits several data sets in parallel.
+
+打印 `st` 会显示有多少次重新拟合通过数值检查，以及每个时间序列和每个估计参数的中位相对误差（即偏差）、它的第 10 和第 90 百分位数、中位绝对相对误差和近似 95% 区间的覆盖率。相对误差为 (estimate - truth) / truth。这里的 F 是各年龄的平均值，没有标准误，所以没有覆盖率。`st$by_year` 按年份给出同样的汇总，`st$replicates` 给出每次重新拟合的检查结果，`st$series` 和 `st$parameters` 列出每个估计值及其真值；未通过检查的重新拟合留在这些表中，但不进入汇总。在记录运行中五次重新拟合都通过检查。中位相对误差为产卵生物量 -0.2%、补充量 -0.5%、平均 F 1.9%；产卵生物量和补充量的 100 个区间中分别有 99 个和 98 个包含真值（[self-test-summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/self-test-summary.csv））。五套数据只演示函数的用法；已发表的自检通常每个拟合用 100 套（[Deroba et al. 2015](https://doi.org/10.1093/icesjms/fst237)）。
+
+Printing `st` shows how many refits pass the numerical checks and, for each time series and estimated parameter, the median relative error (the bias), its 10th and 90th percentiles, the median absolute relative error and the coverage of the approximate 95% intervals. The relative error is (estimate - truth) / truth. F is the mean over ages here and has no standard error, so it has no coverage. `st$by_year` gives the same summaries by year, `st$replicates` the checks of each refit, and `st$series` and `st$parameters` every estimate with its truth; refits that fail the checks stay in these tables but not in the summaries. In the recorded run all five refits passed. The median relative error was -0.2% for spawning biomass, -0.5% for recruitment and 1.9% for mean F, and 99 and 98 of the 100 intervals of spawning biomass and recruitment contained the truth ([self-test-summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/self-test-summary.csv)). Five data sets show how the function works; published self-tests commonly use 100 per fit ([Deroba et al. 2015](https://doi.org/10.1093/icesjms/fst237)).
+
+![五套模拟数据的自检中 ACL 估计值的相对误差 / Relative error of the ACL estimates in a self-test with five simulated data sets](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)
+
+上面几幅图给出各年份相对误差的中位数（线）及其在各次重新拟合间的第 10 至第 90 百分位数（带），虚线表示误差为零。下图对估计参数给出同样的内容，参数取自然尺度，名称与 `extract_parameters()` 相同。这里各年份的中位数都在真值的 8% 以内；只有五套数据时，它们逐年的变化大多是随机波动。估计值能恢复真值的自检说明，在模型假设成立时，模型能从与此类似的数据估计其参数。它不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差，而[北海牙鳕案例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/CASES.md#case-north-sea-whiting)和文献都指出，对只用调查指数的拟合，这些是误差的主要来源；检验它们需要用假设不同的操作模型做模拟（[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation)）。
+
+The upper panels show the median relative error by year (line) and its 10th to 90th percentiles across the refits (band); the dashed line marks no error. The lower panel shows the same for the estimated parameters, on the natural scale and with the names of `extract_parameters()`. Here the medians stay within 8% of the truth in every year; with five data sets most of their change from year to year is noise. A self-test in which the estimates recover the truth shows that the model can estimate its parameters from data like these when its assumptions hold. It says nothing about the bias from a wrong natural mortality rate, survey catchability or growth form, which the [North Sea whiting case](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/CASES.md#case-north-sea-whiting) and the literature identify as the main sources of error for fits to a survey index alone; testing those needs simulations from an operating model with different assumptions ([Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation)).
 
 <a id="case-model-validation-section-4"></a>
 

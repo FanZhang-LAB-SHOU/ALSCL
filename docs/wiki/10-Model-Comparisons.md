@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/09-Growth-and-Mortality) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives)
 
-**ALSCL 2.4.3.9000 · 简体中文 / English**
+**ALSCL 2.4.4 · 简体中文 / English**
 
 先完成第 04 章的 YTF 拟合，得到输入列表 `x` 和拟合结果 `a`、`b`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。第 11 章建立回溯对象 `ra` 和 `rb`。
 First complete chapter 04 to create the input bundle `x` and the fits `a` and `b`. Define `dat <- x$data.CatL`, and load ggplot2 and patchwork. Chapter 11 creates the retrospective objects `ra` and `rb`.
@@ -241,6 +241,28 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 生成模拟的生物量、补充量和产卵生物量（黑色虚线）与 ACL（深蓝）、ALSCL（朱红）拟合的对照，每个量一个面板。上面的代码由 `x$truth` 和两份报告构造 `truth` 与 `estimates`。本例 ACL 紧贴模拟真值，ALSCL 的生物量和产卵生物量在 2013 年后低于真值。这是年龄结构操作模型的一次模拟及给定设置下的拟合。要评估表现如何随模型结构变化，需要在不同生成假设下开展重复模拟。
 
 Biomass, recruitment and spawning biomass of the generating simulation (black dashed) and the ACL (navy) and ALSCL (vermilion) fits, one panel per quantity. The code above constructs `truth` and `estimates` from `x$truth` and the two reports. ACL follows the simulated truth closely here, while ALSCL biomass and spawning biomass fall below it after 2013. This is one realization from the age-based operating model under the stated fitting settings. Repeated simulations under alternative generating assumptions are needed to assess how performance depends on model structure.
+
+
+
+## 48. 自检的相对误差 / Relative errors of a self-test
+
+```r
+# 用 ACL 拟合模拟五套数据并重新拟合 / Simulate five data sets from the ACL fit and refit them
+st <- self_test(a, nsim = 5, seed = 20261101)
+```
+
+```r
+# 绘制本图 / Draw this figure
+plot_self_test(st)
+```
+
+[![自检的相对误差 / Relative errors of a self-test](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/self-test.png?raw=true&v=04eda829c413)
+
+`self_test()` 从 ACL 拟合模拟五套调查数据，用相同设置重新拟合，并把估计值与模拟所用的值比较。上面三幅图给出 SSB、补充量和各年龄平均 F 每年相对误差的中位数（线）和第 10 至第 90 百分位数（带），下图给出估计参数的同样内容，虚线表示误差为零。本例各年份的中位数在真值的 8% 以内；五套数据只演示函数的用法，用于报告的自检需要更多套数据。自检只说明模型假设成立时参数能否估计，不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差。
+
+`self_test()` simulates five survey data sets from the ACL fit, refits them with the same settings and compares the estimates with the values used to simulate them. The three upper panels show the median relative error of SSB, recruitment and mean F over ages by year (line) and its 10th to 90th percentiles (band); the lower panel shows the same for the estimated parameters, and the dashed lines mark no error. Here the medians stay within 8% of the truth in every year; five data sets show how the function works, and a self-test for a report needs more. A self-test shows only whether the parameters can be estimated when the assumptions of the model hold, not the bias from a wrong natural mortality rate, survey catchability or growth form.
+
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_self_test)
 
 
 ---

@@ -14,25 +14,25 @@
 
 ALSCL is an R package for stock assessment from fishery-independent survey data at length. It fits two population models written in [TMB](https://github.com/kaskr/adcomp): the age-structured catch-at-length model **ACL** and the age- and length-structured statistical catch-at-length model **ALSCL** of [Zhang and Cadigan (2022)](https://doi.org/10.1111/faf.12673). Neither model needs age data, so both suit stocks whose ages are unavailable or unreliable, such as Antarctic krill.
 
-Around the two models the package provides data preparation and checks, multistart fitting on parallel workers, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, portable assessment archives and 22 plotting functions.
+Around the two models the package provides data preparation and checks, multistart fitting on parallel workers, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, portable assessment archives and 27 plotting functions.
 
-**Latest release: 2.4.3** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
+**Latest release: 2.4.4** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
 
 ## What you can do
 
 - **Prepare and check the data.** Read the three survey tables from Excel or CSV with `read_survey_excel()` or `read_survey_csv()`, combine them with the biological settings into one input bundle with `prepare_alscl_data()`, and confirm with `check_alscl_data()` and `inspect_parameters()` that the bundle can be fitted and which parameters will be estimated. Annual and quarterly time steps are supported.
 - **Fit two model structures to the same tables.** `run_acl()` tracks numbers at age and converts them to numbers at length with an age-length probability matrix. `run_alscl()` tracks numbers by length and age, with length-specific mortality and a growth transition matrix. Both can run independent optimizer starts on parallel workers (`nstarts`, `ncores`) and finish the best start with checked Newton steps (`polish`).
 - **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and QQ plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
-- **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`) and hindcast validation on withheld time steps (`hindcast_model()`).
+- **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`), self-tests that refit the model to data simulated from it (`self_test()`) and hindcast validation on withheld time steps (`hindcast_model()`).
 - **Keep and share the results.** `save_assessment()` stores a fit with its complete recipe, `read_assessment()` and `refit_model()` bring it back and refit it, and `extract_estimates()` returns the estimates with their standard errors.
-- **Plot everything with one argument set.** The 22 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 47 figures with their code.
+- **Plot everything with one argument set.** The 27 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 48 figures with their code.
 
 ## Installation
 
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # development version (main)
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.3")   # a specific release
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.4")   # a specific release
 ```
 
 ALSCL needs R 4.1 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
@@ -86,11 +86,11 @@ Every page states its purpose, the code to run, what to expect and what to do wh
 
 | Entry | Contents |
 |---|---|
-| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 75 functions |
+| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 77 functions |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Single-page book](docs/BOOK.md) | The same content with Chinese and English side by side, 18 chapters |
 | [User guide](docs/USER_GUIDE.md) | From installation to retrospectives |
 | [Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [Model validation](docs/MODEL_VALIDATION.md) · [Worked cases](docs/CASES.md) | Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |
-| [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md) | Every argument and default; 47 figures with their code |
+| [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md) | Every argument and default; 48 figures with their code |
 | [Speed guide](docs/SPEED_GUIDE.md) | Standard errors on parallel workers and the TMBad option with `alscl_speed()` |
 
 ## Getting help

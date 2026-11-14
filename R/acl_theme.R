@@ -202,6 +202,9 @@ NULL
     # plot_relative_catch
     relative_catch = "Relative catch",
 
+    # plot_self_test
+    self_test = "Relative error of the estimates in a self-test",
+
     # plot_natural_mortality and plot_survey_catchability: inputs of a fit
     natural_mortality = "Natural mortality rate (M) used in the fit",
     survey_q     = "Survey catchability at length used in the fit",
@@ -270,7 +273,8 @@ NULL
     survey_q  = "Survey catchability (q)",
     survey_q_age = "Survey catchability multiplier",
     relative_catch_number = "Catch in numbers divided by its mean",
-    relative_catch_weight = "Catch in weight divided by its mean"
+    relative_catch_weight = "Catch in weight divided by its mean",
+    relative_error = "Relative error (%)"
   )
 )
 
