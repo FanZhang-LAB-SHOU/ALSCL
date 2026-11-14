@@ -266,6 +266,12 @@ test_that("an initial total mortality rate below natural mortality gives a note 
   expect_identical(ALSCL:::.acl_fit_diagnostics(
     ns_synthetic_fit(par, recipe = list(args = list(M = .3))))$plausibility$check, "initial_Z")
   expect_null(ALSCL:::.acl_fit_M(ns_synthetic_fit(par)))
+  # With M by age and time step or by length the single number M in the TMB
+  # data is a summary; the check reads the full rates.
+  by_age <- list(env = list(data = list(M = .6, M_AY = matrix(c(.05, .6, 1.2), 3, 2))))
+  expect_identical(range(ALSCL:::.acl_fit_M(ns_synthetic_fit(par, obj = by_age))), c(.05, 1.2))
+  by_length <- list(env = list(data = list(M = .6, M_LAY = array(c(.1, .9), c(2, 3, 2)))))
+  expect_identical(range(ALSCL:::.acl_fit_M(ns_synthetic_fit(par, obj = by_length))), c(.1, .9))
   expect_identical(nrow(ALSCL:::.acl_fit_diagnostics(ns_synthetic_fit(par))$plausibility), 0L)
   # A fixed initial Z (not in opt$par) is not checked.
   expect_identical(nrow(ALSCL:::.acl_fit_diagnostics(ns_synthetic_fit(c(mean_log_R = 5), M = 5))$plausibility), 0L)

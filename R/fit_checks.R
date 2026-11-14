@@ -143,8 +143,12 @@
 # Natural mortality rate of a fit, in whatever form the fit stores it (one
 # number, a vector or a matrix). NULL when the fit does not store it.
 .acl_fit_M <- function(fit) {
-  candidates <- list(fit[["M"]], fit$recipe$args[["M"]],
-    tryCatch(fit$obj$env$data[["M"]], error = function(e) NULL))
+  data <- tryCatch(fit$obj$env$data, error = function(e) NULL)
+  # With natural mortality by age and time step or by length the templates
+  # read M_AY (ACL) or M_LAY (ALSCL); the single number M in the data is then
+  # only a summary used for a default start, so it is the last candidate.
+  candidates <- list(data[["M_AY"]], data[["M_LAY"]], fit$report[["M_LAY"]], fit[["M"]],
+    fit$recipe$args[["M"]], data[["M"]])
   for (M in candidates)
     if (is.numeric(M) && any(is.finite(M))) return(M[is.finite(M)])
   NULL
