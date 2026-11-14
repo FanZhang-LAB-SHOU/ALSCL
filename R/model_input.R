@@ -207,6 +207,11 @@
 
 # Settings that a fit stores only when they differ from the default, so that
 # the stored structure of a default fit is the same as in earlier versions.
+# A fit without initial_deviations in its structure therefore used the
+# cumulative form. If the default of initial_deviations ever changes, code
+# that reads stored fits (fit$structure, recipes, saved assessments) must
+# convert a fit that does not store the setting to "cumulative", not to the
+# new default.
 .acl_structure_stored_if_set <- "initial_deviations"
 
 # Named sets of settings. "original" is the structure of the package as first
