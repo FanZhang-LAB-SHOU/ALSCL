@@ -6,6 +6,7 @@ drop_timing <- function(st) {
 }
 
 test_that("self_test computes relative errors against the simulated truth of each replicate", {
+  skip_on_cran()
   for (model in c("ACL", "ALSCL")) {
     fit <- fit_fixture(model)$result
     st <- self_test(fit, nsim = 3, seed = 11, process = "resample", save_fits = TRUE)
@@ -47,6 +48,7 @@ test_that("self_test computes relative errors against the simulated truth of eac
 })
 
 test_that("conditional truth is the fitted population and summaries use passing refits", {
+  skip_on_cran()
   fit <- fit_fixture("ACL")$result
   st <- self_test(fit, nsim = 3, seed = 3, quantities = c("SSB", "F"), F_summary = "apical")
   ssb <- st$series[st$series$quantity == "SSB", ]
@@ -75,6 +77,7 @@ test_that("conditional truth is the fitted population and summaries use passing 
 })
 
 test_that("self_test is reproducible with a seed and the same with one and two workers", {
+  skip_on_cran()
   fit <- fit_fixture("ALSCL")$result
   a <- self_test(fit, nsim = 3, seed = 5, process = "resample")
   b <- self_test(fit, nsim = 3, seed = 5, process = "resample")
@@ -87,6 +90,7 @@ test_that("self_test is reproducible with a seed and the same with one and two w
 })
 
 test_that("start chooses the starting values of the refits", {
+  skip_on_cran()
   fixture <- fit_fixture("ACL")
   fit <- fixture$result
   original <- self_test(fit, nsim = 1, seed = 2, save_fits = TRUE)
@@ -102,6 +106,7 @@ test_that("start chooses the starting values of the refits", {
 })
 
 test_that("legacy, failed and unscreened fits give clear errors", {
+  skip_on_cran()
   fit <- fit_fixture("ACL")$result
   legacy <- fit; legacy$recipe <- NULL
   expect_error(self_test(legacy, nsim = 1), "no recipe")
@@ -115,6 +120,7 @@ test_that("legacy, failed and unscreened fits give clear errors", {
 })
 
 test_that("print, summary and plot_self_test describe the self-test", {
+  skip_on_cran()
   fit <- fit_fixture("ALSCL")$result
   st <- self_test(fit, nsim = 3, seed = 4)
   expect_output(print(st), "Self-test of ALSCL: 3 data sets")
