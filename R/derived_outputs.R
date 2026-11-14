@@ -424,14 +424,3 @@ relative_catch <- function(fit, years = NULL) {
              extrapolated = times >= .acl_last_informed(fit, times),
              numerical_ok = .acl_numerical_ok(fit), row.names = NULL)
 }
-
-# The last time step with a positive survey observation. F from that time
-# step onwards enters no likelihood term (see extract_estimates()).
-.acl_last_informed <- function(fit, years) {
-  observed <- fit$observations
-  if (is.matrix(observed) && ncol(observed) == length(years)) {
-    with_data <- which(colSums(is.finite(observed) & observed > 0) > 0)
-    if (length(with_data)) return(years[max(with_data)])
-  }
-  max(years)
-}

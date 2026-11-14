@@ -212,6 +212,20 @@
   isTRUE(tryCatch(.acl_fit_status(fit)$numerical_ok, error = function(e) FALSE))
 }
 
+# The last time step with a positive survey observation, or the last time
+# step when the observations are not stored with the fit. F in a period is
+# informed only by observations of later periods, so F (and the catch, which
+# depends on it) is a prediction from this time step onwards. Used by
+# extract_estimates() and relative_catch().
+.acl_last_informed <- function(fit, years) {
+  observed <- fit$observations
+  if (is.matrix(observed) && ncol(observed) == length(years)) {
+    with_data <- which(colSums(is.finite(observed) & observed > 0) > 0)
+    if (length(with_data)) return(years[max(with_data)])
+  }
+  max(years)
+}
+
 #' Extract fixed-effect parameter estimates on a specified scale
 #' @param fit A fitted ACL or ALSCL result. Older lists remain supported.
 #' @param scale Natural scale (default), or the internal optimizer scale.
@@ -371,13 +385,7 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
   numerical_ok <- .acl_numerical_ok(fit)
   # Terminal-period F enters no likelihood term; catch depends on it.
   terminal_F <- c("F", "FL", "FA", "CN", "CNA", "CNL", "CNLA", "CB", "CBA", "CBL", "CBLA")
-  # F in a period is informed only by observations of later periods, so F is a
-  # prediction from the last period with a positive observation onwards.
-  observed <- fit$observations
-  last_informed <- if (is.matrix(observed) && ncol(observed) == length(years)) {
-    with_data <- which(colSums(is.finite(observed) & observed > 0) > 0)
-    if (length(with_data)) years[max(with_data)] else max(years)
-  } else max(years)
+  last_informed <- .acl_last_informed(fit, years)
   rows <- lapply(quantities, function(quantity) {
     nm <- if (quantity == "F" && is.null(fit$report[["F"]])) "FL" else
       if (quantity == "N_at_age") "NA" else quantity
