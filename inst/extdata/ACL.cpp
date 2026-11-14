@@ -97,7 +97,7 @@ Type objective_function<Type>::operator() ()
   Type std_index = exp(log_std_index);
 
   // Optional natural mortality rate by age and time step, and survey
-  // catchability multiplier by age (absent = published structure).
+  // catchability multiplier by age (absent = original structure).
   std::vector<double> M_AY = optional_numbers(this->data, "M_AY", (size_t) A * Y);
   std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
   std::vector<double> log_q_time = optional_numbers(this->data, "log_q_LY", (size_t) L * Y);
@@ -141,7 +141,7 @@ Type objective_function<Type>::operator() ()
 	NA(i,0) = exp(log_NA(i,0));
   }
   // Optional: the first-period plus group is the equilibrium sum of all older
-  // cohorts at init_Z (absent or 0 keeps the published single-cohort value).
+  // cohorts at init_Z (absent or 0 keeps the original single-cohort value).
   if (optional_setting(this->data, "initial_plus_group") == 1) {
     log_NA(A-1,0) -= log(one - exp(-init_Z));
     NA(A-1,0) = exp(log_NA(A-1,0));

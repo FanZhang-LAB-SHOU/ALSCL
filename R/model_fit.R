@@ -183,7 +183,7 @@
   p <- config$parameters; d <- prepared$data
   structure <- .acl_structure(prepared$structure, model)
   d[names(structure$data)] <- structure$data
-  # ALSCL: t0 = t0_lower + exp(log_t0). Zero is the published positive t0.
+  # ALSCL: t0 = t0_lower + exp(log_t0). Zero is the original positive t0.
   t0_lower <- if (is.null(prepared$t0_lower)) 0 else prepared$t0_lower
   if (!is.numeric(t0_lower) || length(t0_lower) != 1L || !is.finite(t0_lower) || t0_lower >= min(d$age))
     stop("t0_lower must be one finite number below the recruitment age.", call. = FALSE)
@@ -322,6 +322,7 @@
   config <- setup$config; p <- setup$parameters; d <- setup$data
   mapping <- setup$map; random <- setup$random
   .acl_report_clamped(setup$clamped_starts, silent)
+  .acl_partial_set_note(prepared$structure, model, silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",
@@ -449,7 +450,7 @@
     "Growth stops near length %s in this fit: fish in the length bin with midpoint %s stay in it with ",
     "probability %.3f per time step, and the estimated Linf is %s. With growth_transition = \"midpoint\" ",
     "this happens when the growth increment in one time step is small relative to the width of the length bins. ",
-    "Consider a refit with structure = \"consistent\" and compare the objective values; see ?run_alscl."),
+    "Consider a refit with structure = \"von_bertalanffy\" and compare the objective values; see ?run_alscl."),
     format(mid[j]), format(mid[j]), stay[j], format(signif(Linf, 4)))
   out
 }

@@ -23,7 +23,7 @@ Shared helpers:
 - `helper-fixtures.R`: small inputs and fast fits (`fixture_frames()`, `cpp_fixture()`, `fit_fixture()`).
 - `helper-review-reference.R`: independent R implementations of the length-at-age key, the growth
   transition matrix, the population dynamics and the joint negative log-likelihood of both models
-  (published structure). Use these when a change to the templates must be checked against something
+  (original structure). Use these when a change to the templates must be checked against something
   that is not the template itself.
 
 Notes for new tests:

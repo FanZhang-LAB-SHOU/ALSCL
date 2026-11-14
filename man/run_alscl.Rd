@@ -130,20 +130,40 @@ when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
 
 \item{structure}{Optional model structures: the name of a set or a named
-list of settings. The default, an empty list, and \code{"published"} are the
-published structure of Zhang and Cadigan (2022) for every setting.
-\code{"consistent"} selects \code{growth_increment = "von_bertalanffy"},
+list of settings. The default, an empty list, and \code{"original"} are the
+original structure for every setting: the structure of the package as
+first released, which implements the model of Zhang and Cadigan (2022).
+\code{"von_bertalanffy"} selects \code{growth_increment = "von_bertalanffy"},
 \code{growth_transition = "bin"}, \code{initial_length = "growth"} and
 \code{initial_plus_group = "equilibrium"} together, so that the first period
 and the growth transition follow one growth model. A list can name a set
 and add single settings, for example
-\code{list(set = "consistent", correlation_range = "symmetric")}. Use the four
-settings of \code{"consistent"} together: a fit with only some of them can
-fail when the growth increment per time step is small relative to the
-bin width. Settings and values (default first):
+\code{list(set = "von_bertalanffy", correlation_range = "symmetric")}.
+\code{"published"} and \code{"consistent"} are accepted as the earlier names of
+\code{"original"} and \code{"von_bertalanffy"}.
+
+The four settings of \code{"von_bertalanffy"} were tested as a set. A fit
+with only some of them can fail when the growth increment per time step
+is small relative to the bin width. A \code{structure} list that changes
+one, two or three of the four settings therefore gives a message that
+names the settings left at their original values (unless
+\code{silent = TRUE}; a function that runs several fits in one call gives it
+once). \code{"von_bertalanffy"} is the name of the set and also a value of
+the single setting \code{growth_increment}.
+\code{structure = list(growth_increment = "von_bertalanffy")} changes one
+setting, and \code{structure = "von_bertalanffy"} changes all four. A list
+that names the set and replaces one of its settings, for example
+\code{list(set = "von_bertalanffy", growth_transition = "midpoint")}, is
+taken as a deliberate choice and gives no message. \code{correlation_range}
+does not belong to the set. Settings and values (default first):
 \describe{
 \item{\code{growth_increment}}{\code{"logistic"}: the expected growth increment is a
 decreasing logistic function of length, multiplied by \code{growth_step}.
+Zhang and Cadigan (2022) define this function. They give neither the
+lengths at which the increment is 50\% and 95\% of its maximum nor the
+conversion of the increment to a time step shorter than one year. The
+lengths 0.5 Linf and 0.05 Linf and the multiplication by \code{growth_step}
+are those of the code.
 \code{"von_bertalanffy"}: the expected increment over one time step is
 (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
 declines smoothly to zero above Linf, so Linf and vbk have the same
@@ -180,7 +200,7 @@ settings: a correlation rho is \code{qlogis(rho)} under \code{"positive"} and
 }
 With \code{initial_length = "growth"} and \code{initial_plus_group = "equilibrium"}
 a population with constant recruitment, no fishing and init_Z equal to M
-stays constant over time; with the published structure it does not.
+stays constant over time; with the original structure it does not.
 The settings used are stored in the \code{structure} element of the fit.}
 
 \item{start_spread}{Standard deviation of the normal deviates added to the
@@ -189,7 +209,7 @@ the second and later starts. The default 0.15 keeps the starts used by
 earlier versions. See Details for when to use a larger value.}
 
 \item{t0_lower}{Lower limit of the von Bertalanffy parameter t0 in years.
-The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published
+The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 parameterization, in which t0 is positive. Set a negative value, for
 example -1, to allow negative t0; a known t0 is then supplied as
 \code{parameters = list(log_t0 = log(t0 - t0_lower))}. Reported t0 values are
@@ -281,9 +301,9 @@ fitted transition has a length bin, with a midpoint below 90\% of the
 estimated Linf, in which fish stay with a probability of at least 0.99
 per time step, the fit reports it in a message (unless \code{silent = TRUE})
 and \code{summary()} prints it. Consider a refit with
-\code{structure = "consistent"} in that case. The published structure and the
-\code{"consistent"} set have the same number of parameters, so their objective
-values can be compared directly.
+\code{structure = "von_bertalanffy"} in that case. The original structure and
+the \code{"von_bertalanffy"} set have the same number of parameters, so their
+objective values can be compared directly.
 
 A single start can stop at a local optimum that passes every
 numerical check, particularly for the growth parameters of ALSCL. The

@@ -215,7 +215,9 @@ gives annual peels: peel k then ends k years before the terminal period.}
 
 \item{structure, start_spread, t0_lower}{Passed to every full and peel fit; see
 \code{\link{run_alscl}}. A bundle's own settings are used unless these are
-supplied explicitly.}
+supplied explicitly. An ALSCL \code{structure} that changes only some of the
+four settings of the set \code{"von_bertalanffy"} gives the message described
+in \code{\link{run_alscl}} once for the call, unless \code{silent = TRUE}.}
 
 \item{survey_q, survey_q_age}{Survey catchability at length and survey
 catchability multiplier by age, passed to every full and peel fit; see

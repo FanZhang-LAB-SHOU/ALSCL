@@ -5,13 +5,17 @@
 // - 3D population dynamics: NLA(length, age, year)
 // - F at length level with 2D AR1 variation (year x length)
 // - Growth transition matrix G applied each time step
-// - Decreasing logistic function for growth increment (published structure);
+// - Decreasing logistic function for growth increment (original structure);
 //   optional von Bertalanffy increment and integration over the source bin
 // - FA (F-at-age) derived as emergent property from NLA -> NA
 // - Supports both annual and sub-annual (quarterly) time steps
 //
 // Optional data entries select alternative structures. When an entry is absent
-// or 0 the published structure is used:
+// or 0 the original structure is used, that is the structure of the package
+// as first released, which implements the model of Zhang and Cadigan (2022).
+// The paper defines the logistic growth increment; the constants
+// l50 = 0.5 Linf and l95 = 0.05 Linf and the multiplication of the increment
+// by growth_step are in this code and not in the paper.
 //   growth_increment   1 = von Bertalanffy increment over the time step
 //   growth_transition  1 = starting lengths uniform within the source bin
 //   initial_length     1 = first-period lengths at age follow from growth
@@ -94,7 +98,7 @@ Type objective_function<Type>::operator()()
 	Type init_Z = exp(log_init_Z);
 	Type sigma_log_N0 = exp(log_sigma_log_N0);
 
-	// Optional settings (absent or 0 = published structure).
+	// Optional settings (absent or 0 = original structure).
 	int correlation_range = optional_setting(this->data, "correlation_range");
 	double t0_lower = optional_value(this->data, "t0_lower");
 
@@ -107,7 +111,7 @@ Type objective_function<Type>::operator()()
 
 	Type vbk = exp(log_vbk);
 	Type Linf = exp(log_Linf);
-	// t0 = t0_lower + exp(log_t0); t0_lower = 0 gives the published positive t0.
+	// t0 = t0_lower + exp(log_t0); t0_lower = 0 gives the original positive t0.
 	Type t0 = exp(log_t0);
 	if (t0_lower != 0.0) t0 = t0 + Type(t0_lower);
 	Type cv_len = exp(log_cv_len);
@@ -117,7 +121,7 @@ Type objective_function<Type>::operator()()
 	using namespace density;
 
 	// Optional natural mortality rate by length, age and time step, and survey
-	// catchability multiplier by age (absent = published structure).
+	// catchability multiplier by age (absent = original structure).
 	std::vector<double> M_values = optional_numbers(this->data, "M_LAY", (size_t) L * A * Y);
 	std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
 	std::vector<double> log_q_time = optional_numbers(this->data, "log_q_LY", (size_t) L * Y);
@@ -139,7 +143,7 @@ Type objective_function<Type>::operator()()
 		}
 	}
 
-	// Optional structure settings (0 = published structure).
+	// Optional structure settings (0 = original structure).
 	int growth_increment = optional_setting(this->data, "growth_increment");
 	int growth_transition = optional_setting(this->data, "growth_transition");
 	int initial_length = optional_setting(this->data, "initial_length");
@@ -193,15 +197,15 @@ Type objective_function<Type>::operator()()
 
 	Type init_survival = exp(-init_Z);
 	if (initial_length == 0) {
-		// Published structure: every age has the length-at-age distribution pla.
+		// Original structure: every age has the length-at-age distribution pla.
 		if (initial_plus_group == 1) N0(A-1) = N0(A-1) / (one - init_survival);
 		for(int j=0; j<A; ++j){
 			NLA.col(0).col(j) = pla.col(j) * N0(j);
 		}
 	} else {
 		// Lengths at age follow from growth: each age is the previous age after
-		// survival at init_Z and one growth step, so the first period is
-		// consistent with the dynamics that follow.
+		// survival at init_Z and one growth step, so the first period follows
+		// the same growth and mortality as the later periods.
 		vector<Type> state = pla.col(0) * N0(0);
 		NLA.col(0).col(0) = state;
 		for(int j=1; j<A; ++j){
