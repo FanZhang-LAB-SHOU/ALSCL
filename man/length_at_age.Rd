@@ -35,7 +35,10 @@ probability of each length bin given age). ACL uses the same key in every
 time step, so its values do not change with time. Each length bin is
 represented by its midpoint, including the two open-ended outer bins.
 The standard deviation is that of the bin midpoints weighted by numbers
-and does not include the spread of lengths within a bin.
+and does not include the spread of lengths within a bin. Where a large
+share of an age class lies in the first or the last length bin, the mean
+is drawn toward the midpoint of that bin and the standard deviation is
+too small.
 
 With \code{basis = "survey"}, the numbers in each length bin are multiplied by
 the survey catchability at length before the mean and standard deviation
