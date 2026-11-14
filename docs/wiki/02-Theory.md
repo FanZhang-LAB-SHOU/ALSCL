@@ -38,6 +38,18 @@ M 和 F 是每个时间步的瞬时死亡率；季度模型的 `growth_step=0.25
 
 M and F are instantaneous rates per time step. A quarterly model uses `growth_step=0.25` and quarterly mortality rates; the growth parameter $`k`$ is annual.
 
+自然死亡率也可以按年龄组和时间步给出：一个矩阵，每个年龄组一行，每个时间步一列，或者只有一列并用于所有时间步。这时用 $`M_{i,t}`$ 代替 $`M`$：
+
+The natural mortality rate can also be supplied by age class and time step, as a matrix with one row per age class and one column per time step, or one column that is used for every time step. $`M_{i,t}`$ then replaces $`M`$:
+
+```math
+Z_{i,t}=M_{i,t}+F_{i,t}.
+```
+
+存活方程和末组方程的形式不变，所以在末组中，从 $`A-1`$ 年龄组进入的个体和原来就在末组的个体各自按本年龄组的死亡率死亡。ACL 不接受按体长给出的 M。它只跟踪各年龄的尾数，每个时间步都按年龄别体长分布重新分配体长，个体并不保留自己的体长，所以无法对它们施加按体长的死亡率。
+
+The survival and plus-group equations keep their form, so in the plus group the fish that enter from age class $`A-1`$ and the fish already in it each die at the rate of their own age class. ACL does not accept M by length. It follows numbers at age only and assigns lengths from the length-at-age distribution in every time step, so fish do not keep their length and a rate by length cannot be applied to them.
+
 <a id="model-theory-fishing"></a>
 
 #### 捕捞死亡率 / Fishing mortality
@@ -51,9 +63,9 @@ F_{s,t}=\exp(\mu_F+d_{s,t}),\qquad
 \mathrm{Cov}(d_{s,t},d_{s-h,t-j})=\sigma_F^2\phi_S^{|h|}\phi_T^{|j|}.
 ```
 
-这里 $`\sigma_F`$ 是 TMB 可分离 AR(1) 密度经缩放后的边际标准差；相关参数描述组间和时间上的相关性。该式已经包含边际方差，无需再除以 $`1-\phi^2`$ 因子，那是创新方差参数化的写法。自然死亡率 M 作为已知输入。
+这里 $`\sigma_F`$ 是 TMB 可分离 AR(1) 密度经缩放后的边际标准差；相关参数描述组间和时间上的相关性。该式已经包含边际方差，无需再除以 $`1-\phi^2`$ 因子，那是创新方差参数化的写法。模型不估计自然死亡率 M。它作为输入给出：一个数，一个按年龄组和时间步的矩阵，或者（仅 ALSCL）一个按体长组的向量（[准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle)）。
 
-Here $`\sigma_F`$ is the marginal SD in TMB's scaled, separable AR(1) density, and the correlation parameters describe dependence across groups and time. The expression already contains the marginal variance, so it needs no further division by $`1-\phi^2`$ factors, which belong to innovation-variance parameterizations. Natural mortality M is supplied as known.
+Here $`\sigma_F`$ is the marginal SD in TMB's scaled, separable AR(1) density, and the correlation parameters describe dependence across groups and time. The expression already contains the marginal variance, so it needs no further division by $`1-\phi^2`$ factors, which belong to innovation-variance parameterizations. The natural mortality rate M is not estimated. It is supplied as a single number, as a matrix by age class and time step or, for ALSCL, as a vector by length bin ([Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-bundle)).
 
 <a id="model-theory-recruitment"></a>
 
@@ -131,6 +143,18 @@ N_{j,i+1,t+1}=\sum_l G_{j,l}N_{l,i,t}\exp[-(M+F_{l,t})].
 
 The plus group combines survivors and growth from the preceding and oldest age classes. Recruitment enters the youngest class with its length distribution. Columns of G sum to one, shrinkage is excluded, and the largest bin absorbs the right-tail probability.
 
+M 按年龄组和时间步或按体长组给出时，用体长组 $`l`$、年龄组 $`i`$、时间步 $`t`$ 的死亡率 $`M_{l,i,t}`$ 代替 $`M`$。按年龄和时间步的矩阵对同一年龄组的所有体长给同一个值，按体长的向量对同一体长组的所有年龄组和时间步给同一个值。普通年龄组和末组的方程变为：
+
+With M by age class and time step or by length bin, the rate $`M_{l,i,t}`$ of length bin $`l`$, age class $`i`$ and time step $`t`$ replaces $`M`$. A matrix by age and time step gives one rate to all lengths of an age class, and a vector by length gives one rate to all age classes and time steps of a length bin. The ordinary age classes and the plus group then follow:
+
+```math
+N_{j,i+1,t+1}=\sum_l G_{j,l}N_{l,i,t}\exp[-(M_{l,i,t}+F_{l,t})],\qquad i=1,\ldots,A-2,
+```
+
+```math
+N_{j,A,t+1}=\sum_l G_{j,l}\left\{N_{l,A-1,t}\exp[-(M_{l,A-1,t}+F_{l,t})]+N_{l,A,t}\exp[-(M_{l,A,t}+F_{l,t})]\right\}.
+```
+
 生长增量使用下面的平滑下降函数，标准差为 $`CV_G\mu_{\Delta L}`$：
 
 Growth increments use the following smooth decreasing mean, with SD $`CV_G\mu_{\Delta L}`$:
@@ -143,6 +167,27 @@ Growth increments use the following smooth decreasing mean, with SD $`CV_G\mu_{\
 Zhang 和 Cadigan (2022) 定义了这个 logistic 函数；体长 $`0.5L_\infty`$ 和 $`0.05L_\infty`$ 以及因子 $`\Delta t`$ 是代码中的取法，论文没有给出。此函数与精确的任意时间步 VB 增量 $`(L_\infty-L)(1-e^{-k\Delta t})`$ 不同，并且体长组内所有个体都从组中点开始生长。使用 `structure = "von_bertalanffy"` 时，ALSCL 采用 VB 增量，起始体长在组内均匀分布，第一个时间步的两项设置也随之配套（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-structure)）。`pla` 是给定年龄的长度分布，G 是给定源长度的一步转移概率，各模型使用各自的矩阵。`FL` 是长度别 F，`FA` 则由同一世代在相应时间步的存活比例推导。报告中的 `FA` 和对应的年龄别总死亡率 `ZA` 包含末组之前的年龄和最后一个时间步之前的各时间步。`extract_estimates(fit, "FA")` 返回每个年龄（包括末组）和每个时间步的年龄别 F：其余单元格按同一公式由报告的体长—年龄别尾数（`NLA`）和体长别总死亡率（`ZL`）算出。这些单元格在拟合之后计算，因为在模型模板内计算会使拟合值在舍入水平上改变。
 
 Zhang and Cadigan (2022) define this logistic function; the lengths $`0.5L_\infty`$ and $`0.05L_\infty`$ and the factor $`\Delta t`$ are those of the code and are not given in the paper. This curve differs from the exact von Bertalanffy increment $`(L_\infty-L)(1-e^{-k\Delta t})`$, and every fish in a length bin grows from the bin midpoint. With `structure = "von_bertalanffy"`, ALSCL uses the von Bertalanffy increment and starting lengths that are uniform within the bin, together with the two matching settings of the first time step ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-structure)). `pla` describes length given age, while G describes a one-step transition given source length; each model uses its own. `FL` is length-specific F; `FA` is derived from the survival proportion of the same cohort over the model time step. The report holds `FA` and the matching total mortality at age `ZA` for the ages before the plus group and the time steps before the last. `extract_estimates(fit, "FA")` returns F at age for every age, including the plus group, and every time step: it computes the other cells from the reported numbers at length and age (`NLA`) and total mortality at length (`ZL`) with the same formula. These cells are computed after fitting, because computing them in the model template changed fitted values at rounding level.
+
+M 随年龄或体长变化时，年龄别 F 和体长别总死亡率需要另行定义，因为同一年龄的个体体长不同，同一体长的个体年龄也不同。年龄别总死亡率（`ZA`）是该年龄组的尾数在一个时间步内的下降率，年龄别 F（`FA`）等于它减去 M 在各体长上的平均值，以该年龄组的体长别尾数为权重：
+
+When M varies with age or length, F at age and total mortality at length need a definition, because fish of one age have different lengths and fish of one length have different ages. Total mortality at age (`ZA`) is the decline of the numbers of an age class over the time step, and F at age (`FA`) is that rate minus the mean of M over lengths, weighted by the numbers at length of that age class:
+
+```math
+Z^{A}_{i,t}=\log\sum_l N_{l,i,t}-\log\sum_l N_{l,i,t}\exp[-(M_{l,i,t}+F_{l,t})],\qquad
+F^{A}_{i,t}=Z^{A}_{i,t}-\frac{\sum_l N_{l,i,t}M_{l,i,t}}{\sum_l N_{l,i,t}}.
+```
+
+体长别总死亡率（`ZL`）等于体长别 F 加上 M 在各年龄组上的平均值，以该体长组的年龄别尾数为权重：
+
+Total mortality at length (`ZL`) is F at length plus the mean of M over age classes, weighted by the numbers at age of that length bin:
+
+```math
+Z^{L}_{l,t}=F_{l,t}+\frac{\sum_i N_{l,i,t}M_{l,i,t}}{\sum_i N_{l,i,t}}.
+```
+
+这时 `ZL` 是一个汇总量，没有哪个年龄组恰好按这个死亡率死亡。M 为单一数值时，两个定义就是 `FA = ZA - M` 和 `ZL = FL + M`。报告中的 `M_LAY` 保存实际使用的死亡率，是按体长组、年龄组和时间步排列的数组。
+
+`ZL` is then a summary, and no single age class dies at this rate. With a single M the two definitions are `FA = ZA - M` and `ZL = FL + M`. The report holds the rates used as `M_LAY`, an array by length bin, age class and time step.
 
 <a id="model-theory-derived"></a>
 
@@ -157,9 +202,22 @@ b_{l,t}=N_{l,t}w_{l,t},\qquad sb_{l,t}=b_{l,t}m_{l,t},\qquad
 B_t=\sum_l b_{l,t},\qquad SSB_t=\sum_l sb_{l,t}.
 ```
 
-`CN`、`CB` 是模型推算的渔业捕获尾数与重量，区别于输入的调查数量指数。生物量单位由个体重量单位和丰度尺度共同决定。丰度尺度就是调查指数的尺度，因为调查可捕性的最大值固定为 1（见下一节）。只有当指数是绝对丰度估计时，丰度、生物量、产卵生物量、补充量、`CN` 和 `CB` 才是绝对量；使用相对指数时，它们是相对值。
+`CN`、`CB` 是模型推算的渔业捕获尾数与重量，区别于输入的调查数量指数。生物量单位由个体重量单位和丰度尺度共同决定。丰度尺度等于调查指数的尺度除以拟合所用的调查可捕性。使用默认的 logistic 曲线时，可捕性的最大值固定为 1（见下一节），丰度尺度就是完全可捕体长处指数的尺度。只有当指数是绝对丰度估计时，丰度、生物量、产卵生物量、补充量、`CN` 和 `CB` 才是绝对量；使用相对指数时，它们是相对值。
 
-`CN` and `CB` are derived fishery catch numbers and biomass, distinct from the input survey number index. Biomass units depend on the weight units and the abundance scale. The abundance scale is the scale of the survey index, because survey catchability has a fixed maximum of 1 (next section). Abundance, biomass, spawning biomass, recruitment, `CN` and `CB` are absolute only when the index is an absolute abundance estimate; with a relative index they are relative values.
+`CN` and `CB` are derived fishery catch numbers and biomass, distinct from the input survey number index. Biomass units depend on the weight units and the abundance scale. The abundance scale is the scale of the survey index divided by the survey catchability used in the fit. With the default logistic curve, catchability has a fixed maximum of 1 (next section), and the scale is that of the index for fully caught lengths. Abundance, biomass, spawning biomass, recruitment, `CN` and `CB` are absolute only when the index is an absolute abundance estimate; with a relative index they are relative values.
+
+渔获量由 Baranov 渔获方程算出，用到估计的 F、估计的丰度和给定的 M。似然中没有渔获数据。ACL 按年龄组计算渔获量，ALSCL 按体长组和年龄组计算：
+
+Catch follows from the Baranov catch equation with the estimated F, the estimated abundance and the supplied M. No catch data enter the likelihood. Catch is calculated by age class in ACL and by length bin and age class in ALSCL:
+
+```math
+C_{i,t}=N_{i,t}\frac{F_{i,t}}{Z_{i,t}}\left(1-e^{-Z_{i,t}}\right),\qquad
+C_{l,i,t}=N_{l,i,t}\frac{F_{l,t}}{F_{l,t}+M_{l,i,t}}\left(1-e^{-(F_{l,t}+M_{l,i,t})}\right).
+```
+
+`CN` 是一个时间步内各组渔获量之和，ALSCL 拟合的 `CB` 是体长别渔获量乘以体长别体重之和。F 和渔获量的水平取决于给定的 M 和调查可捕性（[调查观测](#model-theory-survey)）。有三个函数返回可与年龄鉴定资料和该种群的其他评估相比较的量。`length_at_age()` 返回每个年龄组和时间步的平均体长及其标准差。`ssb_at_age()` 按年龄别成熟比例计算产卵生物量。`relative_catch()` 返回渔获量除以其在各时间步上的均值。用法见[评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)。
+
+`CN` is the sum of catch over the groups of a time step, and `CB` of an ALSCL fit is the sum of catch at length multiplied by weight at length. The level of F and of catch depends on the supplied M and survey catchability ([Survey observations](#model-theory-survey)). Three functions return quantities for comparison with age readings and with other assessments of the stock. `length_at_age()` returns the mean and standard deviation of length for each age class and time step. `ssb_at_age()` returns spawning biomass from a maturity ogive by age. `relative_catch()` returns catch divided by its mean over the time steps. [Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs) shows how to use them.
 
 <a id="model-theory-survey"></a>
 
@@ -182,6 +240,26 @@ q_l=\left[1+\exp\!\left(-\log(19)\frac{L_l-L_{50}}{L_{95}-L_{50}}\right)\right]^
 
 `sel_L50` and `sel_L95` fix survey catchability at 0.5 and 0.95 at the specified lengths, and catchability approaches 1 for large fish; they describe the survey, and fishery selectivity is a separate quantity. No catchability scale is estimated: multiplying the index by a constant multiplies the abundance, biomass, recruitment and catch estimates by the same constant and leaves fishing mortality unchanged. `exp(report$Elog_index)` is the original-scale median; the arithmetic mean also includes $`\exp(\sigma_I^2/2)`$.
 
+调查可捕性也可以直接给出。`survey_q` 给出体长别可捕性：一个向量，或者一个按体长组和时间步的矩阵，例如用于调查网具更换之后。`survey_q_age` 给出按年龄组的系数。以 $`N_{l,i,t}`$ 表示按体长组、年龄组和时间步的尾数（在 ACL 中为 $`p_{l|i}N_{i,t}`$），指数期望值的一般形式为：
+
+Survey catchability can also be supplied directly. `survey_q` gives catchability at length as a vector, or by length bin and time step as a matrix, for example after a change of survey gear. `survey_q_age` gives a multiplier by age class. With $`N_{l,i,t}`$ the numbers by length bin, age class and time step ($`p_{l|i}N_{i,t}`$ in ACL), the expected index has the general form:
+
+```math
+\log I_{l,t}=\log q_{l,t}+\log\sum_i q^{A}_i N_{l,i,t}+\epsilon_{l,t}.
+```
+
+默认情况下 $`q_{l,t}=q_l`$（logistic 曲线），$`q^{A}_i=1`$。这些值都是固定输入。Zhang 和 Cadigan (2022) 给出了理由：只用调查数据时，体长别可捕性和种群数量的尺度都估计不出来，所以他们把可捕性的最大值固定为 1，形状用 logistic 函数或专家知识给定。本包按原样使用给定的值，不重新缩放；要沿用这一约定，请给出最大值为 1 的曲线，`survey_catchability()` 返回的就是这样的曲线。
+
+The defaults are $`q_{l,t}=q_l`$ from the logistic curve and $`q^{A}_i=1`$. All of these values are fixed inputs. Zhang and Cadigan (2022) give the reason: with survey data alone, catchability at length and the scale of stock numbers cannot be estimated, so they fix the maximum of catchability at 1 and set its shape from the logistic function or from expert knowledge. Supplied values are used as given and are not rescaled, so supply a curve with a maximum of 1 to keep that convention; `survey_catchability()` returns such curves.
+
+调查指数提供的是总死亡率的信息，不能区分它的组成部分。对按年龄的系数，由上式可得：同一世代的对数指数在相邻两个年龄之间的下降量，等于总死亡率减去这两个年龄可捕性之比的对数。因此，可捕性随年龄或体长下降而输入中没有给出时，拟合会把它当作更高的总死亡率，而 F 等于总死亡率减去给定的 M。在只拟合调查数据的模型中，渔业选择性、M 和调查可捕性可能相互混淆，要得到唯一解，必须对其中一项或几项作出假定（[Cook 2013](https://doi.org/10.1016/j.fishres.2013.01.003)）。
+
+The index informs the total mortality rate and not its parts. For a multiplier by age, the equation above gives a decline of the log index of a cohort between two successive ages equal to the total mortality rate minus the log ratio of the catchabilities at the two ages. A catchability that declines with age or length and is not supplied is therefore fitted as a higher total mortality rate, and F is the total mortality rate minus the supplied M. In a model fitted to survey data alone, fishery selectivity, M and survey catchability can be confounded, and a unique solution needs an assumption about one or more of them ([Cook 2013](https://doi.org/10.1016/j.fishres.2013.01.003)).
+
+Zhang 和 Cadigan (2022) 把 F 表述为捕捞死亡率绝对水平的估计，而种群数量和渔获量只估计趋势；论文的案例还把 F 的水平与该种群现行评估的结果作了比较。论文的讨论部分又指出，只用调查数据时能估计的只有总死亡率，F 和 M 要靠对 M 的假定才能分开。论文没有考察调查可捕性的形状设错时 F 怎样变化。本包对北海国际底拖网调查第一季度指数的拟合显示了这种依赖关系。对挪威长臀鳕，ALSCL 的 F 与国际海洋考察理事会（ICES）评估的 F 之间的秩相关系数，在 M 取常数时为 0.24，改用该评估按年龄和年份的 M 后为 0.64。因此本文档建议：与其他评估比较时，比较趋势（相对产卵生物量、补充量和渔获量）和总死亡率；报告 F 的水平时，同时说明所假定的 M 和调查可捕性，以及结果对它们的敏感性（[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity)）。
+
+Zhang and Cadigan (2022) present F as an estimate of the absolute fishing mortality rate, while stock size and catch are estimated as trends, and their case study compares the level of F with that of the current assessment of the stock. Their Discussion states that survey data alone allow only total mortality to be estimated and that F and M are separated by the assumed M. The paper does not examine how an error in the shape of survey catchability changes F. Fits of the package to the first-quarter index of the North Sea International Bottom Trawl Survey showed this dependence. For Norway pout, the rank correlation between F from ALSCL and F from the assessment of the International Council for the Exploration of the Sea (ICES) was 0.24 with a constant M and 0.64 with the M by age and year of that assessment. This documentation therefore recommends comparing trends (relative spawning biomass, recruitment and catch) and the total mortality rate with other assessments, and reporting the level of F only together with the assumed M and survey catchability and the sensitivity to them ([Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity)).
+
 <a id="model-theory-estimation"></a>
 
 #### 估计与区间 / Estimation and uncertainty
@@ -189,6 +267,87 @@ q_l=\left[1+\exp\!\left(-\log(19)\frac{L_l-L_{50}}{L_{95}-L_{50}}\right)\right]^
 TMB 用自动微分计算目标函数及导数，对随机效应采用 Laplace 近似；R 的 `nlminb()` 优化固定效应。`sdreport()` 使用局部曲率及 delta 方法给出近似标准误。绘图中的 95% 区间是逐点区间，只有被估计的参数对它有贡献：`YTF_example` 固定了生长和部分过程参数，因此生长区间退化为一条线，其余区间以这些固定值为条件。生长区间描述平均曲线的不确定性，单尾鱼按 $`CV_L`$ 散布在曲线周围。解读任何区间之前，先读 Hessian、边界和梯度检查。
 
 TMB uses automatic differentiation and a Laplace approximation for the random effects; R's `nlminb()` optimizes the fixed effects. `sdreport()` obtains approximate standard errors from local curvature and the delta method. Plotted 95% intervals are pointwise, and only the estimated parameters contribute to them: `YTF_example` fixes growth and some process parameters, so its growth interval collapses to a line and the other intervals are conditional on the fixed values. Growth intervals describe the uncertainty of the mean curve; individual fish scatter around it with $`CV_L`$. Read the Hessian, bound and gradient checks before interpreting any interval.
+
+<a id="model-theory-paper-differences"></a>
+
+### 包与论文的差别 / Differences between the package and the paper
+
+本包实现的是 [Zhang 和 Cadigan (2022)](https://doi.org/10.1111/faf.12673) 的模型。本节说明包与论文文字不同、并且影响估计值解读的五处。这些差别是把论文正文与包的模型模板逐项对照得到的。论文的补充材料和作者的代码没有读到，所以作者的实现采用哪种形式并不清楚。论文没有给出规定的地方（例如参数的边界、零观测和负的生长增量），包的做法见本页其他各节。这五处在包里都保持不变，这样早期版本的拟合结果可以重现。下面各小节依次说明差别是什么、包为什么保留现有形式，以及使用时该怎么做。
+
+The package implements the model of [Zhang and Cadigan (2022)](https://doi.org/10.1111/faf.12673). This section describes five points on which the package differs from the text of the paper and which change how estimates are read. They were found by comparing the main text of the paper with the model templates of the package. The supporting information of the paper and the code of its authors were not available, so the form used in the authors' implementation is not known. Where the paper gives no rule, for example for parameter bounds, zero observations and negative growth increments, the package follows the other sections of this page. All five points are kept in the package, so that fits made with earlier versions are reproduced. Each subsection states the difference, why the package form is kept and what to do about it.
+
+<a id="model-theory-difference-sd"></a>
+
+#### F 过程和补充量过程的标准差 / Standard deviations of the F and recruitment processes
+
+在包里，$`\sigma_F`$ 和 $`\sigma_R`$ 是边际标准差，即单个对数 F 偏差和单个对数补充量偏差的标准差（[捕捞死亡率](#model-theory-fishing)、[补充量](#model-theory-recruitment)）。论文的式 7 用两个 AR(1) 过程的创新方差写出对数 F 的协方差，式 8 之后的文字以同样的形式给出补充量偏差的平稳方差。以下标 p 表示论文的参数，两种形式的关系为：
+
+In the package, $`\sigma_F`$ and $`\sigma_R`$ are marginal standard deviations: the standard deviation of one log F deviation and of one log recruitment deviation ([Fishing mortality](#model-theory-fishing), [Recruitment](#model-theory-recruitment)). Equation 7 of the paper writes the covariance of log F with the innovation variance of the two AR(1) processes, and the text after Equation 8 gives the stationary variance of the recruitment deviations in the same form. With a subscript p for the parameters of the paper, the two forms are related by:
+
+```math
+\sigma_F^2=\frac{\sigma_{F,p}^2}{(1-\phi_S^2)(1-\phi_T^2)},\qquad
+\sigma_R^2=\frac{\sigma_{R,p}^2}{1-\phi_R^2}.
+```
+
+$`\phi_S`$ 是 F 在年龄组之间（ACL）或体长组之间（ALSCL）的相关系数，$`\phi_T`$ 是 F 在时间上的相关系数，$`\phi_R`$ 是补充量在时间上的相关系数。`F_structure = "year"` 时 F 过程只有时间一个维度，含 $`\phi_S`$ 的因子不出现。标准差和相关系数全部估计时，两种形式描述的是同一个模型，似然相同，种群估计也相同。包保留边际形式，是因为模板使用的 TMB 密度采用这一尺度，现有输入列表和已保存拟合中的初值、边界和固定值也都在这一尺度上。
+
+$`\phi_S`$ is the correlation of F across age classes (ACL) or length bins (ALSCL), $`\phi_T`$ the correlation of F over time and $`\phi_R`$ the correlation of recruitment over time. With `F_structure = "year"` the F process has the time dimension only, and the factor with $`\phi_S`$ is absent. When the standard deviation and the correlations are all estimated, the two forms describe the same model and give the same likelihood and the same population estimates. The package keeps the marginal form because it is the scale of the TMB density that the templates use, and the starting values, bounds and fixed values of existing bundles and saved fits are on this scale.
+
+把标准差与论文中的数值比较之前要先换算：包的估计值乘以 $`\sqrt{(1-\phi_S^2)(1-\phi_T^2)}`$（F）或 $`\sqrt{1-\phi_R^2}`$（补充量）；论文中的数值要用作初值或固定值时，先除以同一因子。模拟器 `sim_data()` 的输入是创新标准差（`F_sd`、`std_logR`）。它的 F 过程只有时间维度，所以 `F_sd = 0.2`、`F_ar = 0.75` 对应的边际标准差是 0.2 / sqrt(1 - 0.75^2) = 0.302，也就是 `YTF_example` 中固定的值。
+
+Convert a standard deviation before comparing it with a value in the paper: multiply an estimate of the package by $`\sqrt{(1-\phi_S^2)(1-\phi_T^2)}`$ for F, or by $`\sqrt{1-\phi_R^2}`$ for recruitment, and divide a value from the paper by the same factor before using it as a starting value or a fixed value. The simulator `sim_data()` takes innovation standard deviations (`F_sd`, `std_logR`). Its F process has the time dimension only, so `F_sd = 0.2` with `F_ar = 0.75` is a marginal standard deviation of 0.2 / sqrt(1 - 0.75^2) = 0.302, the value that `YTF_example` fixes.
+
+<a id="model-theory-difference-sd-fixed"></a>
+
+#### F 过程的标准差默认固定 / The standard deviation of the F process is fixed by default
+
+论文把对数 F 的均值、F 过程的方差和两个相关系数都列为待估参数。包的默认 `map` 把 F 过程的标准差固定在初值上：ALSCL 中是 `log_sigma_log_F`，ACL 中是 `log_std_log_F`。论文的 ACL 写在补充材料里，所以这项比较只针对 ALSCL。初值在 `create_parameters()` 中设定：不选物种预设时 ALSCL 为 1、ACL 为 0.8，`"flatfish"` 预设为 0.8，`"tuna"` 为 0.5，`"krill"` 为 1。它们都是边际标准差（见上一小节）。`YTF_example` 在自己的配置里存的是 0.302。
+
+The paper lists the mean of log F, the variance of the F process and its two correlations as parameters to estimate. The default `map` of the package fixes the standard deviation of the F process at its starting value: `log_sigma_log_F` in ALSCL and `log_std_log_F` in ACL. The ACL of the paper is described in its supporting information, so this comparison applies to ALSCL. The starting values are set in `create_parameters()`: 1 for ALSCL and 0.8 for ACL without a species preset, 0.8 with the `"flatfish"` preset, 0.5 with `"tuna"` and 1 with `"krill"`. They are marginal standard deviations (previous subsection). `YTF_example` stores 0.302 in its own configuration.
+
+包保留默认固定有两个原因。一是用默认设置得到的拟合结果保持不变。二是状态空间评估模型中的过程方差本身难以估计：估计值可能很不精确，而试图估计过多的随机效应过程时，常常得到某个方差被估计为零的解（[Stock 和 Miller 2021](https://doi.org/10.1016/j.fishres.2021.105967)；[Punt 2023](https://doi.org/10.1016/j.fishres.2023.106642)）。本包对北海若干种群的拟合中，多数种群在放开后可以估计出这个标准差，派生量变化很小，有一个种群放开后拟合不收敛。
+
+The package keeps the fix for two reasons. Fits made with the default settings stay the same. Process variances are also difficult to estimate in state-space assessment models: the estimates can be imprecise, and attempts to estimate too many random-effects processes often give solutions in which a variance is estimated at zero ([Stock and Miller 2021](https://doi.org/10.1016/j.fishres.2021.105967); [Punt 2023](https://doi.org/10.1016/j.fishres.2023.106642)). In fits of the package to North Sea stocks, the standard deviation could be estimated for most stocks with little change in the derived quantities, and one fit did not converge when it was released.
+
+固定值是一项假定，所以应当把标准差放开重新拟合一次作为检查。在 `map` 中用具名 `NULL` 放开：ALSCL 用 `map = list(log_sigma_log_F = NULL)`，ACL 用 `map = list(log_std_log_F = NULL)`；然后比较两次拟合的目标函数、数值检查和种群估计（代码见[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-f-sd)）。估计结果有差别时，两次拟合都要报告。放开后的拟合通不过数值检查时，保留固定值，并说明数据不足以确定这个参数。
+
+A fixed value is an assumption, so refit with the standard deviation estimated as a check. Release it with a named `NULL` in `map`, `map = list(log_sigma_log_F = NULL)` for ALSCL or `map = list(log_std_log_F = NULL)` for ACL, and compare the objective, the numerical checks and the population estimates of the two fits ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-f-sd) shows the code). Report both fits when the estimates differ. When the refit fails the numerical checks, keep the fixed value and report that the data did not determine this parameter.
+
+<a id="model-theory-difference-increment"></a>
+
+#### logistic 生长增量的两个体长 / Lengths of the logistic growth increment
+
+论文的式 6 把平均生长增量定义为体长的递减 logistic 函数，其中有两个体长 $`l_{50}`$ 和 $`l_{95}`$，分别是增量等于最大增量 50% 和 95% 时的体长。论文没有给出它们的取值。包把它们取在 $`0.5L_\infty`$ 和 $`0.05L_\infty`$（[生长转移矩阵](#model-theory-growth)）。按这两个取值，时间步为一年时，logistic 增量在体长为 0.05、0.5 和 0.95 $`L_\infty`$ 处等于 von Bertalanffy 增量 $`(L_\infty-L)(1-e^{-k})`$。在 0.05 和 0.5 $`L_\infty`$ 之间它大于 von Bertalanffy 增量（在 0.25 $`L_\infty`$ 处为最大增量的 84%，后者为 75%），在 0.5 和 0.95 $`L_\infty`$ 之间小于后者（在 0.75 $`L_\infty`$ 处为 16%，后者为 25%）。超过 0.95 $`L_\infty`$ 后它又大于后者，并且始终为正：在 $`L_\infty`$ 处仍有最大增量的 3.7%，而 von Bertalanffy 增量为零。因此个体会长到 $`L_\infty`$ 以上，$`L_\infty`$ 不是各年龄平均体长的渐近值。
+
+Equation 6 of the paper defines the mean growth increment as a decreasing logistic function of length with two lengths, $`l_{50}`$ and $`l_{95}`$, at which the increment is 50% and 95% of its maximum. The paper gives no values for them. The package places them at $`0.5L_\infty`$ and $`0.05L_\infty`$ ([Growth transition matrix](#model-theory-growth)). With these values and an annual time step, the logistic increment equals the von Bertalanffy increment $`(L_\infty-L)(1-e^{-k})`$ at lengths of 0.05, 0.5 and 0.95 $`L_\infty`$. It is larger than the von Bertalanffy increment between 0.05 and 0.5 $`L_\infty`$ (84% against 75% of the maximum increment at 0.25 $`L_\infty`$) and smaller between 0.5 and 0.95 $`L_\infty`$ (16% against 25% at 0.75 $`L_\infty`$). Above 0.95 $`L_\infty`$ it is larger again and stays positive: at $`L_\infty`$ it is still 3.7% of its maximum, where the von Bertalanffy increment is zero. Fish therefore grow beyond $`L_\infty`$, and $`L_\infty`$ is not the asymptote of mean length at age.
+
+论文选用 logistic 形式，是因为体长组高于 $`L_\infty`$ 时 von Bertalanffy 增量为负。包把这两个体长作为原始结构的一部分保留。对采用原始结构的 ALSCL 拟合，不要把 $`L_\infty`$ 和 $`k`$ 当作各年龄平均体长的 von Bertalanffy 曲线参数，也不要把它们与用年龄鉴定资料拟合的曲线或 ACL 拟合的参数相比较。应比较 `length_at_age()` 给出的各年龄平均体长（[评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)）。`structure = "von_bertalanffy"` 采用 von Bertalanffy 增量（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-structure)）。
+
+The paper chose the logistic form because the von Bertalanffy increment is negative for length bins above $`L_\infty`$. The package keeps the two lengths as part of the original structure. In an ALSCL fit with this structure, do not read $`L_\infty`$ and $`k`$ as the parameters of a von Bertalanffy curve of mean length at age, and do not compare them with a curve fitted to age readings or with an ACL fit. Compare mean length at age from `length_at_age()` ([Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)). `structure = "von_bertalanffy"` uses the von Bertalanffy increment ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-structure)).
+
+<a id="model-theory-difference-step"></a>
+
+#### 增量乘以时间步长 / Multiplication of the increment by the time step
+
+论文中的 $`k`$ 按年给出，没有把增量换算到短于一年的时间步的公式。包把年增量乘以时间步长 $`\Delta t`$（`growth_step`）。时间步为一年时这没有任何影响。时间步短于一年时，一个时间步的增量带有因子 $`\Delta t(1-e^{-k})`$，而 $`k`$ 相同的 von Bertalanffy 曲线在一个时间步内走完到 $`L_\infty`$ 剩余距离的 $`1-e^{-k\Delta t}`$。$`k`$ 为每年 0.38、时间步为季度时，这两个值是 0.079 和 0.091，所以在两种年增量相等的体长上，包在一个季度内的增量小 13%。以 $`L_\infty`$ = 152 cm、体长 76 cm 的个体为例，在这个体长上两种年增量相等。一年之后，von Bertalanffy 曲线给出 100.0 cm。按包的增量走四个季度得到 95.9 cm（计算中不含增量的变异，也不分体长组）。后一个数更小，是因为每个季度的增量都按已经达到的体长计算。
+
+The paper gives $`k`$ per year and has no equation that converts the increment to a time step shorter than one year. The package multiplies the annual increment by the time step $`\Delta t`$ (`growth_step`). With annual time steps this changes nothing. With shorter time steps, the increment of one step carries the factor $`\Delta t(1-e^{-k})`$, whereas a von Bertalanffy curve with the same $`k`$ closes the fraction $`1-e^{-k\Delta t}`$ of the distance to $`L_\infty`$ in one step. For $`k`$ = 0.38 per year and quarterly time steps the two values are 0.079 and 0.091, so at a length where the two annual increments are equal, the increment of the package in one quarter is 13% smaller. Take a fish of 76 cm with $`L_\infty`$ = 152 cm, a length at which the two annual increments are equal. After one year the von Bertalanffy curve gives 100.0 cm. Four quarterly steps of the package increment give 95.9 cm, in a calculation without variation of the increment and without length bins. The second figure is lower because each quarterly increment is calculated from the length already reached.
+
+所以时间步短于一年时，原始结构的 $`k`$ 不是按年的 von Bertalanffy 生长率，不同时间步长的拟合得到的 $`k`$ 也不能相互比较。包把这一乘法作为原始结构的一部分保留。`structure = "von_bertalanffy"` 采用精确换算 $`1-e^{-k\Delta t}`$。
+
+With time steps shorter than one year, $`k`$ of the original structure is therefore not the annual von Bertalanffy growth rate, and values of $`k`$ from fits with different time steps are not comparable. The package keeps the multiplication as part of the original structure. `structure = "von_bertalanffy"` uses the exact conversion $`1-e^{-k\Delta t}`$.
+
+<a id="model-theory-difference-initial"></a>
+
+#### 初始年龄别尾数的偏差 / Deviations of the initial numbers at age
+
+论文的式 11 把第一个时间步 $`a`$ 龄的尾数写成补充量乘以 $`\exp[-Z_{init}(a-1)]`$，再乘以各年龄之间相互独立的对数正态偏差。在包里，每个年龄组的对数尾数等于前一年龄组的对数尾数减去 `init_Z` 再加一个偏差，所以偏差沿年龄累积（[初始条件](#model-theory-initial)）。模拟器 `sim_data()` 采用同样的形式。相互独立的偏差表示各世代的补充量不同，但随年龄的下降相同。累积的偏差表示较老年龄组共有的死亡历史：相邻两个年龄组之间的一个偏差会改变所有更老年龄组的尾数，对数尾数的方差随年龄增大。
+
+Equation 11 of the paper gives the numbers at age $`a`$ in the first time step as recruitment multiplied by $`\exp[-Z_{init}(a-1)]`$ and by a lognormal deviation that is independent among ages. In the package, the log numbers of each age class equal those of the previous age class minus `init_Z` plus a deviation, so the deviations accumulate over ages ([Initial conditions](#model-theory-initial)). The simulator `sim_data()` uses the same form. Independent deviations represent cohorts that differ in their recruitment and share one decline with age. Accumulated deviations represent a mortality history that the older age classes share: a deviation between two age classes changes the numbers of all older age classes, and the variance of the log numbers increases with age.
+
+这两种形式还没有在模拟或实际数据上比较过。包保留累积形式，估计模型和模拟器用的都是它。包的 `init_Z` 和初始偏差的标准差，与式 11 中的 $`Z_{init}`$ 和标准差不是同一个量，取用论文中的数值时要注意这一点。
+
+The two forms have not been compared in simulations or on data. The package keeps the accumulated form, which its estimation models and its simulator share. `init_Z` and the standard deviation of the initial deviations of the package are not the same quantities as $`Z_{init}`$ and the standard deviation in Equation 11, so do not take values for them from the paper without this in mind.
 
 <a id="model-theory-matrices"></a>
 

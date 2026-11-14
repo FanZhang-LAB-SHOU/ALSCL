@@ -24,9 +24,9 @@ plot_VB(b, se = TRUE)
 
 [![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)
 
-von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。
+von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。要得到拟合种群各年龄的平均体长，或与年龄鉴定资料比较，请用 `length_at_age()`。
 
-The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population.
+The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population. For the mean length at age of the fitted population, and for a comparison with age readings, use `length_at_age()`.
 
 `age_range = NULL` 时绘制拟合的年龄范围，起点不早于 `t0`；显式 `age_range` 必须是两个递增的有限年龄，且不早于 `t0`。若 `se = TRUE` 但参数协方差不可用，函数会警告并只画曲线，保留传入的标签、字号、刻度和主题。
 
