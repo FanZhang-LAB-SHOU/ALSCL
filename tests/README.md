@@ -11,7 +11,7 @@ Run one group with, for example, `devtools::test(filter = "retro")`.
 | Standard errors, speed settings, compile cache, workers | `speed`, `speed-single-quantity`, `review-infra-speed`, `review-infra-compile`, `review-infra-workers`, `review-infra-diagnostics` |
 | Natural mortality by age and time step or by length, survey catchability supplied as `survey_q` and `survey_q_age`, `lorenzen_M()` and `survey_catchability()`: validation, the templates, retrospectives, hindcasts and projections | `ns-mortality-catchability` |
 | Input reading and checks (tables, CSV, Excel, bundles, length bins) | `input`, `input-precision`, `input-workflow`, `bin-bounds-227`, `fit-bundle`, `review-workflows-bundle`, `review-workflows-excel` |
-| Results: summaries, parameter and estimate tables, archives, S3 methods | `result-workflow`, `assessment-provenance`, `assessment-regression`, `review-workflows-archive`, `review-workflows-s3-methods`, `ytf-example` |
+| Results: summaries, parameter and estimate tables, archives, S3 methods | `result-workflow`, `assessment-provenance`, `assessment-regression`, `review-workflows-archive`, `review-workflows-s3-methods`, `ytf-example`, `whiting-example` |
 | Diagnostics, residuals and model comparison | `diagnostics`, `diagnostics-225`, `review-workflows-check-fit`, `comparison-review`, `comparison-screen`, `review-workflows-compare`, `survey-comparison-archive` |
 | Checks of a fit: parameters at their limit in practice, plausibility notes, advice, the message for a single start, `bounds = "wide"` for ACL | `ns-fit-checks` |
 | Outputs for comparison with age readings and other assessments (`length_at_age()`, `ssb_at_age()`, `relative_catch()`) and the growth, length-at-age and catch tables of `compare_models()` | `ns-outputs` |
