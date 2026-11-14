@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.4.3.9000，覆盖 **66 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.3.9000，覆盖 **71 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **66 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **71 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -90,6 +90,11 @@ dat <- x$data.CatL
 - [simulation_to_tables](#simulation_to_tables) — 把一个模拟重复转换为拟合用的三张表 / Convert one simulated replicate to the tables used for fitting
 - [simulate_example_data](#simulate_example_data) — 快速年度教学数据生成 / Generate simple annual teaching data
 - [VB_func](#VB_func) — 计算 VB 平均体长 / Calculate VB mean length
+- [lorenzen_M](#lorenzen_M) — 按体长的幂函数计算自然死亡率 / Natural mortality rate as a power function of length
+- [survey_catchability](#survey_catchability) — 计算 logistic 或穹顶形的体长别调查可捕性 / Survey catchability at length for logistic and dome-shaped curves
+- [length_at_age](#length_at_age) — 拟合模型各年龄的平均体长及标准差 / Mean and standard deviation of length at age from a fitted model
+- [ssb_at_age](#ssb_at_age) — 按年龄别成熟比例计算产卵生物量 / Spawning stock biomass from maturity at age
+- [relative_catch](#relative_catch) — 各时间步的相对渔获量 / Relative catch by time step
 
 <a id="acl_theme"></a>
 ## `acl_theme()`
@@ -301,9 +306,13 @@ compare_models (model1, model2, data.CatL, model1_name = NULL, model2_name = NUL
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Label for model1. Default is auto-detected from model_type. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Label for model2. Default is auto-detected from model_type. |
 
-**返回 / Returns:** 不可见地返回列表：summary 为优化状态、目标函数、信息准则和耗时比较；growth 为生长参数；fit_metrics 为样本内调查拟合误差；correlation 为共同种群时间序列的 Pearson 相关系数及均值比 Ratio_Mean（model2/model1）。fit_diagnostics 保存数值诊断；comparison 包含数据是否核验（data_verified）、比较是否满足条件（eligible）、优选标签（preferred，仅在两次拟合都合格且 AIC 相差至少 2 时给出；差值更小时为 NULL，issues 为空）及问题（issues）。delta_aic 是 model2 的 AIC 减去 model1 的 AIC，aic_threshold 是给出优选所需的最小绝对差（2），reason 说明没有给出优选的原因（给出优选时为 NA）。AIC 差小于 2 并不说明两个模型等价。批量函数的失败记录（例如 fit_scenarios()$fits 中含 error 的元素）会被拒绝，并给出其拟合错误。model1_name 和 model2_name 保存显示标签。
+**返回 / Returns:** 不可见地返回列表：summary 为优化状态、目标函数、信息准则和耗时比较；growth 按模型分组列出参数，列为 Model、Parameter（Linf、k、t0、cv_len、ALSCL 的 cv_grow，以及对数调查指数观测误差的标准差 sigma_index）、Estimate 和 Meaning，ACL 和 ALSCL 的生长参数不并排放置，因为它们不是同一种量；length_at_age 是含 Age、Basis 和每个模型一列的数据框，给出各年龄的平均体长（对各时间步取平均），生长的比较看这张表，两次拟合的调查可捕性都可用时 Basis 为 "survey"（体长别尾数乘以体长别调查可捕性），否则为 "population"，两次拟合都缺少所需的量时为 NULL（见 `length_at_age()`）；fit_metrics 为样本内调查拟合误差；correlation 为共同种群时间序列的 Pearson 相关系数及均值比 Ratio_Mean（model2/model1），其中尾数和重量计的渔获量按相对渔获量比较（"CN (relative)" 和 "CB (relative)" 两行），只给相关系数，Ratio_Mean 为 NA。fit_diagnostics 保存数值诊断；comparison 包含数据是否核验（data_verified）、比较是否满足条件（eligible）、优选标签（preferred，仅在两次拟合都合格且 AIC 相差至少 2 时给出；差值更小时为 NULL，issues 为空）及问题（issues）。delta_aic 是 model2 的 AIC 减去 model1 的 AIC，aic_threshold 是给出优选所需的最小绝对差（2），reason 说明没有给出优选的原因（给出优选时为 NA）。AIC 差小于 2 并不说明两个模型等价。批量函数的失败记录（例如 fit_scenarios()$fits 中含 error 的元素）会被拒绝，并给出其拟合错误。model1_name 和 model2_name 保存显示标签。
 
-Invisibly returns a list: summary compares optimizer status, objectives, information criteria and timing; growth contains growth parameters; fit_metrics contains in-sample survey-fit errors; correlation contains Pearson correlations and Ratio_Mean (model2/model1) for shared population series. fit_diagnostics records numerical diagnostics. comparison contains data_verified, eligible, preferred and issues; preferred names the model with the lower AIC only when both fits are eligible and the AIC values differ by at least 2; with a smaller difference it is NULL and issues is empty. delta_aic is the Akaike information criterion (AIC) of model2 minus that of model1, aic_threshold is the smallest absolute difference for which a preference is given (2), and reason states why a preference was withheld (NA when one is given). A difference below 2 does not establish that the models are equivalent. A failure record from a batch function, such as an element of fit_scenarios()$fits that holds an error, is rejected with its fit error. model1_name and model2_name retain display labels.
+Invisibly returns a list: summary compares optimizer status, objectives, information criteria and timing; growth has one block of rows per model with the columns Model, Parameter (Linf, k, t0, cv_len, cv_grow for ALSCL, and sigma_index, the standard deviation of the observation error of the log survey index), Estimate and Meaning, and the growth parameters of ACL and ALSCL are not placed side by side because they are different quantities; length_at_age is a data frame with Age, Basis and one column per model that holds mean length at age, averaged over the time steps, and is the comparison of growth between the two fits, where Basis is "survey" (numbers at length multiplied by survey catchability at length) when the survey catchability of both fits is available and "population" otherwise, and the element is NULL when neither fit holds the quantities needed (see `length_at_age()`); fit_metrics contains in-sample survey-fit errors; correlation contains Pearson correlations and Ratio_Mean (model2/model1) for shared population series, in which catch in numbers and catch in weight are compared as relative catch (rows "CN (relative)" and "CB (relative)") with the correlation only and Ratio_Mean NA. fit_diagnostics records numerical diagnostics. comparison contains data_verified, eligible, preferred and issues; preferred names the model with the lower AIC only when both fits are eligible and the AIC values differ by at least 2; with a smaller difference it is NULL and issues is empty. delta_aic is the Akaike information criterion (AIC) of model2 minus that of model1, aic_threshold is the smallest absolute difference for which a preference is given (2), and reason states why a preference was withheld (NA when one is given). A difference below 2 does not establish that the models are equivalent. A failure record from a batch function, such as an element of fit_scenarios()$fits that holds an error, is rejected with its fit error. model1_name and model2_name retain display labels.
+
+生长通过各年龄平均体长比较，而不是通过 Linf、k 和 t0。在 ACL 中，它们是各年龄平均体长的 von Bertalanffy 曲线参数。在 ALSCL 中，Linf 和 k 决定一个时间步内平均生长增量随体长的变化，Linf、k 和 t0 决定补充个体的平均体长；更老个体的体长由生长增量和体长别死亡率决定。只拟合调查数据时渔获量的绝对水平无法确定，它取决于所假定的自然死亡率和调查可捕性（见 `relative_catch()`），所以两次拟合的渔获量序列只比较相关系数。ACL 不报告重量计的渔获量；拟合所用的体重可用时，由年龄别渔获尾数和各年龄平均体重算出。
+
+Growth is compared through mean length at age, not through Linf, k and t0. In ACL these are the parameters of a von Bertalanffy curve of mean length at age. In ALSCL, Linf and k set the mean growth increment in one time step as a function of length, and Linf, k and t0 set the mean length of recruits; the lengths of older fish follow from the growth increments and from mortality at length. A fit to survey data alone has no information on the absolute level of catch, which depends on the assumed natural mortality rate and the assumed survey catchability (see `relative_catch()`), so the catch series of the two fits are compared by their correlation only. ACL does not report catch in weight; it is calculated from catch in numbers at age and mean weight at age when the weights used in the fit are available.
 
 **检查 / Checks:** 要求相同时间、体长标签、正观测及缺失掩码；不匹配报错。返回 fit_diagnostics 和 comparison；不合格拟合或无法核验的旧结果保留原始 AIC，但不自动推荐模型。 / Requires matching periods, length labels, positive observations and masks. Returns fit_diagnostics and comparison; failed or unverifiable fits retain raw AIC without an automatic preference.
 
@@ -311,7 +320,10 @@ Invisibly returns a list: summary compares optimizer status, objectives, informa
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-compare_models(a, b, dat)
+comparison <- compare_models(a, b, dat)
+comparison$length_at_age
+comparison$growth
+comparison$correlation
 ```
 
 <a id="create_parameters"></a>
@@ -324,8 +336,8 @@ compare_models(a, b, dat)
 `create_parameters(species = "krill", model_type = "acl")` supplies a Linf start of 90 and bounds, but does not fix Linf or change M, nage or the time step. To fix it, explicitly pass `map = list(log_Linf = factor(NA))` with the chosen starting value. Biological settings still belong in the fitting arguments.
 
 ```r
-create_parameters (model_type = c("acl", "alscl"), species = NULL, parameters = NULL, parameters.L = NULL, 
-    parameters.U = NULL)
+create_parameters (model_type = c("acl", "alscl"), species = NULL, parameters = NULL, parameters.L = NULL,
+    parameters.U = NULL, bounds = c("default", "wide"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -335,16 +347,33 @@ create_parameters (model_type = c("acl", "alscl"), species = NULL, parameters = 
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | A list of custom initial values (default NULL = use all defaults). Only the parameters you specify will be overridden; all others keep their default (or species-preset) values. |
 | `parameters.L` | `NULL` | 命名下界列表，采用优化器尺度。 | A list of custom lower bounds (default NULL). |
 | `parameters.U` | `NULL` | 命名上界列表，采用优化器尺度。 | A list of custom upper bounds (default NULL). |
+| `bounds` | `c("default", "wide")` | "default" 保持早期版本的边界。"wide" 让 ACL 的五个参数采用 ALSCL 的边界（见返回说明之后的表）。对 `model_type = "alscl"` 不起作用。parameters.L 和 parameters.U 中给出的项会替换两种选择下的边界。 | Character. "default" keeps the bounds of earlier versions. "wide" gives ACL the bounds that ALSCL has for five parameters (see the table after the return value). It has no effect for `model_type = "alscl"`. Entries of parameters.L and parameters.U replace the bounds of either choice. |
 
 **返回 / Returns:** 包含 parameters（初值）、parameters.L（下界）和 parameters.U（上界）的列表；三个元素均为优化器尺度上的命名列表，名称对应所选 TMB 模型参数。
 
 A list with parameters (starts), parameters.L (lower bounds) and parameters.U (upper bounds). Each is a named list on the optimizer scale, with names matching the selected TMB model.
+
+不选物种预设时，ACL 有五个参数的默认上界低于 ALSCL，用 ACL 拟合黄尾鲽示例以外的种群时常常停在这些边界上。`bounds = "wide"` 让 ACL 的这些参数采用 ALSCL 的边界（自然尺度；死亡率按模型时间步计，k 按年计）。使用物种预设时，ACL 和 ALSCL 对这些参数的边界相同，`bounds` 不起作用。初值不变。
+
+Without a species preset, the default upper bounds of ACL are lower than those of ALSCL for five parameters, and ACL fits to other stocks than the yellowtail flounder example often stop at them. `bounds = "wide"` gives ACL the ALSCL bounds of these parameters (natural scale; rates are per model time step, k is per year). With a species preset the ACL and ALSCL bounds of these parameters are equal, so `bounds` changes nothing. Starting values are not changed.
+
+| 参数 / Parameter | 含义 / Quantity | 默认边界 / Default bounds | 放宽后的边界 / Wide bounds |
+|---|---|---|---|
+| log_init_Z | 初始总死亡率 / initial total mortality rate | 0.01 - 1 | 0.01 - 10 |
+| mean_log_F | 平均捕捞死亡率 / mean fishing mortality rate | 0.01 - 1 | 0.01 - 2 |
+| log_std_log_N0 | 初始年龄别尾数的标准差（对数尺度） / standard deviation of the initial numbers at age (log scale) | 0 - 1 | 0 - 10 |
+| log_std_log_R | 补充量的标准差（对数尺度） / standard deviation of recruitment (log scale) | 0.01 - 1 | 0.01 - 10 |
+| log_vbk | von Bertalanffy 生长率 k / von Bertalanffy growth rate k | 0.1 - 1 | 0.05 - 2 |
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
 create_parameters(model_type = "acl", species = "flatfish")
+# ACL 采用 ALSCL 的五个参数边界 / ACL with the bounds of ALSCL for five parameters
+wide <- create_parameters(model_type = "acl", bounds = "wide")
+exp(unlist(wide$parameters.U[c("log_init_Z", "mean_log_F", "log_std_log_N0",
+                               "log_std_log_R", "log_vbk")]))
 ```
 
 <a id="create_parameters_alscl"></a>
@@ -396,9 +425,9 @@ diagnose_model (data.CatL, model_result)
 | `data.CatL` | `必填 / required` | 调查数量指数表：首列体长标签，其余列为时间。 | Length labels followed by time columns. |
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A fitted model result. |
 
-**返回 / Returns:** 包含 Metric（指标名称）和 Value（数值）的数据框，合并样本内拟合误差与优化、梯度、Hessian 和边界诊断；已有 diagnostics 时还包括数值筛查、协方差条件数及高相关参数对数量。未定义或不可用的指标为 NA，同时在控制台打印主要诊断。
+**返回 / Returns:** 包含 Metric（指标名称）和 Value（数值）的数据框，合并样本内拟合误差与优化、梯度、Hessian 和边界诊断；已有 diagnostics 时还包括数值筛查、协方差条件数及高相关参数对数量；拟合保存了相应记录时，还包括实际上已到极限的参数个数和合理性提示条数（见 `run_acl()` 的说明和 `model_result$diagnostics`）。未定义或不可用的指标为 NA，同时在控制台打印主要诊断。
 
-A data frame with Metric and Value, combining in-sample fit metrics with optimizer, gradient, Hessian and boundary diagnostics. When diagnostics are available, it also includes the numerical screen, covariance condition number and count of highly correlated parameter pairs. Undefined or unavailable metrics are NA; key diagnostics are also printed.
+A data frame with Metric and Value, combining in-sample fit metrics with optimizer, gradient, Hessian and boundary diagnostics. When diagnostics are available, it also includes the numerical screen, covariance condition number and count of highly correlated parameter pairs. For fits that store them, the numbers of parameters at their limit in practice and of plausibility notes are added (see the notes of `run_acl()` and `model_result$diagnostics`). Undefined or unavailable metrics are NA; key diagnostics are also printed.
 
 这些样本内拟合指标仅使用有限正调查观测。拟合值为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，只应比较同一观测下采用相容似然的拟合。分别检查优化器原始收敛码、梯度、Hessian 和边界。对未参与拟合的观测检验预测时，使用 hindcast_model()。
 
@@ -1252,9 +1281,9 @@ plot_compare_residuals(a, b, dat)
 
 固定调查可捕性 / Fixed survey catchability
 
-`read_assessment()` 读取的评估结果可直接绘图，固定调查可捕性根据保存的输入设置恢复。旧会话中的拟合可使用其 TMB 数据；若旧保存结果缺少所需输入，须先用原始输入列表 `x` 重新保存。
+`read_assessment()` 读取的评估结果可直接绘图，固定调查可捕性根据保存的输入设置恢复；拟合直接给定体长别调查可捕性时取自它的 survey_q。survey_q 按体长和时间步给出时，每条不同的曲线各画一条线，并在图注中说明。按年龄的调查可捕性系数（survey_q_age）不显示。旧会话中的拟合可使用其 TMB 数据；若旧保存结果缺少所需输入，须先用原始输入列表 `x` 重新保存。
 
-Saved assessments from `read_assessment()` can be plotted directly: fixed survey catchability is recovered from the retained input recipe. A legacy live fit can use its TMB data; an older saved fit without the required inputs must first be saved again with its original input bundle `x`.
+Saved assessments from `read_assessment()` can be plotted directly: fixed survey catchability is recovered from the retained input recipe, or taken from its survey_q when the fit used survey catchability at length supplied directly. When survey_q was supplied by length and time step, one line is drawn for each distinct curve and a caption says so. A survey catchability multiplier by age (survey_q_age) is not shown. A legacy live fit can use its TMB data; an older saved fit without the required inputs must first be saved again with its original input bundle `x`.
 
 ```r
 plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL, 
@@ -2037,7 +2066,7 @@ retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | The recruitment age. |
 | `nage` | `必填 / required` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | The number of age classes. |
-| `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | The natural mortality rate. |
+| `M` | `必填 / required` | 每个模型时间步的自然死亡率；可取的形式见 `retro_model()`。 | Natural mortality rate per model time step; see `retro_model()`. |
 | `sel_L50` | `必填 / required` | 调查可捕性达到 0.5 的体长。 | Length at survey catchability 0.5. |
 | `sel_L95` | `必填 / required` | 调查可捕性达到 0.95 的体长，必须大于 sel_L50。 | Length at survey catchability 0.95, greater than sel_L50. |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | Optional custom starting parameter list. |
@@ -2123,7 +2152,7 @@ retro_alscl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | The recruitment age. |
 | `nage` | `必填 / required` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | The number of age classes. |
-| `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | The natural mortality rate. |
+| `M` | `必填 / required` | 每个模型时间步的自然死亡率；可取的形式见 `retro_model()`。 | Natural mortality rate per model time step; see `retro_model()`. |
 | `sel_L50` | `必填 / required` | 调查可捕性达到 0.5 的体长。 | Length at survey catchability 0.5. |
 | `sel_L95` | `必填 / required` | 调查可捕性达到 0.95 的体长，必须大于 sel_L50。 | Length at survey catchability 0.95, greater than sel_L50. |
 | `growth_step` | `NULL` | 每个时间步包含的年数；NULL 时 rec.age<1 取 rec.age、否则取 1；季度为 0.25。 | Time step in years. NULL uses rec.age when it is below one, otherwise one, as in run_alscl(); a bundle supplies its own value. |
@@ -2168,18 +2197,19 @@ rb$rho_text
 Retrospective peels shorten time-dependent `map$dev_log_R` and `map$dev_log_F` with the retained periods. Supply maps for the full dataset: recruitment uses one entry per period; F uses group-by-time column order (age groups for ACL, length groups for ALSCL, one group for `F_structure = "year"`). Factor levels and fixed NA entries are retained. Fixed entries or repeated levels are accepted only when the standard deviation and correlations of that process are fixed too. Invalid full-data map lengths are rejected. Scalar maps and `dev_log_N0` do not change with a peel.
 
 ```r
-retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, 
-    model_type = c("acl", "alscl"), growth_step = NULL, parameters = NULL, parameters.L = NULL, 
-    parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, 
-    len_upper = NULL, train_times = 1, ncores = 1, silent = FALSE, plot = FALSE, 
-    line_size = NULL, point_size = NULL, point_shape = 21, facet_scales = "free", 
-    facet_ncol = NULL, facet_nrow = NULL, title = NULL, xlab = NULL, ylab = NULL, 
-    font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
-    strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
-    title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, 
-    F_structure = c("group_year", "year"), polish = TRUE, zero_action = c("missing", 
-        "error"), control = list(), nstarts = 1, model = NULL, peel_step = 1, structure = list(), 
-    start_spread = 0.15, t0_lower = 0, ...)
+retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL,
+    sel_L95 = NULL, model_type = c("acl", "alscl"), growth_step = NULL, parameters = NULL,
+    parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL,
+    len_lower = NULL, len_upper = NULL, train_times = 1, ncores = 1, silent = FALSE,
+    plot = FALSE, line_size = NULL, point_size = NULL, point_shape = 21, facet_scales = "free",
+    facet_ncol = NULL, facet_nrow = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
+    rho_digits = 4, rho_position = "top_right", rho_size = 3.5, F_structure = c("group_year",
+        "year"), polish = TRUE, zero_action = c("missing", "error"), control = list(),
+    nstarts = 1, model = NULL, peel_step = 1, structure = list(), start_spread = 0.15,
+    t0_lower = 0, survey_q = NULL, survey_q_age = NULL, bounds = c("default", "wide"),
+    ...)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2190,9 +2220,9 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | The maturity data. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | The recruitment age. |
 | `nage` | `必填 / required` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | The number of age classes. |
-| `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | The natural mortality rate. |
-| `sel_L50` | `必填 / required` | 调查可捕性达到 0.5 的体长。 | Length at survey catchability 0.5. |
-| `sel_L95` | `必填 / required` | 调查可捕性达到 0.95 的体长，必须大于 sel_L50。 | Length at survey catchability 0.95, greater than sel_L50. |
+| `M` | `必填 / required` | 每个模型时间步的自然死亡率，可取 `run_acl()` 或 `run_alscl()` 接受的任何形式。按年龄和时间步的矩阵按完整数据的时间步每步一列；每一轮使用它所保留的时间步对应的各列。以按体长和时间步的矩阵给出的 survey_q 同样处理。 | Natural mortality rate per model time step, in one of the forms that `run_acl()` or `run_alscl()` accepts. A matrix by age and time step has one column per time step of the complete data; each peel uses the columns of the time steps that it keeps. The same holds for survey_q given as a matrix by length and time step. |
+| `sel_L50` | `NULL` | 调查可捕性达到 0.5 的体长。给出 survey_q 时为 NULL。 | Length at 50 percent survey catchability. NULL when survey_q is supplied. |
+| `sel_L95` | `NULL` | 调查可捕性达到 0.95 的体长，必须大于 sel_L50。给出 survey_q 时为 NULL。 | Length at 95 percent survey catchability. NULL when survey_q is supplied. |
 | `model_type` | `c("acl", "alscl")` | 模型选择：acl 或 alscl。 | Character. Model to use: "acl" (default) or "alscl". |
 | `growth_step` | `NULL` | 每个时间步包含的年数；NULL 时 rec.age<1 取 rec.age、否则取 1；季度为 0.25。 | Time step in years. NULL uses recruitment age when below 1, otherwise 1. |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | Optional custom starting parameter list. |
@@ -2238,6 +2268,9 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `structure` | `list()` | 传给完整拟合和每一轮拟合的可选模型结构，取值见 `run_alscl()`。未显式给出时使用 x 内的设置。ALSCL 的 `structure` 只改了 "von_bertalanffy" 这组四项设置中的一部分时，每次调用给出一次 `run_alscl()` 所述的提示（`silent = TRUE` 时不显示）。 | Optional model structures passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. An ALSCL `structure` that changes only some of the four settings of the set "von_bertalanffy" gives the message described in `run_alscl()` once for the call, unless `silent = TRUE`. |
 | `start_spread` | `0.15` | 传给完整拟合和每一轮拟合的起点离散程度，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Spread of the second and later starts, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
 | `t0_lower` | `0` | 传给完整拟合和每一轮拟合的 ALSCL t0 下限，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Lower limit of the ALSCL t0, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
+| `survey_q` | `NULL` | 传给完整拟合和每一轮拟合的体长别调查可捕性，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Survey catchability at length, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
+| `survey_q_age` | `NULL` | 传给完整拟合和每一轮拟合的按年龄的调查可捕性系数，含义见 `run_alscl()`。未显式给出时使用 x 内的设置。 | Survey catchability multiplier by age, passed to every full and peel fit; see `run_alscl()`. A bundle's own setting is used unless this argument is supplied explicitly. |
+| `bounds` | `c("default", "wide")` | 传给 ACL 的完整拟合和每一轮拟合，含义见 `run_acl()`。未显式给出时使用 x 内的设置。ALSCL 没有这个参数。 | Passed to every full and peel fit of ACL; see `run_acl()`. A bundle's own setting is used unless this is supplied explicitly. ALSCL has no such argument. |
 | `...` | 可选 / optional | 旧参数名 facet_col、facet_row，仍可使用但会给出警告。 | The former argument names facet_col and facet_row, accepted with a warning. |
 
 **返回 / Returns:** 列表包含 results（各次回溯轨迹）、last_points（各轨迹末点）、rho_by_peel（逐次回溯的相对差异）、rho_text（通过数值筛查后汇总的 Mohn's rho）和 raw_rho_text（未筛查的描述性汇总）。fit_diagnostics 与 errors 保留逐次拟合状态和错误；model_type、workers、nstarts 记录模型与计算设置，peel_step 记录每轮删除的时间步数。plot=TRUE 时另返回 plot 对象；无有效估计可绘制时 plot 为 NULL。
@@ -2276,11 +2309,12 @@ rb$rho_text
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
-run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, parameters = NULL, 
-    parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, len_border = NULL, 
-    output = FALSE, train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL, 
-    zero_action = c("missing", "error"), control = list(), nstarts = ncores, F_structure = c("group_year", 
-        "year"), polish = TRUE, structure = list(), start_spread = 0.15)
+run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
+    parameters = NULL, parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL,
+    len_border = NULL, output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
+    growth_step = NULL, zero_action = c("missing", "error"), control = list(), nstarts = ncores,
+    F_structure = c("group_year", "year"), polish = TRUE, structure = list(), start_spread = 0.15,
+    survey_q = NULL, survey_q_age = NULL, bounds = c("default", "wide"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2290,9 +2324,9 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
 | `nage` | `必填 / required` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | Number of age classes including the plus group (at least two). |
-| `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | Nonnegative natural mortality per model time step. |
-| `sel_L50` | `必填 / required` | 调查可捕性达到 50% 的体长。 | Lengths at 50 and 95 percent survey catchability. |
-| `sel_L95` | `必填 / required` | 调查可捕性达到 95% 的体长，必须大于 L50。 | Lengths at 50 and 95 percent survey catchability. |
+| `M` | `必填 / required` | 每个模型时间步的自然死亡率（季度时间步时为年死亡率除以 4），非负。一个数表示所有年龄和时间步共用一个值。每个年龄组一行（nage 行）、每个时间步一列的矩阵，或只有一列并用于所有时间步的矩阵，是按年龄和时间步的 M；不随时间变化的年龄别 M 写作 `matrix(M_at_age, ncol = 1)`。没有维度的数值向量被当作按体长的 M，只有 `run_alscl()` 接受；ACL 只跟踪各年龄的尾数，个体不保留体长，因此拒绝这种形式。其他对象会报错并说明应有的维度。 | Nonnegative natural mortality rate (M) per model time step (for quarterly time steps, the annual rate divided by 4). A single number is one rate for all ages and time steps. A matrix with one row per age class (nage rows) and one column per time step, or one column that is used for every time step, is M by age and time step; M by age that is constant over time is `matrix(M_at_age, ncol = 1)`. A numeric vector without dimensions is read as M by length, which `run_alscl()` accepts and ACL rejects, because ACL follows numbers at age only and fish do not keep their length. Any other object is rejected with the expected dimensions. |
+| `sel_L50` | `NULL` | 调查可捕性达到 50% 的体长；与 sel_L95 一起定义最大值为 1 的 logistic 调查可捕性曲线。给出 survey_q 时两者都保持 NULL。 | Lengths at 50 and 95 percent survey catchability, which define a logistic survey catchability curve with a maximum of 1. Leave both as NULL when survey_q is supplied. |
+| `sel_L95` | `NULL` | 调查可捕性达到 95% 的体长，必须大于 sel_L50。给出 survey_q 时两者都保持 NULL。 | Lengths at 50 and 95 percent survey catchability, which define a logistic survey catchability curve with a maximum of 1. Leave both as NULL when survey_q is supplied. |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | Named list of initial fixed-effect values. |
 | `parameters.L` | `NULL` | 命名下界列表，采用优化器尺度。 | Named lower and upper bounds. Bounds are aligned with free parameters after applying map. Initial free values are clamped to bounds. |
 | `parameters.U` | `NULL` | 命名上界列表，采用优化器尺度。 | Named lower and upper bounds. Bounds are aligned with free parameters after applying map. Initial free values are clamped to bounds. |
@@ -2311,6 +2345,9 @@ run_acl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, para
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `structure` | `list()` | 可选的模型结构：一组设置的名称，或各项设置的命名列表。默认（空列表）和 "original" 是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。"von_bertalanffy" 对 ACL 选用 `initial_plus_group = "equilibrium"`（这组设置在 ALSCL 中的内容见 `run_alscl()`）；列表可以先指定一组设置再追加单项设置，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。"published" 和 "consistent" 是 "original" 和 "von_bertalanffy" 以前的名称，仍然可以使用。ACL 有两项设置。`initial_plus_group`："single_cohort"（默认，第一期的 plus group 只含一个世代）或 "equilibrium"（等于在总死亡率 init_Z 下所有更老世代之和，因此补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变）。`correlation_range`："positive"（默认，AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换）或 "symmetric"（在 -1 和 1 之间，等于 2 * logistic - 1；这时相关系数 rho 在优化器尺度上为 `qlogis((rho + 1) / 2)`）。实际采用的设置保存在拟合结果的 `structure` 中。 | Optional model structures: the name of a set or a named list of settings. The default, an empty list, and "original" are the original structure: the structure of the package as first released, which implements the model of Zhang and Cadigan (2022). "von_bertalanffy" selects `initial_plus_group = "equilibrium"` for ACL (see `run_alscl()` for the ALSCL settings of this set), and a list can name a set and add single settings, for example `list(set = "von_bertalanffy", correlation_range = "symmetric")`. "published" and "consistent" are accepted as the earlier names of "original" and "von_bertalanffy". ACL has two settings. `initial_plus_group`: "single_cohort" (default; the first-period plus group holds one cohort) or "equilibrium" (it holds the sum of all older cohorts at total mortality init_Z, so a population with constant recruitment, no fishing and init_Z equal to M stays constant over time). `correlation_range`: "positive" (default; AR(1) correlations between 0 and 1, the logistic transform of the `logit_*` parameters) or "symmetric" (between -1 and 1, as 2 * logistic - 1; a correlation rho is then `qlogis((rho + 1) / 2)` on the optimizer scale). The settings used are stored in the `structure` element of the fit. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
+| `survey_q` | `NULL` | 可选的体长别调查可捕性：每个体长组一个正值的数值向量，用来代替由 sel_L50 和 sel_L95 得到的 logistic 曲线，例如穹顶形曲线；`survey_catchability()` 可以算出 logistic 和穹顶形曲线。每个体长组一行、每个时间步一列的矩阵给出按体长和时间步的调查可捕性，例如用于调查网具更换之后；只有一列的矩阵按向量读取。survey_q 与 sel_L50 或 sel_L95 同时给出会报错；输入列表或已保存的拟合中已有这两项时，在调用中加上 `sel_L50 = NULL, sel_L95 = NULL`。这些值是固定输入，不参与估计。 | Optional survey catchability at length: a numeric vector with one positive value per length bin. It is used in place of the logistic curve from sel_L50 and sel_L95, for example for a dome-shaped curve; `survey_catchability()` computes logistic and dome-shaped curves. A matrix with one row per length bin and one column per time step gives survey catchability by length and time step, for example after a change of survey gear; a matrix with one column is read as the vector. Supplying survey_q together with sel_L50 or sel_L95 is an error; when an input bundle or a stored fit already holds these two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are fixed inputs and are not estimated. |
+| `survey_q_age` | `NULL` | 可选的按年龄的调查可捕性系数：每个年龄组一个正值的数值向量。默认 NULL 表示各年龄均为 1。这时体长别调查指数的期望值等于 q(体长) 乘以各年龄的 `survey_q_age[年龄]`、年龄别尾数与该年龄落在该体长的概率三者乘积之和，其中 q(体长) 是由 sel_L50 和 sel_L95 或由 survey_q 得到的体长别调查可捕性。给出 survey_q_age 而 parameters 中没有 mean_log_R 的初值时，mean_log_R 的默认初值提高 `-log(survey_q_age[1])`，因为调查只看到补充个体的这一部分。 | Optional survey catchability multiplier by age: a numeric vector with one positive value per age class. The default NULL is 1 for every age. The expected survey index at length is then q(length) times the sum over ages of `survey_q_age[age]` times numbers at age times the probability of that length at that age, where q(length) is the survey catchability at length from sel_L50 and sel_L95 or from survey_q. When survey_q_age is supplied and parameters holds no start for mean_log_R, the default start of mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then sees only that fraction of the recruits. |
+| `bounds` | `c("default", "wide")` | "default" 保持早期版本的边界。"wide" 让 ACL 的五个参数采用 ALSCL 的边界：初始总死亡率（上界由每个时间步 1 改为 10）、平均捕捞死亡率（由每个时间步 1 改为 2）、初始年龄别尾数和补充量在对数尺度上的标准差（由 1 改为 10），以及 von Bertalanffy 生长率 k（由每年 0.1 到 1 改为 0.05 到 2）；见 `create_parameters()`。parameters.L 和 parameters.U 中给出的项会替换这些边界。ACL 拟合停在某个默认上界时，`diagnostics$advice` 和拟合的提示信息会指出这个参数。 | "default" keeps the bounds of earlier versions. "wide" gives ACL the bounds that ALSCL has for five parameters: the initial total mortality rate (upper bound 10 instead of 1 per time step), the mean fishing mortality rate (2 instead of 1 per time step), the standard deviations of the initial numbers at age and of recruitment on the log scale (10 instead of 1) and the von Bertalanffy growth rate k (0.05 to 2 instead of 0.1 to 1 per year); see `create_parameters()`. Entries of parameters.L and parameters.U replace these bounds. When an ACL fit stops at one of the default upper bounds, `diagnostics$advice` and the message of the fit name this argument. |
 
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。
 
@@ -2320,9 +2357,17 @@ A list of class alscl_fit, retaining existing $ access. report stores population
 
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 
-单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个起点（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
+单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。因此，只用一个起点（`nstarts = 1`，默认）的拟合会给出提示，除非 `silent = TRUE`；一次调用运行多个拟合的函数只提示一次。用于报告的结果请至少使用三个起点（`nstarts = 3` 或更多）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
 
-A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. A fit with one start (`nstarts = 1`, the default) therefore gives a message unless `silent = TRUE`; a function that runs several fits in one call gives it once. For results that will be reported, use at least three starts (`nstarts = 3` or more) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+
+除梯度、Hessian 和优化器边界之外，`diagnostics` 中的数值检查还查找实际上已到极限、但没有碰到边界的参数：`log_t0` 低于 -10（ALSCL；这时 t0 等于 `t0_lower`）、标准差的对数低于 -9（方差为零），以及 logit 相关系数的绝对值大于 15（相关系数落在取值范围的端点）。这样的拟合与停在边界上的拟合一样通不过检查（`numerical_ok = FALSE`）。`diagnostics$limit_parameters` 列出这些参数及其自然尺度上的值，`diagnostics$at_limit` 指出是否存在这样的参数，`diagnostics$advice` 给出处理建议：用 `map` 把该参数固定在选定的值上并重新拟合；相关系数为零时，可改用 `structure = list(correlation_range = "symmetric")`。`diagnostics$plausibility` 列出不改变检查结论的合理性提示：补充个体的平均体长比第二个体长组的下界低两个体长组宽度以上；对数尺度上观测误差标准差的估计值大于 0.9；年龄别体长的变异系数（cv_len）或生长增量的变异系数（cv_grow，ALSCL）的估计值大于 0.3（Stock Synthesis 手册中 cv_len 的示例范围是 0.10 到 0.25）；估计的初始总死亡率低于最小的自然死亡率。除补充个体的平均体长外，这些提示只针对被估计的参数，不针对用 `map` 固定的值。阈值保存在 `diagnostics$check_thresholds` 中。拟合的提示信息、`print()` 和 `summary()` 显示这些建议和提示；`summary()` 的结果在有内容时包含 advice 和 plausibility 两个元素。早期版本保存的拟合保留其原有的检查结论。
+
+Besides the gradient, the Hessian and the optimizer bounds, the numerical screen in `diagnostics` looks for parameters that are at their limit in practice although they have not reached a bound: `log_t0` below -10 (ALSCL; t0 then equals `t0_lower`), the logarithm of a standard deviation below -9 (a variance of zero) and a logit correlation with an absolute value above 15 (a correlation at the end of its range). Such a fit fails the screen (`numerical_ok = FALSE`), as a fit that stopped at a bound does. `diagnostics$limit_parameters` lists these parameters with their values on the natural scale, `diagnostics$at_limit` says whether there is one, and `diagnostics$advice` says what to do: fix the parameter with `map` at a chosen value and refit, or, for a correlation at zero, use `structure = list(correlation_range = "symmetric")`. `diagnostics$plausibility` lists notes that do not change the verdict of the screen: the mean length of recruits lies more than two length-bin widths below the lower border of the second length bin; the estimated standard deviation of the observation error on the log scale is above 0.9; an estimated coefficient of variation of length at age (cv_len) or of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range of cv_len in the Stock Synthesis manual is 0.10 to 0.25); the estimated initial total mortality rate is below the smallest natural mortality rate. Except for the mean length of recruits, the notes concern estimated parameters only, not values fixed with `map`. The thresholds are stored in `diagnostics$check_thresholds`. The messages of a fit, `print()` and `summary()` show the advice and the notes; the result of `summary()` holds them as advice and plausibility when there are any. Fits saved by earlier versions keep their stored verdict.
+
+M 按年龄和时间步给出时，年龄别总死亡率（`Z`）等于 F 加上该年龄、该时间步的 M，存活和渔获方程都用这个值。init_Z 的默认初值使用第一个时间步 M 的中位数。以矩阵给出的常数、与 logistic 曲线相同的 `survey_q`、各列相同的 `survey_q` 矩阵，或全为 1 的 `survey_q_age`，给出的拟合与默认输入的拟合只相差舍入误差。M 是一项假定：调查指数提供总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率，所以 M 的误差直接进入 F，拟合的目标函数不能作为选择 M 的依据。只有在有独立估计（例如多鱼种模型）时才给出按年龄和时间步的 M。`survey_q` 和 `survey_q_age` 是同一类假定：可捕性随体长或年龄下降而没有给出时，拟合会把它当作更高的死亡率。使用了这些形式的拟合，`print()` 和 `summary()` 显示 `Fixed inputs` 一行，`summary()` 的结果中有 inputs 元素。
+
+With M by age and time step, total mortality at age (`Z`) is F plus the M of that age and time step, in survival and in the catch equation. The default start of init_Z uses the median of M in the first time step. A constant given as a matrix, `survey_q` equal to the logistic curve, a `survey_q` matrix with equal columns, or `survey_q_age` of ones gives the fit of the default inputs up to rounding error. M is an assumption. The survey index informs total mortality but not its split into fishing and natural mortality, so an error in M enters F directly, and the objective of a fit is not a basis for choosing M. Supply M by age and time step only when independent estimates exist, for example from a multispecies model. `survey_q` and `survey_q_age` are assumptions of the same kind: a survey catchability that declines with length or age is otherwise fitted as higher mortality. For a fit that uses these forms, `print()` and `summary()` show a line `Fixed inputs`, and the result of `summary()` has the element inputs.
 
 过程密度按完整的偏差数组计算。map 把 `dev_log_R`、`dev_log_F` 或 `dev_log_N0` 的元素设为共享值，或用 NA 固定其中的元素时，只有对应的标准差和相关系数参数也固定才被接受；否则这些估计有偏，拟合被拒绝。每个时间步只用一个各组共享的 F 偏差时，请用 `F_structure = "year"`，它有自己正确归一化的密度。元素共享时，共享值的先验标准差小于所给的标准差；带有共享或固定元素的拟合，其目标函数不能与对这些偏差使用其他 map 的拟合比较（例如用 AIC）。拟合结果的 `restricted_random` 列出涉及的数组。
 
@@ -2353,12 +2398,13 @@ Parameters are estimated from their starting values unless fixed by the map. A w
 ALSCL 2.2.0 accepts `run_acl(x)` and `run_alscl(x)` directly. For `YTF_example`, each function selects its model-specific `fit_config` automatically; explicit call arguments override stored settings. The original separate-argument and `do.call()` forms remain valid. Both use the same built-in acceleration; inspect `a$sd_info` or `b$sd_info` for actual execution.
 
 ```r
-run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, growth_step = NULL, 
-    parameters = NULL, parameters.L = NULL, parameters.U = NULL, map = NULL, len_mid = NULL, 
-    len_border = NULL, len_lower = NULL, len_upper = NULL, output = FALSE, train_times = 1, 
-    ncores = 1, silent = FALSE, zero_action = c("missing", "error"), control = list(), 
-    nstarts = ncores, F_structure = c("group_year", "year"), polish = TRUE, structure = list(), 
-    start_spread = 0.15, t0_lower = 0)
+run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
+    growth_step = NULL, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
+    map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,
+    output = FALSE, train_times = 1, ncores = 1, silent = FALSE, zero_action = c("missing",
+        "error"), control = list(), nstarts = ncores, F_structure = c("group_year",
+        "year"), polish = TRUE, structure = list(), start_spread = 0.15, t0_lower = 0,
+    survey_q = NULL, survey_q_age = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -2368,9 +2414,9 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `data.mat` | `必填 / required` | 成熟比例表，0–1，与调查表完全对齐。 | Maturity-at-length between 0 and 1, with the same layout. |
 | `rec.age` | `必填 / required` | 补充年龄，单位为年。 | Recruitment age in years, greater than t0. |
 | `nage` | `必填 / required` | 年龄组数。末组包括达到或超过该组起始年龄的个体。 | Number of age classes including the plus group (at least two). |
-| `M` | `必填 / required` | 每个模型时间步的自然死亡瞬时率。 | Nonnegative natural mortality per model time step. |
-| `sel_L50` | `必填 / required` | 调查可捕性达到 50% 的体长。 | Lengths at 50 and 95 percent survey catchability. |
-| `sel_L95` | `必填 / required` | 调查可捕性达到 95% 的体长，必须大于 L50。 | Lengths at 50 and 95 percent survey catchability. |
+| `M` | `必填 / required` | 每个模型时间步的自然死亡率（季度时间步时为年死亡率除以 4），非负，有三种形式。一个数表示所有体长、年龄和时间步共用一个值。每个年龄组一行（nage 行）、每个时间步一列的矩阵，或只有一列并用于所有时间步的矩阵，是按年龄和时间步的 M。每个体长组一个值的数值向量是按体长的 M，对所有年龄和时间步相同；`lorenzen_M()` 可以算出这样的向量。后两种形式由 `dim` 属性区分：有两个维度的对象（即使只有一列）按年龄读取，没有维度的向量按体长读取，所以不随时间变化的年龄别 M 写作 `matrix(M_at_age, ncol = 1)`。其他对象会报错并说明应有的维度。 | Nonnegative natural mortality rate (M) per model time step (for quarterly time steps, the annual rate divided by 4), in one of three forms. A single number is one rate for all lengths, ages and time steps. A matrix with one row per age class (nage rows) and one column per time step, or one column that is used for every time step, is M by age and time step. A numeric vector with one value per length bin is M by length, the same for all ages and time steps; `lorenzen_M()` computes such a vector. The `dim` attribute tells the last two forms apart: an object with two dimensions is read as M by age, also when it has one column, and a vector without dimensions is read as M by length. M by age that is constant over time is therefore `matrix(M_at_age, ncol = 1)`. Any other object is rejected with the expected dimensions. |
+| `sel_L50` | `NULL` | 调查可捕性达到 50% 的体长；与 sel_L95 一起定义最大值为 1 的 logistic 调查可捕性曲线。给出 survey_q 时两者都保持 NULL。 | Lengths at 50 and 95 percent survey catchability, which define a logistic survey catchability curve with a maximum of 1. Leave both as NULL when survey_q is supplied. |
+| `sel_L95` | `NULL` | 调查可捕性达到 95% 的体长，必须大于 sel_L50。给出 survey_q 时两者都保持 NULL。 | Lengths at 50 and 95 percent survey catchability, which define a logistic survey catchability curve with a maximum of 1. Leave both as NULL when survey_q is supplied. |
 | `growth_step` | `NULL` | 每个时间步包含的年数；NULL 时 rec.age<1 取 rec.age、否则取 1；季度为 0.25，时间标签间隔必须相同。 | Time between consecutive ages, in years; 0.25 for quarters. NULL uses rec.age when it is below one, otherwise one. Numeric time-column labels must have this spacing; keep missing periods as NA survey columns with weights and maturity for every period. |
 | `parameters` | `NULL` | 命名参数初值列表，采用优化器尺度。 | Named list of initial fixed-effect values. |
 | `parameters.L` | `NULL` | 命名下界列表，采用优化器尺度。 | Named lower and upper bounds. Bounds are aligned with free parameters after applying map. Initial free values are clamped to bounds. |
@@ -2392,6 +2438,8 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95, gr
 | `structure` | `list()` | 可选的模型结构：一组设置的名称，或各项设置的命名列表。默认（空列表）和 "original" 在每项设置上都是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。"von_bertalanffy" 同时选用 `growth_increment = "von_bertalanffy"`、`growth_transition = "bin"`、`initial_length = "growth"` 和 `initial_plus_group = "equilibrium"`，使第一期和生长转移遵循同一个生长模型。列表可以先指定一组设置再追加单项设置，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。"published" 和 "consistent" 是 "original" 和 "von_bertalanffy" 以前的名称，仍然可以使用。"von_bertalanffy" 的四项设置是作为一组检验的：每个时间步的生长增量相对组宽较小时，只用其中一部分的拟合可能失败。因此 `structure` 列表只改了四项中的一项、两项或三项时，拟合给出一条提示，列出仍为原始取值的设置（`silent = TRUE` 时不显示；一次调用中运行多个拟合的函数只提示一次）。"von_bertalanffy" 既是这组设置的名称，也是单项设置 `growth_increment` 的一个取值：`structure = list(growth_increment = "von_bertalanffy")` 只改一项，`structure = "von_bertalanffy"` 四项都改。先指定这组设置再替换其中一项的列表，例如 `list(set = "von_bertalanffy", growth_transition = "midpoint")`，视为有意的选择，不给提示。`correlation_range` 不属于这组设置。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`。Zhang 和 Cadigan (2022) 定义了这个函数，但没有给出增量等于最大值 50% 和 95% 时的体长，也没有说明增量怎样换算到短于一年的时间步：体长 0.5 Linf 和 0.05 Linf 以及乘以 `growth_step` 是代码中的取法。"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。这时个体长到 Linf 附近就停止生长，Linf 在第一期之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，Linf 的标准误可能非常小。logistic 增量在 Linf 以上仍为正。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），个体仍会进入下一个体长组。这时，组宽为增量的几倍时，世代的平均体长与生长曲线接近；组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；原始结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中。 | Optional model structures: the name of a set or a named list of settings. The default, an empty list, and "original" are the original structure for every setting: the structure of the package as first released, which implements the model of Zhang and Cadigan (2022). "von_bertalanffy" selects `growth_increment = "von_bertalanffy"`, `growth_transition = "bin"`, `initial_length = "growth"` and `initial_plus_group = "equilibrium"` together, so that the first period and the growth transition follow one growth model. A list can name a set and add single settings, for example `list(set = "von_bertalanffy", correlation_range = "symmetric")`. "published" and "consistent" are accepted as the earlier names of "original" and "von_bertalanffy". The four settings of "von_bertalanffy" were tested as a set. A fit with only some of them can fail when the growth increment per time step is small relative to the bin width. A `structure` list that changes one, two or three of the four settings therefore gives a message that names the settings left at their original values (unless `silent = TRUE`; a function that runs several fits in one call gives it once). "von_bertalanffy" is the name of the set and also a value of the single setting `growth_increment`. `structure = list(growth_increment = "von_bertalanffy")` changes one setting, and `structure = "von_bertalanffy"` changes all four. A list that names the set and replaces one of its settings, for example `list(set = "von_bertalanffy", growth_transition = "midpoint")`, is taken as a deliberate choice and gives no message. `correlation_range` does not belong to the set. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`. Zhang and Cadigan (2022) define this function. They give neither the lengths at which the increment is 50% and 95% of its maximum nor the conversion of the increment to a time step shorter than one year. The lengths 0.5 Linf and 0.05 Linf and the multiplication by `growth_step` are those of the code. "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. Fish then stop growing at about Linf, so Linf acts as an upper limit of length after the first period: data with many fish larger than the mean asymptotic length fit poorly, and the standard error of Linf can be very small. The logistic increment stays positive above Linf. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin and the transition is integrated over the bin, so fish keep moving to the next bin when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). The mean length of a cohort then follows the growth curve closely for bins a few times wider than the increment; with much wider bins it remains approximate, because fish are spread evenly over their bin after every step. `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the original structure it does not. The settings used are stored in the `structure` element of the fit. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
 | `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是原始的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. |
+| `survey_q` | `NULL` | 可选的体长别调查可捕性：每个体长组一个正值的数值向量，用来代替由 sel_L50 和 sel_L95 得到的 logistic 曲线，例如穹顶形曲线；`survey_catchability()` 可以算出 logistic 和穹顶形曲线。每个体长组一行、每个时间步一列的矩阵给出按体长和时间步的调查可捕性，例如用于调查网具更换之后；只有一列的矩阵按向量读取。survey_q 与 sel_L50 或 sel_L95 同时给出会报错；输入列表或已保存的拟合中已有这两项时，在调用中加上 `sel_L50 = NULL, sel_L95 = NULL`。这些值是固定输入，不参与估计。 | Optional survey catchability at length: a numeric vector with one positive value per length bin. It is used in place of the logistic curve from sel_L50 and sel_L95, for example for a dome-shaped curve; `survey_catchability()` computes logistic and dome-shaped curves. A matrix with one row per length bin and one column per time step gives survey catchability by length and time step, for example after a change of survey gear; a matrix with one column is read as the vector. Supplying survey_q together with sel_L50 or sel_L95 is an error; when an input bundle or a stored fit already holds these two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are fixed inputs and are not estimated. |
+| `survey_q_age` | `NULL` | 可选的按年龄的调查可捕性系数：每个年龄组一个正值的数值向量。默认 NULL 表示各年龄均为 1。这时体长别调查指数的期望值等于 q(体长) 乘以各年龄的 `survey_q_age[年龄]` 与该体长、该年龄尾数乘积之和，其中 q(体长) 是由 sel_L50 和 sel_L95 或由 survey_q 得到的体长别调查可捕性。给出 survey_q_age 而 parameters 中没有 mean_log_R 的初值时，mean_log_R 的默认初值提高 `-log(survey_q_age[1])`，因为调查只看到补充个体的这一部分。 | Optional survey catchability multiplier by age: a numeric vector with one positive value per age class. The default NULL is 1 for every age. The expected survey index at length is then q(length) times the sum over ages of `survey_q_age[age]` times numbers at that length and age, where q(length) is the survey catchability at length from sel_L50 and sel_L95 or from survey_q. When survey_q_age is supplied and parameters holds no start for mean_log_R, the default start of mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then sees only that fraction of the recruits. |
 
 **返回 / Returns:** alscl_fit 类的列表，保留原有 $ 访问方式。report 保存种群量和调查预测；opt 保存所选优化参数、目标函数和原始状态；obj 是当前会话的 TMB 对象；est_std、vcov 和 pdHess 保存近似不确定性及 Hessian 状态。gradient、max_abs_gradient（亦为 final_outer_mgc）、convergence_code、bound_hit 和 diagnostics 用于数值检查。raw_opt、optimizer_history、refinement 保存优化与收尾记录。year、age、体长元数据、growth_step、F_structure 和 elapsed 记录坐标、结构及耗时；starts、start_diagnostics、nstarts 和 workers 记录各起点参数、PID、时间及计算量。recipe 保存重新拟合所需的完整输入与设置。多起点按最低有限目标函数选取，仍须另查数值状态；obj 只可在原会话动态库保持加载时求值。 sd_info 记录标准误的计算方式（方法、核数、耗时）。structure 记录采用的模型结构，t0_lower 记录 t0 的下限，start_spread 记录起点的离散程度；start_summary 给出收敛起点的个数、它们目标函数值的范围以及与最优值一致的个数，范围超过 2 时写入 diagnostics$issues。clamped_starts 列出被移入边界的初值，zero_observations 是被当作缺失的零观测个数，restricted_random 列出 map 中设有共享值或固定值的过程偏差数组。 growth_check 说明在体长组中点生长转移下生长是否在 Linf 以下停止（stalled、该体长，以及个体每个时间步留在该体长组的概率），见“详细说明”。
 
@@ -2405,9 +2453,17 @@ A failed restart does not replace an actual successful pass when the objective v
 
 With `growth_transition = "midpoint"` every fish of a length bin grows from the bin midpoint. Growth then stops at the length where the increment in one time step falls well below half the bin width, whatever the value of Linf; this happens with short time steps and wide bins (for example quarterly steps with 5 cm bins, or annual steps with 5 cm bins for a slow-growing stock). The fit stores `growth_check`. When the fitted transition has a length bin, with a midpoint below 90% of the estimated Linf, in which fish stay with a probability of at least 0.99 per time step, the fit reports it in a message (unless `silent = TRUE`) and `summary()` prints it. Consider a refit with `structure = "von_bertalanffy"` in that case. The original structure and the "von_bertalanffy" set have the same number of parameters, so their objective values can be compared directly.
 
-单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个起点（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
+单个起点可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。`diagnostics` 中的检查只针对所得到的解，不能说明是否存在更好的解。因此，只用一个起点（`nstarts = 1`，默认）的拟合会给出提示，除非 `silent = TRUE`；一次调用运行多个拟合的函数只提示一次。用于报告的结果请至少使用三个起点（`nstarts = 3` 或更多）和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值。
 
-A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The checks in `diagnostics` are local: they do not show whether a better optimum exists. A fit with one start (`nstarts = 1`, the default) therefore gives a message unless `silent = TRUE`; a function that runs several fits in one call gives it once. For results that will be reported, use at least three starts (`nstarts = 3` or more) with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`.
+
+除梯度、Hessian 和优化器边界之外，`diagnostics` 中的数值检查还查找实际上已到极限、但没有碰到边界的参数：`log_t0` 低于 -10（ALSCL；这时 t0 等于 `t0_lower`）、标准差的对数低于 -9（方差为零），以及 logit 相关系数的绝对值大于 15（相关系数落在取值范围的端点）。这样的拟合与停在边界上的拟合一样通不过检查（`numerical_ok = FALSE`）。`diagnostics$limit_parameters` 列出这些参数及其自然尺度上的值，`diagnostics$at_limit` 指出是否存在这样的参数，`diagnostics$advice` 给出处理建议：用 `map` 把该参数固定在选定的值上并重新拟合；相关系数为零时，可改用 `structure = list(correlation_range = "symmetric")`。`diagnostics$plausibility` 列出不改变检查结论的合理性提示：补充个体的平均体长比第二个体长组的下界低两个体长组宽度以上；对数尺度上观测误差标准差的估计值大于 0.9；年龄别体长的变异系数（cv_len）或生长增量的变异系数（cv_grow，ALSCL）的估计值大于 0.3（Stock Synthesis 手册中 cv_len 的示例范围是 0.10 到 0.25）；估计的初始总死亡率低于最小的自然死亡率。除补充个体的平均体长外，这些提示只针对被估计的参数，不针对用 `map` 固定的值。阈值保存在 `diagnostics$check_thresholds` 中。拟合的提示信息、`print()` 和 `summary()` 显示这些建议和提示；`summary()` 的结果在有内容时包含 advice 和 plausibility 两个元素。早期版本保存的拟合保留其原有的检查结论。
+
+Besides the gradient, the Hessian and the optimizer bounds, the numerical screen in `diagnostics` looks for parameters that are at their limit in practice although they have not reached a bound: `log_t0` below -10 (ALSCL; t0 then equals `t0_lower`), the logarithm of a standard deviation below -9 (a variance of zero) and a logit correlation with an absolute value above 15 (a correlation at the end of its range). Such a fit fails the screen (`numerical_ok = FALSE`), as a fit that stopped at a bound does. `diagnostics$limit_parameters` lists these parameters with their values on the natural scale, `diagnostics$at_limit` says whether there is one, and `diagnostics$advice` says what to do: fix the parameter with `map` at a chosen value and refit, or, for a correlation at zero, use `structure = list(correlation_range = "symmetric")`. `diagnostics$plausibility` lists notes that do not change the verdict of the screen: the mean length of recruits lies more than two length-bin widths below the lower border of the second length bin; the estimated standard deviation of the observation error on the log scale is above 0.9; an estimated coefficient of variation of length at age (cv_len) or of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range of cv_len in the Stock Synthesis manual is 0.10 to 0.25); the estimated initial total mortality rate is below the smallest natural mortality rate. Except for the mean length of recruits, the notes concern estimated parameters only, not values fixed with `map`. The thresholds are stored in `diagnostics$check_thresholds`. The messages of a fit, `print()` and `summary()` show the advice and the notes; the result of `summary()` holds them as advice and plausibility when there are any. Fits saved by earlier versions keep their stored verdict.
+
+M 按年龄和时间步或按体长给出时，存活、渔获方程以及年龄别总死亡率（Z）和 F 都用它代替单一的死亡率。在末组中，从前一年龄组进入的个体和原来就在末组的个体各自使用本年龄组的 M。这时有两个报告量需要定义，因为同一年龄的个体体长不同，同一体长的个体年龄也不同。年龄别 F（`FA`）等于年龄别 Z 减去 M 在各体长上的平均值，以该年龄的体长别尾数为权重。体长别 Z（`ZL`）等于体长别 F 加上 M 在各年龄上的平均值，以该体长的年龄别尾数为权重；它是一个汇总量，不是任何一个年龄实际经历的死亡率。报告中的 `M_LAY`（体长乘年龄乘时间步）保存所用的死亡率。init_Z 的默认初值使用第一个时间步 M 的中位数。以非标量形式给出的常数、与 logistic 曲线相同的 `survey_q`、各列相同的 `survey_q` 矩阵，或全为 1 的 `survey_q_age`，给出的拟合与默认输入的拟合只相差舍入误差。M、`survey_q` 和 `survey_q_age` 都是假定：调查指数不能把总死亡率分成捕捞死亡率和自然死亡率，也不能确定调查可捕性的水平和下降段，所以拟合的目标函数不能作为选择它们的依据。使用了这些形式的拟合，`print()` 和 `summary()` 显示 `Fixed inputs` 一行，`summary()` 的结果中有 inputs 元素。
+
+With M by age and time step or by length, M replaces the single rate in survival, in the catch equation and in total mortality (Z) and F at age. In the plus group, the fish that enter from the age before it and the fish already in it each have the M of their own age class. Two reported quantities then need a definition, because fish of one age have different lengths and fish of one length have different ages. F at age (`FA`) is Z at age minus the mean of M over lengths, weighted by the numbers at length of that age. Z at length (`ZL`) is F at length plus the mean of M over ages, weighted by the numbers at age of that length; it is a summary and not the rate that any one age experiences. The report holds the rates used as `M_LAY` (length by age by time step). The default start of init_Z uses the median of M in the first time step. A constant given in a non-scalar form, `survey_q` equal to the logistic curve, a `survey_q` matrix with equal columns, or `survey_q_age` of ones gives the fit of the default inputs up to rounding error. M, `survey_q` and `survey_q_age` are assumptions: the survey index does not inform the split of total mortality into fishing and natural mortality, nor the level or the descending part of survey catchability, so the objective of a fit is not a basis for choosing them. For a fit that uses these forms, `print()` and `summary()` show a line `Fixed inputs`, and the result of `summary()` has the element inputs.
 
 过程密度按完整的偏差数组计算。map 把 `dev_log_R`、`dev_log_F` 或 `dev_log_N0` 的元素设为共享值，或用 NA 固定其中的元素时，只有对应的标准差和相关系数参数也固定才被接受；否则这些估计有偏，拟合被拒绝。每个时间步只用一个各组共享的 F 偏差时，请用 `F_structure = "year"`，它有自己正确归一化的密度。元素共享时，共享值的先验标准差小于所给的标准差；带有共享或固定元素的拟合，其目标函数不能与对这些偏差使用其他 map 的拟合比较（例如用 AIC）。拟合结果的 `restricted_random` 列出涉及的数组。
 
@@ -2982,16 +3038,16 @@ prepare_alscl_data (data.CatL = NULL, data.wgt = NULL, data.mat = NULL, file = N
 | `data.mat` | `NULL` | 与调查数据对齐的体长组成熟比例表。 | Maturity-at-length table aligned with the survey table. |
 | `file` | `NULL` | CSV 文件目录或 Excel 工作簿路径。 | Directory for CSV input or workbook path for Excel input. |
 | `format` | `c("tables", "csv", "excel")` | 输入格式：tables、csv 或 excel。 | Input format: tables, csv or excel. |
-| `fit_args` | `list()` | 共享的生物学输入和拟合设置；三张表单独提供。 | Named list of shared biological and fitting settings. Keep the three tables outside this list. |
+| `fit_args` | `list()` | 共享的生物学输入和拟合设置：rec.age、nage、M，以及 sel_L50 和 sel_L95 或 survey_q。M 可以是一个数、按年龄和时间步的矩阵，或（ALSCL）按体长的向量；survey_q 可以是按体长的向量或按体长和时间步的矩阵；survey_q_age 是可选的按年龄的调查可捕性系数。这些形式见 `run_alscl()`。三张表单独提供。 | Named list of shared biological and fitting settings, such as rec.age, nage, M, and either sel_L50 and sel_L95 or survey_q. M can be a single number, a matrix by age and time step or, for ALSCL, a vector by length; survey_q can be a vector by length or a matrix by length and time step; survey_q_age is an optional survey catchability multiplier by age. See `run_alscl()` for these forms. Keep the three tables outside this list. |
 | `fit_config` | `NULL` | 可选的 acl 和／或 alscl 模型专属设置列表。 | Optional acl and/or alscl lists of model-specific settings. |
 
 **返回 / Returns:** 包含 data.CatL、data.wgt、data.mat、fit_args 以及可选 fit_config 的结构化列表。
 
 A structured list containing data.CatL, data.wgt, data.mat, fit_args and optional fit_config.
 
-安全转换数字文本，并检查三表的数值和排列是否一致；不填补或重排缺失时段，也不推测生物学参数。在 fit_args 中提供 rec.age、nage、M、sel_L50、sel_L95，再运行 check_alscl_data(x, model)。优先级为共享 fit_args、选中的 fit_config、显式运行参数；列表参数整体替换，具名 NULL 的 map 释放规则保留。零值在导入后仍为零，由拟合的 zero_action 决定排除或拒绝。fit_config 中没有某个模型的条目时，该模型只使用共享的 fit_args，所以只含一个模型设置的输入列表也可以用另一个模型拟合。只有三张表、fit_args 和 fit_config 是拟合设置：放在返回列表顶层的拟合参数（例如 `x$M <- 0.3` 或 `x$map <- ...`）不会被使用，拟合时给出警告；请把它放进 `x$fit_args`、`x$fit_config$acl` 或 `x$fit_config$alscl`。仅用于 ALSCL 的 len_lower 和 len_upper 已弃用：它们不能改变拟合，将被移除。
+安全转换数字文本，并检查三表的数值和排列是否一致；不填补或重排缺失时段，也不推测生物学参数。在 fit_args 中提供 rec.age、nage、M，以及 sel_L50 和 sel_L95 或 survey_q，再运行 check_alscl_data(x, model)。优先级为共享 fit_args、选中的 fit_config、显式运行参数；列表参数整体替换，具名 NULL 的 map 释放规则保留。零值在导入后仍为零，由拟合的 zero_action 决定排除或拒绝。fit_config 中没有某个模型的条目时，该模型只使用共享的 fit_args，所以只含一个模型设置的输入列表也可以用另一个模型拟合。只有三张表、fit_args 和 fit_config 是拟合设置：放在返回列表顶层的拟合参数（例如 `x$M <- 0.3` 或 `x$map <- ...`）不会被使用，拟合时给出警告；请把它放进 `x$fit_args`、`x$fit_config$acl` 或 `x$fit_config$alscl`。仅用于 ALSCL 的 len_lower 和 len_upper 已弃用：它们不能改变拟合，将被移除。
 
-This constructor converts numeric text safely and checks table values and alignment. It never fills or reorders missing periods and does not infer biology. Supply rec.age, nage, M, sel_L50 and sel_L95 in fit_args, then run check_alscl_data(x, model). Settings follow shared fit_args, selected fit_config, then explicit run arguments; list-valued settings replace the entire corresponding list. Named NULL map releases remain intact. Zeros remain zeros until the fitting zero_action excludes or rejects them. A model without an entry in fit_config uses the shared fit_args only, so a bundle whose fit_config has an entry for one model can be fitted with the other. Only the three tables, fit_args and fit_config are fitting settings. A fitting argument stored at the top level of the returned list, for example `x$M <- 0.3` or `x$map <- ...`, is not used, and fitting warns about it; store such a setting in `x$fit_args`, `x$fit_config$acl` or `x$fit_config$alscl`. The ALSCL-only arguments len_lower and len_upper are deprecated: they cannot change a fit and will be removed.
+This constructor converts numeric text safely and checks table values and alignment. It never fills or reorders missing periods and does not infer biology. Supply rec.age, nage, M, and either sel_L50 and sel_L95 or survey_q in fit_args, then run check_alscl_data(x, model). Settings follow shared fit_args, selected fit_config, then explicit run arguments; list-valued settings replace the entire corresponding list. Named NULL map releases remain intact. Zeros remain zeros until the fitting zero_action excludes or rejects them. A model without an entry in fit_config uses the shared fit_args only, so a bundle whose fit_config has an entry for one model can be fitted with the other. Only the three tables, fit_args and fit_config are fitting settings. A fitting argument stored at the top level of the returned list, for example `x$M <- 0.3` or `x$map <- ...`, is not used, and fitting warns about it; store such a setting in `x$fit_args`, `x$fit_config$acl` or `x$fit_config$alscl`. The ALSCL-only arguments len_lower and len_upper are deprecated: they cannot change a fit and will be removed.
 
 **示例 / Example:**
 
@@ -3058,7 +3114,7 @@ project_model (fit, F, recruitment, weight, maturity, M = NULL, allow_failed_fit
 | `recruitment` | `必填 / required` | 每个未来时段的有限非负补充数量；向量长度确定推演时段数。 | Finite nonnegative recruitment numbers, one per future period; vector length determines the horizon. |
 | `weight` | `必填 / required` | 完整的非负体长×未来时段个体体重矩阵。可选行名须与拟合体长顺序一致，列名须等于未来时间。 | Complete nonnegative length-by-future-period weight matrix. Optional row labels must match fitted length order; column labels must equal future times. |
 | `maturity` | `必填 / required` | 完整的体长×未来时段成熟比例矩阵，数值在 [0,1] 内；函数不会隐式延用或循环填充。 | Complete length-by-future-period maturity matrix with values in [0, 1]. No implicit carry-forward or recycling. |
-| `M` | `NULL` | 未来每模型时间步的自然死亡率，可为标量或每个未来时段一个值。NULL 使用拟合时指定的 M。旧结果须明确提供 M，首值同时用于末期拟合时段的存活计算。 | Future natural mortality per model step, scalar or one value per future period. NULL uses original M from the fit recipe. Legacy fits require explicit M; its first value is also used for the terminal interval. |
+| `M` | `NULL` | 未来每模型时间步的自然死亡率：一个数，或每个未来时段一个值；每个年龄组一行、每个未来时段一列的矩阵（或只有一列并用于所有未来时段）给出按年龄的未来死亡率。NULL 使用拟合时指定的 M。拟合用的是按年龄和时间步的 M 时，若它在各时间步相同，NULL 使用拟合的年龄别死亡率；若它随时间变化，必须给出未来的 M，因为函数不延续任何值。ALSCL 拟合用的是按体长的 M 时，NULL 使用该体长别死亡率。末期拟合时段使用最后一个时间步的拟合死亡率。旧结果须明确提供 M，首值同时用于末期拟合时段的存活计算。 | Future natural mortality rate per model step: a single number or one value per future period. A matrix with one row per age class and one column per future period, or one column that is used for every future period, gives the future rate by age. NULL uses original M from the fit recipe. For a fit with a natural mortality rate by age and time step, NULL uses the fitted rate by age when it is the same in every time step; when it varies over time the future rate must be supplied, because no value is carried forward. For an ALSCL fit with a rate by length, NULL uses that rate by length. The terminal fitted interval uses the fitted rate of the last time step. Legacy fits require explicit M; its first value is also used for the terminal interval. |
 | `allow_failed_fit` | `FALSE` | 明确未通过数值检查时默认拒绝投影；TRUE 在警告后允许探索性投影，并记录覆盖。缺诊断的旧结果记为 unknown。 | Reject known numerical-screen failures by default; TRUE permits exploratory projection with a warning and records the override. Legacy missing status remains unknown. |
 
 **返回 / Returns:** summary 包含时间、总数量 N、生物量 B、SSB、补充量 Rec、捕捞数量 CN、捕捞生物量 CB、F_mean 和 F_apical；trajectories 和 fishing_mortality 为长表。states 保存 NA、NL 及 ALSCL 的 NLA；catch 保存 CNA 和 CNL。结果同时保留未来生物资料、F、时间轴及假设。CN 为数量，CB 的单位由个体体重单位决定。
@@ -3397,9 +3453,9 @@ Bias/RMSE use numerically valid estimate pairs; coverage additionally requires f
 
 Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
 
-收敛的拟合指没有报错、目标函数有限且最大绝对梯度低于 1e-3（数值检查的梯度阈值）的拟合。这样的拟合仍可能通不过检查，例如估计的相关系数或标准差落在自然尺度的边界上，或 Hessian 不正定。比较 summary 与 summary_converged，看被检查排除的拟合是否改变偏差、RMSE 或覆盖率；把失败率当作收敛率之前先读 failures。
+收敛的拟合指没有报错、目标函数有限且最大绝对梯度低于 1e-3（数值检查的梯度阈值）的拟合。这样的拟合仍可能通不过检查，例如估计的相关系数或标准差落在自然尺度的边界上、某个参数实际上已到极限（failures 中的原因为 "parameter at its limit in practice"），或 Hessian 不正定。比较 summary 与 summary_converged，看被检查排除的拟合是否改变偏差、RMSE 或覆盖率；把失败率当作收敛率之前先读 failures。
 
-A converged fit returned no error and has a finite objective and a maximum absolute gradient below 1e-3, the gradient threshold of the numerical screen. Such a fit can still fail the screen, for example because an estimated correlation or SD lies at a natural-scale boundary or the Hessian is not positive definite. Compare summary with summary_converged to see whether the fits excluded by the screen change bias, RMSE or coverage, and read failures before treating the failure rate as a convergence rate.
+A converged fit returned no error and has a finite objective and a maximum absolute gradient below 1e-3, the gradient threshold of the numerical screen. Such a fit can still fail the screen, for example because an estimated correlation or SD lies at a natural-scale boundary, a parameter is at its limit in practice (the reason "parameter at its limit in practice" in failures) or the Hessian is not positive definite. Compare summary with summary_converged to see whether the fits excluded by the screen change bias, RMSE or coverage, and read failures before treating the failure rate as a convergence rate.
 
 **示例 / Example:**
 
@@ -3485,9 +3541,9 @@ hindcast_model (x, model = c("acl", "alscl"), horizon = 1, nfolds = 3, min_train
 
 predictions is a length/time/fold table with observed, model and persistence predictions on the log scale, errors, scaling denominators and inclusion status. scores reports paired log RMSE/MAE, log MASE and counts by horizon. diagnostics, recipes, settings, start_diagnostics and process_paths retain fit status, failures, warnings and reproduction details; fits are optional.
 
-使用最后若干合格预测起点，每个起点是该次训练数据的末期，且须保留至少 min_train 个训练时间步及完整 horizon。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组训练期相邻时间步的绝对对数差缩放，只使用两端观测均为正值的配对，不跨缺失时段。零或未定义的分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。
+使用最后若干合格预测起点，每个起点是该次训练数据的末期，且须保留至少 min_train 个训练时间步及完整 horizon。每折只拟合截短输入，不使用完整序列拟合估计作为初值。未来对数补充／F 偏差沿 AR(1) 条件均值路径延伸，经种群转移得到代入式调查预测，不是边际预测均值或预测区间。预测沿用训练末期的体重和成熟比例，以及拟合时指定的调查可捕系数。按年龄和时间步的自然死亡率要按完整的时间网格给出：每次训练拟合使用到预测起点为止的各列，预测使用留出时间步的各列；按体长和时间步给出的调查可捕性同样处理。拒绝固定／绑定随时间变化随机效应的 map。失败／未确认数值状态的拟合保留但不评分。评分使用具备朴素预测的配对正观测；对数 MASE 按同体长组训练期相邻时间步的绝对对数差缩放，只使用两端观测均为正值的配对，不跨缺失时段。零或未定义的分母保持缺失。ncores 并行折，每折内初值和标准误顺序运行。手动假设应在不参考留出数据调参的前提下确定。
 
-Uses the last eligible forecast origins, each the final time step of its training dataset, with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by absolute log changes between adjacent training time steps within each length bin, using only pairs with two positive observations. Gaps are retained. Zero or undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.
+Uses the last eligible forecast origins, each the final time step of its training dataset, with at least min_train periods and the complete horizon. Each fold fits truncated inputs; no full-series fit supplies starts. Future log recruitment/F deviations follow AR(1) conditional-mean paths, then population transitions give plug-in survey predictions, not marginal predictive means or predictive intervals. Projections reuse the last training weights and maturity values and the survey catchability specified for the fit. A natural mortality rate by age and time step is supplied for the complete time grid: each training fit uses the columns up to its forecast origin, and the prediction uses the columns of the held-out time steps. The same holds for survey catchability supplied by length and time step. Fixed/tied time-varying random-effect maps are rejected. Failed/unverified fits remain visible but unscored. Scores use paired positive observations with an available persistence forecast; log MASE scales by absolute log changes between adjacent training time steps within each length bin, using only pairs with two positive observations. Gaps are retained. Zero or undefined scales remain missing. ncores parallelizes folds; starts and SEs are sequential inside each fold. User-supplied assumptions must be chosen without tuning to held-out data.
 
 **示例 / Example:**
 
@@ -3501,3 +3557,184 @@ head(validation$predictions)
 
 ![示例图 / Example figure: `hindcast_model(x, model = "acl", horizon = 1, nfolds = 3)`](figures/workflows/hindcast-predictions.png)
 
+<a id="lorenzen_M"></a>
+## `lorenzen_M()`
+
+按体长的幂函数计算自然死亡率 / Natural mortality rate as a power function of length
+
+```r
+lorenzen_M (length, M_ref, L_ref, exponent = -1)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `length` | `必填 / required` | 需要计算 M 的体长，必须为正，通常是模型各体长组的中点，单位与 L_ref 相同。 | Positive lengths at which M is wanted, usually the midpoints of the length bins of the model, in the unit of L_ref. |
+| `M_ref` | `必填 / required` | 参考体长 L_ref 处的自然死亡率。用于模型时，它是每个模型时间步的死亡率（季度时间步时为年死亡率除以 4）。 | Natural mortality rate at the reference length L_ref. For use in a model it is a rate per model time step (for quarterly time steps, the annual rate divided by 4). |
+| `L_ref` | `必填 / required` | M 等于 M_ref 时的参考体长，必须为正。 | Positive reference length at which M equals M_ref. |
+| `exponent` | `-1` | 体长的指数。默认值 -1 是 Lorenzen (2022) 和 Lorenzen 等 (2022) 得到的种群内部 M 随体长变化的指数。 | Exponent of length. The default -1 is the value that Lorenzen (2022) and Lorenzen et al. (2022) found for the change of M with length within a population. |
+
+**返回 / Returns:** 数值向量，`length` 的每个元素对应一个自然死亡率，单位与 `M_ref` 相同。
+
+A numeric vector with one natural mortality rate per element of `length`, in the unit of `M_ref`.
+
+函数按 `M_ref * (length / L_ref)^exponent` 由参考体长处的死亡率算出各体长的自然死亡率（M）。指数取默认值 -1 时，M 与体长成反比。结果可以作为 `M` 传给 `run_alscl()`：每个体长组一个值的数值向量被当作按体长的 M。`M_ref` 是 `L_ref` 处的死亡率，不是各体长上的平均值。文献中的单一死亡率或由最大年龄估计的死亡率通常代表成鱼，所以 `L_ref` 应取成鱼的体长，数值来自模型之外的资料，例如由年龄鉴定资料得到的成熟个体平均体长。不要用模型估计的渐近体长（Linf），否则所假定的 M 会依赖于使用它的那次拟合。曲线只通过乘积 `M_ref * L_ref^(-exponent)` 依赖 `M_ref` 和 `L_ref`，所以敏感性分析只需改变其中一个。指数为负时小体长处的 M 很大，拟合前要检查最小几个体长组的死亡率。Lorenzen (2022) 指出，在体长小于渐近体长约 20% 的早期幼鱼阶段会偏离反比关系。调查指数提供的是总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率。按体长的 M 与单一的 M 一样是一项假定，拟合的目标函数不能作为在两者之间选择的依据。
+
+The function computes a natural mortality rate (M) for each length from the rate at a reference length: `M_ref * (length / L_ref)^exponent`. With the default exponent of -1 the rate is inversely proportional to length. The result can be passed as `M` to `run_alscl()`, which reads a numeric vector with one value per length bin as M by length. `M_ref` is the rate at `L_ref`, not a mean over lengths. A single rate from the literature or from a maximum-age estimator usually stands for adult fish, so `L_ref` should be a length of adult fish. Take it from data outside the model, for example the mean length of mature fish from age readings. Do not use the asymptotic length (Linf) estimated by the model, because the assumed M would then depend on the fit that uses it. The curve depends on `M_ref` and `L_ref` only through the product `M_ref * L_ref^(-exponent)`, so a sensitivity analysis needs to vary only one of them. With a negative exponent M at small lengths is large, so check the rates of the smallest length bins before fitting. Lorenzen (2022) describes departures from the inverse relation in early juveniles, below about 20 percent of the asymptotic length. The survey index informs total mortality, not its split into fishing and natural mortality. M by length is an assumption like a single M, and the objective of a fit is not a basis for choosing between them.
+
+文献 / References: Lorenzen, K. (2022). Size- and age-dependent natural mortality in fish populations: Biology, models, implications, and a generalized length-inverse mortality paradigm. Fisheries Research, 255, 106454. [doi:10.1016/j.fishres.2022.106454](https://doi.org/10.1016/j.fishres.2022.106454). Lorenzen, K., Camp, E. V., and Garlock, T. M. (2022). Natural mortality and body size in fish populations. Fisheries Research, 252, 106327. [doi:10.1016/j.fishres.2022.106327](https://doi.org/10.1016/j.fishres.2022.106327).
+
+**示例 / Example:**
+
+```r
+# 示例数据的体长组中点（cm）；成鱼 M 为每年 0.2，参考体长 40 cm / Length-bin midpoints of the example data (cm); an adult M of 0.2 per year at a reference length of 40 cm
+mid <- seq(6, 50, 2)
+M_length <- lorenzen_M(mid, M_ref = 0.2, L_ref = 40)
+round(M_length, 3)
+# 随体长下降更快 / A steeper decline with length
+round(lorenzen_M(mid, M_ref = 0.2, L_ref = 40, exponent = -1.5), 3)
+```
+
+<a id="survey_catchability"></a>
+## `survey_catchability()`
+
+计算 logistic 或穹顶形的体长别调查可捕性 / Survey catchability at length for logistic and dome-shaped curves
+
+```r
+survey_catchability (length, shape = c("logistic", "dome"), L50, L95, L50_desc = NULL, L95_desc = NULL,
+    minimum = 0)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `length` | `必填 / required` | 需要计算调查可捕性的体长，通常是模型各体长组的中点，单位与 L50 相同。 | Lengths at which survey catchability is wanted, usually the midpoints of the length bins of the model, in the unit of L50. |
+| `shape` | `c("logistic", "dome")` | "logistic"：可捕性随体长上升到 1。"dome"：可捕性随体长上升到 1，对更大的个体再下降。 | "logistic": catchability increases with length to 1. "dome": catchability increases with length, reaches 1 and decreases for larger fish. |
+| `L50` | `必填 / required` | 上升段 logistic 曲线取 0.5 时的体长，须小于 L95；含义与 `run_alscl()` 的 sel_L50 相同。 | Lengths at which the ascending logistic curve is 0.5 and 0.95, with L50 below L95. They have the meaning of sel_L50 and sel_L95 in `run_alscl()`. |
+| `L95` | `必填 / required` | 上升段 logistic 曲线取 0.95 时的体长；含义与 `run_alscl()` 的 sel_L95 相同。 | Lengths at which the ascending logistic curve is 0.5 and 0.95, with L50 below L95. They have the meaning of sel_L50 and sel_L95 in `run_alscl()`. |
+| `L50_desc` | `NULL` | 仅用于穹顶形。下降段 logistic 曲线取 0.5 时的体长，须大于 L50 和 L95_desc；下降到一半的位置。 | Dome only. Lengths at which the descending logistic curve is 0.5 and 0.95, with L95_desc below L50_desc. The decline therefore starts near L95_desc and is halfway at L50_desc. L50_desc must be above L50. |
+| `L95_desc` | `NULL` | 仅用于穹顶形。下降段 logistic 曲线取 0.95 时的体长，须小于 L50_desc；下降大致从这里开始。 | Dome only. Lengths at which the descending logistic curve is 0.5 and 0.95, with L95_desc below L50_desc. The decline therefore starts near L95_desc and is halfway at L50_desc. L50_desc must be above L50. |
+| `minimum` | `0` | 仅用于穹顶形。下降段对最大体长趋近的值（缩放之前），在 0 和 1 之间，不含 1。默认 0 使可捕性下降到接近零。取正值时，下降段等于 `minimum + (1 - minimum)` 乘以下降的 logistic 曲线，所以 L50_desc 是 1 与 minimum 中间值对应的体长。 | Dome only. Value between 0 and 1 (1 excluded) that the descending curve approaches for the largest lengths, before scaling. The default 0 lets catchability decline towards zero. With a positive value the descending curve is `minimum + (1 - minimum)` times the descending logistic curve, so L50_desc is the length halfway between 1 and minimum. |
+
+**返回 / Returns:** 数值向量，`length` 的每个元素对应一个调查可捕性。"logistic" 给出的值与 `run_alscl()` 中 `sel_L50 = L50`、`sel_L95 = L95` 给出的值相同。"dome" 是上升段与下降段的乘积除以该乘积在所有体长上的最大值，所以曲线的最大值为 1；`length` 中没有元素落在峰值处时，返回的最大值小于 1。
+
+A numeric vector with one survey catchability per element of `length`. For "logistic" it holds the values that `sel_L50 = L50` and `sel_L95 = L95` give in `run_alscl()`. For "dome" it is the product of the ascending and the descending curve, divided by the maximum of that product over all lengths, so the curve has a maximum of 1. The largest returned value is below 1 when no element of `length` lies at the peak.
+
+调查可捕性是模型把体长别尾数换算成调查指数期望值时所乘的系数，结果可以作为 `survey_q` 传给 `run_acl()` 和 `run_alscl()`。它是 ACL 和 ALSCL 的输入，模型不估计它。只用调查数据时，它的水平估计不出来，因为调查指数只给出相对数量；可捕性随体长的下降也估计不出来，因为它与死亡率相互混淆（Cook 2013）：调查中大个体少，可能是它们已经死亡，也可能是网具捕不到它们。因此，对捕不好大个体的网具给定 logistic 曲线时，模型会估计出更高的死亡率。曲线的形状应来自对调查网具的研究（例如 Fraser 等 2007 对北海国际底拖网调查所用 GOV 拖网的研究）或年龄资料，不要来自拟合本身；并报告结果随它的变化。`survey_q` 必须为正，所以 `minimum = 0` 的穹顶形曲线在最大体长处按双精度已等于零时不能使用，这时请设一个小的 `minimum`。调查可捕性随时间变化时（例如调查网具更换之后），先对每个时期各算一个向量，再把它们合并成每个时间步一列的矩阵（见示例）。
+
+Survey catchability is the factor by which the models multiply numbers at length to obtain the expected survey index, and the result can be passed as `survey_q` to `run_acl()` and `run_alscl()`. It is an input of ACL and ALSCL, and the models do not estimate it. With survey data alone its level cannot be estimated, because the survey index gives relative numbers only. A decline of catchability with length cannot be estimated either, because it is confounded with mortality (Cook 2013): fewer large fish in the survey can mean that they died or that the gear does not catch them. A model that is given a logistic curve for a gear that catches large fish poorly therefore estimates a higher mortality rate. Take the shape from studies of the survey gear (for example Fraser et al. 2007 for the GOV trawl of the North Sea International Bottom Trawl Survey) or from age data, not from the fit, and report how the results change with it. `survey_q` must be positive, so a dome with `minimum = 0` cannot be used when it reaches zero in double precision at the largest lengths; set a small `minimum` in that case. For a survey catchability that changes over time, for example after a change of survey gear, compute one vector per period and bind the vectors into a matrix with one column per time step (see the example).
+
+文献 / References: Cook, R. M. (2013). A fish stock assessment model using survey data when estimates of catch are unreliable. Fisheries Research, 143, 1-11. [doi:10.1016/j.fishres.2013.01.003](https://doi.org/10.1016/j.fishres.2013.01.003). Fraser, H. M., Greenstreet, S. P. R., and Piet, G. J. (2007). Taking account of catchability in groundfish survey trawls: implications for estimating demersal fish biomass. ICES Journal of Marine Science, 64, 1800-1819. [doi:10.1093/icesjms/fsm145](https://doi.org/10.1093/icesjms/fsm145).
+
+**示例 / Example:**
+
+```r
+mid <- seq(6, 50, 2)
+# 示例设置的 logistic 曲线（sel_L50 = 15，sel_L95 = 20） / The logistic curve of the example settings (sel_L50 = 15, sel_L95 = 20)
+logistic <- survey_catchability(mid, "logistic", L50 = 15, L95 = 20)
+round(logistic, 3)
+# 穹顶形：上升段相同，下降段约从 34 cm 开始，42 cm 处降到一半，最终趋于 0.2 / A dome: the same ascending curve and a descending curve that starts to decline near 34 cm, is halfway at 42 cm and levels off at 0.2
+dome <- survey_catchability(mid, "dome", L50 = 15, L95 = 20,
+                            L50_desc = 42, L95_desc = 34, minimum = 0.2)
+round(dome, 3)
+# 按时间步的调查可捕性：示例数据前 15 年用 logistic 曲线，后 5 年用穹顶形曲线 / Survey catchability by time step: the logistic curve in the first 15 years and the dome in the last 5 years of the example data
+by_time <- cbind(matrix(logistic, length(mid), 15), matrix(dome, length(mid), 5))
+dim(by_time)
+```
+
+<a id="length_at_age"></a>
+## `length_at_age()`
+
+拟合模型各年龄的平均体长及标准差 / Mean and standard deviation of length at age from a fitted model
+
+```r
+length_at_age (fit, basis = c("survey", "population"))
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `basis` | `c("survey", "population")` | "survey"（体长别尾数乘以体长别调查可捕性）和 "population"（种群中的体长别尾数）中的一个或两个。默认两者都返回。 | One or both of "survey" (numbers at length multiplied by survey catchability at length) and "population" (numbers at length in the population). The default returns both. |
+
+**返回 / Returns:** 数据框，每种口径、每个时间步、每个年龄组一行：basis、year（时间步，与 `fit$year` 相同）、age（年龄组，与 `fit$age` 相同；最老的年龄组是末组）、mean_length 和 sd_length（单位与体长组的体长单位相同），以及 numerical_ok（该拟合的数值检查结论，与 summary() 报告的相同）。
+
+A data frame with one row per basis, time step and age class: basis, year (the time step, as in `fit$year`), age (the age class, as in `fit$age`; the oldest age class is a plus group), mean_length and sd_length (in the length unit of the length bins) and numerical_ok (the numerical screen of the fit, the same verdict that summary() reports).
+
+对 ALSCL 拟合，这些量由估计的按体长组、年龄组和时间步的尾数（`fit$report$NLA`）算出。对 ACL 拟合，由年龄-体长概率（`fit$report$pla`，给定年龄时各体长组的概率）算出；ACL 在每个时间步使用同一个矩阵，所以它的值不随时间变化。每个体长组以组中点代表，包括两端的开口组。标准差是各组中点按尾数加权的标准差，不含组内体长的离散。某个年龄组有很大一部分落在第一个或最后一个体长组时，平均体长被拉向该组的中点，标准差偏小。`basis = "survey"` 时，先把各体长组的尾数乘以体长别调查可捕性，再计算均值和标准差。在某个年龄组的体长范围内可捕性随体长上升时，调查渔获中该年龄的小个体偏少，年龄别平均体长大于种群中的值。与同一调查所捕个体的年龄鉴定资料比较时，用这种口径。生长应通过各年龄平均体长比较，而不是通过生长参数。在 ACL 中，Linf、k 和 t0 是各年龄平均体长的 von Bertalanffy 曲线参数。在 ALSCL 中不是：Linf 和 k 决定一个时间步内平均生长增量随体长的变化，Linf、k 和 t0 决定补充个体的平均体长（在原始结构中还决定第一个时间步各年龄组的平均体长，见 `run_alscl()` 的 `structure`）。补充之后，一个世代的体长由生长增量和体长别死亡率决定。由生长增量估计的生长参数与由年龄-体长资料估计的生长参数含义不同，不能直接比较（Francis 1988）。因此，ALSCL 拟合的 Linf、k 和 t0 不应与 ACL 拟合的参数或用年龄鉴定资料拟合的 von Bertalanffy 曲线参数相比较。
+
+For an ALSCL fit the quantities are calculated from the estimated numbers by length bin, age class and time step (`fit$report$NLA`). For an ACL fit they are calculated from the age-length key (`fit$report$pla`, the probability of each length bin given age). ACL uses the same key in every time step, so its values do not change with time. Each length bin is represented by its midpoint, including the two open-ended outer bins. The standard deviation is that of the bin midpoints weighted by numbers and does not include the spread of lengths within a bin. Where a large share of an age class lies in the first or the last length bin, the mean is drawn toward the midpoint of that bin and the standard deviation is too small. With `basis = "survey"`, the numbers in each length bin are multiplied by the survey catchability at length before the mean and standard deviation are calculated. Where catchability increases with length over the lengths of an age class, the small fish of that age class are under-represented in the survey catch, and mean length at age is larger than in the population. Use this basis to compare the fit with mean length at age from age readings of fish caught in the same survey. Compare growth through mean length at age, not through the growth parameters. In ACL, Linf, k and t0 are the parameters of a von Bertalanffy curve of mean length at age. In ALSCL they are not. Linf and k set the mean growth increment in one time step as a function of length, and Linf, k and t0 set the mean length of recruits (and, in the original structure, of every age class in the first time step; see `structure` in `run_alscl()`). After recruitment, the lengths of a cohort follow from the growth increments and from mortality at length. Growth parameters estimated from growth increments and from age-length data have different meanings and are not directly comparable (Francis 1988). Linf, k and t0 of an ALSCL fit should therefore not be compared with those of an ACL fit or of a von Bertalanffy curve fitted to age readings.
+
+文献 / Reference: Francis, R. I. C. C. (1988). Are growth parameters estimated from tagging and age-length data comparable? Canadian Journal of Fisheries and Aquatic Sciences, 45, 936-942. [doi:10.1139/f88-115](https://doi.org/10.1139/f88-115).
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+growth <- length_at_age(b)
+head(growth)
+# 最后一个时间步调查所见的各年龄平均体长 / Mean length at age as the survey sees it, in the last time step
+subset(growth, basis == "survey" & year == max(year))
+```
+
+<a id="ssb_at_age"></a>
+## `ssb_at_age()`
+
+按年龄别成熟比例计算产卵生物量 / Spawning stock biomass from maturity at age
+
+```r
+ssb_at_age (fit, maturity, weight = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `maturity` | `必填 / required` | 年龄别成熟比例，在 0 和 1 之间。数值向量，拟合的每个年龄组一个值，顺序与 `fit$age` 相同（最后一个值用于末组）；或每个年龄组一行、每个时间步一列的矩阵。 | Proportion mature at age, between 0 and 1. A numeric vector with one value per age class of the fit, in the order of `fit$age` (the last value applies to the plus group), or a matrix with one row per age class and one column per time step. |
+| `weight` | `NULL` | NULL（默认）使用模型的年龄别生物量，它由拟合时给定的体长别体重得到。否则给出各年龄的平均体重，形式与 `maturity` 相同的向量或矩阵；这时年龄别生物量等于年龄别尾数乘以这些体重。 | NULL (default) uses the biomass at age of the model, which follows from the weight at length supplied to the fit. Otherwise mean weight at age, as a vector or matrix of the same form as `maturity`; biomass at age is then numbers at age multiplied by these weights. |
+
+**返回 / Returns:** 数据框，每个时间步一行：year（与 `fit$year` 相同）、SSB（按年龄别成熟比例算出）、SSB_model（模型的 SSB，按体长别成熟比例算出）和 numerical_ok（该拟合的数值检查结论）。
+
+A data frame with one row per time step: year (as in `fit$year`), SSB (from maturity at age), SSB_model (the SSB of the model, from maturity at length) and numerical_ok (the numerical screen of the fit).
+
+函数把各年龄组的生物量乘以年龄别成熟比例后求和，得到各时间步的产卵生物量（SSB）。ACL 和 ALSCL 按体长别成熟比例计算 SSB；这个函数给出与年龄别成熟比例相对应的 SSB，例如同一种群按年龄的评估所用的成熟比例。ALSCL 拟合的年龄别生物量是 `fit$report$BA`。ACL 拟合不报告年龄别生物量，它等于年龄别尾数乘以各年龄平均体重，其中各年龄平均体重是拟合时给定的体长别体重按年龄-体长概率求得的平均值。模型的 SSB（`fit$report$SSB`）是各体长组的生物量乘以拟合时给定的体长别成熟比例之和。当年龄别成熟比例等于各年龄组、各时间步内体长别成熟比例按体长别生物量加权的平均值时（对 ALSCL 为 `fit$report$SBA / fit$report$BA`），两条序列相等。有三种情况使它们不同。第一，年龄别成熟比例的来源不同于拟合时给定的体长别成熟比例，例如来自按年龄的评估。第二，年龄别成熟比例不随时间变化，而模型中各年龄的体长，以及由体长别成熟比例得出的年龄别成熟比例，会随时间变化，或与实际种群不同。第三，同一年龄组的所有个体使用一个比例，而体长别成熟比例对该年龄组中较大的个体更高，这些个体也更重。当年龄别成熟比例等于体长别成熟比例按尾数加权的平均值，且体重和成熟比例都随体长增大时，按年龄别成熟比例算出的 SSB 较低。两条序列都以模型生物量为单位，其水平取决于所假定的调查可捕性。与外部序列比较时，比较趋势，不比较水平。
+
+Spawning stock biomass (SSB) by time step is calculated as the sum over age classes of biomass at age multiplied by the proportion mature at age. ACL and ALSCL calculate SSB from the proportion mature at length. This function gives the SSB that corresponds to a maturity ogive by age, such as the one used in an age-based assessment of the same stock. Biomass at age of an ALSCL fit is `fit$report$BA`. An ACL fit does not report biomass at age. It is calculated as numbers at age multiplied by mean weight at age, where mean weight at age is the weight at length supplied to the fit averaged over the age-length key. The SSB of the model (`fit$report$SSB`) is the sum over length bins of biomass at length multiplied by the proportion mature at length supplied to the fit. The two series are equal when maturity at age is the mean of maturity at length within each age class and time step, weighted by biomass at length (for ALSCL, `fit$report$SBA / fit$report$BA`). They differ in three cases. First, the maturity ogive by age comes from a source other than the maturity at length supplied to the fit, for example from an age-based assessment. Second, maturity at age is constant over time, whereas the lengths at age in the model, and with them the proportion mature at age implied by maturity at length, change over time or differ from those of the stock. Third, one proportion is applied to all fish of an age class, whereas maturity at length is higher for the large fish of the age class, which are also the heavy ones. With maturity at age equal to the mean of maturity at length weighted by numbers, and weight and maturity both increasing with length, the SSB from maturity at age is the lower of the two. Both series are in the unit of model biomass, whose level depends on the assumed survey catchability. Compare the trend with an external series, not the level.
+
+**示例 / Example:**
+
+```r
+# 假定的年龄别成熟比例：第四个年龄组有一半个体成熟，第六个年龄组起全部成熟 / An assumed maturity ogive by age: half of the fish mature at the fourth age class, all fish from the sixth
+ogive <- pmin(1, pmax(0, (seq_along(a$age) - 3) / 2))
+ssb <- ssb_at_age(a, maturity = ogive)
+head(ssb)
+cor(log(ssb$SSB), log(ssb$SSB_model))
+```
+
+<a id="relative_catch"></a>
+## `relative_catch()`
+
+各时间步的相对渔获量 / Relative catch by time step
+
+```r
+relative_catch (fit, years = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `years` | `NULL` | 计算均值所用的时间步，取 `fit$year` 中的值。NULL（默认）使用全部时间步。请给出有上报渔获量的时间步，并把上报渔获量除以它在同样时间步上的均值，使两条序列处于同一尺度。 | Time steps over which the mean is calculated, as values of `fit$year`. NULL (default) uses all time steps. Give the time steps with reported catch, and divide the reported catch by its mean over the same time steps, to place both series on the same scale. |
+
+**返回 / Returns:** 数据框，每个时间步一行：year（与 `fit$year` 相同）、catch_number 和 catch_weight（渔获量除以它在 `years` 上的均值，无单位）、extrapolated（渔获量为预测值的时间步为 TRUE，见下文）和 numerical_ok（该拟合的数值检查结论）。
+
+A data frame with one row per time step: year (as in `fit$year`), catch_number and catch_weight (catch divided by its mean over `years`; no unit), extrapolated (TRUE for time steps whose catch is a prediction, see below) and numerical_ok (the numerical screen of the fit).
+
+函数返回模型各时间步的渔获尾数和渔获重量，各自除以它在各时间步上的均值，用于把模型渔获量的趋势与上报渔获量比较。ACL 和 ALSCL 只拟合调查指数。这样的拟合不含渔获量或捕捞死亡率（F）绝对水平的信息。模型渔获量由 Baranov 渔获方程按估计的 F 和丰度算出，两者的水平都取决于所假定的自然死亡率（M）和调查可捕性。总死亡率由各世代在调查中的下降估计，F 等于总死亡率减去所假定的 M，丰度等于调查指数除以所假定的可捕性。所以只应把模型渔获量的趋势与上报渔获量比较，函数因此只返回相对值。最后一个时间步的 F 没有观测提供信息（见 `extract_estimates()`），该时间步的渔获量是预测值，extrapolated = TRUE。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的渔获量也是预测值。除非 `years` 排除它们，这些时间步也计入均值。ALSCL 报告重量计的渔获量。对 ACL，它等于年龄别渔获尾数乘以各年龄平均体重，其中各年龄平均体重是拟合时给定的体长别体重按年龄-体长概率求得的平均值。ACL 结果既没有可用的 TMB 对象、也没有保存的输入设置时，体重不可用，catch_weight 为 NA。
+
+The function returns model catch in numbers and in weight for each time step, each divided by its mean over the time steps, for a comparison of the trend of the model catch with reported catch. ACL and ALSCL are fitted to a survey index alone. Such a fit has no information on the absolute level of catch or of the fishing mortality rate (F). The model catch follows from the Baranov catch equation with the estimated F and abundance, and the level of both depends on the assumed natural mortality rate (M) and the assumed survey catchability. Total mortality is estimated from the decline of cohorts in the survey, F is total mortality minus the assumed M, and abundance is the survey index divided by the assumed catchability. Only the trend of the model catch should be compared with reported catch, and the function therefore returns relative values only. No observation informs F in the terminal time step (see `extract_estimates()`). Catch in that time step is a prediction and has extrapolated = TRUE. When the last time steps have no positive survey observation, catch from the last time step with an observation onwards is a prediction as well. These time steps are included in the mean unless `years` excludes them. ALSCL reports catch in weight. For ACL it is calculated as catch in numbers at age multiplied by mean weight at age, where mean weight at age is the weight at length supplied to the fit averaged over the age-length key. For an ACL result with neither a live TMB object nor a stored recipe, the weights are unavailable and catch_weight is NA.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+catch <- relative_catch(a)
+head(catch)
+# 只对前十个时间步求均值 / Mean taken over the first ten time steps only
+head(relative_catch(a, years = a$year[1:10]))
+```

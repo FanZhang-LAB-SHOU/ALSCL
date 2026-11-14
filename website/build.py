@@ -48,8 +48,8 @@ UI = {
 
 GROUPS = [
     ('workflow', 'Prepare data and inspect parameters', '准备数据与检查参数', ['read_survey_csv', 'read_survey_excel', 'prepare_alscl_data', 'check_alscl_data', 'inspect_parameters']),
-    ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'alscl_speed_info', 'create_parameters', 'create_parameters_alscl', 'generate_map']),
-    ('results', 'Extract, save and reload results', '提取、保存与读取结果', ['extract_parameters', 'extract_estimates', 'save_assessment', 'read_assessment', 'refit_model']),
+    ('fit', 'Fit models', '模型拟合', ['run_acl', 'run_alscl', 'alscl_speed', 'alscl_speed_info', 'create_parameters', 'create_parameters_alscl', 'generate_map', 'lorenzen_M', 'survey_catchability']),
+    ('results', 'Extract, save and reload results', '提取、保存与读取结果', ['extract_parameters', 'extract_estimates', 'length_at_age', 'ssb_at_age', 'relative_catch', 'save_assessment', 'read_assessment', 'refit_model']),
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['check_fit', 'diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
     ('assumptions', 'Sensitivity, profiles and projections', '敏感性、参数剖面与情景投影', ['fit_scenarios', 'profile_model', 'project_model']),
     ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
@@ -312,7 +312,7 @@ def load_reference():
     return reference
 
 def example_setup(name, lang):
-    if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data','simulation_to_tables']: return 'library(ALSCL)'
+    if name in ['alscl_speed','alscl_speed_info','VB_func','mat_func','initialize_params','create_parameters','create_parameters_alscl','generate_map','acl_theme','acl_theme_set','acl_theme_reset','simulate_example_data','simulation_to_tables','lorenzen_M','survey_catchability']: return 'library(ALSCL)'
     base = 'library(ALSCL)\nlibrary(ggplot2)\nlibrary(patchwork)\ndata("YTF_example")\nx <- YTF_example\ninputs <- x[c("data.CatL", "data.wgt", "data.mat")]\ndat <- x$data.CatL'
     if name in ['prepare_alscl_data', 'read_survey_csv', 'read_survey_excel', 'check_alscl_data', 'inspect_parameters', 'fit_scenarios', 'profile_model', 'sim_model', 'sim_alscl', 'simulate_fit', 'hindcast_model', 'summarize_simulations']: return base
     if name in ['sim_cal','sim_data','sim_acl']:
