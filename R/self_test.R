@@ -157,8 +157,8 @@
 #'   starting values matter.
 #'
 #'   **Summaries.** Bias is the median relative error over the replicates
-#'   that pass the numerical checks, and the median absolute relative error
-#'   measures its spread, the measures of Stock and Miller (2021). Refits that
+#'   that pass the numerical checks, as in Stock and Miller (2021), and the
+#'   median absolute relative error measures the size of the errors. Refits that
 #'   fail the checks stay in `replicates`, `series` and `parameters` but not in
 #'   the summaries; read `screen` and `failures` with them. Coverage is the
 #'   share of the intervals that contain the truth, for the series with
@@ -179,7 +179,7 @@
 #'   Replicates run on socket workers when `ncores` is greater than 1, as in
 #'   [fit_scenarios()]; the results are the same for any number of workers.
 #'   Reported studies commonly use 100 data sets (Deroba et al. 2015).
-#' @references Deroba, J.J., Butterworth, D.S., Methot, R.D., et al. (2015).
+#' @references Deroba, J.J., et al. (2015).
 #'   Simulation testing the robustness of stock assessment models to error:
 #'   some results from the ICES strategic initiative on stock assessment
 #'   methods. ICES Journal of Marine Science 72, 19-30.

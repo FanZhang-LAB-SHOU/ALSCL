@@ -157,8 +157,8 @@ optimizer starts near the answer. Comparing the two shows whether the
 starting values matter.
 
 \strong{Summaries.} Bias is the median relative error over the replicates
-that pass the numerical checks, and the median absolute relative error
-measures its spread, the measures of Stock and Miller (2021). Refits that
+that pass the numerical checks, as in Stock and Miller (2021), and the
+median absolute relative error measures the size of the errors. Refits that
 fail the checks stay in \code{replicates}, \code{series} and \code{parameters} but not in
 the summaries; read \code{screen} and \code{failures} with them. Coverage is the
 share of the intervals that contain the truth, for the series with
@@ -190,7 +190,7 @@ plot_self_test(st)
 }
 }
 \references{
-Deroba, J.J., Butterworth, D.S., Methot, R.D., et al. (2015).
+Deroba, J.J., et al. (2015).
 Simulation testing the robustness of stock assessment models to error:
 some results from the ICES strategic initiative on stock assessment
 methods. ICES Journal of Marine Science 72, 19-30.
