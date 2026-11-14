@@ -127,3 +127,4 @@ Increase `iter_range` for a simulation study and vary one setting at a time, suc
 | Decide which parameters to fix or estimate | [Fitting controls](fitting-controls.html) |
 | Generate survey data and fit replicates in batch | [Simulation](simulation.html) |
 | Simulate from a fitted model or predict withheld years | [Model validation](case-model-validation.html) |
+| Fit a real survey index and compare the fit with age readings and an assessment | [What can a fit to a real survey be used for?](case-north-sea-whiting.html) |

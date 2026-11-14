@@ -127,3 +127,4 @@ case_status <- run_case_studies(out = "my_cases")
 | 决定哪些参数固定、哪些估计 | [拟合设置](fitting-controls.html) |
 | 生成调查数据并批量拟合重复 | [模拟与批量实验](simulation.html) |
 | 从拟合模型模拟调查数据，或预测留出的年份 | [模型验证](case-model-validation.html) |
+| 拟合真实的调查指数，并与年龄判读结果和资源评估对比 | [真实调查数据的拟合结果，哪些可以用？](case-north-sea-whiting.html) |
