@@ -55,8 +55,9 @@ DOCUMENTS = [
     ('PLOT_STYLE.md', ('配色、标签与导出', 'Colors, labels and export'), ['plot-customization']),
     ('SPEED_GUIDE.md', ('速度设置', 'Speed settings'), ['speed']),
     ('ADVANCED_WORKFLOWS.md', ('复现与故障处理', 'Reproducibility and troubleshooting'), ['reproducibility']),
-    ('CASES.md', ('应用案例', 'Worked cases'), ['case-fit-survey', 'case-compare-assessments',
-     'case-retrospective-bias', 'case-sensitivity-projection', 'case-simulate-survey']),
+    ('CASES.md', ('应用案例', 'Worked cases'), ['case-fit-survey', 'case-north-sea-whiting',
+     'case-compare-assessments', 'case-retrospective-bias', 'case-sensitivity-projection',
+     'case-simulate-survey']),
 ]
 # Where a link to an article lands inside docs/.
 ARTICLE_TARGET = {slug: f'USER_GUIDE.md#{anchor}' for anchor, slugs in USER_GUIDE for slug in slugs}

@@ -1,0 +1,135 @@
+#' North Sea whiting survey index at length, 1983 to 2026
+#'
+#' A survey index by length and year for whiting (Merlangius merlangus) in the
+#' North Sea, built from the quarter 1 hauls of the North Sea International
+#' Bottom Trawl Survey (NS-IBTS), with weight and maturity at length, the
+#' settings of a fit of ACL and ALSCL, and three tables for checks that do not
+#' enter a fit: length and index at age from age readings, the natural
+#' mortality rate and maturity at age used in the assessment of the stock by
+#' the International Council for the Exploration of the Sea (ICES), and the
+#' results of that assessment. These are observations, not simulated data.
+#'
+#' @format A list with nine components:
+#' \describe{
+#'   \item{data.CatL}{Data frame: 18 length-bin rows, a LengthBin column and 44
+#'     annual columns labelled 1983 through 2026. Survey index in number of
+#'     fish per hour of trawling. Bins are 2 cm wide and labelled by their
+#'     midpoint (the bin labelled 11 holds 10 cm to below 12 cm); the bin
+#'     labelled 9 holds all fish below 10 cm and the bin labelled 43 all fish
+#'     of 42 cm and longer.}
+#'   \item{data.wgt}{Mean weight at length in kg, same layout, the same in
+#'     every year.}
+#'   \item{data.mat}{Proportion mature at length, same layout, the same in
+#'     every year.}
+#'   \item{fit_args}{Settings shared by run_acl and run_alscl: rec.age = 1,
+#'     nage = 10 (the last age class is a plus group), M = 0.5 per year,
+#'     logistic survey catchability with sel_L50 = 10 and sel_L95 = 14 cm,
+#'     len_mid, len_border (interior borders) and growth_step = 1.}
+#'   \item{fit_config}{Two named lists, acl and alscl, with starting values of
+#'     the growth parameters and a map that estimates t0 and fixes the
+#'     coefficient of variation of length at age, cv_len, at 0.15. The alscl
+#'     list also sets t0_lower = -2, so that t0 can be negative.}
+#'   \item{age_readings}{List of two. length_at_age: data frame with period
+#'     ("1983-2026" or a decade), age, mean_length and sd_length (cm), years
+#'     (number of years in the mean) and n_aged (number of aged fish).
+#'     index_at_age: matrix of the survey index by year (rows) and age 1 to 10
+#'     (columns).}
+#'   \item{ices}{List of three. M: natural mortality rate per year by age (rows
+#'     1 to 5 and 6+) and year (columns 1983 to 2022). maturity: proportion
+#'     mature by age and year (1991 to 2021). assessment: data frame with year
+#'     (1982 to 2026), ssb (spawning stock biomass, t), recruitment_age0,
+#'     f_ages_2_5 (mean fishing mortality rate at ages 2 to 5, per year) and
+#'     catch (t).}
+#'   \item{survey_coverage}{Data frame by year: hauls used, statistical
+#'     rectangles, hauls_with_whiting, and hauls_missing, the number of valid
+#'     hauls of the survey that the DATRAS product does not contain.}
+#'   \item{provenance}{Survey, gear, areas, rules used to build each table,
+#'     source of each setting, download dates, citations and licence.}
+#' }
+#' @details
+#' **How the index was built.** Hauls of quarter 1 in IBTS roundfish areas 1
+#' to 7 made with the GOV (Grande Ouverture Verticale) bottom trawl. Catch per
+#' unit effort by 1-cm length class of each haul, with zero for hauls without
+#' whiting, was averaged within each ICES statistical rectangle and then
+#' across rectangles. The index is a plain mean of the hauls; it is not the
+#' model-based index that the ICES assessment uses.
+#'
+#' **Limits of the data.** One survey in one quarter. The DATRAS product lacks
+#' 63 of the 398 valid hauls of 2009 and 56 of the 389 valid hauls of 2012
+#' (`survey_coverage$hauls_missing`); the index of these years is built from
+#' the remaining hauls. The survey started to change to a new trawl in 2025,
+#' and the index of 2025 and 2026 does not separate the hauls made with it
+#' (see `provenance$gear`). Weight and maturity at length are one curve each
+#' for all years.
+#'
+#' **Settings.** M, survey catchability and cv_len are fixed inputs, chosen as
+#' recorded in `provenance$settings`: M from the maximum age read (Then et al.
+#' 2015), the number of age classes from M, cv_len from the age readings, and
+#' a logistic survey catchability that is an assumption. The survey index does
+#' not inform the level of M or of survey catchability. The growth parameters
+#' in `fit_config` are starting values; Linf, k and t0 are estimated.
+#'
+#' **Age readings.** Otoliths are collected by length class, so the aged fish
+#' are not a random sample of the catch and a plain mean of their lengths at
+#' age is biased towards large fish. For each year, the proportion at age
+#' among the fish aged in each 1-cm class (an age-length key) was multiplied
+#' by the survey index of that class. This gives the index at age and the mean
+#' and standard deviation of length at age as the survey sees them, which is
+#' the quantity that `length_at_age(fit, "survey")` returns for a fit.
+#' `length_at_age` holds the unweighted mean of the annual values over the
+#' years of a period with at least 5 aged fish of the age. Ages follow the
+#' ICES convention, in which age 1 is reached in the first quarter 1 after the
+#' year of hatching.
+#'
+#' **ICES tables.** `ices$M` and `ices$maturity` are the input tables of the
+#' assessment of whiting in Subarea 4 and Division 7.d (ICES 2026), with ages
+#' 6 and older in one group; `ices$assessment` is the summary of that
+#' assessment. The assessment uses catch data and several surveys, so it is an
+#' external comparison and not a true value.
+#'
+#' The script `data-raw/whiting_example.R` builds the object from the files in
+#' `data-raw/whiting_example/`.
+#' @source ICES Database of Trawl Surveys (DATRAS), extraction 12 November
+#' 2026 of the North Sea International Bottom Trawl Survey (NS-IBTS), quarter
+#' 1. ICES, Copenhagen, Denmark. \url{https://datras.ices.dk}
+#'
+#' ICES Stock Assessment Database. Copenhagen, Denmark. ICES. Accessed 13
+#' November 2026. \url{https://standardgraphs.ices.dk}
+#'
+#' ICES. 2026. Working Group on the Assessment of Demersal Stocks in the North
+#' Sea and Skagerrak (WGNSSK). ICES Scientific Reports. 08:43. 1647 pp.
+#' \doi{10.17895/ices.pub.32676345}
+#'
+#' The ICES data and publications are available under the Creative Commons
+#' Attribution 4.0 International licence (CC BY 4.0,
+#' \url{https://creativecommons.org/licenses/by/4.0/}; ICES Data Policy,
+#' \doi{10.17895/ices.pub.8883}). The tables of this data set were aggregated
+#' or transcribed from them by the authors of the package, are not ICES
+#' products and remain under CC BY 4.0. Results derived from them do not
+#' imply endorsement by ICES.
+#' @references Then, A. Y., Hoenig, J. M., Hall, N. G. and Hewitt, D. A.
+#' (2015). Evaluating the predictive performance of empirical estimators of
+#' natural mortality rate using information on over 200 fish species. ICES
+#' Journal of Marine Science 72, 82--92. \doi{10.1093/icesjms/fsu136}.
+#' @seealso [YTF_example] for simulated data with known truth;
+#'   [length_at_age()], [ssb_at_age()] and [relative_catch()] for the outputs
+#'   that the check tables are compared with.
+#' @examples
+#' data(whiting_example)
+#' dim(whiting_example$data.CatL)
+#' whiting_example$fit_args[c("rec.age", "nage", "M", "sel_L50", "sel_L95")]
+#' subset(whiting_example$age_readings$length_at_age, period == "1983-2026")
+#' check_alscl_data(whiting_example, "alscl")$summary
+#'
+#' # A short series for a quick fit: the first 20 years, same settings
+#' short <- whiting_example
+#' for (tab in c("data.CatL", "data.wgt", "data.mat"))
+#'   short[[tab]] <- short[[tab]][, 1:21]
+#' check_alscl_data(short, "alscl")$summary
+#' \dontrun{
+#' # About 2 minutes per start; the complete series takes about 10 minutes
+#' fit <- run_alscl(short, nstarts = 3, ncores = 3, start_spread = 0.5)
+#' fit$start_diagnostics[, c("start_id", "objective", "convergence")]
+#' fit$diagnostics$numerical_ok
+#' }
+"whiting_example"

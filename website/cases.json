@@ -32,6 +32,22 @@
     }
   },
   {
+    "slug": "case-north-sea-whiting",
+    "title": {
+      "en": "What can a fit to a real survey be used for?",
+      "zh": "真实调查数据的拟合结果，哪些可以用？"
+    },
+    "group": "assessment",
+    "group_title": {
+      "en": "Fit an assessment",
+      "zh": "拟合资源评估模型"
+    },
+    "description": {
+      "en": "Fit ALSCL and ACL to the North Sea whiting index of 1983-2026, read the starts and the numerical checks, and compare the fit with age readings and with the ICES assessment.",
+      "zh": "用 1983-2026 年北海牙鳕调查指数拟合 ALSCL 和 ACL，读多个初值的结果和数值检查，并与年龄判读结果和 ICES 评估对比。"
+    }
+  },
+  {
     "slug": "case-compare-assessments",
     "title": {
       "en": "Do ACL and ALSCL give different answers?",
