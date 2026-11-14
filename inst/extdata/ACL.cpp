@@ -13,6 +13,13 @@
 //   group the equilibrium sum of all older cohorts at init_Z.
 // - Optional data entry correlation_range = 1 lets the AR(1) correlations
 //   take values between -1 and 1.
+// - Optional data entry M_AY (A x Y) is the natural mortality rate by age and
+//   time step; it replaces the single rate M.
+// - Optional data entry q_age (A) is a survey catchability multiplier by age:
+//   the expected index at length is q(length) times the sum over ages of
+//   q_age(age) * pla(length, age) * NA(age, time step).
+//   The code for M_AY and q_age sits in branches that a fit without these
+//   entries does not enter, so such a fit is computed exactly as before.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -86,6 +93,13 @@ Type objective_function<Type>::operator() ()
 
   Type std_index = exp(log_std_index);
 
+  // Optional natural mortality rate by age and time step, and survey
+  // catchability multiplier by age (absent = published structure).
+  std::vector<double> M_AY = optional_numbers(this->data, "M_AY", (size_t) A * Y);
+  std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
+  bool M_varies = M_AY.size() > 0;
+  bool q_by_age = q_age.size() > 0;
+
   vector<Type> N(Y);
   matrix<Type> NA(A,Y);
   matrix<Type> log_NA(A,Y);
@@ -103,7 +117,8 @@ Type objective_function<Type>::operator() ()
   for(int i = 0;i < A;++i){
     for(int j = 0;j < Y;++j){
         F(i,j) = exp(mean_log_F + dev_log_F(dev_log_F.dim[0] == 1 ? 0 : i,j));
-        Z(i,j)=F(i,j)+M;
+        if (!M_varies) Z(i,j)=F(i,j)+M;
+        else Z(i,j)=F(i,j)+Type(M_AY[i + A * j]);
      }
   }
 
@@ -177,7 +192,13 @@ Type objective_function<Type>::operator() ()
   matrix<Type> resid_index(L,Y);
   for(int i = 0;i < L;++i){
 	for(int j=0; j<Y; ++j){
-  	Elog_index(i,j) = log_q(i) + log_NL(i,j);
+  	if (!q_by_age) {
+  	  Elog_index(i,j) = log_q(i) + log_NL(i,j);
+  	} else {
+  	  Type seen = zero;
+  	  for(int a=0; a<A; ++a) seen += Type(q_age[a]) * pla(i,a) * NA(a,j);
+  	  Elog_index(i,j) = log_q(i) + log(seen + Type(1e-300));
+  	}
 		resid_index(i,j) = zero;
 		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j)) * na_matrix(i,j);
 	}
