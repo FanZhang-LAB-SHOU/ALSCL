@@ -20,7 +20,7 @@
   logit_correlation = 15,
   # Number of length-bin widths by which the mean length of recruits may lie
   # below the lower border of the second length bin.
-  recruit_length_bins = 1,
+  recruit_length_bins = 2,
   # Standard deviation of the observation error on the log scale.
   observation_sd = 0.9,
   # Coefficients of variation of length at age (cv_len) and of the growth

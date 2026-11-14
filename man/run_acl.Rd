@@ -256,8 +256,8 @@ do: fix the parameter with \code{map} at a chosen value and refit, or, for a
 correlation at zero, use
 \code{structure = list(correlation_range = "symmetric")}.
 \code{diagnostics$plausibility} lists notes that do not change the verdict of
-the screen: the mean length of recruits lies more than one length-bin
-width below the lower border of the second length bin; the estimated
+the screen: the mean length of recruits lies more than two length-bin
+widths below the lower border of the second length bin; the estimated
 standard deviation of the observation error on the log scale is above
 0.9; an estimated coefficient of variation of length at age (cv_len) or
 of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range

@@ -56,7 +56,7 @@ test_that("the thresholds of the checks are constants in one place", {
   expect_identical(th$log_t0, -10)
   expect_identical(th$log_sd, -9)
   expect_identical(th$logit_correlation, 15)
-  expect_identical(th$recruit_length_bins, 1)
+  expect_identical(th$recruit_length_bins, 2)
   expect_identical(th$observation_sd, 0.9)
   expect_identical(th$growth_cv, 0.3)
   expect_identical(th$growth_cv_reference, c(0.10, 0.25))
@@ -186,31 +186,31 @@ test_that("several parameters at their limit are listed together and fixed param
 })
 
 test_that("the mean length of recruits far below the smallest length bins gives a note", {
-  # Borders 17.5, 22.5, ...: the note is given below 17.5 - 5 = 12.5.
+  # Borders 17.5, 22.5, ...: the note is given below 17.5 - 2 * 5 = 7.5.
   recruit <- function(Linf, k, t0, age = 1) Linf * (1 - exp(-k * (age - t0)))
-  small <- ns_synthetic_fit(c(mean_log_R = 5), report = list(Linf = 60, vbk = .2, t0 = 1 / 60))
+  small <- ns_synthetic_fit(c(mean_log_R = 5), report = list(Linf = 60, vbk = .1, t0 = 1 / 60))
   d <- ALSCL:::.acl_fit_diagnostics(small)
   expect_identical(d$plausibility$check, "recruit_length")
-  expect_equal(d$plausibility$value, recruit(60, .2, 1 / 60))
-  expect_equal(d$plausibility$threshold, 12.5)
-  expect_match(d$plausibility$note, "The mean length of recruits (rec.age = 1) is 10.7", fixed = TRUE)
-  expect_match(d$plausibility$note, "Linf = 60, k = 0.2 per year, t0 = 0.0167 years", fixed = TRUE)
+  expect_equal(d$plausibility$value, recruit(60, .1, 1 / 60))
+  expect_equal(d$plausibility$threshold, 7.5)
+  expect_match(d$plausibility$note, "The mean length of recruits (rec.age = 1) is 5.62, more than 2 length-bin widths", fixed = TRUE)
+  expect_match(d$plausibility$note, "Linf = 60, k = 0.1 per year, t0 = 0.0167 years", fixed = TRUE)
   # A note does not fail the screen and is not an issue.
   expect_true(d$numerical_ok)
   expect_length(d$issues, 0L)
   expect_identical(d$advice, character())
   # Both models, and growth parameters that are fixed (not in opt$par).
   expect_identical(ALSCL:::.acl_fit_diagnostics(
-    ns_synthetic_fit(c(mean_log_R = 5), model = "ACL", report = list(Linf = 60, vbk = .2, t0 = 1 / 60)))$plausibility$check,
+    ns_synthetic_fit(c(mean_log_R = 5), model = "ACL", report = list(Linf = 60, vbk = .1, t0 = 1 / 60)))$plausibility$check,
     "recruit_length")
   # Not triggered: larger recruits, and a value just above the limit.
   expect_identical(nrow(ALSCL:::.acl_fit_diagnostics(ns_synthetic_fit(c(mean_log_R = 5)))$plausibility), 0L)
-  k <- -log(1 - 12.6 / 60) / (1 - 1 / 60)
+  k <- -log(1 - 7.6 / 60) / (1 - 1 / 60)
   expect_identical(nrow(ALSCL:::.acl_fit_diagnostics(
     ns_synthetic_fit(c(mean_log_R = 5), report = list(Linf = 60, vbk = k, t0 = 1 / 60)))$plausibility), 0L)
   # Incomplete objects give no note and no error.
   for (missing in list(list(report = NULL), list(age = NULL), list(len_border = NULL), list(len_border = 17.5))) {
-    fit <- ns_synthetic_fit(c(mean_log_R = 5), report = list(Linf = 60, vbk = .2, t0 = 1 / 60))
+    fit <- ns_synthetic_fit(c(mean_log_R = 5), report = list(Linf = 60, vbk = .1, t0 = 1 / 60))
     fit[names(missing)] <- missing
     expect_identical(nrow(ALSCL:::.acl_fit_diagnostics(fit)$plausibility), 0L)
   }
@@ -488,7 +488,7 @@ test_that("fits give plausibility notes in messages and summaries without failin
   expect_identical(ns_count(messages, "Fit diagnostics"), 0L)
   # Slow growth puts the recruits far below the smallest length bins, in both models.
   for (model in c("ACL", "ALSCL")) {
-    slow <- ns_small_fit(model, truth = list(log_vbk = log(.2)), start = list(log_vbk = log(.2)))$fit
+    slow <- ns_small_fit(model, truth = list(log_vbk = log(.08)), start = list(log_vbk = log(.08)))$fit
     expect_identical(slow$diagnostics$plausibility$check, "recruit_length")
     expect_true(slow$diagnostics$numerical_ok)
   }
