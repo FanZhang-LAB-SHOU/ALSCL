@@ -15,28 +15,59 @@ library(patchwork)
 acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
-## 19. 生长曲线与区间 / Growth curve and interval
+## 20. 年龄别平均体长 / Mean length at age
 
 ```r
+# 模拟的年龄鉴定资料，并非论文实测 / Synthetic age readings, not observations of the paper
+set.seed(42)
+ref <- data.frame(Age = rep(1:15, each = 5))
+ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
+# 先把每个体长归入模型的体长组，再求均值 / Assign each length to its model length bin before averaging
+ref$Mid <- b$len_mid[findInterval(ref$Length, b$len_border) + 1]
+readings <- data.frame(age = 1:15,
+  mean_length = as.numeric(tapply(ref$Mid, ref$Age, mean)),
+  sd_length = as.numeric(tapply(ref$Mid, ref$Age, sd)))
 # 绘制本图 / Draw this figure
-plot_VB(b, se = TRUE)
+plot_VB(b, observed = readings, parameter_curve = TRUE)
 ```
 
-[![生长曲线与区间 / Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)
+[![年龄别平均体长 / Mean length at age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=a83fe5b491a7)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=a83fe5b491a7)
 
-von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。要得到拟合种群各年龄的平均体长，或与年龄鉴定资料比较，请用 `length_at_age()`。
+对 ALSCL 拟合，`plot_VB()` 画由拟合的体长组、年龄组尾数算出的各年龄平均体长，并取各时间步的均值（实线，数值与 `length_at_age()` 相同）。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，`Linf`、`k` 和 `t0` 决定补充个体的平均体长，所以它们不是各年龄平均体长的 von Bertalanffy 曲线的参数（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-paper-differences)）。默认图 `plot_VB(b)` 只画实线，不标注 `Linf` 和 `k`。`parameter_curve = TRUE` 把由 `Linf`、`k` 和 `t0` 计算的曲线加画为虚线参考线：原始结构下，它是第一个时间步各年龄的平均体长，也是各时间步补充个体的平均体长。`observed` 把年龄鉴定得到的各年龄平均体长加画为点，本例带一个标准差的线段。对 ACL 拟合，`plot_VB(a)` 画 von Bertalanffy 曲线，它就是该模型的各年龄平均体长，并标注 `Linf` 和 `k`。
 
-The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population. For the mean length at age of the fitted population, and for a comparison with age readings, use `length_at_age()`.
+For an ALSCL fit, `plot_VB()` shows mean length at age calculated from the fitted numbers by length bin and age class and averaged over the time steps (solid line; the values of `length_at_age()`). In ALSCL, `Linf` and `k` set the growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits, so they are not the parameters of a von Bertalanffy curve of mean length at age ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-paper-differences)). The default figure, `plot_VB(b)`, shows the solid line only and has no annotation of `Linf` and `k`. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line: with the original structure it is the mean length at age in the first time step and the mean length of recruits in every time step. `observed` adds mean length at age from age readings as points, here with bars of one standard deviation. For an ACL fit, `plot_VB(a)` shows the von Bertalanffy curve, which is the mean length at age of that model, with the annotation of `Linf` and `k`.
 
-`age_range = NULL` 时绘制拟合的年龄范围，起点不早于 `t0`；显式 `age_range` 必须是两个递增的有限年龄，且不早于 `t0`。若 `se = TRUE` 但参数协方差不可用，函数会警告并只画曲线，保留传入的标签、字号、刻度和主题。
+每个体长组用其中点代表。本例最后一个体长组包含 49 cm 以上的全部个体，中点为 50 cm，所以高龄组的平均体长在 50 cm 处持平，低于虚线。与年龄鉴定资料比较时，请像上面的代码那样，先把鉴定个体的体长归入模型的体长组，两者才按同样的方法计算。与调查中采集的鉴定资料比较时用 `basis = "survey"`，此时体长别尾数先乘以体长别调查可捕性。`years` 选择求均值的时间步。
 
-`age_range = NULL` draws the fitted age range, starting no earlier than `t0`; an explicit `age_range` must be two increasing finite ages at or after `t0`. If `se = TRUE` but the parameter covariance is unavailable, the function warns and draws the curve alone, keeping the labels, text sizes, breaks and theme you passed.
+Each length bin is represented by its midpoint. The last length bin of this example holds all fish above 49 cm and has the midpoint 50 cm, so the mean length of the older age classes levels off at 50 cm, below the dashed curve. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model, as the code above does, so that both means are calculated in the same way. Use `basis = "survey"` to compare with age readings of fish caught in the survey: the numbers at length are then multiplied by the survey catchability at length. `years` selects the time steps of the mean.
+
+`se = TRUE` 画由 `Linf`、`k` 和 `t0` 计算的曲线的 95% 区间：对 ACL 拟合是图中曲线的区间，对 ALSCL 拟合是参考线的区间。本例固定了三个参数，因此区间宽度为零。模型不报告由拟合尾数算出的平均体长的标准误，不画参考线而设 `se = TRUE` 时，函数给出警告并只画估计值。若参数协方差不可用，函数会警告并只画估计值，保留传入的标签、字号、刻度和主题。
+
+`se = TRUE` draws the 95% interval of the curve computed from `Linf`, `k` and `t0`: for an ACL fit the interval of the figure, and for an ALSCL fit the interval of the reference line. All three parameters are fixed in this example, so the interval has zero width. The model reports no standard error for mean length at age from the fitted numbers, and `se = TRUE` without the reference line gives a warning and the estimate only. If the parameter covariance is unavailable, the function warns and draws the estimate alone, keeping the labels, text sizes, breaks and theme you passed.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_VB)
 
 
 
-## 20. 年龄—体长概率矩阵 / Age–length probability matrix
+## 21. 各时间步的年龄别平均体长 / Mean length at age by time step
+
+```r
+# 绘制本图 / Draw this figure
+plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2,
+  line_size = 0.6)
+```
+
+[![各时间步的年龄别平均体长 / Mean length at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/length_at_age.png?raw=true&v=546d1e725222)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/length_at_age.png?raw=true&v=546d1e725222)
+
+每个面板显示一个年龄组在各时间步的平均体长，数值来自 `length_at_age()`。原始结构的 ALSCL 拟合中，第一个时间步各年龄组的体长分布由 `Linf`、`k` 和 `t0` 给出。之后各时间步的体长由生长增量和体长别死亡决定，所以平均体长在最初几年变化较大，随后随补充和捕捞而波动。ACL 拟合只用一个年龄体长概率矩阵，得到水平线。`observed` 接受年龄鉴定得到的各时间步、各年龄平均体长（列 `year`、`age` 和 `mean_length`，可加 `sd_length`），画成所属年龄组面板中的点；与调查中采集的鉴定资料比较时用 `basis = "survey"`。`ages` 和 `years` 选择年龄组和时间步，`facet_by = "none"` 把全部年龄组画在一个面板中。
+
+Each panel shows the mean length of one age class in each time step, from `length_at_age()`. In the first time step of an ALSCL fit with the original structure, every age class has the length distribution given by `Linf`, `k` and `t0`. In later time steps the lengths follow from the growth increments and from mortality at length, so the mean length changes during the first years and then varies with recruitment and fishing. An ACL fit uses one age-length key and gives horizontal lines. `observed` takes mean length at age by time step from age readings (columns `year`, `age` and `mean_length`, optionally `sd_length`) and draws it as points in the panel of its age class; use `basis = "survey"` for readings of fish caught in the survey. `ages` and `years` select age classes and time steps, and `facet_by = "none"` draws all age classes in one panel.
+
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_length_at_age)
+
+
+
+## 22. 年龄—体长概率矩阵 / Age–length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
@@ -53,7 +84,7 @@ Each column of the static `pla` matrix gives length-bin probabilities for one ag
 
 
 
-## 21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
+## 23. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
 
 每个面板只有一个估计值时显示为点，带状区间改用误差棒；已选择 `se_type = "errorbar"` 时不会重复添加区间。
 
@@ -79,7 +110,7 @@ Each panel shows the estimated instantaneous fishing mortality rate (`F`) for on
 
 
 
-## 22. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
+## 24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -97,7 +128,7 @@ Each panel shows the same ACL estimates for one time step, with the fitted ages 
 
 
 
-## 23. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin
+## 25. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -115,7 +146,7 @@ Each panel shows how fishing mortality at length (`FL`) changes over time for on
 
 
 
-## 24. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
+## 26. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -133,7 +164,7 @@ For each age class, ALSCL sums the numbers surviving across length bins and divi
 
 
 
-## 25. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
+## 27. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -151,7 +182,27 @@ Each panel shows fishing mortality at length for one time step, with an approxim
 
 
 
-## 26. 按体长组分面的对数残差 / Log residuals by length bin
+## 28. 拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit
+
+```r
+# 绘制本图 / Draw this figure
+(plot_natural_mortality(b, line_size = 0.8) +
+   labs(title = "Natural mortality rate (M)")) |
+  (plot_survey_catchability(b, line_size = 0.8, point_size = 1.5) +
+     labs(title = "Survey catchability at length"))
+```
+
+[![拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true&v=3a333c6d9c04)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true&v=3a333c6d9c04)
+
+两个面板显示的都是你给定的输入，不是估计值。`plot_natural_mortality()` 的图形随 `M` 的形式而定：单个数值画成水平线（如本例）；按年龄组给定时画 M 随年龄的变化，随时间变化时改为画 M 随时间步的变化，每个年龄组一个面板；按体长给定（ALSCL）时画 M 随体长的变化。`plot_survey_catchability()` 显示由 `sel_L50` 和 `sel_L95` 或由 `survey_q` 给出的体长别可捕性。`survey_q` 各时间步不同时，每条不同的曲线画一条线并标出其适用的时间步；`type = "age"` 显示年龄别乘数（`survey_q_age`）。调查指数不能确定总死亡中捕捞死亡和自然死亡各占多少，也不能确定可捕性的水平，所以 F、渔获量和丰度的水平取决于这两项输入（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)）。报告中请把它们与估计值一并给出。
+
+Both panels show inputs that you supplied, not estimates. `plot_natural_mortality()` follows the form of `M`: a single value is a horizontal line (as here), a rate by age class is drawn against age or, when it changes over time, against the time step with one panel per age class, and a rate by length (ALSCL) is drawn against length. `plot_survey_catchability()` shows the catchability at length from `sel_L50` and `sel_L95` or from `survey_q`. When `survey_q` differs among time steps, it draws one line for each distinct curve and names the time steps of each, and `type = "age"` shows the multiplier by age (`survey_q_age`). The survey index does not inform the split of total mortality into fishing and natural mortality or the level of catchability, so the level of F, catch and abundance depends on these inputs ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)). Show them next to the estimates in a report.
+
+[参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_natural_mortality) · [`plot_survey_catchability()`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_survey_catchability)
+
+
+
+## 29. 按体长组分面的对数残差 / Log residuals by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -173,7 +224,7 @@ Within each facet, a missing or excluded observation breaks the residual line an
 
 
 
-## 27. 按时间步分面的对数残差 / Log residuals by time step
+## 30. 按时间步分面的对数残差 / Log residuals by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -191,7 +242,7 @@ The same residuals arranged by length: one panel per time step, with length on t
 
 
 
-## 28. 补充量的对数偏差 / Log recruitment deviations
+## 31. 补充量的对数偏差 / Log recruitment deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -210,7 +261,7 @@ The points are estimated log recruitment deviations and the bars are approximate
 
 
 
-## 29. 补充量相对于中位数的倍数 / Recruitment relative to the process median
+## 32. 补充量相对于中位数的倍数 / Recruitment relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -229,7 +280,7 @@ With `log = FALSE`, each point is recruitment divided by the process median. A r
 
 
 
-## 30. 捕捞死亡率的对数偏差 / Log fishing mortality deviations
+## 33. 捕捞死亡率的对数偏差 / Log fishing mortality deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -248,7 +299,7 @@ Points and approximate 95% intervals show log fishing mortality deviations over 
 
 
 
-## 31. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median
+## 34. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -267,7 +318,7 @@ Each point is the fitted fishing mortality rate divided by the process median. A
 
 
 
-## 32. 长度组成山脊图 / Length composition ridges
+## 35. 长度组成山脊图 / Length composition ridges
 
 山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。
 

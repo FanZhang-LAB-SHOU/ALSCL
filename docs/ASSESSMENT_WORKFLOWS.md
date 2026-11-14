@@ -91,6 +91,17 @@ Three functions return quantities that a source outside the model can check: mea
 
 `relative_catch()` returns catch in numbers and in weight, each divided by its mean over the time steps, or over the time steps given in `years`. Give the time steps that have reported catch, and divide the reported catch by its mean over the same time steps. The function returns relative values only, because a fit to a survey index does not determine the level of catch ([Model principles](USER_GUIDE.md#model-theory-survey)). The column `extrapolated` is `TRUE` for the last time step, whose catch is a prediction.
 
+```r
+plot_VB(b, basis = "survey")
+plot_length_at_age(b, basis = "survey", ages = c(1, 5, 10))
+plot_SSB(b, maturity_at_age = ogive)
+plot_relative_catch(b)
+```
+
+有四个绘图函数显示这些输出。`plot_VB()` 画各时间步平均后的各年龄平均体长，`plot_length_at_age()` 按时间步画；两者都接受 `basis`，并可在 `observed` 中给出年龄鉴定得到的各年龄平均体长，画成点。`plot_SSB()` 加上 `maturity_at_age` 后，在模型的产卵生物量旁加画按年龄别成熟比例算出的产卵生物量。`plot_relative_catch()` 画相对渔获量；给出 `observed` 时，加画除以同样时间步均值后的上报渔获量。`plot_natural_mortality()` 和 `plot_survey_catchability()` 显示拟合所用的自然死亡率和调查可捕性，渔获量和丰度的水平取决于这两项输入（[生长、死亡与残差图](PLOT_GALLERY.md)）。
+
+Four plots show these outputs. `plot_VB()` draws mean length at age averaged over the time steps, and `plot_length_at_age()` draws it by time step; both take `basis` and, in `observed`, the mean length at age from age readings, drawn as points. `plot_SSB()` with `maturity_at_age` adds the spawning biomass from the maturity ogive by age to the spawning biomass of the model. `plot_relative_catch()` draws relative catch and, with `observed`, a reported catch series divided by its mean over the same time steps. `plot_natural_mortality()` and `plot_survey_catchability()` show the natural mortality rate and the survey catchability that the fit used, the two inputs on which the level of catch and abundance depends ([Growth, mortality and residuals](PLOT_GALLERY.md)).
+
 <a id="assessment-workflows-section-5"></a>
 
 ### 3. 按模型时间轴检查残差 / Check residuals on the model time grid

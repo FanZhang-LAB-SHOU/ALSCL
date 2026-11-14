@@ -6,9 +6,9 @@
 
 **ALSCL 2.4.3.9000 · 简体中文 / English**
 
-对应 ALSCL 2.4.3.9000，覆盖 **71 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.3.9000，覆盖 **75 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **71 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **75 exported functions** of ALSCL 2.4.3.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -70,21 +70,25 @@ dat <- x$data.CatL
 - [plot_compare_CatL](#plot_compare_CatL) — 两模型调查拟合 / Survey fits from both models
 - [plot_compare_F](#plot_compare_F) — 死亡率矩阵比较 / Fishing mortality matrices
 - [plot_compare_F_ts](#plot_compare_F_ts) — 各时间步 F 比较 / Fishing mortality by time step
-- [plot_compare_growth](#plot_compare_growth) — 生长与外部参照接口 / Growth and reference-data interface
+- [plot_compare_growth](#plot_compare_growth) — 两模型的年龄别平均体长 / Mean length at age of two fits
 - [plot_compare_metrics](#plot_compare_metrics) — 拟合指标比较 / Fit metric comparison
 - [plot_compare_residuals](#plot_compare_residuals) — 残差联合诊断 / Combined residual diagnostics
 - [plot_compare_selectivity](#plot_compare_selectivity) — 固定调查可捕性 / Fixed survey catchability
 - [plot_compare_ts](#plot_compare_ts) — 种群时间序列比较 / Population time series comparison
 - [plot_deviance](#plot_deviance) — 补充量和捕捞死亡率的过程偏差 / Recruitment and fishing mortality deviations
 - [plot_fishing_mortality](#plot_fishing_mortality) — 按年龄或体长绘制捕捞死亡率 / Plot fishing mortality by age or length
+- [plot_length_at_age](#plot_length_at_age) — 各时间步的年龄别平均体长 / Mean length at age by time step
+- [plot_natural_mortality](#plot_natural_mortality) — 拟合所用的自然死亡率 / Natural mortality rate used in a fit
 - [plot_pla](#plot_pla) — 给定年龄的体长分布 / Distribution of length at age
 - [plot_recruitment](#plot_recruitment) — 补充量 / Recruitment
+- [plot_relative_catch](#plot_relative_catch) — 各时间步的相对渔获量 / Relative catch by time step
 - [plot_residuals](#plot_residuals) — 按时间步或体长组绘制调查指数的对数残差 / Log survey-index residuals by time step or length bin
 - [plot_retro](#plot_retro) — 截短拟合与完整拟合的比较 / Retrospective estimates and the full fit
 - [plot_ridges](#plot_ridges) — 长度组成山脊图 / Length composition ridges
 - [plot_SSB](#plot_SSB) — 产卵生物量 SSB / Spawning stock biomass (SSB)
 - [plot_SSB_Rec](#plot_SSB_Rec) — 亲体与补充关系 / Spawning stock biomass against recruitment
-- [plot_VB](#plot_VB) — 生长曲线与区间 / Growth curve and interval
+- [plot_survey_catchability](#plot_survey_catchability) — 拟合所用的调查可捕性 / Survey catchability used in a fit
+- [plot_VB](#plot_VB) — 年龄别平均体长：VB 曲线或拟合尾数 / Mean length at age: von Bertalanffy curve or fitted numbers
 - [retro_acl](#retro_acl) — ACL 回溯入口 / ACL retrospective wrapper
 - [retro_alscl](#retro_alscl) — ALSCL 回溯入口 / ALSCL retrospective wrapper
 - [retro_model](#retro_model) — 统一回溯分析 / Unified retrospective analysis
@@ -1110,19 +1114,27 @@ plot_compare_F_ts(a, b, method = "apical") +
 <a id="plot_compare_growth"></a>
 ## `plot_compare_growth()`
 
-生长与外部参照接口 / Growth and reference-data interface
+两模型的年龄别平均体长 / Mean length at age of two fits
 
-曲线比较 VB 参数，热图比较静态 `pla` 矩阵。两个面板都使用拟合的年龄和体长：热图单元位于 `model$age` 中的年龄和 `model$len_mid` 中的体长组中点上；任一拟合缺少这些元数据时，热图使用年龄组和体长组的位置，并在坐标轴上注明。ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。
+左图比较两次拟合的各年龄平均体长，两者按同一口径计算（`length_at_age()`）并取各时间步的均值：ACL 来自年龄体长概率矩阵，ALSCL 来自拟合的体长组、年龄组尾数。右图是同一口径、同样时间步的给定年龄的体长分布热图，单元位于 `model$age` 中的年龄和 `model$len_mid` 中的体长组中点上。ACL 在种群口径下的热图就是 `report$pla`。ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例；`report$pla` 在 ALSCL 中是补充个体（原始结构下还有第一个时间步各年龄）的体长分布，用 `plot_pla()` 查看。
 
-The curves compare VB parameters and the heatmaps compare static `pla` matrices. Both panels use fitted ages and lengths: the heatmap cells sit at the ages in `model$age` and at the length-bin midpoints in `model$len_mid`. If either fit lacks this metadata, the heatmaps use age-class and length-bin positions and say so on their axes. Realized length distributions at age in ALSCL also depend on growth transitions and survival.
+The left panel compares mean length at age of the two fits, calculated on the same basis for both (`length_at_age()`) and averaged over the time steps: for ACL from the age-length key, for ALSCL from the fitted numbers by length bin and age class. The right panel shows heatmaps of the probability of length given age on the same basis and for the same time steps, with cells at the ages in `model$age` and at the length-bin midpoints in `model$len_mid`. For an ACL fit on the population basis the heatmap is `report$pla`. For an ALSCL fit it is the proportion of each age class in each length bin from the fitted numbers; `report$pla` of an ALSCL fit is the length distribution of recruits (and, with the original structure, of every age class in the first time step) and is shown by `plot_pla()`.
 
-可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
+左图不再画由生长参数计算的曲线，副标题也不再列出两个模型的 `Linf` 和 `k`。在 ACL 中这些参数是各年龄平均体长曲线的参数，在 ALSCL 中它们决定体长别生长增量和补充个体的平均体长，含义不同，不作比较。副标题给出口径和求均值的时间步。两个面板都需要每次拟合的年龄、体长组中点和时间步，ALSCL 还需要体长别年龄别尾数；缺少这些信息的结果会报错。
 
-The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the assessment curves and observed points remain.
+The left panel no longer draws curves computed from the growth parameters, and the subtitle no longer lists `Linf` and `k` of the two models. In ACL these are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits. They have different meanings and are not compared. The subtitle states the basis and the time steps of the mean. Both panels need the ages, the length-bin midpoints and the time steps of each fit, and an ALSCL fit needs its numbers by length and age; a result without them is an error.
 
-省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
+`observed` 给出年龄鉴定得到的各年龄平均体长，画成点，可带标准差或区间；与调查中采集的鉴定资料比较时用 `basis = "survey"`。`ref_data` 仍可给出个体的年龄和体长，由 `nls()` 拟合一条 VB 参考曲线，副标题给出该曲线的 `Linf` 和 `k`。
 
-Omit `age_range` to use the combined fitted age range, starting at or after both models' `t0`. A model without saved age metadata contributes the legacy range 1-20 years. An explicit range must contain two finite increasing ages and start at or after both `t0` values. A range with no positive span is rejected.
+`observed` supplies mean length at age from age readings, drawn as points with an optional standard deviation or interval; use `basis = "survey"` for readings of fish caught in the survey. `ref_data` still takes individual ages and lengths, to which `nls()` fits a VB reference curve; the subtitle gives `Linf` and `k` of that curve.
+
+可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；两个模型的线和观测点仍保留。
+
+The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the lines of the two models and the observed points remain.
+
+省略 `age_range` 时画两次拟合的全部年龄组。显式范围须为两个有限且递增的年龄，选取其中的年龄组；每次拟合至少要有一个年龄组落在范围内。
+
+Omit `age_range` to draw all age classes of both fits. An explicit range must contain two finite increasing ages and selects the age classes within it; each fit needs at least one age class in the range.
 
 提供 `ref_data` 时，`ref_name` 必须为非空字符串，且与两个模型标签均不同；重复名称会在拟合参考曲线前报错。
 
@@ -1132,14 +1144,15 @@ When supplying `ref_data`, use a nonempty `ref_name` distinct from both model la
 plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model2_name = NULL,
     colors = NULL, linetypes = NULL, line_size = NULL, ref_data = NULL, ref_name = "Observed VB",
     ref_color = "grey30", ref_linetype = "dotdash", show_points = TRUE, point_size = NULL,
-    point_alpha = 0.4, nls_start = NULL, ...)
+    point_alpha = 0.4, nls_start = NULL, ..., observed = NULL, basis = c("population", "survey"),
+    years = NULL, observed_name = "Age readings")
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model1` | `必填 / required` | 第一个拟合对象。 | First model result (reference). |
 | `model2` | `必填 / required` | 第二个拟合对象。 | Second model result (alternative). |
-| `age_range` | `NULL` | 两份拟合的合并年龄范围，自动起点不早于两个 t0；旧结果回退到 1-20 岁。显式值须为有限递增的二元向量，起点不早于两个 t0。 | Combined fitted ages, starting at or after both t0 values; legacy fallback 1-20. An explicit finite increasing pair must start at or after both t0 values. |
+| `age_range` | `NULL` | NULL 画两次拟合的全部年龄组。显式值须为有限递增的二元向量，选取其中的年龄组。 | NULL draws all age classes of both fits. An explicit finite increasing pair selects the age classes within it. |
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
@@ -1147,13 +1160,17 @@ plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `ref_data` | `NULL` | 可选 Age、Length 列的参考个体生长数据。 | Optional data.frame with columns Age and Length containing observed age-length measurements (e.g. from otolith readings). If provided, a VB curve is fitted via nls() and overlaid as a reference, with the raw data as scatter points. |
 | `ref_name` | `"Observed VB"` | 参考曲线名称；提供 ref_data 时必须非空，且不与任一模型标签重复。 | Nonempty reference-curve label distinct from both model labels when ref_data is supplied. |
-| `ref_color` | `"grey30"` | 参考曲线颜色。 | Character. Color for reference curve/points. Default "grey30". |
+| `ref_color` | `"grey30"` | 参考曲线及其数据点的颜色，也是 `observed` 的点的颜色。 | Character. Color for the reference curve and its points, and for the points of `observed`. Default "grey30". |
 | `ref_linetype` | `"dotdash"` | 参考曲线线型。 | Character. Linetype for reference curve. Default "dotdash". |
 | `show_points` | `TRUE` | 是否显示参考数据点。 | Logical. Show raw data points from ref_data. Default TRUE. |
 | `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
-| `point_alpha` | `0.4` | 点透明度，0–1。 | Numeric. Transparency of data points. Default 0.4. |
+| `point_alpha` | `0.4` | `ref_data` 数据点的透明度，0-1。 | Numeric. Transparency of the raw data points of `ref_data`. Default 0.4. |
 | `nls_start` | `NULL` | 参考数据 VB 非线性回归初值：Linf、k、t0。 | Named list. Starting values for nls. Default attempts auto-detection from data range. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `observed` | `NULL` | NULL，或年龄鉴定得到的各年龄平均体长数据框，画成左图中的点。必需列：`age`（岁）和 `mean_length`。可选列：`sd_length`（或 `sd`），画成均值上下各一个标准差的线段；或 `lower` 和 `upper`，画成区间线段；以及 `year`（时间步）。每行画一个点。给出 `years` 时只画这些时间步的行，没有时间步的行总是画出。 | NULL or a data frame of observed mean length at age from age readings, drawn as points in the left panel. Required columns: `age` (years) and `mean_length`. Optional columns: `sd_length` (or `sd`), drawn as bars of one standard deviation on each side of the mean, or `lower` and `upper`, drawn as the bars of an interval; and `year` (the time step). Every row is drawn as one point. With `years`, only the rows of those time steps are drawn; rows without a time step are always drawn. |
+| `basis` | `c("population", "survey")` | `"population"`（默认）：种群口径的各年龄平均体长和体长分布。`"survey"`：调查口径，即体长别尾数先乘以拟合所用的体长别调查可捕性；与调查中采集的年龄鉴定资料比较时用这一口径。 | `"population"` (default): mean length at age and the length distribution at age in the population. `"survey"`: in the survey catch, that is, with numbers at length multiplied by the survey catchability at length used in each fit. Use `"survey"` to compare with age readings of fish caught in the survey. |
+| `years` | `NULL` | NULL（每次拟合的全部时间步），或求均值的时间步；必须是两次拟合共有的时间步。 | NULL (all time steps of each fit) or the time steps over which the values are averaged. They must be time steps of both fits. |
+| `observed_name` | `"Age readings"` | `observed` 的点在图例中的名称，须与两个模型标签和 `ref_name` 不同。 | Character. Name of the points of `observed` in the legend, distinct from both model labels and from `ref_name`. Default is "Age readings". |
 
 **返回 / Returns:** 可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。
 
@@ -1174,7 +1191,7 @@ plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
     ref_name = "Synthetic reference", nls_start = list(Linf = 60, k = 0.2, t0 = 1/60))
 ```
 
-![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15))`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=e68a0ef8fb70)
+![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true&v=6a580f231902)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
 
@@ -1532,6 +1549,139 @@ plot_fishing_mortality(a, type = "year",
 
 ACL 的 `type="length"` 当前与 `"age"` 是兼容别名，不能解释为长度别 F。 / For ACL, length remains an age-plot compatibility alias.
 
+<a id="plot_length_at_age"></a>
+## `plot_length_at_age()`
+
+各时间步的年龄别平均体长 / Mean length at age by time step
+
+图中画出拟合模型每个年龄组的平均体长随时间步的变化，数值来自 `length_at_age()`；可加画年龄鉴定得到的各时间步、各年龄平均体长。用它查看模型中各年龄体长随时间的变化，并与年龄鉴定资料比较。`plot_VB()` 画的是这些数值在各时间步上的均值随年龄的变化。
+
+The figure shows the mean length of each age class of a fitted model against the time step, from `length_at_age()`, and optionally the observed mean length at age by time step from age readings. Use it to see how the lengths at age of the model change over time and to compare them with age readings. `plot_VB()` shows the mean of the same values over the time steps against age.
+
+ALSCL 的数值来自估计的体长组、年龄组、时间步尾数，随生长、补充和体长别死亡而变化。ACL 的数值来自年龄体长概率矩阵，各时间步相同：种群口径下是水平线；调查口径下，只有给定的调查可捕性随时间变化时才变化。每个体长组用其中点代表，所以有较多个体落在第一个或最后一个体长组的年龄组，其平均体长会偏向该组的中点；与鉴定资料比较时，先把鉴定个体的体长归入模型的体长组。最老的年龄组是末组，用加号标出。标题使用主题键 `length_at_age_time`，坐标轴标签使用 `xlab$year` 和 `ylab$growth`；包中没有体长单位，请在 `ylab` 中给出。
+
+For an ALSCL fit the values come from the estimated numbers by length bin, age class and time step, so they change over time with growth, recruitment and mortality at length. For an ACL fit they come from the age-length key, which is the same in every time step: the lines are horizontal on the population basis, and on the survey basis they change only when the supplied survey catchability changes over time. Each length bin is represented by its midpoint, so the mean of an age class with a large share of its fish in the first or the last length bin is drawn toward the midpoint of that bin; for a comparison with age readings, first assign the lengths of the aged fish to the length bins of the model. The oldest age class is a plus group and is marked with a plus sign. The title uses the theme key `length_at_age_time`, and the axis labels use `xlab$year` and `ylab$growth`; the package holds no unit for length, so give it in `ylab`.
+
+```r
+plot_length_at_age (fit, observed = NULL, basis = c("population", "survey"), years = NULL,
+    ages = NULL, facet_by = c("age", "none"), line_size = NULL, line_color = NULL,
+    line_type = "solid", point_size = NULL, observed_color = NULL, observed_name = "Age readings",
+    facet_ncol = NULL, facet_scales = "free", return_data = FALSE, title = NULL, xlab = NULL,
+    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
+    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
+    base_theme = NULL, title_hjust = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `observed` | `NULL` | NULL，或年龄鉴定得到的各年龄平均体长数据框，画成点。必需列：`age`（拟合的年龄组，取 `fit$age` 中的值）、`mean_length` 和 `year`（时间步，与 `fit$year` 同一刻度）。可选列：`sd_length`（或 `sd`），画成均值上下各一个标准差的线段；或 `lower` 和 `upper`，画成区间线段。`length_at_age()` 的输出含有这些列。 | NULL or a data frame of observed mean length at age from age readings, drawn as points. Required columns: `age` (an age class of the fit, as in `fit$age`), `mean_length` and `year` (the time step, on the scale of `fit$year`). Optional columns: `sd_length` (or `sd`), drawn as bars of one standard deviation on each side of the mean, or `lower` and `upper`, drawn as the bars of an interval. The output of `length_at_age()` has these columns. |
+| `basis` | `c("population", "survey")` | `"population"`（默认）：种群口径的各年龄平均体长。`"survey"`：调查口径，即体长别尾数先乘以拟合所用的体长别调查可捕性；与调查中采集的年龄鉴定资料比较时用这一口径。 | `"population"` (default): mean length at age in the population. `"survey"`: mean length at age in the survey catch, that is, with numbers at length multiplied by the survey catchability at length used in the fit. Use `"survey"` to compare with age readings of fish caught in the survey. |
+| `years` | `NULL` | NULL（全部时间步），或要画的时间步，取 `fit$year` 中的值。 | NULL (all time steps) or the time steps to draw, as values of `fit$year`. |
+| `ages` | `NULL` | NULL（全部年龄组），或要画的年龄组，取 `fit$age` 中的值。 | NULL (all age classes) or the age classes to draw, as values of `fit$age`. |
+| `facet_by` | `c("age", "none")` | `"age"`（默认）：每个年龄组一个分面。`"none"`：只有一个面板，每个年龄组一条线，按年龄组着色。 | `"age"` (default): one panel per age class. `"none"`: one panel with one line per age class, coloured by age class. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_color` | `NULL` | `facet_by = "age"` 时的线条颜色；NULL 继承全局 line_color。`facet_by = "none"` 时各线使用全局配色。 | Character or NULL. Line colour with `facet_by = "age"`; NULL inherits the global line_color setting. With `facet_by = "none"` the lines take the colours of the global palette. |
+| `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
+| `point_size` | `NULL` | 观测点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the observed points; NULL inherits the global point_size setting (default 2.5). |
+| `observed_color` | `NULL` | `facet_by = "age"` 时观测点的颜色；NULL 继承全局 observed_color。`facet_by = "none"` 时点的颜色与其年龄组相同。 | Character or NULL. Colour of the observed points with `facet_by = "age"`; NULL inherits the global observed_color setting. With `facet_by = "none"` the points take the colour of their age class. |
+| `observed_name` | `"Age readings"` | 观测点在图例和图注中的名称。 | Character. Name of the observed points in the legend and the caption. Default is "Age readings". |
+| `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
+| `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
+| `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
+| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
+| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
+| `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
+| `title_size` | `NULL` | 图标题字号。 | Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14). |
+| `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
+| `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
+| `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
+| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+
+**返回 / Returns:** ggplot 对象；`return_data = TRUE` 时返回含 `plot` 和 `data` 的列表，`data` 每个年龄组和时间步一行：Year、Age、AgeClass（分面标签）、mean_length 和 sd_length。
+
+A ggplot object, or a list with `plot` and `data` when `return_data = TRUE`. `data` has one row per age class and time step: Year, Age, AgeClass (the panel label), mean_length and sd_length.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2)
+# 调查口径，并加上各时间步的年龄鉴定均值（本例为模拟值） / Survey basis, with mean length at age from age readings by time step (made up here)
+readings <- subset(length_at_age(b, basis = "survey"), age %in% c(2, 5) & year %% 2 == 0)
+readings$mean_length <- readings$mean_length + rep(c(-1, 1), length.out = nrow(readings))
+plot_length_at_age(b, observed = readings, basis = "survey", ages = c(2, 5))
+```
+
+![示例图 / Example figure: `plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2, line_size = 0.6)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/length_at_age.png?raw=true&v=546d1e725222)
+
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_length_at_age)。
+
+<a id="plot_natural_mortality"></a>
+## `plot_natural_mortality()`
+
+拟合所用的自然死亡率 / Natural mortality rate used in a fit
+
+图中画出 ACL 或 ALSCL 拟合所用的自然死亡率（M）。M 是用户给定的输入，不是估计值。图形随输入的形式而定：单个数值画成随时间步的水平线；按年龄组给定且各时间步相同时，画 M 随年龄的变化，每个年龄组一个点；按年龄组和时间步给定时，画 M 随时间步的变化，每个年龄组一个分面；按体长给定（仅 ALSCL）时，画 M 随体长组中点的变化，每个体长组一个点。副标题写明输入的形式。
+
+The figure shows the natural mortality rate (M) that a fitted ACL or ALSCL model used. M is an input supplied by the user and is not estimated. The figure follows the form of the input: a single value is a horizontal line against the time step; a rate by age class that is the same in every time step is drawn against age, with a point at each age class; a rate by age class and time step is drawn against the time step, one panel per age class; a rate by length (ALSCL only) is drawn against the midpoints of the length bins, with a point at each length bin. The subtitle names the form.
+
+M 是每个模型时间步的瞬时率，默认纵轴标签注明时间基准，例如 "Natural mortality rate (per year)"。数值读自拟合结果中保存的输入设置；没有保存设置的结果读自可用的 TMB 对象。调查指数不能确定总死亡中捕捞死亡和自然死亡各占多少，所以估计的捕捞死亡率和模型渔获量的水平取决于这一输入。标题使用主题键 `natural_mortality`，坐标轴标签使用 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$M`。
+
+M is an instantaneous rate per model time step, and the default y-axis label states this time basis, for example "Natural mortality rate (per year)". The rate is read from the recipe stored in the fit, or from the live TMB object of a fit without a recipe. The survey index does not inform the split of total mortality into fishing and natural mortality, so the level of the estimated fishing mortality rate and of the model catch depends on this input. The title uses the theme key `natural_mortality`; the axis labels use `xlab$year`, `xlab$age` or `xlab$length`, and `ylab$M`.
+
+```r
+plot_natural_mortality (fit, line_size = NULL, line_color = NULL, line_type = "solid",
+    point_size = NULL, facet_ncol = NULL, facet_scales = "free", return_data = FALSE,
+    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL,
+    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
+    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
+| `point_size` | `NULL` | 年龄组或体长组上的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points at the age classes or length bins; NULL inherits the global point_size setting (default 2.5). |
+| `facet_ncol` | `NULL` | M 按年龄组和时间步给定时的分面列数。 | Numeric. Columns in facet wrap, for M by age class and time step. Default is NULL. |
+| `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
+| `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
+| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
+| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
+| `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
+| `title_size` | `NULL` | 图标题字号。 | Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14). |
+| `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
+| `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
+| `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
+| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+
+**返回 / Returns:** ggplot 对象；`return_data = TRUE` 时返回含 `plot` 和 `data` 的列表。
+
+A ggplot object, or a list with `plot` and `data` when `return_data = TRUE`.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+plot_natural_mortality(b)
+# 数值，随输入形式给出 Year、Age 或 Length 列 / The values, with a Year, Age or Length column that follows the form of the input
+head(plot_natural_mortality(b, return_data = TRUE)$data)
+```
+
+![示例图 / Example figure: `plot_natural_mortality(b) | plot_survey_catchability(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true&v=3a333c6d9c04)
+
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_natural_mortality)。
+
 <a id="plot_pla"></a>
 ## `plot_pla()`
 
@@ -1648,6 +1798,72 @@ plot_recruitment(b, se = TRUE)
 ![示例图 / Example figure: `plot_recruitment(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true&v=47a314e4a713)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_recruitment)。
+
+<a id="plot_relative_catch"></a>
+## `plot_relative_catch()`
+
+各时间步的相对渔获量 / Relative catch by time step
+
+图中画出模型的渔获尾数或渔获重量除以其均值后的序列，数值来自 `relative_catch()`；可加画上报渔获量，它除以自己在同样时间步上的均值。用它比较模型渔获量和上报渔获量的趋势。
+
+The figure shows the model catch in numbers or in weight divided by its mean, from `relative_catch()`, and optionally a reported catch series divided by its mean over the same time steps. Use it to compare the trend of the model catch with reported catch.
+
+ACL 和 ALSCL 只拟合调查指数。这样的拟合不含渔获量或捕捞死亡率绝对水平的信息，它们取决于假定的自然死亡率和调查可捕性（见 `relative_catch()`）。所以只应比较趋势：两条序列都除以各自在同样时间步上的均值，纵轴标签写明数值是相对值，副标题给出求均值的时间步，水平点线标出数值 1。最后一个时间步的捕捞死亡率没有观测提供信息，该时间步的模型渔获量是预测值；`return_data = TRUE` 时 `extrapolated` 列标出它。ACL 结果既没有可用的 TMB 对象、也没有保存的输入设置时，没有渔获重量，`type = "weight"` 会报错。标题使用主题键 `relative_catch`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_catch_number` 或 `ylab$relative_catch_weight`。
+
+ACL and ALSCL are fitted to a survey index alone. Such a fit has no information on the absolute level of catch or of the fishing mortality rate, which depend on the assumed natural mortality rate and the assumed survey catchability (see `relative_catch()`). Only the trend should be compared: both series are divided by their mean over the same time steps, the y-axis label states that the values are relative, the subtitle gives the time steps of the mean, and a dotted horizontal line marks the value 1. No observation informs the fishing mortality rate in the terminal time step, so the model catch in that time step is a prediction; `return_data = TRUE` marks it in the column `extrapolated`. For an ACL result with neither a live TMB object nor a stored recipe, catch in weight is unavailable and `type = "weight"` is an error. The title uses the theme key `relative_catch`; the axis labels use `xlab$year` and `ylab$relative_catch_number` or `ylab$relative_catch_weight`.
+
+```r
+plot_relative_catch (fit, observed = NULL, type = c("number", "weight"), years = NULL,
+    line_size = NULL, line_color = NULL, line_type = "solid", point_size = NULL,
+    observed_color = NULL, observed_name = "Reported catch", return_data = FALSE, title = NULL,
+    xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
+    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
+    base_theme = NULL, title_hjust = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `observed` | `NULL` | NULL，或上报渔获量数据框，画成点。必需列：`year`（时间步，取 `fit$year` 中的值）和 `catch`（上报的渔获尾数或渔获重量，与 `type` 一致，单位不限）。不在拟合时间步内的行和渔获量缺失的行不画。 | NULL or a data frame of reported catch, drawn as points. Required columns: `year` (the time step, as in `fit$year`) and `catch` (reported catch in numbers or in weight, to match `type`, in any unit). Rows of time steps that are not in the fit and rows with a missing catch are not drawn. |
+| `type` | `c("number", "weight")` | `"number"`（默认）：渔获尾数。`"weight"`：渔获重量。 | `"number"` (default): catch in numbers. `"weight"`: catch in weight. |
+| `years` | `NULL` | NULL，或计算均值所用的时间步，取 `fit$year` 中的值。NULL 使用拟合的全部时间步；给出 `observed` 时使用其中有上报渔获量的时间步。给出 `observed` 时，`years` 中没有上报渔获量的时间步不计入。 | NULL or the time steps over which the mean is calculated, as values of `fit$year`. NULL uses all time steps of the fit, or, with `observed`, the time steps of the fit that have a reported catch. With `observed`, time steps without a reported catch are left out of `years`. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
+| `point_size` | `NULL` | `observed` 的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points of `observed`; NULL inherits the global point_size setting (default 2.5). |
+| `observed_color` | `NULL` | `observed` 的点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Colour of the points of `observed`; NULL inherits the global observed_color setting. |
+| `observed_name` | `"Reported catch"` | 上报序列在图例中的名称。 | Character. Name of the reported series in the legend. Default is "Reported catch". |
+| `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
+| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
+| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
+| `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
+| `title_size` | `NULL` | 图标题字号。 | Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14). |
+| `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
+| `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
+| `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
+| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+
+**返回 / Returns:** ggplot 对象；`return_data = TRUE` 时返回列表，含 `plot`、`data`（模型序列：Year、relative 和 extrapolated）和 `observed`（上报序列：Year 和 relative，或 NULL）。
+
+A ggplot object, or a list with `plot`, `data` (the model series: Year, relative and extrapolated) and `observed` (the reported series: Year and relative, or NULL) when `return_data = TRUE`.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+plot_relative_catch(b)
+# 与生成数据时的渔获重量比较趋势；实际应用中用上报渔获量 / Compare the trend with the catch in weight of the data-generating simulation; use reported catch in practice
+simulated <- data.frame(year = b$year, catch = x$truth$CB)
+plot_relative_catch(b, observed = simulated, type = "weight", observed_name = "Simulated catch")
+```
+
+![示例图 / Example figure: `plot_relative_catch(b, observed = simulated, type = "weight", observed_name = "Simulated catch")`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true&v=05ee2a8256dc)
+
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_relative_catch)。
 
 <a id="plot_residuals"></a>
 ## `plot_residuals()`
@@ -1872,7 +2088,8 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
     facet_ncol = NULL, facet_scales = "free", return_data = FALSE, title = NULL,
     xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
     axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
-    base_theme = NULL, title_hjust = NULL, interval = NULL)
+    base_theme = NULL, title_hjust = NULL, interval = NULL, maturity_at_age = NULL,
+    weight_at_age = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1901,6 +2118,12 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 | `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
+| `maturity_at_age` | `NULL` | NULL（默认），或年龄别成熟比例，写法与 `ssb_at_age()` 的 `maturity` 相同：每个年龄组一个值的向量，或年龄组乘时间步的矩阵。`type = "SSB"` 时，把按这条年龄别成熟曲线算出的 SSB 加画为虚线，并用图例区分两条序列；其他类型下给出会报错。 | NULL (default) or the proportion mature at age, as `maturity` in `ssb_at_age()`: a vector with one value per age class or a matrix by age class and time step. With `type = "SSB"`, the SSB from this maturity ogive by age is added as a dashed line, and a legend names the two series. It is an error with the other types. |
+| `weight_at_age` | `NULL` | NULL，或各年龄平均体重，写法与 `ssb_at_age()` 的 `weight` 相同，与 `maturity_at_age` 一起使用。 | NULL or mean weight at age, as `weight` in `ssb_at_age()`, used with `maturity_at_age`. |
+
+模型按体长别成熟比例计算 SSB。给出 `maturity_at_age` 时，图中加画 `ssb_at_age()` 按年龄别成熟比例算出的 SSB（各年龄生物量乘以该年龄成熟比例后求和），用于和使用年龄别成熟曲线的年龄结构评估比较。`se = TRUE` 的区间属于模型的 SSB，加画的序列没有标准误。两条序列的单位都是模型生物量，其水平取决于假定的调查可捕性。不给 `maturity_at_age` 时图形与以前相同。
+
+The models calculate SSB from the proportion mature at length. With `maturity_at_age`, the figure adds the SSB that `ssb_at_age()` calculates from maturity at age (the sum over age classes of biomass at age multiplied by the proportion mature at age), for a comparison with an age-based assessment that uses a maturity ogive by age. The interval of `se = TRUE` belongs to the SSB of the model; the added series has no standard error. Both series are in the unit of model biomass, whose level depends on the assumed survey catchability. Without `maturity_at_age` the figure is the same as before.
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
@@ -1979,18 +2202,86 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_SSB_Rec)。
 
+<a id="plot_survey_catchability"></a>
+## `plot_survey_catchability()`
+
+拟合所用的调查可捕性 / Survey catchability used in a fit
+
+图中画出 ACL 或 ALSCL 拟合所用的调查可捕性：体长别可捕性（随时间变化时按时间步分线），或给定了年龄别可捕性乘数时的该乘数。调查可捕性是输入，不是估计值。
+
+The figure shows the survey catchability that a fitted ACL or ALSCL model used: catchability at length, by time step when it changes over time, or the catchability multiplier by age class when one was supplied. Survey catchability is an input and is not estimated.
+
+体长别可捕性是由 `sel_L50` 和 `sel_L95` 给出的 logistic 曲线，或用 `survey_q` 直接给定的数值，图中把各体长组的数值直接相连。`survey_q` 按体长和时间步给定且各时间步不同时，每条不同的曲线画一条线，图例给出各曲线适用的时间步。`type = "age"` 画年龄别可捕性乘数（`survey_q_age`）；拟合没有这一输入时报错。体长别调查指数等于体长别可捕性乘以各年龄组的乘数与体长别年龄别尾数之积的和，所以体长别可捕性对所有年龄组相同。可捕性的水平和下降段是假设：调查指数不能确定它们，而估计丰度的水平取决于它们。`plot_compare_selectivity()` 把两次拟合的体长别可捕性画在一个面板中。标题使用主题键 `survey_q` 和 `survey_q_age`，坐标轴标签使用 `xlab$length` 或 `xlab$age` 以及 `ylab$survey_q` 或 `ylab$survey_q_age`。
+
+Catchability at length is the logistic curve from `sel_L50` and `sel_L95`, or the values supplied as `survey_q`; the values of the length bins are connected directly. When `survey_q` was supplied by length and time step and differs among time steps, one line is drawn for each distinct curve, and the legend gives the time steps of each curve. `type = "age"` draws the catchability multiplier by age class (`survey_q_age`) and is an error for a fit without this input. The survey index at length is catchability at length multiplied by the sum over age classes of the multiplier by age and numbers at length and age, so catchability at length is one input for all age classes. The level and the descending part of catchability are assumptions: the survey index does not inform them, and the level of the estimated abundance depends on them. `plot_compare_selectivity()` draws catchability at length of two fits in one panel. The titles use the theme keys `survey_q` and `survey_q_age`; the axis labels use `xlab$length` or `xlab$age`, and `ylab$survey_q` or `ylab$survey_q_age`.
+
+```r
+plot_survey_catchability (fit, type = c("length", "age"), line_size = NULL, line_color = NULL,
+    line_type = "solid", point_size = NULL, return_data = FALSE, title = NULL, xlab = NULL,
+    ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL,
+    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
+    base_theme = NULL, title_hjust = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
+| `type` | `c("length", "age")` | `"length"`（默认）：体长别调查可捕性，横轴为体长组中点。`"age"`：年龄别可捕性乘数（`survey_q_age`），横轴为年龄；拟合没有这一输入时报错。 | `"length"` (default): survey catchability at length, against the midpoints of the length bins. `"age"`: the survey catchability multiplier by age class (`survey_q_age`), against age; an error for a fit without this input. |
+| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 line_color。体长别可捕性随时间变化时，各线使用全局配色。 | Character or NULL. NULL inherits the global line_color setting. When catchability at length changes over time, the lines take the colours of the global palette. |
+| `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
+| `point_size` | `NULL` | 体长组或年龄组上的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points at the length bins or age classes; NULL inherits the global point_size setting (default 2.5). |
+| `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
+| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
+| `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
+| `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
+| `title_size` | `NULL` | 图标题字号。 | Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14). |
+| `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
+| `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
+| `legend_text_size` | `NULL` | 图例文字字号。 | Numeric or NULL. Legend text size in pt. If NULL, uses global theme (default 10). |
+| `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
+| `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+
+**返回 / Returns:** ggplot 对象；`return_data = TRUE` 时返回含 `plot` 和 `data` 的列表。
+
+A ggplot object, or a list with `plot` and `data` when `return_data = TRUE`.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+plot_survey_catchability(b)
+# 各体长组的可捕性数值 / The catchability of each length bin
+head(plot_survey_catchability(b, return_data = TRUE)$data)
+```
+
+![示例图 / Example figure: `plot_natural_mortality(b) | plot_survey_catchability(b)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true&v=3a333c6d9c04)
+
+[查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_survey_catchability)。
+
 <a id="plot_VB"></a>
 ## `plot_VB()`
 
-生长曲线与区间 / Growth curve and interval
+年龄别平均体长：VB 曲线或拟合尾数 / Mean length at age: von Bertalanffy curve or fitted numbers
 
-曲线由拟合结果中的 VB 参数计算，`t0` 是理论零体长年龄。ALSCL 各期实际的年龄别体长分布还取决于生长转移和体长别死亡；此图展示的是参数对应的参考曲线。
+图中画出拟合模型各年龄的平均体长。画什么取决于模型，因为生长参数在 ACL 和 ALSCL 中含义不同。对 ACL 拟合，`Linf`、`vbk` 和 `t0` 是种群各年龄平均体长的 von Bertalanffy（VB）曲线的参数，图中画这条曲线并标注 `Linf` 和 `k`，`t0` 是理论零体长年龄。对 ALSCL 拟合，`Linf` 和 `k` 决定体长别平均生长增量，`Linf`、`k` 和 `t0` 决定补充个体的平均体长，它们不是各年龄平均体长曲线的参数。此时图中画由拟合的体长组、年龄组尾数算出的各年龄平均体长（`length_at_age()`），取各时间步的均值，不标注 `Linf` 和 `k`。
 
-The curve is calculated from the fitted VB parameters; `t0` is the theoretical age at zero length. Realized length distributions at age in ALSCL also depend on growth transitions and length-specific mortality; this plot shows the parameter-based reference curve.
+The figure shows mean length at age of a fitted model. What is drawn depends on the model, because the growth parameters have different meanings in ACL and ALSCL. For an ACL fit, `Linf`, `vbk` and `t0` are the parameters of a von Bertalanffy (VB) curve of mean length at age in the population; the figure shows this curve with an annotation of `Linf` and `k`, and `t0` is the theoretical age at zero length. For an ALSCL fit, `Linf` and `k` set the mean growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits; they are not the parameters of a curve of mean length at age. The figure then shows mean length at age calculated from the fitted numbers by length bin and age class (`length_at_age()`), averaged over the time steps, without an annotation of `Linf` and `k`.
 
-`age_range = NULL` 使用拟合年龄范围；旧结果没有年龄信息时回退到 1–25 岁，自动起点不早于 `t0`。显式范围必须是有限、递增且起点不早于 `t0` 的二元向量；自动范围没有正跨度时会报错。有效的显式范围仍可使用。两种区间样式均保留参数标注，并遵守 `text_size`、`text_color`、`font_family` 和 `ylab$growth`；单次调用的标签优先。
+`basis = "survey"` 改用调查口径（体长别尾数乘以拟合所用的体长别调查可捕性），与调查中采集的年龄鉴定资料比较时用这一口径；此时 ACL 拟合也按年龄体长概率矩阵计算各年龄平均体长。`years` 选择求均值的时间步。`observed` 给出年龄鉴定得到的各年龄平均体长，画成点，可带标准差或区间。`parameter_curve = TRUE` 把由 `Linf`、`k` 和 `t0` 计算的曲线画成虚线参考线，图例和图注说明它的含义：原始结构下，它是第一个时间步各年龄的平均体长，也是各时间步补充个体的平均体长。`se = TRUE` 的区间属于这条曲线。模型不报告由拟合尾数算出的平均体长的标准误，所以只要求区间而不画这条曲线时，函数给出警告并只画估计值。
 
-`age_range = NULL` uses the fitted age range; older results without age metadata fall back to 1–25 years. The automatic lower endpoint is at least `t0`. An explicit range must be a finite increasing pair starting at or after `t0`; an automatic range with no positive span is rejected. Valid explicit ranges remain supported. Both confidence-interval styles retain the parameter annotation and honor `text_size`, `text_color`, `font_family`, and `ylab$growth`; explicit labels override global labels.
+`basis = "survey"` uses the survey basis (numbers at length multiplied by the survey catchability at length used in the fit); use it to compare with age readings of fish caught in the survey. An ACL fit then also shows mean length at age from its age-length key. `years` selects the time steps of the mean. `observed` supplies mean length at age from age readings, drawn as points, with an optional standard deviation or interval. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line; the legend and the caption say what it is: with the original structure, the mean length at age in the first time step and the mean length of recruits in every time step. The interval of `se = TRUE` belongs to this curve. The model reports no standard error for mean length at age from the fitted numbers, so a request for an interval without the curve gives a warning and the estimate only.
+
+每个体长组用其中点代表，包括两端的开口组。某年龄组有较多个体落在第一个或最后一个体长组时，其平均体长会偏向该组的中点。与年龄鉴定资料比较时，先把鉴定个体的体长归入模型的体长组，再用体长组中点求各年龄平均体长，两者才按同样的方法计算。
+
+Each length bin is represented by its midpoint, including the two open-ended outer bins. Where a large share of an age class lies in the first or the last length bin, its mean length is drawn toward the midpoint of that bin. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model and average the bin midpoints, so that both means are calculated in the same way.
+
+对 ACL 的 VB 曲线，`age_range = NULL` 使用拟合年龄范围；旧结果没有年龄信息时回退到 1-25 岁，自动起点不早于 `t0`；显式范围必须是有限、递增且起点不早于 `t0` 的二元向量。对由尾数算出的平均体长，`age_range = NULL` 画全部年龄组，显式范围选取其中的年龄组，起点可以早于 `t0`。参数标注遵守 `text_size`、`text_color` 和 `font_family`。纵轴标签继承 `ylab$growth`；包中没有体长单位，请在 `ylab` 中给出，例如 `ylab = "Length (cm)"`。缺少年龄、时间步、体长组中点或体长别年龄别尾数的 ALSCL 结果会报错。
+
+For the VB curve of an ACL fit, `age_range = NULL` uses the fitted age range; older results without age metadata fall back to 1-25 years, and the automatic lower endpoint is at least `t0`. An explicit range must be a finite increasing pair starting at or after `t0`. For mean length at age from the numbers, `age_range = NULL` draws all age classes and an explicit range selects the age classes within it; it may start before `t0`. The parameter annotation honors `text_size`, `text_color` and `font_family`. The y-axis label inherits `ylab$growth`; the package holds no unit for length, so give it in `ylab`, for example `ylab = "Length (cm)"`. An ALSCL result without ages, time steps, length-bin midpoints or numbers by length and age is an error.
 
 `ylab` 在所有模式生效；协方差不可用时提示并仅绘制曲线，保留全部自定义样式。 `ylab` is honored in every mode; unavailable covariance triggers a warning and an estimate-only curve that retains all custom styling.
 
@@ -2000,17 +2291,19 @@ plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, li
     text_color = "black", text_size = 5, title = NULL, xlab = NULL, ylab = NULL,
     font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
-    title_hjust = NULL)
+    title_hjust = NULL, observed = NULL, basis = c("population", "survey"), years = NULL,
+    parameter_curve = FALSE, point_size = NULL, observed_color = NULL,
+    observed_name = "Age readings")
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
-| `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components. |
-| `age_range` | `NULL` | 默认采用拟合年龄范围，旧结果无年龄信息时回退到 1–25 岁，自动起点不早于 t0；显式范围须有限、递增且起点不早于 t0。 | NULL uses fitted ages or the legacy 1–25 fallback, with an automatic start no earlier than t0. Explicit ranges must be finite increasing pairs starting at or after t0. |
+| `model_result` | `必填 / required` | ACL 或 ALSCL 的拟合结果。画 VB 曲线只需要 report 中的 Linf、vbk 和 t0；由尾数算平均体长需要 `run_acl()` 或 `run_alscl()` 的结果，或保存的评估结果。 | A fitted ACL or ALSCL result. The von Bertalanffy curve needs a "report" component with "Linf", "vbk" and "t0"; mean length at age from the fitted numbers needs a result of `run_alscl()` or `run_acl()`, or a saved assessment. |
+| `age_range` | `NULL` | ACL 的 VB 曲线：默认采用拟合年龄范围，旧结果无年龄信息时回退到 1-25 岁，自动起点不早于 t0；显式范围须有限、递增且起点不早于 t0。由尾数算出的平均体长：NULL 画全部年龄组，显式范围选取其中的年龄组。 | For the von Bertalanffy curve of an ACL fit, NULL uses fitted ages or the legacy 1-25 fallback, with an automatic start no earlier than t0; explicit ranges must be finite increasing pairs starting at or after t0. For mean length at age from the fitted numbers, NULL uses all age classes and an explicit range selects the age classes within it. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
-| `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Draw approximate pointwise 95% confidence intervals using model-based standard errors. Default FALSE. |
+| `se` | `FALSE` | 是否画由 Linf、k 和 t0 计算的曲线的 95% 置信区间（delta 法）。对 ACL 拟合是图中曲线的区间；对 ALSCL 拟合，区间画在 `parameter_curve = TRUE` 的参考线周围。 | Logical. Whether to draw the 95% confidence interval of the curve computed from Linf, k and t0 (delta method). Default FALSE. For an ACL fit it is the interval of the figure; for an ALSCL fit it is drawn around the reference line when `parameter_curve = TRUE`. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
 | `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
 | `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon（阴影）或 errorbar（误差棒）。误差棒画在 age_range 内的拟合年龄（model_result$age）上；没有年龄元数据的结果，或范围内没有拟合年龄时，画在每个绘图年龄上。 | Character. Type of interval display: "ribbon" (shaded area) or "errorbar" (error bars). Error bars are drawn at the fitted ages in model_result$age that lie within age_range. Results saved without age metadata, and ranges that contain no fitted age, use every plotted age. Default is "ribbon". |
@@ -2028,6 +2321,13 @@ plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, li
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks (e.g. seq(1, 20, by = 2)). NULL = auto. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
+| `observed` | `NULL` | NULL，或年龄鉴定得到的各年龄平均体长数据框，画成点。必需列：`age`（岁）和 `mean_length`。可选列：`sd_length`（或 `sd`），画成均值上下各一个标准差的线段；或 `lower` 和 `upper`，画成区间线段；以及 `year`（时间步）。每行画一个点。给出 `years` 时只画这些时间步的行，没有时间步的行总是画出。 | NULL or a data frame of observed mean length at age from age readings, drawn as points. Required columns: `age` (years) and `mean_length`. Optional columns: `sd_length` (or `sd`), drawn as bars of one standard deviation on each side of the mean, or `lower` and `upper`, drawn as the bars of an interval; and `year` (the time step). Every row is drawn as one point. With `years`, only the rows of those time steps are drawn; rows without a time step are always drawn. |
+| `basis` | `c("population", "survey")` | `"population"`（默认）：种群口径的各年龄平均体长。`"survey"`：调查口径，即体长别尾数先乘以拟合所用的体长别调查可捕性；与调查中采集的年龄鉴定资料比较时用这一口径。此时 ACL 拟合按年龄体长概率矩阵画各年龄平均体长，不画描述种群的 VB 曲线。 | `"population"` (default): mean length at age in the population. `"survey"`: mean length at age in the survey catch, that is, with numbers at length multiplied by the survey catchability at length used in the fit. Use `"survey"` to compare with age readings of fish caught in the survey. For an ACL fit, `"survey"` draws mean length at age from the age-length key in place of the von Bertalanffy curve, which describes the population. |
+| `years` | `NULL` | NULL（全部时间步），或对由尾数算出的平均体长求均值的时间步，取 `model_result$year` 中的值。不改变 ACL 的 VB 曲线。 | NULL (all time steps) or the time steps over which mean length at age from the fitted numbers is averaged, as values of `model_result$year`. It does not change the von Bertalanffy curve of an ACL fit. |
+| `parameter_curve` | `FALSE` | 对 ALSCL 拟合，以及 `basis = "survey"` 的 ACL 拟合，是否加画由 Linf、k 和 t0 计算的曲线作为虚线参考线，并在图例和图注中说明。对 ACL 的 VB 曲线没有作用。 | Logical. For an ALSCL fit, and for an ACL fit with `basis = "survey"`, whether to add the curve computed from Linf, k and t0 as a dashed reference line, named in the legend and explained in the caption. It has no effect on the von Bertalanffy curve of an ACL fit. |
+| `point_size` | `NULL` | 观测点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the observed points; NULL inherits the global point_size setting (default 2.5). |
+| `observed_color` | `NULL` | 观测点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Colour of the observed points; NULL inherits the global observed_color setting. |
+| `observed_name` | `"Age readings"` | 观测点在图例中的名称。 | Character. Name of the observed points in the legend. Default is "Age readings". |
 
 **返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
 
@@ -2037,10 +2337,18 @@ A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_VB(b, se = TRUE)
+plot_VB(b)
+# 模拟的年龄鉴定资料；体长先归入模型体长组 / Synthetic age readings; each length is assigned to its model length bin
+set.seed(42)
+ref <- data.frame(Age = rep(1:15, each = 5))
+ref$Length <- VB_func(60, 0.2, 1/60, ref$Age) + stats::rnorm(nrow(ref), sd = 2)
+ref$Mid <- b$len_mid[findInterval(ref$Length, b$len_border) + 1]
+readings <- data.frame(age = 1:15, mean_length = as.numeric(tapply(ref$Mid, ref$Age, mean)),
+    sd_length = as.numeric(tapply(ref$Mid, ref$Age, sd)))
+plot_VB(b, observed = readings, parameter_curve = TRUE)
 ```
 
-![示例图 / Example figure: `plot_VB(b, se = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=fd78e32165ad)
+![示例图 / Example figure: `plot_VB(b, observed = readings, parameter_curve = TRUE)`](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true&v=a83fe5b491a7)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_VB)。
 

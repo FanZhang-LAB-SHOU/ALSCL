@@ -25,7 +25,7 @@ Around the two models the package provides data preparation and checks, multista
 - **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and QQ plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
 - **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`) and hindcast validation on withheld time steps (`hindcast_model()`).
 - **Keep and share the results.** `save_assessment()` stores a fit with its complete recipe, `read_assessment()` and `refit_model()` bring it back and refit it, and `extract_estimates()` returns the estimates with their standard errors.
-- **Plot everything with one argument set.** The 22 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 44 figures with their code.
+- **Plot everything with one argument set.** The 22 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 47 figures with their code.
 
 ## Installation
 
@@ -86,11 +86,11 @@ Every page states its purpose, the code to run, what to expect and what to do wh
 
 | Entry | Contents |
 |---|---|
-| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 71 functions |
+| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, six worked cases and the reference of all 75 functions |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Single-page book](docs/BOOK.md) | The same content with Chinese and English side by side, 18 chapters |
 | [User guide](docs/USER_GUIDE.md) | From installation to retrospectives |
 | [Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [Model validation](docs/MODEL_VALIDATION.md) · [Worked cases](docs/CASES.md) | Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |
-| [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md) | Every argument and default; 44 figures with their code |
+| [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md) | Every argument and default; 47 figures with their code |
 | [Speed guide](docs/SPEED_GUIDE.md) | Standard errors on parallel workers and the TMBad option with `alscl_speed()` |
 
 ## Getting help

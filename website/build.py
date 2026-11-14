@@ -54,8 +54,8 @@ GROUPS = [
     ('assumptions', 'Sensitivity, profiles and projections', '敏感性、参数剖面与情景投影', ['fit_scenarios', 'profile_model', 'project_model']),
     ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
     ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulation_to_tables', 'simulate_example_data']),
-    ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_recruitment', 'plot_SSB_Rec']),
-    ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_pla', 'plot_fishing_mortality', 'plot_residuals', 'plot_deviance', 'plot_ridges']),
+    ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_relative_catch', 'plot_recruitment', 'plot_SSB_Rec']),
+    ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_length_at_age', 'plot_pla', 'plot_fishing_mortality', 'plot_natural_mortality', 'plot_survey_catchability', 'plot_residuals', 'plot_deviance', 'plot_ridges']),
     ('comparison', 'Compare models visually', '模型比较绘图', ['plot_compare_ts', 'plot_compare_CatL', 'plot_compare_F', 'plot_compare_F_ts', 'plot_compare_growth', 'plot_compare_selectivity', 'plot_compare_residuals', 'plot_compare_metrics', 'plot_compare_annual_F']),
     ('theme', 'Plot appearance', '绘图样式', ['acl_theme', 'acl_theme_set', 'acl_theme_reset'])]
 

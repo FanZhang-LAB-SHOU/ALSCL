@@ -61,6 +61,15 @@ tail(catch, 3)
 
 `relative_catch()` 返回尾数和重量计的渔获量，各自除以它在各时间步上的均值，或在 `years` 指定的时间步上的均值。请给出有上报渔获量的时间步，并把上报渔获量除以它在同样时间步上的均值。函数只返回相对值，因为只拟合调查指数时渔获量的水平无法确定（[模型原理与时间尺度](model-theory.html#survey)）。`extrapolated` 列在最后一个时间步为 `TRUE`，该时间步的渔获量是预测值。
 
+```r
+plot_VB(b, basis = "survey")
+plot_length_at_age(b, basis = "survey", ages = c(1, 5, 10))
+plot_SSB(b, maturity_at_age = ogive)
+plot_relative_catch(b)
+```
+
+有四个绘图函数显示这些输出。`plot_VB()` 画各时间步平均后的各年龄平均体长，`plot_length_at_age()` 按时间步画；两者都接受 `basis`，并可在 `observed` 中给出年龄鉴定得到的各年龄平均体长，画成点。`plot_SSB()` 加上 `maturity_at_age` 后，在模型的产卵生物量旁加画按年龄别成熟比例算出的产卵生物量。`plot_relative_catch()` 画相对渔获量；给出 `observed` 时，加画除以同样时间步均值后的上报渔获量。`plot_natural_mortality()` 和 `plot_survey_catchability()` 显示拟合所用的自然死亡率和调查可捕性，渔获量和丰度的水平取决于这两项输入（[生长、死亡与残差图](growth-mortality.html)）。
+
 <h2 id="section-5">3. 按模型时间轴检查残差</h2>
 
 ```r

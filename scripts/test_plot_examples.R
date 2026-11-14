@@ -101,12 +101,20 @@ check_growth_fishing_examples <- function(a, b, assert_grid_free_plot) {
           built <- ggplot2::ggplot_build(value)
           text_layers <- which(vapply(value$layers, function(layer)
             inherits(layer$geom, "GeomText"), logical(1)))
-          check(length(text_layers) == 1L, paste(path, "growth annotation missing"))
-          wanted_font <- if (is.null(arguments$font_family)) "mono" else eval(arguments$font_family, e)
-          check(all(built$data[[text_layers]]$family == wanted_font), paste(path, "annotation font ignored"))
-          if (!is.null(arguments$text_size))
-            check(all(built$data[[text_layers]]$size == eval(arguments$text_size, e)),
-                  paste(path, "annotation size ignored"))
+          # The annotation of Linf and k belongs to the curve computed from
+          # the growth parameters: the figure of an ACL fit, and the reference
+          # line that parameter_curve = TRUE adds for an ALSCL fit.
+          curve_drawn <- !identical(fit$model_type, "ALSCL") || isTRUE(eval(arguments$parameter_curve, e))
+          check(length(text_layers) == as.integer(curve_drawn),
+                paste(path, if (curve_drawn) "growth annotation missing" else
+                  "Linf and k annotated without the curve computed from them"))
+          if (curve_drawn) {
+            wanted_font <- if (is.null(arguments$font_family)) "mono" else eval(arguments$font_family, e)
+            check(all(built$data[[text_layers]]$family == wanted_font), paste(path, "annotation font ignored"))
+            if (!is.null(arguments$text_size))
+              check(all(built$data[[text_layers]]$size == eval(arguments$text_size, e)),
+                    paste(path, "annotation size ignored"))
+          }
         } else if (name == "plot_compare_CatL") {
           check(identical(value$labels$y, "Survey index"), paste(path, "survey comparison uses catch label"))
           acl_theme_set(ylab = list(survey = "Survey index (example check)"))

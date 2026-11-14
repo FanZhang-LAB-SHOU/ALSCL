@@ -25,7 +25,7 @@ ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估�
 - **判断拟合。** `diagnose_model()` 报告收敛码、梯度、Hessian 和落在边界上的参数；`check_fit()` 增加残差热图、滞后相关和 QQ 图；`compare_models()` 按 AIC、BIC 和拟合统计量比较同一数据的两次拟合。
 - **检验评估结果。** 带 Mohn's rho 的回溯分析（`retro_model()`）、敏感性情景（`fit_scenarios()`）、似然剖面（`profile_model()`）、确定性投影（`project_model()`）、从拟合模型模拟调查数据（`simulate_fit()`）和对留出时间步的预测检验（`hindcast_model()`）。
 - **保存并分享结果。** `save_assessment()` 把拟合连同完整设置一起保存，`read_assessment()` 和 `refit_model()` 读回并重新拟合，`extract_estimates()` 返回带标准误的估计值。
-- **用同一组参数画所有图。** 22 个绘图函数共用参数名和一个主题 `acl_theme_set()`，提供五种色板。[图谱](docs/PLOT_GALLERY.md)展示全部 44 张示例图及其代码。
+- **用同一组参数画所有图。** 22 个绘图函数共用参数名和一个主题 `acl_theme_set()`，提供五种色板。[图谱](docs/PLOT_GALLERY.md)展示全部 47 张示例图及其代码。
 
 ## 安装
 
@@ -86,11 +86,11 @@ save_assessment(a, "ytf_acl.rds")
 
 | 入口 | 内容 |
 |---|---|
-| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 71 个函数的参考 |
+| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 75 个函数的参考 |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿](docs/BOOK.md) | 同一内容的中英对照版本，18 章 |
 | [使用指南](docs/USER_GUIDE.md) | 从安装到回溯分析的双语手册 |
 | [评估工作流](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证](docs/MODEL_VALIDATION.md) · [应用案例](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 |
-| [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md) | 全部参数与默认值；44 张示例图及其代码 |
+| [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md) | 全部参数与默认值；47 张示例图及其代码 |
 | [加速指南](docs/SPEED_GUIDE.md) | 用 `alscl_speed()` 在并行进程上计算标准误，以及 TMBad 选项 |
 
 ## 获取帮助
