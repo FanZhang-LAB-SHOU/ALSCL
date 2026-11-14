@@ -17,7 +17,7 @@ plot_VB(b, se = TRUE)
 
 [![Growth curve and interval](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)
 
-The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population.
+The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population. For the mean length at age of the fitted population, and for a comparison with age readings, use `length_at_age()`.
 
 `age_range = NULL` draws the fitted age range, starting no earlier than `t0`; an explicit `age_range` must be two increasing finite ages at or after `t0`. If `se = TRUE` but the parameter covariance is unavailable, the function warns and draws the curve alone, keeping the labels, text sizes, breaks and theme you passed.
 

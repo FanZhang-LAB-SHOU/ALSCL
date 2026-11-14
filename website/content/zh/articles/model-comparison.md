@@ -79,7 +79,7 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 [![生长与外部参照接口](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)
 
-左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。
+左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，不是各年龄平均体长曲线的参数，所以比较两次拟合的生长时，请看 `compare_models(a, b, dat)$length_at_age` 中的各年龄平均体长。
 
 省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
 
@@ -127,7 +127,7 @@ plot_compare_selectivity(a, b)
 
 [![固定调查可捕性](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_selectivity.png?raw=true)
 
-各拟合输入的体长别调查可捕性 `q`（`sel_L50`、`sel_L95`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。
+各拟合输入的体长别调查可捕性 `q`（`sel_L50` 和 `sel_L95`，或 `survey_q`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。`survey_q` 按体长和时间步给出时，每条不同的曲线各画一条线，并在图注中说明。按年龄的调查可捕性系数（`survey_q_age`）不显示。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_selectivity)
 

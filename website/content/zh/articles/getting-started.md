@@ -55,7 +55,7 @@ diagnose_model(x$data.CatL, a)
 
 `run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟；拟合本身约二十秒。`silent = TRUE` 不显示进度信息。
 
-`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 状态及参数边界检查。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过。优化器原始收敛码和强参数相关须另行检查。即使该筛查通过，也要阅读 `a$diagnostics$issues`；[理解第一次拟合](first-model.html)解释各项检查及提示问题的处理方法。
+`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 状态及参数边界检查。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过，并且没有实际上已到极限的参数。优化器原始收敛码和强参数相关须另行检查。即使该筛查通过，也要阅读 `a$diagnostics$issues`；[理解第一次拟合](first-model.html)解释各项检查及提示问题的处理方法。
 
 本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
 

@@ -20,13 +20,14 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 
 | 设置 / Setting | 含义 / Meaning | 放在哪里 / Where to put it |
 |---|---|---|
-| `rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border` / `rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border` | 生物学、调查可捕性和时间步 / Biology, survey catchability and time step | `x$fit_args`，两个模型共用 / `x$fit_args`, shared by both models |
+| `rec.age`、`nage`、`M`、`sel_L50` 和 `sel_L95` 或 `survey_q`、`survey_q_age`、`growth_step`、`len_mid`、`len_border` / `rec.age`, `nage`, `M`, `sel_L50` and `sel_L95` or `survey_q`, `survey_q_age`, `growth_step`, `len_mid`, `len_border` | 生物学、调查可捕性和时间步。`M` 是一个数、一个按年龄组和时间步的矩阵，或者（仅 ALSCL）一个按体长组的向量。`survey_q` 直接给出体长别调查可捕性，`survey_q_age` 是按年龄组的系数（[准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-mortality-catchability)） / Biology, survey catchability and time step. `M` is a single number, a matrix by age class and time step or, for ALSCL, a vector by length bin. `survey_q` supplies survey catchability at length directly, and `survey_q_age` is a multiplier by age class ([Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-mortality-catchability)) | `x$fit_args`，两个模型共用 / `x$fit_args`, shared by both models |
 | `zero_action` | 调查零值按缺失处理（默认 `"missing"`）或终止拟合（`"error"`） / Treat survey zeros as missing (`"missing"`, default) or stop (`"error"`) | `x$fit_args` |
 | `parameters`、`parameters.L`、`parameters.U` / `parameters`, `parameters.L`, `parameters.U` | 标量参数在优化器尺度上的初值和边界 / Starting values and bounds of the scalar parameters, on the optimizer scale | `x$fit_config$acl` 或 `x$fit_config$alscl` / `x$fit_config$acl` or `x$fit_config$alscl` |
 | `map` | 哪些参数固定在初值、哪些默认固定的参数被释放 / Which parameters are fixed at their starting value and which default fixes are released | `x$fit_config$acl` 或 `x$fit_config$alscl` / `x$fit_config$acl` or `x$fit_config$alscl` |
 | `F_structure` | `"group_year"`（默认）：F 随年龄或体长及时间步变化；`"year"`：每个时间步一个 F / `"group_year"` (default): F varies by age or length and by time step; `"year"`: one F per time step | `x$fit_args` 或调用 / `x$fit_args` or the call |
 | `structure` | 可选的模型结构，包括 AR(1) 相关系数的取值范围；默认是原始结构，即本包最初发布时的结构 / Optional model structures, including the range of the AR(1) correlations; the default is the original structure, that of the package as first released | `x$fit_config$acl` 或 `x$fit_config$alscl`，或调用 / `x$fit_config$acl` or `x$fit_config$alscl`, or the call |
 | `t0_lower` | ALSCL 生长参数 `t0` 的下限，单位为年（默认 0）；取负值时允许 `t0` 为负 / Lower limit of the ALSCL growth parameter `t0` in years (default 0); a negative value allows a negative `t0` | `x$fit_config$alscl`，或 `run_alscl()` 的调用 / `x$fit_config$alscl` or the call to `run_alscl()` |
+| `bounds` | `"default"`，或 `"wide"`：让 ACL 的五个参数采用 ALSCL 的边界（第 4 步） / `"default"`, or `"wide"` to give ACL the bounds of ALSCL for five parameters (step 4) | `x$fit_config$acl`，或 `run_acl()` 的调用 / `x$fit_config$acl` or the call to `run_acl()` |
 | `nstarts`、`ncores` / `nstarts`, `ncores` | 独立初值的个数和运行它们的工作进程数 / Number of independent optimizer starts and of worker processes running them | 调用 / The call |
 | `start_spread` | 第二个及之后的初值围绕第一个初值的离散程度（默认 0.15） / Spread of the second and later starts around the first (default 0.15) | 调用 / The call |
 | `train_times` | 每个初值连续优化的轮数（默认 1） / Successive optimizer passes from each start (default 1) | 调用 / The call |
@@ -91,6 +92,28 @@ Leave the process-deviation blocks `dev_log_R`, `dev_log_F` and `dev_log_N0` out
 
 For a named `NULL` release, copy the exact parameter name from `inspect_parameters(x, model)`. An unknown name stops the fit. When you subset a map factor, unused levels are discarded and the remaining entries keep their fixed or estimated status.
 
+<a id="fitting-controls-f-sd"></a>
+
+#### 估计 F 过程的标准差 / Estimate the standard deviation of the F process
+
+```r
+a_fixed <- run_acl(YTF_example, silent = TRUE)
+cfg <- YTF_example$fit_config$acl
+cfg$map["log_std_log_F"] <- list(NULL)  # 具名 NULL 解除默认固定 / a named NULL releases the default fix
+a_free <- run_acl(YTF_example, map = cfg$map, silent = TRUE)
+subset(extract_parameters(a_free), parameter == "log_std_log_F")
+c(fixed = a_fixed$opt$objective, estimated = a_free$opt$objective)
+range(a_free$report$SSB / a_fixed$report$SSB)
+```
+
+两个模型默认都把 F 过程的标准差固定在初值上：ACL 中是 `log_std_log_F`，ALSCL 中是 `log_sigma_log_F`。提出 ALSCL 的论文是估计这个参数的（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-sd-fixed)），所以每次评估都应把标准差放开重新拟合一次作为检查。`map` 中的具名 `NULL` 解除默认固定。请像代码块那样用单方括号赋值，因为 `cfg$map$log_std_log_F <- NULL` 会删除这一项，默认固定随即重新生效。这个值是边际标准差（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-sd)）。
+
+Both models fix the standard deviation of the F process at its starting value by default: `log_std_log_F` in ACL and `log_sigma_log_F` in ALSCL. The paper that introduced ALSCL estimates this parameter ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-sd-fixed)), so refit with the standard deviation estimated as a check of every assessment. A named `NULL` in `map` releases a default fix. Write it with single brackets as in the block, because `cfg$map$log_std_log_F <- NULL` deletes the entry and the default fix then applies again. The value is a marginal standard deviation ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-sd)).
+
+本例的估计值为 0.24，标准误 0.04，而固定值是 0.302。目标函数下降 1.0，各年的产卵生物量变化都不到 1%。两次拟合的差别比这更大时，两者都要报告。放开后的拟合通不过数值检查时（例如标准差被估计为零），保留固定值，并说明数据不足以确定它。
+
+In this example the estimate is 0.24 with a standard error of 0.04, against the fixed value of 0.302. The objective falls by 1.0, and spawning biomass changes by less than 1% in every year. Report both fits when they differ more than this. When the refit fails the numerical checks, for example because the standard deviation is estimated at zero, keep the fixed value and report that the data did not determine it.
+
 <a id="fitting-controls-starts"></a>
 
 ### 4. 设置初值和边界 / Set starting values and bounds
@@ -102,11 +125,19 @@ p$parameters.U$log_Linf <- log(90)
 x$fit_config$acl$parameters <- p$parameters
 x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
+# bounds = "wide" 时 ACL 的上界（自然尺度） / Upper bounds of ACL with bounds = "wide", on the natural scale
+wide <- create_parameters(model_type = "acl", bounds = "wide")
+exp(unlist(wide$parameters.U[c("log_init_Z", "mean_log_F", "log_std_log_N0",
+                               "log_std_log_R", "log_vbk")]))
 ```
 
 初值和边界在优化器尺度上填写：渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`（相关系数取默认范围时；取值在 -1 和 1 之间时的写法见第 6 步）。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6：20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此默认 `t0_lower = 0` 时 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间；允许 `t0` 为负的做法见第 6 步。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界。初值是这样一个体长的 1.1 倍：调查指数合计值的 99% 位于该体长以下。上界为最大体长组中点的 2 倍。下界取默认值（10）与该 99% 体长的一半两者中较小的一个，因此体长组延伸到最大个体以上时，真实的 `Linf` 不会被排除在外。`run_alscl()` 对你没有给定的值总是按数据设置：初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍，所以体长组远超最大个体时请给出 `parameters.L$log_Linf`。[估计参数清单](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)给出完整列表和变换方式。
 
 Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5 (with the default range of the correlations; step 6 gives the value for correlations between -1 and 1). `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. The presets are starting configurations taken from simulation operating models, not validated settings for a stock. The `"tuna"` preset, for example, is the tuna-like operating model M6 of the simulation study: 20 quarterly age classes with a plus group at 5 years, an asymptotic length of 152 cm and constant natural mortality. ACL uses `t0` directly, while ALSCL uses `log_t0` with `t0 = t0_lower + exp(log_t0)`, so with the default `t0_lower = 0` an ALSCL `t0` must lie between 0 and `rec.age`; step 6 shows how to allow a negative `t0`. A starting value outside its bounds is moved to the nearest bound before fitting, with a warning when you supplied the start and with a message for a default start; the fit lists these values in `clamped_starts`. The ACL defaults for `Linf` (start 60, bounds 10 to 100) are in the length units of the yellowtail flounder example. When they do not suit your length bins, for example tuna lengths in cm, `run_acl()` sets the start and bounds that you did not supply from the data. The start is 1.1 times the length below which 99 percent of the summed survey index lies. The upper bound is 2 times the largest length-bin midpoint. The lower bound is the smaller of the default (10) and half of that 99 percent length, so that length bins extending beyond the largest fish do not exclude the true `Linf`. `run_alscl()` always sets the values you did not supply from the data: the start is 1.1 times the largest length-bin midpoint and the bounds are 0.7 and 2 times that midpoint, so supply `parameters.L$log_Linf` when the bins extend well beyond the largest fish. [Estimation parameter lists](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) gives the full list with transformations.
+
+不选物种预设时，ACL 有五个参数的默认上界低于 ALSCL：初始总死亡率（每个时间步 1，ALSCL 为 10）、平均捕捞死亡率（每个时间步 1，ALSCL 为 2）、初始年龄别尾数和补充量在对数尺度上的标准差（1，ALSCL 为 10），以及生长率 `k`（每年 0.1 到 1，ALSCL 为 0.05 到 2）。ACL 的这些取值适合黄尾鲽示例，用 ACL 拟合其他种群时常常停在这些边界上。`run_acl(x, bounds = "wide")` 让 ACL 的这五个参数采用 ALSCL 的边界；代码块最后几行打印放宽后的上界：10、2、10、10 和 2。默认边界不变，所以以前的拟合可以重现。停在边界上的拟合通不过数值检查；如果边界属于这五个参数，`diagnostics$advice` 和拟合的提示信息会指出这个参数。`parameters.L` 和 `parameters.U` 中给出的项会替换两种选择下的边界。使用物种预设时，ACL 和 ALSCL 对这些参数的边界相同，`bounds` 不起作用。`run_alscl()` 没有这个参数。
+
+Without a species preset, the default upper bounds of ACL are lower than those of ALSCL for five parameters: the initial total mortality rate (1 against 10 per time step), the mean fishing mortality rate (1 against 2 per time step), the standard deviations of the initial numbers at age and of recruitment on the log scale (1 against 10), and the growth rate `k` (0.1 to 1 against 0.05 to 2 per year). The ACL values suit the yellowtail flounder example, and ACL fits to other stocks often stop at them. `run_acl(x, bounds = "wide")` gives ACL the ALSCL bounds of these five parameters; the last lines of the block print the wide upper bounds, 10, 2, 10, 10 and 2. The default bounds are unchanged, so earlier fits are reproduced. A fit that stops at a bound fails the numerical checks, and when the bound is one of these five, `diagnostics$advice` and the message of the fit name this argument. Entries of `parameters.L` and `parameters.U` replace the bounds of either choice. With a species preset, ACL and ALSCL have the same bounds for these parameters and `bounds` changes nothing. `run_alscl()` has no such argument.
 
 <a id="fitting-controls-f-structure"></a>
 
@@ -228,9 +259,9 @@ a5$start_summary
 
 `nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the lowest objective is kept. The perturbations are normal deviates with standard deviation `start_spread` (default 0.15) on the optimizer scale. `start_diagnostics` lists every start with its objective and convergence code, and `start_summary` gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to `diagnostics$issues`. If the final objectives differ, check convergence and compare the final gradients and parameter estimates before interpreting the difference as evidence for multiple local minima. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
 
-单个初值可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。数值检查只针对所得到的解，不能说明是否存在更好的解。用于报告的结果请使用多个初值（例如 `nstarts = 5`）和更大的 `start_spread`（例如 0.5），如代码块最后两行所示，并比较 `start_diagnostics` 中的目标函数值。
+单个初值可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。数值检查只针对所得到的解，不能说明是否存在更好的解。因此，只用一个初值（默认）的拟合会给出提示，除非设了 `silent = TRUE`；`retro_model()`、`fit_scenarios()` 这类一次运行多个拟合的函数，每次调用只提示一次。用于报告的结果请至少使用三个初值和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值；代码块最后两行用了五个初值。彼此靠得很近的初值可能都到达同一个局部最优，所以在增加个数的同时也要加大离散程度。多个初值并不能保证找到最优解（[Subbey 2018](https://doi.org/10.1093/icesjms/fsy044)）。
 
-A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The numerical checks are local: they describe the solution that was found and do not show whether a better one exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5), as in the last two lines of the block, and compare the objectives in `start_diagnostics`.
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The numerical checks are local: they describe the solution that was found and do not show whether a better one exists. A fit with one start, the default, therefore gives a message unless `silent = TRUE`; a function that runs several fits, such as `retro_model()` or `fit_scenarios()`, gives it once per call. For results that will be reported, use at least three starts with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`; the last two lines of the block use five starts. Starts that lie close together can all reach the same local optimum, so widen the spread as well as raising the number. Several starts do not guarantee that the best solution is found ([Subbey 2018](https://doi.org/10.1093/icesjms/fsy044)).
 
 如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始退出码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器退出码。
 
@@ -310,9 +341,9 @@ p$parameters.U$log_sigma_index <- log(0.5)
 fixed_index <- list(log_sigma_index = factor(NA))
 ```
 
-`create_parameters()` 返回所选模型和预设的三个列表。改初值或边界后参数仍然自由；只有 `fixed_index` 这样的 `map` 条目才会固定它。随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 在上表中没有键名。`correlation_range` 和 `t0_lower` 的说明见[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range)。
+`create_parameters()` 返回所选模型和预设的三个列表。改初值或边界后参数仍然自由；只有 `fixed_index` 这样的 `map` 条目才会固定它。随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 在上表中没有键名。`correlation_range` 和 `t0_lower` 的说明见[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range)。`create_parameters(model_type = "acl", bounds = "wide")` 返回的 ACL 列表中，有五个参数采用 ALSCL 的边界（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-starts)）。在采用原始结构的 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量；两个模型中 F 过程和补充量过程的标准差都是边际标准差。这两点的说明见[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-paper-differences)。
 
-`create_parameters()` returns the three lists for the model and preset. A changed start or bound leaves the parameter free; only a `map` entry such as `fixed_index` fixes it. The random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` have no key above. [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range) explains `correlation_range` and `t0_lower`.
+`create_parameters()` returns the three lists for the model and preset. A changed start or bound leaves the parameter free; only a `map` entry such as `fixed_index` fixes it. The random effects `dev_log_R`, `dev_log_F` and `dev_log_N0` have no key above. [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range) explains `correlation_range` and `t0_lower`. `create_parameters(model_type = "acl", bounds = "wide")` returns the ACL lists with the ALSCL bounds of five parameters ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-starts)). In ALSCL with the original structure, `Linf` and `k` set the growth increment at length, and the standard deviations of the F and recruitment processes are marginal standard deviations in both models; [Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-paper-differences) explains both.
 
 <a id="estimation-parameters-next"></a>
 

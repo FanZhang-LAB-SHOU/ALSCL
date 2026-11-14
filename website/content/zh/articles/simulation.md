@@ -101,7 +101,7 @@ performance$summary_converged
 performance$failures
 ```
 
-`sim_acl()` 读取 `sim_data_path` 中的每个 `sim_rep<id>` 文件，从文件构造三张表和生物学设置，再用你传入的初值和 `map` 以及文件中记录的自然死亡率拟合 ACL；`sim_alscl()` 用 ALSCL 的参数名做同样的事。早期版本以 `sim_rep1e+05` 这类名称写出的文件也能读取。给定的 `M` 必须等于记录值。要研究自然死亡率设定有误的情形，传入 `M` 并设 `allow_M_mismatch = TRUE`。
+`sim_acl()` 读取 `sim_data_path` 中的每个 `sim_rep<id>` 文件，从文件构造三张表和生物学设置，再用你传入的初值和 `map` 以及文件中记录的自然死亡率拟合 ACL；`sim_alscl()` 用 ALSCL 的参数名做同样的事。早期版本以 `sim_rep1e+05` 这类名称写出的文件也能读取。给定的 `M` 必须等于记录值。要研究自然死亡率设定有误的情形，传入 `M` 并设 `allow_M_mismatch = TRUE`。`initialize_params()`、`sim_data()`、`simulate_example_data()` 以及 `sim_model()` 和它的两个便捷入口只使用单一的自然死亡率。给出按年龄和时间步的矩阵或按体长的向量时，它们会报错并说明原因；这些形式只有 `run_acl()` 和 `run_alscl()` 接受。
 
 本例使用 `YTF_example` 中的鲽鱼生长设置，将对数 F 的边际标准差固定为根据 `pa` 换算的 0.3023716。`YTF_example` 保存的配置中也是这个值，因为随包数据就是用这一预设生成的；修改 `pa` 中的 `F_sd` 或 `F_ar` 时，设置 `log_std_log_F` 的那一行使拟合的标准差与操作模型保持一致。操作模型用共用时间序列和选择性生成 F，ACL 拟合采用年龄与时间可分离的 F 过程。两者都在对数尺度上加入独立扰动，逐龄递推初始尾数。要调整拟合假设，见[选择拟合设置](fitting-controls.html)。
 

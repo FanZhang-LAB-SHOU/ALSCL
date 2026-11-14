@@ -8,13 +8,14 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 
 | Setting | Meaning | Where to put it |
 |---|---|---|
-| `rec.age`, `nage`, `M`, `sel_L50`, `sel_L95`, `growth_step`, `len_mid`, `len_border` | Biology, survey catchability and time step | `x$fit_args`, shared by both models |
+| `rec.age`, `nage`, `M`, `sel_L50` and `sel_L95` or `survey_q`, `survey_q_age`, `growth_step`, `len_mid`, `len_border` | Biology, survey catchability and time step. `M` is a single number, a matrix by age class and time step or, for ALSCL, a vector by length bin. `survey_q` supplies survey catchability at length directly, and `survey_q_age` is a multiplier by age class ([Prepare your survey data](data-preparation.html#mortality-catchability)) | `x$fit_args`, shared by both models |
 | `zero_action` | Treat survey zeros as missing (`"missing"`, default) or stop (`"error"`) | `x$fit_args` |
 | `parameters`, `parameters.L`, `parameters.U` | Starting values and bounds of the scalar parameters, on the optimizer scale | `x$fit_config$acl` or `x$fit_config$alscl` |
 | `map` | Which parameters are fixed at their starting value and which default fixes are released | `x$fit_config$acl` or `x$fit_config$alscl` |
 | `F_structure` | `"group_year"` (default): F varies by age or length and by time step; `"year"`: one F per time step | `x$fit_args` or the call |
 | `structure` | Optional model structures, including the range of the AR(1) correlations; the default is the original structure, that of the package as first released | `x$fit_config$acl` or `x$fit_config$alscl`, or the call |
 | `t0_lower` | Lower limit of the ALSCL growth parameter `t0` in years (default 0); a negative value allows a negative `t0` | `x$fit_config$alscl` or the call to `run_alscl()` |
+| `bounds` | `"default"`, or `"wide"` to give ACL the bounds of ALSCL for five parameters (step 4) | `x$fit_config$acl` or the call to `run_acl()` |
 | `nstarts`, `ncores` | Number of independent optimizer starts and of worker processes running them | The call |
 | `start_spread` | Spread of the second and later starts around the first (default 0.15) | The call |
 | `train_times` | Successive optimizer passes from each start (default 1) | The call |
@@ -63,6 +64,22 @@ Leave the process-deviation blocks `dev_log_R`, `dev_log_F` and `dev_log_N0` out
 
 For a named `NULL` release, copy the exact parameter name from `inspect_parameters(x, model)`. An unknown name stops the fit. When you subset a map factor, unused levels are discarded and the remaining entries keep their fixed or estimated status.
 
+<h3 id="f-sd">Estimate the standard deviation of the F process</h3>
+
+```r
+a_fixed <- run_acl(YTF_example, silent = TRUE)
+cfg <- YTF_example$fit_config$acl
+cfg$map["log_std_log_F"] <- list(NULL)  # a named NULL releases the default fix
+a_free <- run_acl(YTF_example, map = cfg$map, silent = TRUE)
+subset(extract_parameters(a_free), parameter == "log_std_log_F")
+c(fixed = a_fixed$opt$objective, estimated = a_free$opt$objective)
+range(a_free$report$SSB / a_fixed$report$SSB)
+```
+
+Both models fix the standard deviation of the F process at its starting value by default: `log_std_log_F` in ACL and `log_sigma_log_F` in ALSCL. The paper that introduced ALSCL estimates this parameter ([Model principles](model-theory.html#difference-sd-fixed)), so refit with the standard deviation estimated as a check of every assessment. A named `NULL` in `map` releases a default fix. Write it with single brackets as in the block, because `cfg$map$log_std_log_F <- NULL` deletes the entry and the default fix then applies again. The value is a marginal standard deviation ([Model principles](model-theory.html#difference-sd)).
+
+In this example the estimate is 0.24 with a standard error of 0.04, against the fixed value of 0.302. The objective falls by 1.0, and spawning biomass changes by less than 1% in every year. Report both fits when they differ more than this. When the refit fails the numerical checks, for example because the standard deviation is estimated at zero, keep the fixed value and report that the data did not determine it.
+
 <h2 id="starts">4. Set starting values and bounds</h2>
 
 ```r
@@ -72,9 +89,15 @@ p$parameters.U$log_Linf <- log(90)
 x$fit_config$acl$parameters <- p$parameters
 x$fit_config$acl$parameters.U <- p$parameters.U
 inspect_parameters(x, "acl")[, c("parameter", "natural_start", "lower", "upper")]
+# Upper bounds of ACL with bounds = "wide", on the natural scale
+wide <- create_parameters(model_type = "acl", bounds = "wide")
+exp(unlist(wide$parameters.U[c("log_init_Z", "mean_log_F", "log_std_log_N0",
+                               "log_std_log_R", "log_vbk")]))
 ```
 
 Starting values and bounds are entered on the optimizer scale: `log_Linf = log(65)` for an asymptotic length of 65 cm, `logit_log_R = qlogis(0.5)` for a correlation of 0.5 (with the default range of the correlations; step 6 gives the value for correlations between -1 and 1). `create_parameters()` returns complete lists of starts (`parameters`), lower bounds (`parameters.L`) and upper bounds (`parameters.U`) for a species preset (`"flatfish"`, `"tuna"`, `"krill"` or none); change the entries you have information about. The presets are starting configurations taken from simulation operating models, not validated settings for a stock. The `"tuna"` preset, for example, is the tuna-like operating model M6 of the simulation study: 20 quarterly age classes with a plus group at 5 years, an asymptotic length of 152 cm and constant natural mortality. ACL uses `t0` directly, while ALSCL uses `log_t0` with `t0 = t0_lower + exp(log_t0)`, so with the default `t0_lower = 0` an ALSCL `t0` must lie between 0 and `rec.age`; step 6 shows how to allow a negative `t0`. A starting value outside its bounds is moved to the nearest bound before fitting, with a warning when you supplied the start and with a message for a default start; the fit lists these values in `clamped_starts`. The ACL defaults for `Linf` (start 60, bounds 10 to 100) are in the length units of the yellowtail flounder example. When they do not suit your length bins, for example tuna lengths in cm, `run_acl()` sets the start and bounds that you did not supply from the data. The start is 1.1 times the length below which 99 percent of the summed survey index lies. The upper bound is 2 times the largest length-bin midpoint. The lower bound is the smaller of the default (10) and half of that 99 percent length, so that length bins extending beyond the largest fish do not exclude the true `Linf`. `run_alscl()` always sets the values you did not supply from the data: the start is 1.1 times the largest length-bin midpoint and the bounds are 0.7 and 2 times that midpoint, so supply `parameters.L$log_Linf` when the bins extend well beyond the largest fish. [Estimation parameter lists](estimation-parameters.html) gives the full list with transformations.
+
+Without a species preset, the default upper bounds of ACL are lower than those of ALSCL for five parameters: the initial total mortality rate (1 against 10 per time step), the mean fishing mortality rate (1 against 2 per time step), the standard deviations of the initial numbers at age and of recruitment on the log scale (1 against 10), and the growth rate `k` (0.1 to 1 against 0.05 to 2 per year). The ACL values suit the yellowtail flounder example, and ACL fits to other stocks often stop at them. `run_acl(x, bounds = "wide")` gives ACL the ALSCL bounds of these five parameters; the last lines of the block print the wide upper bounds, 10, 2, 10, 10 and 2. The default bounds are unchanged, so earlier fits are reproduced. A fit that stops at a bound fails the numerical checks, and when the bound is one of these five, `diagnostics$advice` and the message of the fit name this argument. Entries of `parameters.L` and `parameters.U` replace the bounds of either choice. With a species preset, ACL and ALSCL have the same bounds for these parameters and `bounds` changes nothing. `run_alscl()` has no such argument.
 
 <h2 id="f-structure">5. Choose the F structure</h2>
 
@@ -164,7 +187,7 @@ a5$start_summary
 
 `nstarts` runs independent starts: the first from the supplied starting values, the later ones from deterministic perturbations of them, and the lowest objective is kept. The perturbations are normal deviates with standard deviation `start_spread` (default 0.15) on the optimizer scale. `start_diagnostics` lists every start with its objective and convergence code, and `start_summary` gives the number of converged starts, the range of their objectives and the number that agree with the best one; a range above 2 is added to `diagnostics$issues`. If the final objectives differ, check convergence and compare the final gradients and parameter estimates before interpreting the difference as evidence for multiple local minima. `ncores` sets how many worker processes run the starts at the same time (`nstarts` defaults to `ncores`, so set both when you compare timings). `train_times` repeats the optimizer from each start's end point; `polish = TRUE` finishes the best start with up to five Newton steps that are accepted only when the gradient decreases and the Hessian stays positive definite, and `a4$refinement` records what happened. `control = list(iter.max = 3000)` passes limits to `nlminb()`.
 
-A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The numerical checks are local: they describe the solution that was found and do not show whether a better one exists. For results that will be reported, use several starts (for example `nstarts = 5`) with a wider `start_spread` (for example 0.5), as in the last two lines of the block, and compare the objectives in `start_diagnostics`.
+A single start can stop at a local optimum that passes every numerical check, particularly for the growth parameters of ALSCL. The numerical checks are local: they describe the solution that was found and do not show whether a better one exists. A fit with one start, the default, therefore gives a message unless `silent = TRUE`; a function that runs several fits, such as `retro_model()` or `fit_scenarios()`, gives it once per call. For results that will be reported, use at least three starts with a wider `start_spread` (for example 0.5) and compare the objectives in `start_diagnostics`; the last two lines of the block use five starts. Starts that lie close together can all reach the same local optimum, so widen the spread as well as raising the number. Several starts do not guarantee that the best solution is found ([Subbey 2018](https://doi.org/10.1093/icesjms/fsy044)).
 
 A failed restart does not replace an actual successful pass when the objective values differ by at most `1e-8` and every parameter differs by at most `1e-6 * max(1, abs(p1), abs(p2))`. These tolerances identify numerically equivalent repeated passes; meaningful objective improvements or separated parameter vectors still compete by the lower objective. All raw codes and messages remain in `optimizer_history`, and `raw_opt$selected_pass` identifies the retained pass. The final gradient, Hessian and boundary checks remain separate from the optimizer code.
 

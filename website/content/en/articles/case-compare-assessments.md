@@ -48,11 +48,16 @@ Points are the observations and curves the fitted medians in the four selected y
 
 ```r
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+comparison$correlation
+comparison$length_at_age
+comparison$growth
 ```
 
 ![Conditional population estimates from the synthetic YTF example](../assets/manual/figures/ytf/compare_ts.png)
 
 Compare the timing, trends and magnitudes of the point estimates, then inspect their uncertainty; `se = TRUE` adds each fit's approximate intervals. Overlap alone does not show that point estimates are close: wide intervals can overlap despite large differences. For a quantitative comparison, report differences or ratios at matching times. Inference about those differences requires their joint uncertainty because the fits use the same data. This example describes one dataset.
+
+`comparison$correlation` gives the correlation between the two fits and the ratio of their means for spawning biomass, recruitment, biomass and abundance. Catch is compared as relative catch (rows `CN (relative)` and `CB (relative)`, without a ratio), because a fit to a survey index does not determine the level of catch. Compare growth through `comparison$length_at_age`, the mean length at age of both fits. `comparison$growth` lists `Linf`, `k` and `t0` in a separate block for each model, because they are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length in ALSCL ([Judge whether a fit can be used](diagnostics.html#compare)).
 
 <h2 id="mortality">5. Compare fishing mortality</h2>
 

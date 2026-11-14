@@ -55,7 +55,7 @@ diagnose_model(x$data.CatL, a)
 
 `run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about twenty seconds. `silent = TRUE` hides the progress messages.
 
-`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when this screen passes; [Understand your first fit](first-model.html) explains the checks and how to investigate a flagged result.
+`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when this screen passes; [Understand your first fit](first-model.html) explains the checks and how to investigate a flagged result.
 
 Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 

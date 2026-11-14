@@ -22,13 +22,56 @@ b$refinement$status
 b$start_diagnostics
 ```
 
-`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 和协方差状态，以及参数边界检查。数值筛查使用 0.001 的梯度阈值、Hessian 和协方差矩阵的正定性及边界检查；优化器原始收敛码另行报告。`b$diagnostics$issues` 列出全部诊断提示。`high_correlations` 列出估计相关系数绝对值至少为 0.95 的参数对，包括负相关；应结合剖面、其他初值或敏感性分析检查这些参数的可辨识性。`b$refinement` 记录收尾的 Newton 步（满足梯度准则时 `status = "gradient_tolerance"`），`b$start_diagnostics` 记录每个初值的目标函数值。
+`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 和协方差状态，以及参数边界检查。数值筛查使用 0.001 的梯度阈值、Hessian 和协方差矩阵的正定性、边界检查，以及对实际上已到极限的参数的检查（见下一小节）；优化器原始收敛码另行报告。`b$diagnostics$issues` 列出全部诊断提示。`high_correlations` 列出估计相关系数绝对值至少为 0.95 的参数对，包括负相关；应结合剖面、其他初值或敏感性分析检查这些参数的可辨识性。`b$refinement` 记录收尾的 Newton 步（满足梯度准则时 `status = "gradient_tolerance"`），`b$start_diagnostics` 记录每个初值的目标函数值。
 
-`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. The numerical screen uses a gradient threshold of 0.001, positive-definite Hessian and covariance matrices, and the boundary checks; the raw optimizer code is reported separately. `b$diagnostics$issues` lists all diagnostic flags. `high_correlations` lists parameter pairs with an absolute estimated correlation of at least 0.95, including negative correlations. These pairs warrant checking parameter identifiability with profiles, additional starts or sensitivity analyses. `b$refinement` records the finishing Newton steps (`status = "gradient_tolerance"` when that criterion was met), and `b$start_diagnostics` records the objective for each start.
+`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. The numerical screen uses a gradient threshold of 0.001, positive-definite Hessian and covariance matrices, the boundary checks and the check for parameters at their limit in practice (next subsection); the raw optimizer code is reported separately. `b$diagnostics$issues` lists all diagnostic flags. `high_correlations` lists parameter pairs with an absolute estimated correlation of at least 0.95, including negative correlations. These pairs warrant checking parameter identifiability with profiles, additional starts or sensitivity analyses. `b$refinement` records the finishing Newton steps (`status = "gradient_tolerance"` when that criterion was met), and `b$start_diagnostics` records the objective for each start.
 
 检查未通过时，每次只改一处：增加初值（`nstarts = 4`），检查参数尺度和边界，并用剖面调查难以确定的参数。有依据时再固定某个参数，或让各组共用 F（`F_structure = "year"`），方法见[拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting)。在第 3 步比较修改后的拟合与原拟合。通过数值筛查不能确认唯一解、全局最优解、参数可辨识性或模型适用性。单个初值可能停在通过全部检查的局部最优，所以用于报告的结果请运行多个初值并加大 `start_spread`，再读 `b$start_summary`（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer)）。[Carvalho 等（2021）第 2.1 节](https://repository.library.noaa.gov/view/noaa/32687/noaa_32687_DS1.pdf)解释了为何需要结合多项诊断。
 
 When a check fails, change one thing at a time: run more starts (`nstarts = 4`), inspect parameter scales and bounds, and use profiles to investigate poorly determined parameters. If the evidence supports it, fix a parameter or share F across groups (`F_structure = "year"`), as described in [Fitting controls](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting). Compare the revised fit with the original in step 3. Passing the numerical screen does not establish a unique or global optimum, parameter identifiability or an adequate model. A single start can stop at a local optimum that passes every check, so for results that will be reported run several starts with a wider `start_spread` and read `b$start_summary` ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer)). [Carvalho et al. (2021), section 2.1](https://repository.library.noaa.gov/view/noaa/32687/noaa_32687_DS1.pdf) explains why several diagnostics are needed.
+
+<a id="diagnostics-limits"></a>
+
+#### 已到极限的参数、处理建议和合理性提示 / Parameters at their limit, advice and plausibility notes
+
+```r
+# 未通过检查的拟合：放开 F 在年龄间的相关系数，它的估计值走到 1 / A fit that fails: the correlation of F across ages is released and runs to 1
+cfg <- x$fit_config$acl
+cfg$map["logit_log_F_a"] <- list(NULL)
+a_limit <- run_acl(x, map = cfg$map, silent = TRUE)
+a_limit$diagnostics$numerical_ok
+a_limit$diagnostics$limit_parameters[, c("parameter", "estimate", "natural")]
+a_limit$diagnostics$advice
+# 通过检查但带有提示的拟合：M 设得高于初始总死亡率 / A fit that passes with a note: M is set above the initial total mortality rate
+a_note <- run_acl(x, M = 0.5, silent = TRUE)
+a_note$diagnostics$numerical_ok
+a_note$diagnostics$plausibility[, c("check", "parameter", "value", "threshold")]
+a_note$diagnostics$plausibility$note
+a_note$diagnostics$check_thresholds
+```
+
+参数可以在没有碰到优化器边界的情况下到达极限：它在优化器尺度上走得很远，自然尺度上的值已等于极限值。数值筛查判这样的拟合不通过，与停在边界上的拟合一样。检查三种情形。`log_t0` 低于 -10（ALSCL）表示 `t0` 等于下限 `t0_lower`。标准差的对数低于 -9 表示方差被估计为零。logit 相关系数的绝对值大于 15 表示相关系数落在取值范围的端点。`diagnostics$limit_parameters` 列出这些参数的估计值和自然尺度上的值，`diagnostics$issues` 中也会点名。代码块的第一次拟合中，F 在年龄间的相关系数在 logit 尺度上估计为 19.1，即相关系数为 1，`numerical_ok` 为 `FALSE`。R 还会警告产生了 NaN，因为这次拟合的协方差矩阵不正定。
+
+A parameter can be at its limit without reaching an optimizer bound: it runs so far on the optimizer scale that its natural value equals the limit. The numerical screen fails such a fit, as it fails a fit that stopped at a bound. Three cases are checked. `log_t0` below -10 (ALSCL) means that `t0` equals its lower limit `t0_lower`. The logarithm of a standard deviation below -9 means a variance estimated at zero. A logit correlation with an absolute value above 15 means a correlation at the end of its range. `diagnostics$limit_parameters` lists these parameters with their estimates and natural values, and `diagnostics$issues` names them. In the first fit of the block the correlation of F across ages is estimated at 19.1 on the logit scale, a correlation of 1, and `numerical_ok` is `FALSE`. R also warns that NaNs were produced, because the covariance matrix of this fit is not positive definite.
+
+`diagnostics$advice` 给出处理建议，拟合的提示信息、`print()` 和 `summary()` 都会显示它。参数估计在边界上，说明数据或模型结构可能有问题；检查收敛时，第一步就是找出这样的参数（[Carvalho 等 2021](https://doi.org/10.1016/j.fishres.2021.105959)）。实际上已到极限的参数属于同一种情形，只是没有碰到边界。方差被估计为零不应解释为该过程没有变异；通常的做法是固定或去掉这个参数。所以建议是：用 `map` 把该参数固定在有依据的值上，然后重新拟合。有两种情形另有办法：相关系数为零时，`structure = list(correlation_range = "symmetric")` 使零成为取值范围内部的值（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range)）；`t0` 等于 `t0_lower` 时，调低 `t0_lower` 可以允许更小的 `t0`。建议还涉及两类上界。ACL 有五个参数的默认上界低于 ALSCL，拟合停在其中之一时，建议用 `bounds = "wide"` 重新拟合（[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-starts)）；`t0` 停在上界时，建议会说明这个上界的含义。
+
+`diagnostics$advice` says what to do, and the messages of the fit, `print()` and `summary()` show it. A parameter estimated at a bound indicates a possible problem with the data or the model structure, and looking for such parameters is the first step of a convergence check ([Carvalho et al. 2021](https://doi.org/10.1016/j.fishres.2021.105959)). A parameter at its limit in practice is the same case without a bound. A variance estimated at zero should not be read as absence of variation; the usual practice is to fix or remove the parameter. The advice is therefore to fix the parameter with `map` at a value you can justify and to refit. Two cases have a further option: for a correlation at zero, `structure = list(correlation_range = "symmetric")` makes zero an interior value ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-correlation-range)), and for `t0` at `t0_lower`, a lower `t0_lower` allows a smaller `t0`. The advice also covers two upper bounds. An ACL fit that stops at one of the five default upper bounds that are below those of ALSCL is told to refit with `bounds = "wide"` ([Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-starts)), and a fit in which `t0` stops at its upper bound is told what that bound means.
+
+合理性提示针对的是通过了数值检查、但数值提示需要核查输入的估计值。它们不改变 `numerical_ok`。四项检查见下表。除补充个体的平均体长外，这些检查只针对被估计的参数，因为用 `map` 固定的值是假定，不是拟合的结果。代码块的第二次拟合中，`M = 0.5` 高于估计的初始总死亡率（每个时间步 0.49），所以拟合通过检查并带有一条提示。
+
+Plausibility notes concern estimates that pass the numerical checks but have values that call for a check of the inputs. They do not change `numerical_ok`. The four checks are in the table. Except for the mean length of recruits, they apply to estimated parameters only, because a value fixed with `map` is an assumption and not a result of the fit. In the second fit of the block, `M = 0.5` is above the estimated initial total mortality rate of 0.49 per time step, so the fit passes and carries one note.
+
+| 检查 / Check | 何时给出提示 / A note is given when | 应核查什么 / What to examine |
+|---|---|---|
+| `recruit_length` | 由 `Linf`、`k`、`t0` 和 `rec.age` 算出的补充个体平均体长，比第二个体长组的下界低两个体长组宽度以上 / The mean length of recruits, calculated from `Linf`, `k`, `t0` and `rec.age`, lies more than two length-bin widths below the lower border of the second length bin | `rec.age` 是否为调查指数中最小个体的年龄，以及生长参数 / Whether `rec.age` is the age of the smallest fish in the survey index, and the growth parameters |
+| `observation_sd` | 对数尺度上观测误差标准差的估计值大于 0.9 / The estimated standard deviation of the observation error on the log scale is above 0.9 | 残差，以及生长和调查可捕性的设置 / The residuals, and the settings for growth and survey catchability |
+| `growth_cv` | 年龄别体长的变异系数（`cv_len`）或生长增量的变异系数（`cv_grow`，ALSCL）的估计值大于 0.3。Stock Synthesis 手册中 `cv_len` 的示例范围是 0.10 到 0.25；`cv_grow` 没有已发表的范围 / An estimated coefficient of variation of length at age (`cv_len`) or of the growth increment (`cv_grow`, ALSCL) is above 0.3. The example range of `cv_len` in the Stock Synthesis manual is 0.10 to 0.25; no published range is known for `cv_grow` | 用年龄资料核对拟合的各年龄体长（[评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)），或把该参数固定在由年龄资料得到的值上 / Fitted length at age against age data ([Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)), or fix the parameter at a value from age data |
+| `initial_Z` | 估计的初始总死亡率低于最小的自然死亡率 / The estimated initial total mortality rate is below the smallest natural mortality rate | `M`、调查可捕性，以及第一个时间步之前补充量是否在增加 / `M`, the survey catchability, and whether recruitment increased before the first time step |
+
+阈值保存在 `diagnostics$check_thresholds` 中。它们是本包选定的筛查值，并非取自文献。`diagnose_model()` 报告已到极限的参数个数和提示条数，`summarize_simulations()` 把参数到达极限计入失败原因。早期版本保存的拟合保留其原有的检查结论。
+
+The thresholds are stored in `diagnostics$check_thresholds`. They are screening values chosen for this package and are not taken from the literature. `diagnose_model()` reports the number of parameters at their limit and the number of notes, and `summarize_simulations()` counts a parameter at its limit among the reasons for failure. A fit saved by an earlier version keeps its stored verdict.
 
 <a id="diagnostics-residuals"></a>
 
@@ -60,6 +103,9 @@ Use these patterns to choose hypotheses to examine. A pattern in the smallest bi
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$comparison
 comparison$fit_metrics
+comparison$length_at_age
+comparison$growth
+comparison$correlation
 plot_compare_residuals(a, b, x$data.CatL)
 plot_compare_ts(a, b, quantities = c("SSB", "Rec"), se = TRUE)
 ```
@@ -67,6 +113,10 @@ plot_compare_ts(a, b, quantities = c("SSB", "Rec"), se = TRUE)
 `compare_models()` 适用于同一观测的任意两次拟合：ACL 对 ALSCL，或同一模型的两种设置，例如某个参数固定与释放。它先核对两次拟合使用了同一张调查表（`data_verified`），再比较 AIC、BIC 和 `fit_metrics` 中的拟合统计量。`preferred` 只在两次拟合都通过数值检查（`eligible`）且两个 AIC 相差至少 2 时给出 AIC 较低的模型。某次拟合未通过检查时，`preferred` 留空，`issues` 说明原因。两次拟合都合格但 AIC 之差小于 2 时，`preferred` 同样留空，而 `issues` 为空：函数会打印 AIC 差别很小的提示，差值见 `comparison$summary` 的 `Delta AIC` 行。`comparison$comparison` 还记录 `delta_aic`（第二个模型的 AIC 减去第一个模型的 AIC）、`aic_threshold`（2）和 `reason`，后者说明没有给出优选的原因。差值小于 2 并不说明两个模型等价。用比较结果在统计上可比的设置之间做选择；AIC 较低并不能让固定值或结构不适合该种群的模型变得可用。
 
 `compare_models()` works for any two fits of the same observations: ACL against ALSCL, or two configurations of one model, such as a parameter fixed and released. It first verifies that both fits used the same survey table (`data_verified`), then compares AIC, BIC and the fit statistics in `fit_metrics`. The `preferred` entry names the model with the lower AIC only when both fits passed the numerical checks (`eligible`) and the two AIC values differ by at least 2. When a fit failed a check, `preferred` stays empty and `issues` says why. When the fits are eligible but the AIC difference is below 2, `preferred` also stays empty and `issues` is empty: the function prints that the AIC values show little separation, and the `Delta AIC` row of `comparison$summary` gives the difference. `comparison$comparison` also records `delta_aic` (the AIC of the second model minus that of the first), `aic_threshold` (2) and `reason`, which states why no preference was given. A difference below 2 does not show that the models are equivalent. Use the comparison to choose between statistically comparable configurations; a lower AIC does not make a model with unsuitable fixed values or structure usable.
+
+有三张表比较两次拟合的估计结果。`comparison$length_at_age` 给出两次拟合各年龄的平均体长（对各时间步取平均），每个模型一列。两次拟合的调查可捕性都可用时，`Basis` 为 `"survey"`（体长别尾数乘以体长别调查可捕性），否则为 `"population"`。生长的比较看这张表。`comparison$growth` 把参数 `Linf`、`k`、`t0`、`cv_len`、`cv_grow`（ALSCL）和观测误差的标准差按模型各列成一组行，列名为 `Model`、`Parameter`、`Estimate` 和 `Meaning`。参数不并排放置，因为在 ACL 中 `Linf`、`k` 和 `t0` 是各年龄平均体长的 von Bertalanffy 曲线参数，在 ALSCL 中它们决定体长别生长增量和补充个体的平均体长（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)）。`comparison$correlation` 对产卵生物量、补充量、生物量和丰度给出两条序列之间的相关系数，以及 `Ratio_Mean`，即第二次拟合的均值除以第一次拟合的均值。尾数和重量计的渔获量按相对渔获量比较，见 `CN (relative)` 和 `CB (relative)` 两行：只给出相关系数，因为只拟合调查指数时渔获量的水平无法确定。
+
+Three tables compare the estimates of the two fits. `comparison$length_at_age` holds the mean length at age of both fits, averaged over the time steps, with one column per model. `Basis` is `"survey"` (numbers at length multiplied by survey catchability at length) when the survey catchability of both fits is available, and `"population"` otherwise. This table is the comparison of growth. `comparison$growth` lists the parameters `Linf`, `k`, `t0`, `cv_len`, `cv_grow` (ALSCL) and the standard deviation of the observation error in a separate block of rows for each model, with the columns `Model`, `Parameter`, `Estimate` and `Meaning`. The parameters are not placed side by side, because `Linf`, `k` and `t0` are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length and the mean length of recruits in ALSCL ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)). `comparison$correlation` gives, for spawning biomass, recruitment, biomass and abundance, the correlation between the two series and `Ratio_Mean`, the mean of the second fit divided by that of the first. Catch in numbers and in weight are compared as relative catch, in the rows `CN (relative)` and `CB (relative)`: only the correlation is given, because a fit to a survey index does not determine the level of catch.
 
 比较时请提供两次拟合共同使用的调查表。程序逐格按该正观测自身的大小核对，相对容差为 `1e-12`。例如，把 `1e-13` 改成 `1e-20` 会使对数观测相差约 16，程序会在选择模型前报错。
 
@@ -81,11 +131,33 @@ scenarios <- fit_scenarios(x, list(reference = list(), low_M = list(M = 0.15), h
                            model = "acl", ncores = 2)
 scenarios$status
 subset(scenarios$estimates, quantity == "SSB" & year == max(year))
+# 输入的其他形式：按年龄组的 M 和穹顶形调查可捕性 / Other forms of the inputs: M by age class and a dome-shaped survey catchability
+q_dome <- survey_catchability(x$fit_args$len_mid, "dome", L50 = 15, L95 = 20,
+                              L50_desc = 42, L95_desc = 34, minimum = 0.2)
+inputs <- fit_scenarios(x, list(
+  reference = list(),
+  M_by_age = list(M = matrix(c(0.4, 0.3, rep(0.2, 13)), ncol = 1)),
+  dome = list(survey_q = q_dome, sel_L50 = NULL, sel_L95 = NULL)),
+  model = "acl", ncores = 2, F_summary = "mean", silent = TRUE)
+inputs$status[, c("scenario", "numerical_ok")]
+mean_F <- subset(inputs$estimates, quantity == "F")
+tapply(mean_F$estimate, mean_F$scenario, mean)
+ssb <- subset(inputs$estimates, quantity == "SSB")
+tapply(ssb$estimate, ssb$scenario, mean)
+tapply(ssb$estimate, ssb$scenario, function(v) v[length(v)] / mean(v))
 ```
 
 固定输入（自然死亡率 `M`、调查可捕性、固定的生长参数）决定估计值的尺度。`fit_scenarios()` 在具名的改动下重新拟合同一观测，返回每次拟合的状态和按情景整理的估计值表，可以看出 `M` 在有依据的范围内变化时，最后一年的产卵生物量变动多少。先看 `status`：未通过数值检查的情景保留在表中并加以标记。[评估工作流](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md)继续介绍似然剖面和投影。
 
 The fixed inputs (natural mortality `M`, survey catchability, fixed growth parameters) set the scale of the estimates. `fit_scenarios()` refits the same observations under named changes and returns every fit's status and a table of estimates by scenario, so you can see how much the spawning biomass in the last year moves when `M` varies over its supported range. Read `status` first: a scenario that failed the numerical checks stays in the table, flagged. [Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ASSESSMENT_WORKFLOWS.md) continues with likelihood profiles and projections.
+
+情景可以把 `M` 换成它的任何一种形式，也可以用 `survey_q` 代替 logistic 调查可捕性；因为输入列表里存有 `sel_L50` 和 `sel_L95`，这样的情景要把它们设为 `NULL`。每项输入的变动范围应根据它的来源确定。按最大年龄估计的 M，估计式的一个标准差（对数尺度上 0.31）相当于把 M 乘以 0.73 和 1.36（[Hamel 和 Cope 2022](https://doi.org/10.1016/j.fishres.2022.106477)）。穹顶形调查可捕性会压低估计的死亡率，并与 M 相互混淆，所以每次都要同时运行 logistic 曲线的情景。
+
+A scenario can change `M` to any of its forms and can replace the logistic survey catchability with `survey_q`; the scenario then sets `sel_L50` and `sel_L95` to `NULL`, because the bundle stores them. Choose the range of each input from its source. For an M from maximum age, one standard deviation of the estimator (0.31 on the log scale) corresponds to M multiplied by 0.73 and by 1.36 ([Hamel and Cope 2022](https://doi.org/10.1016/j.fishres.2022.106477)). A dome-shaped survey catchability lowers the estimated mortality and is confounded with M, so always run the logistic curve next to it.
+
+与趋势相比，F 和种群数量的水平更依赖这些输入。在代码块的第二部分，F 对各年龄和各年份的均值在参考拟合中为 0.32，最小两个年龄组的 M 调高后为 0.28，使用穹顶形曲线后为 0.12；产卵生物量的均值分别为 57、57 和 141。最后一年的产卵生物量与其多年均值之比分别为 1.33、1.34 和 1.19。调查指数提供的是总死亡率和相对数量的信息，不能确定总死亡率在 F 和 M 之间的划分，也不能确定可捕性的水平（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-survey)）。报告趋势和总死亡率时给出它们在各情景下的范围；给出 F 的水平时，同时说明它所依赖的 M 和调查可捕性。
+
+The level of F and of stock size depends on these inputs more than the trends do. In the second part of the block, the mean F over ages and years is 0.32 in the reference fit, 0.28 with a higher M for the two youngest age classes and 0.12 with the dome, and mean spawning biomass is 57, 57 and 141. Spawning biomass in the last year relative to its mean over the years is 1.33, 1.34 and 1.19. The survey index informs the total mortality rate and relative numbers; it does not inform the split of mortality into F and M or the level of catchability ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-survey)). Report trends and the total mortality rate with their range over the scenarios, and give a level of F only together with the M and survey catchability that it depends on.
 
 <a id="diagnostics-stability"></a>
 
