@@ -99,9 +99,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
   fit <- tryCatch(withCallingHandlers({
     if ("map" %in% names(fit_args))
       fit_args["map"] <- list(.acl_retro_map(fit_args, removed, model_type))
-    # A natural mortality rate by age and time step keeps the same time steps.
-    if (removed > 0L && !is.null(fit_args$M))
-      fit_args$M <- .acl_M_truncate(fit_args$M, ncol(fit_args$data.CatL) - 1L, end_col - 1L)
+    # A natural mortality rate by age and time step and a survey catchability
+    # by length and time step keep the same time steps as the data.
+    for (name in intersect(c("M", "survey_q"), names(fit_args)))
+      if (removed > 0L && !is.null(fit_args[[name]]))
+        fit_args[[name]] <- .acl_truncate_time(fit_args[[name]], ncol(fit_args$data.CatL) - 1L, end_col - 1L)
     for (name in c("data.CatL", "data.wgt", "data.mat"))
       fit_args[[name]] <- fit_args[[name]][, seq_len(end_col), drop = FALSE]
     do.call(if (model_type == "acl") run_acl else run_alscl, fit_args)
@@ -164,7 +166,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param M Natural mortality rate per model time step, in one of the forms
 #'   that [run_acl()] or [run_alscl()] accepts. A matrix by age and time step
 #'   has one column per time step of the complete data; each peel uses the
-#'   columns of the time steps that it keeps.
+#'   columns of the time steps that it keeps. The same holds for survey_q
+#'   given as a matrix by length and time step.
 #' @param sel_L50 Length at 50 percent survey catchability. NULL when
 #'   survey_q is supplied.
 #' @param sel_L95 Length at 95 percent survey catchability. NULL when

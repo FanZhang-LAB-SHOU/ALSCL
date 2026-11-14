@@ -145,10 +145,14 @@ earlier versions. See Details for when to use a larger value.}
 \item{survey_q}{Optional survey catchability at length: a numeric vector
 with one positive value per length bin. It is used in place of the
 logistic curve from \code{sel_L50} and \code{sel_L95}, for example for a
-dome-shaped curve. Supplying it together with \code{sel_L50} or \code{sel_L95} is
-an error; when an input bundle or a stored fit already holds these two,
-add \verb{sel_L50 = NULL, sel_L95 = NULL} to the call. The values are fixed
-inputs and are not estimated.}
+dome-shaped curve; \code{\link[=survey_catchability]{survey_catchability()}} computes logistic and
+dome-shaped curves. A matrix with one row per length bin and one column
+per time step gives survey catchability by length and time step, for
+example after a change of survey gear; a matrix with one column is read
+as the vector. Supplying survey_q together with \code{sel_L50} or \code{sel_L95}
+is an error; when an input bundle or a stored fit already holds these
+two, add \verb{sel_L50 = NULL, sel_L95 = NULL} to the call. The values are
+fixed inputs and are not estimated.}
 
 \item{survey_q_age}{Optional survey catchability multiplier by age: a
 numeric vector with one positive value per age class. The default NULL
@@ -251,8 +255,9 @@ With M by age and time step, total mortality at age (\code{Z}) is F
 plus the M of that age and time step, in survival and in the catch
 equation. The default start of init_Z uses the median of M in the first
 time step. A constant given as a matrix, \code{survey_q} equal to the
-logistic curve, or \code{survey_q_age} of ones gives the fit of the default
-inputs up to rounding error.
+logistic curve, a \code{survey_q} matrix with equal columns, or
+\code{survey_q_age} of ones gives the fit of the default inputs up to
+rounding error.
 
 M is an assumption. The survey index informs total mortality but not its
 split into fishing and natural mortality, so an error in M enters F

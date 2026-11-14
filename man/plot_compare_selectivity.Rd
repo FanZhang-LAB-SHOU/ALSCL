@@ -49,8 +49,10 @@ Saved assessments are supported without refitting. Survey
 catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
 at the fitted length midpoints, or taken from its survey_q when the fit
 used survey catchability at length supplied directly. Older fits without
-a recipe use log_q from their live TMB object. A survey catchability
-multiplier by age (survey_q_age) is not shown.
+a recipe use log_q from their live TMB object. When survey_q was
+supplied by length and time step, one line is drawn for each distinct
+curve and a caption says so. A survey catchability multiplier by age
+(survey_q_age) is not shown.
 }
 \examples{
 \donttest{

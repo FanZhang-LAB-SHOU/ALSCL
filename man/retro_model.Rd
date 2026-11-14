@@ -84,7 +84,8 @@ by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. F
 \item{M}{Natural mortality rate per model time step, in one of the forms
 that \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}} accepts. A matrix by age and time step
 has one column per time step of the complete data; each peel uses the
-columns of the time steps that it keeps.}
+columns of the time steps that it keeps. The same holds for survey_q
+given as a matrix by length and time step.}
 
 \item{sel_L50}{Length at 50 percent survey catchability. NULL when
 survey_q is supplied.}

@@ -28,8 +28,10 @@
 //   q_age              survey catchability multiplier by age (A): the expected
 //                      index at length is q(length) times the sum over ages of
 //                      q_age(age) * NLA(length, age, time step).
-// The code for M_LAY and q_age sits in branches that a fit without these
-// entries does not enter, so such a fit is computed exactly as before.
+//   log_q_LY           log survey catchability by length and time step (L x Y);
+//                      it replaces log_q, for example after a change of gear.
+// The code for these three entries sits in branches that a fit without them
+// does not enter, so such a fit is computed exactly as before.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -118,8 +120,10 @@ Type objective_function<Type>::operator()()
 	// catchability multiplier by age (absent = published structure).
 	std::vector<double> M_values = optional_numbers(this->data, "M_LAY", (size_t) L * A * Y);
 	std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
+	std::vector<double> log_q_time = optional_numbers(this->data, "log_q_LY", (size_t) L * Y);
 	bool M_varies = M_values.size() > 0;
 	bool q_by_age = q_age.size() > 0;
+	bool q_by_time = log_q_time.size() > 0;
 	// M at length bin k, age class j and time step i (used only when M_varies).
 	auto M_at = [&](int k, int j, int i) { return Type(M_values[k + L * (j + A * i)]); };
 
@@ -404,12 +408,16 @@ Type objective_function<Type>::operator()()
 	matrix<Type> resid_index(L,Y);
 	for(int i = 0;i < L;++i){
 		for(int j=0; j<Y; ++j){
-			if (!q_by_age) {
+			if (!q_by_age && !q_by_time) {
 				Elog_index(i,j) = log_q(i) + log(positive_probability(NL(i,j)));
 			} else {
-				Type seen = zero;
-				for(int a=0; a<A; ++a) seen += Type(q_age[a]) * NLA(i,a,j);
-				Elog_index(i,j) = log_q(i) + log(positive_probability(seen));
+				Type seen = NL(i,j);
+				if (q_by_age) {
+					seen = zero;
+					for(int a=0; a<A; ++a) seen += Type(q_age[a]) * NLA(i,a,j);
+				}
+				Type log_q_now = q_by_time ? Type(log_q_time[i + L * j]) : Type(log_q(i));
+				Elog_index(i,j) = log_q_now + log(positive_probability(seen));
 			}
 			resid_index(i,j) = zero;
 		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j))* na_matrix(i,j);

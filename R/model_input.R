@@ -163,9 +163,12 @@
     stop("Time column spacing must equal growth_step (", growth_step,
          " years). Include every model period; use NA survey observations for missing periods,",
          " and provide weights and maturity for the complete time grid.", call. = FALSE)
+  supplied_q <- if (is.null(survey_q)) NULL else .acl_survey_q(survey_q, nrow(obs), ncol(obs), years)
+  # With survey catchability by length and time step the templates read
+  # log_q_LY (added below); log_q then holds the first time step.
   log_q <- if (is.null(survey_q))
     stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE) else
-    log(.acl_survey_q(survey_q, nrow(obs)))
+    if (supplied_q$form == "length") log(supplied_q$q) else log(supplied_q$q[, 1L])
   data <- list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
                len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
                Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M)
@@ -182,6 +185,7 @@
     out$data$M <- .acl_M_summary(out$natural_mortality)
   }
   if (!is.null(survey_q_age)) out$data$q_age <- .acl_survey_q_age(survey_q_age, nage)
+  if (!is.null(supplied_q) && supplied_q$form == "length_time") out$data$log_q_LY <- log(supplied_q$q)
   out
 }
 

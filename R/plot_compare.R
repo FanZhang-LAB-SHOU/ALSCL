@@ -1095,8 +1095,10 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #'   catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
 #'   at the fitted length midpoints, or taken from its survey_q when the fit
 #'   used survey catchability at length supplied directly. Older fits without
-#'   a recipe use log_q from their live TMB object. A survey catchability
-#'   multiplier by age (survey_q_age) is not shown.
+#'   a recipe use log_q from their live TMB object. When survey_q was
+#'   supplied by length and time step, one line is drawn for each distinct
+#'   curve and a caption says so. A survey catchability multiplier by age
+#'   (survey_q_age) is not shown.
 #' @examples
 #' \donttest{
 #' # Fit both models to the last ten years of the example data. The shorter
@@ -1130,10 +1132,15 @@ plot_compare_selectivity <- function(model1, model2,
     if (!is.null(args$survey_q)) {
       # Survey catchability at length supplied directly; it can exceed one.
       q <- args$survey_q
-      if (!is.numeric(q) || length(q) != length(lengths) || any(!is.finite(q)) || any(q <= 0))
+      by_time <- length(dim(q)) == 2L && ncol(q) > 1L
+      if (!is.numeric(q) || (if (by_time) nrow(q) else length(q)) != length(lengths) ||
+          any(!is.finite(q)) || any(q <= 0))
         stop("The saved recipe must have one finite positive survey_q value per length midpoint.",
              call. = FALSE)
-      return(as.numeric(q))
+      if (!by_time) return(as.numeric(q))
+      # By time step: one curve for each distinct column, in time order.
+      distinct <- unname(q[, !duplicated(t(q)), drop = FALSE])
+      return(if (ncol(distinct) == 1L) as.numeric(distinct) else distinct)
     }
     if (!is.null(args$sel_L50) && !is.null(args$sel_L95)) {
       valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
@@ -1153,17 +1160,31 @@ plot_compare_selectivity <- function(model1, model2,
     exp(log_q)
   }
   q1 <- catchability(model1); q2 <- catchability(model2)
-  df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
-              data.frame(Length = model2$len_mid, Selectivity = q2, Model = model2_name))
+  varying <- is.matrix(q1) || is.matrix(q2)
+  if (!varying) {
+    df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
+                data.frame(Length = model2$len_mid, Selectivity = q2, Model = model2_name))
+  } else {
+    # Survey catchability that changes over time: one line per distinct curve.
+    curves <- function(model, q, name) {
+      q <- as.matrix(q)
+      data.frame(Length = rep(model$len_mid, ncol(q)), Selectivity = as.vector(q), Model = name,
+                 Curve = paste(name, rep(seq_len(ncol(q)), each = nrow(q))))
+    }
+    df <- rbind(curves(model1, q1, model1_name), curves(model2, q2, model2_name))
+  }
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Length, y = Selectivity, color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$line_size) +
+    (if (varying) ggplot2::geom_line(ggplot2::aes(group = Curve), linewidth = cfg$line_size) else
+      ggplot2::geom_line(linewidth = cfg$line_size)) +
     ggplot2::geom_point(size = cfg$point_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_title("compare_sel", model1_name, model2_name),
                   x = .acl_lab("x", "length"), y = "Survey catchability (q)") +
     .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
+  if (varying) p <- p + ggplot2::labs(
+    caption = "Survey catchability supplied by time step: one line for each distinct curve of a fit.")
   return(p)
 }
 

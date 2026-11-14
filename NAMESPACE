@@ -82,6 +82,7 @@ export(simulate_example_data)
 export(simulate_fit)
 export(simulation_to_tables)
 export(summarize_simulations)
+export(survey_catchability)
 importFrom(RColorBrewer,brewer.pal)
 importFrom(TMB,
   MakeADFun,

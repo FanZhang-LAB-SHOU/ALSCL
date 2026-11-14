@@ -220,14 +220,16 @@ test_that("constant inputs in the new forms give the scalar objective in both te
     d <- base$data
     constant <- if (model == "ACL") list(M_AY = matrix(d$M, d$A, d$Y)) else
       list(M_LAY = array(d$M, c(d$L, d$A, d$Y)))
-    forms <- list(M = constant, q_age = list(q_age = rep(1, d$A)), both = c(constant, list(q_age = rep(1, d$A))))
+    by_time <- list(log_q_LY = matrix(d$log_q, d$L, d$Y))
+    forms <- list(M = constant, q_age = list(q_age = rep(1, d$A)), q_time = by_time,
+                  all = c(constant, list(q_age = rep(1, d$A)), by_time))
     for (name in names(forms)) {
       other <- ns_template(model, forms[[name]])
       expect_equal(other$value, base$value, tolerance = 1e-12, info = paste(model, name))
       expect_equal(other$gradient, base$gradient, tolerance = 1e-9, info = paste(model, name))
       shared <- intersect(names(base$report), names(other$report))
       expect_setequal(setdiff(names(other$report), names(base$report)),
-                      if (model == "ALSCL" && name != "q_age") "M_LAY" else character())
+                      if (model == "ALSCL" && name %in% c("M", "all")) "M_LAY" else character())
       for (quantity in shared)
         expect_equal(other$report[[quantity]], base$report[[quantity]], tolerance = 1e-11,
                      info = paste(model, name, quantity))
@@ -245,7 +247,13 @@ test_that("the ACL template applies M by age and time step and the multiplier by
   A <- d0$A; Y <- d0$Y; L <- d0$L
   M <- matrix(seq(.05, .6, length.out = A * Y), A, Y)
   q_age <- seq(.2, 1.2, length.out = A)
+  log_q_time <- matrix(log(seq(.3, 1.4, length.out = L * Y)), L, Y)
   r <- ns_template("ACL", list(M_AY = M, q_age = q_age))$report
+  by_time <- ns_template("ACL", list(M_AY = M, q_age = q_age, log_q_LY = log_q_time))$report
+  expect_equal(by_time$Elog_index, r$Elog_index - d0$log_q + log_q_time, tolerance = 1e-12)
+  expect_equal(ns_template("ACL", list(log_q_LY = log_q_time))$report$Elog_index,
+               ns_template("ACL")$report$Elog_index - d0$log_q + log_q_time, tolerance = 1e-12)
+  expect_equal(by_time[["NA"]], r[["NA"]], tolerance = 0)
   expect_equal(r$Z, r$F + M, tolerance = 1e-14)
   numbers <- r[["NA"]]
   for (y in 2:Y) {
@@ -309,6 +317,14 @@ test_that("the ALSCL template applies M by length, age and time step and the mul
     expect_equal(completed$ZA, Z_age, tolerance = 1e-12, info = name)
     expect_identical(completed$FA[-A, -Y], r$FA)
   }
+  # Survey catchability by length and time step replaces the vector.
+  log_q_time <- matrix(log(seq(.3, 1.4, length.out = L * Y)), L, Y)
+  plain <- ns_template("ALSCL")$report
+  expect_equal(ns_template("ALSCL", list(log_q_LY = log_q_time))$report$Elog_index,
+               plain$Elog_index - d0$log_q + log_q_time, tolerance = 1e-12)
+  with_age <- ns_template("ALSCL", list(q_age = q_age))$report
+  expect_equal(ns_template("ALSCL", list(q_age = q_age, log_q_LY = log_q_time))$report$Elog_index,
+               with_age$Elog_index - d0$log_q + log_q_time, tolerance = 1e-12)
   # With M by age only, F at age is Z at age minus the M of that age.
   r <- ns_template("ALSCL", list(M_LAY = cases$age_time))$report
   expect_equal(r$ZA - r$FA, by_age_time[-A, -Y], tolerance = 1e-12)
@@ -329,6 +345,10 @@ test_that("fits with constant inputs in the new forms reproduce the scalar fit",
       matrix = list(M = matrix(.2, 4, 5)),
       one_column = list(M = matrix(.2, 4, 1)),
       survey_q = list(survey_q = stats::plogis(log(19) * (mid - 20) / 10), sel_L50 = NULL, sel_L95 = NULL),
+      helper = list(survey_q = survey_catchability(mid, "logistic", L50 = 20, L95 = 30),
+                    sel_L50 = NULL, sel_L95 = NULL),
+      q_time = list(survey_q = matrix(stats::plogis(log(19) * (mid - 20) / 10), 9, 5),
+                    sel_L50 = NULL, sel_L95 = NULL),
       q_age = list(survey_q_age = rep(1, 4)))
     if (model == "ALSCL") forms$length <- list(M = rep(.2, 9))
     for (name in names(forms)) {
@@ -428,19 +448,21 @@ test_that("assessment archives keep M by age and the survey catchability inputs"
 
 test_that("retrospective peels and hindcast folds keep the time steps of M", {
   M <- matrix(seq(.1, .5, length.out = 20), 4, 5)
-  expect_identical(ALSCL:::.acl_M_truncate(M, 5L, 3L), M[, 1:3])
-  expect_identical(ALSCL:::.acl_M_truncate(M, 5L, 5L), M)
-  expect_identical(ALSCL:::.acl_M_truncate(M[, 1, drop = FALSE], 5L, 3L), M[, 1, drop = FALSE])
-  expect_identical(ALSCL:::.acl_M_truncate(.2, 5L, 3L), .2)
-  expect_identical(ALSCL:::.acl_M_truncate(seq(.1, .9, by = .1), 5L, 3L), seq(.1, .9, by = .1))
-  expect_identical(ALSCL:::.acl_M_truncate(M[, 1:4], 5L, 3L), M[, 1:4])  # wrong width: left for the fit to report
-  expect_identical(ALSCL:::.acl_M_future(M, 5L, 3L, 2L), M[, 4:5])
-  expect_null(ALSCL:::.acl_M_future(M[, 1, drop = FALSE], 5L, 3L, 2L))
-  expect_null(ALSCL:::.acl_M_future(.2, 5L, 3L, 2L))
+  expect_identical(ALSCL:::.acl_truncate_time(M, 5L, 3L), M[, 1:3])
+  expect_identical(ALSCL:::.acl_truncate_time(M, 5L, 5L), M)
+  expect_identical(ALSCL:::.acl_truncate_time(M[, 1, drop = FALSE], 5L, 3L), M[, 1, drop = FALSE])
+  expect_identical(ALSCL:::.acl_truncate_time(.2, 5L, 3L), .2)
+  expect_identical(ALSCL:::.acl_truncate_time(seq(.1, .9, by = .1), 5L, 3L), seq(.1, .9, by = .1))
+  expect_identical(ALSCL:::.acl_truncate_time(M[, 1:4], 5L, 3L), M[, 1:4])  # wrong width: left for the fit to report
+  expect_identical(ALSCL:::.acl_future_time(M, 5L, 3L, 2L), M[, 4:5])
+  expect_null(ALSCL:::.acl_future_time(M[, 1, drop = FALSE], 5L, 3L, 2L))
+  expect_null(ALSCL:::.acl_future_time(.2, 5L, 3L, 2L))
 
   f <- fixture_frames(); f$M <- M
-  fold <- ALSCL:::.acl_hindcast_args(c(f, list(map = NULL)), 3L, "acl")
+  q_time <- matrix(seq(.2, 1, length.out = 45), 9, 5)
+  fold <- ALSCL:::.acl_hindcast_args(c(f, list(map = NULL, survey_q = q_time)), 3L, "acl")
   expect_identical(fold$M, M[, 1:3])
+  expect_identical(fold$survey_q, q_time[, 1:3])
   expect_identical(ncol(fold$data.CatL), 4L)
 
   seen <- list()
@@ -480,6 +502,12 @@ test_that("retrospective peels and hindcast folds keep the time steps of M", {
     expect_identical(seen[[2]]$M, matrix(.3, 4, 1))
     expect_identical(seen[[2]]$survey_q, rep(.5, 9))
     expect_null(seen[[2]]$sel_L50)
+    # Survey catchability by length and time step is cut with the data.
+    seen <- list()
+    suppressWarnings(retro_model(x, nyear = 2, model_type = model, silent = TRUE,
+                                 survey_q = q_time, sel_L50 = NULL, sel_L95 = NULL))
+    expect_identical(lapply(seen, function(a) dim(a$survey_q)), list(c(9L, 5L), c(9L, 4L), c(9L, 3L)))
+    expect_identical(seen[[3]]$survey_q, q_time[, 1:3])
   }
 })
 
@@ -509,6 +537,15 @@ test_that("retrospective and hindcast fits run with M by age and time step", {
     changed <- hindcast_model(other, model = tolower(model), nfolds = 1, horizon = 2)
     expect_identical(changed$predictions$predicted_log[1:9], out$predictions$predicted_log[1:9])
     expect_true(all(changed$predictions$predicted_log[10:18] < out$predictions$predicted_log[10:18]))
+    # Survey catchability by time step: the training fit uses the training
+    # columns and the prediction uses the columns of the held-out time steps.
+    q <- stats::plogis(log(19) * (fit$len_mid - 20) / 10)
+    by_time <- x; by_time$sel_L50 <- by_time$sel_L95 <- NULL
+    by_time$survey_q <- cbind(matrix(q, 9, 3), 0.5 * q, 0.25 * q)
+    shifted <- hindcast_model(by_time, model = tolower(model), nfolds = 1, horizon = 2)
+    expect_identical(shifted$recipes[[1]]$args$survey_q, matrix(q, 9, 3))
+    expect_equal(shifted$predictions$predicted_log - out$predictions$predicted_log,
+                 rep(log(c(.5, .25)), each = 9), tolerance = 1e-6)
   }
 })
 
@@ -590,4 +627,100 @@ test_that("simulation functions state that they use a single natural mortality r
   bio <- sim_cal(p)
   p$M <- rep(.2, 3)
   expect_error(sim_data(bio, p, iter_range = 1, output_dir = tempfile()), "single natural mortality rate")
+})
+
+test_that("survey_catchability gives the logistic curve of sel_L50 and sel_L95 and a dome", {
+  default <- ns_prepare()
+  mid <- default$bins$mid
+  logistic <- survey_catchability(mid, "logistic", L50 = 20, L95 = 30)
+  expect_identical(logistic, stats::plogis(log(19) * (mid - 20) / (30 - 20)))
+  expect_identical(survey_catchability(mid, L50 = 20, L95 = 30), logistic)
+  expect_equal(survey_catchability(c(20, 30), "logistic", 20, 30), c(.5, .95))
+  expect_equal(log(logistic), default$data$log_q, tolerance = 1e-14)
+  expect_equal(ns_prepare(survey_q = logistic, sel_L50 = NULL, sel_L95 = NULL)$data$log_q,
+               default$data$log_q, tolerance = 1e-14)
+
+  dome <- function(x, minimum = 0) survey_catchability(x, "dome", L50 = 20, L95 = 30,
+    L50_desc = 50, L95_desc = 40, minimum = minimum)
+  fine <- seq(0, 200, by = .001)
+  expect_equal(max(dome(fine)), 1, tolerance = 1e-8)
+  expect_true(all(dome(fine) > 0 & dome(fine) <= 1))
+  peak <- fine[which.max(dome(fine))]
+  expect_true(peak > 30 && peak < 40)
+  expect_true(all(diff(dome(fine[fine < peak])) > 0))
+  expect_true(all(diff(dome(fine[fine > peak & fine < 120])) < 0))
+  # The product of the two logistic curves, scaled by its maximum.
+  product <- function(x, minimum = 0) stats::plogis(log(19) * (x - 20) / 10) *
+    (minimum + (1 - minimum) * stats::plogis(-log(19) * (x - 50) / 10))
+  expect_equal(dome(mid), product(mid) / max(product(fine)), tolerance = 1e-8)
+  # The curve does not depend on the lengths at which it is evaluated.
+  expect_identical(dome(mid)[3:5], dome(mid[3:5]))
+  expect_lt(max(dome(mid)), 1)
+  # The descending curve is 0.95 at L95_desc and 0.5 at L50_desc before scaling.
+  expect_equal(dome(c(40, 50)) / dome(c(40, 50))[1],
+               c(1, stats::plogis(log(19) * 3) * .5 / (stats::plogis(log(19) * 2) * .95)), tolerance = 1e-12)
+  # A floor for the largest lengths.
+  floor <- dome(fine, minimum = .3)
+  expect_equal(max(floor), 1, tolerance = 1e-8)
+  expect_equal(dome(1000, minimum = .3), .3 / max(product(fine, .3)), tolerance = 1e-8)
+  expect_true(all(dome(c(60, 80, 100), .3) > dome(c(60, 80, 100))))
+  expect_true(all(ALSCL:::.acl_survey_q(dome(mid, .3), 9, 5)$q == dome(mid, .3)))
+
+  expect_error(survey_catchability(mid, "logistic", 30, 20), "L95 must be greater than L50")
+  expect_error(survey_catchability(mid, "logistic", 20, 30, L50_desc = 50), "use shape = \"dome\"")
+  expect_error(survey_catchability(mid, "logistic", 20, 30, minimum = .1), "use shape = \"dome\"")
+  expect_error(survey_catchability(mid, "dome", 20, 30), "requires L50_desc and L95_desc")
+  expect_error(survey_catchability(mid, "dome", 20, 30, L50_desc = 40, L95_desc = 50), "L95_desc must be below L50_desc")
+  expect_error(survey_catchability(mid, "dome", 20, 30, L50_desc = 15, L95_desc = 10), "L50_desc must be greater than L50")
+  expect_error(survey_catchability(mid, "dome", 20, 30, 50, 40, minimum = 1), "minimum must be at least 0 and below 1")
+  expect_error(survey_catchability(mid, "dome", 20, 30, 50, 40, minimum = -.1), "minimum")
+  expect_error(survey_catchability(c(mid, NA), "logistic", 20, 30), "finite lengths")
+  expect_error(survey_catchability(mid, "logistic", c(20, 21), 30), "L50 must be one finite number")
+  expect_error(survey_catchability(mid, "bell", 20, 30), "should be one of")
+})
+
+test_that("survey_q by length and time step is validated and passed to the templates", {
+  default <- ns_prepare()
+  q <- stats::plogis(log(19) * (default$bins$mid - 20) / 10)
+  by_time <- cbind(matrix(q, 9, 3), matrix(.5 * q, 9, 2))
+  x <- ns_prepare(survey_q = by_time, sel_L50 = NULL, sel_L95 = NULL)
+  expect_equal(x$data$log_q_LY, log(by_time))
+  expect_equal(x$data$log_q, log(q))
+  for (model in c("ACL", "ALSCL"))
+    expect_equal(ALSCL:::.acl_model_setup(model, x)$data$log_q_LY, log(by_time))
+  # A matrix with one column is the vector by length.
+  one_column <- ns_prepare(survey_q = matrix(q, ncol = 1), sel_L50 = NULL, sel_L95 = NULL)
+  expect_null(one_column$data$log_q_LY)
+  expect_equal(one_column$data$log_q, log(q))
+  expect_null(default$data$log_q_LY)
+
+  run <- function(value) ns_prepare(survey_q = value, sel_L50 = NULL, sel_L95 = NULL)
+  expect_error(run(t(by_time)), "9 rows \\(one per length bin\\) and 5 columns \\(one per time step\\).*matrix with 5 rows and 9 columns.*transpose")
+  expect_error(run(by_time[, 1:4]), "It is a matrix with 9 rows and 4 columns")
+  expect_error(run(replace(by_time, 7, 0)), "finite positive values")
+  expect_error(run(array(q, c(9, 5, 2))), "survey_q must be a numeric vector with 9")
+  named <- by_time; colnames(named) <- 2000:2004
+  expect_equal(run(named)$data$log_q_LY, log(by_time))
+  colnames(named) <- c(2000:2003, 2010)
+  expect_error(run(named), "column names of survey_q.*column 5 is named 2010 and the time step is 2004")
+  expect_error(ns_prepare(survey_q = by_time), "cannot be combined")
+
+  args <- list(M = .2, survey_q = by_time)
+  expect_identical(ALSCL:::.acl_input_forms(list(recipe = list(args = args))),
+                   "survey catchability at length and time step supplied as survey_q")
+  args$survey_q <- q
+  expect_identical(ALSCL:::.acl_input_forms(list(recipe = list(args = args))),
+                   "survey catchability at length supplied as survey_q")
+
+  # The catchability plot draws one line for each distinct curve.
+  fit <- function(value) list(model_type = "ACL", len_mid = default$bins$mid,
+    recipe = list(args = list(survey_q = value)))
+  p <- plot_compare_selectivity(fit(by_time), fit(q), "by time", "constant")
+  lines <- ggplot2::ggplot_build(p)$data[[1]]
+  expect_length(unique(lines$group), 3L)
+  expect_equal(sort(lines$y), sort(c(q, .5 * q, q)))
+  expect_match(p$labels$caption, "one line for each distinct curve")
+  constant <- plot_compare_selectivity(fit(matrix(q, 9, 5)), fit(q), "a", "b")
+  expect_null(constant$labels$caption)
+  expect_equal(sort(ggplot2::ggplot_build(constant)$data[[1]]$y), sort(c(q, q)))
 })
