@@ -52,7 +52,7 @@ GROUPS = [
     ('results', 'Extract, save and reload results', '提取、保存与读取结果', ['extract_parameters', 'extract_estimates', 'length_at_age', 'ssb_at_age', 'relative_catch', 'save_assessment', 'read_assessment', 'refit_model']),
     ('diagnostics', 'Diagnostics and retrospectives', '诊断与回溯分析', ['check_fit', 'diagnose_model', 'diagnostic_metrics', 'compare_models', 'retro_model', 'retro_acl', 'retro_alscl', 'plot_retro']),
     ('assumptions', 'Sensitivity, profiles and projections', '敏感性、参数剖面与情景投影', ['fit_scenarios', 'profile_model', 'project_model']),
-    ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
+    ('validation', 'Simulation and prediction checks', '模拟与预测检验', ['simulate_fit', 'self_test', 'plot_self_test', 'hindcast_model', 'sim_model', 'sim_acl', 'sim_alscl', 'summarize_simulations']),
     ('biology', 'Biology and operating-model simulations', '生物参数与操作模型模拟', ['VB_func', 'mat_func', 'initialize_params', 'sim_cal', 'sim_data', 'simulation_to_tables', 'simulate_example_data']),
     ('population', 'Survey and population plots', '调查与种群绘图', ['plot_CatL', 'plot_abundance', 'plot_biomass', 'plot_SSB', 'plot_catch', 'plot_relative_catch', 'plot_recruitment', 'plot_SSB_Rec']),
     ('process', 'Growth, mortality and residuals', '生长、死亡率与残差', ['plot_VB', 'plot_length_at_age', 'plot_pla', 'plot_fishing_mortality', 'plot_natural_mortality', 'plot_survey_catchability', 'plot_residuals', 'plot_deviance', 'plot_ridges']),

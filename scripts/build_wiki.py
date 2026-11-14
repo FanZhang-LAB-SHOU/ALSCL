@@ -42,7 +42,7 @@ for i,m in enumerate(marks):
 # that is neither placed nor listed as omitted stops the build, so that a new
 # section cannot be dropped from the Wiki and the book without notice.
 gallery_chapters={'08-Population-Plots':list(range(1,20)),'09-Growth-and-Mortality':list(range(20,36)),
- '10-Model-Comparisons':list(range(36,45))+[47]}
+ '10-Model-Comparisons':list(range(36,45))+[47,48]}
 gallery_omitted=[45,46]
 placed=[n for numbers in gallery_chapters.values() for n in numbers]+gallery_omitted
 if len(placed)!=len(set(placed)) or set(placed)!=set(blocks):
