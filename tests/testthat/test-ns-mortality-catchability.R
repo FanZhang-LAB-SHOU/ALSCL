@@ -47,7 +47,7 @@ test_that("lorenzen_M returns the rate by length and checks its inputs", {
 test_that("a single M prepares the same input as before", {
   default <- ns_prepare()
   expect_identical(names(default), c("data", "bins", "year", "growth_step", "observations", "data.CatL",
-    "structure", "start_spread", "t0_lower", "zero_observations"))
+    "structure", "start_spread", "t0_lower", "zero_observations", "bounds"))
   expect_identical(names(default$data), c("logN_at_len", "na_matrix", "log_q", "len_border", "age",
     "Y", "A", "L", "weight", "mat", "M"))
   expect_identical(default$data$M, .2)
