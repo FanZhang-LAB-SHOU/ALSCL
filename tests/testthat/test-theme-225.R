@@ -27,6 +27,7 @@ test_that("every exported plot family and comparison panel defaults to no grid",
   retro <- list(results = retro_data,
     last_points = retro_data[retro_data$Year == 2002, ],
     rho_text = data.frame(Variable = "SSB", Rho = .01))
+  self_test_result <- self_test(fit_fixture("ACL")$result, nsim = 2, seed = 1)
   calls <- list(
     plot_abundance = list(m), plot_biomass = list(m), plot_SSB = list(m),
     plot_recruitment = list(m), plot_SSB_Rec = list(m), plot_catch = list(m),
@@ -38,7 +39,8 @@ test_that("every exported plot family and comparison panel defaults to no grid",
     plot_compare_CatL = list(m, m, d), plot_compare_metrics = list(m, m, d),
     plot_compare_selectivity = list(m, m), plot_compare_F_ts = list(m, m),
     plot_length_at_age = list(m), plot_relative_catch = list(m),
-    plot_natural_mortality = list(m), plot_survey_catchability = list(m))
+    plot_natural_mortality = list(m), plot_survey_catchability = list(m),
+    plot_self_test = list(self_test_result))
   exported_plots <- grep("^plot_", getNamespaceExports("ALSCL"), value = TRUE)
   # Former names are wrappers of the functions already in the list.
   expect_setequal(names(calls), setdiff(exported_plots, names(ALSCL:::.acl_deprecated_functions)))
