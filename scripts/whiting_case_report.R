@@ -204,6 +204,10 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
     num(paste0("Z_seen_acl_", p), z_rows$acl_fixed[i], paste("Same decline in the index at age implied by ACL,", z_rows$period[i]))
     num(paste0("Z_ices_", p), z_rows$Z_ices[i], paste("ICES mean F at ages 2 to 5 plus mean ICES M at ages 2 to 5,", z_rows$period[i]))
   }
+  num("Z_seen_alscl_maxdiff", max(abs(z_rows$alscl - z_rows$age_readings)),
+      "Largest absolute difference among the periods between the decline implied by ALSCL and that of the age readings")
+  num("Z_seen_acl_maxdiff_first_two", max(abs(z_rows$acl_fixed - z_rows$age_readings)[1:2]),
+      "Largest absolute difference in the first two periods between the decline implied by ACL and that of the age readings")
   num("Z_readings_all", decline(ia), "Decline of the log index of a cohort per year, ages 2 to 5, age readings, 1983-2025")
   num("Z_seen_alscl_all", decline(seen$alscl), "Same decline in the index at age implied by ALSCL, 1983-2025")
   for (a in 1:2) for (n in c("alscl", "acl_fixed"))

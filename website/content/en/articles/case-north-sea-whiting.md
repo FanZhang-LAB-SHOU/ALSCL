@@ -84,9 +84,9 @@ a2$diagnostics[c("numerical_ok", "issues")]
 
 All five starts of ACL ended at the same objective, 736.88, with a positive definite Hessian, and the fit still failed the numerical checks. The standard deviation of the deviations of the initial numbers at age was estimated at 2e-05, which is zero in practice. Such a parameter has not reached a bound of the optimizer, but the data do not determine it. `a$diagnostics$advice` says to fix `log_std_log_N0` with `map` at a chosen value and to refit.
 
-The second call follows the advice with a standard deviation of exp(-3) = 0.05. An explicit `map` or `parameters` argument replaces the one stored in the bundle, so both calls repeat the stored entries. The objective changed by 0.08, the estimates of Linf, k and t0 stayed the same to three digits, and `numerical_ok` was `TRUE`. Three entries remained in `issues` that do not fail the checks: a correlation of 0.96 between the estimates of k and t0, a largest gradient of 1e-05 after the last refinement step, and one start that stopped at an objective of 1308.
+The second call follows the advice with a standard deviation of exp(-3) = 0.05. An explicit `map` or `parameters` argument replaces the one stored in the bundle, so both calls repeat the stored entries. The objective changed by 0.08, the estimates of Linf, k and t0 stayed the same to three digits, and `numerical_ok` was `TRUE`. Three entries remained in `issues` that do not fail the checks: a correlation of 0.96 between the estimates of k and t0, a refinement of the optimizer that stopped at a largest gradient of 1e-05, above its tolerance, and one start that stopped at an objective of 1308.
 
-One plausibility note stayed in both ACL fits. The initial total mortality rate was estimated at 0.34 per year, below the assumed M of 0.5. Total mortality is the sum of fishing and natural mortality and cannot lie below M, so the numbers at age of 1983 in the ACL fit do not agree with the assumed M and survey catchability. The note does not change the verdict of the checks; report it with the fit. ALSCL estimated 0.88 per year.
+One plausibility note stayed in both ACL fits. The initial total mortality rate was estimated at 0.34 per year, below the assumed M of 0.5. The numbers at age of 1983 then decline with age more slowly than natural mortality alone would give, which can come from the assumed M, from the assumed survey catchability, or from recruitment that increased before 1983. The note does not change the verdict of the checks; report it with the fit. ALSCL estimated 0.88 per year.
 
 ALSCL has the lower objective, 722.59 against 736.96, with 13 against 9 estimated scalar parameters. The objective does not show which model describes the stock better. Steps 5 and 6 compare both fits with data that they did not use.
 
@@ -115,7 +115,7 @@ Compare growth through mean length at age and not through the growth parameters.
 
 ALSCL lies within 1.3 cm of the age readings at ages 1 to 4. From age 5 it lies above them, by 1.5 cm at age 5 and by 7.7 cm at age 9. ACL lies 0.9 to 2.0 cm below the age readings at every age and follows their shape. Both models lie more than 1 cm below the age readings at ages 1 and 2.
 
-A length index shows separate peaks only for the youngest ages. The lengths of older ages overlap, and few large fish in the index can mean that fish grow slowly or that large fish die fast. Length data alone do not separate the growth of older fish from mortality at length. In these fits ALSCL lets old fish grow to larger lengths and gives them a higher mortality, and ACL gives them a lower asymptotic length; the age readings agree better with ACL from age 6. The age readings also change over time, which neither model allows. Mean length at age 5 ranges from 30.2 to 33.5 cm among the decades. Use the mean lengths of ALSCL at ages 1 to 4, and do not read its Linf or its lengths at older ages as estimates of growth.
+In a length index only the youngest ages form separate peaks. The lengths of older ages overlap, and few large fish in the index can mean that fish grow slowly or that large fish die fast. Length data alone do not separate the growth of older fish from mortality at length. In these fits ALSCL lets old fish grow to larger lengths and gives them a higher fishing mortality (step 6), and ACL gives them a lower asymptotic length; the age readings agree better with ACL from age 6. The age readings also change over time, which neither model allows. Mean length at age 5 ranges from 30.2 to 33.5 cm among the decades. Use the mean lengths of ALSCL at ages 1 to 4, and do not read its Linf or its lengths at older ages as estimates of growth.
 
 <h2 id="assessment">6. Compare trends and mortality with the assessment</h2>
 
@@ -147,7 +147,7 @@ cor(log(catch$catch_weight[keep]), log(at(ices$catch)[keep]))
 
 The trends of SSB and recruitment agree in part with the assessment, with correlations of 0.67 to 0.74 for ALSCL. SSB is lowest in 2006 in the ALSCL fit and in 2009 in the assessment, and rises afterwards in both. The two differ in the recent level. Mean SSB of 2017-2026 divided by that of 1983-1992 is 0.87 for ALSCL and 1.22 for the assessment. The maturity at age of the assessment in place of maturity at length changes the correlation by less than 0.01.
 
-The level of F cannot be compared. F of ALSCL is above that of the assessment in all three periods and about twice as high after 2000, and the rank correlation between the two series is 0.31. In a fit to survey data alone, total mortality is estimated from the decline of cohorts in the index under the assumed survey catchability, and F is total mortality minus the assumed M. The level of F, and with it the level of catch, therefore follows from the fixed inputs; step 7 shows by how much.
+The level of F cannot be compared. F of ALSCL is above that of the assessment in all three periods and about twice as high after 2000, and the rank correlation between the two series is 0.31. F of ACL lies closer to that of the assessment in the first two periods and below it in the last. In a fit to survey data alone, total mortality is estimated from the decline of cohorts in the index under the assumed survey catchability, and F is total mortality minus the assumed M. The level of F, and with it the level of catch, therefore follows from the fixed inputs; step 7 shows by how much.
 
 What the survey does inform is the rate at which the index of a cohort declines from one year to the next, the apparent total mortality rate from the survey. The table gives its mean over ages 2 to 5, calculated from the index at age of the age readings (`x$age_readings$index_at_age`) and from the index at age that each fit implies, next to the sum of F and M of the assessment.
 
@@ -157,7 +157,7 @@ What the survey does inform is the rate at which the index of a cohort declines 
 | 2000-2012 | 0.78 | 0.94 | 0.81 | 0.76 |
 | 2013-2025 | 0.95 | 0.86 | 0.62 | 0.73 |
 
-ALSCL stays within 0.2 per year of the age readings in every period, and ACL falls to 0.62 in the last period, where the age readings give 0.95. The apparent rate equals the total mortality rate of the stock only where survey catchability does not change with age; the assessment estimates a separate catchability of this survey index for each age.
+ALSCL stays within 0.17 per year of the age readings in every period. ACL lies within 0.04 per year in the first two periods and falls to 0.62 in the last, where the age readings give 0.95. The apparent rate equals the total mortality rate of the stock only where survey catchability does not change with age; the assessment estimates a separate catchability of this survey index for each age.
 
 <h2 id="sensitivity">7. Change two fixed inputs</h2>
 
@@ -195,7 +195,7 @@ The second fit replaces the logistic survey catchability by a curve that decline
 
 Both sensitivity fits passed the numerical checks. The trends of SSB and recruitment hardly change. Their correlations with the main fit are 0.97 or higher. The levels change. Recruitment is 1.48 times that of the main fit with M by age, in which more fish of age 1 die, and SSB is 1.66 times that of the main fit with the declining catchability, in which the survey catches a smaller share of the large fish. Mean F at ages 2 to 5 in 2013-2025 is 0.36, 0.28 and 0.08 per year in the three fits, against 0.18 in the assessment. Mean length at age 7 stays 4 to 5 cm above the age readings in all three fits, so neither input removes the difference at older ages.
 
-The objective is higher in both sensitivity fits, by 135 and by 30. Do not choose M or the shape of survey catchability by the objective. With survey data alone, M, fishing mortality and a decline of survey catchability with length are confounded, and a unique solution needs an assumption about them ([Cook 2013](https://doi.org/10.1016/j.fishres.2013.01.003)). [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673) describe the F estimates of the model as absolute, and their paper does not examine a wrong M or a wrong shape of survey catchability. The three fits of this step show that the level of F holds only for the M and the survey catchability that were assumed.
+The objective is higher in both sensitivity fits, by 135 and by 30. Do not choose M or the shape of survey catchability by the objective. With survey data alone, the natural mortality rate, the selectivity of the fishery and survey catchability may be confounded, and a unique solution needs an assumption about one or more of them ([Cook 2013](https://doi.org/10.1016/j.fishres.2013.01.003)). [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673) describe the F estimates of the model as absolute, and their paper does not examine a wrong M or a wrong shape of survey catchability. The three fits of this step show that the level of F holds only for the M and the survey catchability that were assumed.
 
 <h2 id="use">8. Decide what to report</h2>
 
@@ -214,7 +214,7 @@ save_assessment(b, "whiting_alscl.rds")
 | Recruitment by year | Trend | Correlation of 0.77 with the index at age 1 of the age readings and of 0.67 with the assessment; correlation of 0.99 or higher among the three fits of step 7 |
 | Spawning biomass | Trend, as a relative series | Correlation of 0.74 with the assessment and of 0.97 or higher among the three fits |
 | Mean length at ages 1 to 4 | As the survey sees it | Within 1.3 cm of the age readings |
-| Apparent total mortality rate from the survey, ages 2 to 5 | As a rate of decline of the index, not as the total mortality rate of the stock | Within 0.2 per year of the age readings in each period |
+| Apparent total mortality rate from the survey, ages 2 to 5 | As a rate of decline of the index, not as the total mortality rate of the stock | Within 0.17 per year of the age readings in each period |
 | Level of F and of catch | Do not use | F is total mortality minus the assumed M; 0.08 to 0.36 per year in 2013-2025 among the three fits |
 | Level of SSB and of recruitment | Do not use | In the unit of the survey index; they change by factors of 1.66 and 1.48 with the inputs of step 7 |
 | Linf and mean length at ages 5 and older | Do not use as growth estimates | 1.5 to 7.7 cm above the age readings |

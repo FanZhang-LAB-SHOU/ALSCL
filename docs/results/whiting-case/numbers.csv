@@ -186,6 +186,8 @@
 "Z_seen_alscl_2013_2025",0.861921,"Same decline in the index at age implied by ALSCL, 2013-2025"
 "Z_seen_acl_2013_2025",0.623087,"Same decline in the index at age implied by ACL, 2013-2025"
 "Z_ices_2013_2025",0.729167,"ICES mean F at ages 2 to 5 plus mean ICES M at ages 2 to 5, 2013-2025"
+"Z_seen_alscl_maxdiff",0.165142,"Largest absolute difference among the periods between the decline implied by ALSCL and that of the age readings"
+"Z_seen_acl_maxdiff_first_two",0.035726,"Largest absolute difference in the first two periods between the decline implied by ACL and that of the age readings"
 "Z_readings_all",0.938151,"Decline of the log index of a cohort per year, ages 2 to 5, age readings, 1983-2025"
 "Z_seen_alscl_all",0.986993,"Same decline in the index at age implied by ALSCL, 1983-2025"
 "cor_index_age1_alscl",0.767095,"Correlation of the log index at age 1 between age readings and the fit, ALSCL"
