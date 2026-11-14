@@ -3,20 +3,20 @@
 # from maturity at age, and relative catch. None of them enters the fit.
 
 # Check a fitted result and return its model type and coordinates.
-.acl_derived_fit <- function(fit) {
-  if (!is.list(fit)) stop("fit must be a fitted ACL or ALSCL result.", call. = FALSE)
+.acl_derived_fit <- function(fit, name = "fit") {
+  if (!is.list(fit)) stop(name, " must be a fitted ACL or ALSCL result.", call. = FALSE)
   if (is.null(fit$report) && (!is.null(fit$error) || identical(fit$converge, "FAILED"))) {
     reason <- if (is.character(fit$error) && length(fit$error) == 1L && !is.na(fit$error))
       paste0(" Fit error: ", fit$error) else ""
-    stop("fit is a failed fit without estimates and cannot be used here.", reason, call. = FALSE)
+    stop(name, " is a failed fit without estimates and cannot be used here.", reason, call. = FALSE)
   }
-  if (!is.list(fit$report)) stop("fit must be a fitted ACL or ALSCL result with a report.", call. = FALSE)
+  if (!is.list(fit$report)) stop(name, " must be a fitted ACL or ALSCL result with a report.", call. = FALSE)
   model <- .detect_model_name(fit, NA_character_)
-  if (!model %in% c("ACL", "ALSCL")) stop("fit must be an ACL or ALSCL result.", call. = FALSE)
-  years <- .acl_plot_year(fit, name = "fit")
+  if (!model %in% c("ACL", "ALSCL")) stop(name, " must be an ACL or ALSCL result.", call. = FALSE)
+  years <- .acl_plot_year(fit, name = name)
   ages <- fit$age
   if (!is.numeric(ages) || !length(ages) || any(!is.finite(ages)))
-    stop("fit must contain finite age metadata.", call. = FALSE)
+    stop(name, " must contain finite age metadata.", call. = FALSE)
   list(model = model, years = years, ages = as.numeric(ages))
 }
 
@@ -90,8 +90,10 @@
   list(mean = matrix(average, d[2L], d[3L]), sd = matrix(sqrt(variance), d[2L], d[3L]))
 }
 
-# A x Y moments of length at age for one basis.
-.acl_length_at_age <- function(fit, basis, info = .acl_derived_fit(fit)) {
+# Numbers by length bin, age class and time step (L x A x Y) on one basis, and
+# the length-bin midpoints. With basis = "survey" the numbers are multiplied
+# by the survey catchability of the fit.
+.acl_basis_numbers <- function(fit, basis, info = .acl_derived_fit(fit)) {
   numbers <- .acl_numbers_length_age(fit, info)
   mid <- fit$len_mid
   if (!is.numeric(mid) || length(mid) != dim(numbers)[1L] || any(!is.finite(mid)))
@@ -107,7 +109,13 @@
     # changes the survey index at age but cancels in the moments of length.
     if (!is.null(q$age)) numbers <- sweep(numbers, 2L, as.numeric(q$age), "*")
   }
-  .acl_length_moments(numbers, as.numeric(mid))
+  list(numbers = numbers, mid = as.numeric(mid))
+}
+
+# A x Y moments of length at age for one basis.
+.acl_length_at_age <- function(fit, basis, info = .acl_derived_fit(fit)) {
+  x <- .acl_basis_numbers(fit, basis, info)
+  .acl_length_moments(x$numbers, x$mid)
 }
 
 #' Mean length at age from a fitted model
@@ -189,11 +197,29 @@ length_at_age <- function(fit, basis = c("survey", "population")) {
   do.call(rbind, rows)
 }
 
+# Positions in `times` (the time steps of a fit) of the time steps `years`.
+# NULL selects every time step.
+.acl_year_positions <- function(years, times) {
+  if (is.null(years)) return(seq_along(times))
+  if (!is.numeric(years) || !length(years) || any(!is.finite(years)))
+    stop("years must be finite numeric time steps of fit.", call. = FALSE)
+  position <- vapply(years, function(y) {
+    hit <- which(abs(times - y) <= 1e-8 * max(1, abs(y)))
+    if (length(hit)) hit[1L] else NA_integer_
+  }, integer(1))
+  if (anyNA(position))
+    stop("years must be time steps of fit (fit$year); not found: ",
+         paste(format(years[is.na(position)]), collapse = ", "), ".", call. = FALSE)
+  sort(unique(position))
+}
+
 # Mean length at age averaged over the time steps (an unweighted mean of the
-# values by time step), for summaries such as compare_models().
-.acl_mean_length_at_age <- function(fit, basis) {
-  info <- .acl_derived_fit(fit)
-  data.frame(age = info$ages, mean_length = rowMeans(.acl_length_at_age(fit, basis, info)$mean))
+# values by time step), for summaries such as compare_models() and for the
+# growth plots. `years` restricts the mean to these time steps.
+.acl_mean_length_at_age <- function(fit, basis, years = NULL, info = .acl_derived_fit(fit)) {
+  keep <- .acl_year_positions(years, info$years)
+  data.frame(age = info$ages,
+             mean_length = rowMeans(.acl_length_at_age(fit, basis, info)$mean[, keep, drop = FALSE]))
 }
 
 # A value by age class (vector) or by age class and time step (matrix), as an
@@ -381,19 +407,7 @@ ssb_at_age <- function(fit, maturity, weight = NULL) {
 relative_catch <- function(fit, years = NULL) {
   info <- .acl_derived_fit(fit)
   times <- info$years
-  reference <- rep(TRUE, length(times))
-  if (!is.null(years)) {
-    if (!is.numeric(years) || !length(years) || any(!is.finite(years)))
-      stop("years must be finite numeric time steps of fit.", call. = FALSE)
-    position <- vapply(years, function(y) {
-      hit <- which(abs(times - y) <= 1e-8 * max(1, abs(y)))
-      if (length(hit)) hit[1L] else NA_integer_
-    }, integer(1))
-    if (anyNA(position))
-      stop("years must be time steps of fit (fit$year); not found: ",
-           paste(format(years[is.na(position)]), collapse = ", "), ".", call. = FALSE)
-    reference <- seq_along(times) %in% position
-  }
+  reference <- seq_along(times) %in% .acl_year_positions(years, times)
   series <- .acl_catch_series(fit)
   relative <- function(value, label) {
     if (is.null(value)) return(rep(NA_real_, length(times)))

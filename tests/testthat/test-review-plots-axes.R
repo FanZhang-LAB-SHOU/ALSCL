@@ -11,9 +11,12 @@ review_axis_fit <- function(model = "ACL", ages = 1:4, years = 2000:2005, step =
     resid_index = matrix(-0.05, L, Y), Linf = 60, vbk = 0.2, t0 = -0.5)
   if (model == "ALSCL") {
     report <- c(report, list(BA = field(A, .5), SBA = field(A, .25), FL = field(L, .01),
-      FA = field(A - 1L, .01)[, -Y, drop = FALSE], dev_log_F = field(L, .001)))
+      FA = field(A - 1L, .01)[, -Y, drop = FALSE], dev_log_F = field(L, .001),
+      # Numbers by length, age and time step: the age-length key times numbers at age.
+      NLA = array(vapply(seq_len(Y), function(y) sweep(matrix(1 / L, L, A), 2L, field(A)[, y], "*"),
+                         matrix(0, L, A)), c(L, A, Y))))
   } else report <- c(report, list(F = field(A, .01), dev_log_F = field(A, .001)))
-  blocks <- lapply(report[!names(report) %in% c("pla", "Elog_index", "resid_index", "Linf", "vbk", "t0")],
+  blocks <- lapply(report[!names(report) %in% c("pla", "Elog_index", "resid_index", "Linf", "vbk", "t0", "NLA")],
     function(x) cbind(Estimate = as.numeric(x), "Std. Error" = 0.1 * abs(as.numeric(x))))
   est_std <- do.call(rbind, blocks)
   rownames(est_std) <- rep(names(blocks), vapply(blocks, nrow, integer(1)))
@@ -110,10 +113,10 @@ test_that("comparison heatmaps use fitted ages and length midpoints", {
   expect_equal(unique(pla$data$Width), 1)
   expect_equal(unique(pla$data$Height), 10)
   expect_silent(patchwork::patchworkGrob(p))
+  # Mean length at age needs the fitted ages: a result saved without age
+  # metadata is an error, as in length_at_age().
   legacy <- acl; legacy$age <- NULL
-  positions <- plot_compare_growth(legacy, alscl, age_range = c(2, 5))[[2L]]
-  expect_equal(sort(unique(positions$data$Age)), 1:4)
-  expect_identical(positions$labels$x, "Age group")
+  expect_error(plot_compare_growth(legacy, alscl, age_range = c(2, 5)), "model1 must contain finite age metadata")
   # ACL heatmap rows end in the plus group.
   heat <- suppressMessages(plot_compare_F(acl, alscl))
   expect_true("Age 5+" %in% levels(heat$data$Label))

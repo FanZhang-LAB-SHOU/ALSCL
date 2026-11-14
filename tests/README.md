@@ -19,11 +19,13 @@ Run one group with, for example, `devtools::test(filter = "retro")`.
 | Operating models and simulation studies | `simulation`, `simulation-224`, `simulation-release228`, `simulation-review`, `simulation-consistency-review`, `simulation-provenance-243`, `simulation-summary-api`, `sim-model-api`, `sim-multistart`, `sim-tails-selectivity`, `simulate-fit`, `review-core-simulation`, `review-infra-sim`, `review-infra-summary`, `review-infra-tables`, `review-tests-operating-model`, `theme-simulation-contracts-242` |
 | Plots of fitted quantities (data, intervals, axes, facets) | `plot-review`, `plot-data-227`, `plot-workflow`, `plots-225`, `plot-release228`, `plot-semantics-release229`, `plot-arguments-240`, `plot-labels-review`, `plot-facets-reference-review`, `plot-archive-domain-review`, `singleton-plot-rendering`, `missing-lag-224`, `catchability-plot`, `survey-axis-label`, `survey-plot-gaps`, `survey-runs-and-axis-labels`, `review-plots-intervals`, `review-plots-axes` |
 | Comparison plots and growth plots | `comparison-plots-224`, `review-plots-compare-theme`, `vb-domain-theme-review`, `vb-style-227` |
+| Plots of mean length at age (`plot_VB()`, `plot_compare_growth()`, `plot_length_at_age()`), relative catch (`plot_relative_catch()`), the natural mortality rate and survey catchability used in a fit (`plot_natural_mortality()`, `plot_survey_catchability()`) and the SSB from maturity at age in `plot_SSB()` | `ns-plots` |
 | Theme, palettes and plot style | `theme-225`, `theme-226`, `palettes`, `plot-style-243`, `style-release229`, `fishing-theme-followup`, `population-theme-inheritance` |
 
 Shared helpers:
 
-- `helper-fixtures.R`: small inputs and fast fits (`fixture_frames()`, `cpp_fixture()`, `fit_fixture()`).
+- `helper-fixtures.R`: small inputs and fast fits (`fixture_frames()`, `cpp_fixture()`, `fit_fixture()`), and
+  `growth_plot_fixture()`, which adds what the growth plots read to a hand-made result.
 - `helper-review-reference.R`: independent R implementations of the length-at-age key, the growth
   transition matrix, the population dynamics and the joint negative log-likelihood of both models
   (original structure). Use these when a change to the templates must be checked against something

@@ -118,14 +118,14 @@ acl_theme_reset()
 ### 4. 设置生长图的范围和文字 / Set the growth-plot range and text
 
 ```r
-plot_VB(b, se = FALSE, ylab = "Length (cm)",
+plot_VB(b, parameter_curve = TRUE, ylab = "Length (cm)",
         axis_text_size = 12, x_breaks = c(1, 5, 10, 15),
         age_range = c(1, 15), text_size = 4)
 ```
 
-`age_range = NULL` 时，`plot_VB()` 使用拟合结果中的年龄范围（没有年龄元数据的结果用 1-25 岁），起点不早于 `t0`；没有正跨度时报错。显式范围必须是两个有限、递增的年龄，且起点不早于 `t0`，以避免在理论零体长年龄之前出现负的预测体长。这是 [von Bertalanffy 方程](https://www.fao.org/4/x5685e/x5685e03.htm)中 `t0` 的含义。曲线和区间都继承 `ylab$growth` 和所选字体，显式 `ylab` 覆盖全局标签，Linf/k 标注遵守 `text_size` 和 `text_color`。如果 `se = TRUE` 但协方差不可用，函数会给出警告并只画曲线。
+对 ALSCL 拟合，`plot_VB()` 在拟合的年龄组上画由拟合尾数算出的各年龄平均体长：`age_range` 选取其中的年龄组，`parameter_curve = TRUE` 加画由 `Linf`、`k` 和 `t0` 计算的曲线及其标注，标注遵守 `text_size` 和 `text_color`。对 ACL 拟合的 von Bertalanffy 曲线，`age_range = NULL` 使用拟合结果中的年龄范围（没有年龄元数据的结果用 1-25 岁），起点不早于 `t0`；没有正跨度时报错。显式范围必须是两个有限、递增的年龄，且起点不早于 `t0`，以避免在理论零体长年龄之前出现负的预测体长。这是 [von Bertalanffy 方程](https://www.fao.org/4/x5685e/x5685e03.htm)中 `t0` 的含义。线、曲线和区间都继承 `ylab$growth` 和所选字体，显式 `ylab` 覆盖全局标签；包中没有体长单位，请在标签中给出。`observed` 的点使用 `observed_color` 和 `point_size`。`se = TRUE` 的区间属于由参数计算的曲线；协方差不可用时，函数给出警告并只画估计值。
 
-`plot_VB()` uses the fitted age range when `age_range = NULL` (1-25 years for a result without age metadata), starting no earlier than `t0`; a range with no positive span produces an error. An explicit range must contain two finite increasing ages and start at or after `t0`, which avoids negative predicted lengths below the theoretical age at zero length. This is the meaning of `t0` in the [von Bertalanffy equation](https://www.fao.org/4/x5685e/x5685e03.htm). Curves and intervals inherit `ylab$growth` and the selected font, an explicit `ylab` overrides the global label, and the Linf/k annotation honors `text_size` and `text_color`. If the covariance is unavailable and `se = TRUE`, the function warns and draws only the curve.
+For an ALSCL fit, `plot_VB()` draws mean length at age from the fitted numbers at the fitted age classes: `age_range` selects the age classes within it, and `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` with its annotation, which honors `text_size` and `text_color`. For the von Bertalanffy curve of an ACL fit, `age_range = NULL` uses the fitted age range (1-25 years for a result without age metadata), starting no earlier than `t0`; a range with no positive span produces an error. An explicit range must contain two finite increasing ages and start at or after `t0`, which avoids negative predicted lengths below the theoretical age at zero length. This is the meaning of `t0` in the [von Bertalanffy equation](https://www.fao.org/4/x5685e/x5685e03.htm). Lines, curves and intervals inherit `ylab$growth` and the selected font, and an explicit `ylab` overrides the global label; the package holds no unit for length, so give it in the label. The points of `observed` take `observed_color` and `point_size`. With `se = TRUE` the interval belongs to the curve computed from the parameters; if the covariance is unavailable, the function warns and draws only the estimate.
 
 <a id="plot-customization-labels"></a>
 

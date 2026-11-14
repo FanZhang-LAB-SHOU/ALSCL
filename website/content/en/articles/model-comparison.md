@@ -53,9 +53,9 @@ A wholly unobserved period breaks the mean-residual line. Isolated observed peri
 
 The mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.
 
-## Growth and reference-data interface
+## Mean length at age of both models
 
-Reference data and layout helper:
+Reference data and layout helper
 
 ```r
 # Synthetic reference points, not paper observations
@@ -63,9 +63,7 @@ set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
 growth_display <- function(p) {
-  p[[1]] <- p[[1]] + labs(subtitle = paste(strsplit(
-    p[[1]]$labels$subtitle, " | ", fixed=TRUE)[[1]], collapse="\n")) +
-    theme(legend.text=element_text(size=7))
+  p[[1]] <- p[[1]] + theme(legend.text=element_text(size=7))
   p[[2]] <- p[[2]] + scale_x_continuous(breaks=c(1,5,10,15))
   p
 }
@@ -77,13 +75,13 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-[![Growth and reference-data interface](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)
+[![Mean length at age of both models](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_growth.png?raw=true)
 
-Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion dashed) with their `Linf` and `k` in the subtitle, the grey reference curve that `nls()` fits to `ref_data`, and the grey points of that data; right: the age length matrices of both fits as heat maps, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis. Fits saved without this metadata are drawn against age-class and length-bin positions, and the axes say so. Use it to compare the parameter-based VB curves and static `pla` matrices. Matching curves indicate matching VB parameters; the realized length distribution at age in ALSCL also depends on growth transitions and survival. Here the growth parameters are fixed at the same values. The reference points are simulated by the code above; an independent age-length dataset can be supplied for comparison. In ALSCL, `Linf` and `k` set the growth increment at length and are not the parameters of a curve of mean length at age, so compare the growth of the two fits through the mean length at age in `compare_models(a, b, dat)$length_at_age`.
+Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL navy solid, from its age-length key; ALSCL vermilion dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
 
-Omit `age_range` to use the combined fitted age range, starting at or after both models' `t0`. A model without saved age metadata contributes the legacy range 1-20 years. An explicit range must contain two finite increasing ages and start at or after both `t0` values. A range with no positive span is rejected.
+`observed` adds mean length at age from age readings as points, with an optional standard deviation or interval, for example `plot_compare_growth(a, b, observed = readings, basis = "survey")` with the `readings` of [Growth, mortality and residuals](growth-mortality.html). Use `basis = "survey"` for readings of fish caught in the survey. Omit `age_range` to draw all age classes of both fits; an explicit range must contain two finite increasing ages and selects the age classes within it. `years` selects the time steps of the mean.
 
-The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the assessment curves and observed points remain.
+The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the lines of the two fits and the observed points remain.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_compare_growth)
 

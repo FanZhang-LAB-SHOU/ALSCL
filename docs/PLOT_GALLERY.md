@@ -1,10 +1,10 @@
 # YTF 绘图图谱 · YTF plot gallery
 
-**44 张图，覆盖 22 个公开绘图函数及主要类型。44 figures covering all 22 public plotting functions and major variants.**
+**47 张图，覆盖 26 个公开绘图函数及主要类型。47 figures covering all 26 public plotting functions and major variants.**
 
 另附单点估计与缺测绘图示例。 / Additional examples show single estimates and missing observations.
 
-全部 44 张图使用当前绘图函数从内置教学拟合生成，默认不显示网格线；BL/SBL 图包含可用的近似 95% 区间。 / All 44 figures are drawn with the current plotting functions from the built-in teaching fits; the defaults show no gridlines, and the BL/SBL figures include the available approximate 95% intervals.
+全部 47 张图使用当前绘图函数从内置教学拟合生成，默认不显示网格线；BL/SBL 图包含可用的近似 95% 区间。 / All 47 figures are drawn with the current plotting functions from the built-in teaching fits; the defaults show no gridlines, and the BL/SBL figures include the available approximate 95% intervals.
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
@@ -39,34 +39,37 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [14. 捕获尾数 CN / Catch numbers CN](#plot_catch_CN)
 - [15. 捕获尾数 CNA / Catch numbers CNA](#plot_catch_CNA)
 - [16. 捕获尾数 CNL / Catch numbers CNL](#plot_catch_CNL)
-- [17. 补充量 / Recruitment](#recruitment)
-- [18. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
-- [19. 生长曲线与区间 / Growth curve and interval](#VB)
-- [20. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
-- [21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](#F_ACL_year)
-- [22. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
-- [23. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](#F_ALSCL_year)
-- [24. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](#F_ALSCL_age)
-- [25. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](#F_ALSCL_length)
-- [26. 按体长组分面的对数残差 / Log residuals by length bin](#residuals_length)
-- [27. 按时间步分面的对数残差 / Log residuals by time step](#residuals_year)
-- [28. 补充量的对数偏差 / Log recruitment deviations](#deviation_R_TRUE)
-- [29. 补充量相对于中位数的倍数 / Recruitment relative to the process median](#deviation_R_FALSE)
-- [30. 捕捞死亡率的对数偏差 / Log fishing mortality deviations](#deviation_F_TRUE)
-- [31. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median](#deviation_F_FALSE)
-- [32. 长度组成山脊图 / Length composition ridges](#ridges)
-- [33. 种群时间序列比较 / Population time series comparison](#compare_ts)
-- [34. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
-- [35. 残差联合诊断 / Combined residual diagnostics](#compare_residuals)
-- [36. 生长与外部参照接口 / Growth and reference-data interface](#compare_growth)
-- [37. 两模型调查拟合 / Survey fits from both models](#compare_CatL)
-- [38. 拟合指标比较 / Fit metric comparison](#compare_metrics)
-- [39. 固定调查可捕性 / Fixed survey catchability](#compare_selectivity)
-- [40. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](#compare_F_apical)
-- [41. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](#compare_F_mean)
-- [42. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
-- [43. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
-- [44. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
+- [17. 相对渔获量 / Relative catch](#relative_catch)
+- [18. 补充量 / Recruitment](#recruitment)
+- [19. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
+- [20. 年龄别平均体长 / Mean length at age](#VB)
+- [21. 各时间步的年龄别平均体长 / Mean length at age by time step](#length_at_age)
+- [22. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
+- [23. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](#F_ACL_year)
+- [24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
+- [25. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](#F_ALSCL_year)
+- [26. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](#F_ALSCL_age)
+- [27. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](#F_ALSCL_length)
+- [28. 拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit](#inputs)
+- [29. 按体长组分面的对数残差 / Log residuals by length bin](#residuals_length)
+- [30. 按时间步分面的对数残差 / Log residuals by time step](#residuals_year)
+- [31. 补充量的对数偏差 / Log recruitment deviations](#deviation_R_TRUE)
+- [32. 补充量相对于中位数的倍数 / Recruitment relative to the process median](#deviation_R_FALSE)
+- [33. 捕捞死亡率的对数偏差 / Log fishing mortality deviations](#deviation_F_TRUE)
+- [34. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median](#deviation_F_FALSE)
+- [35. 长度组成山脊图 / Length composition ridges](#ridges)
+- [36. 种群时间序列比较 / Population time series comparison](#compare_ts)
+- [37. 死亡率矩阵比较 / Fishing mortality matrices](#compare_F)
+- [38. 残差联合诊断 / Combined residual diagnostics](#compare_residuals)
+- [39. 两模型的年龄别平均体长 / Mean length at age of both models](#compare_growth)
+- [40. 两模型调查拟合 / Survey fits from both models](#compare_CatL)
+- [41. 拟合指标比较 / Fit metric comparison](#compare_metrics)
+- [42. 固定调查可捕性 / Fixed survey catchability](#compare_selectivity)
+- [43. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](#compare_F_apical)
+- [44. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](#compare_F_mean)
+- [45. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
+- [46. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
+- [47. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
 
 <a id="plot_CatL"></a>
 
@@ -321,6 +324,10 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 
 Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute spawning biomass from a maturity ogive by age with `ssb_at_age()`.
 
+`plot_SSB(b, maturity_at_age = ogive)` 把按年龄别成熟比例算出的 SSB（`ssb_at_age()`）加画为虚线，与模型按体长别成熟比例算出的 SSB 并列；`ogive` 给出每个年龄组的成熟比例（[评估工作流](ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)）。不给这个参数时图形不变。
+
+`plot_SSB(b, maturity_at_age = ogive)` adds the SSB calculated from a maturity ogive by age (`ssb_at_age()`) as a dashed line next to the SSB of the model, which uses maturity at length; `ogive` holds one proportion mature per age class ([Assessment workflows](ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)). Without this argument the figure is unchanged.
+
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
 
 
@@ -432,10 +439,30 @@ Each panel shows the expected catch in numbers for one length bin, with an appro
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
+<a id="plot_relative_catch"></a>
+
+<a id="relative_catch"></a>
+## 17. 相对渔获量 / Relative catch
+
+```r
+# 绘制本图 / Draw this figure
+plot_relative_catch(b,
+  observed = data.frame(year = b$year, catch = x$truth$CB),
+  type = "weight", observed_name = "Simulated catch")
+```
+
+[![相对渔获量 / Relative catch](figures/ytf/relative_catch.png)](figures/ytf/relative_catch.png)
+
+线是模型渔获重量除以它在各时间步上的均值，数值来自 `relative_catch()`。点是生成 `YTF_example` 的模拟中的渔获重量，除以它在同样时间步上的均值。用自己的数据时，把上报渔获量作为 `observed` 传入，它是含 `year` 和 `catch` 两列的数据框，单位不限。只拟合调查指数时，渔获量的绝对水平无法确定，它取决于假定的自然死亡率和调查可捕性，所以本图只比较趋势：纵轴标签写明数值是相对值，点线标出均值。上报序列只覆盖部分时间步时，均值取两条序列共有的时间步，`years` 可进一步限定。最后一个时间步的渔获量是预测值，因为该时间步的 F 没有观测提供信息。
+
+The line is the model catch in weight divided by its mean over the time steps, from `relative_catch()`. The points are the catch in weight of the simulation that generated `YTF_example`, divided by its mean over the same time steps. With your own data, pass the reported catch as `observed`, a data frame with the columns `year` and `catch` in any unit. A fit to a survey index alone has no information on the absolute level of catch, which depends on the assumed natural mortality rate and survey catchability, so the figure compares trends only: the y-axis label states that the values are relative, and the dotted line marks the mean. When the reported series covers part of the time steps, the mean is taken over the time steps that both series have, and `years` restricts it further. The catch in the last time step is a prediction, because no observation informs F in that time step.
+
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_relative_catch)
+
 <a id="plot_recruitment"></a>
 
 <a id="recruitment"></a>
-## 17. 补充量 / Recruitment
+## 18. 补充量 / Recruitment
 
 ```r
 # 绘制本图 / Draw this figure
@@ -453,7 +480,7 @@ Recruitment is the estimated number entering the youngest age class per time ste
 <a id="plot_SSB_Rec"></a>
 
 <a id="SSB_Rec"></a>
-## 18. 亲体与补充关系 / Spawning biomass and recruitment
+## 19. 亲体与补充关系 / Spawning biomass and recruitment
 
 `age_at_recruitment` 的单位是年，默认 NULL 取最小拟合年龄（没有年龄元数据的结果用 1 年）。`plot_SSB_Rec()` 把给定的值除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。没有 `growth_step` 的结果使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
 
@@ -475,29 +502,61 @@ Each point pairs spawning stock biomass with recruitment `age_at_recruitment` ye
 <a id="plot_VB"></a>
 
 <a id="VB"></a>
-## 19. 生长曲线与区间 / Growth curve and interval
+## 20. 年龄别平均体长 / Mean length at age
+
+```r
+# 模拟的年龄鉴定资料，并非论文实测 / Synthetic age readings, not observations of the paper
+set.seed(42)
+ref <- data.frame(Age = rep(1:15, each = 5))
+ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
+# 先把每个体长归入模型的体长组，再求均值 / Assign each length to its model length bin before averaging
+ref$Mid <- b$len_mid[findInterval(ref$Length, b$len_border) + 1]
+readings <- data.frame(age = 1:15,
+  mean_length = as.numeric(tapply(ref$Mid, ref$Age, mean)),
+  sd_length = as.numeric(tapply(ref$Mid, ref$Age, sd)))
+# 绘制本图 / Draw this figure
+plot_VB(b, observed = readings, parameter_curve = TRUE)
+```
+
+[![年龄别平均体长 / Mean length at age](figures/ytf/VB.png)](figures/ytf/VB.png)
+
+对 ALSCL 拟合，`plot_VB()` 画由拟合的体长组、年龄组尾数算出的各年龄平均体长，并取各时间步的均值（实线，数值与 `length_at_age()` 相同）。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，`Linf`、`k` 和 `t0` 决定补充个体的平均体长，所以它们不是各年龄平均体长的 von Bertalanffy 曲线的参数（[模型原理与时间尺度](USER_GUIDE.md#model-theory-paper-differences)）。默认图 `plot_VB(b)` 只画实线，不标注 `Linf` 和 `k`。`parameter_curve = TRUE` 把由 `Linf`、`k` 和 `t0` 计算的曲线加画为虚线参考线：原始结构下，它是第一个时间步各年龄的平均体长，也是各时间步补充个体的平均体长。`observed` 把年龄鉴定得到的各年龄平均体长加画为点，本例带一个标准差的线段。对 ACL 拟合，`plot_VB(a)` 画 von Bertalanffy 曲线，它就是该模型的各年龄平均体长，并标注 `Linf` 和 `k`。
+
+For an ALSCL fit, `plot_VB()` shows mean length at age calculated from the fitted numbers by length bin and age class and averaged over the time steps (solid line; the values of `length_at_age()`). In ALSCL, `Linf` and `k` set the growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits, so they are not the parameters of a von Bertalanffy curve of mean length at age ([Model principles](USER_GUIDE.md#model-theory-paper-differences)). The default figure, `plot_VB(b)`, shows the solid line only and has no annotation of `Linf` and `k`. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line: with the original structure it is the mean length at age in the first time step and the mean length of recruits in every time step. `observed` adds mean length at age from age readings as points, here with bars of one standard deviation. For an ACL fit, `plot_VB(a)` shows the von Bertalanffy curve, which is the mean length at age of that model, with the annotation of `Linf` and `k`.
+
+每个体长组用其中点代表。本例最后一个体长组包含 49 cm 以上的全部个体，中点为 50 cm，所以高龄组的平均体长在 50 cm 处持平，低于虚线。与年龄鉴定资料比较时，请像上面的代码那样，先把鉴定个体的体长归入模型的体长组，两者才按同样的方法计算。与调查中采集的鉴定资料比较时用 `basis = "survey"`，此时体长别尾数先乘以体长别调查可捕性。`years` 选择求均值的时间步。
+
+Each length bin is represented by its midpoint. The last length bin of this example holds all fish above 49 cm and has the midpoint 50 cm, so the mean length of the older age classes levels off at 50 cm, below the dashed curve. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model, as the code above does, so that both means are calculated in the same way. Use `basis = "survey"` to compare with age readings of fish caught in the survey: the numbers at length are then multiplied by the survey catchability at length. `years` selects the time steps of the mean.
+
+`se = TRUE` 画由 `Linf`、`k` 和 `t0` 计算的曲线的 95% 区间：对 ACL 拟合是图中曲线的区间，对 ALSCL 拟合是参考线的区间。本例固定了三个参数，因此区间宽度为零。模型不报告由拟合尾数算出的平均体长的标准误，不画参考线而设 `se = TRUE` 时，函数给出警告并只画估计值。若参数协方差不可用，函数会警告并只画估计值，保留传入的标签、字号、刻度和主题。
+
+`se = TRUE` draws the 95% interval of the curve computed from `Linf`, `k` and `t0`: for an ACL fit the interval of the figure, and for an ALSCL fit the interval of the reference line. All three parameters are fixed in this example, so the interval has zero width. The model reports no standard error for mean length at age from the fitted numbers, and `se = TRUE` without the reference line gives a warning and the estimate only. If the parameter covariance is unavailable, the function warns and draws the estimate alone, keeping the labels, text sizes, breaks and theme you passed.
+
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_VB)
+
+<a id="plot_length_at_age"></a>
+
+<a id="length_at_age"></a>
+## 21. 各时间步的年龄别平均体长 / Mean length at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
-plot_VB(b, se = TRUE)
+plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2,
+  line_size = 0.6)
 ```
 
-[![生长曲线与区间 / Growth curve and interval](figures/ytf/VB.png)](figures/ytf/VB.png)
+[![各时间步的年龄别平均体长 / Mean length at age by time step](figures/ytf/length_at_age.png)](figures/ytf/length_at_age.png)
 
-von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。要得到拟合种群各年龄的平均体长，或与年龄鉴定资料比较，请用 `length_at_age()`。
+每个面板显示一个年龄组在各时间步的平均体长，数值来自 `length_at_age()`。原始结构的 ALSCL 拟合中，第一个时间步各年龄组的体长分布由 `Linf`、`k` 和 `t0` 给出。之后各时间步的体长由生长增量和体长别死亡决定，所以平均体长在最初几年变化较大，随后随补充和捕捞而波动。ACL 拟合只用一个年龄体长概率矩阵，得到水平线。`observed` 接受年龄鉴定得到的各时间步、各年龄平均体长（列 `year`、`age` 和 `mean_length`，可加 `sd_length`），画成所属年龄组面板中的点；与调查中采集的鉴定资料比较时用 `basis = "survey"`。`ages` 和 `years` 选择年龄组和时间步，`facet_by = "none"` 把全部年龄组画在一个面板中。
 
-The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population. For the mean length at age of the fitted population, and for a comparison with age readings, use `length_at_age()`.
+Each panel shows the mean length of one age class in each time step, from `length_at_age()`. In the first time step of an ALSCL fit with the original structure, every age class has the length distribution given by `Linf`, `k` and `t0`. In later time steps the lengths follow from the growth increments and from mortality at length, so the mean length changes during the first years and then varies with recruitment and fishing. An ACL fit uses one age-length key and gives horizontal lines. `observed` takes mean length at age by time step from age readings (columns `year`, `age` and `mean_length`, optionally `sd_length`) and draws it as points in the panel of its age class; use `basis = "survey"` for readings of fish caught in the survey. `ages` and `years` select age classes and time steps, and `facet_by = "none"` draws all age classes in one panel.
 
-`age_range = NULL` 时绘制拟合的年龄范围，起点不早于 `t0`；显式 `age_range` 必须是两个递增的有限年龄，且不早于 `t0`。若 `se = TRUE` 但参数协方差不可用，函数会警告并只画曲线，保留传入的标签、字号、刻度和主题。
-
-`age_range = NULL` draws the fitted age range, starting no earlier than `t0`; an explicit `age_range` must be two increasing finite ages at or after `t0`. If `se = TRUE` but the parameter covariance is unavailable, the function warns and draws the curve alone, keeping the labels, text sizes, breaks and theme you passed.
-
-[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_VB)
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_length_at_age)
 
 <a id="plot_pla"></a>
 
 <a id="pla"></a>
-## 20. 年龄—体长概率矩阵 / Age–length probability matrix
+## 22. 年龄—体长概率矩阵 / Age–length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
@@ -515,7 +574,7 @@ Each column of the static `pla` matrix gives length-bin probabilities for one ag
 <a id="plot_fishing_mortality"></a>
 
 <a id="F_ACL_year"></a>
-## 21. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
+## 23. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class
 
 每个面板只有一个估计值时显示为点，带状区间改用误差棒；已选择 `se_type = "errorbar"` 时不会重复添加区间。
 
@@ -540,7 +599,7 @@ Each panel shows the estimated instantaneous fishing mortality rate (`F`) for on
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ACL_age"></a>
-## 22. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
+## 24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -557,7 +616,7 @@ Each panel shows the same ACL estimates for one time step, with the fitted ages 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_year"></a>
-## 23. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin
+## 25. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -574,7 +633,7 @@ Each panel shows how fishing mortality at length (`FL`) changes over time for on
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_age"></a>
-## 24. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
+## 26. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -591,7 +650,7 @@ For each age class, ALSCL sums the numbers surviving across length bins and divi
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_length"></a>
-## 25. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
+## 27. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -607,10 +666,33 @@ Each panel shows fishing mortality at length for one time step, with an approxim
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
+<a id="plot_natural_mortality"></a>
+
+<a id="plot_survey_catchability"></a>
+
+<a id="inputs"></a>
+## 28. 拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit
+
+```r
+# 绘制本图 / Draw this figure
+(plot_natural_mortality(b, line_size = 0.8) +
+   labs(title = "Natural mortality rate (M)")) |
+  (plot_survey_catchability(b, line_size = 0.8, point_size = 1.5) +
+     labs(title = "Survey catchability at length"))
+```
+
+[![拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit](figures/ytf/inputs.png)](figures/ytf/inputs.png)
+
+两个面板显示的都是你给定的输入，不是估计值。`plot_natural_mortality()` 的图形随 `M` 的形式而定：单个数值画成水平线（如本例）；按年龄组给定时画 M 随年龄的变化，随时间变化时改为画 M 随时间步的变化，每个年龄组一个面板；按体长给定（ALSCL）时画 M 随体长的变化。`plot_survey_catchability()` 显示由 `sel_L50` 和 `sel_L95` 或由 `survey_q` 给出的体长别可捕性。`survey_q` 各时间步不同时，每条不同的曲线画一条线并标出其适用的时间步；`type = "age"` 显示年龄别乘数（`survey_q_age`）。调查指数不能确定总死亡中捕捞死亡和自然死亡各占多少，也不能确定可捕性的水平，所以 F、渔获量和丰度的水平取决于这两项输入（[选择拟合设置](USER_GUIDE.md#fitting)）。报告中请把它们与估计值一并给出。
+
+Both panels show inputs that you supplied, not estimates. `plot_natural_mortality()` follows the form of `M`: a single value is a horizontal line (as here), a rate by age class is drawn against age or, when it changes over time, against the time step with one panel per age class, and a rate by length (ALSCL) is drawn against length. `plot_survey_catchability()` shows the catchability at length from `sel_L50` and `sel_L95` or from `survey_q`. When `survey_q` differs among time steps, it draws one line for each distinct curve and names the time steps of each, and `type = "age"` shows the multiplier by age (`survey_q_age`). The survey index does not inform the split of total mortality into fishing and natural mortality or the level of catchability, so the level of F, catch and abundance depends on these inputs ([Choose the fitting settings](USER_GUIDE.md#fitting)). Show them next to the estimates in a report.
+
+[参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_natural_mortality) · [`plot_survey_catchability()`](FUNCTION_REFERENCE.md#plot_survey_catchability)
+
 <a id="plot_residuals"></a>
 
 <a id="residuals_length"></a>
-## 26. 按体长组分面的对数残差 / Log residuals by length bin
+## 29. 按体长组分面的对数残差 / Log residuals by length bin
 
 ```r
 # 绘制本图 / Draw this figure
@@ -631,7 +713,7 @@ Within each facet, a missing or excluded observation breaks the residual line an
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
 <a id="residuals_year"></a>
-## 27. 按时间步分面的对数残差 / Log residuals by time step
+## 30. 按时间步分面的对数残差 / Log residuals by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -650,7 +732,7 @@ The same residuals arranged by length: one panel per time step, with length on t
 <a id="plot_deviance"></a>
 
 <a id="deviation_R_TRUE"></a>
-## 28. 补充量的对数偏差 / Log recruitment deviations
+## 31. 补充量的对数偏差 / Log recruitment deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -668,7 +750,7 @@ The points are estimated log recruitment deviations and the bars are approximate
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_R_FALSE"></a>
-## 29. 补充量相对于中位数的倍数 / Recruitment relative to the process median
+## 32. 补充量相对于中位数的倍数 / Recruitment relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -686,7 +768,7 @@ With `log = FALSE`, each point is recruitment divided by the process median. A r
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_TRUE"></a>
-## 30. 捕捞死亡率的对数偏差 / Log fishing mortality deviations
+## 33. 捕捞死亡率的对数偏差 / Log fishing mortality deviations
 
 ```r
 # 绘制本图 / Draw this figure
@@ -704,7 +786,7 @@ Points and approximate 95% intervals show log fishing mortality deviations over 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_deviance)
 
 <a id="deviation_F_FALSE"></a>
-## 31. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median
+## 34. 捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median
 
 ```r
 # 绘制本图 / Draw this figure
@@ -724,7 +806,7 @@ Each point is the fitted fishing mortality rate divided by the process median. A
 <a id="plot_ridges"></a>
 
 <a id="ridges"></a>
-## 32. 长度组成山脊图 / Length composition ridges
+## 35. 长度组成山脊图 / Length composition ridges
 
 山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。
 
@@ -773,7 +855,7 @@ plot_ridges(ridge_example, ridges_scale = 1,
 <a id="plot_compare_ts"></a>
 
 <a id="compare_ts"></a>
-## 33. 种群时间序列比较 / Population time series comparison
+## 36. 种群时间序列比较 / Population time series comparison
 
 每个模型分别判断是否只有一个估计值；单点用点与误差棒，多期结果仍用曲线与带状区间。
 
@@ -795,7 +877,7 @@ Time series of spawning biomass, recruitment, total biomass, total abundance and
 <a id="plot_compare_F"></a>
 
 <a id="compare_F"></a>
-## 34. 死亡率矩阵比较 / Fishing mortality matrices
+## 37. 死亡率矩阵比较 / Fishing mortality matrices
 
 ```r
 # 绘制本图 / Draw this figure
@@ -813,7 +895,7 @@ Heat maps of fishing mortality, one per fit, time on the horizontal axis and the
 <a id="plot_compare_residuals"></a>
 
 <a id="compare_residuals"></a>
-## 35. 残差联合诊断 / Combined residual diagnostics
+## 38. 残差联合诊断 / Combined residual diagnostics
 
 平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。
 
@@ -839,7 +921,7 @@ A wholly unobserved period breaks the mean-residual line. Isolated observed peri
 <a id="plot_compare_growth"></a>
 
 <a id="compare_growth"></a>
-## 36. 生长与外部参照接口 / Growth and reference-data interface
+## 39. 两模型的年龄别平均体长 / Mean length at age of both models
 
 参考数据与排版辅助函数 / Reference data and layout helper:
 
@@ -849,9 +931,7 @@ set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
 growth_display <- function(p) {
-  p[[1]] <- p[[1]] + labs(subtitle = paste(strsplit(
-    p[[1]]$labels$subtitle, " | ", fixed=TRUE)[[1]], collapse="\n")) +
-    theme(legend.text=element_text(size=7))
+  p[[1]] <- p[[1]] + theme(legend.text=element_text(size=7))
   p[[2]] <- p[[2]] + scale_x_continuous(breaks=c(1,5,10,15))
   p
 }
@@ -863,26 +943,26 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
-[![生长与外部参照接口 / Growth and reference-data interface](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
+[![两模型的年龄别平均体长 / Mean length at age of both models](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
 
-左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，不是各年龄平均体长曲线的参数，所以比较两次拟合的生长时，请看 `compare_models(a, b, dat)$length_at_age` 中的各年龄平均体长。
+左图：两次拟合按同一口径计算、并取各时间步均值的各年龄平均体长（ACL 深蓝实线，来自年龄体长概率矩阵；ALSCL 朱红虚线，来自拟合的体长组、年龄组尾数），另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点。副标题给出口径和时间步，以及参照曲线的 `Linf` 和 `k`。右图：两次拟合按同一口径的给定年龄的体长分布热图，横轴为拟合年龄，纵轴为体长组中点；ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例。左图不画由两次拟合的生长参数计算的曲线。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长曲线的参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两个模型的参数含义不同。`compare_models(a, b, dat)$length_at_age` 以表格给出同样的数值。两次拟合的线在 50 cm 附近持平，因为最后一个体长组包含 49 cm 以上的全部个体，并用其中点代表。参照数据的体长没有归入体长组，所以参照曲线继续上升。
 
-Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion dashed) with their `Linf` and `k` in the subtitle, the grey reference curve that `nls()` fits to `ref_data`, and the grey points of that data; right: the age length matrices of both fits as heat maps, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis. Fits saved without this metadata are drawn against age-class and length-bin positions, and the axes say so. Use it to compare the parameter-based VB curves and static `pla` matrices. Matching curves indicate matching VB parameters; the realized length distribution at age in ALSCL also depends on growth transitions and survival. Here the growth parameters are fixed at the same values. The reference points are simulated by the code above; an independent age-length dataset can be supplied for comparison. In ALSCL, `Linf` and `k` set the growth increment at length and are not the parameters of a curve of mean length at age, so compare the growth of the two fits through the mean length at age in `compare_models(a, b, dat)$length_at_age`.
+Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL navy solid, from its age-length key; ALSCL vermilion dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
 
-省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
+`observed` 把年龄鉴定得到的各年龄平均体长加画为点，可带标准差或区间，例如 `plot_compare_growth(a, b, observed = readings, basis = "survey")`，其中 `readings` 见[生长、死亡与残差图](#plot_VB)。与调查中采集的鉴定资料比较时用 `basis = "survey"`。省略 `age_range` 时画两次拟合的全部年龄组；显式范围须为两个有限且递增的年龄，选取其中的年龄组。`years` 选择求均值的时间步。
 
-Omit `age_range` to use the combined fitted age range, starting at or after both models' `t0`. A model without saved age metadata contributes the legacy range 1-20 years. An explicit range must contain two finite increasing ages and start at or after both `t0` values. A range with no positive span is rejected.
+`observed` adds mean length at age from age readings as points, with an optional standard deviation or interval, for example `plot_compare_growth(a, b, observed = readings, basis = "survey")` with the `readings` of [Growth, mortality and residuals](#plot_VB). Use `basis = "survey"` for readings of fish caught in the survey. Omit `age_range` to draw all age classes of both fits; an explicit range must contain two finite increasing ages and selects the age classes within it. `years` selects the time steps of the mean.
 
-可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；评估模型曲线和观测点仍保留。
+可选参考曲线仅在不早于其自身拟合 `t0` 的年龄绘制。若其生长参数无效，或没有剩余的正年龄跨度，会警告说明省略参考曲线的原因；两次拟合的线和观测点仍保留。
 
-The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the assessment curves and observed points remain.
+The optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the lines of the two fits and the observed points remain.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_growth)
 
 <a id="plot_compare_CatL"></a>
 
 <a id="compare_CatL"></a>
-## 37. 两模型调查拟合 / Survey fits from both models
+## 40. 两模型调查拟合 / Survey fits from both models
 
 ```r
 # 绘制本图 / Draw this figure
@@ -904,7 +984,7 @@ The vertical label comes from `ylab$survey` and reads Survey index by default; s
 <a id="plot_compare_metrics"></a>
 
 <a id="compare_metrics"></a>
-## 38. 拟合指标比较 / Fit metric comparison
+## 41. 拟合指标比较 / Fit metric comparison
 
 ```r
 # 绘制本图 / Draw this figure
@@ -927,7 +1007,7 @@ The bars use the same calculation as `diagnostic_metrics()`: only finite positiv
 <a id="plot_compare_selectivity"></a>
 
 <a id="compare_selectivity"></a>
-## 39. 固定调查可捕性 / Fixed survey catchability
+## 42. 固定调查可捕性 / Fixed survey catchability
 
 ```r
 # 绘制本图 / Draw this figure
@@ -945,7 +1025,7 @@ Survey catchability `q` at length from the input of each fit (`sel_L50` and `sel
 <a id="plot_compare_F_ts"></a>
 
 <a id="compare_F_apical"></a>
-## 40. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step
+## 43. 每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -962,7 +1042,7 @@ Apical F is the maximum fishing mortality rate across age classes in ACL or acro
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F_ts)
 
 <a id="compare_F_mean"></a>
-## 41. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step
+## 44. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -981,7 +1061,7 @@ Mean fishing mortality, the unweighted average of `F` over the groups at each ti
 <a id="plot_retro"></a>
 
 <a id="retro_ACL"></a>
-## 42. ACL 回溯分析 / ACL retrospective analysis
+## 45. ACL 回溯分析 / ACL retrospective analysis
 
 ```r
 # 绘制本图 / Draw this figure
@@ -997,7 +1077,7 @@ Retrospective analysis of the ACL fit: one panel per quantity (`B`, `N`, `Rec`, 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
 <a id="retro_ALSCL"></a>
-## 43. ALSCL 回溯分析 / ALSCL retrospective analysis
+## 46. ALSCL 回溯分析 / ALSCL retrospective analysis
 
 ```r
 # 绘制本图 / Draw this figure
@@ -1013,7 +1093,7 @@ The same retrospective analysis for the ALSCL fit, with the same layout and colo
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
 <a id="truth"></a>
-## 44. 模拟真值与条件估计 / Simulation truth and conditional estimates
+## 47. 模拟真值与条件估计 / Simulation truth and conditional estimates
 
 ```r
 # 将生成真值与报告中的估计对齐 / Align truth and fitted reports
@@ -1040,4 +1120,3 @@ ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_m
 生成模拟的生物量、补充量和产卵生物量（黑色虚线）与 ACL（深蓝）、ALSCL（朱红）拟合的对照，每个量一个面板。上面的代码由 `x$truth` 和两份报告构造 `truth` 与 `estimates`。本例 ACL 紧贴模拟真值，ALSCL 的生物量和产卵生物量在 2013 年后低于真值。这是年龄结构操作模型的一次模拟及给定设置下的拟合。要评估表现如何随模型结构变化，需要在不同生成假设下开展重复模拟。
 
 Biomass, recruitment and spawning biomass of the generating simulation (black dashed) and the ACL (navy) and ALSCL (vermilion) fits, one panel per quantity. The code above constructs `truth` and `estimates` from `x$truth` and the two reports. ACL follows the simulated truth closely here, while ALSCL biomass and spawning biomass fall below it after 2013. This is one realization from the age-based operating model under the stated fitting settings. Repeated simulations under alternative generating assumptions are needed to assess how performance depends on model structure.
-

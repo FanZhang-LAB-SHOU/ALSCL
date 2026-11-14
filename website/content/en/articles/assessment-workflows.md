@@ -61,6 +61,15 @@ Three functions return quantities that a source outside the model can check: mea
 
 `relative_catch()` returns catch in numbers and in weight, each divided by its mean over the time steps, or over the time steps given in `years`. Give the time steps that have reported catch, and divide the reported catch by its mean over the same time steps. The function returns relative values only, because a fit to a survey index does not determine the level of catch ([Model principles](model-theory.html#survey)). The column `extrapolated` is `TRUE` for the last time step, whose catch is a prediction.
 
+```r
+plot_VB(b, basis = "survey")
+plot_length_at_age(b, basis = "survey", ages = c(1, 5, 10))
+plot_SSB(b, maturity_at_age = ogive)
+plot_relative_catch(b)
+```
+
+Four plots show these outputs. `plot_VB()` draws mean length at age averaged over the time steps, and `plot_length_at_age()` draws it by time step; both take `basis` and, in `observed`, the mean length at age from age readings, drawn as points. `plot_SSB()` with `maturity_at_age` adds the spawning biomass from the maturity ogive by age to the spawning biomass of the model. `plot_relative_catch()` draws relative catch and, with `observed`, a reported catch series divided by its mean over the same time steps. `plot_natural_mortality()` and `plot_survey_catchability()` show the natural mortality rate and the survey catchability that the fit used, the two inputs on which the level of catch and abundance depends ([Growth, mortality and residuals](growth-mortality.html)).
+
 <h2 id="section-5">3. Check residuals on the model time grid</h2>
 
 ```r
