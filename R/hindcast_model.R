@@ -2,6 +2,8 @@
 .acl_hindcast_args <- function(args, origin, model) {
   periods <- ncol(args$data.CatL) - 1L
   args["map"] <- list(.acl_retro_map(args, periods - origin, model))
+  # A natural mortality rate by age and time step keeps the training steps.
+  if (!is.null(args$M)) args$M <- .acl_M_truncate(args$M, periods, origin)
   for (nm in c("data.CatL", "data.wgt", "data.mat"))
     args[[nm]] <- args[[nm]][, seq_len(origin + 1L), drop = FALSE]
   args$ncores <- 1L
@@ -11,7 +13,9 @@
 
 # Conditional means on the log-process scale; these are not marginal means
 # after exponentiation or nonlinear population transitions.
-.acl_hindcast_predict <- function(fit, horizon) {
+# future_M is the natural mortality rate of the held-out time steps (age by
+# time step) when the supplied rate varies over time; NULL uses the fitted rate.
+.acl_hindcast_predict <- function(fit, horizon, future_M = NULL) {
   r <- fit$report
   scalar <- function(x, name, correlation = FALSE) {
     if (!is.numeric(x) || length(x) != 1L || !is.finite(x) ||
@@ -45,8 +49,14 @@
   weight <- matrix(rep(prepared$data$weight[, Y], horizon), L, horizon)
   maturity <- matrix(rep(prepared$data$mat[, Y], horizon), L, horizon)
   projection <- project_model(fit, F = F, recruitment = recruitment,
-    weight = weight, maturity = maturity)
+    weight = weight, maturity = maturity, M = future_M)
   NL <- projection$states$NL
+  # With a survey catchability multiplier by age, the survey sees the sum
+  # over ages of the multiplier times numbers at length and age.
+  q_age <- prepared$data$q_age
+  if (!is.null(q_age)) NL <- if (fit$model_type == "ACL")
+    fit$report$pla %*% (q_age * projection$states[["NA"]]) else
+    apply(sweep(projection$states$NLA, 2L, q_age, "*"), c(1L, 3L), sum)
   log_NL <- if (fit$model_type == "ACL") log(NL + 1e-300) else log(pmax(NL, 1e-300))
   prediction <- sweep(log_NL, 1L, prepared$data$log_q, "+")
   if (any(!is.finite(prediction))) stop("Nonfinite survey predictions.", call. = FALSE)
@@ -124,6 +134,9 @@
 #'   the fitted AR(1) conditional means on the log-process scale: the last fitted
 #'   deviation times phi to the power of the forecast horizon. Projections retain
 #'   the scalar parameter values from the training fit and the specified survey catchability.
+#'   A natural mortality rate by age and time step is supplied for the
+#'   complete time grid. Each training fit uses the columns up to its forecast
+#'   origin, and the prediction uses the columns of the held-out time steps.
 #'   project_model() advances
 #'   the population; training-terminal weights and maturity are repeated only
 #'   for this calculation and do not affect survey-number predictions. These are
@@ -223,7 +236,8 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
     extra_warnings <- character()
     prediction_error <- NULL
     prediction <- if (isTRUE(diagnostics$numerical_ok[i])) tryCatch(withCallingHandlers(
-      .acl_hindcast_predict(results[[i]]$fit, horizon), warning = function(w) {
+      .acl_hindcast_predict(results[[i]]$fit, horizon,
+        future_M = .acl_M_future(args$M, Y, origin, horizon)), warning = function(w) {
         extra_warnings <<- c(extra_warnings, conditionMessage(w))
         invokeRestart("muffleWarning")
       }), error = function(e) {

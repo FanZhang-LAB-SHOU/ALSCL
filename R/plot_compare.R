@@ -1093,8 +1093,10 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 #' @return A ggplot object.
 #' @details Saved assessments are supported without refitting. Survey
 #'   catchability is reconstructed from the saved recipe's sel_L50 and sel_L95
-#'   at the fitted length midpoints. Older fits without a recipe use log_q from
-#'   their live TMB object.
+#'   at the fitted length midpoints, or taken from its survey_q when the fit
+#'   used survey catchability at length supplied directly. Older fits without
+#'   a recipe use log_q from their live TMB object. A survey catchability
+#'   multiplier by age (survey_q_age) is not shown.
 #' @examples
 #' \donttest{
 #' # Fit both models to the last ten years of the example data. The shorter
@@ -1125,6 +1127,14 @@ plot_compare_selectivity <- function(model1, model2,
     if (!is.numeric(lengths) || !length(lengths) || any(!is.finite(lengths)))
       stop("Catchability plots require finite fitted length midpoints.", call. = FALSE)
     args <- model$recipe$args
+    if (!is.null(args$survey_q)) {
+      # Survey catchability at length supplied directly; it can exceed one.
+      q <- args$survey_q
+      if (!is.numeric(q) || length(q) != length(lengths) || any(!is.finite(q)) || any(q <= 0))
+        stop("The saved recipe must have one finite positive survey_q value per length midpoint.",
+             call. = FALSE)
+      return(as.numeric(q))
+    }
     if (!is.null(args$sel_L50) && !is.null(args$sel_L95)) {
       valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
       if (!valid_scalar(args$sel_L50) || !valid_scalar(args$sel_L95) ||

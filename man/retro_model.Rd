@@ -12,8 +12,8 @@ retro_model(
   rec.age,
   nage,
   M,
-  sel_L50,
-  sel_L95,
+  sel_L50 = NULL,
+  sel_L95 = NULL,
   model_type = c("acl", "alscl"),
   growth_step = NULL,
   parameters = NULL,
@@ -59,6 +59,8 @@ retro_model(
   structure = list(),
   start_spread = 0.15,
   t0_lower = 0,
+  survey_q = NULL,
+  survey_q_age = NULL,
   ...
 )
 }
@@ -79,11 +81,16 @@ by \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}}. F
 
 \item{nage}{The number of age classes.}
 
-\item{M}{Natural mortality per model time step.}
+\item{M}{Natural mortality rate per model time step, in one of the forms
+that \code{\link[=run_acl]{run_acl()}} or \code{\link[=run_alscl]{run_alscl()}} accepts. A matrix by age and time step
+has one column per time step of the complete data; each peel uses the
+columns of the time steps that it keeps.}
 
-\item{sel_L50}{Length at 50 percent survey catchability.}
+\item{sel_L50}{Length at 50 percent survey catchability. NULL when
+survey_q is supplied.}
 
-\item{sel_L95}{Length at 95 percent survey catchability.}
+\item{sel_L95}{Length at 95 percent survey catchability. NULL when
+survey_q is supplied.}
 
 \item{model_type}{Character. Model to use: \code{"acl"} (default) or \code{"alscl"}.}
 
@@ -208,6 +215,11 @@ gives annual peels: peel k then ends k years before the terminal period.}
 \code{\link{run_alscl}}. A bundle's own settings are used unless these are
 supplied explicitly.}
 
+\item{survey_q, survey_q_age}{Survey catchability at length and survey
+catchability multiplier by age, passed to every full and peel fit; see
+\code{\link[=run_alscl]{run_alscl()}}. A bundle's own settings are used unless these are
+supplied explicitly.}
+
 \item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }
 \value{
@@ -246,8 +258,9 @@ Mohn's rho is reported. Invalid or failed fits are not silently dropped.
 A parameter that the map fixes has the same value in the full fit and in
 every peel. When map fixes mean_log_R and parameters gives no value for
 it, the value is derived once from the complete observations (the log of
-the mean total survey index over periods) and used in every fit. Earlier
-versions derived it again from the truncated data of each peel.
+the mean total survey index over periods, minus the log of the first
+value of survey_q_age when that is supplied) and used in every fit.
+Earlier versions derived it again from the truncated data of each peel.
 
 Warnings raised while fitting are recorded in fit_diagnostics$warnings for
 the fit that raised them, including fits on socket workers, and one
