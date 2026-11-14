@@ -1,10 +1,10 @@
 plot_style_fixture_243 <- function() {
   residual <- rbind(c(.1, .3, -.2, .2, -.1, .4), c(-.2, .1, .4, -.1, .2, .3))
-  structure(list(model_type = "ALSCL", year = 2000:2005, age = 1:4,
+  structure(growth_plot_fixture(list(model_type = "ALSCL", year = 2000:2005, age = 1:4,
     len_mid = c(10, 20), len_label = c("5-15", "15-25"), growth_step = 1,
     observations = exp(residual), report = list(Elog_index = matrix(0, 2, 6),
       sigma_index = .5, FL = matrix(seq_len(12) / 100, 2, 6),
-      Linf = 50, vbk = .2, t0 = 0, pla = matrix(.5, 2, 4))),
+      Linf = 50, vbk = .2, t0 = 0, pla = matrix(.5, 2, 4)))),
     class = c("alscl_fit", "list"))
 }
 

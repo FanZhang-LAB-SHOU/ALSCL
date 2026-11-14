@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_growth}
 \alias{plot_compare_growth}
-\title{Compare Growth Curves and Length-at-Age Matrices}
+\title{Compare mean length at age and the length distribution at age of two fits}
 \usage{
 plot_compare_growth(
   model1,
@@ -21,7 +21,11 @@ plot_compare_growth(
   point_size = NULL,
   point_alpha = 0.4,
   nls_start = NULL,
-  ...
+  ...,
+  observed = NULL,
+  basis = c("population", "survey"),
+  years = NULL,
+  observed_name = "Age readings"
 )
 }
 \arguments{
@@ -29,10 +33,9 @@ plot_compare_growth(
 
 \item{model2}{Second model result (alternative).}
 
-\item{age_range}{Numeric vector of length 2, or NULL. NULL uses the combined
-range of fitted ages, starting no earlier than either model's t0. A model
-without age metadata contributes the legacy range c(1, 20). An explicit
-range must be finite, increasing and start at or after both t0 values.}
+\item{age_range}{Numeric vector of length 2, or NULL. NULL draws all age
+classes of both fits. An explicit range must be finite and increasing
+and selects the age classes within it; each fit needs at least one.}
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
@@ -49,14 +52,17 @@ a warning and the global setting is used.}
 containing observed age-length measurements (e.g. from otolith readings).
 If provided, a VB curve is fitted via \code{nls()} and overlaid as a
 reference, with the raw data as scatter points. The reference curve is
-drawn only at ages at or above its fitted t0, within age_range. A fit with
-invalid growth parameters or no positive age span in that range is omitted
-with a warning; model curves and observed points are retained.}
+drawn only at ages at or above its fitted t0, within the plotted ages. A
+fit with invalid growth parameters or no positive age span in that range
+is omitted with a warning; model lines and observed points are retained.
+The subtitle gives Linf and k of this curve, which are the parameters
+of a von Bertalanffy curve of the observed lengths at age.}
 
 \item{ref_name}{Character. Nonempty label for the reference curve, distinct
 from both model labels when ref_data is supplied. Default "Observed VB".}
 
-\item{ref_color}{Character. Color for reference curve/points. Default "grey30".}
+\item{ref_color}{Character. Color for the reference curve and its points,
+and for the points of \code{observed}. Default "grey30".}
 
 \item{ref_linetype}{Character. Linetype for reference curve. Default "dotdash".}
 
@@ -64,27 +70,69 @@ from both model labels when ref_data is supplied. Default "Observed VB".}
 
 \item{point_size}{Numeric. Size of data points. NULL = use global theme.}
 
-\item{point_alpha}{Numeric. Transparency of data points. Default 0.4.}
+\item{point_alpha}{Numeric. Transparency of the raw data points of
+\code{ref_data}. Default 0.4.}
 
 \item{nls_start}{Named list. Starting values for nls. Default attempts
 auto-detection from data range.}
 
 \item{...}{The former argument name linewidth, accepted with a warning.}
+
+\item{observed}{NULL or a data frame of observed mean length at age from
+age readings, drawn as points in the left panel. Required columns: \code{age}
+(years) and \code{mean_length}. Optional columns: \code{sd_length} (or \code{sd}), drawn
+as bars of one standard deviation on each side of the mean, or \code{lower}
+and \code{upper}, drawn as the bars of an interval; and \code{year} (the time
+step). Every row is drawn as one point. With \code{years}, only the rows of
+those time steps are drawn; rows without a time step are always drawn.}
+
+\item{basis}{\code{"population"} (default): mean length at age and the length
+distribution at age in the population. \code{"survey"}: in the survey catch,
+that is, with numbers at length multiplied by the survey catchability at
+length used in each fit. Use \code{"survey"} to compare with age readings of
+fish caught in the survey.}
+
+\item{years}{NULL (all time steps of each fit) or the time steps over which
+the values are averaged. They must be time steps of both fits.}
+
+\item{observed_name}{Character. Name of the points of \code{observed} in the
+legend, distinct from both model labels and from \code{ref_name}. Default is
+"Age readings".}
 }
 \value{
 A ggplot object.
 }
 \description{
-Left panel: von Bertalanffy (VB) growth curves from each model. Optionally
-overlay a VB curve fitted independently from observed age-length data via
-\code{nls()}. Right panel: heatmaps of the static probability of length
-given age (pla), side by side. Both panels use fitted ages and lengths:
-the heatmap cells sit at the ages in \code{model$age} and at the length-bin
-midpoints in \code{model$len_mid}. If either fit lacks this metadata, the
-heatmaps use age-class and length-bin positions and say so on their axes.
-The panels compare VB parameters and static length-at-age probabilities.
-Realized length distributions at age in ALSCL also depend on growth
-transitions and survival.
+Left panel: mean length at age of each model, calculated on the same basis
+for both (\code{\link[=length_at_age]{length_at_age()}}) and averaged over the time steps. For an ACL
+fit the values come from its age-length key, and for an ALSCL fit from the
+fitted numbers by length bin and age class. Observed mean length at age
+from age readings can be added as points (\code{observed}), and a von
+Bertalanffy curve fitted to observed age-length pairs with \code{nls()}
+can be added as a reference (\code{ref_data}). Right panel: heatmaps of the
+probability of length given age, side by side, on the same basis and for
+the same time steps.
+}
+\details{
+The left panel does not draw curves from the growth parameters. In ACL,
+Linf, k and t0 are the parameters of a von Bertalanffy curve of mean length
+at age. In ALSCL they set the growth increment at length and the mean
+length of recruits, so the parameters of the two models have different
+meanings and are not compared (see \code{\link[=length_at_age]{length_at_age()}}). Earlier versions
+drew one curve from the parameters of each model and listed Linf and k of
+both models in the subtitle.
+
+Both panels need the ages, the length-bin midpoints and the time
+steps of each fit, and an ALSCL fit needs its numbers by length, age and
+time step. Results without them give an error. The heatmap cells sit at
+the ages in \code{model$age} and at the length-bin midpoints in
+\code{model$len_mid}. For an ACL fit on the population basis, the
+heatmap is its age-length key (\code{report$pla}). For an ALSCL fit it is
+the proportion of each age class in each length bin from the fitted
+numbers, averaged over the time steps; \code{report$pla} of an ALSCL fit
+is the length distribution of recruits (and, with the original structure,
+of every age class in the first time step) and is shown by \code{\link[=plot_pla]{plot_pla()}}.
+The subtitle of the left panel states the basis and the time steps.
 }
 \examples{
 \donttest{
@@ -97,10 +145,17 @@ x[tables] <- lapply(x[tables], function(tab) tab[, c(1, 12:21)])
 fit_acl <- run_acl(x, silent = TRUE)
 fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
 
-# Without reference data
+# Mean length at age of both fits in the population
 plot_compare_growth(fit_acl, fit_alscl)
 
-# With observed age-length data
+# With observed mean length at age from age readings, on the survey
+# basis. These values are made up for the example.
+readings <- data.frame(age = 1:8,
+                       mean_length = c(12, 20, 27, 32, 37, 40, 43, 45),
+                       sd_length = c(2, 2.5, 3, 3, 3.5, 3.5, 4, 4))
+plot_compare_growth(fit_acl, fit_alscl, observed = readings, basis = "survey")
+
+# With observed age-length pairs and a von Bertalanffy curve fitted to them
 obs <- data.frame(Age = c(1,1,2,2,3,3,4,5,6,7),
                   Length = c(20,22,30,28,38,35,42,48,50,52))
 plot_compare_growth(fit_acl, fit_alscl, ref_data = obs)
@@ -110,4 +165,8 @@ plot_compare_growth(fit_acl, fit_alscl,
   ref_data = obs, ref_name = "Otolith data",
   ref_color = "forestgreen", show_points = TRUE)
 }
+}
+\seealso{
+\code{\link[=length_at_age]{length_at_age()}}, \code{\link[=plot_VB]{plot_VB()}}, \code{\link[=plot_length_at_age]{plot_length_at_age()}},
+\code{\link[=compare_models]{compare_models()}}.
 }

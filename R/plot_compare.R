@@ -544,45 +544,85 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 
 
 # ==========================================================================
-# plot_compare_growth: VB + pla
+# plot_compare_growth: mean length at age + length distribution at age
 # ==========================================================================
 
-#' Compare Growth Curves and Length-at-Age Matrices
+#' Compare mean length at age and the length distribution at age of two fits
 #'
-#' Left panel: von Bertalanffy (VB) growth curves from each model. Optionally
-#' overlay a VB curve fitted independently from observed age-length data via
-#' \code{nls()}. Right panel: heatmaps of the static probability of length
-#' given age (pla), side by side. Both panels use fitted ages and lengths:
-#' the heatmap cells sit at the ages in \code{model$age} and at the length-bin
-#' midpoints in \code{model$len_mid}. If either fit lacks this metadata, the
-#' heatmaps use age-class and length-bin positions and say so on their axes.
-#' The panels compare VB parameters and static length-at-age probabilities.
-#' Realized length distributions at age in ALSCL also depend on growth
-#' transitions and survival.
+#' Left panel: mean length at age of each model, calculated on the same basis
+#' for both ([length_at_age()]) and averaged over the time steps. For an ACL
+#' fit the values come from its age-length key, and for an ALSCL fit from the
+#' fitted numbers by length bin and age class. Observed mean length at age
+#' from age readings can be added as points (`observed`), and a von
+#' Bertalanffy curve fitted to observed age-length pairs with \code{nls()}
+#' can be added as a reference (`ref_data`). Right panel: heatmaps of the
+#' probability of length given age, side by side, on the same basis and for
+#' the same time steps.
+#'
+#' The left panel does not draw curves from the growth parameters. In ACL,
+#' Linf, k and t0 are the parameters of a von Bertalanffy curve of mean length
+#' at age. In ALSCL they set the growth increment at length and the mean
+#' length of recruits, so the parameters of the two models have different
+#' meanings and are not compared (see [length_at_age()]). Earlier versions
+#' drew one curve from the parameters of each model and listed Linf and k of
+#' both models in the subtitle.
 #'
 #' @inheritParams plot_compare_ts
-#' @param age_range Numeric vector of length 2, or NULL. NULL uses the combined
-#'   range of fitted ages, starting no earlier than either model's t0. A model
-#'   without age metadata contributes the legacy range c(1, 20). An explicit
-#'   range must be finite, increasing and start at or after both t0 values.
+#' @param age_range Numeric vector of length 2, or NULL. NULL draws all age
+#'   classes of both fits. An explicit range must be finite and increasing
+#'   and selects the age classes within it; each fit needs at least one.
 #' @param ref_data Optional data.frame with columns \code{Age} and \code{Length}
 #'   containing observed age-length measurements (e.g. from otolith readings).
 #'   If provided, a VB curve is fitted via \code{nls()} and overlaid as a
 #'   reference, with the raw data as scatter points. The reference curve is
-#'   drawn only at ages at or above its fitted t0, within age_range. A fit with
-#'   invalid growth parameters or no positive age span in that range is omitted
-#'   with a warning; model curves and observed points are retained.
+#'   drawn only at ages at or above its fitted t0, within the plotted ages. A
+#'   fit with invalid growth parameters or no positive age span in that range
+#'   is omitted with a warning; model lines and observed points are retained.
+#'   The subtitle gives Linf and k of this curve, which are the parameters
+#'   of a von Bertalanffy curve of the observed lengths at age.
 #' @param ref_name Character. Nonempty label for the reference curve, distinct
 #'   from both model labels when ref_data is supplied. Default "Observed VB".
-#' @param ref_color Character. Color for reference curve/points. Default "grey30".
+#' @param ref_color Character. Color for the reference curve and its points,
+#'   and for the points of `observed`. Default "grey30".
 #' @param ref_linetype Character. Linetype for reference curve. Default "dotdash".
 #' @param show_points Logical. Show raw data points from \code{ref_data}. Default TRUE.
 #' @param point_size Numeric. Size of data points. NULL = use global theme.
-#' @param point_alpha Numeric. Transparency of data points. Default 0.4.
+#' @param point_alpha Numeric. Transparency of the raw data points of
+#'   \code{ref_data}. Default 0.4.
 #' @param nls_start Named list. Starting values for nls. Default attempts
 #'   auto-detection from data range.
 #' @param ... The former argument name linewidth, accepted with a warning.
+#' @param observed NULL or a data frame of observed mean length at age from
+#'   age readings, drawn as points in the left panel. Required columns: `age`
+#'   (years) and `mean_length`. Optional columns: `sd_length` (or `sd`), drawn
+#'   as bars of one standard deviation on each side of the mean, or `lower`
+#'   and `upper`, drawn as the bars of an interval; and `year` (the time
+#'   step). Every row is drawn as one point. With `years`, only the rows of
+#'   those time steps are drawn; rows without a time step are always drawn.
+#' @param basis `"population"` (default): mean length at age and the length
+#'   distribution at age in the population. `"survey"`: in the survey catch,
+#'   that is, with numbers at length multiplied by the survey catchability at
+#'   length used in each fit. Use `"survey"` to compare with age readings of
+#'   fish caught in the survey.
+#' @param years NULL (all time steps of each fit) or the time steps over which
+#'   the values are averaged. They must be time steps of both fits.
+#' @param observed_name Character. Name of the points of `observed` in the
+#'   legend, distinct from both model labels and from `ref_name`. Default is
+#'   "Age readings".
 #' @return A ggplot object.
+#' @details Both panels need the ages, the length-bin midpoints and the time
+#'   steps of each fit, and an ALSCL fit needs its numbers by length, age and
+#'   time step. Results without them give an error. The heatmap cells sit at
+#'   the ages in \code{model$age} and at the length-bin midpoints in
+#'   \code{model$len_mid}. For an ACL fit on the population basis, the
+#'   heatmap is its age-length key (\code{report$pla}). For an ALSCL fit it is
+#'   the proportion of each age class in each length bin from the fitted
+#'   numbers, averaged over the time steps; \code{report$pla} of an ALSCL fit
+#'   is the length distribution of recruits (and, with the original structure,
+#'   of every age class in the first time step) and is shown by [plot_pla()].
+#'   The subtitle of the left panel states the basis and the time steps.
+#' @seealso [length_at_age()], [plot_VB()], [plot_length_at_age()],
+#'   [compare_models()].
 #' @export
 #'
 #' @examples
@@ -596,10 +636,17 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #' fit_acl <- run_acl(x, silent = TRUE)
 #' fit_alscl <- run_alscl(x, F_structure = "year", silent = TRUE)
 #'
-#' # Without reference data
+#' # Mean length at age of both fits in the population
 #' plot_compare_growth(fit_acl, fit_alscl)
 #'
-#' # With observed age-length data
+#' # With observed mean length at age from age readings, on the survey
+#' # basis. These values are made up for the example.
+#' readings <- data.frame(age = 1:8,
+#'                        mean_length = c(12, 20, 27, 32, 37, 40, 43, 45),
+#'                        sd_length = c(2, 2.5, 3, 3, 3.5, 3.5, 4, 4))
+#' plot_compare_growth(fit_acl, fit_alscl, observed = readings, basis = "survey")
+#'
+#' # With observed age-length pairs and a von Bertalanffy curve fitted to them
 #' obs <- data.frame(Age = c(1,1,2,2,3,3,4,5,6,7),
 #'                   Length = c(20,22,30,28,38,35,42,48,50,52))
 #' plot_compare_growth(fit_acl, fit_alscl, ref_data = obs)
@@ -615,10 +662,13 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
                                 ref_data = NULL, ref_name = "Observed VB",
                                 ref_color = "grey30", ref_linetype = "dotdash",
                                 show_points = TRUE, point_size = NULL,
-                                point_alpha = 0.4, nls_start = NULL, ...) {
+                                point_alpha = 0.4, nls_start = NULL, ...,
+                                observed = NULL, basis = c("population", "survey"),
+                                years = NULL, observed_name = "Age readings") {
 
   renamed <- .acl_renamed(list(...), "plot_compare_growth")
   if (is.null(line_size)) line_size <- renamed$line_size
+  basis <- match.arg(basis)
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   if (!is.null(ref_data)) {
@@ -628,51 +678,39 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
     if (ref_name %in% model_names)
       stop("ref_name must be distinct from both model names.", call. = FALSE)
   }
+  obs <- .acl_observed_length(observed)
+  if (!is.null(obs)) {
+    .acl_check_series_name(observed_name, "observed_name")
+    if (observed_name %in% c(model_names, if (!is.null(ref_data)) ref_name))
+      stop("observed_name must be distinct from both model names and from ref_name.", call. = FALSE)
+    obs <- .acl_observed_years(obs, years)
+  }
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
 
+  # Mean length at age on the same basis for both fits: from the age-length
+  # key of an ACL fit and from the fitted numbers of an ALSCL fit.
+  series <- list(.acl_growth_series(model1, basis, years, "model1"),
+                 .acl_growth_series(model2, basis, years, "model2"))
+  if (!is.null(age_range))
+    .acl_check_age_range(age_range, "; it selects the age classes to draw.")
+  vb_df <- do.call(rbind, Map(function(x, name) {
+    keep <- if (is.null(age_range)) seq_along(x$ages) else
+      which(x$ages >= age_range[1L] & x$ages <= age_range[2L])
+    if (!length(keep))
+      stop("age_range contains no age class of ", name, ".", call. = FALSE)
+    data.frame(Age = x$ages[keep], Length = x$mean[keep], Model = name)
+  }, series, list(model1_name, model2_name)))
+  if (is.null(age_range)) age_range <- range(vb_df$Age)
   valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
-  for (model in list(model1, model2)) {
-    if (!valid_scalar(model$report$Linf) || model$report$Linf <= 0 ||
-        !valid_scalar(model$report$vbk) || model$report$vbk <= 0 ||
-        !valid_scalar(model$report$t0))
-      stop("Growth parameters Linf and vbk must be finite positive scalars, and t0 must be finite.",
-           call. = FALSE)
-  }
-  first_valid_age <- max(model1$report$t0, model2$report$t0)
-  if (is.null(age_range)) {
-    fitted_range <- function(model) {
-      if (is.null(model$age)) return(c(1, 20))
-      if (!is.numeric(model$age) || !length(model$age) || any(!is.finite(model$age)))
-        stop("Model age metadata must contain finite numeric ages; supply age_range for saved fits without usable age metadata.",
-             call. = FALSE)
-      range(model$age)
-    }
-    age_range <- range(c(fitted_range(model1), fitted_range(model2)))
-    age_range[1L] <- max(age_range[1L], first_valid_age)
-  }
-  if (!is.numeric(age_range) || length(age_range) != 2L || any(!is.finite(age_range)) ||
-      age_range[2L] <= age_range[1L])
-    stop("age_range must be a finite increasing pair with a positive span; supply an explicit range at or above both t0 values.",
-         call. = FALSE)
-  if (age_range[1L] < first_valid_age)
-    stop("age_range must start at or after both t0 values; earlier ages extrapolate to negative lengths.",
-         call. = FALSE)
-
   VB <- function(Linf, k, t0, age) Linf * (1 - exp(-k * (age - t0)))
   ages <- seq(age_range[1], age_range[2], by = 0.5)
   if (tail(ages, 1L) < age_range[2L]) ages <- c(ages, age_range[2L])
-  vb_df <- rbind(
-    data.frame(Age = ages, Length = VB(model1$report$Linf, model1$report$vbk, model1$report$t0, ages), Model = model1_name),
-    data.frame(Age = ages, Length = VB(model2$report$Linf, model2$report$vbk, model2$report$t0, ages), Model = model2_name))
 
-  # Build color/linetype scales including optional ref
   all_colors <- cfg$colors
   all_linetypes <- cfg$linetypes
-
-  p_vb <- ggplot2::ggplot(vb_df, ggplot2::aes(x = Age, y = Length, color = Model, linetype = Model)) +
-    ggplot2::geom_line(linewidth = cfg$line_size)
+  ref_text <- NULL
 
   # Add reference VB curve from observed data
   if (!is.null(ref_data)) {
@@ -715,8 +753,8 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
       }
     }
     if (!is.null(nls_fit)) {
-      # The reference can have a later growth origin than either assessment.
-      # Include that origin exactly without shortening the model curves.
+      # The reference can have a later growth origin than the first plotted
+      # age. Include that origin exactly without shortening the model lines.
       reference_ages <- sort(unique(c(max(age_range[1L], nls_coef["t0"]),
                                       ages[ages >= nls_coef["t0"]])))
       ref_curve <- data.frame(
@@ -728,69 +766,59 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 
       all_colors[ref_name]    <- ref_color
       all_linetypes[ref_name] <- ref_linetype
+      ref_text <- sprintf("%s: Linf = %.1f, k = %.3f per year", ref_name, nls_coef["Linf"], nls_coef["k"])
     }
-
-    # Scatter points
-    if (show_points) {
-      p_vb <- p_vb +
-        ggplot2::geom_point(
-          data = ref_data,
-          ggplot2::aes(x = Age, y = Length),
-          color = ref_color, size = cfg$point_size,
-          alpha = point_alpha, inherit.aes = FALSE
-        )
-    }
-
-    # Rebuild with all data (including ref curve)
-    p_vb <- ggplot2::ggplot(vb_df, ggplot2::aes(x = Age, y = Length, color = Model, linetype = Model)) +
-      ggplot2::geom_line(linewidth = cfg$line_size)
-
-    if (show_points) {
-      p_vb <- p_vb +
-        ggplot2::geom_point(
-          data = ref_data,
-          ggplot2::aes(x = Age, y = Length),
-          color = ref_color, size = cfg$point_size,
-          alpha = point_alpha, inherit.aes = FALSE
-        )
-    }
-
-    # Subtitle with ref params
-    if (!is.null(nls_fit)) {
-      sub_txt <- sprintf("%s: Linf=%.1f, k=%.3f | %s: Linf=%.1f, k=%.3f | %s: Linf=%.1f, k=%.3f",
-                         model1_name, model1$report$Linf, model1$report$vbk,
-                         model2_name, model2$report$Linf, model2$report$vbk,
-                         ref_name, nls_coef["Linf"], nls_coef["k"])
-    } else {
-      sub_txt <- sprintf("%s: Linf=%.1f, k=%.3f | %s: Linf=%.1f, k=%.3f",
-                         model1_name, model1$report$Linf, model1$report$vbk,
-                         model2_name, model2$report$Linf, model2$report$vbk)
-    }
-  } else {
-    sub_txt <- sprintf("%s: Linf=%.1f, k=%.3f | %s: Linf=%.1f, k=%.3f",
-                       model1_name, model1$report$Linf, model1$report$vbk,
-                       model2_name, model2$report$Linf, model2$report$vbk)
   }
 
+  p_vb <- ggplot2::ggplot(vb_df, ggplot2::aes(x = Age, y = Length, color = Model, linetype = Model)) +
+    ggplot2::geom_line(linewidth = cfg$line_size)
+  # Raw age-length pairs of the reference data
+  if (!is.null(ref_data) && show_points)
+    p_vb <- p_vb +
+      ggplot2::geom_point(
+        data = ref_data,
+        ggplot2::aes(x = Age, y = Length),
+        color = ref_color, size = cfg$point_size,
+        alpha = point_alpha, inherit.aes = FALSE
+      )
+  # Observed mean length at age: points named in a shape legend
+  has_observed <- !is.null(obs) && nrow(obs) > 0L
+  if (has_observed) {
+    bars <- obs[is.finite(obs$lower) & is.finite(obs$upper), , drop = FALSE]
+    if (nrow(bars)) p_vb <- p_vb + ggplot2::geom_errorbar(data = bars,
+      ggplot2::aes(x = age, ymin = lower, ymax = upper), color = ref_color, width = 0, inherit.aes = FALSE)
+    obs$Series <- observed_name
+    p_vb <- p_vb +
+      ggplot2::geom_point(data = obs, ggplot2::aes(x = age, y = mean_length, shape = Series),
+                          color = ref_color, size = cfg$point_size, inherit.aes = FALSE) +
+      ggplot2::scale_shape_manual(name = NULL, values = stats::setNames(16, observed_name))
+  }
+
+  same_years <- isTRUE(all.equal(series[[1L]]$years, series[[2L]]$years))
+  sub_txt <- paste(c(
+    if (same_years) .acl_growth_subtitle(basis, series[[1L]]$years, series[[1L]]$all_years,
+                                         model1$growth_step) else
+      paste0(.acl_growth_subtitle(basis, by_time = TRUE), ", mean of the time steps of each fit"),
+    ref_text), collapse = "\n")
   p_vb <- p_vb +
     ggplot2::scale_color_manual(values = all_colors) +
     ggplot2::scale_linetype_manual(values = all_linetypes) +
     ggplot2::labs(title = .acl_title("compare_growth", model1_name, model2_name),
-                  subtitle = sub_txt,
+                  subtitle = sub_txt, caption = if (has_observed) .acl_caption(.acl_observed_caption(obs), 75),
                   x = .acl_lab("x", "age"), y = .acl_lab("y", "growth")) +
-    .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
+    .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos,
+                                       plot.caption = ggplot2::element_text(hjust = 0))
+  p_vb <- .acl_show_singletons(p_vb, "Model", point_size = cfg$point_size)
 
-  # Heatmap cells at fitted ages and length-bin midpoints, on the same axes
-  # as the growth curves. Without that metadata in both fits, use positions.
-  pla_parts <- lapply(list(model1, model2), function(model) {
-    pla <- as.matrix(model$report$pla)
+  # Probability of length given age on the same basis and for the same time
+  # steps. Heatmap cells sit at fitted ages and length-bin midpoints, on the
+  # same axes as the left panel.
+  pla_parts <- Map(function(model, x, name) {
     mids <- model$len_mid
-    if (!is.numeric(mids) || length(mids) != nrow(pla) || any(!is.finite(mids)) ||
-        any(diff(mids) <= 0)) mids <- NULL
-    list(pla = pla, ages = .acl_fitted_ages(model, ncol(pla)), mids = mids)
-  })
-  use_ages <- all(vapply(pla_parts, function(x) !is.null(x$ages), logical(1)))
-  use_mids <- all(vapply(pla_parts, function(x) !is.null(x$mids), logical(1)))
+    if (any(diff(mids) <= 0))
+      stop(name, " must have increasing length-bin midpoints.", call. = FALSE)
+    list(pla = .acl_length_given_age(model, basis, x), ages = x$ages, mids = mids)
+  }, list(model1, model2), series, list("model1", "model2"))
   # Cell size from the spacing of the coordinates; edge cells mirror their
   # inner half-width.
   cell_size <- function(x) {
@@ -800,12 +828,10 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
   }
   pla_df <- do.call(rbind, Map(function(part, name) {
     long <- .acl_matrix_long(part$pla, c("Length", "Age", "Probability"))
-    ages <- if (use_ages) part$ages else seq_len(ncol(part$pla))
-    mids <- if (use_mids) part$mids else seq_len(nrow(part$pla))
-    long$Width <- cell_size(ages)[long$Age]
-    long$Height <- cell_size(mids)[long$Length]
-    long$Age <- ages[long$Age]
-    long$Length <- mids[long$Length]
+    long$Width <- cell_size(part$ages)[long$Age]
+    long$Height <- cell_size(part$mids)[long$Length]
+    long$Age <- part$ages[long$Age]
+    long$Length <- part$mids[long$Length]
     long$Model <- rep(name, nrow(long))
     long
   }, pla_parts, list(model1_name, model2_name)))
@@ -815,8 +841,7 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
     ggplot2::geom_tile(ggplot2::aes(width = Width, height = Height)) + .acl_fill_continuous() +
     ggplot2::facet_wrap(~Model) +
     ggplot2::labs(title = "Probability of length given age",
-                  x = if (use_ages) .acl_lab("x", "age") else "Age group",
-                  y = if (use_mids) .acl_lab("y", "length") else "Length bin") +
+                  x = .acl_lab("x", "age"), y = .acl_lab("y", "length")) +
     .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
                                     legend.position = cfg$legend_pos)
 
@@ -824,6 +849,25 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
     p <- patchwork::wrap_plots(p_vb, p_pla, ncol = 2)
   } else { p <- p_pla }
   return(p)
+}
+
+# Probability of length given age (L x A) of one fit on one basis: the share
+# of each age class in each length bin, averaged over the time steps of
+# `series` (the result of .acl_growth_series()). For an ACL fit on the
+# population basis this is its age-length key.
+.acl_length_given_age <- function(fit, basis, series) {
+  info <- list(model = series$model, years = series$all_years, ages = series$ages)
+  numbers <- .acl_basis_numbers(fit, basis, info)$numbers
+  keep <- match(series$years, series$all_years)
+  share <- vapply(keep, function(y) {
+    at_age <- numbers[, , y, drop = TRUE]
+    dim(at_age) <- dim(numbers)[1:2]
+    sweep(at_age, 2L, colSums(at_age), "/")
+  }, matrix(0, dim(numbers)[1L], dim(numbers)[2L]))
+  dim(share) <- c(dim(numbers)[1:2], length(keep))
+  out <- apply(share, c(1L, 2L), mean, na.rm = TRUE)
+  out[!is.finite(out)] <- NA_real_
+  out
 }
 
 
@@ -1078,6 +1122,52 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 }
 
 
+# Survey catchability at length of one fit for the catchability plots
+# (plot_compare_selectivity() and plot_survey_catchability()): a vector with
+# one value per length bin, or, when catchability supplied by length and time
+# step differs among time steps, a matrix with one column for each distinct
+# curve in time order. The attribute "curve" then gives the column of each
+# time step.
+.acl_plot_catchability <- function(model) {
+  lengths <- model$len_mid
+  if (!is.numeric(lengths) || !length(lengths) || any(!is.finite(lengths)))
+    stop("Catchability plots require finite fitted length midpoints.", call. = FALSE)
+  args <- model$recipe$args
+  if (!is.null(args$survey_q)) {
+    # Survey catchability at length supplied directly; it can exceed one.
+    q <- args$survey_q
+    by_time <- length(dim(q)) == 2L && ncol(q) > 1L
+    if (!is.numeric(q) || (if (by_time) nrow(q) else length(q)) != length(lengths) ||
+        any(!is.finite(q)) || any(q <= 0))
+      stop("The saved recipe must have one finite positive survey_q value per length midpoint.",
+           call. = FALSE)
+    if (!by_time) return(as.numeric(q))
+    # By time step: one curve for each distinct column, in time order.
+    first <- !duplicated(t(q))
+    distinct <- unname(q[, first, drop = FALSE])
+    if (ncol(distinct) == 1L) return(as.numeric(distinct))
+    attr(distinct, "curve") <- match(apply(q, 2L, paste, collapse = " "),
+                                     apply(distinct, 2L, paste, collapse = " "))
+    return(distinct)
+  }
+  if (!is.null(args$sel_L50) && !is.null(args$sel_L95)) {
+    valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
+    if (!valid_scalar(args$sel_L50) || !valid_scalar(args$sel_L95) ||
+        args$sel_L95 <= args$sel_L50)
+      stop("The saved recipe must have finite sel_L50 and sel_L95 with sel_L95 greater than sel_L50.",
+           call. = FALSE)
+    log_q <- stats::plogis(log(19) * (lengths - args$sel_L50) /
+                            (args$sel_L95 - args$sel_L50), log.p = TRUE)
+  } else {
+    log_q <- model$obj$env$data$log_q
+  }
+  if (!is.numeric(log_q) || length(log_q) != length(lengths) ||
+      anyNA(log_q) || any(log_q > 0))
+    stop("Catchability plots require a complete saved recipe or fitted log_q values matching the length midpoints.",
+         call. = FALSE)
+  exp(log_q)
+}
+
 # ==========================================================================
 # plot_compare_selectivity
 # ==========================================================================
@@ -1124,42 +1214,7 @@ plot_compare_selectivity <- function(model1, model2,
                                line_size = line_size, point_size = point_size,
                                m1 = model1_name, m2 = model2_name)
 
-  catchability <- function(model) {
-    lengths <- model$len_mid
-    if (!is.numeric(lengths) || !length(lengths) || any(!is.finite(lengths)))
-      stop("Catchability plots require finite fitted length midpoints.", call. = FALSE)
-    args <- model$recipe$args
-    if (!is.null(args$survey_q)) {
-      # Survey catchability at length supplied directly; it can exceed one.
-      q <- args$survey_q
-      by_time <- length(dim(q)) == 2L && ncol(q) > 1L
-      if (!is.numeric(q) || (if (by_time) nrow(q) else length(q)) != length(lengths) ||
-          any(!is.finite(q)) || any(q <= 0))
-        stop("The saved recipe must have one finite positive survey_q value per length midpoint.",
-             call. = FALSE)
-      if (!by_time) return(as.numeric(q))
-      # By time step: one curve for each distinct column, in time order.
-      distinct <- unname(q[, !duplicated(t(q)), drop = FALSE])
-      return(if (ncol(distinct) == 1L) as.numeric(distinct) else distinct)
-    }
-    if (!is.null(args$sel_L50) && !is.null(args$sel_L95)) {
-      valid_scalar <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
-      if (!valid_scalar(args$sel_L50) || !valid_scalar(args$sel_L95) ||
-          args$sel_L95 <= args$sel_L50)
-        stop("The saved recipe must have finite sel_L50 and sel_L95 with sel_L95 greater than sel_L50.",
-             call. = FALSE)
-      log_q <- stats::plogis(log(19) * (lengths - args$sel_L50) /
-                              (args$sel_L95 - args$sel_L50), log.p = TRUE)
-    } else {
-      log_q <- model$obj$env$data$log_q
-    }
-    if (!is.numeric(log_q) || length(log_q) != length(lengths) ||
-        anyNA(log_q) || any(log_q > 0))
-      stop("Catchability plots require a complete saved recipe or fitted log_q values matching the length midpoints.",
-           call. = FALSE)
-    exp(log_q)
-  }
-  q1 <- catchability(model1); q2 <- catchability(model2)
+  q1 <- .acl_plot_catchability(model1); q2 <- .acl_plot_catchability(model2)
   varying <- is.matrix(q1) || is.matrix(q2)
   if (!varying) {
     df <- rbind(data.frame(Length = model1$len_mid, Selectivity = q1, Model = model1_name),
@@ -1181,7 +1236,7 @@ plot_compare_selectivity <- function(model1, model2,
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_title("compare_sel", model1_name, model2_name),
-                  x = .acl_lab("x", "length"), y = "Survey catchability (q)") +
+                  x = .acl_lab("x", "length"), y = .acl_lab("y", "survey_q")) +
     .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
   if (varying) p <- p + ggplot2::labs(
     caption = "Survey catchability supplied by time step: one line for each distinct curve of a fit.")
