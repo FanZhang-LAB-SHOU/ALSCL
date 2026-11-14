@@ -3,36 +3,36 @@
 
 test_that("a set name selects the settings that belong together", {
   S <- ALSCL:::.acl_structure
-  expect_identical(S("published", "ALSCL"), S(list(), "ALSCL"))
-  full <- S("consistent", "ALSCL")
+  expect_identical(S("original", "ALSCL"), S(list(), "ALSCL"))
+  full <- S("von_bertalanffy", "ALSCL")
   expect_identical(full$choices, list(initial_plus_group = "equilibrium", initial_length = "growth",
     growth_increment = "von_bertalanffy", growth_transition = "bin", correlation_range = "positive"))
   expect_identical(full$data, list(initial_plus_group = 1L, initial_length = 1L,
     growth_increment = 1L, growth_transition = 1L))
-  expect_identical(S("consistent", "ACL")$choices,
+  expect_identical(S("von_bertalanffy", "ACL")$choices,
     list(initial_plus_group = "equilibrium", correlation_range = "positive"))
-  expect_identical(S(list(set = "consistent", correlation_range = "symmetric"), "ALSCL")$choices$correlation_range,
+  expect_identical(S(list(set = "von_bertalanffy", correlation_range = "symmetric"), "ALSCL")$choices$correlation_range,
     "symmetric")
   # A setting given next to the set replaces the value of the set.
-  mixed <- S(list(set = "consistent", growth_transition = "midpoint"), "ALSCL")$choices
+  mixed <- S(list(set = "von_bertalanffy", growth_transition = "midpoint"), "ALSCL")$choices
   expect_identical(mixed$growth_transition, "midpoint")
   expect_identical(mixed$initial_length, "growth")
-  expect_identical(S(list(set = "published", growth_transition = "bin"), "ALSCL")$data, list(growth_transition = 1L))
-  expect_error(S("best", "ALSCL"), "must be \"published\" or \"consistent\"")
-  expect_error(S(c("consistent", "published"), "ALSCL"), "must be \"published\" or \"consistent\"")
+  expect_identical(S(list(set = "original", growth_transition = "bin"), "ALSCL")$data, list(growth_transition = 1L))
+  expect_error(S("best", "ALSCL"), "must be \"original\" or \"von_bertalanffy\"")
+  expect_error(S(c("von_bertalanffy", "original"), "ALSCL"), "must be \"original\" or \"von_bertalanffy\"")
   expect_error(S(list(set = "best"), "ALSCL"), "structure\\$set must be")
-  expect_error(S(list(set = "consistent", set = "published"), "ALSCL"), "more than one `set`")
-  expect_error(S(list(set = "consistent", growth = "vb"), "ALSCL"), "Unknown structure setting: growth")
-  expect_error(S(list("consistent"), "ALSCL"), "named list")
+  expect_error(S(list(set = "von_bertalanffy", set = "original"), "ALSCL"), "more than one `set`")
+  expect_error(S(list(set = "von_bertalanffy", growth = "vb"), "ALSCL"), "Unknown structure setting: growth")
+  expect_error(S(list("von_bertalanffy"), "ALSCL"), "named list")
   # The scale settings read a set name as well as a list.
-  expect_false(ALSCL:::.acl_scale_settings(list(structure = "consistent"))$symmetric)
-  expect_true(ALSCL:::.acl_scale_settings(list(structure = list(set = "consistent",
+  expect_false(ALSCL:::.acl_scale_settings(list(structure = "von_bertalanffy"))$symmetric)
+  expect_true(ALSCL:::.acl_scale_settings(list(structure = list(set = "von_bertalanffy",
     correlation_range = "symmetric")))$symmetric)
 })
 
 test_that("the operating model accepts a set name", {
   params <- initialize_params(species = "tuna", nyear = 30, burn_in = 20)
-  params$structure <- "consistent"
+  params$structure <- "von_bertalanffy"
   by_name <- sim_cal(params)
   params$structure <- list(initial_plus_group = "equilibrium", initial_length = "growth",
     growth_increment = "von_bertalanffy", growth_transition = "bin")
@@ -56,7 +56,7 @@ test_that("the growth check finds growth that stops below Linf under the midpoin
   stay <- diag(tuna$report$G)
   expect_identical(result$length, tuna$len_mid[which(stay >= .99 & tuna$len_mid < .9 * 152)[1L]])
   expect_match(result$message, "Growth stops near length")
-  expect_match(result$message, "structure = \"consistent\"")
+  expect_match(result$message, "structure = \"von_bertalanffy\"")
   # Annual steps with 2 cm bins do not stall, and neither does the transition integrated over the bin.
   expect_false(check(fit_like(seq(6, 50, 2), 1, 60, .2, .2))$stalled)
   expect_false(check(fit_like(seq(12.5, 172.5, 5), .25, 152, .38, .3, "von_bertalanffy", "bin"))$stalled)
@@ -70,7 +70,7 @@ test_that("the growth check finds growth that stops below Linf under the midpoin
   expect_false(check(broken)$stalled)
 })
 
-test_that("a fit reports growth that stops below Linf, and not with the consistent set", {
+test_that("a fit reports growth that stops below Linf, and not with the von_bertalanffy set", {
   skip_on_cran()
   f <- fixture_frames()
   f$data.CatL[[1]] <- as.character(seq(15, 55, 5)); f$data.wgt[[1]] <- f$data.mat[[1]] <- f$data.CatL[[1]]
@@ -86,15 +86,15 @@ test_that("a fit reports growth that stops below Linf, and not with the consiste
   expect_output(print(summary(fit)), "Growth check: Growth stops near length")
   args$silent <- FALSE
   expect_message(do.call(run_alscl, args), "Growth stops near length")
-  expect_no_message(full <- do.call(run_alscl, c(args, list(structure = "consistent"))),
+  expect_no_message(full <- do.call(run_alscl, c(args, list(structure = "von_bertalanffy"))),
                     message = "Growth stops near length")
   expect_null(summary(full)$growth_check)
   expect_false(full$growth_check$stalled)
   expect_identical(full$structure$growth_transition, "bin")
   expect_identical(full$structure$initial_length, "growth")
-  expect_identical(full$recipe$args$structure, "consistent")
+  expect_identical(full$recipe$args$structure, "von_bertalanffy")
   # ACL takes the plus-group setting of the set and has no growth check.
-  prepared <- do.call(ALSCL:::.acl_prepare_data, c(f, list(structure = "consistent")))
+  prepared <- do.call(ALSCL:::.acl_prepare_data, c(f, list(structure = "von_bertalanffy")))
   setup <- ALSCL:::.acl_model_setup("ACL", prepared)
   expect_identical(setup$data$initial_plus_group, 1L)
   expect_identical(setup$structure$initial_plus_group, "equilibrium")

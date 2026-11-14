@@ -228,15 +228,18 @@
   out
 }
 
-# A single start can stop at a local optimum. The note is given once per user
-# call: a function that runs several fits in this process opens a batch with
-# .acl_notes_begin(), and the fits after the first one that shows the note
-# stay quiet until .acl_notes_end() closes the batch.
+# Notes about default behaviour are given once per user call: a function that
+# runs several fits in this process opens a batch with .acl_notes_begin(),
+# and the fits after the first one that shows a note stay quiet about it
+# until .acl_notes_end() closes the batch. Two notes use this: a single start
+# can stop at a local optimum (.acl_single_start_note()), and a structure
+# that changes only some of the four settings of the set "von_bertalanffy"
+# (.acl_partial_set_note()).
 .acl_notes <- new.env(parent = emptyenv())
 
 .acl_notes_begin <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
-  if (depth == 0L) .acl_notes$single_start <- FALSE
+  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- FALSE
   .acl_notes$depth <- depth + 1L
   invisible(NULL)
 }
@@ -244,7 +247,7 @@
 .acl_notes_end <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
   .acl_notes$depth <- max(0L, depth - 1L)
-  if (.acl_notes$depth == 0L) .acl_notes$single_start <- FALSE
+  if (.acl_notes$depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- FALSE
   invisible(NULL)
 }
 
@@ -257,5 +260,51 @@
           "every numerical check. For results that will be reported, use at least three starts with a wider ",
           "spread of the starting values, for example nstarts = 3 and start_spread = 0.5, and compare the ",
           "objectives in start_diagnostics.")
+  invisible(TRUE)
+}
+
+# The four ALSCL settings of the set "von_bertalanffy" were tested together.
+# For a structure that changes one, two or three of them from their original
+# values, return the settings that keep their original values; otherwise
+# character(0). A list that names the set and replaces single settings,
+# for example list(set = "von_bertalanffy", growth_transition = "midpoint"),
+# is a deliberate departure from the set and also gives character(0).
+# `correlation_range` does not belong to the set. ACL has one of the four
+# settings only, so no ACL structure is a part of the set.
+.acl_partial_set <- function(structure, model = "ALSCL") {
+  if (toupper(model) != "ALSCL") return(character())
+  if (is.list(structure) && identical(.acl_structure_set_name(structure[["set"]]), "von_bertalanffy"))
+    return(character())
+  choices <- tryCatch(.acl_structure(structure, "ALSCL")$choices, error = function(e) NULL)
+  if (is.null(choices)) return(character())
+  settings <- names(.acl_structure_sets$von_bertalanffy)
+  original <- vapply(settings, function(nm) identical(choices[[nm]], .acl_structure_choices[[nm]][1L]), logical(1))
+  if (all(original) || !any(original)) character() else settings[original]
+}
+
+# "a", "a and b" or "a, b and c".
+.acl_word_list <- function(x) {
+  if (length(x) < 2L) return(paste(x))
+  paste(paste(x[-length(x)], collapse = ", "), "and", x[length(x)])
+}
+
+# The note for a part of the set "von_bertalanffy": once per fit, and once
+# per batch of fits (see .acl_notes_begin()).
+.acl_partial_set_note <- function(structure, model, silent) {
+  if (isTRUE(silent)) return(invisible(FALSE))
+  kept <- .acl_partial_set(structure, model)
+  if (!length(kept)) return(invisible(FALSE))
+  in_batch <- isTRUE(.acl_notes$depth > 0L)
+  if (in_batch && isTRUE(.acl_notes$partial_set)) return(invisible(FALSE))
+  if (in_batch) .acl_notes$partial_set <- TRUE
+  changed <- setdiff(names(.acl_structure_sets$von_bertalanffy), kept)
+  message("The structure changes ", .acl_word_list(changed), " and leaves ", .acl_word_list(kept),
+          if (length(kept) == 1L) " at its original value" else " at their original values",
+          ". These four settings were tested as a set, structure = \"von_bertalanffy\", and a fit with only ",
+          "some of them can fail when the growth increment in one time step is small relative to the width of ",
+          "the length bins.",
+          if ("growth_increment" %in% changed)
+            " The value growth_increment = \"von_bertalanffy\" is one setting of the set and does not select the other three.",
+          " See ?run_alscl.")
   invisible(TRUE)
 }

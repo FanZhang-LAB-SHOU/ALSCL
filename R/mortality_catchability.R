@@ -3,7 +3,7 @@
 # the model templates.
 #
 # M has three forms:
-#   "scalar"    a single number, the constant rate of the published models;
+#   "scalar"    a single number, the constant rate of the original structure;
 #   "age_time"  a matrix with one row per age class and one column per time
 #               step, or one column that is used for every time step;
 #   "length"    a numeric vector with one value per length bin (ALSCL only).

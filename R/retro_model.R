@@ -213,7 +213,9 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   gives annual peels: peel k then ends k years before the terminal period.
 #' @param structure,start_spread,t0_lower Passed to every full and peel fit; see
 #'   \code{\link{run_alscl}}. A bundle's own settings are used unless these are
-#'   supplied explicitly.
+#'   supplied explicitly. An ALSCL `structure` that changes only some of the
+#'   four settings of the set `"von_bertalanffy"` gives the message described
+#'   in \code{\link{run_alscl}} once for the call, unless `silent = TRUE`.
 #' @param bounds Passed to every full and peel fit of ACL; see
 #'   \code{\link{run_acl}}. A bundle's own setting is used unless this is
 #'   supplied explicitly. ALSCL has no such argument.
@@ -371,6 +373,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
          "nyear * peel_step is ", as.double(nyear) * peel_step, " and the data have ",
          ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
   fit_args <- .acl_retro_fixed_scalars(fit_args)
+  # The full fit and the peels are silent fits, so the note on a part of the
+  # set "von_bertalanffy" is given here, once for the call.
+  .acl_partial_set_note(fit_args$structure, model_type, silent)
 
   progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()

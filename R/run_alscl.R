@@ -92,20 +92,40 @@
 #'   when forked processes are selected; other sessions compute it sequentially.
 #'   refinement$hessian_calculations records methods, cores and fallback notes.
 #' @param structure Optional model structures: the name of a set or a named
-#'   list of settings. The default, an empty list, and `"published"` are the
-#'   published structure of Zhang and Cadigan (2022) for every setting.
-#'   `"consistent"` selects `growth_increment = "von_bertalanffy"`,
+#'   list of settings. The default, an empty list, and `"original"` are the
+#'   original structure for every setting: the structure of the package as
+#'   first released, which implements the model of Zhang and Cadigan (2022).
+#'   `"von_bertalanffy"` selects `growth_increment = "von_bertalanffy"`,
 #'   `growth_transition = "bin"`, `initial_length = "growth"` and
 #'   `initial_plus_group = "equilibrium"` together, so that the first period
 #'   and the growth transition follow one growth model. A list can name a set
 #'   and add single settings, for example
-#'   `list(set = "consistent", correlation_range = "symmetric")`. Use the four
-#'   settings of `"consistent"` together: a fit with only some of them can
-#'   fail when the growth increment per time step is small relative to the
-#'   bin width. Settings and values (default first):
+#'   `list(set = "von_bertalanffy", correlation_range = "symmetric")`.
+#'   `"published"` and `"consistent"` are accepted as the earlier names of
+#'   `"original"` and `"von_bertalanffy"`.
+#'
+#'   The four settings of `"von_bertalanffy"` were tested as a set. A fit
+#'   with only some of them can fail when the growth increment per time step
+#'   is small relative to the bin width. A `structure` list that changes
+#'   one, two or three of the four settings therefore gives a message that
+#'   names the settings left at their original values (unless
+#'   `silent = TRUE`; a function that runs several fits in one call gives it
+#'   once). `"von_bertalanffy"` is the name of the set and also a value of
+#'   the single setting `growth_increment`.
+#'   `structure = list(growth_increment = "von_bertalanffy")` changes one
+#'   setting, and `structure = "von_bertalanffy"` changes all four. A list
+#'   that names the set and replaces one of its settings, for example
+#'   `list(set = "von_bertalanffy", growth_transition = "midpoint")`, is
+#'   taken as a deliberate choice and gives no message. `correlation_range`
+#'   does not belong to the set. Settings and values (default first):
 #'   \describe{
 #'   \item{`growth_increment`}{`"logistic"`: the expected growth increment is a
 #'     decreasing logistic function of length, multiplied by `growth_step`.
+#'     Zhang and Cadigan (2022) define this function. They give neither the
+#'     lengths at which the increment is 50% and 95% of its maximum nor the
+#'     conversion of the increment to a time step shorter than one year. The
+#'     lengths 0.5 Linf and 0.05 Linf and the multiplication by `growth_step`
+#'     are those of the code.
 #'     `"von_bertalanffy"`: the expected increment over one time step is
 #'     (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and
 #'     declines smoothly to zero above Linf, so Linf and vbk have the same
@@ -142,10 +162,10 @@
 #'   }
 #'   With `initial_length = "growth"` and `initial_plus_group = "equilibrium"`
 #'   a population with constant recruitment, no fishing and init_Z equal to M
-#'   stays constant over time; with the published structure it does not.
+#'   stays constant over time; with the original structure it does not.
 #'   The settings used are stored in the `structure` element of the fit.
 #' @param t0_lower Lower limit of the von Bertalanffy parameter t0 in years.
-#'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the published
+#'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 #'   parameterization, in which t0 is positive. Set a negative value, for
 #'   example -1, to allow negative t0; a known t0 is then supplied as
 #'   `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are
@@ -164,9 +184,9 @@
 #'   estimated Linf, in which fish stay with a probability of at least 0.99
 #'   per time step, the fit reports it in a message (unless `silent = TRUE`)
 #'   and `summary()` prints it. Consider a refit with
-#'   `structure = "consistent"` in that case. The published structure and the
-#'   `"consistent"` set have the same number of parameters, so their objective
-#'   values can be compared directly.
+#'   `structure = "von_bertalanffy"` in that case. The original structure and
+#'   the `"von_bertalanffy"` set have the same number of parameters, so their
+#'   objective values can be compared directly.
 #' @details A single start can stop at a local optimum that passes every
 #'   numerical check, particularly for the growth parameters of ALSCL. The
 #'   checks in `diagnostics` are local: they do not show whether a better

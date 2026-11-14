@@ -53,7 +53,7 @@ parameters. In ACL, Linf, k and t0 are the parameters of a von
 Bertalanffy curve of mean length at age. In ALSCL they are not. Linf and
 k set the mean growth increment in one time step as a function of
 length, and Linf, k and t0 set the mean length of recruits (and, in the
-published structure, of every age class in the first time step; see
+original structure, of every age class in the first time step; see
 \code{structure} in \code{\link[=run_alscl]{run_alscl()}}). After recruitment, the lengths of a cohort
 follow from the growth increments and from mortality at length. Growth
 parameters estimated from growth increments and from age-length data
