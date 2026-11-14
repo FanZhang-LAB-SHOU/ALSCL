@@ -11,8 +11,8 @@ run_acl(
   rec.age,
   nage,
   M,
-  sel_L50,
-  sel_L95,
+  sel_L50 = NULL,
+  sel_L95 = NULL,
   parameters = NULL,
   parameters.L = NULL,
   parameters.U = NULL,
@@ -30,7 +30,9 @@ run_acl(
   F_structure = c("group_year", "year"),
   polish = TRUE,
   structure = list(),
-  start_spread = 0.15
+  start_spread = 0.15,
+  survey_q = NULL,
+  survey_q_age = NULL
 )
 }
 \arguments{
@@ -46,9 +48,22 @@ named input bundle such as YTF_example; see Details.}
 
 \item{nage}{Number of age classes including the plus group (at least two).}
 
-\item{M}{Nonnegative natural mortality per model time step.}
+\item{M}{Nonnegative natural mortality rate (M) per model time step (for
+quarterly time steps, the annual rate divided by 4), in one of two
+forms. A single number is one rate for all ages and time steps. A matrix
+with one row per age class (\code{nage} rows) and one column per time step,
+or one column that is used for every time step, is M by age and time
+step; M by age that is constant over time is \code{matrix(M_at_age, ncol = 1)}.
+A numeric vector without dimensions is read as M by length, which
+\code{\link[=run_alscl]{run_alscl()}} accepts and ACL rejects, because ACL follows numbers at age
+only and assigns lengths from the length-at-age distribution in every
+time step. Fish therefore do not keep their length, and a rate by length
+cannot be applied to them. Any other object is rejected with the
+expected dimensions. See Details.}
 
-\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
+\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability,
+which define a logistic survey catchability curve with a maximum of 1.
+Leave both as NULL when \code{survey_q} is supplied.}
 
 \item{parameters}{Named list of initial fixed-effect values.}
 
@@ -126,6 +141,25 @@ element of the fit.}
 starting values (on the scale of the optimizer, mostly logarithms) of
 the second and later starts. The default 0.15 keeps the starts used by
 earlier versions. See Details for when to use a larger value.}
+
+\item{survey_q}{Optional survey catchability at length: a numeric vector
+with one positive value per length bin. It is used in place of the
+logistic curve from \code{sel_L50} and \code{sel_L95}, for example for a
+dome-shaped curve. Supplying it together with \code{sel_L50} or \code{sel_L95} is
+an error; when an input bundle or a stored fit already holds these two,
+add \verb{sel_L50 = NULL, sel_L95 = NULL} to the call. The values are fixed
+inputs and are not estimated.}
+
+\item{survey_q_age}{Optional survey catchability multiplier by age: a
+numeric vector with one positive value per age class. The default NULL
+is 1 for every age. The expected survey index at length is then
+q(length) times the sum over ages of \code{survey_q_age[age]} times numbers
+at age times the probability of that length at that age, where
+q(length) is the survey catchability at length from \code{sel_L50} and
+\code{sel_L95} or from \code{survey_q}. When \code{survey_q_age} is supplied and
+\code{parameters} holds no start for mean_log_R, the default start of
+mean_log_R is raised by \code{-log(survey_q_age[1])}, because the survey then
+sees only that fraction of the recruits.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -212,6 +246,21 @@ percent of the summed survey index lies, the upper bound is 2 times the
 largest midpoint, and the lower bound is the smaller of the default (10)
 and half of that 99 percent length, so that length bins extending beyond
 the largest fish do not exclude the true Linf.
+
+With M by age and time step, total mortality at age (\code{Z}) is F
+plus the M of that age and time step, in survival and in the catch
+equation. The default start of init_Z uses the median of M in the first
+time step. A constant given as a matrix, \code{survey_q} equal to the
+logistic curve, or \code{survey_q_age} of ones gives the fit of the default
+inputs up to rounding error.
+
+M is an assumption. The survey index informs total mortality but not its
+split into fishing and natural mortality, so an error in M enters F
+directly, and the objective of a fit is not a basis for choosing M.
+Supply M by age and time step only when independent estimates exist, for
+example from a multispecies model. \code{survey_q} and \code{survey_q_age} are
+assumptions of the same kind. A survey catchability that declines with
+length or age is otherwise fitted as higher mortality.
 }
 \examples{
 \donttest{

@@ -11,8 +11,8 @@ run_alscl(
   rec.age,
   nage,
   M,
-  sel_L50,
-  sel_L95,
+  sel_L50 = NULL,
+  sel_L95 = NULL,
   growth_step = NULL,
   parameters = NULL,
   parameters.L = NULL,
@@ -33,7 +33,9 @@ run_alscl(
   polish = TRUE,
   structure = list(),
   start_spread = 0.15,
-  t0_lower = 0
+  t0_lower = 0,
+  survey_q = NULL,
+  survey_q_age = NULL
 )
 }
 \arguments{
@@ -49,9 +51,22 @@ named input bundle such as YTF_example; see Details.}
 
 \item{nage}{Number of age classes including the plus group (at least two).}
 
-\item{M}{Nonnegative natural mortality per model time step.}
+\item{M}{Nonnegative natural mortality rate (M) per model time step (for
+quarterly time steps, the annual rate divided by 4), in one of three
+forms. A single number is one rate for all lengths, ages and time steps.
+A matrix with one row per age class (\code{nage} rows) and one column per
+time step, or one column that is used for every time step, is M by age
+and time step. A numeric vector with one value per length bin is M by
+length, the same for all ages and time steps; \code{\link[=lorenzen_M]{lorenzen_M()}} computes
+such a vector. The \code{dim} attribute tells the last two forms apart. An
+object with two dimensions is read as M by age, also when it has one
+column, and a vector without dimensions is read as M by length. M by age
+that is constant over time is therefore \code{matrix(M_at_age, ncol = 1)}.
+Any other object is rejected with the expected dimensions. See Details.}
 
-\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
+\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability,
+which define a logistic survey catchability curve with a maximum of 1.
+Leave both as NULL when \code{survey_q} is supplied.}
 
 \item{growth_step}{Time between consecutive ages, in years. Use 0.25 for quarters.
 NULL uses rec.age when it is below one, otherwise one.
@@ -179,6 +194,25 @@ parameterization, in which t0 is positive. Set a negative value, for
 example -1, to allow negative t0; a known t0 is then supplied as
 \code{parameters = list(log_t0 = log(t0 - t0_lower))}. Reported t0 values are
 always on the natural scale.}
+
+\item{survey_q}{Optional survey catchability at length: a numeric vector
+with one positive value per length bin. It is used in place of the
+logistic curve from \code{sel_L50} and \code{sel_L95}, for example for a
+dome-shaped curve. Supplying it together with \code{sel_L50} or \code{sel_L95} is
+an error; when an input bundle or a stored fit already holds these two,
+add \verb{sel_L50 = NULL, sel_L95 = NULL} to the call. The values are fixed
+inputs and are not estimated.}
+
+\item{survey_q_age}{Optional survey catchability multiplier by age: a
+numeric vector with one positive value per age class. The default NULL
+is 1 for every age. The expected survey index at length is then
+q(length) times the sum over ages of \code{survey_q_age[age]} times numbers
+at that length and age, where q(length) is the survey catchability at
+length from \code{sel_L50} and \code{sel_L95} or from \code{survey_q}. When
+\code{survey_q_age} is supplied and \code{parameters} holds no start for
+mean_log_R, the default start of mean_log_R is raised by
+\code{-log(survey_q_age[1])}, because the survey then sees only that
+fraction of the recruits.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -278,6 +312,30 @@ midpoint and its bounds are 0.7 and 2 times that midpoint. Supply
 \code{parameters.L$log_Linf} when the bins extend well beyond the largest
 fish, because Linf below 0.7 times the largest midpoint is otherwise
 excluded.
+
+With M by age and time step or by length, M replaces the single
+rate in survival, in the catch equation and in total mortality (Z) and F
+at age. In the plus group, the fish that enter from the age before it and
+the fish already in it each have the M of their own age class. Two
+reported quantities then need a definition, because fish of one age have
+different lengths and fish of one length have different ages. F at age
+(\code{FA}) is Z at age minus the mean of M over lengths, weighted by the
+numbers at length of that age. Z at length (\code{ZL}) is F at length plus
+the mean of M over ages, weighted by the numbers at age of that length;
+it is a summary and not the rate that any one age experiences. The
+report holds the rates used as \code{M_LAY} (length by age by time step).
+The default start of init_Z uses the median of M in the first time
+step. A constant given in a non-scalar form, \code{survey_q} equal to the
+logistic curve, or \code{survey_q_age} of ones gives the fit of the default
+inputs up to rounding error.
+
+M is an assumption. The survey index informs Z but not its split into
+fishing and natural mortality, so an error in M enters F directly, and
+the objective of a fit is not a basis for choosing M. Supply M by age and
+time step only when independent estimates exist, for example from a
+multispecies model. \code{survey_q} and \code{survey_q_age} are assumptions of the
+same kind. A survey catchability that declines with length or age is
+otherwise fitted as higher mortality.
 
 ALSCL tracks joint length-age abundance and F at length; FA summarizes
 effective cohort survival. log_t0 represents a positive t0 below rec.age.

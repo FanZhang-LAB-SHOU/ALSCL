@@ -164,11 +164,35 @@
 # by the same formula; they are computed here and not in the template, where
 # the extra operations would change fitted values at rounding level. Returns
 # the reported matrices with complete = FALSE when the report lacks NLA or ZL.
+# A fit with a natural mortality rate by age and time step or by length
+# reports that rate as M_LAY (length by age by time step). Total mortality at
+# age is then computed from F at length and M_LAY, and F at age is total
+# mortality at age minus the mean of M over lengths weighted by numbers at
+# length of that age, as in the template.
 .acl_F_at_age <- function(fit) {
   r <- fit$report
   FA <- r$FA; ZA <- r$ZA; NLA <- r$NLA; ZL <- r$ZL
   if (!is.matrix(FA) || !is.numeric(FA)) return(NULL)
   reported <- list(FA = FA, ZA = ZA, complete = FALSE)
+  if (!is.null(r$M_LAY)) {
+    M <- r$M_LAY; FL <- r$FL
+    if (!is.array(NLA) || length(dim(NLA)) != 3L || !is.array(M) || !identical(dim(M), dim(NLA)) ||
+        !is.matrix(FL) || !is.matrix(ZA) || !identical(dim(ZA), dim(FA)) ||
+        any(!is.finite(NLA)) || any(!is.finite(M)) || any(!is.finite(FL)))
+      return(reported)
+    L <- dim(NLA)[1L]; A <- dim(NLA)[2L]; Y <- dim(NLA)[3L]
+    if (!identical(dim(FA), c(A - 1L, Y - 1L)) || !identical(dim(FL), c(L, Y))) return(reported)
+    F_array <- aperm(array(FL, c(L, Y, A)), c(1L, 3L, 2L))
+    before <- matrix(apply(NLA, c(2L, 3L), sum), A, Y)
+    after <- matrix(apply(NLA * exp(-(F_array + M)), c(2L, 3L), sum), A, Y)
+    weight <- NLA + 1e-300
+    mean_M <- matrix(apply(weight * M, c(2L, 3L), sum) / apply(weight, c(2L, 3L), sum), A, Y)
+    all_Z <- log(pmax(before, 1e-300)) - log(pmax(after, 1e-300))
+    all_F <- all_Z - mean_M
+    old <- cbind(rep(seq_len(A - 1L), Y - 1L), rep(seq_len(Y - 1L), each = A - 1L))
+    all_Z[old] <- ZA; all_F[old] <- FA  # keep the reported values in their cells
+    return(list(FA = all_F, ZA = all_Z, complete = TRUE))
+  }
   if (!is.array(NLA) || length(dim(NLA)) != 3L || !is.matrix(ZL) || !is.matrix(ZA) ||
       !identical(dim(ZA), dim(FA)) || any(!is.finite(NLA)) || any(!is.finite(ZL)))
     return(reported)
@@ -430,6 +454,11 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
 #'   For an ALSCL fit in which growth stops below Linf under the midpoint
 #'   growth transition, growth_check holds the message described in the
 #'   Details of [run_alscl()].
+#'   When the fit used a natural mortality rate by age and time step or by
+#'   length, or a survey catchability supplied as survey_q or survey_q_age,
+#'   inputs names these forms and print shows them as fixed inputs. A fit
+#'   with a single natural mortality rate and the logistic survey
+#'   catchability curve has no such element.
 #' @examples
 #' \donttest{
 #' fit <- run_acl(YTF_example, silent = TRUE)
@@ -455,6 +484,9 @@ summary.alscl_fit <- function(object, ...) {
     out$notes <- paste0("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
                         problem, ").")
   if (isTRUE(object$growth_check$stalled)) out$growth_check <- object$growth_check$message
+  # Non-default forms of natural mortality and survey catchability, if any.
+  inputs <- .acl_input_forms(object)
+  if (length(inputs)) out$inputs <- inputs
   structure(out, class = "summary.alscl_fit")
 }
 
@@ -467,6 +499,7 @@ print.summary.alscl_fit <- function(x, digits = NULL, ...) {
   cat(x$model, "assessment; periods", paste(x$periods, collapse = " to "),
       "; F structure:", structure_label, "\n")
   print(x$diagnostics, row.names = FALSE, digits = digits)
+  if (length(x$inputs)) cat("\nFixed inputs: ", paste(x$inputs, collapse = "; "), "\n", sep = "")
   cat("\nFixed-effect parameters (natural scale):\n")
   print(x$parameters, row.names = FALSE, digits = digits)
   if (length(x$notes)) cat("\nNote: ", paste(x$notes, collapse = " "), "\n", sep = "")

@@ -26,7 +26,10 @@ prepare_alscl_data(
 \item{format}{Input format: "tables", "csv" or "excel".}
 
 \item{fit_args}{Named list of shared fitting arguments, including rec.age,
-nage, M, sel_L50 and sel_L95. Keep the three tables outside this list.
+nage, M, and either sel_L50 and sel_L95 or survey_q. M can be a single
+number, a matrix by age and time step or, for ALSCL, a vector by length;
+survey_q_age is an optional survey catchability multiplier by age. See
+\code{\link[=run_alscl]{run_alscl()}} for these forms. Keep the three tables outside this list.
 The ALSCL-only arguments len_lower and len_upper are deprecated: they
 cannot change a fit, ACL fits ignore them, and they will be removed.}
 

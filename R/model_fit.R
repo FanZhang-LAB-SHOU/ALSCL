@@ -186,6 +186,9 @@
   if (model == "ACL" && t0_lower != 0)
     stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.", call. = FALSE)
   if (t0_lower != 0) d$t0_lower <- t0_lower
+  # Natural mortality rate by age and time step or by length (optional data).
+  M_data <- .acl_M_data(prepared$natural_mortality, model, d$L, d$A, d$Y)
+  d[names(M_data)] <- M_data
   # Default correlation starts keep their natural value under either range.
   if (identical(structure$choices$correlation_range, "symmetric"))
     for (nm in grep("^logit_", names(p), value = TRUE))
@@ -215,6 +218,9 @@
   if (is.null(parameters$mean_log_R)) {
     totals <- colSums(prepared$observations, na.rm = TRUE)
     p$mean_log_R <- log(mean(totals[totals > 0]))
+    # With a survey catchability multiplier by age the survey sees only the
+    # fraction q_age[1] of the recruits, so the default start is raised.
+    if (!is.null(d$q_age)) p$mean_log_R <- p$mean_log_R - log(d$q_age[1L])
   }
   if (is.null(parameters$log_init_Z)) {
     p$log_init_Z <- log(d$M + .3)
