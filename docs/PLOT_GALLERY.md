@@ -317,9 +317,9 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 
 [![产卵生物量 SSB / Spawning biomass SSB](figures/ytf/plot_SSB_SSB.png)](figures/ytf/plot_SSB_SSB.png)
 
-产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。
+产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。SSB 的水平取决于拟合时给定的调查可捕性。要与使用年龄别成熟比例的评估比较趋势，请用 `ssb_at_age()` 按年龄别成熟比例计算产卵生物量。
 
-Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point.
+Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute spawning biomass from a maturity ogive by age with `ssb_at_age()`.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
 
@@ -392,9 +392,9 @@ plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
 
 [![捕获尾数 CN / Catch numbers CN](figures/ytf/plot_catch_CN.png)](figures/ytf/plot_catch_CN.png)
 
-模型推导的捕捞尾数（`CN`）随时间步变化，带近似 95% 区间。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。
+模型推导的捕捞尾数（`CN`）随时间步变化，带近似 95% 区间。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。只拟合调查指数时渔获量的水平无法确定，它取决于给定的自然死亡率和调查可捕性。`relative_catch()` 返回渔获量除以其在各时间步上的均值，用于与上报渔获量比较趋势。
 
-Model-derived catch in numbers (`CN`) by time step with an approximate 95% interval. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause.
+Model-derived catch in numbers (`CN`) by time step with an approximate 95% interval. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause. A fit to a survey index alone does not determine the level of catch, which depends on the supplied natural mortality rate and survey catchability. `relative_catch()` returns catch divided by its mean over the time steps, for a comparison of trends with reported catch.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
@@ -484,9 +484,9 @@ plot_VB(b, se = TRUE)
 
 [![生长曲线与区间 / Growth curve and interval](figures/ytf/VB.png)](figures/ytf/VB.png)
 
-von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。
+von Bertalanffy 曲线是由图中 `Linf`、`k` 和 `t0` 计算的参考曲线。`se = TRUE` 时，95% 区间反映这些参数的估计不确定性。本例固定了三个参数，因此区间宽度为零。在 ALSCL 中，各期实际的年龄别平均体长还取决于生长转移和体长别死亡；这条参考曲线不代表种群演变后的平均体长。要得到拟合种群各年龄的平均体长，或与年龄鉴定资料比较，请用 `length_at_age()`。
 
-The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population.
+The von Bertalanffy curve is a reference calculated from the displayed `Linf`, `k` and `t0`. With `se = TRUE`, the 95% band reflects uncertainty in those parameters. All three are fixed in this example, so the band has zero width. In ALSCL, the realized mean length at age also depends on growth transitions and length-specific mortality; this reference curve does not summarize the evolving population. For the mean length at age of the fitted population, and for a comparison with age readings, use `length_at_age()`.
 
 `age_range = NULL` 时绘制拟合的年龄范围，起点不早于 `t0`；显式 `age_range` 必须是两个递增的有限年龄，且不早于 `t0`。若 `se = TRUE` 但参数协方差不可用，函数会警告并只画曲线，保留传入的标签、字号、刻度和主题。
 
@@ -865,9 +865,9 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 [![生长与外部参照接口 / Growth and reference-data interface](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
 
-左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。
+左图：两组拟合的 von Bertalanffy 曲线（ACL 深蓝实线，ALSCL 朱红虚线），副标题给出各自的 `Linf` 和 `k`，另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点；右图：两组拟合的年龄体长矩阵热图，横轴为拟合年龄，纵轴为体长组中点。保存时没有这些元数据的拟合按年龄组和体长组的位置绘制，并在坐标轴上注明。用它比较由参数计算的 VB 曲线和静态 `pla` 矩阵。曲线重合表示 VB 参数相同；ALSCL 各期实际的年龄别体长分布还取决于生长转移和存活。本例的生长参数固定为相同值。参照点由上面的代码模拟生成，也可传入独立的年龄体长数据进行比较。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，不是各年龄平均体长曲线的参数，所以比较两次拟合的生长时，请看 `compare_models(a, b, dat)$length_at_age` 中的各年龄平均体长。
 
-Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion dashed) with their `Linf` and `k` in the subtitle, the grey reference curve that `nls()` fits to `ref_data`, and the grey points of that data; right: the age length matrices of both fits as heat maps, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis. Fits saved without this metadata are drawn against age-class and length-bin positions, and the axes say so. Use it to compare the parameter-based VB curves and static `pla` matrices. Matching curves indicate matching VB parameters; the realized length distribution at age in ALSCL also depends on growth transitions and survival. Here the growth parameters are fixed at the same values. The reference points are simulated by the code above; an independent age-length dataset can be supplied for comparison.
+Left: the von Bertalanffy curves of both fits (ACL navy solid, ALSCL vermilion dashed) with their `Linf` and `k` in the subtitle, the grey reference curve that `nls()` fits to `ref_data`, and the grey points of that data; right: the age length matrices of both fits as heat maps, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis. Fits saved without this metadata are drawn against age-class and length-bin positions, and the axes say so. Use it to compare the parameter-based VB curves and static `pla` matrices. Matching curves indicate matching VB parameters; the realized length distribution at age in ALSCL also depends on growth transitions and survival. Here the growth parameters are fixed at the same values. The reference points are simulated by the code above; an independent age-length dataset can be supplied for comparison. In ALSCL, `Linf` and `k` set the growth increment at length and are not the parameters of a curve of mean length at age, so compare the growth of the two fits through the mean length at age in `compare_models(a, b, dat)$length_at_age`.
 
 省略 `age_range` 时，采用两份拟合年龄的合并范围，起点不早于两个模型的 `t0`。缺少年龄信息的旧结果使用 1-20 岁范围。显式范围须为两个有限且递增的年龄，起点不早于两个 `t0`；没有正跨度的范围会报错。
 
@@ -936,9 +936,9 @@ plot_compare_selectivity(a, b)
 
 [![固定调查可捕性 / Fixed survey catchability](figures/ytf/compare_selectivity.png)](figures/ytf/compare_selectivity.png)
 
-各拟合输入的体长别调查可捕性 `q`（`sel_L50`、`sel_L95`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。
+各拟合输入的体长别调查可捕性 `q`（`sel_L50` 和 `sel_L95`，或 `survey_q`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。`survey_q` 按体长和时间步给出时，每条不同的曲线各画一条线，并在图注中说明。按年龄的调查可捕性系数（`survey_q_age`）不显示。
 
-Survey catchability `q` at length from the input of each fit (`sel_L50`, `sel_L95`), as lines with points for ACL (navy solid) and ALSCL (vermilion dashed). Use it to confirm which catchability curve each fit used; the curves coincide here because both fits took the same input, and the values are fixed inputs, not an estimated selectivity, so a difference between two fits means different inputs.
+Survey catchability `q` at length from the input of each fit (`sel_L50` and `sel_L95`, or `survey_q`), as lines with points for ACL (navy solid) and ALSCL (vermilion dashed). Use it to confirm which catchability curve each fit used; the curves coincide here because both fits took the same input, and the values are fixed inputs, not an estimated selectivity, so a difference between two fits means different inputs. When `survey_q` was supplied by length and time step, one line is drawn for each distinct curve and a caption says so. A survey catchability multiplier by age (`survey_q_age`) is not shown.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_selectivity)
 

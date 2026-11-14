@@ -36,7 +36,7 @@ p$parameters.U$log_sigma_index <- log(0.5)
 fixed_index <- list(log_sigma_index = factor(NA))
 ```
 
-`create_parameters()` 返回所选模型和预设的三个列表。改初值或边界后参数仍然自由；只有 `fixed_index` 这样的 `map` 条目才会固定它。随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 在上表中没有键名。`correlation_range` 和 `t0_lower` 的说明见[选择拟合设置](fitting-controls.html#correlation-range)。
+`create_parameters()` 返回所选模型和预设的三个列表。改初值或边界后参数仍然自由；只有 `fixed_index` 这样的 `map` 条目才会固定它。随机效应 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 在上表中没有键名。`correlation_range` 和 `t0_lower` 的说明见[选择拟合设置](fitting-controls.html#correlation-range)。`create_parameters(model_type = "acl", bounds = "wide")` 返回的 ACL 列表中，有五个参数采用 ALSCL 的边界（[选择拟合设置](fitting-controls.html#starts)）。在采用原始结构的 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量；两个模型中 F 过程和补充量过程的标准差都是边际标准差。这两点的说明见[模型原理与时间尺度](model-theory.html#paper-differences)。
 
 <h2 id="next">下一步</h2>
 

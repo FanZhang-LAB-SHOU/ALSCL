@@ -48,11 +48,16 @@ plot_compare_CatL(a, b, x$data.CatL,
 
 ```r
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+comparison$correlation
+comparison$length_at_age
+comparison$growth
 ```
 
 ![模拟 YTF 示例的条件种群估计](../assets/manual/figures/ytf/compare_ts.png)
 
 先比较点估计的时间位置、趋势和大小，再检查不确定性；`se = TRUE` 加上各拟合的近似区间。仅凭重叠不能说明点估计接近：很宽的区间即使点估计差异很大也可能重叠。定量比较时，报告同一时间的估计差或比值。由于两次拟合使用同一数据，对差异作统计推断时需要考虑其联合不确定性。本例只描述这一组数据。
+
+`comparison$correlation` 对产卵生物量、补充量、生物量和丰度给出两次拟合之间的相关系数和均值之比。渔获量按相对渔获量比较（`CN (relative)` 和 `CB (relative)` 两行，不给比值），因为只拟合调查指数时渔获量的水平无法确定。生长的比较看 `comparison$length_at_age`，即两次拟合各年龄的平均体长。`comparison$growth` 把 `Linf`、`k` 和 `t0` 按模型分开列出，因为它们在 ACL 中是各年龄平均体长的 von Bertalanffy 曲线参数，在 ALSCL 中决定体长别生长增量（[判断拟合是否可用](diagnostics.html#compare)）。
 
 <h2 id="mortality">5. 比较捕捞死亡率</h2>
 

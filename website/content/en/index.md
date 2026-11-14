@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-Read the numerical checks first (convergence code, gradient, Hessian, bounds), then the residual patterns, then the sensitivity to the fixed values such as natural mortality. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
+Read the numerical checks first (convergence code, gradient, Hessian, bounds, parameters at their limit), then the residual patterns, then the sensitivity to the fixed inputs such as natural mortality and survey catchability. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
 
 <h2 id="learn-more">Basic functions</h2>
 

@@ -72,9 +72,10 @@ rb2 <- retro_alscl(x, nyear = 3, nstarts = 2, ncores = 3, silent = TRUE)
 rb2$fit_diagnostics
 ```
 
-用你报告的那次拟合的设置运行分析，这样各轮之间的差异只来自去掉的观测。调用中的参数会传给每次拟合：`nstarts = 2` 让每次拟合运行两个初值并保留目标函数值较低的那个，`ncores = 3` 让完整拟合和三轮在三个工作进程上运行（工作进程最多 `nyear + 1` 个），`map`、`parameters` 或 `control` 参数会整体替换保存的列表（[选择拟合设置](fitting-controls.html)）。输入列表中保存的或调用中给出的可选模型结构、`start_spread` 和 ALSCL 的 `t0_lower` 也会传给每次拟合。对自己的输入列表有四条规则：
+用你报告的那次拟合的设置运行分析，这样各轮之间的差异只来自去掉的观测。调用中的参数会传给每次拟合：`nstarts = 2` 让每次拟合运行两个初值并保留目标函数值较低的那个，`ncores = 3` 让完整拟合和三轮在三个工作进程上运行（工作进程最多 `nyear + 1` 个），`map`、`parameters` 或 `control` 参数会整体替换保存的列表（[选择拟合设置](fitting-controls.html)）。输入列表中保存的或调用中给出的可选模型结构、`start_spread`、ACL 的 `bounds`、ALSCL 的 `t0_lower`，以及以 `survey_q` 或 `survey_q_age` 给出的调查可捕性，也会传给每次拟合。对自己的输入列表有五条规则：
 
 - `dev_log_R` 和 `dev_log_F`（补充量和捕捞死亡率的过程偏差）的 map 必须覆盖完整数据表的全部时间步，先排一个时间步的所有组再排下一个（`F_structure = "year"` 时只有一组）；每一轮保留其时间步对应的 map 项，长度不符的 map 会终止分析。[选择拟合设置](fitting-controls.html#map)中对固定项和重复水平的限制适用于每一轮。
+- 按年龄和时间步的自然死亡率，以及按体长和时间步的调查可捕性，按完整数据表的时间步每步一列。每一轮使用它所保留的时间步对应的各列。
 - 使用与主拟合相同的 F 结构：保存的 `F_structure` 会被使用，调用中显式给出的则作用于每次拟合。
 - 最短的一轮至少保留两个观测时间步，序列较短时要保留更多，因为较短的一轮要用更少的观测估计同样多的参数。
 - 用 `peel_step` 选择每轮的长度：季度数据默认每轮去掉一个季度，`retro_alscl(x, nyear = 3, peel_step = 4)` 每轮去掉一年，第 `k` 轮止于最后一个时间步之前 `k` 年，Mohn rho 是对按年回溯求均值。`RetrospectiveYear` 显示保留的最后一个时间步。
