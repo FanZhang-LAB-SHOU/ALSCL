@@ -168,9 +168,10 @@
 #'     for ages a = 1 to `nage`, where R(1) is the recruitment of the first
 #'     period and the deviations e(a) are independent normal with the
 #'     standard deviation of the initial deviations; `dev_log_N0` then has
-#'     `nage` entries. The first age also has a deviation, so the numbers at
-#'     the first age in the first period differ from the reported recruitment
-#'     `Rec` of that period. With `initial_plus_group = "equilibrium"` the
+#'     `nage` entries. The first age also has a deviation, and the reported
+#'     recruitment `Rec` of the first period (with its standard error) is the
+#'     number at the first age in that period, this deviation included; the
+#'     recruitment deviations `dev_log_R` keep their density. With `initial_plus_group = "equilibrium"` the
 #'     deviation of the plus group multiplies the sum of the older cohorts.
 #'     With `initial_length = "growth"` the length distribution of each age
 #'     follows from growth and survival at init_Z without deviations, and the
@@ -306,6 +307,8 @@
 #'   mean_log_R, the default start of mean_log_R is raised by
 #'   `-log(survey_q_age[1])`, because the survey then sees only that
 #'   fraction of the recruits.
+#'   The fit gives a message with this change unless `silent = TRUE`, once
+#'   per call of a function that runs several fits.
 #' @details With M by age and time step or by length, M replaces the single
 #'   rate in survival, in the catch equation and in total mortality (Z) and F
 #'   at age. In the plus group, the fish that enter from the age before it and

@@ -15,8 +15,10 @@
 // - Optional data entry initial_deviations = 1 gives the first-period numbers
 //   at age independent deviations, Equation 11 of the paper:
 //   log N(a,1) = log R(1) - init_Z (a-1) + dev(a), a = 1, ..., A, so
-//   dev_log_N0 has A entries. Absent or 0 keeps the original form, in which
-//   the deviations accumulate over ages and dev_log_N0 has A-1 entries.
+//   dev_log_N0 has A entries, and the reported recruitment Rec of the first
+//   time step is N(1,1), deviation included. Absent or 0 keeps the original
+//   form, in which the deviations accumulate over ages and dev_log_N0 has
+//   A-1 entries.
 // - Optional data entry correlation_range = 1 lets the AR(1) correlations
 //   take values between -1 and 1.
 // - Optional data entry M_AY (A x Y) is the natural mortality rate by age and
@@ -155,6 +157,11 @@ Type objective_function<Type>::operator() ()
       log_NA(i,0) = log_Rec(0) - init_Z * Type(i) + dev_log_N0(i);
       NA(i,0) = exp(log_NA(i,0));
     }
+    // The reported recruitment of the first time step is the number at the
+    // first age, deviation included. The recruitment density stays on
+    // dev_log_R.
+    log_Rec(0) = log_NA(0,0);
+    Rec(0) = NA(0,0);
   }
   // Optional: the first-period plus group is the equilibrium sum of all older
   // cohorts at init_Z (absent or 0 keeps the original single-cohort value).

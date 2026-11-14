@@ -24,7 +24,9 @@
 //   initial_deviations 1 = first-period numbers at age have independent
 //                          deviations, Equation 11 of the paper:
 //                          log N(a,1) = log R(1) - init_Z (a-1) + dev(a),
-//                          a = 1, ..., A, so dev_log_N0 has A entries.
+//                          a = 1, ..., A, so dev_log_N0 has A entries;
+//                          the reported recruitment Rec of the first time
+//                          step is N(1,1), deviation included.
 //                          0 (original): the deviations accumulate over
 //                          ages, log N(a,1) = log N(a-1,1) - init_Z + dev(a-1),
 //                          and dev_log_N0 has A-1 entries.
@@ -264,6 +266,13 @@ Type objective_function<Type>::operator()()
 			}
 			NLA.col(0).col(j) = state;
 		}
+	}
+	// With independent deviations the reported recruitment of the first time
+	// step is the number at the first age, deviation included. The
+	// recruitment density stays on dev_log_R.
+	if (initial_deviations == 1) {
+		Rec(0) = NLA.col(0).col(0).sum();
+		log_Rec(0) = log(Rec(0));
 	}
 
 	// Core dynamics: years 2+
