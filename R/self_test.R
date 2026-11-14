@@ -11,6 +11,29 @@
   if (F_summary == "mean") colMeans(value) else apply(value, 2L, max)
 }
 
+# Truth of the scalar parameters on the internal scale. In conditional mode
+# the deviations are the fitted values, whose mean need not be zero, so the
+# truth of the mean of a process is the mean of the realized process on its
+# log scale: the source estimate plus the mean of the fitted deviations over
+# all cells of the process. The reported deviation arrays hold the value that
+# the template uses in every cell, with tied and fixed cells included, so a
+# map is respected. A single row of dev_log_F (F_structure = "year") is shared
+# by all ages or length bins, and its mean is the mean over all cells. In
+# resample mode the deviations are drawn from the process with mean zero and
+# the truth is the source estimate.
+.acl_self_test_process_means <- c(mean_log_F = "dev_log_F", mean_log_R = "dev_log_R")
+
+.acl_self_test_truth <- function(truth, process) {
+  parameters <- truth$parameters
+  if (process != "conditional") return(parameters)
+  for (nm in names(.acl_self_test_process_means)) {
+    dev <- truth$random_effects[[.acl_self_test_process_means[[nm]]]]
+    if (is.numeric(parameters[[nm]]) && is.numeric(dev) && length(dev) && all(is.finite(dev)))
+      parameters[[nm]] <- parameters[[nm]] + mean(dev)
+  }
+  parameters
+}
+
 # Approximate interval of a positive or signed quantity from its standard
 # error, with the two forms used by the plots of the package.
 .acl_self_test_interval <- function(estimate, se, z, interval) {
@@ -120,8 +143,10 @@
 #'       replicates that pass the numerical checks.}
 #'     \item{failures}{Reasons of the replicates that fail the numerical
 #'       checks, as in [summarize_simulations()].}
-#'     \item{settings}{The arguments used, the model, the number of workers
-#'       and the elapsed time in seconds.}
+#'     \item{settings}{The arguments used, the model, the number of workers,
+#'       the elapsed time in seconds and `process_mean_truth`, the truth of
+#'       mean_log_F and mean_log_R: `"realized"` (conditional mode) or
+#'       `"source"` (resample mode); see Details.}
 #'     \item{simulation}{The `metadata` of [simulate_fit()].}
 #'     \item{fits}{The refits when `save_fits = TRUE`, otherwise NULL.}
 #'   }
@@ -139,15 +164,29 @@
 #'   observations are drawn, so each replicate has its own population, computed
 #'   by the model, and the truth of a time series differs between replicates.
 #'   This also tests whether the variances of the process deviations can be
-#'   estimated. In conditional mode the deviations are the fitted values, not
-#'   a draw from their distribution: their mean need not be zero, so the
-#'   refits can move the level of a process between its mean parameter (for
-#'   example mean_log_F) and the deviations. The relative errors of the time
-#'   series are then a better measure than those of the process parameters.
-#'   In both cases the truth of a scalar parameter is its estimate
-#'   in the source fit, and fixed parameters, the natural mortality rate,
-#'   survey catchability, growth and maturity stay as in the source fit.
-#'   Relative errors are computed against the truth of each replicate.
+#'   estimated. Fixed parameters, the natural mortality rate, survey
+#'   catchability, growth and maturity stay as in the source fit in both
+#'   modes. Relative errors are computed against the truth of each replicate.
+#'
+#'   **Truth of the scalar parameters.** The truth of a scalar parameter is
+#'   its estimate in the source fit, with one exception. In conditional mode
+#'   the deviations are the fitted values, not a draw from their
+#'   distribution, and their mean need not be zero. The truth of the mean of
+#'   a process, mean_log_F (log fishing mortality rate) and mean_log_R (log
+#'   recruitment), is then the mean of the realized process on the log
+#'   scale: the source estimate plus the mean of the fitted deviations over
+#'   all cells of the process (all ages or length bins and time steps for F,
+#'   all time steps for recruitment), with the values that a map ties or
+#'   fixes included as the template uses them. A refit estimates this mean,
+#'   because the data inform the level of the process and not how the level
+#'   is split between the mean parameter and the deviations. In resample mode
+#'   the new deviations are drawn with mean zero and the truth of these two
+#'   parameters is the source estimate. `settings$process_mean_truth` records
+#'   which definition applies (`"realized"` or `"source"`). Other parameters
+#'   can trade off in the same way, for example init_Z with the mean of the
+#'   initial deviations, and keep the source estimate as truth; the relative
+#'   errors of the time series are then a better measure than those of these
+#'   parameters.
 #'
 #'   **Refits.** Each refit uses the model, structure, map, bounds, fixed
 #'   values and fixed inputs of the source fit, from its recipe. With
@@ -184,7 +223,14 @@
 #'   Replicates run on socket workers when `ncores` is greater than 1, as in
 #'   [fit_scenarios()]; the results are the same for any number of workers.
 #'   Reported studies commonly use 100 data sets (Deroba et al. 2015).
-#' @references Deroba, J.J., et al. (2015).
+#' @references Deroba, J.J., Butterworth, D.S., Methot, R.D., De Oliveira,
+#'   J.A.A., Fernandez, C., Nielsen, A., Cadrin, S.X., Dickey-Collas, M.,
+#'   Legault, C.M., Ianelli, J., Valero, J.L., Needle, C.L., O'Malley, J.M.,
+#'   Chang, Y.-J., Thompson, G.G., Canales, C., Swain, D.P., Miller, D.C.M.,
+#'   Hintzen, N.T., Bertignac, M., Ibaibarriaga, L., Silva, A., Murta, A.,
+#'   Kell, L.T., de Moor, C.L., Parma, A.M., Dichmont, C.M., Restrepo, V.R.,
+#'   Ye, Y., Jardim, E., Spencer, P.D., Hanselman, D.H., Blaylock, J., Mood,
+#'   M., Hulson, P.-J.F. (2015).
 #'   Simulation testing the robustness of stock assessment models to error:
 #'   some results from the ICES strategic initiative on stock assessment
 #'   methods. ICES Journal of Marine Science 72, 19-30.
@@ -245,7 +291,8 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
   simulated <- simulate_fit(fit, nsim = nsim, seed = seed, process = process,
                             preserve_missing = preserve_missing)
   # Natural-scale truth of the estimated scalar parameters: the estimates of
-  # the source fit, which simulate_fit() uses in every replicate.
+  # the source fit, which simulate_fit() uses in every replicate, except the
+  # means of the processes in conditional mode (see .acl_self_test_truth()).
   settings <- .acl_scale_settings(fit)
   free <- names(fit$opt$par)
   natural <- function(values) vapply(free, function(nm)
@@ -304,7 +351,7 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
   }))
   parameters <- do.call(rbind, lapply(names(fits), function(id) {
     refit <- fits[[id]]
-    true_value <- natural(simulated$simulations[[id]]$truth$parameters)
+    true_value <- natural(.acl_self_test_truth(simulated$simulations[[id]]$truth, process))
     table <- if (is.null(refit$error)) tryCatch(
       .acl_extract_parameters(refit, "natural", z), error = function(e) NULL) else NULL
     row <- if (is.null(table)) rep(NA_integer_, length(free)) else match(free, table$parameter)
@@ -326,7 +373,8 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
   parameter_summary <- .acl_self_test_rows(parameters, "parameter")
   parameter_summary <- parameter_summary[match(free, parameter_summary$parameter), , drop = FALSE]
   parameter_summary <- cbind(parameter_summary["parameter"],
-    truth = unname(natural(simulated$simulations[[1L]]$truth$parameters)), parameter_summary[-1L])
+    truth = unname(natural(.acl_self_test_truth(simulated$simulations[[1L]]$truth, process))),
+    parameter_summary[-1L])
   rownames(by_year) <- rownames(series_summary) <- rownames(parameter_summary) <- NULL
   screen <- data.frame(n_replicates = nsim, n_errors = sum(nzchar(replicates$error)),
     n_converged = sum(replicates$converged), n_passed = sum(replicates$numerical_ok),
@@ -335,6 +383,7 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
     by_year = by_year, series_summary = series_summary, parameter_summary = parameter_summary,
     screen = screen, failures = status$failures,
     settings = list(model = toupper(model), nsim = nsim, seed = seed, process = process,
+      process_mean_truth = if (process == "conditional") "realized" else "source",
       start = start, nstarts = as.integer(fit_settings[[1L]]$nstarts), quantities = quantities,
       F_summary = F_summary, F_group = if (model == "acl") "age" else "length",
       conf_level = conf_level, interval = interval, preserve_missing = preserve_missing,
@@ -377,6 +426,11 @@ print.summary.alscl_self_test <- function(x, digits = 3, ...) {
         if (s$F_group == "age") "ages" else "length bins", " at each time step.\n", sep = "")
   cat("\nRelative error of the estimated parameters (natural scale), refits that pass the checks:\n")
   print(x$parameter_summary, row.names = FALSE, digits = digits)
+  if (identical(s$process_mean_truth, "realized") &&
+      any(names(.acl_self_test_process_means) %in% x$parameter_summary$parameter))
+    cat("The truth of mean_log_F and mean_log_R is the mean of the fitted log F and log recruitment ",
+        "of the source fit: its estimate plus the mean of the fitted deviations, shown on the natural scale.\n",
+        sep = "")
   cat("\nCoverage is the share of ", 100 * s$conf_level,
       "% intervals that contain the truth.\n", sep = "")
   invisible(x)

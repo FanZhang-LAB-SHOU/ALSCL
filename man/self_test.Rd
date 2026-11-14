@@ -111,8 +111,10 @@ error), \code{n_converged}, \code{n_passed} and \code{pass_rate}, the share of
 replicates that pass the numerical checks.}
 \item{failures}{Reasons of the replicates that fail the numerical
 checks, as in \code{\link[=summarize_simulations]{summarize_simulations()}}.}
-\item{settings}{The arguments used, the model, the number of workers
-and the elapsed time in seconds.}
+\item{settings}{The arguments used, the model, the number of workers,
+the elapsed time in seconds and \code{process_mean_truth}, the truth of
+mean_log_F and mean_log_R: \code{"realized"} (conditional mode) or
+\code{"source"} (resample mode); see Details.}
 \item{simulation}{The \code{metadata} of \code{\link[=simulate_fit]{simulate_fit()}}.}
 \item{fits}{The refits when \code{save_fits = TRUE}, otherwise NULL.}
 }
@@ -139,15 +141,29 @@ from their estimated distribution (variances and correlations) before the
 observations are drawn, so each replicate has its own population, computed
 by the model, and the truth of a time series differs between replicates.
 This also tests whether the variances of the process deviations can be
-estimated. In conditional mode the deviations are the fitted values, not
-a draw from their distribution: their mean need not be zero, so the
-refits can move the level of a process between its mean parameter (for
-example mean_log_F) and the deviations. The relative errors of the time
-series are then a better measure than those of the process parameters.
-In both cases the truth of a scalar parameter is its estimate
-in the source fit, and fixed parameters, the natural mortality rate,
-survey catchability, growth and maturity stay as in the source fit.
-Relative errors are computed against the truth of each replicate.
+estimated. Fixed parameters, the natural mortality rate, survey
+catchability, growth and maturity stay as in the source fit in both
+modes. Relative errors are computed against the truth of each replicate.
+
+\strong{Truth of the scalar parameters.} The truth of a scalar parameter is
+its estimate in the source fit, with one exception. In conditional mode
+the deviations are the fitted values, not a draw from their
+distribution, and their mean need not be zero. The truth of the mean of
+a process, mean_log_F (log fishing mortality rate) and mean_log_R (log
+recruitment), is then the mean of the realized process on the log
+scale: the source estimate plus the mean of the fitted deviations over
+all cells of the process (all ages or length bins and time steps for F,
+all time steps for recruitment), with the values that a map ties or
+fixes included as the template uses them. A refit estimates this mean,
+because the data inform the level of the process and not how the level
+is split between the mean parameter and the deviations. In resample mode
+the new deviations are drawn with mean zero and the truth of these two
+parameters is the source estimate. \code{settings$process_mean_truth} records
+which definition applies (\code{"realized"} or \code{"source"}). Other parameters
+can trade off in the same way, for example init_Z with the mean of the
+initial deviations, and keep the source estimate as truth; the relative
+errors of the time series are then a better measure than those of these
+parameters.
 
 \strong{Refits.} Each refit uses the model, structure, map, bounds, fixed
 values and fixed inputs of the source fit, from its recipe. With
@@ -195,7 +211,14 @@ plot_self_test(st)
 }
 }
 \references{
-Deroba, J.J., et al. (2015).
+Deroba, J.J., Butterworth, D.S., Methot, R.D., De Oliveira,
+J.A.A., Fernandez, C., Nielsen, A., Cadrin, S.X., Dickey-Collas, M.,
+Legault, C.M., Ianelli, J., Valero, J.L., Needle, C.L., O'Malley, J.M.,
+Chang, Y.-J., Thompson, G.G., Canales, C., Swain, D.P., Miller, D.C.M.,
+Hintzen, N.T., Bertignac, M., Ibaibarriaga, L., Silva, A., Murta, A.,
+Kell, L.T., de Moor, C.L., Parma, A.M., Dichmont, C.M., Restrepo, V.R.,
+Ye, Y., Jardim, E., Spencer, P.D., Hanselman, D.H., Blaylock, J., Mood,
+M., Hulson, P.-J.F. (2015).
 Simulation testing the robustness of stock assessment models to error:
 some results from the ICES strategic initiative on stock assessment
 methods. ICES Journal of Marine Science 72, 19-30.
