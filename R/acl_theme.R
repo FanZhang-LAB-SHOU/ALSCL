@@ -191,8 +191,21 @@ NULL
     dev_R_multiplier = "Recruitment multipliers over time",
     dev_F_multiplier = "Fishing mortality multipliers over time",
 
-    # plot_VB
+    # plot_VB: the von Bertalanffy curve of an ACL fit, and mean length at
+    # age from the fitted numbers of an ALSCL fit
     VB      = "Von Bertalanffy growth curve",
+    length_at_age = "Mean length at age",
+
+    # plot_length_at_age
+    length_at_age_time = "Mean length at age by time step",
+
+    # plot_relative_catch
+    relative_catch = "Relative catch",
+
+    # plot_natural_mortality and plot_survey_catchability: inputs of a fit
+    natural_mortality = "Natural mortality rate (M) used in the fit",
+    survey_q     = "Survey catchability at length used in the fit",
+    survey_q_age = "Survey catchability multiplier by age used in the fit",
 
     # plot_ridges
     CatL_obs_length = "Observed survey length composition over time",
@@ -217,7 +230,7 @@ NULL
     compare_ts      = "{m1} vs {m2}",
     compare_F       = "Fishing mortality comparison",
     compare_resid   = "Residual diagnostics: {m1} vs {m2}",
-    compare_growth  = "Growth comparison",
+    compare_growth  = "Mean length at age",
     compare_CatL    = "Observed and fitted survey indices at length",
     compare_metrics = "Model fit comparison: {m1} vs {m2}",
     compare_sel     = "Survey catchability at length",
@@ -251,7 +264,13 @@ NULL
     dev_F_multiplier = "Fishing mortality multiplier",
     residual  = "Log residual",
     growth    = "Length",
-    length    = "Length"
+    length    = "Length",
+    # The time basis, such as "(per year)", is appended from the fit.
+    M         = "Natural mortality rate",
+    survey_q  = "Survey catchability (q)",
+    survey_q_age = "Survey catchability multiplier",
+    relative_catch_number = "Catch in numbers divided by its mean",
+    relative_catch_weight = "Catch in weight divided by its mean"
   )
 )
 
@@ -835,6 +854,12 @@ acl_theme_reset <- function() {
 # is used verbatim.
 .acl_F_label <- function(basis, label = .acl_lab("y", "F")) {
   if (identical(label, .acl_defaults$ylab$F)) paste0(label, " (", basis, ")") else label
+}
+
+# Default natural mortality label with its time basis. A customized label is
+# used verbatim.
+.acl_M_label <- function(basis, label = .acl_lab("y", "M")) {
+  if (identical(label, .acl_defaults$ylab$M)) paste0(label, " (", basis, ")") else label
 }
 
 

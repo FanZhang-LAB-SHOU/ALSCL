@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_VB.R
 \name{plot_VB}
 \alias{plot_VB}
-\title{Plot the Von Bertalanffy growth function}
+\title{Plot mean length at age: the von Bertalanffy curve or the fitted numbers}
 \usage{
 plot_VB(
   model_result,
@@ -27,16 +27,31 @@ plot_VB(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  observed = NULL,
+  basis = c("population", "survey"),
+  years = NULL,
+  parameter_curve = FALSE,
+  point_size = NULL,
+  observed_color = NULL,
+  observed_name = "Age readings"
 )
 }
 \arguments{
-\item{model_result}{A list that contains model output. The list should have a "report" component which contains "Linf", "vbk" and "t0" components.}
+\item{model_result}{A fitted ACL or ALSCL result. For the von Bertalanffy
+curve the list needs a "report" component with "Linf", "vbk" and "t0".
+Mean length at age from the fitted numbers needs a result of
+\code{\link[=run_alscl]{run_alscl()}} or \code{\link[=run_acl]{run_acl()}}, or a saved assessment.}
 
-\item{age_range}{NULL or a finite increasing numeric pair in years. NULL
-uses the fitted age range in model_result$age, or c(1, 25) for saved fits
-without age metadata; the automatic lower endpoint is at least t0. An
-explicit range must start at or after t0 to avoid negative-length extrapolation.}
+\item{age_range}{NULL or a finite increasing numeric pair in years. For the
+von Bertalanffy curve of an ACL fit, NULL uses the fitted age range in
+model_result$age, or c(1, 25) for saved fits without age metadata; the
+automatic lower endpoint is at least t0, and an explicit range must
+start at or after t0 to avoid negative-length extrapolation. For mean
+length at age from the fitted numbers, NULL uses all age classes and an
+explicit range selects the age classes within it; the curve from Linf,
+k and t0 is then drawn from t0 or the start of the range, whichever is
+later.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
 
@@ -44,7 +59,13 @@ explicit range must start at or after t0 to avoid negative-length extrapolation.
 
 \item{line_type}{Character. The type of the line in the plot. Default is "solid".}
 
-\item{se}{Logical. Whether to calculate and plot standard error as confidence intervals. Default is FALSE.}
+\item{se}{Logical. Whether to draw the 95\% confidence interval of the curve
+computed from Linf, k and t0 (delta method with the covariance of the
+growth parameters). Default is FALSE. The interval belongs to that
+curve: for an ACL fit it is the interval of the figure, and for an ALSCL
+fit it is drawn around the reference line when \code{parameter_curve = TRUE}.
+The model reports no standard error for mean length at age from the
+fitted numbers; see Details.}
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
@@ -88,25 +109,104 @@ lies on this axis; otherwise the breaks are chosen automatically.}
 \item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
+
+\item{observed}{NULL or a data frame of observed mean length at age from
+age readings, drawn as points. Required columns: \code{age} (years) and
+\code{mean_length}. Optional columns: \code{sd_length} (or \code{sd}), drawn as bars of
+one standard deviation on each side of the mean, or \code{lower} and \code{upper},
+drawn as the bars of an interval; and \code{year} (the time step, on the
+scale of \code{model_result$year}). Every row is drawn as one point. With
+\code{years}, only the rows of those time steps are drawn; rows without a
+time step are always drawn.}
+
+\item{basis}{\code{"population"} (default): mean length at age in the
+population. \code{"survey"}: mean length at age in the survey catch, that is,
+with numbers at length multiplied by the survey catchability at length
+used in the fit. Use \code{"survey"} to compare with age readings of fish
+caught in the survey. For an ACL fit, \code{"survey"} draws mean length at age
+from the age-length key in place of the von Bertalanffy curve, which
+describes the population.}
+
+\item{years}{NULL (all time steps) or the time steps over which mean length
+at age from the fitted numbers is averaged, as values of
+\code{model_result$year}. It does not change the von Bertalanffy curve of an
+ACL fit, which is the same in every time step.}
+
+\item{parameter_curve}{Logical. For an ALSCL fit, and for an ACL fit with
+\code{basis = "survey"}, whether to add the curve computed from Linf, k and
+t0 as a dashed reference line, named in the legend and explained in the
+caption. Default is FALSE. It has no effect on the von Bertalanffy curve
+of an ACL fit, which is that curve.}
+
+\item{point_size}{Numeric or NULL. Size of the observed points; NULL
+inherits the global point_size setting.}
+
+\item{observed_color}{Character or NULL. Colour of the observed points;
+NULL inherits the global observed_color setting.}
+
+\item{observed_name}{Character. Name of the observed points in the legend.
+Default is "Age readings".}
 }
 \value{
 A ggplot object representing the plot.
 }
 \description{
-Plot a reference curve using the asymptotic length (Linf), the growth
-coefficient (vbk, per year) and t0 from a fitted result.
-The parameter t0 is the theoretical age at zero length. The annotation
-gives Linf in the length units of the data and k per year. In ALSCL, realized
-length distributions at age also depend on growth transitions and
-length-specific mortality, so this curve does not summarize the evolving
-population.
+Plots mean length at age of a fitted model against age. What is drawn
+depends on the model, because the growth parameters have different
+meanings in ACL and ALSCL.
 }
 \details{
+For an ACL fit, the asymptotic length (Linf), the growth rate (vbk, per
+year) and t0 (the theoretical age at zero length, in years) are the
+parameters of a von Bertalanffy curve of mean length at age in the
+population. The figure shows this curve, and the annotation gives Linf in
+the length unit of the data and k per year.
+
+For an ALSCL fit, Linf and k set the mean growth increment at length, and
+Linf, k and t0 set the mean length of recruits (see \code{\link[=length_at_age]{length_at_age()}}).
+They are not the parameters of a von Bertalanffy curve of mean length at
+age. The figure therefore shows mean length at age calculated from the
+fitted numbers by length bin and age class (\code{\link[=length_at_age]{length_at_age()}}), averaged
+over the time steps, and has no annotation of Linf and k. The curve
+computed from Linf, k and t0 can be added as a reference line with
+\code{parameter_curve = TRUE}.
+
+For an ALSCL fit, and for any fit with \code{basis = "survey"}, mean
+length at age is that of \code{\link[=length_at_age]{length_at_age()}}: for ALSCL from the estimated
+numbers by length bin, age class and time step, and for ACL from the
+age-length key. Each length bin is represented by its midpoint. The line
+connects the values of the age classes, and the oldest age class is a
+plus group, marked with a plus sign on the age axis. The subtitle states
+the basis and the time steps of the mean. \code{\link[=plot_length_at_age]{plot_length_at_age()}} shows
+the values of each time step.
+
+In an ALSCL fit with the original structure, the curve computed from
+Linf, k and t0 is the mean length at age in the first time step and the
+mean length of recruits in every time step. With
+\code{structure = list(initial_length = "growth")} (part of
+\code{structure = "von_bertalanffy"}), its value at the first age class is
+the mean length of recruits. In later time steps the lengths of a cohort
+follow from the growth increments and from mortality at length, so the
+curve is not the mean length at age of the fitted population. The
+caption of the figure states which of the two cases applies.
+
+Changes from earlier versions for ALSCL fits: the default figure showed
+the curve computed from Linf, k and t0 with an annotation of Linf and k.
+The annotation is now drawn only with that curve, under the heading
+"Curve from Linf, k and t0". \code{se = TRUE} without \code{parameter_curve = TRUE} gives a
+warning and draws the estimate only, because the model reports no
+standard error for mean length at age from the fitted numbers. An
+explicit \code{age_range} that starts before t0 is no longer an error for
+these fits, because the fitted numbers are not extrapolated.
+
 If the growth covariance is unavailable or unusable, a request for
 confidence intervals warns and draws the estimate only, preserving all
 supplied labels, axis settings, text styles and theme options. The parameter
 annotation is retained with and without intervals and inherits font_family.
 The y-axis inherits the global growth label unless ylab is supplied.
+The package holds no unit for length; give it in ylab, for example
+\code{ylab = "Length (cm)"}. The title uses the theme key \code{VB} for the von
+Bertalanffy curve of an ACL fit and \code{length_at_age} otherwise.
 An automatic age range with no positive span at or above t0 is rejected;
 supply an explicit biologically meaningful age_range in that case.
 }
@@ -115,5 +215,19 @@ supply an explicit biologically meaningful age_range in that case.
 fit <- run_acl(YTF_example, silent = TRUE)
 plot_VB(fit)
 plot_VB(fit, age_range = c(1, 25))
+
+# Observed mean length at age from age readings, drawn as points. These
+# values are made up for the example.
+readings <- data.frame(age = 1:8,
+                       mean_length = c(12, 20, 27, 32, 37, 40, 43, 45),
+                       sd_length = c(2, 2.5, 3, 3, 3.5, 3.5, 4, 4))
+plot_VB(fit, observed = readings, ylab = "Length (cm)")
+
+# Mean length at age in the survey catch, the basis to use for age
+# readings of fish caught in the survey
+plot_VB(fit, observed = readings, basis = "survey", ylab = "Length (cm)")
 }
+}
+\seealso{
+\code{\link[=length_at_age]{length_at_age()}}, \code{\link[=plot_length_at_age]{plot_length_at_age()}}, \code{\link[=plot_compare_growth]{plot_compare_growth()}}.
 }
