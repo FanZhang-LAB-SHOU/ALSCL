@@ -21,6 +21,13 @@
 //   initial_length     1 = first-period lengths at age follow from growth
 //   initial_plus_group 1 = first-period plus group is the equilibrium sum of
 //                          all older cohorts at init_Z
+//   initial_deviations 1 = first-period numbers at age have independent
+//                          deviations, Equation 11 of the paper:
+//                          log N(a,1) = log R(1) - init_Z (a-1) + dev(a),
+//                          a = 1, ..., A, so dev_log_N0 has A entries.
+//                          0 (original): the deviations accumulate over
+//                          ages, log N(a,1) = log N(a-1,1) - init_Z + dev(a-1),
+//                          and dev_log_N0 has A-1 entries.
 //   correlation_range  1 = AR(1) correlations between -1 and 1
 //   t0_lower           lower limit of t0: t0 = t0_lower + exp(log_t0)
 //   M_LAY              natural mortality rate by length, age and time step
@@ -89,7 +96,7 @@ Type objective_function<Type>::operator()()
 	// Random effects
 	PARAMETER_VECTOR(dev_log_R);    // recruitment deviations (Y)
 	PARAMETER_ARRAY(dev_log_F);     // F deviations at LENGTH (L x Y), not (A x Y) as in ACL
-	PARAMETER_VECTOR(dev_log_N0);   // initial abundance deviations (A-1)
+	PARAMETER_VECTOR(dev_log_N0);   // initial abundance deviations (A-1; A with initial_deviations = 1)
 
 	// ==================== DERIVED QUANTITIES ====================
 	Type one = 1.0;
@@ -148,6 +155,9 @@ Type objective_function<Type>::operator()()
 	int growth_transition = optional_setting(this->data, "growth_transition");
 	int initial_length = optional_setting(this->data, "initial_length");
 	int initial_plus_group = optional_setting(this->data, "initial_plus_group");
+	int initial_deviations = optional_setting(this->data, "initial_deviations");
+	if (initial_deviations == 1 && dev_log_N0.size() != A)
+		Rf_error("With independent initial deviations dev_log_N0 must have A entries.");
 
 	// Growth conserves all survivors; the last bin absorbs the right tail.
 	matrix<Type> G(L,L);
@@ -190,9 +200,17 @@ Type objective_function<Type>::operator()()
 	log_N0(0) = log_Rec(0);
 	N0(0) = Rec(0);
 
+	if (initial_deviations == 0) {
 	for(int j = 1;j < A;++j){
 		log_N0(j) = log_N0(j-1) - init_Z + dev_log_N0(j-1);
 		N0(j) = exp(log_N0(j));
+	}
+	} else {
+		// Independent deviations (Equation 11 of the paper), first age included.
+		for(int j = 0;j < A;++j){
+			log_N0(j) = log_Rec(0) - init_Z * Type(j) + dev_log_N0(j);
+			N0(j) = exp(log_N0(j));
+		}
 	}
 
 	Type init_survival = exp(-init_Z);
@@ -201,6 +219,28 @@ Type objective_function<Type>::operator()()
 		if (initial_plus_group == 1) N0(A-1) = N0(A-1) / (one - init_survival);
 		for(int j=0; j<A; ++j){
 			NLA.col(0).col(j) = pla.col(j) * N0(j);
+		}
+	} else if (initial_deviations == 1) {
+		// Lengths at age follow from growth, with independent deviations: the
+		// length distribution of each age is that of the previous age after
+		// survival at init_Z and one growth step, without deviations, and the
+		// deviation of the age multiplies the numbers of that age only. For the
+		// equilibrium plus group it multiplies the sum of the older cohorts.
+		vector<Type> state = pla.col(0) * Rec(0);
+		NLA.col(0).col(0) = state * exp(dev_log_N0(0));
+		for(int j=1; j<A; ++j){
+			vector<Type> grown = G * state;
+			state = grown * init_survival;
+			if (j == A-1 && initial_plus_group == 1) {
+				vector<Type> total(L);
+				for (int i=0; i<L; ++i) {
+					Type acc = state(i);
+					for (int k=0; k<i; ++k) acc += init_survival * G(i,k) * total(k);
+					total(i) = acc / (one - init_survival * G(i,i));
+				}
+				state = total;
+			}
+			NLA.col(0).col(j) = state * exp(dev_log_N0(j));
 		}
 	} else {
 		// Lengths at age follow from growth: each age is the previous age after

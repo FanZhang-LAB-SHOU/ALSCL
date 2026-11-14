@@ -197,11 +197,31 @@ means no correlation and negative correlation can be estimated. A
 \verb{logit_*} start or fixed value has a different meaning under the two
 settings: a correlation rho is \code{qlogis(rho)} under \code{"positive"} and
 \code{qlogis((rho + 1) / 2)} under \code{"symmetric"}.}
+\item{\code{initial_deviations}}{Deviations of the log numbers at age in the
+first period (the initial numbers). \code{"cumulative"}: the log numbers of
+each age after the first are those of the previous age minus init_Z
+plus a normal deviation, so the deviations accumulate over ages and
+\code{dev_log_N0} has \code{nage - 1} entries. \code{"independent"}: Equation 11 of
+Zhang and Cadigan (2022), log N(a) = log R(1) - init_Z (a - 1) + e(a)
+for ages a = 1 to \code{nage}, where R(1) is the recruitment of the first
+period and the deviations e(a) are independent normal with the
+standard deviation of the initial deviations; \code{dev_log_N0} then has
+\code{nage} entries. The first age also has a deviation, so the numbers at
+the first age in the first period differ from the reported recruitment
+\code{Rec} of that period. With \code{initial_plus_group = "equilibrium"} the
+deviation of the plus group multiplies the sum of the older cohorts.
+With \code{initial_length = "growth"} the length distribution of each age
+follows from growth and survival at init_Z without deviations, and the
+deviation of an age multiplies the numbers of that age only. This
+setting does not belong to the set \code{"von_bertalanffy"}.}
 }
 With \code{initial_length = "growth"} and \code{initial_plus_group = "equilibrium"}
 a population with constant recruitment, no fishing and init_Z equal to M
 stays constant over time; with the original structure it does not.
-The settings used are stored in the \code{structure} element of the fit.}
+The settings used are stored in the \code{structure} element of the fit;
+\code{initial_deviations} is stored only when it is \code{"independent"}, so that
+the stored structure of a fit with the default form is the same as in
+earlier versions.}
 
 \item{start_spread}{Standard deviation of the normal deviates added to the
 starting values (on the scale of the optimizer, mostly logarithms) of
