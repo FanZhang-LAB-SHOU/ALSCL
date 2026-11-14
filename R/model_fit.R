@@ -175,7 +175,8 @@
                              F_structure = c("group_year", "year")) {
   F_structure <- match.arg(F_structure)
   config <- create_parameters(model_type = tolower(model), parameters = parameters,
-                              parameters.L = parameters.L, parameters.U = parameters.U)
+                              parameters.L = parameters.L, parameters.U = parameters.U,
+                              bounds = if (is.null(prepared$bounds)) "default" else prepared$bounds)
   p <- config$parameters; d <- prepared$data
   structure <- .acl_structure(prepared$structure, model)
   d[names(structure$data)] <- structure$data

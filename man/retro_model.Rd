@@ -59,6 +59,7 @@ retro_model(
   structure = list(),
   start_spread = 0.15,
   t0_lower = 0,
+  bounds = c("default", "wide"),
   ...
 )
 }
@@ -207,6 +208,10 @@ gives annual peels: peel k then ends k years before the terminal period.}
 \item{structure, start_spread, t0_lower}{Passed to every full and peel fit; see
 \code{\link{run_alscl}}. A bundle's own settings are used unless these are
 supplied explicitly.}
+
+\item{bounds}{Passed to every full and peel fit of ACL; see
+\code{\link{run_acl}}. A bundle's own setting is used unless this is
+supplied explicitly. ALSCL has no such argument.}
 
 \item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }

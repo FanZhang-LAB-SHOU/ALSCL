@@ -30,7 +30,8 @@ run_acl(
   F_structure = c("group_year", "year"),
   polish = TRUE,
   structure = list(),
-  start_spread = 0.15
+  start_spread = 0.15,
+  bounds = c("default", "wide")
 )
 }
 \arguments{
@@ -126,6 +127,17 @@ element of the fit.}
 starting values (on the scale of the optimizer, mostly logarithms) of
 the second and later starts. The default 0.15 keeps the starts used by
 earlier versions. See Details for when to use a larger value.}
+
+\item{bounds}{\code{"default"} keeps the bounds of earlier versions. \code{"wide"}
+gives ACL the bounds that ALSCL has for five parameters: the initial
+total mortality rate (upper bound 10 instead of 1 per time step), the
+mean fishing mortality rate (2 instead of 1 per time step), the standard
+deviations of the initial numbers at age and of recruitment on the log
+scale (10 instead of 1) and the von Bertalanffy growth rate k (0.05 to 2
+instead of 0.1 to 1 per year); see \code{\link[=create_parameters]{create_parameters()}}. Entries of
+\code{parameters.L} and \code{parameters.U} replace these bounds. When an ACL fit
+stops at one of the default upper bounds, \code{diagnostics$advice} and the
+message of the fit name this argument.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,
@@ -180,12 +192,40 @@ Both interfaces use the same fitting and standard-error acceleration.
 A single start can stop at a local optimum that passes every
 numerical check, particularly for the growth parameters of ALSCL. The
 checks in \code{diagnostics} are local: they do not show whether a better
-optimum exists. For results that will be reported, use several starts
-(for example \code{nstarts = 5}) with a wider \code{start_spread} (for example
-0.5) and compare the objectives in \code{start_diagnostics}. \code{start_summary}
+optimum exists. A fit with one start (\code{nstarts = 1}, the default)
+therefore gives a message unless \code{silent = TRUE}; a function that runs
+several fits in one call gives it once. For results that will be
+reported, use at least three starts (\code{nstarts = 3} or more) with a wider
+\code{start_spread} (for example 0.5) and compare the objectives in
+\code{start_diagnostics}. \code{start_summary}
 gives the number of converged starts, the range of their objectives and
 the number that agree with the best one; a range above 2 is added to
 \code{diagnostics$issues}.
+
+Besides the gradient, the Hessian and the optimizer bounds, the
+numerical screen in \code{diagnostics} looks for parameters that are at their
+limit in practice although they have not reached a bound: \code{log_t0} below
+-10 (ALSCL; t0 then equals \code{t0_lower}), the logarithm of a standard
+deviation below -9 (a variance of zero) and a logit correlation with an
+absolute value above 15 (a correlation at the end of its range). Such a
+fit fails the screen (\code{numerical_ok = FALSE}), as a fit that stopped at
+a bound does. \code{diagnostics$limit_parameters} lists these parameters with
+their values on the natural scale and \code{diagnostics$advice} says what to
+do: fix the parameter with \code{map} at a chosen value and refit, or, for a
+correlation at zero, use
+\code{structure = list(correlation_range = "symmetric")}.
+\code{diagnostics$plausibility} lists notes that do not change the verdict of
+the screen: the mean length of recruits lies more than one length-bin
+width below the lower border of the second length bin; the estimated
+standard deviation of the observation error on the log scale is above
+0.9; an estimated coefficient of variation of length at age (cv_len) or
+of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range
+of cv_len in the Stock Synthesis manual is 0.10 to 0.25); the estimated
+initial total mortality rate is below the smallest natural mortality
+rate. Except for the mean length of recruits, the notes concern
+estimated parameters only, not values fixed with \code{map}. The thresholds
+are stored in \code{diagnostics$check_thresholds}. The messages of a fit and
+\code{summary()} show the advice and the notes.
 
 The process densities are evaluated on the complete arrays of
 deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0

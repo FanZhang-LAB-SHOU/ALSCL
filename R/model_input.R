@@ -115,8 +115,10 @@
                               sel_L50, sel_L95, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
                               len_upper = NULL, zero_action = c("missing", "error"),
-                              structure = list(), start_spread = 0.15, t0_lower = 0) {
+                              structure = list(), start_spread = 0.15, t0_lower = 0,
+                              bounds = c("default", "wide")) {
   zero_action <- match.arg(zero_action)
+  bounds <- match.arg(bounds)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
   if (is.null(growth_step)) growth_step <- if (rec.age < 1) rec.age else 1
@@ -155,7 +157,7 @@
                   Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
        structure = structure, start_spread = start_spread, t0_lower = t0_lower,
-       zero_observations = sum(obs == 0, na.rm = TRUE))
+       zero_observations = sum(obs == 0, na.rm = TRUE), bounds = bounds)
 }
 
 # Optional model structures. The first choice of each setting is the published
