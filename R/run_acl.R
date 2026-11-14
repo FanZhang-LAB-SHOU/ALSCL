@@ -116,9 +116,9 @@
 #'   ages and `dev_log_N0` has `nage - 1` entries) or `"independent"`
 #'   (Equation 11 of Zhang and Cadigan 2022: log N(a) = log R(1) -
 #'   init_Z (a - 1) + e(a) for ages a = 1 to `nage`, with independent normal
-#'   deviations e(a), so `dev_log_N0` has `nage` entries and the numbers at
-#'   the first age in the first period differ from the reported recruitment
-#'   of that period; with an equilibrium plus group, the deviation of the
+#'   deviations e(a), so `dev_log_N0` has `nage` entries and the reported
+#'   recruitment `Rec` of the first period is the number at the first age in
+#'   that period, e(1) included; with an equilibrium plus group, the deviation of the
 #'   plus group multiplies the sum of the older cohorts). The settings used
 #'   are stored in the `structure` element of the fit; `initial_deviations`
 #'   is stored only when it is `"independent"`, so that the stored structure
@@ -237,6 +237,8 @@
 #'   `parameters` holds no start for mean_log_R, the default start of
 #'   mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then
 #'   sees only that fraction of the recruits.
+#'   The fit gives a message with this change unless `silent = TRUE`, once
+#'   per call of a function that runs several fits.
 #' @details With M by age and time step, total mortality at age (`Z`) is F
 #'   plus the M of that age and time step, in survival and in the catch
 #'   equation. The default start of init_Z uses the median of M in the first

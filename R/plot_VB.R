@@ -121,7 +121,9 @@
 #'   The annotation is now drawn only with that curve, under the heading
 #'   "Curve from Linf, k and t0". `se = TRUE` without `parameter_curve = TRUE` gives a
 #'   warning and draws the estimate only, because the model reports no
-#'   standard error for mean length at age from the fitted numbers. An
+#'   standard error for mean length at age from the fitted numbers. Scripts
+#'   that used the interval of the earlier figure must add
+#'   `parameter_curve = TRUE`, which draws that curve with its interval. An
 #'   explicit `age_range` that starts before t0 is no longer an error for
 #'   these fits, because the fitted numbers are not extrapolated.
 #'
@@ -347,9 +349,12 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
               call. = FALSE)
   }
   if (se && is.null(curve)) {
-    warning("The model reports no standard error for mean length at age from the fitted numbers; drawing the estimate only. ",
-            "se = TRUE applies to the curve computed from Linf, k and t0, which is drawn with parameter_curve = TRUE.",
-            call. = FALSE)
+    if (!parameter_curve)
+      warning("The model reports no standard error for mean length at age from the fitted numbers; drawing the estimate only. ",
+              "For the interval that plot_VB(se = TRUE) drew before version 2.4.4, add parameter_curve = TRUE: ",
+              "it draws the curve computed from Linf, k and t0 with its interval.", call. = FALSE) else
+      warning("The model reports no standard error for mean length at age from the fitted numbers, and the curve ",
+              "computed from Linf, k and t0 is not drawn; drawing the estimate only.", call. = FALSE)
     se <- FALSE
   }
   if (se) {

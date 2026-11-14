@@ -219,12 +219,17 @@
       config$parameters.L$log_Linf <- min(config$parameters.L$log_Linf, log(.5 * large))
     if (is.null(parameters.U$log_Linf)) config$parameters.U$log_Linf <- log(2 * max_len)
   }
+  mean_log_R_shift <- NULL
   if (is.null(parameters$mean_log_R)) {
     totals <- colSums(prepared$observations, na.rm = TRUE)
     p$mean_log_R <- log(mean(totals[totals > 0]))
     # With a survey catchability multiplier by age the survey sees only the
-    # fraction q_age[1] of the recruits, so the default start is raised.
-    if (!is.null(d$q_age)) p$mean_log_R <- p$mean_log_R - log(d$q_age[1L])
+    # fraction q_age[1] of the recruits, so the default start is raised. The
+    # fit reports the shift (.acl_q_age_start_note()).
+    if (!is.null(d$q_age)) {
+      mean_log_R_shift <- -log(d$q_age[1L])
+      p$mean_log_R <- p$mean_log_R + mean_log_R_shift
+    }
   }
   if (is.null(parameters$log_init_Z)) {
     p$log_init_Z <- log(d$M + .3)
@@ -263,7 +268,8 @@
   }
   list(data = d, parameters = p, config = config, map = mapping,
        random = random, F_structure = F_structure, structure = structure$choices,
-       clamped_starts = clamped, restricted_random = restricted_random, t0_lower = t0_lower)
+       clamped_starts = clamped, restricted_random = restricted_random, t0_lower = t0_lower,
+       mean_log_R_shift = mean_log_R_shift)
 }
 
 # Tell the user about starting values that were moved into the bounds. A start
@@ -323,6 +329,7 @@
   mapping <- setup$map; random <- setup$random
   .acl_report_clamped(setup$clamped_starts, silent)
   .acl_partial_set_note(prepared$structure, model, silent)
+  .acl_q_age_start_note(setup$mean_log_R_shift, d$q_age, silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",

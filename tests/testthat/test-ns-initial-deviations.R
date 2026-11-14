@@ -83,8 +83,10 @@ test_that("ACL gives the numbers at age of Equation 11 under the independent for
     x <- id_report("ACL", extra)
     expected <- id_equation_11(x$parameters, x$data$A, equilibrium)
     expect_equal(x$report[["NA"]][, 1L], expected, tolerance = 1e-12)
-    # The reported recruitment of the first period has no age deviation.
-    expect_equal(x$report$Rec[1L], exp(x$parameters$mean_log_R + x$parameters$dev_log_R[1L]), tolerance = 1e-12)
+    # The reported recruitment of the first period includes the deviation of
+    # the first age.
+    expect_equal(x$report$Rec[1L], exp(x$parameters$mean_log_R + x$parameters$dev_log_R[1L] +
+                                         x$parameters$dev_log_N0[1L]), tolerance = 1e-12)
   }
 })
 
@@ -114,6 +116,37 @@ test_that("ALSCL gives the numbers at length and age of Equation 11 under every 
       if (!equilibrium) expect_equal(colSums(expected), id_equation_11(p, A), tolerance = 1e-10)
     }
     expect_equal(x$report$NLA[, , 1L], expected, tolerance = 1e-10)
+  }
+})
+
+test_that("the reported first-period recruitment is the number at the first age under both forms", {
+  skip_on_cran()
+  first_age <- function(model, report)
+    if (model == "ACL") report[["NA"]][1L, 1L] else sum(report$NLA[, 1L, 1L])
+  for (model in c("ACL", "ALSCL")) {
+    settings <- list(cumulative = list(), independent = list(initial_deviations = 1L))
+    if (model == "ALSCL") settings$independent_growth <-
+      list(initial_deviations = 1L, initial_length = 1L, initial_plus_group = 1L)
+    for (form in names(settings)) {
+      x <- id_report(model, settings[[form]])
+      p <- x$parameters
+      expect_equal(x$report$Rec[1L], first_age(model, x$report), tolerance = 1e-12)
+      # Later periods and the cumulative form keep exp(mean_log_R + dev_log_R).
+      expected <- exp(p$mean_log_R + p$dev_log_R)
+      if (form != "cumulative") expected[1L] <- expected[1L] * exp(p$dev_log_N0[1L])
+      expect_equal(x$report$Rec, expected, tolerance = 1e-12)
+    }
+  }
+  # In a fit, the recruitment series and its standard errors use the same value.
+  base <- fit_fixture("ACL")
+  fit <- do.call(run_acl, c(base$input, list(parameters = base$parameters, map = base$map, silent = TRUE,
+    structure = list(initial_deviations = "independent"))))
+  expect_equal(fit$report$Rec[1L], fit$report[["NA"]][1L, 1L], tolerance = 1e-12)
+  rec <- extract_estimates(fit, "Rec")
+  expect_equal(rec$estimate[1L], fit$report[["NA"]][1L, 1L], tolerance = 1e-12)
+  if (!is.null(fit$est_std)) {
+    reported <- fit$est_std[rownames(fit$est_std) == "Rec", "Estimate"]
+    expect_equal(unname(reported[1L]), fit$report[["NA"]][1L, 1L], tolerance = 1e-10)
   }
 })
 

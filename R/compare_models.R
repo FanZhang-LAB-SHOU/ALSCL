@@ -20,7 +20,10 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'     standard deviation of the observation error of the log survey index),
 #'     Estimate and Meaning. The growth parameters of ACL and ALSCL are not
 #'     placed side by side, because they are different quantities (see
-#'     Details).}
+#'     Details). Until version 2.4.3 the table had one column per model;
+#'     `cmp$growth$ALSCL` and `cmp$growth[["ALSCL"]]` with a model name now
+#'     give an error instead of NULL. Use
+#'     `subset(cmp$growth, Model == "ALSCL")`.}
 #'   \item{length_at_age}{Data frame with Age, Basis and one column per model:
 #'     mean length at age, averaged over the time steps. This is the
 #'     comparison of growth between the two fits. Basis is "survey" (numbers
@@ -185,8 +188,8 @@ compare_models <- function(model1, model2, data.CatL,
   # ===== 2. Growth parameters, by model, and mean length at age =====
   # Linf, k and t0 are different quantities in ACL and ALSCL, so each model
   # has its own block of rows. Growth is compared through mean length at age.
-  growth_df <- rbind(.acl_growth_block(model1, model1_name),
-                     .acl_growth_block(model2, model2_name))
+  growth_df <- .acl_growth_table(rbind(.acl_growth_block(model1, model1_name),
+                                       .acl_growth_block(model2, model2_name)))
   length_df <- .acl_compare_length_at_age(model1, model2, model1_name, model2_name)
 
   # ===== 3. Goodness-of-fit metrics =====
@@ -317,6 +320,40 @@ compare_models <- function(model1, model2, data.CatL,
     model1_name = model1_name,
     model2_name = model2_name
   ))
+}
+
+# The growth table of compare_models() has had one block of rows per model
+# since version 2.4.4; until 2.4.3 it had one column per model. Code written
+# for the old table, cmp$growth$ALSCL, would silently get NULL from a data
+# frame, so the table has a class whose `$` and `[[` give an error for a model
+# name that is not a column. Everything else is that of a data frame.
+.acl_growth_table <- function(x) {
+  rownames(x) <- NULL
+  class(x) <- c("alscl_growth_table", "data.frame")
+  x
+}
+
+.acl_growth_column_check <- function(x, name) {
+  if (is.character(name) && length(name) == 1L && !is.na(name) && !name %in% names(x)) {
+    models <- unique(as.character(.subset2(x, "Model")))
+    if (name %in% models)
+      stop("compare_models()$growth has columns ", .acl_word_list(names(x)),
+           " since version 2.4.4, with one block of rows per model, and no column ", name,
+           ". Use subset(cmp$growth, Model == \"", name, "\").", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+#' @export
+`$.alscl_growth_table` <- function(x, name) {
+  .acl_growth_column_check(x, name)
+  NextMethod()
+}
+
+#' @export
+`[[.alscl_growth_table` <- function(x, i, j, ...) {
+  if (!missing(i) && missing(j)) .acl_growth_column_check(x, i)
+  NextMethod()
 }
 
 # Growth and observation error parameters of one fit, with the meaning that

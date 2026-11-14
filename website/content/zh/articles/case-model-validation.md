@@ -78,6 +78,8 @@ plot_self_test(st)
 
 `self_test()` 一次完成第 2、3 步：用 `simulate_fit()` 模拟 `nsim` 套数据，用拟合中保存的设置对每套数据重新拟合同一个模型，再把估计值与生成数据时所用的值比较。示例用 ACL 拟合 `a`，因为一次 ACL 拟合只需几秒；对 ALSCL 用 `self_test(b)`，用法相同。`process` 的含义与第 2 步相同。取 `"conditional"` 时种群保持源拟合的种群，所以每个重复的真值相同；取 `"resample"` 时按估计的分布重新抽取补充量、F 和初始偏差，所以每个重复有自己的真值，检验也包括估计的过程方差。默认每次重新拟合从源拟合的初值出发，初值个数也与源拟合相同，这样停在局部最优的重新拟合会算作误差，与实际数据的情形一样。`start = "estimates"` 让每次重新拟合从生成数据所用的值出发；这样更快，但可能掩盖局部最优和数据不能确定的参数。`ncores` 让多套数据并行拟合。
 
+取 `"conditional"` 时，源拟合的偏差保持拟合值不变，其均值不一定为零。数据提供的是 F 和补充量水平的信息，不能区分这一水平中 `mean_log_F` 或 `mean_log_R` 与偏差各占多少，所以这两个参数的真值取源拟合的对数 F 和对数补充量的均值，即其估计值加上拟合偏差的均值（F 取所有年龄或体长组和所有时间步，补充量取所有时间步）。取 `"resample"` 时，新抽取的偏差均值为零，真值是源拟合的估计值。`st$settings$process_mean_truth` 记录采用的是哪种定义（`"realized"` 或 `"source"`）。其他参数的真值仍是源拟合的估计值；其中有些参数（如 `init_Z`）也可能以同样的方式与偏差相互替代，此时时间序列更能说明问题。
+
 打印 `st` 会显示有多少次重新拟合通过数值检查，以及每个时间序列和每个估计参数的中位相对误差（即偏差）、它的第 10 和第 90 百分位数、中位绝对相对误差和近似 95% 区间的覆盖率。相对误差为 (estimate - truth) / truth。这里的 F 是各年龄的平均值，没有标准误，所以没有覆盖率。`st$by_year` 按年份给出同样的汇总，`st$replicates` 给出每次重新拟合的检查结果，`st$series` 和 `st$parameters` 列出每个估计值及其真值；未通过检查的重新拟合留在这些表中，但不进入汇总。在记录运行中五次重新拟合都通过检查。中位相对误差为产卵生物量 -0.2%、补充量 -0.5%、平均 F 1.9%；产卵生物量和补充量的 100 个区间中分别有 99 个和 98 个包含真值（[self-test-summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/self-test-summary.csv））。五套数据只演示函数的用法；已发表的自检通常每个拟合用 100 套（[Deroba et al. 2015](https://doi.org/10.1093/icesjms/fst237)）。
 
 ![五套模拟数据的自检中 ACL 估计值的相对误差](../assets/manual/figures/workflows/self-test.png)

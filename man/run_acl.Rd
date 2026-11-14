@@ -178,7 +178,9 @@ q(length) is the survey catchability at length from \code{sel_L50} and
 \code{sel_L95} or from \code{survey_q}. When \code{survey_q_age} is supplied and
 \code{parameters} holds no start for mean_log_R, the default start of
 mean_log_R is raised by \code{-log(survey_q_age[1])}, because the survey then
-sees only that fraction of the recruits.}
+sees only that fraction of the recruits.
+The fit gives a message with this change unless \code{silent = TRUE}, once
+per call of a function that runs several fits.}
 
 \item{bounds}{\code{"default"} keeps the bounds of earlier versions. \code{"wide"}
 gives ACL the bounds that ALSCL has for five parameters: the initial

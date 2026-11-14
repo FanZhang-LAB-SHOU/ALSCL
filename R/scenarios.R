@@ -44,8 +44,9 @@
 
 .acl_batch_apply <- function(settings, model, ncores) {
   # Messages of fits on socket workers do not reach the user, so the notes on
-  # single starts and on a part of the set "von_bertalanffy" are given here,
-  # once, for fits that are not silent.
+  # single starts, on a part of the set "von_bertalanffy" and on the start of
+  # mean_log_R with survey_q_age are given here, once, for fits that are not
+  # silent.
   workers <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(settings)))
   if (workers > 1L && any(vapply(settings, function(args)
         !isTRUE(args$silent) && isTRUE(args$nstarts == 1L), logical(1))))
@@ -53,6 +54,10 @@
   if (workers > 1L)
     for (args in settings)
       if (!isTRUE(args$silent) && .acl_partial_set_note(args$structure, model, FALSE)) break
+  if (workers > 1L)
+    for (args in settings)
+      if (!isTRUE(args$silent) &&
+          .acl_q_age_start_note(.acl_q_age_start_shift(args), args$survey_q_age, FALSE)) break
   .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
 }
 

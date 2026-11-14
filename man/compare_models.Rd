@@ -32,7 +32,10 @@ Parameter (Linf, k, t0, cv_len, cv_grow for ALSCL, and sigma_index, the
 standard deviation of the observation error of the log survey index),
 Estimate and Meaning. The growth parameters of ACL and ALSCL are not
 placed side by side, because they are different quantities (see
-Details).}
+Details). Until version 2.4.3 the table had one column per model;
+\code{cmp$growth$ALSCL} and \code{cmp$growth[["ALSCL"]]} with a model name now
+give an error instead of NULL. Use
+\code{subset(cmp$growth, Model == "ALSCL")}.}
 \item{length_at_age}{Data frame with Age, Basis and one column per model:
 mean length at age, averaged over the time steps. This is the
 comparison of growth between the two fits. Basis is "survey" (numbers

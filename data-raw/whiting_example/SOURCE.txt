@@ -82,7 +82,10 @@ ices_M_at_age.csv, ices_maturity_at_age.csv
   Tables 22.15 and 22.14 of the whiting section of WGNSSK 2026, as transcribed
   by the test team: ages 1 to 5 and a plus group of ages 6 and older. The
   natural mortality table ends in 2022; the maturity table covers 1991 to
-  2021.
+  2021. Both tables were checked against the report (file "WGNSSK 2026_22
+  whiting 4.pdf", https://ndownloader.figshare.com/files/69947262) and equal
+  Tables 22.15 and 22.14 in every cell (240 and 186 values, largest
+  difference 0).
 
 ices_assessment.csv
   Summary table of the assessment of whiting in Subarea 4 and Division 7.d

@@ -275,10 +275,12 @@ utils::globalVariables("Curve")
 #' @details Survey catchability is an input of ACL and ALSCL. The models do
 #'   not estimate it. With survey data alone its level cannot be estimated,
 #'   because the survey index gives relative numbers only (Cook 2013). A
-#'   decline of catchability with length cannot be estimated either, because
-#'   it is confounded with mortality (Thompson 1994; Cook 2013): fewer large
-#'   fish in the survey can mean that they died or that the gear does not
-#'   catch them. A model that is given a logistic curve for a gear that
+#'   decline of catchability with length cannot be estimated from the survey
+#'   index either, because it is confounded with mortality (Cook 2013): fewer
+#'   large fish in the survey can mean that they died or that the gear does
+#'   not catch them. In the same way, a selectivity that declines at older
+#'   ages and the natural mortality rate cannot both be estimated
+#'   (Thompson 1994). A model that is given a logistic curve for a gear that
 #'   catches large fish poorly therefore estimates a higher mortality rate.
 #'   Take the shape from studies of the survey gear (for example Fraser et
 #'   al. 2007 for the GOV trawl of the North Sea International Bottom Trawl

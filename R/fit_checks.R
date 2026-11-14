@@ -231,15 +231,16 @@
 # Notes about default behaviour are given once per user call: a function that
 # runs several fits in this process opens a batch with .acl_notes_begin(),
 # and the fits after the first one that shows a note stay quiet about it
-# until .acl_notes_end() closes the batch. Two notes use this: a single start
-# can stop at a local optimum (.acl_single_start_note()), and a structure
+# until .acl_notes_end() closes the batch. Three notes use this: a single
+# start can stop at a local optimum (.acl_single_start_note()), a structure
 # that changes only some of the four settings of the set "von_bertalanffy"
-# (.acl_partial_set_note()).
+# (.acl_partial_set_note()), and the default start of mean_log_R moved by
+# survey_q_age (.acl_q_age_start_note()).
 .acl_notes <- new.env(parent = emptyenv())
 
 .acl_notes_begin <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
-  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- FALSE
+  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <- FALSE
   .acl_notes$depth <- depth + 1L
   invisible(NULL)
 }
@@ -247,7 +248,8 @@
 .acl_notes_end <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
   .acl_notes$depth <- max(0L, depth - 1L)
-  if (.acl_notes$depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- FALSE
+  if (.acl_notes$depth == 0L)
+    .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <- FALSE
   invisible(NULL)
 }
 
@@ -260,6 +262,32 @@
           "every numerical check. For results that will be reported, use at least three starts with a wider ",
           "spread of the starting values, for example nstarts = 3 and start_spread = 0.5, and compare the ",
           "objectives in start_diagnostics.")
+  invisible(TRUE)
+}
+
+# The shift of the default start of mean_log_R by -log(survey_q_age[1]),
+# from the arguments of a fit: NULL when survey_q_age is not supplied or
+# parameters holds a start for mean_log_R. Used for fits that run on socket
+# workers or silently, whose own note does not reach the user.
+.acl_q_age_start_shift <- function(args) {
+  q_age <- args$survey_q_age
+  if (!is.numeric(q_age) || !length(q_age) || !is.finite(q_age[1L]) || q_age[1L] <= 0 ||
+      !is.null(args$parameters[["mean_log_R"]])) return(NULL)
+  -log(q_age[1L])
+}
+
+# The note on the default start of mean_log_R with survey_q_age: once per
+# fit, and once per batch of fits (see .acl_notes_begin()). No note when the
+# shift is zero (survey_q_age[1] = 1).
+.acl_q_age_start_note <- function(shift, q_age, silent) {
+  if (isTRUE(silent) || !is.numeric(shift) || length(shift) != 1L || !is.finite(shift) || shift == 0)
+    return(invisible(FALSE))
+  in_batch <- isTRUE(.acl_notes$depth > 0L)
+  if (in_batch && isTRUE(.acl_notes$q_age_start)) return(invisible(FALSE))
+  if (in_batch) .acl_notes$q_age_start <- TRUE
+  message("The default start of mean_log_R was changed by -log(survey_q_age[1]) = ", format(signif(shift, 4)),
+          " (survey_q_age[1] = ", format(signif(q_age[1L], 4)), "), because the survey sees only that fraction ",
+          "of the recruits. To use another start, supply it as parameters$mean_log_R.")
   invisible(TRUE)
 }
 
