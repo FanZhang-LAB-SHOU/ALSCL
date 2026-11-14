@@ -1,4 +1,4 @@
-utils::globalVariables(c("LengthGroup", "Count"))
+utils::globalVariables(c("LengthGroup", "Count", "SSB_at_age"))
 #' @title Plot spawning biomass (SSB), SBL or SBA over time
 #'
 #' @description Plots SSB, spawning biomass at length (SBL), or spawning biomass
@@ -35,6 +35,13 @@ utils::globalVariables(c("LengthGroup", "Count"))
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
+#' @param maturity_at_age NULL (default) or the proportion mature at age, as
+#'   `maturity` in [ssb_at_age()]: a vector with one value per age class or a
+#'   matrix by age class and time step. With `type = "SSB"`, the SSB from this
+#'   maturity ogive by age is added as a dashed line, and a legend names the
+#'   two series. It is an error with the other types.
+#' @param weight_at_age NULL or mean weight at age, as `weight` in
+#'   [ssb_at_age()], used with `maturity_at_age`.
 #'
 #' @details ALSCL reports SSB, SBL and SBA with standard errors. ACL reports SSB
 #'   with standard errors and SBL estimates only; SBA is unavailable. A missing
@@ -48,6 +55,15 @@ utils::globalVariables(c("LengthGroup", "Count"))
 #'   exactly zero, such as spawning stock biomass in a length bin with no
 #'   mature fish, keeps the Wald bounds. Inspect fit diagnostics before using
 #'   uncertainty intervals.
+#'
+#' @details The models calculate SSB from the proportion mature at length.
+#'   With `maturity_at_age`, the figure adds the SSB calculated by
+#'   [ssb_at_age()] as the sum over age classes of biomass at age multiplied
+#'   by the proportion mature at age, for comparison with an age-based
+#'   assessment that uses a maturity ogive by age. The confidence interval of
+#'   `se = TRUE` belongs to the SSB of the model; the added series has no
+#'   standard error. Both series are in the unit of model biomass, whose
+#'   level depends on the assumed survey catchability.
 #'
 #' @details Age panels are labelled with the fitted ages in \code{model_result$age}.
 #'   The oldest age class is a plus group and is marked with a plus sign, for
@@ -82,7 +98,8 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
                      return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL,
                      font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                      strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
-                     title_hjust = NULL, interval = NULL) {
+                     title_hjust = NULL, interval = NULL,
+                     maturity_at_age = NULL, weight_at_age = NULL) {
   # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -92,6 +109,10 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
 
   type <- match.arg(type)
   interval <- .acl_interval_type(interval)
+  if (type != "SSB" && (!is.null(maturity_at_age) || !is.null(weight_at_age)))
+    stop("maturity_at_age and weight_at_age apply to type = \"SSB\" only.", call. = FALSE)
+  if (is.null(maturity_at_age) && !is.null(weight_at_age))
+    stop("weight_at_age is used with maturity_at_age; supply both.", call. = FALSE)
   quantity <- .acl_plot_population_data(model_result, type, c("SSB", "SBL", "SBA"), se)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
@@ -123,6 +144,21 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha)
       data_out <- ci
+    }
+    if (!is.null(maturity_at_age)) {
+      # SSB from a maturity ogive by age, next to the SSB of the model.
+      by_age <- ssb_at_age(model_result, maturity = maturity_at_age, weight = weight_at_age)
+      series <- c("Maturity at length (model)", "Maturity at age")
+      added <- data.frame(Year = by_age$year, SSB_at_age = by_age$SSB)
+      model_line <- which(vapply(p$layers, function(layer) inherits(layer$geom, "GeomLine"), logical(1)))[1L]
+      p$layers[[model_line]] <- ggplot2::geom_line(ggplot2::aes(linetype = series[1L]),
+        linewidth = line_size, color = line_color)
+      p <- p + ggplot2::geom_line(data = added, ggplot2::aes(x = Year, y = SSB_at_age, linetype = series[2L]),
+                                  linewidth = line_size, color = line_color, inherit.aes = FALSE) +
+        ggplot2::scale_linetype_manual(name = "SSB from", breaks = series,
+          values = stats::setNames(c(line_type, if (identical(line_type, "dashed")) "solid" else "dashed"), series)) +
+        ggplot2::guides(linetype = ggplot2::guide_legend(keywidth = ggplot2::unit(1.2, "cm")))
+      data_out$SSB_at_age <- by_age$SSB
     }
   }
 
@@ -205,6 +241,7 @@ plot_SSB <- function(model_result, line_size = NULL, line_color = NULL, line_typ
     .acl_scale_x(x_breaks, n_breaks = 5, values = Year) + current_theme
 
   p <- .acl_show_singletons(p, intersect(c("AgeGroup", "LengthGroup"), names(p$data)))
+  if (!is.null(maturity_at_age)) p <- p + ggplot2::theme(legend.position = "bottom")
 
   if (return_data) {
     return(list(plot = p, data = data_out))
