@@ -139,7 +139,12 @@
 #'   observations are drawn, so each replicate has its own population, computed
 #'   by the model, and the truth of a time series differs between replicates.
 #'   This also tests whether the variances of the process deviations can be
-#'   estimated. In both cases the truth of a scalar parameter is its estimate
+#'   estimated. In conditional mode the deviations are the fitted values, not
+#'   a draw from their distribution: their mean need not be zero, so the
+#'   refits can move the level of a process between its mean parameter (for
+#'   example mean_log_F) and the deviations. The relative errors of the time
+#'   series are then a better measure than those of the process parameters.
+#'   In both cases the truth of a scalar parameter is its estimate
 #'   in the source fit, and fixed parameters, the natural mortality rate,
 #'   survey catchability, growth and maturity stay as in the source fit.
 #'   Relative errors are computed against the truth of each replicate.
