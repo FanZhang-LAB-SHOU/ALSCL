@@ -214,6 +214,9 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param structure,start_spread,t0_lower Passed to every full and peel fit; see
 #'   \code{\link{run_alscl}}. A bundle's own settings are used unless these are
 #'   supplied explicitly.
+#' @param bounds Passed to every full and peel fit of ACL; see
+#'   \code{\link{run_acl}}. A bundle's own setting is used unless this is
+#'   supplied explicitly. ALSCL has no such argument.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
@@ -309,7 +312,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
                         model = NULL, peel_step = 1, structure = list(), start_spread = 0.15, t0_lower = 0,
-                        survey_q = NULL, survey_q_age = NULL, ...) {
+                        survey_q = NULL, survey_q_age = NULL,
+                        bounds = c("default", "wide"), ...) {
   .acl_check_flag(plot, "plot")
   .acl_check_flag(silent, "silent")
   renamed <- .acl_renamed(list(...), "retro_model")

@@ -44,6 +44,12 @@ length, or a survey catchability supplied as survey_q or survey_q_age,
 inputs names these forms and print shows them as fixed inputs. A fit
 with a single natural mortality rate and the logistic survey
 catchability curve has no such element.
+advice holds what to do about parameters that are at their limit in
+practice and about upper bounds that can be widened, and plausibility
+holds the plausibility notes of the fit; both are described in the
+Details of \code{\link[=run_acl]{run_acl()}} and are absent when the fit has none. A fit of an
+earlier version stores neither and is summarized from its stored
+diagnostics.
 }
 \examples{
 \donttest{

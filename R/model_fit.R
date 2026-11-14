@@ -174,8 +174,12 @@
                              parameters.L = NULL, parameters.U = NULL, map = NULL,
                              F_structure = c("group_year", "year")) {
   F_structure <- match.arg(F_structure)
-  config <- create_parameters(model_type = tolower(model), parameters = parameters,
-                              parameters.L = parameters.L, parameters.U = parameters.U)
+  # The default call is that of earlier versions; bounds is passed only when it is used.
+  config <- if (identical(prepared$bounds, "wide"))
+    create_parameters(model_type = tolower(model), parameters = parameters,
+                      parameters.L = parameters.L, parameters.U = parameters.U, bounds = "wide") else
+    create_parameters(model_type = tolower(model), parameters = parameters,
+                      parameters.L = parameters.L, parameters.U = parameters.U)
   p <- config$parameters; d <- prepared$data
   structure <- .acl_structure(prepared$structure, model)
   d[names(structure$data)] <- structure$data
@@ -408,9 +412,14 @@
       "starts converged to different optima (objective range %.3g over %d converged starts; the lowest is reported)",
       result$start_summary$objective_range, result$start_summary$converged))
   if (!silent && length(result$diagnostics$issues))
-    message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "))
+    message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "),
+            if (length(result$diagnostics$advice))
+              paste0(". ", paste(result$diagnostics$advice, collapse = " ")))
+  if (!silent && nrow(result$diagnostics$plausibility))
+    message("Plausibility notes: ", paste(result$diagnostics$plausibility$note, collapse = " "))
   result$growth_check <- .acl_growth_check(result)
   if (!silent && isTRUE(result$growth_check$stalled)) message(result$growth_check$message)
+  .acl_single_start_note(nstarts, silent)
   if (output) .acl_save_output(result, prepared$data.CatL)
   result
 }

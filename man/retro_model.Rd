@@ -61,6 +61,7 @@ retro_model(
   t0_lower = 0,
   survey_q = NULL,
   survey_q_age = NULL,
+  bounds = c("default", "wide"),
   ...
 )
 }
@@ -220,6 +221,10 @@ supplied explicitly.}
 catchability multiplier by age, passed to every full and peel fit; see
 \code{\link[=run_alscl]{run_alscl()}}. A bundle's own settings are used unless these are
 supplied explicitly.}
+
+\item{bounds}{Passed to every full and peel fit of ACL; see
+\code{\link{run_acl}}. A bundle's own setting is used unless this is
+supplied explicitly. ALSCL has no such argument.}
 
 \item{...}{The former argument names facet_col and facet_row, accepted with a warning.}
 }

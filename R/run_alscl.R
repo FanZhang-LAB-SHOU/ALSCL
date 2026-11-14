@@ -170,12 +170,39 @@
 #' @details A single start can stop at a local optimum that passes every
 #'   numerical check, particularly for the growth parameters of ALSCL. The
 #'   checks in `diagnostics` are local: they do not show whether a better
-#'   optimum exists. For results that will be reported, use several starts
-#'   (for example `nstarts = 5`) with a wider `start_spread` (for example
-#'   0.5) and compare the objectives in `start_diagnostics`. `start_summary`
+#'   optimum exists. A fit with one start (`nstarts = 1`, the default)
+#'   therefore gives a message unless `silent = TRUE`; a function that runs
+#'   several fits in one call gives it once. For results that will be
+#'   reported, use at least three starts (`nstarts = 3` or more) with a wider
+#'   `start_spread` (for example 0.5) and compare the objectives in
+#'   `start_diagnostics`. `start_summary`
 #'   gives the number of converged starts, the range of their objectives and
 #'   the number that agree with the best one; a range above 2 is added to
 #'   `diagnostics$issues`.
+#' @details Besides the gradient, the Hessian and the optimizer bounds, the
+#'   numerical screen in `diagnostics` looks for parameters that are at their
+#'   limit in practice although they have not reached a bound: `log_t0` below
+#'   -10 (ALSCL; t0 then equals `t0_lower`), the logarithm of a standard
+#'   deviation below -9 (a variance of zero) and a logit correlation with an
+#'   absolute value above 15 (a correlation at the end of its range). Such a
+#'   fit fails the screen (`numerical_ok = FALSE`), as a fit that stopped at
+#'   a bound does. `diagnostics$limit_parameters` lists these parameters with
+#'   their values on the natural scale and `diagnostics$advice` says what to
+#'   do: fix the parameter with `map` at a chosen value and refit, or, for a
+#'   correlation at zero, use
+#'   `structure = list(correlation_range = "symmetric")`.
+#'   `diagnostics$plausibility` lists notes that do not change the verdict of
+#'   the screen: the mean length of recruits lies more than one length-bin
+#'   width below the lower border of the second length bin; the estimated
+#'   standard deviation of the observation error on the log scale is above
+#'   0.9; an estimated coefficient of variation of length at age (cv_len) or
+#'   of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range
+#'   of cv_len in the Stock Synthesis manual is 0.10 to 0.25); the estimated
+#'   initial total mortality rate is below the smallest natural mortality
+#'   rate. Except for the mean length of recruits, the notes concern
+#'   estimated parameters only, not values fixed with `map`. The thresholds
+#'   are stored in `diagnostics$check_thresholds`. The messages of a fit and
+#'   `summary()` show the advice and the notes.
 #' @details The process densities are evaluated on the complete arrays of
 #'   deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
 #'   to shared values, or fixes entries with NA, is therefore accepted only

@@ -21,6 +21,9 @@ Diagnose a fitted assessment model
 Reports the optimizer convergence code, maximum absolute gradient,
 boundary status and Hessian positive definiteness separately. A successful
 optimizer code alone does not establish reliable statistical inference.
+For fits that store them, the numbers of parameters at their limit in
+practice and of plausibility notes are added; see the Details of
+\code{\link[=run_acl]{run_acl()}} and \code{model_result$diagnostics}.
 Input observations are checked against available fitted time, length and
 observation metadata by \code{diagnostic_metrics()}; known mismatches are errors.
 }

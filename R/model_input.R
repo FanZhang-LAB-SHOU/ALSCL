@@ -116,8 +116,10 @@
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
                               len_upper = NULL, zero_action = c("missing", "error"),
                               structure = list(), start_spread = 0.15, t0_lower = 0,
-                              survey_q = NULL, survey_q_age = NULL) {
+                              survey_q = NULL, survey_q_age = NULL,
+                              bounds = c("default", "wide")) {
   zero_action <- match.arg(zero_action)
+  bounds <- match.arg(bounds)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE)
   # A single number is the constant natural mortality rate. The other forms
@@ -175,7 +177,7 @@
   out <- list(data = data,
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
        structure = structure, start_spread = start_spread, t0_lower = t0_lower,
-       zero_observations = sum(obs == 0, na.rm = TRUE))
+       zero_observations = sum(obs == 0, na.rm = TRUE), bounds = bounds)
   # The entries below exist only for the non-default input forms, so the
   # prepared input of a default fit is the same as in earlier versions.
   if (!M_single) {
