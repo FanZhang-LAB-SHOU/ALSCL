@@ -28,7 +28,9 @@ plot_SSB(
   x_breaks = NULL,
   base_theme = NULL,
   title_hjust = NULL,
-  interval = NULL
+  interval = NULL,
+  maturity_at_age = NULL,
+  weight_at_age = NULL
 )
 }
 \arguments{
@@ -86,6 +88,15 @@ stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
+
+\item{maturity_at_age}{NULL (default) or the proportion mature at age, as
+\code{maturity} in \code{\link[=ssb_at_age]{ssb_at_age()}}: a vector with one value per age class or a
+matrix by age class and time step. With \code{type = "SSB"}, the SSB from this
+maturity ogive by age is added as a dashed line, and a legend names the
+two series. It is an error with the other types.}
+
+\item{weight_at_age}{NULL or mean weight at age, as \code{weight} in
+\code{\link[=ssb_at_age]{ssb_at_age()}}, used with \code{maturity_at_age}.}
 }
 \value{
 A ggplot object or a list with plot and data.
@@ -107,6 +118,15 @@ It cannot fall below zero. \code{interval = "wald"}, or
 exactly zero, such as spawning stock biomass in a length bin with no
 mature fish, keeps the Wald bounds. Inspect fit diagnostics before using
 uncertainty intervals.
+
+The models calculate SSB from the proportion mature at length.
+With \code{maturity_at_age}, the figure adds the SSB calculated by
+\code{\link[=ssb_at_age]{ssb_at_age()}} as the sum over age classes of biomass at age multiplied
+by the proportion mature at age, for comparison with an age-based
+assessment that uses a maturity ogive by age. The confidence interval of
+\code{se = TRUE} belongs to the SSB of the model; the added series has no
+standard error. Both series are in the unit of model biomass, whose
+level depends on the assumed survey catchability.
 
 Age panels are labelled with the fitted ages in \code{model_result$age}.
 The oldest age class is a plus group and is marked with a plus sign, for

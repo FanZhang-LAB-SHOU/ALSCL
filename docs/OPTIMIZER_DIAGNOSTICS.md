@@ -120,6 +120,6 @@ The updated complete suite passed **6,961 assertions, with zero failures, warnin
 
 更新后的完整测试通过 **6,961 项断言，零失败、零警告、零跳过**。源码包检查为 `Status: OK`，网站和说明书检查通过。实际运行 ACL、ALSCL 后，混合列输入与纯数值输入的拟合在数值精度范围内一致，原有数值列逐位保留。完整示例和前述两个回溯输入在转换修正前后逐位相同。绘图测试确认无网格线并保留内部缺失间隔。在本轮检查范围内，模拟、预测验证、投影、结果保存和优化状态传递未再复现其他缺陷。
 
-These changes are part of the development revision after 2.4.3, listed under Unreleased in NEWS. The `v2.4.3` tag and release archive remain the original baseline; use a checkout containing this report to reproduce the corrected behavior.
+These changes were released in 2.4.4 and are listed under that version in NEWS. The `v2.4.3` tag and release archive remain the original baseline; use a checkout containing this report to reproduce the corrected behavior.
 
-这些修正属于 2.4.3 之后的开发修订，列在 NEWS 的 Unreleased 中。`v2.4.3` 标签和发布压缩包仍保留原始基线；复现修正后的行为时，使用包含本报告的代码检出版本。
+这些修正已在 2.4.4 中发布，列在 NEWS 的 2.4.4 条目下。`v2.4.3` 标签和发布压缩包仍保留原始基线；复现修正后的行为时，使用包含本报告的代码检出版本。

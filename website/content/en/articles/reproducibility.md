@@ -110,6 +110,10 @@ Error messages are quoted as the package prints them.
 | Zeros in the survey table | Zeros count as missing (`zero_action = "missing"`) | Decide whether a zero is real before fitting |
 | Blank cells in the weight or maturity table | Both tables must be complete | Fill them and record the source |
 | Convergence code not 0, large gradient or Hessian not positive definite | The optimizer stopped early or a parameter is not informed | See [Understand your first fit](first-model.html#checks) |
+| `numerical_ok` is `FALSE` and the issues name a parameter at its limit in practice | A variance is estimated at zero, a correlation is at the end of its range, or the ALSCL `t0` equals `t0_lower` | Follow `diagnostics$advice`; see [Judge whether a fit can be used](diagnostics.html#limits) |
+| `survey_q replaces the logistic survey catchability curve, so it cannot be combined with sel_L50 or sel_L95` | The bundle or the saved fit holds `sel_L50` and `sel_L95` | Add `sel_L50 = NULL, sel_L95 = NULL` to the call |
+| `M is a numeric vector, which is read as the natural mortality rate by length` from `run_acl()` | A vector is M by length, which only ALSCL accepts | For M by age, supply a matrix with one column, `matrix(M_at_age, ncol = 1)` |
+| `The fitted natural mortality rate varies over time, and no value is carried forward` from `project_model()` | The fit used M by age and time step | Supply `M` for the future time steps |
 | Quarterly F looks small | Every output gives F per time step | Report F per time step |
 | `plot_fishing_mortality(a, type = "length")` warns on an ACL fit | ACL has no F by length; `"length"` means `"age"` | Use `type = "age"` or fit ALSCL |
 | `plot_VB()` draws a line without an interval | The growth parameters are fixed | Expected; release them with `map` |

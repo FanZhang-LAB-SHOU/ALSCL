@@ -35,7 +35,7 @@ library(ALSCL)
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
 
-网站对应 ALSCL 2.4.3.9000，即 2.4.3 发布之后 `main` 分支上的开发版；各版本变化和尚未发布的改动见[更新记录](news/index.html)。
+网站对应 ALSCL 2.4.4；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 
@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-先读数值检查（收敛码、梯度、Hessian、边界），再看残差规律，然后看对自然死亡率等固定值的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较图](articles/model-comparison.html)展示比较图形。
+先读数值检查（收敛码、梯度、Hessian、边界、已到极限的参数），再看残差规律，然后看对自然死亡率、调查可捕性等固定输入的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较图](articles/model-comparison.html)展示比较图形。
 
 <h2 id="learn-more">基本功能</h2>
 

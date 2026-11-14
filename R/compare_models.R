@@ -15,10 +15,25 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #' @return A list with:
 #' \describe{
 #'   \item{summary}{Data frame with convergence, objective, AIC, BIC, number of parameters.}
-#'   \item{growth}{Data frame comparing VB growth parameters.}
+#'   \item{growth}{Data frame with one block of rows per model: Model,
+#'     Parameter (Linf, k, t0, cv_len, cv_grow for ALSCL, and sigma_index, the
+#'     standard deviation of the observation error of the log survey index),
+#'     Estimate and Meaning. The growth parameters of ACL and ALSCL are not
+#'     placed side by side, because they are different quantities (see
+#'     Details).}
+#'   \item{length_at_age}{Data frame with Age, Basis and one column per model:
+#'     mean length at age, averaged over the time steps. This is the
+#'     comparison of growth between the two fits. Basis is "survey" (numbers
+#'     at length multiplied by survey catchability at length) when the survey
+#'     catchability of both fits is available and "population" otherwise.
+#'     NULL when neither fit holds the quantities needed (see
+#'     [length_at_age()]).}
 #'   \item{fit_metrics}{Data frame with MSE, RMSE, R-squared, MAPE, etc. for each model.}
 #'   \item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
-#'     the ratio of means (model2/model1), for common population quantities.}
+#'     the ratio of means (model2/model1), for common population quantities.
+#'     Catch in numbers and catch in weight are compared as relative catch
+#'     (rows "CN (relative)" and "CB (relative)"): only the correlation is
+#'     given and Ratio_Mean is NA (see Details).}
 #'   \item{model1_name,model2_name}{Labels used in the comparison.}
 #'   \item{fit_diagnostics}{Numerical status of each fit, including the raw code,
 #'     gradient, Hessian and natural-scale boundaries.}
@@ -43,6 +58,22 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   models are equivalent. A failure record from a batch function, such as an
 #'   element of fit_scenarios()$fits that holds an error, is rejected with its
 #'   fit error.
+#'   Growth is compared through mean length at age, not through Linf, k and
+#'   t0. In ACL these are the parameters of a von Bertalanffy curve of mean
+#'   length at age. In ALSCL, Linf and k set the mean growth increment in one
+#'   time step as a function of length, and Linf, k and t0 set the mean length
+#'   of recruits; the lengths of older fish follow from the growth increments
+#'   and from mortality at length. The parameters are therefore listed in a
+#'   separate block for each model, with their meaning, and length_at_age
+#'   holds mean length at age of both fits as an unweighted mean over the time
+#'   steps of the values that [length_at_age()] returns.
+#'   A fit to survey data alone has no information on the absolute level of
+#'   catch, which depends on the assumed natural mortality rate and the
+#'   assumed survey catchability (see [relative_catch()]). The catch series
+#'   of the two fits are therefore compared by their correlation only. ACL
+#'   does not report catch in weight; it is calculated from catch in numbers
+#'   at age and mean weight at age when the weights used in the fit are
+#'   available.
 #'   Goodness-of-fit measures use the same calculation as
 #'   \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 #'   is NA; nonfinite response-scale predictions at observed cells are errors.
@@ -151,33 +182,12 @@ compare_models <- function(model1, model2, data.CatL,
   )
   colnames(summary_df) <- c("Metric", model1_name, model2_name)
 
-  # ===== 2. Growth parameters =====
-  safe_round <- function(x, digits = 4) {
-    if (is.null(x) || length(x) == 0) return(NA)
-    round(as.numeric(x)[1], digits)
-  }
-
-  growth_df <- data.frame(
-    Parameter = c("Linf", "k (vbk)", "t0", "cv_len", "cv_grow", "sigma_index"),
-    Model1 = c(
-      safe_round(model1$report$Linf, 3),
-      safe_round(model1$report$vbk),
-      safe_round(model1$report$t0),
-      safe_round(model1$report$cv_len),
-      safe_round(model1$report$cv_grow),
-      safe_round(if(is.null(model1$report$sigma_index)) model1$report$std_index else model1$report$sigma_index)
-    ),
-    Model2 = c(
-      safe_round(model2$report$Linf, 3),
-      safe_round(model2$report$vbk),
-      safe_round(model2$report$t0),
-      safe_round(model2$report$cv_len),
-      safe_round(model2$report$cv_grow),
-      safe_round(if(is.null(model2$report$sigma_index)) model2$report$std_index else model2$report$sigma_index)
-    ),
-    stringsAsFactors = FALSE
-  )
-  colnames(growth_df) <- c("Parameter", model1_name, model2_name)
+  # ===== 2. Growth parameters, by model, and mean length at age =====
+  # Linf, k and t0 are different quantities in ACL and ALSCL, so each model
+  # has its own block of rows. Growth is compared through mean length at age.
+  growth_df <- rbind(.acl_growth_block(model1, model1_name),
+                     .acl_growth_block(model2, model2_name))
+  length_df <- .acl_compare_length_at_age(model1, model2, model1_name, model2_name)
 
   # ===== 3. Goodness-of-fit metrics =====
   calc_fit <- function(model, data.CatL) {
@@ -204,13 +214,20 @@ compare_models <- function(model1, model2, data.CatL,
   cors <- numeric(length(quantities))
   ratios <- numeric(length(quantities))
 
+  # A fit to survey data alone does not estimate the level of catch, so the
+  # catch series are compared as relative catch: correlation only.
+  relative <- c("CN", "CB")
+  catch <- lapply(list(model1, model2), function(m)
+    tryCatch(.acl_catch_series(m), error = function(e) list()))
+  series <- function(k, q) switch(q, CN = catch[[k]]$number, CB = catch[[k]]$weight,
+                                  list(model1, model2)[[k]]$report[[q]])
   for (i in seq_along(quantities)) {
     q <- quantities[i]
-    v1 <- model1$report[[q]]
-    v2 <- model2$report[[q]]
+    v1 <- series(1L, q)
+    v2 <- series(2L, q)
     if (!is.null(v1) && !is.null(v2) && length(v1) == length(v2)) {
       cors[i]   <- round(stats::cor(v1, v2), 4)
-      ratios[i] <- round(mean(v2) / mean(v1), 4)
+      ratios[i] <- if (q %in% relative) NA else round(mean(v2) / mean(v1), 4)
     } else {
       cors[i]   <- NA
       ratios[i] <- NA
@@ -218,7 +235,7 @@ compare_models <- function(model1, model2, data.CatL,
   }
 
   corr_df <- data.frame(
-    Quantity    = quantities,
+    Quantity    = ifelse(quantities %in% relative, paste(quantities, "(relative)"), quantities),
     Correlation = cors,
     Ratio_Mean  = ratios,
     stringsAsFactors = FALSE
@@ -232,14 +249,34 @@ compare_models <- function(model1, model2, data.CatL,
   cat("--- Convergence & Information Criteria ---\n")
   print(summary_df, row.names = FALSE)
 
-  cat("\n--- Growth Parameters ---\n")
-  print(growth_df, row.names = FALSE)
+  cat("\n--- Growth and observation error parameters, by model ---\n")
+  for (name in c(model1_name, model2_name)) {
+    cat(name, ":\n", sep = "")
+    print(growth_df[growth_df$Model == name, c("Parameter", "Estimate", "Meaning")],
+          row.names = FALSE, right = FALSE)
+  }
+  cat(.acl_growth_note(model1, model2), "\n", sep = "")
+
+  cat("\n--- Mean length at age ---\n")
+  if (is.null(length_df)) {
+    cat("Not available: the fits do not hold numbers by length and age or an age-length key.\n")
+  } else {
+    print(data.frame(Age = length_df$Age, round(length_df[c(model1_name, model2_name)], 2),
+                     check.names = FALSE), row.names = FALSE)
+    cat(if (identical(length_df$Basis[1L], "survey"))
+      "As the survey sees it (numbers at length multiplied by survey catchability at length)" else
+      "In the population (survey catchability is unavailable for at least one fit)",
+      "; mean over the time steps. See ?length_at_age.\n", sep = "")
+  }
 
   cat("\n--- Goodness-of-Fit ---\n")
   print(fit_df, row.names = FALSE)
 
   cat("\n--- Time-Series Agreement ---\n")
   print(corr_df, row.names = FALSE)
+  cat("CN and CB (catch in numbers and in weight) are compared as relative catch: a fit to survey data\n",
+      "alone has no information on the absolute level of catch, so only the correlation is given.\n",
+      "See ?relative_catch.\n", sep = "")
 
   cat("\n--- Numerical status ---\n")
   print(fit_diagnostics, row.names = FALSE)
@@ -269,6 +306,7 @@ compare_models <- function(model1, model2, data.CatL,
   invisible(list(
     summary     = summary_df,
     growth      = growth_df,
+    length_at_age = length_df,
     fit_metrics = fit_df,
     correlation = corr_df,
     fit_diagnostics = fit_diagnostics,
@@ -279,4 +317,73 @@ compare_models <- function(model1, model2, data.CatL,
     model1_name = model1_name,
     model2_name = model2_name
   ))
+}
+
+# Growth and observation error parameters of one fit, with the meaning that
+# each parameter has in that model. In ACL, Linf, k and t0 are the parameters
+# of the von Bertalanffy curve of mean length at age. In ALSCL, Linf and k
+# set the growth increment at length, and with t0 the length of recruits.
+.acl_growth_block <- function(model, name) {
+  type <- .detect_model_name(model, NA_character_)
+  r <- model$report
+  value <- function(x, digits = 4) {
+    if (is.null(x) || length(x) == 0) return(NA_real_)
+    round(as.numeric(x)[1], digits)
+  }
+  sigma <- if (is.null(r$sigma_index)) r$std_index else r$sigma_index
+  observation <- "standard deviation of the observation error of the log survey index"
+  if (identical(type, "ALSCL")) {
+    parameter <- c("Linf", "k (vbk)", "t0", "cv_len", "cv_grow", "sigma_index")
+    estimate <- c(value(r$Linf, 3), value(r$vbk), value(r$t0), value(r$cv_len), value(r$cv_grow), value(sigma))
+    meaning <- c("sets the growth increment at length and the mean length of recruits (length unit)",
+                 "sets the growth increment at length and the mean length of recruits (per year)",
+                 "sets the mean length of recruits (years)",
+                 "coefficient of variation of the length of recruits",
+                 "coefficient of variation of the growth increment", observation)
+  } else {
+    parameter <- c("Linf", "k (vbk)", "t0", "cv_len", "sigma_index")
+    estimate <- c(value(r$Linf, 3), value(r$vbk), value(r$t0), value(r$cv_len), value(sigma))
+    meaning <- if (identical(type, "ACL"))
+      c("asymptote of the von Bertalanffy curve of mean length at age (length unit)",
+        "growth coefficient of that curve (per year)",
+        "age at which mean length on that curve is zero (years)",
+        "coefficient of variation of length at age", observation) else
+      c(rep("model type unknown", 4L), observation)
+  }
+  data.frame(Model = name, Parameter = parameter, Estimate = estimate, Meaning = meaning,
+             stringsAsFactors = FALSE)
+}
+
+# One sentence on whether the growth parameters of the two fits can be compared.
+.acl_growth_note <- function(model1, model2) {
+  types <- c(.detect_model_name(model1, NA_character_), .detect_model_name(model2, NA_character_))
+  if (!anyNA(types) && types[1L] == types[2L])
+    return(paste0("Both fits are ", types[1L], ", so each parameter has the same meaning in both."))
+  paste0("Linf, k and t0 are different quantities in ACL and ALSCL and are not compared.\n",
+         "Compare growth through mean length at age.")
+}
+
+# Mean length at age of two fits, averaged over the time steps. The survey
+# basis is used when the survey catchability of both fits is available, the
+# population basis otherwise. A fit without the quantities needed has NA;
+# NULL when neither fit has them.
+.acl_compare_length_at_age <- function(model1, model2, name1, name2) {
+  models <- list(model1, model2)
+  tables <- function(basis) lapply(models, function(m)
+    tryCatch(.acl_mean_length_at_age(m, basis), error = function(e) NULL))
+  basis <- "survey"; found <- tables(basis)
+  if (any(vapply(found, is.null, logical(1)))) {
+    population <- tables("population")
+    if (sum(!vapply(population, is.null, logical(1))) > sum(!vapply(found, is.null, logical(1)))) {
+      basis <- "population"; found <- population
+    }
+  }
+  if (all(vapply(found, is.null, logical(1)))) return(NULL)
+  ages <- sort(unique(round(unlist(lapply(found, `[[`, "age")), 8)))
+  column <- function(x) if (is.null(x)) rep(NA_real_, length(ages)) else
+    x$mean_length[match(ages, round(x$age, 8))]
+  out <- data.frame(Age = ages, Basis = basis, column(found[[1L]]), column(found[[2L]]),
+                    stringsAsFactors = FALSE)
+  names(out)[3:4] <- c(name1, name2)
+  out
 }

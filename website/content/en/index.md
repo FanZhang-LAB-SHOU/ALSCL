@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website describes ALSCL 2.4.3.9000, the development version on `main` after release 2.4.3; see [News](news/index.html) for the changes in each release and for the changes that are not yet released.
+The website describes ALSCL 2.4.4; see [News](news/index.html) for the changes in each release and for the changes that are not yet released.
 
 <h2 id="models">Two model structures</h2>
 
@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-Read the numerical checks first (convergence code, gradient, Hessian, bounds), then the residual patterns, then the sensitivity to the fixed values such as natural mortality. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
+Read the numerical checks first (convergence code, gradient, Hessian, bounds, parameters at their limit), then the residual patterns, then the sensitivity to the fixed inputs such as natural mortality and survey catchability. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
 
 <h2 id="learn-more">Basic functions</h2>
 

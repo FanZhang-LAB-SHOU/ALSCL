@@ -14,25 +14,25 @@
 
 ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估。它拟合两个用 [TMB](https://github.com/kaskr/adcomp) 编写的种群模型：年龄结构 catch-at-length 模型 **ACL**，以及 [Zhang 和 Cadigan（2022）](https://doi.org/10.1111/faf.12673) 提出的年龄与体长联合结构统计 catch-at-length 模型 **ALSCL**。两个模型都不需要年龄数据，适合没有年龄数据或年龄鉴定不可靠的种群，例如南极磷虾。
 
-围绕这两个模型，软件包提供数据准备与检查、多初值并行拟合、诊断、模型比较、回溯分析、敏感性情景、似然剖面、投影、从拟合模型模拟调查数据、预测检验、可移植的评估存档和 22 个绘图函数。
+围绕这两个模型，软件包提供数据准备与检查、多初值并行拟合、诊断、模型比较、回溯分析、敏感性情景、似然剖面、投影、从拟合模型模拟调查数据、预测检验、可移植的评估存档和 27 个绘图函数。
 
-**最新版本：2.4.3** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
+**最新版本：2.4.4** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
 
 ## 能做什么
 
 - **准备并检查数据。** 用 `read_survey_excel()` 或 `read_survey_csv()` 读入三张调查表，用 `prepare_alscl_data()` 把它们和生物学设置组成一个输入列表，再用 `check_alscl_data()` 和 `inspect_parameters()` 确认列表可以拟合、哪些参数将被估计。支持年度和季度时间步。
 - **用同一组表拟合两种模型结构。** `run_acl()` 追踪年龄别尾数，并用年龄-体长概率矩阵转换为体长别尾数；`run_alscl()` 追踪体长与年龄别尾数，死亡率随体长变化，存活个体按生长转移矩阵推进。两者都可以用多个独立初值在并行进程上拟合（`nstarts`、`ncores`），并对最优初值做带检查的 Newton 收尾（`polish`）。
 - **判断拟合。** `diagnose_model()` 报告收敛码、梯度、Hessian 和落在边界上的参数；`check_fit()` 增加残差热图、滞后相关和 QQ 图；`compare_models()` 按 AIC、BIC 和拟合统计量比较同一数据的两次拟合。
-- **检验评估结果。** 带 Mohn's rho 的回溯分析（`retro_model()`）、敏感性情景（`fit_scenarios()`）、似然剖面（`profile_model()`）、确定性投影（`project_model()`）、从拟合模型模拟调查数据（`simulate_fit()`）和对留出时间步的预测检验（`hindcast_model()`）。
+- **检验评估结果。** 带 Mohn's rho 的回溯分析（`retro_model()`）、敏感性情景（`fit_scenarios()`）、似然剖面（`profile_model()`）、确定性投影（`project_model()`）、从拟合模型模拟调查数据（`simulate_fit()`）、用模拟数据重新拟合同一模型的自检（`self_test()`）和对留出时间步的预测检验（`hindcast_model()`）。
 - **保存并分享结果。** `save_assessment()` 把拟合连同完整设置一起保存，`read_assessment()` 和 `refit_model()` 读回并重新拟合，`extract_estimates()` 返回带标准误的估计值。
-- **用同一组参数画所有图。** 22 个绘图函数共用参数名和一个主题 `acl_theme_set()`，提供五种色板。[图谱](docs/PLOT_GALLERY.md)展示全部 44 张示例图及其代码。
+- **用同一组参数画所有图。** 27 个绘图函数共用参数名和一个主题 `acl_theme_set()`，提供五种色板。[图谱](docs/PLOT_GALLERY.md)展示全部 48 张示例图及其代码。
 
 ## 安装
 
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # 开发版（main 分支）
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.3")   # 指定版本
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.4")   # 指定版本
 ```
 
 ALSCL 需要 R 4.1 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
@@ -86,11 +86,11 @@ save_assessment(a, "ytf_acl.rds")
 
 | 入口 | 内容 |
 |---|---|
-| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 66 个函数的参考 |
+| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 77 个函数的参考 |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿](docs/BOOK.md) | 同一内容的中英对照版本，18 章 |
 | [使用指南](docs/USER_GUIDE.md) | 从安装到回溯分析的双语手册 |
 | [评估工作流](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证](docs/MODEL_VALIDATION.md) · [应用案例](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 |
-| [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md) | 全部参数与默认值；44 张示例图及其代码 |
+| [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md) | 全部参数与默认值；48 张示例图及其代码 |
 | [加速指南](docs/SPEED_GUIDE.md) | 用 `alscl_speed()` 在并行进程上计算标准误，以及 TMBad 选项 |
 
 ## 获取帮助

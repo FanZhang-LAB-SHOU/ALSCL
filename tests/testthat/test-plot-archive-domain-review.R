@@ -50,10 +50,9 @@ test_that("legacy catchability inputs retain exact endpoints and fail clearly wh
   expect_error(plot_compare_selectivity(fit, fit), "finite fitted length midpoints")
 })
 
-growth_comparison_fixture_242 <- function(age = 2:5, t0 = 1.5) {
-  list(model_type = "ACL", age = age,
-       report = list(Linf = 60, vbk = .2, t0 = t0,
-                     pla = matrix(1 / 3, 3, length(age))))
+growth_comparison_fixture_242 <- function(age = 2:5, t0 = 1.5, model = "ACL") {
+  growth_plot_fixture(list(model_type = model, age = age,
+       report = list(Linf = 60, vbk = .2, t0 = t0)))
 }
 
 growth_comparison_data_242 <- function(plot) {
@@ -63,53 +62,56 @@ growth_comparison_data_242 <- function(plot) {
            !"Probability" %in% names(d), data)[[1L]]
 }
 
-test_that("growth comparisons use fitted ages and never default to pre-t0 lengths", {
+test_that("growth comparisons draw mean length at age at the fitted age classes", {
   skip_if_not_installed("patchwork")
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   first <- growth_comparison_fixture_242()
-  second <- growth_comparison_fixture_242(seq(2.25, 6, .25), 2.25)
-  second$model_type <- "ALSCL"
+  second <- growth_comparison_fixture_242(seq(2.25, 6, .25), 2.25, model = "ALSCL")
   plot <- plot_compare_growth(first, second)
   data <- growth_comparison_data_242(plot)
-  expect_equal(range(data$Age), c(2.25, 6))
-  expect_true(all(data$Length >= 0))
+  expect_equal(range(data$Age), c(2, 6))
   for (name in unique(data$Model)) {
     selected <- data[data$Model == name, ]
     fit <- if (name == "ACL") first else second
-    expect_equal(selected$Length,
-                 fit$report$Linf * (1 - exp(-fit$report$vbk * (selected$Age - fit$report$t0))))
+    # One value per age class, from the age-length key (ACL) or the fitted
+    # numbers (ALSCL), not a curve computed from Linf, k and t0.
+    expect_equal(selected$Age, as.numeric(fit$age))
+    expect_equal(selected$Length, ALSCL:::.acl_mean_length_at_age(fit, "population")$mean_length)
+    expect_equal(selected$Length, as.numeric(crossprod(fit$report$pla, fit$len_mid)))
   }
   expect_grid_free_242(plot)
-  for (bounds in list(c(2.25, 2.3), c(3.13, 8.37), c(20, 25))) {
-    data <- growth_comparison_data_242(plot_compare_growth(first, second, age_range = bounds))
-    expect_equal(range(data$Age), bounds)
-    expect_true(all(data$Length >= 0))
-    expect_gte(length(unique(data$Age)), 2L)
-  }
-  expect_error(plot_compare_growth(first, second, age_range = c(2, 5)),
-               "start at or after both t0")
+  # An explicit range selects the age classes within it. It may start before
+  # t0, because the values are not extrapolated.
+  data <- growth_comparison_data_242(plot_compare_growth(first, second, age_range = c(1, 4)))
+  expect_equal(sort(unique(data$Age[data$Model == "ACL"])), 2:4)
+  expect_equal(range(data$Age[data$Model == "ALSCL"]), c(2.25, 4))
+  expect_error(plot_compare_growth(first, second, age_range = c(5.1, 5.2)), "contains no age class of ACL")
   for (bad in list(c(3, 3), c(4, 3), numeric(), 3, c(3, 4, 5), c(NA, 5), c(3, Inf), "3"))
     expect_error(plot_compare_growth(first, second, age_range = bad), "finite increasing pair")
 })
 
-test_that("growth comparison ranges validate metadata and keep a legacy fallback", {
+test_that("growth comparisons need the metadata of mean length at age, not growth parameters", {
   skip_if_not_installed("patchwork")
   first <- growth_comparison_fixture_242()
   second <- first
   second$age <- NULL
-  expect_equal(range(growth_comparison_data_242(plot_compare_growth(first, second))$Age), c(1.5, 20))
-  second$age <- c(1, NA_real_)
-  expect_error(plot_compare_growth(first, second), "finite numeric ages")
-  expect_no_error(plot_compare_growth(first, second, age_range = c(2, 5)))
-  second$age <- 1:2
-  first$age <- 1:2
-  second$report$t0 <- 3
-  expect_error(plot_compare_growth(first, second), "positive span")
+  expect_error(plot_compare_growth(first, second), "model2 must contain finite age metadata")
+  second$age <- c(1, NA_real_, 3, 4)
+  expect_error(plot_compare_growth(first, second), "model2 must contain finite age metadata")
+  second <- first; second$year <- NULL
+  expect_error(plot_compare_growth(first, second), "model2 must contain finite, increasing year metadata")
+  second <- first; second$len_mid <- NULL
+  expect_error(plot_compare_growth(first, second), "length-bin midpoints")
+  second <- growth_comparison_fixture_242(model = "ALSCL"); second$report$NLA <- NULL
+  expect_error(plot_compare_growth(first, second), "numbers by length, age and time step")
+  # The growth parameters are not drawn, so unusable values do not stop the plot.
   for (parameter in c("Linf", "vbk", "t0")) {
     bad <- growth_comparison_fixture_242()
     bad$report[[parameter]] <- NA_real_
-    expect_error(plot_compare_growth(first, bad, age_range = c(3, 5)), "Growth parameters")
+    expect_no_error(plot_compare_growth(first, bad))
   }
+  failed <- list(error = "optimizer failed", converge = "FAILED")
+  expect_error(plot_compare_growth(first, failed), "model2 is a failed fit without estimates")
 })
 
 test_that("fitted reference growth curves respect their own growth origin", {
@@ -130,17 +132,28 @@ test_that("fitted reference growth curves respect their own growth origin", {
   expect_equal(reference$Length[1L], 0)
   expect_equal(range(data$Age[data$Model != "Observed VB"]), c(1, 8))
   expect_grid_free_242(plot)
+  # The subtitle gives the parameters of the fitted reference curve only.
+  panel <- Filter(function(panel) is.data.frame(panel$data) &&
+    "Model" %in% names(panel$data) && !"Probability" %in% names(panel$data),
+    plot_review_panels_242(plot))[[1L]]
+  expect_match(panel$labels$subtitle, "Observed VB: Linf = ", fixed = TRUE)
+  expect_false(grepl("ACL", panel$labels$subtitle, fixed = TRUE))
 
   expect_warning(plot <- plot_compare_growth(fit, fit, age_range = c(1, 1.5),
     ref_data = observed, nls_start = start), "no positive age span.*Skipping reference curve")
   data <- growth_comparison_data_242(plot)
   expect_false("Observed VB" %in% data$Model)
-  expect_equal(range(data$Age), c(1, 1.5))
+  # One age class lies in this range; each model is then drawn as a point.
+  expect_equal(range(data$Age), c(1, 1))
   panel <- Filter(function(panel) is.data.frame(panel$data) &&
     "Model" %in% names(panel$data) && !"Probability" %in% names(panel$data),
     plot_review_panels_242(plot))[[1L]]
-  points <- which(vapply(panel$layers, function(layer) inherits(layer$geom, "GeomPoint"), logical(1)))
-  expect_equal(panel$layers[[points]]$data, observed)
+  # The model values of the single age class are points as well; the raw
+  # reference data keep their own layer.
+  points <- Filter(function(layer) inherits(layer$geom, "GeomPoint") &&
+                     !"Model" %in% names(layer$data), panel$layers)
+  expect_length(points, 1L)
+  expect_equal(points[[1L]]$data, observed)
   expect_grid_free_242(plot)
 
   observed <- data.frame(Age = 1:6)

@@ -5,6 +5,9 @@
 #' @details Reports the optimizer convergence code, maximum absolute gradient,
 #'   boundary status and Hessian positive definiteness separately. A successful
 #'   optimizer code alone does not establish reliable statistical inference.
+#'   For fits that store them, the numbers of parameters at their limit in
+#'   practice and of plausibility notes are added; see the Details of
+#'   [run_acl()] and \code{model_result$diagnostics}.
 #'   Input observations are checked against available fitted time, length and
 #'   observation metadata by \code{diagnostic_metrics()}; known mismatches are errors.
 #' @examples
@@ -35,6 +38,13 @@ diagnose_model <- function(data.CatL, model_result) {
     result <- rbind(result, data.frame(Metric = c("Numerical Screen Passed",
       "Natural Scale Boundary", "Covariance Condition", "Highly Correlated Pairs"),
       Value = c(d$numerical_ok, d$natural_boundary, d$covariance_condition, nrow(d$high_correlations))))
+    # Fits of earlier versions do not store these two elements.
+    if (is.data.frame(d$limit_parameters) && is.data.frame(d$plausibility)) {
+      cat("Parameters at their limit in practice:", nrow(d$limit_parameters),
+          "\nPlausibility notes:", nrow(d$plausibility), "\n")
+      result <- rbind(result, data.frame(Metric = c("Parameters At Limit In Practice", "Plausibility Notes"),
+        Value = c(nrow(d$limit_parameters), nrow(d$plausibility))))
+    }
   }
   result
 }

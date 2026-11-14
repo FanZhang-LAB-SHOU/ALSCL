@@ -6,8 +6,21 @@
 #' @param data.mat Maturity-at-length between 0 and 1, with the same layout.
 #' @param rec.age Recruitment age in years, greater than t0.
 #' @param nage Number of age classes including the plus group (at least two).
-#' @param M Nonnegative natural mortality per model time step.
-#' @param sel_L50,sel_L95 Lengths at 50 and 95 percent survey catchability.
+#' @param M Nonnegative natural mortality rate (M) per model time step (for
+#'   quarterly time steps, the annual rate divided by 4), in one of two
+#'   forms. A single number is one rate for all ages and time steps. A matrix
+#'   with one row per age class (`nage` rows) and one column per time step,
+#'   or one column that is used for every time step, is M by age and time
+#'   step; M by age that is constant over time is `matrix(M_at_age, ncol = 1)`.
+#'   A numeric vector without dimensions is read as M by length, which
+#'   [run_alscl()] accepts and ACL rejects, because ACL follows numbers at age
+#'   only and assigns lengths from the length-at-age distribution in every
+#'   time step. Fish therefore do not keep their length, and a rate by length
+#'   cannot be applied to them. Any other object is rejected with the
+#'   expected dimensions. See Details.
+#' @param sel_L50,sel_L95 Lengths at 50 and 95 percent survey catchability,
+#'   which define a logistic survey catchability curve with a maximum of 1.
+#'   Leave both as NULL when `survey_q` is supplied.
 #' @param parameters Named list of initial fixed-effect values.
 #' @param parameters.L,parameters.U Named lower and upper bounds. Bounds are aligned
 #'   with free parameters after applying map. Initial free values are clamped to bounds.
@@ -80,12 +93,15 @@
 #'   when forked processes are selected; other sessions compute it sequentially.
 #'   refinement$hessian_calculations records methods, cores and fallback notes.
 #' @param structure Optional model structures: the name of a set or a named
-#'   list of settings. The default, an empty list, and `"published"` are the
-#'   published structure of Zhang and Cadigan (2022). `"consistent"` selects
-#'   `initial_plus_group = "equilibrium"` for ACL (see [run_alscl()] for the
-#'   ALSCL settings of this set), and a list can name a set and add single
-#'   settings, for example
-#'   `list(set = "consistent", correlation_range = "symmetric")`. ACL has the
+#'   list of settings. The default, an empty list, and `"original"` are the
+#'   original structure: the structure of the package as first released,
+#'   which implements the model of Zhang and Cadigan (2022).
+#'   `"von_bertalanffy"` selects `initial_plus_group = "equilibrium"` for ACL
+#'   (see [run_alscl()] for the ALSCL settings of this set), and a list can
+#'   name a set and add single settings, for example
+#'   `list(set = "von_bertalanffy", correlation_range = "symmetric")`.
+#'   `"published"` and `"consistent"` are accepted as the earlier names of
+#'   `"original"` and `"von_bertalanffy"`. ACL has the
 #'   setting `initial_plus_group`: `"single_cohort"` (default;
 #'   the first-period plus group holds one cohort) or `"equilibrium"` (it
 #'   holds the sum of all older cohorts at total mortality init_Z, so a
@@ -94,21 +110,69 @@
 #'   AR(1) correlations between 0 and 1, the logistic transform of the
 #'   `logit_*` parameters) or `"symmetric"` (between -1 and 1, as
 #'   2 * logistic - 1; a correlation rho is then `qlogis((rho + 1) / 2)` on the
-#'   optimizer scale). The settings used are stored in the `structure`
-#'   element of the fit.
+#'   optimizer scale). `initial_deviations`: `"cumulative"` (default; the
+#'   log numbers at age in the first period are those of the previous age
+#'   minus init_Z plus a normal deviation, so the deviations accumulate over
+#'   ages and `dev_log_N0` has `nage - 1` entries) or `"independent"`
+#'   (Equation 11 of Zhang and Cadigan 2022: log N(a) = log R(1) -
+#'   init_Z (a - 1) + e(a) for ages a = 1 to `nage`, with independent normal
+#'   deviations e(a), so `dev_log_N0` has `nage` entries and the numbers at
+#'   the first age in the first period differ from the reported recruitment
+#'   of that period; with an equilibrium plus group, the deviation of the
+#'   plus group multiplies the sum of the older cohorts). The settings used
+#'   are stored in the `structure` element of the fit; `initial_deviations`
+#'   is stored only when it is `"independent"`, so that the stored structure
+#'   of a fit with the default form is the same as in earlier versions.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by
 #'   earlier versions. See Details for when to use a larger value.
+#' @param bounds `"default"` keeps the bounds of earlier versions. `"wide"`
+#'   gives ACL the bounds that ALSCL has for five parameters: the initial
+#'   total mortality rate (upper bound 10 instead of 1 per time step), the
+#'   mean fishing mortality rate (2 instead of 1 per time step), the standard
+#'   deviations of the initial numbers at age and of recruitment on the log
+#'   scale (10 instead of 1) and the von Bertalanffy growth rate k (0.05 to 2
+#'   instead of 0.1 to 1 per year); see [create_parameters()]. Entries of
+#'   `parameters.L` and `parameters.U` replace these bounds. When an ACL fit
+#'   stops at one of the default upper bounds, `diagnostics$advice` and the
+#'   message of the fit name this argument.
 #' @details A single start can stop at a local optimum that passes every
 #'   numerical check, particularly for the growth parameters of ALSCL. The
 #'   checks in `diagnostics` are local: they do not show whether a better
-#'   optimum exists. For results that will be reported, use several starts
-#'   (for example `nstarts = 5`) with a wider `start_spread` (for example
-#'   0.5) and compare the objectives in `start_diagnostics`. `start_summary`
+#'   optimum exists. A fit with one start (`nstarts = 1`, the default)
+#'   therefore gives a message unless `silent = TRUE`; a function that runs
+#'   several fits in one call gives it once. For results that will be
+#'   reported, use at least three starts (`nstarts = 3` or more) with a wider
+#'   `start_spread` (for example 0.5) and compare the objectives in
+#'   `start_diagnostics`. `start_summary`
 #'   gives the number of converged starts, the range of their objectives and
 #'   the number that agree with the best one; a range above 2 is added to
 #'   `diagnostics$issues`.
+#' @details Besides the gradient, the Hessian and the optimizer bounds, the
+#'   numerical screen in `diagnostics` looks for parameters that are at their
+#'   limit in practice although they have not reached a bound: `log_t0` below
+#'   -10 (ALSCL; t0 then equals `t0_lower`), the logarithm of a standard
+#'   deviation below -9 (a variance of zero) and a logit correlation with an
+#'   absolute value above 15 (a correlation at the end of its range). Such a
+#'   fit fails the screen (`numerical_ok = FALSE`), as a fit that stopped at
+#'   a bound does. `diagnostics$limit_parameters` lists these parameters with
+#'   their values on the natural scale and `diagnostics$advice` says what to
+#'   do: fix the parameter with `map` at a chosen value and refit, or, for a
+#'   correlation at zero, use
+#'   `structure = list(correlation_range = "symmetric")`.
+#'   `diagnostics$plausibility` lists notes that do not change the verdict of
+#'   the screen: the mean length of recruits lies more than two length-bin
+#'   widths below the lower border of the second length bin; the estimated
+#'   standard deviation of the observation error on the log scale is above
+#'   0.9; an estimated coefficient of variation of length at age (cv_len) or
+#'   of the growth increment (cv_grow, ALSCL) is above 0.3 (the example range
+#'   of cv_len in the Stock Synthesis manual is 0.10 to 0.25); the estimated
+#'   initial total mortality rate is below the smallest natural mortality
+#'   rate. Except for the mean length of recruits, the notes concern
+#'   estimated parameters only, not values fixed with `map`. The thresholds
+#'   are stored in `diagnostics$check_thresholds`. The messages of a fit and
+#'   `summary()` show the advice and the notes.
 #' @details The process densities are evaluated on the complete arrays of
 #'   deviations. A map that ties entries of dev_log_R, dev_log_F or dev_log_N0
 #'   to shared values, or fixes entries with NA, is therefore accepted only
@@ -152,19 +216,57 @@
 #'   recipe stores the complete resolved fitting inputs and software settings.
 #'   Use summary(), extract_parameters(), extract_estimates(), save_assessment()
 #'   and refit_model() for inspection, portable storage and reproducible refitting.
+#' @param survey_q Optional survey catchability at length: a numeric vector
+#'   with one positive value per length bin. It is used in place of the
+#'   logistic curve from `sel_L50` and `sel_L95`, for example for a
+#'   dome-shaped curve; [survey_catchability()] computes logistic and
+#'   dome-shaped curves. A matrix with one row per length bin and one column
+#'   per time step gives survey catchability by length and time step, for
+#'   example after a change of survey gear; a matrix with one column is read
+#'   as the vector. Supplying survey_q together with `sel_L50` or `sel_L95`
+#'   is an error; when an input bundle or a stored fit already holds these
+#'   two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are
+#'   fixed inputs and are not estimated.
+#' @param survey_q_age Optional survey catchability multiplier by age: a
+#'   numeric vector with one positive value per age class. The default NULL
+#'   is 1 for every age. The expected survey index at length is then
+#'   q(length) times the sum over ages of `survey_q_age[age]` times numbers
+#'   at age times the probability of that length at that age, where
+#'   q(length) is the survey catchability at length from `sel_L50` and
+#'   `sel_L95` or from `survey_q`. When `survey_q_age` is supplied and
+#'   `parameters` holds no start for mean_log_R, the default start of
+#'   mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then
+#'   sees only that fraction of the recruits.
+#' @details With M by age and time step, total mortality at age (`Z`) is F
+#'   plus the M of that age and time step, in survival and in the catch
+#'   equation. The default start of init_Z uses the median of M in the first
+#'   time step. A constant given as a matrix, `survey_q` equal to the
+#'   logistic curve, a `survey_q` matrix with equal columns, or
+#'   `survey_q_age` of ones gives the fit of the default inputs up to
+#'   rounding error.
+#'
+#'   M is an assumption. The survey index informs total mortality but not its
+#'   split into fishing and natural mortality, so an error in M enters F
+#'   directly, and the objective of a fit is not a basis for choosing M.
+#'   Supply M by age and time step only when independent estimates exist, for
+#'   example from a multispecies model. `survey_q` and `survey_q_age` are
+#'   assumptions of the same kind. A survey catchability that declines with
+#'   length or age is otherwise fitted as higher mortality.
 #' @export
-run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+run_acl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, len_mid = NULL, len_border = NULL, output = FALSE,
                     train_times = 1, ncores = 1, silent = FALSE, growth_step = NULL,
                     zero_action = c("missing", "error"), control = list(), nstarts = ncores,
                       F_structure = c("group_year", "year"), polish = TRUE,
-                    structure = list(), start_spread = 0.15) {
+                    structure = list(), start_spread = 0.15,
+                    survey_q = NULL, survey_q_age = NULL, bounds = c("default", "wide")) {
   if (is.list(data.CatL) && !is.data.frame(data.CatL))
     return(.acl_fit_bundle(data.CatL, "acl", match.call(), environment()))
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, zero_action = zero_action,
-    structure = structure, start_spread = start_spread)
+    structure = structure, start_spread = start_spread,
+    survey_q = survey_q, survey_q_age = survey_q_age, bounds = bounds)
   result <- .acl_fit("ACL", prepared, parameters, parameters.L, parameters.U, map,
            train_times, ncores, silent, output, control, nstarts, F_structure, polish)
   .acl_attach_recipe(result, model = "acl",

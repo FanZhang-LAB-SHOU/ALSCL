@@ -159,6 +159,16 @@
     "warnings": [],
     "status": "PASS"
   },
+  "relative_catch": {
+    "id": "relative_catch",
+    "zh": "相对渔获量",
+    "en": "Relative catch",
+    "code": "plot_relative_catch(b, observed = data.frame(year = b$year, catch = x$truth$CB), type = \"weight\", \n    observed_name = \"Simulated catch\")",
+    "note_zh": "只用调查指数拟合时，渔获量的绝对水平取决于假定的自然死亡率和调查可捕性，所以只比较趋势。点为生成数据时的渔获重量，不是报告的渔获统计。",
+    "note_en": "A fit to a survey index alone has no information on the absolute level of catch, which depends on the assumed natural mortality rate and survey catchability, so only trends are compared. The points are the catch in weight of the data-generating simulation, not reported landings.",
+    "warnings": [],
+    "status": "PASS"
+  },
   "recruitment": {
     "id": "recruitment",
     "zh": "补充量",
@@ -181,11 +191,21 @@
   },
   "VB": {
     "id": "VB",
-    "zh": "生长曲线与区间",
-    "en": "Growth curve and interval",
-    "code": "plot_VB(b, se = TRUE)",
-    "note_zh": "生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。省略 age_range 时使用拟合年龄范围，并避开 t0 之前的年龄；显示区间时仍保留 Linf/k 标注。",
-    "note_en": "Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation. Omitting age_range uses the fitted age range and avoids ages before t0. Linf/k annotations remain visible with intervals.",
+    "zh": "年龄别平均体长",
+    "en": "Mean length at age",
+    "code": "plot_VB(b, observed = readings, parameter_curve = TRUE)",
+    "note_zh": "实线为 ALSCL 拟合尾数算出的各年龄平均体长（各时间步的均值）；虚线为由 Linf、k 和 t0 计算的参考曲线，只在加 parameter_curve = TRUE 时绘制。点为模拟的年龄鉴定资料。",
+    "note_en": "The solid line is the mean length at age from the fitted numbers of the ALSCL fit (mean over the time steps). The dashed line is the curve computed from Linf, k and t0 and is drawn only with parameter_curve = TRUE. The points are synthetic age readings.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "length_at_age": {
+    "id": "length_at_age",
+    "zh": "各时间步的年龄别平均体长",
+    "en": "Mean length at age by time step",
+    "code": "plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2, line_size = 0.6)",
+    "note_zh": "每个分面是一个年龄组。原始结构下第一个时间步的各年龄体长分布由 Linf、k 和 t0 给出，之后由生长增量和体长别死亡决定。",
+    "note_en": "One panel per age class. With the original structure the length distribution of every age class in the first time step follows from Linf, k and t0; later time steps follow from the growth increments and mortality at length.",
     "warnings": [],
     "status": "PASS"
   },
@@ -246,6 +266,16 @@
     "code": "plot_fishing_mortality(fit, type = if (model == \"ACL\" && typ == \"length\") \"age\" else typ, se = TRUE, \n    facet_ncol = 4, line_size = 0.6)",
     "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
     "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "inputs": {
+    "id": "inputs",
+    "zh": "拟合所用的自然死亡率和调查可捕性",
+    "en": "Natural mortality rate and survey catchability used in the fit",
+    "code": "(plot_natural_mortality(b, line_size = 0.8) + labs(title = \"Natural mortality rate (M)\")) | \n    (plot_survey_catchability(b, line_size = 0.8, point_size = 1.5) + labs(title = \"Survey catchability at length\"))",
+    "note_zh": "两者都是用户给定的假设，不是估计值。调查指数不能确定总死亡中自然死亡的份额，也不能确定可捕性的水平。",
+    "note_en": "Both are assumptions supplied by the user, not estimates. The survey index informs neither the share of natural mortality in total mortality nor the level of catchability.",
     "warnings": [],
     "status": "PASS"
   },
@@ -351,11 +381,11 @@
   },
   "compare_growth": {
     "id": "compare_growth",
-    "zh": "生长与外部参照接口",
-    "en": "Growth and reference-data interface",
+    "zh": "两模型的年龄别平均体长",
+    "en": "Mean length at age of both models",
     "code": "growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = \"Synthetic reference\", \n    nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))",
-    "note_zh": "灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。ref_name 必须是非空名称，且与两个模型名称不同。",
-    "note_en": "The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. ref_name must be nonempty and differ from both model names.",
+    "note_zh": "左图为两次拟合的年龄别平均体长（ACL 来自年龄—体长概率矩阵，ALSCL 来自拟合尾数），口径相同。灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。ref_name 必须是非空名称，且与两个模型名称不同。",
+    "note_en": "The left panel shows mean length at age of both fits on the same basis (ACL from its age-length key, ALSCL from its fitted numbers). The reference curve uses synthetic Age and Length data, not empirical measurements from the paper. ref_name must be nonempty and differ from both model names.",
     "warnings": [],
     "status": "PASS"
   },

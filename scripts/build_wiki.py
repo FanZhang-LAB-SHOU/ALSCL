@@ -37,13 +37,13 @@ for i,m in enumerate(marks):
  # trailing anchors belong to the next page and are redundant in the Wiki.
  block=re.sub(r'<a id="[^"]+"></a>\s*','',block)
  blocks[int(m[1])]=block
-# Gallery sections of each plot chapter. Sections 42 and 43 are the retrospective
+# Gallery sections of each plot chapter. Sections 45 and 46 are the retrospective
 # figures, which chapter 11 already shows from USER_GUIDE.md. A gallery section
 # that is neither placed nor listed as omitted stops the build, so that a new
 # section cannot be dropped from the Wiki and the book without notice.
-gallery_chapters={'08-Population-Plots':list(range(1,19)),'09-Growth-and-Mortality':list(range(19,33)),
- '10-Model-Comparisons':list(range(33,42))+[44]}
-gallery_omitted=[42,43]
+gallery_chapters={'08-Population-Plots':list(range(1,20)),'09-Growth-and-Mortality':list(range(20,36)),
+ '10-Model-Comparisons':list(range(36,45))+[47,48]}
+gallery_omitted=[45,46]
 placed=[n for numbers in gallery_chapters.values() for n in numbers]+gallery_omitted
 if len(placed)!=len(set(placed)) or set(placed)!=set(blocks):
  sys.exit('docs/PLOT_GALLERY.md sections and the Wiki chapters disagree. Not assigned in scripts/build_wiki.py: '

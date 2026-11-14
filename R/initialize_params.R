@@ -35,9 +35,12 @@
 #' @param std_logR Numeric. Innovation SD of AR(1) log-recruitment deviations
 #'   (default 0.3); the stationary marginal SD is
 #'   std_logR / sqrt(1 - R_ar^2).
-#' @param std_logN0 Numeric. SD of independent log-scale increments used to
-#'   construct the initial age distribution recursively (default 0.2). The total
-#'   log deviation at each age accumulates these increments.
+#' @param std_logN0 Numeric. SD of the normal deviations of the initial log
+#'   numbers at age (default 0.2). With the default form the deviations are
+#'   increments between neighbouring ages, so the total log deviation at each
+#'   age accumulates them. Set `params$structure <- list(initial_deviations =
+#'   "independent")` before [sim_data()] to give each age, the first included,
+#'   one independent deviation (Equation 11 of Zhang and Cadigan 2022).
 #' @param alpha Numeric. Beverton-Holt alpha (default 400).
 #' @param beta Numeric. Beverton-Holt beta (default 10).
 #' @param std_SN Numeric. Survey observation error SD (default 0.2).
@@ -327,6 +330,7 @@ initialize_params <- function(nyear      = NULL,
   sp$nyear <- .acl_positive_integer(sp$nyear, "nyear", 2L)
   .acl_scalar(sp$growth_step, "growth_step", 0, TRUE)
   .acl_scalar(sp$rec.age, "rec.age", 0, TRUE)
+  .acl_single_M(sp$M, "initialize_params()")
   .acl_scalar(sp$M, "M", 0)
   if (sp$t0 >= sp$rec.age) stop("t0 must be below rec.age.")
   bins <- .acl_simulation_bins(sp$len_mid, sp$len_border, normalize_outer = TRUE)

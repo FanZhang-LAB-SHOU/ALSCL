@@ -25,6 +25,13 @@
 #' @param allow_M_mismatch Logical. FALSE (default) stops when a supplied M
 #'   differs from the natural mortality rate recorded in a replicate file.
 #'   TRUE fits the supplied M, for a study of misspecified natural mortality.
+#' @param structure Optional model structures of the fitted model, as in
+#'   [run_acl()] and [run_alscl()]. The default, an empty list, is the
+#'   original structure. The value need not equal the `structure` element of
+#'   the parameter list that generated the replicates: a different value
+#'   fits a model with another structure, for example
+#'   `list(initial_deviations = "independent")` for data simulated with
+#'   cumulative initial deviations.
 #'
 #' @inheritParams run_acl
 #' @return A list containing the results of the stock assessment model. Failed
@@ -82,8 +89,10 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = NULL, ncores = 1, train_times = 1, control = list(),
                     F_structure = c("group_year", "year"), polish = TRUE,
-                    model = c("acl", "alscl"), nstarts = 1, allow_M_mismatch = FALSE) {
+                    model = c("acl", "alscl"), nstarts = 1, allow_M_mismatch = FALSE,
+                    structure = list()) {
   model <- match.arg(model)
+  .acl_structure(structure, toupper(model))
   F_structure <- match.arg(F_structure)
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
@@ -91,6 +100,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
       any(iter_range < 0 | iter_range != floor(iter_range) | iter_range > .Machine$integer.max) ||
       anyDuplicated(iter_range))
     stop("iter_range must contain distinct nonnegative integer replicate IDs.", call. = FALSE)
+  .acl_single_M(M, "sim_model()")
   if (!is.null(M)) .acl_scalar(M, "M", 0)
   if (!is.logical(allow_M_mismatch) || length(allow_M_mismatch) != 1L || is.na(allow_M_mismatch))
     stop("allow_M_mismatch must be TRUE or FALSE.", call. = FALSE)
@@ -111,6 +121,8 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     parameters.U = parameters.U, map = map, train_times = train_times,
     control = control, silent = TRUE, F_structure = F_structure, polish = polish,
     ncores = 1L, nstarts = nstarts)
+  # Passed only when it is set, so that default fits are called as before.
+  if (length(structure)) fit_args$structure <- structure
   fit_one <- function(iter) {
     started <- proc.time()[["elapsed"]]
     id <- .acl_replicate_id(iter)
@@ -162,10 +174,11 @@ sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                     map = NULL, M = NULL, ncores = 1, train_times = 1, control = list(),
                     F_structure = c("group_year", "year"), polish = TRUE,
-                    nstarts = 1, allow_M_mismatch = FALSE) {
+                    nstarts = 1, allow_M_mismatch = FALSE, structure = list()) {
   sim_model(iter_range, sim_data_path, output_dir, parameters, parameters.L,
     parameters.U, map, M, ncores, train_times, control, F_structure, polish,
-    model = "acl", nstarts = nstarts, allow_M_mismatch = allow_M_mismatch)
+    model = "acl", nstarts = nstarts, allow_M_mismatch = allow_M_mismatch,
+    structure = structure)
 }
 
 #' Fit simulation replicates with ALSCL

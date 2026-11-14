@@ -75,6 +75,22 @@ metadata are accepted when their arrays match the current parameters.
 Process settings (including mortality, recruitment and observation error),
 simulation duration and output controls can change without recalculating
 biology. These checks run before creating files or drawing random numbers.
+The initial numbers at age, in the first simulated year (before the
+burn-in), are recruitment times exp(-init_Z (a - 1)) times a lognormal
+deviation. With the default form the deviations accumulate over ages:
+log N(a) = log N(a - 1) - init_Z + d(a - 1), with nage - 1 independent
+normal increments d of SD std_logN0. With
+\code{params$structure = list(initial_deviations = "independent")} every age,
+the first included, has one independent deviation of SD std_logN0, as in
+Equation 11 of Zhang and Cadigan (2022). The deviations of ages 2 to nage
+are then the draws that the default form uses for its increments, so the
+two forms share their random numbers; with \code{random_numbers = "sequential"} the extra draw of the first age changes the draws that
+follow (survey errors), whereas with \code{"by_process"} it does not. Other
+settings of \code{params$structure} (\code{initial_plus_group}, \code{initial_length})
+combine with either form as in \code{\link[=run_alscl]{run_alscl()}}. After a long burn-in, such
+as the 80 years of the "flatfish" preset, the initial numbers have
+little effect on the returned years; use burn_in = 0 in
+\code{\link[=initialize_params]{initialize_params()}} to return the first simulated year.
 Survey observations retain true zeros and small positive values; no
 artificial positive floor is applied. Survey biomass equals survey
 abundance times weight at length. Fitting still treats zeros as missing

@@ -72,6 +72,10 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
   # The same rule as the fitting setup, applied to all periods.
   totals <- colSums(survey$observed, na.rm = TRUE)
   value <- log(mean(totals[totals > 0]))
+  # The fitting setup raises this start when survey_q_age is supplied.
+  q_age <- fit_args$survey_q_age
+  if (is.numeric(q_age) && length(q_age) && is.finite(q_age[1L]) && q_age[1L] > 0)
+    value <- value - log(q_age[1L])
   if (!is.finite(value)) return(fit_args)
   parameters <- fit_args$parameters
   if (is.null(parameters)) parameters <- list()
@@ -95,6 +99,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
   fit <- tryCatch(withCallingHandlers({
     if ("map" %in% names(fit_args))
       fit_args["map"] <- list(.acl_retro_map(fit_args, removed, model_type))
+    # A natural mortality rate by age and time step and a survey catchability
+    # by length and time step keep the same time steps as the data.
+    for (name in intersect(c("M", "survey_q"), names(fit_args)))
+      if (removed > 0L && !is.null(fit_args[[name]]))
+        fit_args[[name]] <- .acl_truncate_time(fit_args[[name]], ncol(fit_args$data.CatL) - 1L, end_col - 1L)
     for (name in c("data.CatL", "data.wgt", "data.mat"))
       fit_args[[name]] <- fit_args[[name]][, seq_len(end_col), drop = FALSE]
     do.call(if (model_type == "acl") run_acl else run_alscl, fit_args)
@@ -154,9 +163,19 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M Natural mortality per model time step.
-#' @param sel_L50 Length at 50 percent survey catchability.
-#' @param sel_L95 Length at 95 percent survey catchability.
+#' @param M Natural mortality rate per model time step, in one of the forms
+#'   that [run_acl()] or [run_alscl()] accepts. A matrix by age and time step
+#'   has one column per time step of the complete data; each peel uses the
+#'   columns of the time steps that it keeps. The same holds for survey_q
+#'   given as a matrix by length and time step.
+#' @param sel_L50 Length at 50 percent survey catchability. NULL when
+#'   survey_q is supplied.
+#' @param sel_L95 Length at 95 percent survey catchability. NULL when
+#'   survey_q is supplied.
+#' @param survey_q,survey_q_age Survey catchability at length and survey
+#'   catchability multiplier by age, passed to every full and peel fit; see
+#'   [run_alscl()]. A bundle's own settings are used unless these are
+#'   supplied explicitly.
 #' @param model_type Character. Model to use: `"acl"` (default) or `"alscl"`.
 #' @param model Same as model_type, accepted for consistency with the other
 #'   workflow functions. Supply one of the two.
@@ -194,7 +213,12 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   gives annual peels: peel k then ends k years before the terminal period.
 #' @param structure,start_spread,t0_lower Passed to every full and peel fit; see
 #'   \code{\link{run_alscl}}. A bundle's own settings are used unless these are
-#'   supplied explicitly.
+#'   supplied explicitly. An ALSCL `structure` that changes only some of the
+#'   four settings of the set `"von_bertalanffy"` gives the message described
+#'   in \code{\link{run_alscl}} once for the call, unless `silent = TRUE`.
+#' @param bounds Passed to every full and peel fit of ACL; see
+#'   \code{\link{run_acl}}. A bundle's own setting is used unless this is
+#'   supplied explicitly. ALSCL has no such argument.
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
@@ -232,8 +256,9 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   A parameter that the map fixes has the same value in the full fit and in
 #'   every peel. When map fixes mean_log_R and parameters gives no value for
 #'   it, the value is derived once from the complete observations (the log of
-#'   the mean total survey index over periods) and used in every fit. Earlier
-#'   versions derived it again from the truncated data of each peel.
+#'   the mean total survey index over periods, minus the log of the first
+#'   value of survey_q_age when that is supplied) and used in every fit.
+#'   Earlier versions derived it again from the truncated data of each peel.
 #'
 #'   Warnings raised while fitting are recorded in fit_diagnostics$warnings for
 #'   the fit that raised them, including fits on socket workers, and one
@@ -270,7 +295,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' plot_retro(retro)
 #' }
 retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
-                        rec.age, nage, M, sel_L50, sel_L95,
+                        rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
                         model_type = c("acl", "alscl"),
                         growth_step = NULL,
                         parameters = NULL, parameters.L = NULL, parameters.U = NULL,
@@ -288,7 +313,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5,
                         F_structure = c("group_year", "year"), polish = TRUE,
                         zero_action = c("missing", "error"), control = list(), nstarts = 1,
-                        model = NULL, peel_step = 1, structure = list(), start_spread = 0.15, t0_lower = 0, ...) {
+                        model = NULL, peel_step = 1, structure = list(), start_spread = 0.15, t0_lower = 0,
+                        survey_q = NULL, survey_q_age = NULL,
+                        bounds = c("default", "wide"), ...) {
   .acl_check_flag(plot, "plot")
   .acl_check_flag(silent, "silent")
   renamed <- .acl_renamed(list(...), "retro_model")
@@ -346,6 +373,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
          "nyear * peel_step is ", as.double(nyear) * peel_step, " and the data have ",
          ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
   fit_args <- .acl_retro_fixed_scalars(fit_args)
+  # The full fit and the peels are silent fits, so the note on a part of the
+  # set "von_bertalanffy" is given here, once for the call.
+  .acl_partial_set_note(fit_args$structure, model_type, silent)
 
   progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()
@@ -487,7 +517,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M Natural mortality per model time step.
+#' @param M Natural mortality rate per model time step; see [retro_model()].
 #' @param sel_L50 Length at 50 percent survey catchability.
 #' @param sel_L95 Length at 95 percent survey catchability.
 #' @param ... Additional arguments passed to [retro_model()].
@@ -521,7 +551,7 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 #' @param data.mat The maturity data.
 #' @param rec.age The recruitment age.
 #' @param nage The number of age classes.
-#' @param M Natural mortality per model time step.
+#' @param M Natural mortality rate per model time step; see [retro_model()].
 #' @param sel_L50 Length at 50 percent survey catchability.
 #' @param sel_L95 Length at 95 percent survey catchability.
 #' @param growth_step Time step in years. NULL uses rec.age when it is below

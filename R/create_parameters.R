@@ -18,6 +18,11 @@
 #'   default (or species-preset) values.
 #' @param parameters.L A list of custom lower bounds (default NULL).
 #' @param parameters.U A list of custom upper bounds (default NULL).
+#' @param bounds Character. \code{"default"} keeps the bounds of earlier
+#'   versions. \code{"wide"} gives ACL the bounds that ALSCL has for five
+#'   parameters; see Details. It has no effect for \code{model_type = "alscl"}.
+#'   Entries of \code{parameters.L} and \code{parameters.U} replace the bounds
+#'   of either choice.
 #'
 #' @return A list with three elements: \code{parameters}, \code{parameters.L},
 #'   and \code{parameters.U}. Each is a named list of parameter values with
@@ -58,6 +63,26 @@
 #' ALSCL has one additional parameter: \code{log_cv_grow} (CV of growth
 #' increment controlling the transition matrix G variability).
 #'
+#' \strong{Wide bounds for ACL:}
+#'
+#' Without a species preset, the default upper bounds of ACL are lower than
+#' those of ALSCL for five parameters, and ACL fits to other stocks than the
+#' yellowtail flounder example often stop at them. \code{bounds = "wide"}
+#' gives ACL the ALSCL bounds of these parameters (natural scale; rates are
+#' per model time step, k is per year):
+#'
+#' \tabular{llll}{
+#'   \strong{Parameter} \tab \strong{Quantity} \tab \strong{Default bounds} \tab \strong{Wide bounds} \cr
+#'   log_init_Z     \tab initial total mortality rate \tab 0.01 to 1 \tab 0.01 to 10 \cr
+#'   mean_log_F     \tab mean fishing mortality rate \tab 0.01 to 1 \tab 0.01 to 2 \cr
+#'   log_std_log_N0 \tab standard deviation of the initial numbers at age (log scale) \tab 0 to 1 \tab 0 to 10 \cr
+#'   log_std_log_R  \tab standard deviation of recruitment (log scale) \tab 0.01 to 1 \tab 0.01 to 10 \cr
+#'   log_vbk        \tab von Bertalanffy growth rate k \tab 0.1 to 1 \tab 0.05 to 2 \cr
+#' }
+#'
+#' With a species preset the ACL and ALSCL bounds of these parameters are
+#' equal, so \code{bounds} changes nothing. Starting values are not changed.
+#'
 #' @examples
 #' # Generic ACL defaults (wide bounds, suitable for exploration)
 #' p <- create_parameters("acl")
@@ -72,6 +97,10 @@
 #' p <- create_parameters("acl", species = "krill",
 #'   parameters = list(log_Linf = log(85)))
 #'
+#' # ACL with the bounds of ALSCL for five parameters
+#' exp(unlist(create_parameters("acl", bounds = "wide")$parameters.U[
+#'   c("log_init_Z", "mean_log_F", "log_std_log_N0", "log_std_log_R", "log_vbk")]))
+#'
 #' # List available presets
 #' create_parameters("acl", species = "?")
 #'
@@ -80,7 +109,8 @@ create_parameters <- function(model_type = c("acl", "alscl"),
                               species      = NULL,
                               parameters   = NULL,
                               parameters.L = NULL,
-                              parameters.U = NULL) {
+                              parameters.U = NULL,
+                              bounds       = c("default", "wide")) {
 
   if (is.null(model_type) || is.list(model_type)) {
     legacy <- list(parameters = model_type, lower = species, upper = parameters)
@@ -88,6 +118,7 @@ create_parameters <- function(model_type = c("acl", "alscl"),
     parameters <- legacy$parameters; parameters.L <- legacy$lower; parameters.U <- legacy$upper
   }
   model_type <- match.arg(model_type)
+  bounds <- match.arg(bounds)
 
   # =========================================================================
   # Backward compatibility: run_acl()/run_alscl() may call
@@ -528,6 +559,12 @@ create_parameters <- function(model_type = c("acl", "alscl"),
   }
   if ("t0" %in% names(defaults)) {defaults_L$t0 <- -5; defaults_U$t0 <- 5}
   if ("log_t0" %in% names(defaults)) {defaults_L$log_t0 <- -20; defaults_U$log_t0 <- log(5)}
+  # bounds = "wide": ACL takes the bounds that ALSCL has for the same request.
+  if (bounds == "wide" && model_type == "acl") {
+    wide <- .acl_wide_bounds(if (is.character(species)) species else NULL)
+    defaults_L[names(wide$lower)] <- wide$lower
+    defaults_U[names(wide$upper)] <- wide$upper
+  }
   override_lists <- list(parameters = parameters, parameters.L = parameters.L, parameters.U = parameters.U)
   for (list_name in names(override_lists)) {
     overrides <- override_lists[[list_name]]

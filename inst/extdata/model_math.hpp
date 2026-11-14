@@ -45,7 +45,7 @@ matrix<Type> length_age_key(vector<Type> borders, vector<Type> ages,
   return pla;
 }
 // Optional integer setting in the data list. An absent entry returns 0, which
-// keeps the published model structure, so data lists built for earlier
+// keeps the original model structure, so data lists built for earlier
 // versions remain valid.
 inline int optional_setting(SEXP data, const char* name) {
   SEXP value = getListElement(data, name);
@@ -58,8 +58,21 @@ inline double optional_value(SEXP data, const char* name) {
   if (Rf_isNull(value) || Rf_length(value) < 1) return 0.0;
   return Rf_asReal(value);
 }
+// Optional numeric data entry (vector, matrix or array) as plain numbers in
+// column-major order. An absent entry gives an empty vector, so data lists
+// built for earlier versions remain valid. `expected` is the required number
+// of values of an entry that is present.
+inline std::vector<double> optional_numbers(SEXP data, const char* name, size_t expected) {
+  SEXP value = getListElement(data, name);
+  std::vector<double> out;
+  if (Rf_isNull(value)) return out;
+  if (!Rf_isReal(value) || (size_t) XLENGTH(value) != expected)
+    Rf_error("Data entry '%s' must hold %d real values.", name, (int) expected);
+  out.assign(REAL(value), REAL(value) + XLENGTH(value));
+  return out;
+}
 // AR(1) correlation from its optimizer-scale parameter.
-// range 0: logistic, between 0 and 1 (published structure).
+// range 0: logistic, between 0 and 1 (original structure).
 // range 1: 2 * logistic - 1, between -1 and 1.
 template<class Type>
 Type ar1_correlation(Type x, int range) {
@@ -67,8 +80,9 @@ Type ar1_correlation(Type x, int range) {
   return invlogit(x);
 }
 // Expected growth increment over one time step for a fish of length x.
-// increment 0: decreasing logistic curve of Zhang and Cadigan (2022), scaled
-//   linearly by the time step.
+// increment 0: decreasing logistic function of length of Zhang and Cadigan
+//   (2022). The constants l50 = 0.5 Linf and l95 = 0.05 Linf and the linear
+//   scaling by the time step are in this code and not in the paper.
 // increment 1: von Bertalanffy, (Linf - x) * (1 - exp(-vbk * growth_step))
 //   below Linf, declining smoothly to zero above Linf (smoothing scale
 //   0.01 * Linf) so that the increment stays positive and differentiable.

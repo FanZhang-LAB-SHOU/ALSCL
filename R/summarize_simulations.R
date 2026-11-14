@@ -93,7 +93,8 @@ summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), con
       if (!stationary) "large or nonfinite gradient",
       if (!isTRUE(status$pdHess)) "Hessian unavailable or not positive definite",
       if (isTRUE(status$bound_hit)) "optimizer-scale boundary",
-      if (isTRUE(status$natural_boundary)) "natural-scale boundary")
+      if (isTRUE(status$natural_boundary)) "natural-scale boundary",
+      if (grepl("limit in practice", status$issues, fixed = TRUE)) "parameter at its limit in practice")
     if (!isTRUE(status$numerical_ok) && !length(reasons)) reasons <- "other"
     statuses[[i]] <- cbind(data.frame(replicate = id, elapsed = elapsed,
       error = fit$error %||% "", stringsAsFactors = FALSE), status,
@@ -164,7 +165,7 @@ summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), con
   }))
   reason_levels <- c("fit error", "large or nonfinite gradient",
     "Hessian unavailable or not positive definite", "optimizer-scale boundary",
-    "natural-scale boundary", "other")
+    "natural-scale boundary", "parameter at its limit in practice", "other")
   reason_list <- strsplit(replicates$failure_reasons, "; ", fixed = TRUE)
   failures <- data.frame(reason = reason_levels,
     n_replicates = vapply(reason_levels, function(reason)

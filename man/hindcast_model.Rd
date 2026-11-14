@@ -65,6 +65,10 @@ fit is used to initialize the folds. Recruitment and F deviations follow
 the fitted AR(1) conditional means on the log-process scale: the last fitted
 deviation times phi to the power of the forecast horizon. Projections retain
 the scalar parameter values from the training fit and the specified survey catchability.
+A natural mortality rate by age and time step is supplied for the
+complete time grid. Each training fit uses the columns up to its forecast
+origin, and the prediction uses the columns of the held-out time steps.
+The same holds for survey catchability supplied by length and time step.
 project_model() advances
 the population; training-terminal weights and maturity are repeated only
 for this calculation and do not affect survey-number predictions. These are

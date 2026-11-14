@@ -174,18 +174,25 @@
                              parameters.L = NULL, parameters.U = NULL, map = NULL,
                              F_structure = c("group_year", "year")) {
   F_structure <- match.arg(F_structure)
-  config <- create_parameters(model_type = tolower(model), parameters = parameters,
-                              parameters.L = parameters.L, parameters.U = parameters.U)
+  # The default call is that of earlier versions; bounds is passed only when it is used.
+  config <- if (identical(prepared$bounds, "wide"))
+    create_parameters(model_type = tolower(model), parameters = parameters,
+                      parameters.L = parameters.L, parameters.U = parameters.U, bounds = "wide") else
+    create_parameters(model_type = tolower(model), parameters = parameters,
+                      parameters.L = parameters.L, parameters.U = parameters.U)
   p <- config$parameters; d <- prepared$data
   structure <- .acl_structure(prepared$structure, model)
   d[names(structure$data)] <- structure$data
-  # ALSCL: t0 = t0_lower + exp(log_t0). Zero is the published positive t0.
+  # ALSCL: t0 = t0_lower + exp(log_t0). Zero is the original positive t0.
   t0_lower <- if (is.null(prepared$t0_lower)) 0 else prepared$t0_lower
   if (!is.numeric(t0_lower) || length(t0_lower) != 1L || !is.finite(t0_lower) || t0_lower >= min(d$age))
     stop("t0_lower must be one finite number below the recruitment age.", call. = FALSE)
   if (model == "ACL" && t0_lower != 0)
     stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.", call. = FALSE)
   if (t0_lower != 0) d$t0_lower <- t0_lower
+  # Natural mortality rate by age and time step or by length (optional data).
+  M_data <- .acl_M_data(prepared$natural_mortality, model, d$L, d$A, d$Y)
+  d[names(M_data)] <- M_data
   # Default correlation starts keep their natural value under either range.
   if (identical(structure$choices$correlation_range, "symmetric"))
     for (nm in grep("^logit_", names(p), value = TRUE))
@@ -215,6 +222,9 @@
   if (is.null(parameters$mean_log_R)) {
     totals <- colSums(prepared$observations, na.rm = TRUE)
     p$mean_log_R <- log(mean(totals[totals > 0]))
+    # With a survey catchability multiplier by age the survey sees only the
+    # fraction q_age[1] of the recruits, so the default start is raised.
+    if (!is.null(d$q_age)) p$mean_log_R <- p$mean_log_R - log(d$q_age[1L])
   }
   if (is.null(parameters$log_init_Z)) {
     p$log_init_Z <- log(d$M + .3)
@@ -230,7 +240,7 @@
   if ((if (model == "ACL") p$t0 else t0_lower + exp(p$log_t0)) >= min(d$age)) stop("t0 must be below the recruitment age.", call. = FALSE)
   p$dev_log_R <- rep(0, d$Y)
   p$dev_log_F <- array(0, c(if (F_structure == "year") 1L else if (model == "ACL") d$A else d$L, d$Y))
-  p$dev_log_N0 <- rep(0, d$A-1L)
+  p$dev_log_N0 <- rep(0, .acl_initial_deviation_count(structure$choices, d$A))
   mapping <- .acl_map(p, map, model)
   if (F_structure == "year") {
     group_parameter <- if (model == "ACL") "logit_log_F_a" else "logit_log_F_l"
@@ -312,6 +322,7 @@
   config <- setup$config; p <- setup$parameters; d <- setup$data
   mapping <- setup$map; random <- setup$random
   .acl_report_clamped(setup$clamped_starts, silent)
+  .acl_partial_set_note(prepared$structure, model, silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",
@@ -402,9 +413,14 @@
       "starts converged to different optima (objective range %.3g over %d converged starts; the lowest is reported)",
       result$start_summary$objective_range, result$start_summary$converged))
   if (!silent && length(result$diagnostics$issues))
-    message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "))
+    message("Fit diagnostics: ", paste(result$diagnostics$issues, collapse = "; "),
+            if (length(result$diagnostics$advice))
+              paste0(". ", paste(result$diagnostics$advice, collapse = " ")))
+  if (!silent && nrow(result$diagnostics$plausibility))
+    message("Plausibility notes: ", paste(result$diagnostics$plausibility$note, collapse = " "))
   result$growth_check <- .acl_growth_check(result)
   if (!silent && isTRUE(result$growth_check$stalled)) message(result$growth_check$message)
+  .acl_single_start_note(nstarts, silent)
   if (output) .acl_save_output(result, prepared$data.CatL)
   result
 }
@@ -434,7 +450,7 @@
     "Growth stops near length %s in this fit: fish in the length bin with midpoint %s stay in it with ",
     "probability %.3f per time step, and the estimated Linf is %s. With growth_transition = \"midpoint\" ",
     "this happens when the growth increment in one time step is small relative to the width of the length bins. ",
-    "Consider a refit with structure = \"consistent\" and compare the objective values; see ?run_alscl."),
+    "Consider a refit with structure = \"von_bertalanffy\" and compare the objective values; see ?run_alscl."),
     format(mid[j]), format(mid[j]), stay[j], format(signif(Linf, 4)))
   out
 }

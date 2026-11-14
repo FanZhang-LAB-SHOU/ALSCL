@@ -10,7 +10,8 @@ create_parameters(
   species = NULL,
   parameters = NULL,
   parameters.L = NULL,
-  parameters.U = NULL
+  parameters.U = NULL,
+  bounds = c("default", "wide")
 )
 
 create_parameters_alscl(species, parameters, parameters.L, parameters.U)
@@ -34,6 +35,12 @@ default (or species-preset) values.}
 \item{parameters.L}{A list of custom lower bounds (default NULL).}
 
 \item{parameters.U}{A list of custom upper bounds (default NULL).}
+
+\item{bounds}{Character. \code{"default"} keeps the bounds of earlier
+versions. \code{"wide"} gives ACL the bounds that ALSCL has for five
+parameters; see Details. It has no effect for \code{model_type = "alscl"}.
+Entries of \code{parameters.L} and \code{parameters.U} replace the bounds
+of either choice.}
 }
 \value{
 A list with three elements: \code{parameters}, \code{parameters.L},
@@ -80,6 +87,26 @@ Observation error SD        \tab log_std_index         \tab log_sigma_index \cr
 ALSCL has one additional parameter: \code{log_cv_grow} (CV of growth
 increment controlling the transition matrix G variability).
 
+\strong{Wide bounds for ACL:}
+
+Without a species preset, the default upper bounds of ACL are lower than
+those of ALSCL for five parameters, and ACL fits to other stocks than the
+yellowtail flounder example often stop at them. \code{bounds = "wide"}
+gives ACL the ALSCL bounds of these parameters (natural scale; rates are
+per model time step, k is per year):
+
+\tabular{llll}{
+\strong{Parameter} \tab \strong{Quantity} \tab \strong{Default bounds} \tab \strong{Wide bounds} \cr
+log_init_Z     \tab initial total mortality rate \tab 0.01 to 1 \tab 0.01 to 10 \cr
+mean_log_F     \tab mean fishing mortality rate \tab 0.01 to 1 \tab 0.01 to 2 \cr
+log_std_log_N0 \tab standard deviation of the initial numbers at age (log scale) \tab 0 to 1 \tab 0 to 10 \cr
+log_std_log_R  \tab standard deviation of recruitment (log scale) \tab 0.01 to 1 \tab 0.01 to 10 \cr
+log_vbk        \tab von Bertalanffy growth rate k \tab 0.1 to 1 \tab 0.05 to 2 \cr
+}
+
+With a species preset the ACL and ALSCL bounds of these parameters are
+equal, so \code{bounds} changes nothing. Starting values are not changed.
+
 \code{create_parameters_alscl()} is a convenience wrapper that calls
 \code{create_parameters("alscl", ...)}.
 }
@@ -96,6 +123,10 @@ p <- create_parameters("alscl", species = "tuna")
 # Krill ACL preset with custom Linf override
 p <- create_parameters("acl", species = "krill",
   parameters = list(log_Linf = log(85)))
+
+# ACL with the bounds of ALSCL for five parameters
+exp(unlist(create_parameters("acl", bounds = "wide")$parameters.U[
+  c("log_init_Z", "mean_log_F", "log_std_log_N0", "log_std_log_R", "log_vbk")]))
 
 # List available presets
 create_parameters("acl", species = "?")

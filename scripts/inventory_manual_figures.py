@@ -28,9 +28,11 @@ for folder in ['docs/figures', 'man/figures']:
             source = 'scripts/ytf_workflow.R'
         elif '/cases/' in rel:
             source = 'scripts/case_studies.R'
+        elif '/whiting-case/' in rel:
+            source = 'scripts/whiting_case_report.R'
         elif '/workflows/' in rel:
             source = ('scripts/model_validation.R'
-                      if path.name in ('fitted-simulation.png', 'hindcast-predictions.png')
+                      if path.name in ('fitted-simulation.png', 'hindcast-predictions.png', 'self-test.png')
                       else 'scripts/assessment_workflow.R')
         elif '/speed/' in rel:
             source = 'scripts/plot_speed_benchmark.R'

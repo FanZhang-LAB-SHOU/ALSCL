@@ -175,3 +175,4 @@ Increase `iter_range` for a simulation study and vary one setting at a time, suc
 | 决定哪些参数固定、哪些估计 / Decide which parameters to fix or estimate | [拟合设置](USER_GUIDE.md#fitting) / [Fitting controls](USER_GUIDE.md#fitting) |
 | 生成调查数据并批量拟合重复 / Generate survey data and fit replicates in batch | [模拟与批量实验](USER_GUIDE.md#simulation) / [Simulation](USER_GUIDE.md#simulation) |
 | 从拟合模型模拟调查数据，或预测留出的年份 / Simulate from a fitted model or predict withheld years | [模型验证](MODEL_VALIDATION.md) / [Model validation](MODEL_VALIDATION.md) |
+| 拟合真实的调查指数，并与年龄判读结果和资源评估对比 / Fit a real survey index and compare the fit with age readings and an assessment | [真实调查数据的拟合结果，哪些可以用？](CASES.md#case-north-sea-whiting) / [What can a fit to a real survey be used for?](CASES.md#case-north-sea-whiting) |

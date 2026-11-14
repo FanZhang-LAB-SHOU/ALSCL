@@ -110,6 +110,10 @@ list.files(getOption("ALSCL.tmb.cache"))
 | 调查表中有零 | 零按缺失处理（`zero_action = "missing"`） | 拟合前判断零是否真实 |
 | 体重表或成熟比例表有空白单元格 | 两张表必须完整 | 补全并记录来源 |
 | 收敛码不是 0、梯度大或 Hessian 不正定 | 优化器提前停止，或某个参数得不到信息 | 见[理解第一次拟合](first-model.html#checks) |
+| `numerical_ok` 为 `FALSE`，issues 中指出某个参数实际上已到极限 | 方差被估计为零，相关系数落在取值范围的端点，或 ALSCL 的 `t0` 等于 `t0_lower` | 按 `diagnostics$advice` 处理；见[判断拟合是否可用](diagnostics.html#limits) |
+| `survey_q replaces the logistic survey catchability curve, so it cannot be combined with sel_L50 or sel_L95` | 输入列表或保存的拟合中存有 `sel_L50` 和 `sel_L95` | 在调用中加上 `sel_L50 = NULL, sel_L95 = NULL` |
+| `run_acl()` 提示 `M is a numeric vector, which is read as the natural mortality rate by length` | 向量被当作按体长的 M，只有 ALSCL 接受 | 按年龄的 M 请给出只有一列的矩阵：`matrix(M_at_age, ncol = 1)` |
+| `project_model()` 提示 `The fitted natural mortality rate varies over time, and no value is carried forward` | 拟合用的是按年龄和时间步的 M | 给出未来各时间步的 `M` |
 | 季度 F 看起来偏小 | F 在所有输出中都按时间步计 | 按时间步报告 F |
 | 对 ACL 拟合调用 `plot_fishing_mortality(a, type = "length")` 给出警告 | ACL 没有按体长的 F；`"length"` 等同 `"age"` | 用 `type = "age"`，或拟合 ALSCL |
 | `plot_VB()` 只画出一条线，没有区间 | 生长参数被固定 | 属于预期；用 `map` 释放 |

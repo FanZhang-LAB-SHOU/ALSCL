@@ -3,11 +3,11 @@ facet_reference_fixture <- function() {
   lengths <- seq(5, 60, 5)
   residuals <- outer(seq_along(lengths), seq_along(years),
                      function(l, y) sin(l / 2) + cos(y / 3) + l * y / 100)
-  list(model_type = "ALSCL", year = years, len_mid = lengths,
+  growth_plot_fixture(list(model_type = "ALSCL", year = years, len_mid = lengths,
     len_label = paste0(lengths - 2.5, "-", lengths + 2.5),
     observations = exp(residuals),
     report = list(resid_index = residuals, Elog_index = residuals * 0,
-      Linf = 80, vbk = .2, t0 = -.1, pla = matrix(1 / 12, 12, 5)))
+      Linf = 80, vbk = .2, t0 = -.1, pla = matrix(1 / 12, 12, 5))))
 }
 
 # Extract rendered trend values by facet, independent of the number of layers.
@@ -106,7 +106,9 @@ test_that("growth references require a valid label distinct from resolved model 
   panel <- if (inherits(p, "patchwork")) p[[1L]] else p
   rendered <- ggplot2::ggplot_build(panel)$data[[1L]]
   expect_equal(length(unique(rendered$group)), 3L)
-  expect_equal(as.integer(table(rendered$group)), rep(39L, 3))
+  # The model lines have one value per age class (mean length at age from
+  # the fitted numbers); the reference curve is drawn on a half-year grid.
+  expect_setequal(as.integer(table(rendered$group)), c(5L, 5L, 9L))
   expect_true(all(vapply(split(rendered$x, rendered$group), function(x) !anyDuplicated(x), logical(1))))
   expect_equal(length(unique(rendered$colour)), 3L)
   expect_equal(length(unique(rendered$linetype)), 3L)

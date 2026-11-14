@@ -8,11 +8,27 @@
 // - Recruitment deviations follow an AR(1) process; log-F deviations follow a
 //   separable AR(1) process over ages and time steps, or one AR(1) series
 //   shared by all ages when dev_log_F has a single row.
-// - Initial numbers at age (ages after the first) have iid normal deviations.
+// - Initial log numbers at age (ages after the first) are those of the previous
+//   age minus init_Z plus an iid normal deviation.
 // - Optional data entry initial_plus_group = 1 makes the first-period plus
 //   group the equilibrium sum of all older cohorts at init_Z.
+// - Optional data entry initial_deviations = 1 gives the first-period numbers
+//   at age independent deviations, Equation 11 of the paper:
+//   log N(a,1) = log R(1) - init_Z (a-1) + dev(a), a = 1, ..., A, so
+//   dev_log_N0 has A entries. Absent or 0 keeps the original form, in which
+//   the deviations accumulate over ages and dev_log_N0 has A-1 entries.
 // - Optional data entry correlation_range = 1 lets the AR(1) correlations
 //   take values between -1 and 1.
+// - Optional data entry M_AY (A x Y) is the natural mortality rate by age and
+//   time step; it replaces the single rate M.
+// - Optional data entry q_age (A) is a survey catchability multiplier by age:
+//   the expected index at length is q(length) times the sum over ages of
+//   q_age(age) * pla(length, age) * NA(age, time step).
+// - Optional data entry log_q_LY (L x Y) is the log survey catchability by
+//   length and time step; it replaces log_q, for example after a change of
+//   gear.
+//   The code for these three entries sits in branches that a fit without
+//   them does not enter, so such a fit is computed exactly as before.
 
 #include <TMB.hpp>
 #include <iostream>
@@ -64,7 +80,7 @@ Type objective_function<Type>::operator() ()
   // random effects
   PARAMETER_VECTOR(dev_log_R); // recruitment deviation
   PARAMETER_ARRAY(dev_log_F); // deviation of fishing moratlity across years and ages
-  PARAMETER_VECTOR(dev_log_N0); // deviation of initial number at age (except for the first age), so size = A-1
+  PARAMETER_VECTOR(dev_log_N0); // deviation of initial number at age: A-1 (all ages but the first), or A with initial_deviations = 1
 
   // derived parameters
   Type init_Z = exp(log_init_Z);
@@ -86,6 +102,15 @@ Type objective_function<Type>::operator() ()
 
   Type std_index = exp(log_std_index);
 
+  // Optional natural mortality rate by age and time step, and survey
+  // catchability multiplier by age (absent = original structure).
+  std::vector<double> M_AY = optional_numbers(this->data, "M_AY", (size_t) A * Y);
+  std::vector<double> q_age = optional_numbers(this->data, "q_age", (size_t) A);
+  std::vector<double> log_q_time = optional_numbers(this->data, "log_q_LY", (size_t) L * Y);
+  bool M_varies = M_AY.size() > 0;
+  bool q_by_age = q_age.size() > 0;
+  bool q_by_time = log_q_time.size() > 0;
+
   vector<Type> N(Y);
   matrix<Type> NA(A,Y);
   matrix<Type> log_NA(A,Y);
@@ -103,7 +128,8 @@ Type objective_function<Type>::operator() ()
   for(int i = 0;i < A;++i){
     for(int j = 0;j < Y;++j){
         F(i,j) = exp(mean_log_F + dev_log_F(dev_log_F.dim[0] == 1 ? 0 : i,j));
-        Z(i,j)=F(i,j)+M;
+        if (!M_varies) Z(i,j)=F(i,j)+M;
+        else Z(i,j)=F(i,j)+Type(M_AY[i + A * j]);
      }
   }
 
@@ -116,12 +142,22 @@ Type objective_function<Type>::operator() ()
   log_NA(0,0) = log_Rec(0);
   NA(0,0) = Rec(0);
   //Type cz=zero;
+  if (optional_setting(this->data, "initial_deviations") == 0) {
   for(int i = 1;i < A;++i){
     log_NA(i,0) = log_NA(i-1,0) -init_Z  + dev_log_N0(i-1);
 	NA(i,0) = exp(log_NA(i,0));
   }
+  } else {
+    // Independent deviations (Equation 11 of the paper), first age included.
+    if (dev_log_N0.size() != A)
+      Rf_error("With independent initial deviations dev_log_N0 must have A entries.");
+    for(int i = 0;i < A;++i){
+      log_NA(i,0) = log_Rec(0) - init_Z * Type(i) + dev_log_N0(i);
+      NA(i,0) = exp(log_NA(i,0));
+    }
+  }
   // Optional: the first-period plus group is the equilibrium sum of all older
-  // cohorts at init_Z (absent or 0 keeps the published single-cohort value).
+  // cohorts at init_Z (absent or 0 keeps the original single-cohort value).
   if (optional_setting(this->data, "initial_plus_group") == 1) {
     log_NA(A-1,0) -= log(one - exp(-init_Z));
     NA(A-1,0) = exp(log_NA(A-1,0));
@@ -177,7 +213,18 @@ Type objective_function<Type>::operator() ()
   matrix<Type> resid_index(L,Y);
   for(int i = 0;i < L;++i){
 	for(int j=0; j<Y; ++j){
-  	Elog_index(i,j) = log_q(i) + log_NL(i,j);
+  	if (!q_by_age && !q_by_time) {
+  	  Elog_index(i,j) = log_q(i) + log_NL(i,j);
+  	} else {
+  	  Type log_seen = log_NL(i,j);
+  	  if (q_by_age) {
+  	    Type seen = zero;
+  	    for(int a=0; a<A; ++a) seen += Type(q_age[a]) * pla(i,a) * NA(a,j);
+  	    log_seen = log(seen + Type(1e-300));
+  	  }
+  	  Type log_q_now = q_by_time ? Type(log_q_time[i + L * j]) : Type(log_q(i));
+  	  Elog_index(i,j) = log_q_now + log_seen;
+  	}
 		resid_index(i,j) = zero;
 		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j)) * na_matrix(i,j);
 	}

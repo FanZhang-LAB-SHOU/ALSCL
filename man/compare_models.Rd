@@ -27,10 +27,25 @@ compare_models(
 A list with:
 \describe{
 \item{summary}{Data frame with convergence, objective, AIC, BIC, number of parameters.}
-\item{growth}{Data frame comparing VB growth parameters.}
+\item{growth}{Data frame with one block of rows per model: Model,
+Parameter (Linf, k, t0, cv_len, cv_grow for ALSCL, and sigma_index, the
+standard deviation of the observation error of the log survey index),
+Estimate and Meaning. The growth parameters of ACL and ALSCL are not
+placed side by side, because they are different quantities (see
+Details).}
+\item{length_at_age}{Data frame with Age, Basis and one column per model:
+mean length at age, averaged over the time steps. This is the
+comparison of growth between the two fits. Basis is "survey" (numbers
+at length multiplied by survey catchability at length) when the survey
+catchability of both fits is available and "population" otherwise.
+NULL when neither fit holds the quantities needed (see
+\code{\link[=length_at_age]{length_at_age()}}).}
 \item{fit_metrics}{Data frame with MSE, RMSE, R-squared, MAPE, etc. for each model.}
 \item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
-the ratio of means (model2/model1), for common population quantities.}
+the ratio of means (model2/model1), for common population quantities.
+Catch in numbers and catch in weight are compared as relative catch
+(rows "CN (relative)" and "CB (relative)"): only the correlation is
+given and Ratio_Mean is NA (see Details).}
 \item{model1_name,model2_name}{Labels used in the comparison.}
 \item{fit_diagnostics}{Numerical status of each fit, including the raw code,
 gradient, Hessian and natural-scale boundaries.}
@@ -62,6 +77,22 @@ AIC difference is below 2; such a difference does not establish that the
 models are equivalent. A failure record from a batch function, such as an
 element of fit_scenarios()$fits that holds an error, is rejected with its
 fit error.
+Growth is compared through mean length at age, not through Linf, k and
+t0. In ACL these are the parameters of a von Bertalanffy curve of mean
+length at age. In ALSCL, Linf and k set the mean growth increment in one
+time step as a function of length, and Linf, k and t0 set the mean length
+of recruits; the lengths of older fish follow from the growth increments
+and from mortality at length. The parameters are therefore listed in a
+separate block for each model, with their meaning, and length_at_age
+holds mean length at age of both fits as an unweighted mean over the time
+steps of the values that \code{\link[=length_at_age]{length_at_age()}} returns.
+A fit to survey data alone has no information on the absolute level of
+catch, which depends on the assumed natural mortality rate and the
+assumed survey catchability (see \code{\link[=relative_catch]{relative_catch()}}). The catch series
+of the two fits are therefore compared by their correlation only. ACL
+does not report catch in weight; it is calculated from catch in numbers
+at age and mean weight at age when the weights used in the fit are
+available.
 Goodness-of-fit measures use the same calculation as
 \code{diagnostic_metrics()}. Undefined R-squared for constant observations
 is NA; nonfinite response-scale predictions at observed cells are errors.

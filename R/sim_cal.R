@@ -314,7 +314,7 @@ sim_cal <- function(params) {
   inputs <- c(list(model_type = model_type, nage = nage, rec.age = rec_age, ages = ages,
     growth_step = step, len_mid = bins$mid, len_border = c(-Inf, bins$border, Inf),
     sel_type = unname(sel_type)), params[fields])
-  # Growth structures other than the published one determine the growth matrix.
+  # Growth structures other than the original one determine the growth matrix.
   structure <- .acl_structure(params$structure, if (model_type == "length_based") "ALSCL" else "ACL")$choices
   growth <- structure[intersect(c("growth_increment", "growth_transition"), names(structure))]
   growth <- growth[!vapply(names(growth), function(nm) growth[[nm]] == .acl_structure_choices[[nm]][1L], logical(1))]

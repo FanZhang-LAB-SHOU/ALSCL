@@ -11,8 +11,10 @@ vb_domain_fixture <- function(model = "ACL", fixed = FALSE) {
 
 test_that("default growth ages follow the fit without invalid negative-length intervals", {
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
-  for (model in c("ACL", "ALSCL")) for (fixed in c(FALSE, TRUE)) {
-    fit <- vb_domain_fixture(model, fixed)
+  # The von Bertalanffy curve of an ACL fit. In ALSCL, Linf, k and t0 are not
+  # the parameters of a curve of mean length at age: see the next test.
+  for (fixed in c(FALSE, TRUE)) {
+    fit <- vb_domain_fixture("ACL", fixed)
     for (se in c(FALSE, TRUE)) {
       p <- plot_VB(fit, se = se)
       expect_equal(range(p$data$age), range(fit$age))
@@ -31,6 +33,42 @@ test_that("default growth ages follow the fit without invalid negative-length in
       expect_s3_class(ggplot2::ggplot_build(p), "ggplot_built")
     }
   }
+})
+
+test_that("an ALSCL fit shows mean length at age from its numbers, with the parameter curve as an option", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  layer_of <- function(p, geom) which(vapply(p$layers, function(z) inherits(z$geom, geom), logical(1)))
+  for (fixed in c(FALSE, TRUE)) {
+    fit <- growth_plot_fixture(vb_domain_fixture("ALSCL", fixed))
+    p <- plot_VB(fit)
+    expect_equal(p$data$age, fit$age)
+    expect_equal(p$data$length, ALSCL:::.acl_mean_length_at_age(fit, "population")$mean_length)
+    expect_identical(p$labels$title, "Mean length at age")
+    expect_length(layer_of(p, "GeomText"), 0L)
+    expect_length(layer_of(p, "GeomLine"), 1L)
+    # No standard error exists for these values: the request is reported.
+    expect_warning(q <- plot_VB(fit, se = TRUE), "no standard error for mean length at age")
+    expect_length(layer_of(q, "GeomRibbon"), 0L)
+    expect_equal(q$data, p$data)
+    # The curve computed from Linf, k and t0 as a reference line with its interval.
+    for (kind in c("ribbon", "errorbar")) {
+      expect_no_warning(r <- plot_VB(fit, parameter_curve = TRUE, se = TRUE, se_type = kind))
+      lines <- layer_of(r, "GeomLine")
+      expect_length(lines, 2L)
+      curve <- r$layers[[lines[2L]]]$data
+      expect_equal(range(curve$age), range(fit$age))
+      expect_equal(curve$length,
+                   fit$report$Linf * (1 - exp(-fit$report$vbk * (curve$age - fit$report$t0))))
+      expect_true(all(curve$lower <= curve$length & curve$upper >= curve$length))
+      if (fixed) expect_equal(curve$lower, curve$upper)
+      expect_length(layer_of(r, if (kind == "ribbon") "GeomRibbon" else "GeomErrorbar"), 1L)
+      expect_match(ggplot2::ggplot_build(r)$data[[layer_of(r, "GeomText")]]$label, "Curve from Linf, k and t0:")
+      expect_match(r$labels$caption, "mean length at age in the first time step")
+      expect_equal(r$data, p$data)
+    }
+  }
+  # A result without numbers by length, age and time step has no such figure.
+  expect_error(plot_VB(vb_domain_fixture("ALSCL")), "model_result must contain finite, increasing year metadata")
 })
 
 test_that("growth ranges retain valid explicit endpoints and reject pre-t0 extrapolation", {

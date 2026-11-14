@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows)
 
-**ALSCL 2.4.3.9000 · 简体中文 / English**
+**ALSCL 2.4.4 · 简体中文 / English**
 
 [使用指南 / User guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [首页 / Home](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md)
 
@@ -162,6 +162,10 @@ Error messages are quoted as the package prints them.
 | 调查表中有零 / Zeros in the survey table | 零按缺失处理（`zero_action = "missing"`） / Zeros count as missing (`zero_action = "missing"`) | 拟合前判断零是否真实 / Decide whether a zero is real before fitting |
 | 体重表或成熟比例表有空白单元格 / Blank cells in the weight or maturity table | 两张表必须完整 / Both tables must be complete | 补全并记录来源 / Fill them and record the source |
 | 收敛码不是 0、梯度大或 Hessian 不正定 / Convergence code not 0, large gradient or Hessian not positive definite | 优化器提前停止，或某个参数得不到信息 / The optimizer stopped early or a parameter is not informed | 见[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks) / See [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks) |
+| `numerical_ok` 为 `FALSE`，issues 中指出某个参数实际上已到极限 / `numerical_ok` is `FALSE` and the issues name a parameter at its limit in practice | 方差被估计为零，相关系数落在取值范围的端点，或 ALSCL 的 `t0` 等于 `t0_lower` / A variance is estimated at zero, a correlation is at the end of its range, or the ALSCL `t0` equals `t0_lower` | 按 `diagnostics$advice` 处理；见[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-limits) / Follow `diagnostics$advice`; see [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-limits) |
+| `survey_q replaces the logistic survey catchability curve, so it cannot be combined with sel_L50 or sel_L95` | 输入列表或保存的拟合中存有 `sel_L50` 和 `sel_L95` / The bundle or the saved fit holds `sel_L50` and `sel_L95` | 在调用中加上 `sel_L50 = NULL, sel_L95 = NULL` / Add `sel_L50 = NULL, sel_L95 = NULL` to the call |
+| `run_acl()` 提示 `M is a numeric vector, which is read as the natural mortality rate by length` / `M is a numeric vector, which is read as the natural mortality rate by length` from `run_acl()` | 向量被当作按体长的 M，只有 ALSCL 接受 / A vector is M by length, which only ALSCL accepts | 按年龄的 M 请给出只有一列的矩阵：`matrix(M_at_age, ncol = 1)` / For M by age, supply a matrix with one column, `matrix(M_at_age, ncol = 1)` |
+| `project_model()` 提示 `The fitted natural mortality rate varies over time, and no value is carried forward` / `The fitted natural mortality rate varies over time, and no value is carried forward` from `project_model()` | 拟合用的是按年龄和时间步的 M / The fit used M by age and time step | 给出未来各时间步的 `M` / Supply `M` for the future time steps |
 | 季度 F 看起来偏小 / Quarterly F looks small | F 在所有输出中都按时间步计 / Every output gives F per time step | 按时间步报告 F / Report F per time step |
 | 对 ACL 拟合调用 `plot_fishing_mortality(a, type = "length")` 给出警告 / `plot_fishing_mortality(a, type = "length")` warns on an ACL fit | ACL 没有按体长的 F；`"length"` 等同 `"age"` / ACL has no F by length; `"length"` means `"age"` | 用 `type = "age"`，或拟合 ALSCL / Use `type = "age"` or fit ALSCL |
 | `plot_VB()` 只画出一条线，没有区间 / `plot_VB()` draws a line without an interval | 生长参数被固定 / The growth parameters are fixed | 属于预期；用 `map` 释放 / Expected; release them with `map` |

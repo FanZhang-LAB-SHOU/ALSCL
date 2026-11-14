@@ -9,7 +9,13 @@
 # options(ALSCL.se_level = ) gets the same level in both modes.
 .acl_cluster_lapply <- function(X, FUN, ncores, model, ...) {
   ncores <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(X)))
-  if (ncores == 1L) return(lapply(X, FUN, ...))
+  if (ncores == 1L) {
+    # The fits run in this process: notes about default behaviour are shown
+    # once for the batch, not once per fit (see .acl_notes_begin()).
+    .acl_notes_begin()
+    on.exit(.acl_notes_end(), add = TRUE)
+    return(lapply(X, FUN, ...))
+  }
   info <- .acl_compile(toupper(model))
   cl <- parallel::makeCluster(ncores)
   on.exit(parallel::stopCluster(cl), add = TRUE)
@@ -36,8 +42,19 @@
        pid = Sys.getpid(), warnings = unique(warnings))
 }
 
-.acl_batch_apply <- function(settings, model, ncores)
+.acl_batch_apply <- function(settings, model, ncores) {
+  # Messages of fits on socket workers do not reach the user, so the notes on
+  # single starts and on a part of the set "von_bertalanffy" are given here,
+  # once, for fits that are not silent.
+  workers <- .acl_workers(min(.acl_positive_integer(ncores, "ncores"), length(settings)))
+  if (workers > 1L && any(vapply(settings, function(args)
+        !isTRUE(args$silent) && isTRUE(args$nstarts == 1L), logical(1))))
+    .acl_single_start_note(1L, FALSE)
+  if (workers > 1L)
+    for (args in settings)
+      if (!isTRUE(args$silent) && .acl_partial_set_note(args$structure, model, FALSE)) break
   .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
+}
 
 .acl_batch_status <- function(results) {
   do.call(rbind, lapply(seq_along(results), function(i) {

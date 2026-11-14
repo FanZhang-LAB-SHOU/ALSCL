@@ -38,3 +38,28 @@ fit_fixture <- function(model="ACL", ncores=1, nstarts=ncores) {
   result<-do.call(if(model=="ACL")run_acl else run_alscl,args)
   list(result=result,input=f,parameters=p,map=mapping)
 }
+
+# Add what the growth plots read to a hand-made result: time steps, ages,
+# length-bin midpoints, an age-length key, numbers at age and, for ALSCL,
+# numbers by length bin, age class and time step equal to the key times
+# numbers at age. Entries that the result already has are kept.
+growth_plot_fixture <- function(fit, year = 2000:2002) {
+  if (is.null(fit$year)) fit$year <- year
+  A <- if (is.null(fit$age)) ncol(fit$report$pla) else length(fit$age)
+  if (is.null(fit$age)) fit$age <- seq_len(A)
+  if (is.null(fit$report$pla) || ncol(fit$report$pla) != A) {
+    mid <- if (is.null(fit$len_mid)) seq(5, 65, 5) else fit$len_mid
+    mean_length <- fit$report$Linf * (1 - exp(-fit$report$vbk * (fit$age - fit$report$t0)))
+    key <- vapply(mean_length, function(m) stats::dnorm(mid, m, 4) + 1e-6, mid)
+    fit$report$pla <- sweep(key, 2L, colSums(key), "/")
+    fit$len_mid <- mid
+  }
+  L <- nrow(fit$report$pla); Y <- length(fit$year)
+  if (is.null(fit$len_mid)) fit$len_mid <- seq(5, by = 5, length.out = L)
+  if (is.null(fit$report[["NA"]]))
+    fit$report[["NA"]] <- outer(exp(-0.3 * seq_len(A)), seq(100, by = 10, length.out = Y))
+  if (identical(fit$model_type, "ALSCL") && is.null(fit$report$NLA))
+    fit$report$NLA <- array(vapply(seq_len(Y), function(y)
+      sweep(fit$report$pla, 2L, fit$report[["NA"]][, y], "*"), fit$report$pla), c(L, A, Y))
+  fit
+}

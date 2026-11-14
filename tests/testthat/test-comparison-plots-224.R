@@ -4,7 +4,7 @@ comparison_plot_fixture_224 <- function(year = 2000:2003, structure = "group_yea
   F <- matrix(seq_len(length(observed)) / 100, 3L, length(year),
               dimnames = list(c("small", "medium", "large"), paste0("period", year)))
   ssb <- seq_along(year) * 100
-  list(model_type = "ALSCL", F_structure = structure,
+  growth_plot_fixture(list(model_type = "ALSCL", F_structure = structure,
        year = year, len_mid = c(7.5, 15, 45),
        len_label = c("5-10", "10-20", "20-70"), observations = observed,
        report = list(FL = F, SSB = ssb, Elog_index = log(predicted),
@@ -13,7 +13,7 @@ comparison_plot_fixture_224 <- function(year = 2000:2003, structure = "group_yea
        est_std = matrix(c(ssb, seq_along(ssb)), length(ssb), 2L,
                         dimnames = list(rep("SSB", length(ssb)), c("Estimate", "Std. Error"))),
        opt = list(par = c(a = 1, b = 2), objective = 10),
-       obj = list(env = list(data = list(log_q = log(c(.2, .5, .9))))))
+       obj = list(env = list(data = list(log_q = log(c(.2, .5, .9)))))))
 }
 
 comparison_plot_data_224 <- function(model) {
@@ -66,8 +66,9 @@ test_that("all comparison plots keep same-model fits in distinct groups", {
   }
   acl1 <- m1; acl2 <- m2
   acl1$model_type <- "ACL"; acl2$model_type <- "ACL"
-  acl1$report$F <- acl1$report$FL; acl1$report$FL <- NULL
-  acl2$report$F <- acl2$report$FL; acl2$report$FL <- NULL
+  # F of an ACL fit has one row per age class (four in this fixture).
+  acl1$report$F <- acl1$report$FL[c(1:3, 3L), ]; acl1$report$FL <- NULL
+  acl2$report$F <- acl2$report$FL[c(1:3, 3L), ]; acl2$report$FL <- NULL
   for (p in comparison_plot_calls_224(acl1, acl2, data)) {
     labels <- unique(unlist(lapply(comparison_panel_data_224(p), function(d) {
       if ("Model" %in% names(d)) as.character(d$Model)

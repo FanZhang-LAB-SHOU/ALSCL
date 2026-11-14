@@ -112,17 +112,33 @@
        upper = c(edges, Inf), labels = labels)
 }
 .acl_prepare_data <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M,
-                              sel_L50, sel_L95, growth_step = NULL,
+                              sel_L50 = NULL, sel_L95 = NULL, growth_step = NULL,
                               len_mid = NULL, len_border = NULL, len_lower = NULL,
                               len_upper = NULL, zero_action = c("missing", "error"),
-                              structure = list(), start_spread = 0.15, t0_lower = 0) {
+                              structure = list(), start_spread = 0.15, t0_lower = 0,
+                              survey_q = NULL, survey_q_age = NULL,
+                              bounds = c("default", "wide")) {
   zero_action <- match.arg(zero_action)
+  bounds <- match.arg(bounds)
   nage <- .acl_positive_integer(nage, "nage", 2L)
-  rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE); M <- .acl_scalar(M, "M", 0)
+  rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE)
+  # A single number is the constant natural mortality rate. The other forms
+  # (see .acl_M_input) are checked below, once the data dimensions are known.
+  M_single <- is.null(M) || (is.atomic(M) && length(M) == 1L)
+  if (M_single) M <- .acl_scalar(M, "M", 0)
   if (is.null(growth_step)) growth_step <- if (rec.age < 1) rec.age else 1
   growth_step <- .acl_scalar(growth_step, "growth_step", 0, TRUE)
-  .acl_scalar(sel_L50, "sel_L50"); .acl_scalar(sel_L95, "sel_L95")
-  if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.", call. = FALSE)
+  if (is.null(survey_q)) {
+    if (is.null(sel_L50) || is.null(sel_L95))
+      stop("sel_L50 and sel_L95 are required unless survey catchability at length is supplied as survey_q.",
+           call. = FALSE)
+    .acl_scalar(sel_L50, "sel_L50"); .acl_scalar(sel_L95, "sel_L95")
+    if (sel_L95 <= sel_L50) stop("sel_L95 must be greater than sel_L50.", call. = FALSE)
+  } else if (!is.null(sel_L50) || !is.null(sel_L95)) {
+    stop("survey_q replaces the logistic survey catchability curve, so it cannot be combined with sel_L50 or sel_L95. ",
+         "Supply either survey_q or both sel_L50 and sel_L95. When an input bundle or a stored fit already holds ",
+         "sel_L50 and sel_L95, add sel_L50 = NULL and sel_L95 = NULL to the call.", call. = FALSE)
+  }
   frames <- list(data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat)
   if (any(vapply(frames, function(x) length(dim(x)) != 2L || ncol(x) < 3L || nrow(x) < 2L, logical(1)))) stop("Inputs require a length-label column, at least two time columns and two length bins.", call. = FALSE)
   frames <- lapply(frames, as.data.frame, stringsAsFactors = FALSE); catl <- frames$data.CatL
@@ -149,32 +165,74 @@
     stop("Time column spacing must equal growth_step (", growth_step,
          " years). Include every model period; use NA survey observations for missing periods,",
          " and provide weights and maturity for the complete time grid.", call. = FALSE)
-  log_q <- stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE)
-  list(data = list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
-                  len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
-                  Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M),
+  supplied_q <- if (is.null(survey_q)) NULL else .acl_survey_q(survey_q, nrow(obs), ncol(obs), years)
+  # With survey catchability by length and time step the templates read
+  # log_q_LY (added below); log_q then holds the first time step.
+  log_q <- if (is.null(survey_q))
+    stats::plogis(log(19) * (bins$mid - sel_L50) / (sel_L95 - sel_L50), log.p = TRUE) else
+    if (supplied_q$form == "length") log(supplied_q$q) else log(supplied_q$q[, 1L])
+  data <- list(logN_at_len = log_obs, na_matrix = observed * 1, log_q = log_q,
+               len_border = bins$border, age = rec.age + seq.int(0L, nage-1L) * growth_step,
+               Y = ncol(obs), A = nage, L = nrow(obs), weight = weight, mat = mat, M = M)
+  out <- list(data = data,
        bins = bins, year = years, growth_step = growth_step, observations = obs, data.CatL = catl,
        structure = structure, start_spread = start_spread, t0_lower = t0_lower,
-       zero_observations = sum(obs == 0, na.rm = TRUE))
+       zero_observations = sum(obs == 0, na.rm = TRUE), bounds = bounds)
+  # The entries below exist only for the non-default input forms, so the
+  # prepared input of a default fit is the same as in earlier versions.
+  if (!M_single) {
+    out$natural_mortality <- .acl_M_input(M, nage, nrow(obs), ncol(obs), years)
+    # The templates still read the single number M; with a non-scalar M it is
+    # used only for the default start of init_Z.
+    out$data$M <- .acl_M_summary(out$natural_mortality)
+  }
+  if (!is.null(survey_q_age)) out$data$q_age <- .acl_survey_q_age(survey_q_age, nage)
+  if (!is.null(supplied_q) && supplied_q$form == "length_time") out$data$log_q_LY <- log(supplied_q$q)
+  out
 }
 
-# Optional model structures. The first choice of each setting is the published
-# structure of Zhang and Cadigan (2022) and is the default.
+# Optional model structures. The first choice of each setting is the original
+# structure and is the default: the structure of the package as first
+# released, which implements the model of Zhang and Cadigan (2022).
 .acl_structure_choices <- list(
   initial_plus_group = c("single_cohort", "equilibrium"),
   initial_length = c("length_at_age", "growth"),
   growth_increment = c("logistic", "von_bertalanffy"),
   growth_transition = c("midpoint", "bin"),
-  correlation_range = c("positive", "symmetric"))
+  correlation_range = c("positive", "symmetric"),
+  initial_deviations = c("cumulative", "independent"))
 
-# Named sets of settings. "published" is the structure of Zhang and Cadigan
-# (2022). "consistent" makes the first period follow the same growth and
-# mortality as later periods and uses the von Bertalanffy increment integrated
-# over the length bin. The four settings are meant to be used together.
+# Settings that apply to ACL as well as ALSCL.
+.acl_structure_acl <- c("initial_plus_group", "correlation_range", "initial_deviations")
+
+# Settings that a fit stores only when they differ from the default, so that
+# the stored structure of a default fit is the same as in earlier versions.
+.acl_structure_stored_if_set <- "initial_deviations"
+
+# Named sets of settings. "original" is the structure of the package as first
+# released, the implementation of the model of Zhang and Cadigan (2022). Two
+# details of its growth increment are in the code and not in the paper: the
+# constants l50 = 0.5 Linf and l95 = 0.05 Linf of the logistic function, and
+# the multiplication of the increment by the length of the time step.
+# "von_bertalanffy" holds the four ALSCL settings that are used together: the
+# von Bertalanffy growth increment, transition probabilities integrated over
+# each length bin, a length distribution of the first period generated by the
+# growth model, and an equilibrium plus group in the first period.
 .acl_structure_sets <- list(
-  published = list(),
-  consistent = list(initial_plus_group = "equilibrium", initial_length = "growth",
-                    growth_increment = "von_bertalanffy", growth_transition = "bin"))
+  original = list(),
+  von_bertalanffy = list(initial_plus_group = "equilibrium", initial_length = "growth",
+                         growth_increment = "von_bertalanffy", growth_transition = "bin"))
+
+# Earlier names of the sets. They are accepted with the same effect and
+# without a message, so that existing scripts keep working.
+.acl_structure_set_aliases <- c(published = "original", consistent = "von_bertalanffy")
+
+# The current name of a set, or NA when `name` is not the name of a set.
+.acl_structure_set_name <- function(name) {
+  if (!is.character(name) || length(name) != 1L || is.na(name)) return(NA_character_)
+  if (name %in% names(.acl_structure_set_aliases)) name <- .acl_structure_set_aliases[[name]]
+  if (name %in% names(.acl_structure_sets)) name else NA_character_
+}
 
 # Expand a set name, or a list with a `set` element, to a plain list of
 # settings. Settings given next to `set` replace those of the set. ACL keeps
@@ -182,11 +240,12 @@
 .acl_structure_expand <- function(structure, model = "ALSCL") {
   if (is.null(structure)) return(list())
   pick <- function(name, label) {
-    if (!is.character(name) || length(name) != 1L || is.na(name) || !name %in% names(.acl_structure_sets))
-      stop(label, " must be \"published\" or \"consistent\" (the name of a set); use a named list for ",
-           "single settings, for example list(growth_transition = \"bin\").", call. = FALSE)
+    name <- .acl_structure_set_name(name)
+    if (is.na(name))
+      stop(label, " must be \"original\" or \"von_bertalanffy\" (the name of a set); use a named list for ",
+           "single settings, for example list(correlation_range = \"symmetric\").", call. = FALSE)
     set <- .acl_structure_sets[[name]]
-    if (toupper(model) == "ACL") set <- set[intersect(names(set), c("initial_plus_group", "correlation_range"))]
+    if (toupper(model) == "ACL") set <- set[intersect(names(set), .acl_structure_acl)]
     set
   }
   if (is.character(structure)) return(pick(structure, "A character structure"))
@@ -218,12 +277,12 @@
 .acl_structure <- function(structure = list(), model = "ALSCL") {
   model <- toupper(model)
   structure <- .acl_structure_expand(structure, model)
-  available <- if (model == "ACL") c("initial_plus_group", "correlation_range") else names(.acl_structure_choices)
+  available <- if (model == "ACL") .acl_structure_acl else names(.acl_structure_choices)
   if (!is.list(structure) || is.data.frame(structure) || (length(structure) &&
       (is.null(names(structure)) || anyNA(names(structure)) || any(!nzchar(names(structure))) ||
        anyDuplicated(names(structure)))))
-    stop("structure must be \"published\", \"consistent\" or a named list, for example ",
-         "list(set = \"consistent\", correlation_range = \"symmetric\").", call. = FALSE)
+    stop("structure must be \"original\", \"von_bertalanffy\" or a named list, for example ",
+         "list(set = \"von_bertalanffy\", correlation_range = \"symmetric\").", call. = FALSE)
   unknown <- setdiff(names(structure), names(.acl_structure_choices))
   if (length(unknown))
     stop("Unknown structure setting: ", paste(unknown, collapse = ", "), ". Available settings: ",
@@ -242,8 +301,22 @@
     choices[[nm]] <- value
   }
   codes <- vapply(names(choices), function(nm) match(choices[[nm]], .acl_structure_choices[[nm]]) - 1L, integer(1))
-  list(choices = choices, data = as.list(codes[codes > 0L]))
+  unset <- names(codes)[codes == 0L & names(codes) %in% .acl_structure_stored_if_set]
+  list(choices = choices[setdiff(names(choices), unset)], data = as.list(codes[codes > 0L]))
 }
+
+# The form of the deviations of the initial numbers at age in a list of
+# structure choices. Fits with the default form and fits of earlier versions
+# do not store the setting.
+.acl_initial_deviations <- function(choices) {
+  value <- choices$initial_deviations
+  if (is.null(value)) .acl_structure_choices$initial_deviations[1L] else value
+}
+
+# Number of deviations of the initial numbers at age: A - 1 (all ages but the
+# first) with cumulative deviations, A with independent deviations.
+.acl_initial_deviation_count <- function(choices, nage)
+  if (.acl_initial_deviations(choices) == "independent") nage else nage - 1L
 .acl_observed_log <- function(model_result) {
   observed <- model_result$observations
   if (!is.null(observed)) {

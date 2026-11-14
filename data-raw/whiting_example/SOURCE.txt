@@ -1,0 +1,102 @@
+Input files of the bundled data set whiting_example
+===================================================
+
+North Sea whiting (Merlangius merlangus), North Sea International Bottom Trawl
+Survey (NS-IBTS), quarter 1, 1983 to 2026. data-raw/whiting_example.R builds
+data/whiting_example.rda from these files.
+
+Sources and licence
+-------------------
+ICES Database of Trawl Surveys (DATRAS), extraction 12 November 2026 of the
+North Sea International Bottom Trawl Survey (NS-IBTS), quarter 1. ICES,
+Copenhagen, Denmark. https://datras.ices.dk
+
+ICES Stock Assessment Database. Copenhagen, Denmark. ICES. Accessed 13 November
+2026. https://standardgraphs.ices.dk
+
+ICES. 2026. Working Group on the Assessment of Demersal Stocks in the North Sea
+and Skagerrak (WGNSSK). ICES Scientific Reports. 08:43. 1647 pp.
+https://doi.org/10.17895/ices.pub.32676345
+
+Public data in the ICES databases are available under the Creative Commons
+Attribution 4.0 International licence (CC BY 4.0,
+https://creativecommons.org/licenses/by/4.0/) according to the ICES Data Policy
+(version of April 2025, https://doi.org/10.17895/ices.pub.8883). ICES
+publications released from 2021 onwards are under the same licence. The files
+here were aggregated or transcribed from these sources by the authors of the
+ALSCL package. They are not ICES products, and results derived from them do not
+imply endorsement by ICES. The files in this folder remain under CC BY 4.0.
+
+How the files were built (North Sea test of ALSCL, November 2026)
+------------------------------------------------------------------
+Download: DATRAS web services getCPUELength (catch per unit effort per length
+per haul per hour) and getCAdata (individual length, weight, maturity and age
+records), survey NS-IBTS, quarter 1, 1983 to 2026, on 12 November 2026.
+
+data.CatL.csv
+  Survey index by length bin (rows) and year (columns), in number per hour of
+  trawling. Hauls in IBTS roundfish areas 1 to 7 made with the GOV trawl; hauls
+  recorded with another gear were dropped (59 in 1983, 4 in 1984, 8 in 1985, 15
+  in 2026). Catch per unit effort by 1-cm length class for each haul (lengths
+  rounded down to the cm), with zero for hauls without whiting, was averaged
+  within each ICES statistical rectangle and then across rectangles. Bin
+  width: the smallest of 1, 2 and 5 cm for which the central 98% of the index
+  (11 to 36 cm) spans at most 24 bins, which gives 2 cm. The end bins were
+  merged inwards until fish of those lengths were caught in at least 5 hauls in
+  every year: the bin labelled 9 holds all fish below 10 cm and the bin
+  labelled 43 all fish of 42 cm and longer. The bin labelled 11 holds 10 cm to
+  below 12 cm.
+
+data.wgt.csv, data.mat.csv
+  Weight (kg) and proportion mature at the bin labels, the same in every year,
+  from the individual records of the survey: weight (g) = 0.00440 * length
+  (cm)^3.183, fitted on the log scale with the correction for the mean of a
+  lognormal error (85896 records, 1997 to 2026), and a logistic regression of
+  maturity on length with 50% mature at 19.4 cm and 95% at 27.7 cm (145828
+  records, 1983 to 2026).
+
+survey_coverage.csv
+  By year: hauls used, ICES statistical rectangles with hauls, hauls with
+  whiting, and hauls_missing, the number of valid hauls in the DATRAS haul
+  records (all areas and gears) that the product of catch per unit effort by
+  length does not contain. 2009 lacks 63 of 398 valid hauls (63 of the 72
+  German hauls) and 2012 lacks 56 of 389 (all Scottish hauls); a second
+  download gave the same result. Seven other years lack 1 or 2 hauls.
+
+age_readings_length_at_age.csv, age_readings_index_at_age.csv
+  From the 205030 age readings of 1983 to 2026. Otoliths are sampled by length
+  class and are not a random sample of the catch. For each year, the
+  proportion at age among the fish aged in each 1-cm class (age-length key)
+  was multiplied by the survey index of that class. Summed over the classes,
+  this gives the index at age (second file, ages 1 to 10; older ages hold less
+  than 1% of the index in every year and are left out). The mean and standard
+  deviation of length at age were taken over the class midpoints for each year
+  and age with at least 5 aged fish, leaving out fish recorded as a plus
+  group. The first file gives the unweighted mean of these annual values over
+  the years of each period (the complete series and the decades), the number
+  of years and the number of aged fish. Age 1 is the first quarter 1 after the
+  year of hatching. These tables do not enter a fit.
+
+ices_M_at_age.csv, ices_maturity_at_age.csv
+  Natural mortality rate (per year) and proportion mature by age and year from
+  Tables 22.15 and 22.14 of the whiting section of WGNSSK 2026, as transcribed
+  by the test team: ages 1 to 5 and a plus group of ages 6 and older. The
+  natural mortality table ends in 2022; the maturity table covers 1991 to
+  2021.
+
+ices_assessment.csv
+  Summary table of the assessment of whiting in Subarea 4 and Division 7.d
+  (stock whg.27.47d, assessment of 2026, assessment key 22488) from the ICES
+  Stock Assessment Database, downloaded 13 November 2026: spawning stock
+  biomass (t), recruitment at age 0, mean fishing mortality rate at ages 2 to
+  5 (per year) and catch (t), 1982 to 2026.
+
+Settings recorded in the data set
+---------------------------------
+M = 0.50 per year from M = 4.899 * tmax^-0.916 (Then et al. 2015) with tmax =
+12 years, the oldest age read at least 3 times. Number of age classes =
+ceiling(log(100) / M), limited to 4 to 12, which gives 10. Survey catchability:
+logistic with 50% at 10 cm and 95% at 14 cm, an assumption. cv_len fixed at
+0.15 (mean coefficient of variation of length at ages 1 to 3 in the age
+readings: 0.148). Starting values of the growth parameters: see
+data-raw/whiting_example.R.
