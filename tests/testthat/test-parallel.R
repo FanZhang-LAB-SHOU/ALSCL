@@ -15,7 +15,10 @@ test_that("fixed multistart work is reproducible across socket worker counts", {
     expect_equal(unique(serial$start_diagnostics$pid), Sys.getpid())
     expect_length(unique(concurrent$start_diagnostics$pid), 2)
     expect_false(Sys.getpid() %in% concurrent$start_diagnostics$pid)
-    expect_true(all(concurrent$start_diagnostics$cpu_seconds > 0))
+    # Worker CPU time is recorded. A start of this small fixture can finish
+    # within one tick of the Windows process clock (about 15 ms), so 0 is valid.
+    cpu <- concurrent$start_diagnostics$cpu_seconds
+    expect_true(all(is.finite(cpu) & cpu >= 0))
     expect_true(all(concurrent$start_diagnostics$finished_at >=
                       concurrent$start_diagnostics$started_at))
     expect_equal(concurrent$workers, 2)
