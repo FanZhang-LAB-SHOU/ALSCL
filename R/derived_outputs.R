@@ -5,11 +5,7 @@
 # Check a fitted result and return its model type and coordinates.
 .acl_derived_fit <- function(fit, name = "fit") {
   if (!is.list(fit)) stop(name, " must be a fitted ACL or ALSCL result.", call. = FALSE)
-  if (is.null(fit$report) && (!is.null(fit$error) || identical(fit$converge, "FAILED"))) {
-    reason <- if (is.character(fit$error) && length(fit$error) == 1L && !is.na(fit$error))
-      paste0(" Fit error: ", fit$error) else ""
-    stop(name, " is a failed fit without estimates and cannot be used here.", reason, call. = FALSE)
-  }
+  .acl_stop_if_failed(fit, name)
   if (!is.list(fit$report)) stop(name, " must be a fitted ACL or ALSCL result with a report.", call. = FALSE)
   model <- .detect_model_name(fit, NA_character_)
   if (!model %in% c("ACL", "ALSCL")) stop(name, " must be an ACL or ALSCL result.", call. = FALSE)

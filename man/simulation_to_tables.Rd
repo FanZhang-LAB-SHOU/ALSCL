@@ -22,7 +22,12 @@ recorded in \code{sm}.}
 A list with data frames \code{data.CatL} (survey catch at length),
 \code{data.wgt} (weight at length) and \code{data.mat} (proportion mature
 at length). Each has a \code{LengthBin} column followed by one column per
-model time step.
+model time step. The rows are labelled with the length midpoints only.
+To fit the tables, also pass the interior borders of the length bins,
+\code{len_border = sm$len_border}, and the midpoints, as
+\code{\link{sim_model}} does: without them the borders are placed
+halfway between midpoints, which differs from the simulated bins when
+the bins have unequal widths (for example the krill preset).
 }
 \description{
 Converts the output of \code{\link{sim_data}} to the three tables that

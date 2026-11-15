@@ -28,8 +28,17 @@ jobs:
           # macOS knitr and xfun binaries failed archive detection in CI.
           # Use pak's dependency override; keep the complete package checks.
           # https://pak.r-lib.org/reference/faq.html
-          extra-packages: ${{ runner.os == 'macOS' && 'any::rcmdcheck, knitr=?source, xfun=?source' || 'any::rcmdcheck' }}
+          extra-packages: ${{ runner.os == 'macOS' && 'any::rcmdcheck, knitr=?source, xfun=?source' || (runner.os == 'Linux' && 'any::rcmdcheck, any::roxygen2' || 'any::rcmdcheck') }}
           needs: check
+      - name: Check that the help pages match the roxygen comments
+        if: runner.os == 'Linux'
+        shell: Rscript {0}
+        run: |
+          roxygen2::roxygenise()
+          changed <- system2("git", c("status", "--porcelain", "--", "man", "NAMESPACE"), stdout = TRUE)
+          if (length(changed))
+            stop("The help pages differ from the roxygen comments in R/. Run roxygen2::roxygenise() and commit:\n",
+                 paste(changed, collapse = "\n"))
       # Every R process otherwise compiles the TMB templates into its own
       # temporary folder. One folder shared by the steps below is named here;
       # ALSCL_TEST_CACHE is read by tests/testthat/helper-fixtures.R and

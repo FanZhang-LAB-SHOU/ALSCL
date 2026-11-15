@@ -25,7 +25,8 @@ Extract fixed-effect parameter estimates on a specified scale
 }
 \details{
 Natural-scale estimates use exp for log and mean_log parameters,
-plogis for logit parameters, and identity for ACL t0. The natural-scale SE
+plogis for logit parameters (2 * plogis - 1 with correlation_range =
+"symmetric"), identity for ACL t0 and t0_lower + exp for ALSCL log_t0. The natural-scale SE
 uses the delta method; interval endpoints transform an internal-scale Wald
 interval. exp(mean_log_F) and exp(mean_log_R) are baseline process levels,
 not arithmetic averages over time. Parameter names retain their exact

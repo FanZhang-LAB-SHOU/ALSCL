@@ -373,12 +373,14 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
          "nyear * peel_step is ", as.double(nyear) * peel_step, " and the data have ",
          ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
   q_age_shift <- .acl_q_age_start_shift(fit_args)
+  symmetric_starts <- .acl_symmetric_supplied(fit_args$structure, fit_args$parameters, model_type)
   fit_args <- .acl_retro_fixed_scalars(fit_args)
   # The full fit and the peels are silent fits, so the notes on a part of the
   # set "von_bertalanffy" and on the start of mean_log_R with survey_q_age are
   # given here, once for the call.
   .acl_partial_set_note(fit_args$structure, model_type, silent)
   .acl_q_age_start_note(q_age_shift, fit_args$survey_q_age, silent)
+  .acl_symmetric_start_note(symmetric_starts, silent)
 
   progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()

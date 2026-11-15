@@ -383,7 +383,9 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
 #'   Columns include parameter, kind, start, natural_start, lower, upper,
 #'   transform, status, map_source, size, dimensions, n_free, n_fixed and n_tied.
 #'   Bounds and starts are on the optimizer scale. Natural starts apply exp,
-#'   plogis or identity. exp(mean_log_R) and exp(mean_log_F) are natural-scale
+#'   plogis (2 * plogis - 1 with correlation_range = "symmetric"), identity
+#'   (ACL t0) or t0_lower + exp (ALSCL log_t0); the transform column names the
+#'   one used. exp(mean_log_R) and exp(mean_log_F) are natural-scale
 #'   process baselines, not arithmetic means. Random-effect starts are all zero;
 #'   natural_start is their
 #'   multiplicative factor. n_free counts independent mapped values; n_tied

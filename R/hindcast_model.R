@@ -21,9 +21,11 @@
 # time step) when it was supplied by time step; NULL uses the fitted vector.
 .acl_hindcast_predict <- function(fit, horizon, future_M = NULL, future_q = NULL) {
   r <- fit$report
+  # A fitted correlation lies between 0 and 1, or between -1 and 1 with
+  # structure$correlation_range = "symmetric".
   scalar <- function(x, name, correlation = FALSE) {
     if (!is.numeric(x) || length(x) != 1L || !is.finite(x) ||
-        (correlation && (x < 0 || x > 1)))
+        (correlation && abs(x) > 1))
       stop("Invalid fitted ", name, " for the conditional process path.", call. = FALSE)
     as.numeric(x)
   }

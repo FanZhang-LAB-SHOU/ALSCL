@@ -113,7 +113,10 @@ per model step, not per calendar year.}
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
 parameters, a smaller maximum gradient and objective increase at most
-\code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+\code{1e-8} (roundoff tolerance). When the gradient is still 0.001 or more
+after these steps, a second pass of up to five steps accepts an objective
+increase within the working precision of the objective,
+\code{sqrt(.Machine$double.eps)} times its size. FALSE skips refinement. Raw optimizer codes
 remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
@@ -144,9 +147,9 @@ minus init_Z plus a normal deviation, so the deviations accumulate over
 ages and \code{dev_log_N0} has \code{nage - 1} entries) or \code{"independent"}
 (Equation 11 of Zhang and Cadigan 2022: log N(a) = log R(1) -
 init_Z (a - 1) + e(a) for ages a = 1 to \code{nage}, with independent normal
-deviations e(a), so \code{dev_log_N0} has \code{nage} entries and the numbers at
-the first age in the first period differ from the reported recruitment
-of that period; with an equilibrium plus group, the deviation of the
+deviations e(a), so \code{dev_log_N0} has \code{nage} entries and the reported
+recruitment \code{Rec} of the first period is the number at the first age in
+that period, e(1) included; with an equilibrium plus group, the deviation of the
 plus group multiplies the sum of the older cohorts). The settings used
 are stored in the \code{structure} element of the fit; \code{initial_deviations}
 is stored only when it is \code{"independent"}, so that the stored structure

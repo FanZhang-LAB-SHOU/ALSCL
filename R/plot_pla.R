@@ -49,6 +49,7 @@
 #' plot_pla(fit, low_col = "white", high_col = "steelblue")
 #' }
 plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+  .acl_stop_if_failed(model_result, "model_result")
   # NULL inherits the global palette.
   if (is.null(low_col)) low_col <- acl_theme("low_col")
   if (is.null(high_col)) high_col <- acl_theme("high_col")

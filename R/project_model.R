@@ -75,17 +75,19 @@
 #' @export
 project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
                           allow_failed_fit = FALSE) {
+  .acl_stop_if_failed(fit)
   if (!is.list(fit) || !is.list(fit$report))
     stop("fit must contain a fitted population report.", call. = FALSE)
   model <- toupper(fit$model_type)
   if (length(model) != 1L || !model %in% c("ACL", "ALSCL"))
     stop("fit$model_type must be ACL or ALSCL.", call. = FALSE)
   .acl_check_flag(allow_failed_fit, "allow_failed_fit")
-  failed_fit <- isFALSE(fit$diagnostics$numerical_ok)
+  screen <- .acl_source_screen(fit)
+  failed_fit <- isFALSE(screen)
   if (failed_fit) {
     if (!allow_failed_fit)
       stop("The source fit failed the numerical screen (diagnostics$numerical_ok = FALSE). ",
-        "Review fit$diagnostics; set allow_failed_fit = TRUE only for an exploratory projection.",
+        "Review summary(fit); set allow_failed_fit = TRUE only for an exploratory projection.",
         call. = FALSE)
     warning("The source fit failed the numerical screen; this exploratory projection uses that failed fit ",
       "because allow_failed_fit = TRUE.", call. = FALSE)
@@ -253,8 +255,8 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
       state_timing = "start of each future period",
       mortality_timing = "terminal fitted F/M produce first future state; future F[t]/M[t] produce catch[t] and survival to t+1",
       mortality_units = "instantaneous per model time step; not annualized",
-      source_fit_numerical_ok = fit$diagnostics$numerical_ok,
-      source_fit_status = if (failed_fit) "failed" else if (isTRUE(fit$diagnostics$numerical_ok)) "passed" else "unknown",
+      source_fit_numerical_ok = if (failed_fit) FALSE else fit$diagnostics$numerical_ok,
+      source_fit_status = if (failed_fit) "failed" else if (isTRUE(screen)) "passed" else "unknown",
       failed_fit_override = failed_fit && allow_failed_fit))
 }
 

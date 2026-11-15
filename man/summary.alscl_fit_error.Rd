@@ -6,6 +6,9 @@
 \alias{print.alscl_fit_error}
 \alias{coef.alscl_fit_error}
 \alias{vcov.alscl_fit_error}
+\alias{fitted.alscl_fit_error}
+\alias{nobs.alscl_fit_error}
+\alias{logLik.alscl_fit_error}
 \title{Methods for a failed fit record}
 \usage{
 \method{summary}{alscl_fit_error}(object, ...)
@@ -17,6 +20,12 @@
 \method{coef}{alscl_fit_error}(object, ...)
 
 \method{vcov}{alscl_fit_error}(object, ...)
+
+\method{fitted}{alscl_fit_error}(object, ...)
+
+\method{nobs}{alscl_fit_error}(object, ...)
+
+\method{logLik}{alscl_fit_error}(object, ...)
 }
 \arguments{
 \item{object, x}{A failure record of class alscl_fit_error.}
@@ -27,8 +36,9 @@
 print and summary report the error message. summary returns a
 summary.alscl_fit_error list with the error, the replicate number when
 recorded, and a one-row diagnostics table with numerical_ok = FALSE.
-coef and vcov return NULL, so a loop over a batch of results does not stop
-at a failed fit.
+coef, vcov and fitted return NULL, nobs returns NA and logLik returns an NA
+log-likelihood, so AIC() and BIC() give NA. A loop over a batch of results
+therefore does not stop at a failed fit.
 }
 \description{
 Batch functions such as \code{\link[=sim_model]{sim_model()}} and \code{\link[=fit_scenarios]{fit_scenarios()}} keep a record of
@@ -43,4 +53,5 @@ failed <- z$fits$negative_M
 failed
 summary(failed)$diagnostics$numerical_ok
 coef(failed)
+AIC(failed)
 }

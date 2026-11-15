@@ -86,7 +86,10 @@
 #' @param polish Logical. By default, apply up to five safeguarded Newton steps
 #'   to the selected fit, requiring a positive-definite Hessian, in-bounds
 #'   parameters, a smaller maximum gradient and objective increase at most
-#'   `1e-8` (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+#'   `1e-8` (roundoff tolerance). When the gradient is still 0.001 or more
+#'   after these steps, a second pass of up to five steps accepts an objective
+#'   increase within the working precision of the objective,
+#'   `sqrt(.Machine$double.eps)` times its size. FALSE skips refinement. Raw optimizer codes
 #'   remain unchanged; inspect `optimizer_history`, `refinement`, and
 #'   `diagnostics` separately. This may change estimates at numerical precision.
 #'   On checked TMB versions, the refinement Hessian shares the sd_cores limit

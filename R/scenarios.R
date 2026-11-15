@@ -58,6 +58,10 @@
     for (args in settings)
       if (!isTRUE(args$silent) &&
           .acl_q_age_start_note(.acl_q_age_start_shift(args), args$survey_q_age, FALSE)) break
+  if (workers > 1L)
+    for (args in settings)
+      if (!isTRUE(args$silent) && .acl_symmetric_start_note(
+          .acl_symmetric_supplied(args$structure, args$parameters, model), FALSE)) break
   .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
 }
 

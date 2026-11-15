@@ -162,7 +162,7 @@ case_status <- run_case_studies(out = "my_cases")
 
 开展模拟研究时，增大 `iter_range` 以增加重复次数，每次改变一项设置，例如调查观测误差或自然死亡率。用全部拟合计算失败率。偏差和 RMSE 只使用通过数值检查且估计值与真值均有限的配对，区间覆盖率只使用可计算的区间。报告指标时分别列出配对数和区间数。见[模拟调查数据](USER_GUIDE.md#simulation)。
 
-Increase `iter_range` for a simulation study and vary one setting at a time, such as survey observation error or natural mortality. Report the failure rate across all attempted fits. Bias and RMSE use finite estimate–truth pairs from fits that passed the numerical checks. Interval coverage uses the subset with usable intervals. Report the number of pairs and intervals alongside the respective statistics. See [Simulate survey data](USER_GUIDE.md#simulation).
+Increase `iter_range` for a simulation study and vary one setting at a time, such as survey observation error or natural mortality. Report the failure rate across all attempted fits. Bias and RMSE use finite estimate-truth pairs from fits that passed the numerical checks. Interval coverage uses the subset with usable intervals. Report the number of pairs and intervals alongside the respective statistics. See [Simulate survey data](USER_GUIDE.md#simulation).
 
 <a id="case-studies-next"></a>
 

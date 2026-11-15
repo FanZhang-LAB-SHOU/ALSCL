@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.4.4.9000，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.5，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **77 exported functions** of ALSCL 2.4.4.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **77 exported functions** of ALSCL 2.4.5 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -42,7 +42,7 @@ dat <- x$data.CatL
 - [fit_scenarios](#fit_scenarios) — 在同一观测数据上串行或 socket 并行拟合具名敏感性情景。 / Fit named sensitivity scenarios on common observations with serial or socket execution.
 - [extract_parameters](#extract_parameters) — 提取参数、尺度与固定状态 / Extract parameters, scales and estimation status
 - [extract_estimates](#extract_estimates) — 统一提取带坐标的种群估计 / Extract population estimates with coordinates
-- [check_fit](#check_fit) — 用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time–length heatmap, actual-time lag correlations and a normal QQ plot.
+- [check_fit](#check_fit) — 用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time-length heatmap, actual-time lag correlations and a normal QQ plot.
 - [check_alscl_data](#check_alscl_data) — 在编译或拟合之前检查完整数据和模型设置。 / Check complete data and model settings before compiling or fitting.
 - [acl_theme](#acl_theme) — 读取全局主题 / Read global theme settings
 - [acl_theme_reset](#acl_theme_reset) — 恢复默认主题 / Reset theme settings
@@ -1191,7 +1191,7 @@ plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_growth)。
 
-这里的参考点是本例生成的模拟年龄–体长数据，用于演示参考曲线拟合；请用独立采集的年龄–体长观测替换它们。 / These reference points are synthetic age–length data generated in this example to demonstrate the reference fit; replace them with independently collected age–length observations.
+这里的参考点是本例生成的模拟年龄–体长数据，用于演示参考曲线拟合；请用独立采集的年龄–体长观测替换它们。 / These reference points are synthetic age-length data generated in this example to demonstrate the reference fit; replace them with independently collected age-length observations.
 
 <a id="plot_compare_metrics"></a>
 ## `plot_compare_metrics()`
@@ -1868,7 +1868,7 @@ plot_relative_catch(b, observed = simulated, type = "weight", observed_name = "S
 
 每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
 
-Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.
+Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
 调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。
 
@@ -2210,7 +2210,7 @@ The upper panels show, for each time series, the median relative error by time s
 ```r
 plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9), line_size = NULL, 
     line_color = NULL, se_color = NULL, se_alpha = NULL, point_size = NULL, facet_ncol = NULL, 
-    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, 
+    facet_scales = "free_y", return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, 
     title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, 
     legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
 ```
@@ -2226,6 +2226,7 @@ plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9)
 | `se_alpha` | `NULL` | 带的不透明度；NULL 继承全局 se_alpha。 | Opacity of the band; NULL inherits the global se_alpha setting. |
 | `point_size` | `NULL` | 参数中位数点的大小；NULL 继承全局 point_size。 | Size of the median of a parameter; NULL inherits the global point_size setting. |
 | `facet_ncol` | `NULL` | 时间序列分面的列数；NULL 时一行最多三幅。 | Columns of the time-series panels; NULL puts up to three panels in a row. |
+| `facet_scales` | `"free_y"` | 时间序列分面的坐标尺度："fixed"、"free"、"free_x" 或 "free_y"，默认 "free_y"。 | Character. Scales of the time-series panels: "fixed", "free", "free_x" or "free_y". Default is "free_y". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
@@ -3210,7 +3211,7 @@ check$warnings
 <a id="check_fit"></a>
 ## `check_fit`
 
-用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time–length heatmap, actual-time lag correlations and a normal QQ plot.
+用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time-length heatmap, actual-time lag correlations and a normal QQ plot.
 
 ```r
 check_fit (fit, max_lag = 5)
@@ -3748,7 +3749,7 @@ lapply(fits, function(fit) fit$diagnostics)
 sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters = NULL, 
     parameters.L = NULL, parameters.U = NULL, map = NULL, M = NULL, ncores = 1, train_times = 1, 
     control = list(), F_structure = c("group_year", "year"), polish = TRUE, model = c("acl", 
-        "alscl"), nstarts = 1, allow_M_mismatch = FALSE, structure = list())
+        "alscl"), nstarts = 1, allow_M_mismatch = FALSE, structure = list(), t0_lower = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
@@ -3770,6 +3771,7 @@ sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
 | `allow_M_mismatch` | `FALSE` | 逻辑值。FALSE（默认）在给定的 M 与重复文件记录的自然死亡率不同时停止。TRUE 按给定的 M 拟合，用于研究自然死亡率设定有误的情形。 | Logical. FALSE (default) stops when a supplied M differs from the natural mortality rate recorded in a replicate file. TRUE fits the supplied M, for a study of misspecified natural mortality. |
 | `structure` | `list()` | 拟合模型的可选结构，与 `run_acl()` 和 `run_alscl()` 中相同。默认（空列表）为原始结构。取值不必等于生成模拟重复的参数列表中的 `structure`：取不同的值就是拟合另一种结构的模型，例如对用累加初始偏差模拟的数据使用 `list(initial_deviations = "independent")`。 | Optional model structures of the fitted model, as in `run_acl()` and `run_alscl()`. The default, an empty list, is the original structure. The value need not equal the `structure` element of the parameter list that generated the replicates: a different value fits a model with another structure, for example `list(initial_deviations = "independent")` for data simulated with cumulative initial deviations. |
+| `t0_lower` | `NULL` | 仅用于 ALSCL。t0 的下限，与 `run_alscl()` 相同；NULL（默认）取 0。设为负值（例如 -1）即可拟合用负 t0 生成的重复。 | ALSCL only. Lower limit of t0, as in `run_alscl()`; NULL (default) uses 0. Set a negative value, for example -1, to fit replicates generated with a negative t0. |
 
 **返回 / Returns:** 返回包含 iter 和 elapsed 的具名拟合或错误记录列表；每个结果同时替换对应 `result_rep_<id>` 文件。
 
@@ -3914,13 +3916,13 @@ self_test (fit, nsim = 20, seed = NULL, process = c("conditional", "resample"), 
 | `silent` | `TRUE` | 不显示拟合过程信息。 | Suppress fitting progress messages. |
 | `save_fits` | `FALSE` | 是否在结果中保留各次重新拟合（不含 TMB 对象）。 | Keep the refits, without the TMB object, in the result. |
 
-**返回 / Returns:** `alscl_self_test` 对象：`replicates`（每次重新拟合的数值检查、耗时、报错和警告）、`series` 和 `parameters`（每个重复、量和时间步或参数的真值、估计值、标准误、区间、误差、相对误差和是否覆盖）、`by_year`、`series_summary` 和 `parameter_summary`（通过检查的重新拟合的中位相对误差、第 10 和第 90 百分位数、中位绝对相对误差和覆盖率）、`screen`（通过检查的比例）、`failures`、`settings`（含 `process_mean_truth`，即 mean_log_F 和 mean_log_R 真值的定义）、`simulation`（`simulate_fit()` 的 metadata）和 `fits`。`print()` 和 `summary()` 显示汇总，`plot_self_test()` 画相对误差。
+**返回 / Returns:** `alscl_self_test` 对象：`replicates`（每次重新拟合的数值检查、耗时、报错和警告）、`series` 和 `parameters`（每个重复、量和时间步或参数的真值、估计值、标准误、区间、误差、相对误差和是否覆盖）、`by_year`、`series_summary` 和 `parameter_summary`（通过检查的重新拟合的中位相对误差、第 10 和第 90 百分位数、中位绝对相对误差和覆盖率）、`screen`（通过检查的比例）、`failures`、`settings`、`simulation`（`simulate_fit()` 的 metadata）和 `fits`。`print()` 和 `summary()` 显示汇总，`plot_self_test()` 画相对误差。
 
-An `alscl_self_test` object: `replicates` (numerical checks, time, error and warnings of each refit), `series` and `parameters` (truth, estimate, standard error, interval, error, relative error and coverage for each replicate and quantity and time step, or parameter), `by_year`, `series_summary` and `parameter_summary` (median relative error, 10th and 90th percentiles, median absolute relative error and coverage over the refits that pass the checks), `screen` (the share that pass), `failures`, `settings` (with `process_mean_truth`, the definition of the truth of mean_log_F and mean_log_R), `simulation` (the metadata of `simulate_fit()`) and `fits`. `print()` and `summary()` show the summaries; `plot_self_test()` draws the relative errors.
+An `alscl_self_test` object: `replicates` (numerical checks, time, error and warnings of each refit), `series` and `parameters` (truth, estimate, standard error, interval, error, relative error and coverage for each replicate and quantity and time step, or parameter), `by_year`, `series_summary` and `parameter_summary` (median relative error, 10th and 90th percentiles, median absolute relative error and coverage over the refits that pass the checks), `screen` (the share that pass), `failures`, `settings`, `simulation` (the metadata of `simulate_fit()`) and `fits`. `print()` and `summary()` show the summaries; `plot_self_test()` draws the relative errors.
 
-conditional 时每个重复的真值都是源拟合的种群；resample 时每个重复有自己的种群，由模型从新抽取的偏差算出，检验也包括估计的过程方差。标量参数的真值是源拟合的估计值，只有一个例外。conditional 时偏差是拟合值，而不是从其分布中抽取的值，其均值不一定为零，所以 mean_log_F 和 mean_log_R 的真值取实际的对数 F 和对数补充量的均值，即源拟合的估计值加上拟合偏差在该过程所有格上的均值（F 为所有年龄或体长组和所有时间步，补充量为所有时间步），map 设为共享值或固定值的格按模板实际使用的值计入。重新拟合估计的就是这个均值，因为数据提供的是过程水平的信息，不能区分均值参数和偏差各占多少。resample 时新抽取的偏差均值为零，真值是源拟合的估计值。`settings$process_mean_truth` 相应为 "realized" 或 "source"。其他参数也可能以同样的方式与偏差相互替代，例如 init_Z 与初始偏差的均值，它们的真值仍是源拟合的估计值，此时时间序列比这些参数更能说明问题。两种情形下固定参数、自然死亡率、调查可捕性、生长和成熟度都保持不变。每次重新拟合使用源拟合的模型、结构、map、边界、固定值和固定输入。original 时停在局部最优的重新拟合算作误差，与实际数据的情形一样；estimates 更快，但可能掩盖局部最优和数据不能确定的参数。相对误差为 (估计值 - 真值) / 真值；真值为零时没有定义，真值接近零（如 t0 或接近零的相关系数）时很大，此时看 `error`。时间序列有标准误时（SSB、补充量、总生物量和总丰度，不含 F 的汇总）和估计参数（区间同 `extract_parameters()`）计算覆盖率。
+conditional 时每个重复的真值都是源拟合的种群；resample 时每个重复有自己的种群，由模型从新抽取的偏差算出，检验也包括估计的过程方差。两种情形下标量参数的真值都是源拟合的估计值。conditional 时偏差是拟合值，其算术平均不一定为零；但在估计值处，AR(1) 过程的均值参数（mean_log_F、mean_log_R）等于拟合过程的加权平均，其中第一个和最后一个时间步的权重较大，重新拟合若找回了这个过程，也就找回了这个加权平均。F 和补充量的水平由时间序列衡量，其真值是实现的过程。可能与偏差相互替代的参数（如 init_Z 与初始偏差）也更适合用时间序列判断。两种情形下固定参数、自然死亡率、调查可捕性、生长和成熟度都保持不变。每次重新拟合使用源拟合的模型、结构、map、边界、固定值和固定输入。original 时停在局部最优的重新拟合算作误差，与实际数据的情形一样；estimates 更快，但可能掩盖局部最优和数据不能确定的参数。相对误差为 (估计值 - 真值) / |真值|，所以无论真值正负，正值都表示高估；真值为零时没有定义，真值接近零（如 t0 或接近零的相关系数）时很大，此时看 `error`。时间序列有标准误时（SSB、补充量、总生物量和总丰度，不含 F 的汇总）和估计参数（区间同 `extract_parameters()`）计算覆盖率。
 
-With conditional, the truth of every replicate is the population of the source fit; with resample, each replicate has its own population, computed by the model from the new deviations, and the test also covers the estimated process variances. The truth of a scalar parameter is its estimate in the source fit, with one exception. In conditional mode the deviations are the fitted values, not a draw from their distribution, and their mean need not be zero, so the truth of mean_log_F and mean_log_R is the mean of the realized log F and log recruitment: the source estimate plus the mean of the fitted deviations over all cells of the process (all ages or length bins and time steps for F, all time steps for recruitment), with tied and fixed cells counted at the values the template uses. A refit estimates this mean, because the data inform the level of a process and not its split between the mean parameter and the deviations. In resample mode the new deviations have mean zero and the truth is the source estimate. `settings$process_mean_truth` is "realized" or "source" accordingly. Other parameters can trade off with the deviations in the same way, for example init_Z with the mean of the initial deviations, and keep the source estimate as truth; the time series are then a better measure than these parameters. Fixed parameters, natural mortality, survey catchability, growth and maturity are unchanged in both modes. Each refit uses the model, structure, map, bounds, fixed values and fixed inputs of the source fit. With original, a refit that stops at a local optimum counts as an error, as it would with real data; estimates is faster but can hide local optima and parameters that the data do not determine. The relative error is (estimate - truth) / truth; it is undefined for a zero truth and large for a truth near zero (t0, or a correlation near zero), where `error` is the measure to read. Coverage is computed for series with standard errors (SSB, recruitment, total biomass and abundance, not the summary of F) and for the estimated parameters, with the interval of `extract_parameters()`.
+With conditional, the truth of every replicate is the population of the source fit; with resample, each replicate has its own population, computed by the model from the new deviations, and the test also covers the estimated process variances. The truth of a scalar parameter is its estimate in the source fit, in both modes. In conditional mode the deviations are the fitted values and their arithmetic mean need not be zero, but at the estimate the mean parameter of an AR(1) process (mean_log_F, mean_log_R) equals a weighted mean of the fitted process in which the first and last time steps weigh more, and a refit that recovers the process recovers this weighted mean. The level of F and recruitment is measured by the time series, whose truth is the realized process. Parameters that can trade off with the deviations, for example init_Z with the initial deviations, are also better judged by the time series. Fixed parameters, natural mortality, survey catchability, growth and maturity are unchanged in both modes. Each refit uses the model, structure, map, bounds, fixed values and fixed inputs of the source fit. With original, a refit that stops at a local optimum counts as an error, as it would with real data; estimates is faster but can hide local optima and parameters that the data do not determine. The relative error is (estimate - truth) / |truth|, so a positive value is an overestimate for any sign of the truth; it is undefined for a zero truth and large for a truth near zero (t0, or a correlation near zero), where `error` is the measure to read. Coverage is computed for series with standard errors (SSB, recruitment, total biomass and abundance, not the summary of F) and for the estimated parameters, with the interval of `extract_parameters()`.
 
 估计值能恢复真值的自检说明，在模型假设成立时，模型能从与此类似的数据估计其参数（Deroba et al. 2015）。它不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差；检验这些需要用假设不同的操作模型做模拟（`sim_model()`）。并行进程的个数不改变结果。
 

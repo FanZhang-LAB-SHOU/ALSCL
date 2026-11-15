@@ -44,7 +44,7 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [19. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
 - [20. 年龄别平均体长 / Mean length at age](#VB)
 - [21. 各时间步的年龄别平均体长 / Mean length at age by time step](#length_at_age)
-- [22. 年龄—体长概率矩阵 / Age–length probability matrix](#pla)
+- [22. 年龄—体长概率矩阵 / Age-length probability matrix](#pla)
 - [23. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](#F_ACL_year)
 - [24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
 - [25. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](#F_ALSCL_year)
@@ -496,7 +496,7 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
-Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock–recruitment curve.
+Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock-recruitment curve.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -557,14 +557,14 @@ Each panel shows the mean length of one age class in each time step, from `lengt
 <a id="plot_pla"></a>
 
 <a id="pla"></a>
-## 22. 年龄—体长概率矩阵 / Age–length probability matrix
+## 22. 年龄—体长概率矩阵 / Age-length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
 plot_pla(b)
 ```
 
-[![年龄—体长概率矩阵 / Age–length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
+[![年龄—体长概率矩阵 / Age-length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
 
 静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 Age group。
 
@@ -709,7 +709,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
 
 Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis: the navy line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
 
-Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.
+Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_residuals)
 
@@ -835,7 +835,7 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 
 这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10–90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
 
-This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10–90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
+This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10-90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
 
 ```r
 # Synthetic display example with missing boundary length bins.

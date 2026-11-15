@@ -5,7 +5,9 @@
   had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
   previous_seed <- if (had_seed) get(".Random.seed", envir = .GlobalEnv)
   function() {
-    do.call(RNGkind, as.list(previous_kind))
+    # Restoring a caller's "Rounding" sampler (RNGversion("3.5.0")) repeats R's
+    # warning about that sampler, which the caller has already received.
+    suppressWarnings(do.call(RNGkind, as.list(previous_kind)))
     if (had_seed) assign(".Random.seed", previous_seed, envir = .GlobalEnv)
     else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
       rm(".Random.seed", envir = .GlobalEnv)
@@ -323,6 +325,7 @@
 .acl_initial_deviation_count <- function(choices, nage)
   if (.acl_initial_deviations(choices) == "independent") nage else nage - 1L
 .acl_observed_log <- function(model_result) {
+  .acl_stop_if_failed(model_result, "model_result")
   observed <- model_result$observations
   if (!is.null(observed)) {
     observed <- as.matrix(observed)

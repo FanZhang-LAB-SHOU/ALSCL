@@ -102,6 +102,7 @@ for path,soup in pages.items():
         main=soup.select_one('main')
         if re.search('[\u3400-\u9fff]',main.get_text()):errors.append(f'{name}: untranslated Chinese in English content')
         if re.search('[\u3000-\u303f\uff00-\uffef]',main.get_text()):errors.append(f'{name}: full-width punctuation in English content')
+        if re.search('[\u2013\u2014]',main.get_text()):errors.append(f'{name}: en or em dash in English content; use a hyphen for ranges and compounds')
 for language in ['','zh/']:
     for f in functions:
         path=SITE/(language+'reference/'+f['name']+'.html')
@@ -144,9 +145,13 @@ for f in functions:
 n_functions=len(functions)
 n_plots=len([f for f in functions if f['name'].startswith('plot_') and f['name'] not in deprecated])
 n_figures=len(re.findall(r'^## \d+\. ',gallery,re.M))
+n_cases=len(json.loads((ROOT/'website/cases.json').read_text(encoding='utf-8')))
+n_chapters=len(list((ROOT/'docs/wiki').glob('[0-9][0-9]-*.md')))
+number_en=dict(enumerate('zero one two three four five six seven eight nine ten eleven twelve'.split()))
+number_zh=dict(enumerate('零一二三四五六七八九十'))|{11:'十一',12:'十二'}
 quoted=[('docs/FUNCTION_REFERENCE.md',reference,[f'对应 ALSCL {version}，覆盖 **{n_functions} 个公开函数**',f'All **{n_functions} exported functions** of ALSCL {version}']),
-        ('README.md',(ROOT/'README.md').read_text(encoding='utf-8'),[f'Latest release: {release}',f'all {n_functions} functions',f'{n_figures} figures with their code']),
-        ('README.zh-CN.md',(ROOT/'README.zh-CN.md').read_text(encoding='utf-8'),[f'最新版本：{release}',f'{n_functions} 个函数的参考',f'{n_figures} 张示例图']),
+        ('README.md',(ROOT/'README.md').read_text(encoding='utf-8'),[f'Latest release: {release}',f'all {n_functions} functions',f'{n_figures} figures with their code',f'{n_plots} plotting functions',f'{number_en[n_cases]} worked cases',f'{n_chapters} chapters']),
+        ('README.zh-CN.md',(ROOT/'README.zh-CN.md').read_text(encoding='utf-8'),[f'最新版本：{release}',f'{n_functions} 个函数的参考',f'{n_figures} 张示例图',f'{n_plots} 个绘图函数',f'{number_zh[n_cases]}个应用案例',f'{n_chapters} 章']),
         ('docs/PLOT_GALLERY.md',gallery,[f'**{n_figures} 张图，覆盖 {n_plots} 个公开绘图函数及主要类型。{n_figures} figures covering all {n_plots} public plotting functions and major variants.**']),
         ('website/content/en/index.md',(ROOT/'website/content/en/index.md').read_text(encoding='utf-8'),[f'ALSCL {version}']),
         ('website/content/zh/index.md',(ROOT/'website/content/zh/index.md').read_text(encoding='utf-8'),[f'ALSCL {version}'])]

@@ -35,7 +35,7 @@ library(ALSCL)
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
 
-网站对应 ALSCL 2.4.4.9000，即 2.4.4 发布之后 `main` 分支上的开发版；各版本变化和尚未发布的改动见[更新记录](news/index.html)。
+网站对应 ALSCL 2.4.5；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 
@@ -89,12 +89,12 @@ comparison$summary
 
 <h2 id="citation">引用</h2>
 
-Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, **23**(5), 1121–1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)。
+Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, **23**(5), 1121-1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)。
 
 <h3 id="krill-paper">相关应用：南极磷虾</h3>
 
-Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1–22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
+Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1-22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
 
 该研究将 ACL 与 ALSCL 应用于南极磷虾，考察同一队列内体长相关的生长和死亡率差异如何影响资源评估结果。
 
-报告分析时，也应记录 ALSCL 版本、代码提交号、数据来源与拟合假设。
+`citation("ALSCL")` 会给出模型论文和软件包的文献。报告分析时，也应记录 ALSCL 版本、代码提交号、数据来源与拟合假设。

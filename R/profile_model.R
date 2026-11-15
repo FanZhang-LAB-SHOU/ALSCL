@@ -83,7 +83,9 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
     old <- options(ALSCL.framework = recipe$settings$ALSCL.framework)
     on.exit(options(old), add = TRUE)
   }
-  args <- .acl_resolved_args(recipe$args, recipe$model)
+  # Drop map entries of an older archive that release parameters the model
+  # does not have, as refit_model() does.
+  args <- .acl_resolved_args(.acl_recipe_map_compat(recipe$args, recipe$model), recipe$model)
   params <- args$parameters %||% list()
   for (nm in intersect(names(free), scalars)) params[nm] <- list(unname(free[[nm]]))
   mapping <- args$map %||% list()

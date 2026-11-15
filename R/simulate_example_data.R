@@ -210,7 +210,8 @@ simulate_example_data <- function(years      = 2000:2025,
     # A supplied seed must not change the caller's random-number stream.
     restore_rng <- .acl_preserve_rng()
     on.exit(restore_rng(), add = TRUE)
-    set.seed(seed)
+    # The generator of sim_data(), so a seed gives the same data in any session.
+    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
   }
 
   # --- Time-varying fishing mortality ---

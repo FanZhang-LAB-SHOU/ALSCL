@@ -190,6 +190,11 @@
   if (model == "ACL" && t0_lower != 0)
     stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.", call. = FALSE)
   if (t0_lower != 0) d$t0_lower <- t0_lower
+  # A default t0 start keeps its natural value under t0_lower, as default
+  # correlation starts do under the symmetric range: without this, the
+  # default (fixed) t0 of 1/60 year would become t0_lower + 1/60.
+  if (model == "ALSCL" && t0_lower != 0 && is.null(parameters$log_t0) && exp(p$log_t0) > t0_lower)
+    p$log_t0 <- log(exp(p$log_t0) - t0_lower)
   # Natural mortality rate by age and time step or by length (optional data).
   M_data <- .acl_M_data(prepared$natural_mortality, model, d$L, d$A, d$Y)
   d[names(M_data)] <- M_data
@@ -330,6 +335,7 @@
   .acl_report_clamped(setup$clamped_starts, silent)
   .acl_partial_set_note(prepared$structure, model, silent)
   .acl_q_age_start_note(setup$mean_log_R_shift, d$q_age, silent)
+  .acl_symmetric_start_note(.acl_symmetric_supplied(prepared$structure, parameters, model), silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",

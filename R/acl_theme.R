@@ -667,11 +667,12 @@ acl_theme_reset <- function() {
 
 
 # Apply the same typography to a patchwork's outer title and panel titles.
-.acl_annotation_theme <- function(legend_pos) {
+.acl_annotation_theme <- function(legend_pos, font_family = NULL, title_size = NULL,
+                                  title_hjust = NULL) {
   ggplot2::theme(
-    text = ggplot2::element_text(family = acl_theme("font_family")),
-    plot.title = ggplot2::element_text(size = acl_theme("title_size"),
-                                     hjust = acl_theme("title_hjust")),
+    text = ggplot2::element_text(family = font_family %||% acl_theme("font_family")),
+    plot.title = ggplot2::element_text(size = title_size %||% acl_theme("title_size"),
+                                     hjust = title_hjust %||% acl_theme("title_hjust")),
     legend.position = legend_pos)
 }
 
@@ -772,10 +773,14 @@ acl_theme_reset <- function() {
 # quarterly time step: `step` when the caller knows it (the fitted
 # growth_step), otherwise the spacing of the labels. Semiannual or annual
 # series recorded at .25 or .75 keep their decimal labels. `prefix = FALSE`
-# drops "Year" for axes whose title already names the unit.
+# drops "Year" for axes whose title already names the unit. Whole-number
+# times are years unless `step` is quarterly: then they are first quarters,
+# so a quarterly retrospective that ends in a first quarter reads "2004 Q1".
 .acl_time_labels <- function(times, step = NULL, prefix = TRUE) {
   times <- as.numeric(times)
-  if (all(abs(times - round(times)) < 1e-8)) {
+  quarterly_step <- is.numeric(step) && length(step) == 1L && is.finite(step) &&
+    abs(step - 0.25) < 1e-6
+  if (!quarterly_step && all(abs(times - round(times)) < 1e-8)) {
     years <- format(round(times), trim = TRUE)
     return(if (prefix) paste("Year", years) else years)
   }

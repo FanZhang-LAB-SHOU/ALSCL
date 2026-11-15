@@ -1,0 +1,24 @@
+year <- c(sub("-.*", "", c(meta$Date, meta$Packaged)), format(Sys.Date(), "%Y"))[1]
+
+bibentry(
+  bibtype = "Article",
+  header = "To cite the ALSCL model, please use:",
+  title = "An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks",
+  author = c(person("Fan", "Zhang"), person(c("Noel", "G."), "Cadigan")),
+  journal = "Fish and Fisheries",
+  year = "2022",
+  volume = "23",
+  number = "5",
+  pages = "1121--1135",
+  doi = "10.1111/faf.12673"
+)
+
+bibentry(
+  bibtype = "Manual",
+  header = "To cite the ALSCL R package, please use:",
+  title = "{ALSCL}: Age- and Length-Structured Statistical Catch-at-Length Models",
+  author = c(person("Hongyu", "Lin"), person("Fan", "Zhang"), person("Sisong", "Dong")),
+  year = year,
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/FanZhang-LAB-SHOU/ALSCL"
+)

@@ -235,12 +235,15 @@
 # start can stop at a local optimum (.acl_single_start_note()), a structure
 # that changes only some of the four settings of the set "von_bertalanffy"
 # (.acl_partial_set_note()), and the default start of mean_log_R moved by
-# survey_q_age (.acl_q_age_start_note()).
+# survey_q_age (.acl_q_age_start_note()). A fourth note names supplied
+# correlation starts under correlation_range = "symmetric"
+# (.acl_symmetric_start_note()).
 .acl_notes <- new.env(parent = emptyenv())
 
 .acl_notes_begin <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
-  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <- FALSE
+  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <-
+    .acl_notes$symmetric_start <- FALSE
   .acl_notes$depth <- depth + 1L
   invisible(NULL)
 }
@@ -249,7 +252,8 @@
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
   .acl_notes$depth <- max(0L, depth - 1L)
   if (.acl_notes$depth == 0L)
-    .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <- FALSE
+    .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <-
+      .acl_notes$symmetric_start <- FALSE
   invisible(NULL)
 }
 
@@ -288,6 +292,39 @@
   message("The default start of mean_log_R was changed by -log(survey_q_age[1]) = ", format(signif(shift, 4)),
           " (survey_q_age[1] = ", format(signif(q_age[1L], 4)), "), because the survey sees only that fraction ",
           "of the recruits. To use another start, supply it as parameters$mean_log_R.")
+  invisible(TRUE)
+}
+
+# Supplied starts of the correlation parameters (logit_*) when the structure
+# uses correlation_range = "symmetric": a value x then means the correlation
+# 2 * plogis(x) - 1, not plogis(x). Default starts are converted to keep their
+# value; supplied ones are not, so a start written for the default range
+# changes meaning (YTF_example fixes logit_log_R = qlogis(0.1), which becomes
+# a correlation of -0.8). NULL when there is none.
+.acl_symmetric_supplied <- function(structure, parameters, model) {
+  choices <- tryCatch(.acl_structure(structure, model)$choices, error = function(e) NULL)
+  if (!identical(choices$correlation_range, "symmetric") || !is.list(parameters)) return(NULL)
+  names <- grep("^logit_", names(parameters), value = TRUE)
+  values <- vapply(names, function(nm) {
+    x <- parameters[[nm]]
+    if (is.numeric(x) && length(x) == 1L && is.finite(x)) as.numeric(x) else NA_real_
+  }, numeric(1))
+  values <- values[is.finite(values)]
+  if (length(values)) values else NULL
+}
+
+.acl_symmetric_start_note <- function(values, silent) {
+  if (isTRUE(silent) || !length(values)) return(invisible(FALSE))
+  in_batch <- isTRUE(.acl_notes$depth > 0L)
+  if (in_batch && isTRUE(.acl_notes$symmetric_start)) return(invisible(FALSE))
+  if (in_batch) .acl_notes$symmetric_start <- TRUE
+  read <- vapply(names(values), function(nm)
+    paste0(nm, " = ", format(signif(values[[nm]], 4)), " is a correlation of ",
+           format(round(2 * stats::plogis(values[[nm]]) - 1, 3)), " (",
+           format(round(stats::plogis(values[[nm]]), 3)), " under the default range)"), character(1))
+  message("With correlation_range = \"symmetric\" a supplied start x of a correlation parameter means the ",
+          "correlation 2 * plogis(x) - 1: ", paste(read, collapse = "; "),
+          ". To keep a correlation rho, supply qlogis((rho + 1) / 2).")
   invisible(TRUE)
 }
 

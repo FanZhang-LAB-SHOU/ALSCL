@@ -85,7 +85,10 @@
 #' @param polish Logical. By default, apply up to five safeguarded Newton steps
 #'   to the selected fit, requiring a positive-definite Hessian, in-bounds
 #'   parameters, a smaller maximum gradient and objective increase at most
-#'   `1e-8` (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+#'   `1e-8` (roundoff tolerance). When the gradient is still 0.001 or more
+#'   after these steps, a second pass of up to five steps accepts an objective
+#'   increase within the working precision of the objective,
+#'   `sqrt(.Machine$double.eps)` times its size. FALSE skips refinement. Raw optimizer codes
 #'   remain unchanged; inspect `optimizer_history`, `refinement`, and
 #'   `diagnostics` separately. This may change estimates at numerical precision.
 #'   On checked TMB versions, the refinement Hessian shares the sd_cores limit
@@ -189,8 +192,10 @@
 #'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 #'   parameterization, in which t0 is positive. Set a negative value, for
 #'   example -1, to allow negative t0; a known t0 is then supplied as
-#'   `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are
-#'   always on the natural scale.
+#'   `parameters = list(log_t0 = log(t0 - t0_lower))`. When log_t0 is not
+#'   supplied, its default start is converted so that t0 keeps its default
+#'   value (1/60 year, fixed by default). Reported t0 values are always on the
+#'   natural scale.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by
@@ -341,7 +346,8 @@
 #'   to construct open-ended bounds from len_border. Numeric interval labels
 #'   describe bin centers and interior boundaries; they do not truncate the tails.
 #' @details ALSCL tracks joint length-age abundance and F at length; FA summarizes
-#'   effective cohort survival. log_t0 represents a positive t0 below rec.age.
+#'   effective cohort survival. t0 = t0_lower + exp(log_t0) lies below rec.age;
+#'   with the default t0_lower = 0 it is positive.
 run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_L95 = NULL,
                       growth_step = NULL, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,

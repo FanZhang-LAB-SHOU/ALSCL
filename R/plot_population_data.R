@@ -1,6 +1,7 @@
 # Validate the output actually supplied by a fit instead of assuming every
 # model reports every population quantity and its standard error.
 .acl_plot_population_data <- function(model_result, type, choices, se) {
+  .acl_stop_if_failed(model_result, "model_result")
   .acl_check_flag(se, "se")
   value <- model_result$report[[type]]
   if (is.null(value)) {

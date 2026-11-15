@@ -41,6 +41,7 @@ utils::globalVariables(c(
 }
 
 .acl_plot_year <- function(model, n = NULL, name = "Model") {
+  .acl_stop_if_failed(model, if (identical(name, "Model")) "model_result" else name)
   years <- model$year
   if (!is.numeric(years) || !length(years) || any(!is.finite(years)) ||
       any(diff(years) <= 0))
