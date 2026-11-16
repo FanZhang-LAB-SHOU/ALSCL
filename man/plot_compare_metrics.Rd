@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_metrics}
 \alias{plot_compare_metrics}
-\title{Compare Goodness-of-Fit Metrics}
+\title{Compare the fit statistics of two models}
 \usage{
 plot_compare_metrics(
   model1,
@@ -17,7 +17,8 @@ plot_compare_metrics(
   label_size = 3.2,
   bar_width = 0.6,
   bar_alpha = 0.85,
-  ...
+  ...,
+  title = NULL
 )
 }
 \arguments{
@@ -42,23 +43,41 @@ AIC, Bayesian information criterion, BIC, and the negative
 log-likelihood), \code{"npar"} (number of estimated parameters).
 Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
 
-\item{facet_ncol}{Integer or NULL. Columns of panels. NULL uses up to three.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL
+chooses it from the number of panels, and the legend fills an empty
+cell.}
 
 \item{legend_pos}{Character. Legend position. NULL = use global theme.}
 
-\item{label_size}{Numeric. Text label size on bars. Default 3.2.}
+\item{label_size}{Numeric. Size in mm of the values printed at the ends of
+the bars, at least 8 pt. Default 3.2.}
 
-\item{bar_width}{Numeric. Bar width. Default 0.6.}
+\item{bar_width}{Numeric. Height of the pair of bars of one statistic, as
+a share of its row. Default 0.6.}
 
 \item{bar_alpha}{Numeric. Bar transparency. Default 0.85.}
 
 \item{...}{The former argument name ncol, accepted with a warning.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Compare Goodness-of-Fit Metrics
+Compare the fit statistics of two models
+}
+\details{
+Each panel shows one row of horizontal bars per statistic, the
+first model above the second, with each value printed horizontally just
+beyond the end of its bar, with three significant digits. R-squared runs
+from 0 to 1 plus room for the values.
+
+\code{title} is the title of the whole figure. The titles of the
+panels stay when it is removed, because they name the panels.
 }
 \examples{
 \donttest{

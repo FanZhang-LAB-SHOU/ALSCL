@@ -197,8 +197,14 @@
 #'   `parameters = list(log_t0 = log(t0 - t0_lower))`. When log_t0 is not
 #'   supplied, its default start is converted so that t0 keeps its default
 #'   value (1/60 year, fixed by default). A supplied log_t0 is read with the
-#'   new limit, and the fit gives a message with the t0 that it means (unless
-#'   `silent = TRUE`). Reported t0 values are always on the natural scale.
+#'   new limit. When t0_lower and log_t0 come from different places, one from
+#'   the arguments of the call and the other from the bundle or a saved
+#'   recipe (for example `run_alscl(YTF_example, t0_lower = -1)`, whose
+#'   bundle stores a log_t0 chosen for t0_lower = 0), the fit gives a message
+#'   with the t0 that it means (unless `silent = TRUE`). There is no message
+#'   when both are stored in the bundle, as in [whiting_example], or both are
+#'   given in the same call. Reported t0 values are always on the natural
+#'   scale.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by

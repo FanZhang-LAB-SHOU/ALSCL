@@ -107,7 +107,7 @@ performance$failures
 
 每次重复在一个工作进程中拟合，它的 `nstarts` 个初值依次运行；`ncores` 决定同时运行多少次重复。每次重复的结果，包括带有 `converge = "FAILED"` 和 `error` 信息的失败，都会返回并保存为 `output_dir` 下的 `result_rep_<id>`。结果不含 TMB 对象 `obj`；需要时对结果调用 `refit_model()`。
 
-`summarize_simulations()` 需要真值列表与拟合列表同名，每个元素包含 `year` 和每个量的一个向量，这里从重复文件读取，使时间坐标一致。`performance$replicates` 给出每次重复的数值检查和错误信息；`performance$summary` 按量给出失败率、偏差、相对偏差、RMSE 和区间覆盖率，以及各自的计数。偏差和 RMSE 只使用通过数值检查的拟合，覆盖率还需要有限的标准误，所以报告统计量时要一并报告 `failure_rate`。`performance$summary_converged` 对全部收敛的拟合给出同样的统计量，不论是否通过数值检查；`performance$failures` 按原因统计失败的重复。比较这两张汇总表，看被数值检查排除的拟合是否改变偏差、RMSE 或覆盖率。如果调用停止并提示“identical unique replicate names”或“time coordinates differ”，说明真值不是从拟合所用的同一批文件读取的。
+`summarize_simulations()` 需要真值列表与拟合列表同名，每个元素包含 `year` 和每个量的一个向量，这里从重复文件读取，使时间坐标一致。`performance$replicates` 给出每次重复的数值检查和错误信息；`performance$summary` 按量给出失败率、偏差、相对偏差、RMSE 和 95% 区间的覆盖率，以及各自的计数；区间默认为对数正态区间，与图中相同，`interval = "wald"` 给出对称区间的覆盖率。偏差和 RMSE 只使用通过数值检查的拟合，覆盖率还需要有限的标准误，所以报告统计量时要一并报告 `failure_rate`。`performance$summary_converged` 对全部收敛的拟合给出同样的统计量，不论是否通过数值检查；`performance$failures` 按原因统计失败的重复。比较这两张汇总表，看被数值检查排除的拟合是否改变偏差、RMSE 或覆盖率。如果调用停止并提示“identical unique replicate names”或“time coordinates differ”，说明真值不是从拟合所用的同一批文件读取的。
 
 时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。
 

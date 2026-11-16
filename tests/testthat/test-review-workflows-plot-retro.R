@@ -25,6 +25,8 @@ review_grob <- function(plot) {
 }
 
 test_that("a complete annual retrospective plot keeps its appearance", {
+  # The npg colors of 2.4.5 are those of the classic style.
+  local_classic_style()
   r <- retro_plot_fixture()
   p <- plot_retro(r)
   built <- ggplot2::ggplot_build(p)
@@ -34,7 +36,7 @@ test_that("a complete annual retrospective plot keeps its appearance", {
   expect_equal(unique(built$data[[1L]]$linetype), 1)
   expect_null(p$labels$subtitle)
   expect_null(built$plot$scales$get_scales("linetype"))
-  expect_true(all(grepl("^rho = 0.0100$", built$data[[3L]]$label)))
+  expect_true(all(grepl("^Mohn's rho = 0.0100$", built$data[[3L]]$label)))
 })
 
 test_that("a peel that failed the numerical screen is dashed and named (GS4)", {
@@ -48,10 +50,10 @@ test_that("a peel that failed the numerical screen is dashed and named (GS4)", {
   failed_group <- which(levels(r$results$RetrospectiveYear) == "2002")
   expect_identical(unique(lines$linetype[lines$group == failed_group]), "dashed")
   expect_identical(unique(lines$linetype[lines$group != failed_group]), "solid")
-  expect_identical(built$plot$scales$get_scales("linetype")$name, "Numerical screen")
+  expect_identical(built$plot$scales$get_scales("linetype")$name, "Numerical checks")
   expect_match(p$labels$subtitle, "numerical checks")
-  expect_match(p$labels$subtitle, "Failed the numerical screen: terminal year 2002.", fixed = TRUE)
-  expect_true(all(built$data[[3L]]$label == "rho unavailable (2 of 3 peels valid): check diagnostics"))
+  expect_match(p$labels$subtitle, "The fit with terminal year 2002 failed the numerical checks.", fixed = TRUE)
+  expect_true(all(built$data[[3L]]$label == "Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics"))
   expect_no_warning(review_grob(p))
 })
 
@@ -65,7 +67,7 @@ test_that("a peel without estimates stays in the legend and colors stay with the
   scale <- retro_color_scale(p)
   expect_identical(scale$map(c("2004", "2003", "2002", "2001")), reference)
   expect_identical(scale$get_labels(), c("2004", "2003 (no estimates)", "2002", "2001"))
-  expect_match(p$labels$subtitle, "No estimates: terminal year 2003.", fixed = TRUE)
+  expect_match(p$labels$subtitle, "The fit with terminal year 2003 returned no estimates.", fixed = TRUE)
   expect_no_warning(review_grob(p))
 
   # Without the diagnostics table the recorded peel index still fixes the colors.
@@ -96,8 +98,8 @@ test_that("quarterly peels are labelled by quarter under 'Terminal period' (GS7)
                    c("2001 Q4", "2001 Q3", "2001 Q2", "2001 Q1"))
   expect_identical(retro_color_scale(p)$get_labels(),
                    ALSCL:::.acl_time_labels(rev(times[5:8])))
-  # Colors remain keyed by the numeric period.
-  expect_equal(retro_color_scale(p)$map(c("2001.75", "2001.5")), ggsci::pal_npg()(4)[1:2])
+  # Colors remain keyed by the numeric period: the full fit and the first peel.
+  expect_equal(retro_color_scale(p)$map(c("2001.75", "2001.5")), c("#ed5f26", "#252525"))
   r$results$NumericalOK[r$results$Peel == 1L] <- FALSE
   expect_match(plot_retro(r)$labels$subtitle, "terminal period 2001 Q3", fixed = TRUE)
 })

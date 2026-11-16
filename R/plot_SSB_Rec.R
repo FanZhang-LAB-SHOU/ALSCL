@@ -22,7 +22,10 @@
 #' @param point_shape Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle).
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #'
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -106,12 +109,15 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = NULL,
   # Create the plot
   p <-  ggplot2::ggplot(plot_data, ggplot2::aes(x = SSB, y = Rec)) +
     ggplot2::geom_point(size= point_size, color= point_color,shape=point_shape) +
-    ggplot2:: labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "ssb"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), title = if (!is.null(title)) title else .acl_title("SSB_Rec"))+
+    ggplot2:: labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "ssb"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "rec"), title = .acl_plot_title(title, "SSB_Rec"))+
     .acl_scale_x(x_breaks, n_breaks = 8, values = plot_data$SSB) +
-      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+    # One quantity against another reads best in a square panel.
+    ggplot2::theme(aspect.ratio = 1)
 
   data_out <-plot_data
 
+  p <- .acl_tidy_axes(p)
   if (return_data) {
     return(list(plot = p, data = data_out))
   } else {

@@ -31,12 +31,16 @@
 #'   explicit range selects the age classes within it; the curve from Linf,
 #'   k and t0 is then drawn from t0 or the start of the range, whichever is
 #'   later.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. The type of the line in the plot. Default is "solid".
 #' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
-#'   global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.
+#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
+#'   inherits the global se_alpha setting (0.3 under the standard style, 0.2
+#'   under classic). Error bars are opaque unless se_alpha is given.
 #' @param se_type Character. Type of interval display: "ribbon" (shaded area) or
 #'   "errorbar" (error bars). Error bars are drawn at the fitted ages in
 #'   model_result$age that lie within age_range. Results saved without age
@@ -49,11 +53,18 @@
 #'   fit it is drawn around the reference line when `parameter_curve = TRUE`.
 #'   The model reports no standard error for mean length at age from the
 #'   fitted numbers; see Details.
-#' @param text_size Numeric. Size of the growth-parameter annotation in all
-#'   display modes. Default is 5.
+#' @param text_size Numeric. Size in mm of the growth-parameter annotation in
+#'   all display modes, as for \code{ggplot2::geom_text()}. Default is 3.5
+#'   (about 10 pt); smaller values are drawn at 8 pt, the smallest size of
+#'   text in the package figures. The annotation is placed in the upper left
+#'   corner of the panel, or in the lower right corner when the curve, its
+#'   interval or the observations reach the upper left corner.
 #' @param text_color Character. Color of the growth-parameter annotation in all
 #'   display modes. Default is "black".
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -119,7 +130,7 @@
 #'   Changes from earlier versions for ALSCL fits: the default figure showed
 #'   the curve computed from Linf, k and t0 with an annotation of Linf and k.
 #'   The annotation is now drawn only with that curve, under the heading
-#'   "Curve from Linf, k and t0". `se = TRUE` without `parameter_curve = TRUE` gives a
+#'   "Curve from the growth parameters". `se = TRUE` without `parameter_curve = TRUE` gives a
 #'   warning and draws the estimate only, because the model reports no
 #'   standard error for mean length at age from the fitted numbers. Scripts
 #'   that used the interval of the earlier figure must add
@@ -157,13 +168,13 @@
 #' # readings of fish caught in the survey
 #' plot_VB(fit, observed = readings, basis = "survey", ylab = "Length (cm)")
 #' }
-plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"),text_color="black",text_size=5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
+plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"),text_color="black",text_size=3.5, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL,
                     observed = NULL, basis = c("population", "survey"), years = NULL,
                     parameter_curve = FALSE, point_size = NULL, observed_color = NULL,
                     observed_name = "Age readings"){
   .acl_stop_if_failed(model_result, "model_result")
   # NULL 继承全局色板 / NULL inherits the global palette.
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
   # Error bars are thin lines: draw them opaque unless the call sets se_alpha.
@@ -183,12 +194,12 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   # at age, and on the survey basis no model has such a curve: both cases
   # draw mean length at age from numbers by length and age.
   if (identical(.detect_model_name(model_result, NA_character_), "ALSCL") || basis == "survey")
-    return(.acl_plot_mean_length(model_result, obs, basis, years, age_range, parameter_curve,
+    return(.acl_tidy_axes_result(.acl_plot_mean_length(model_result, obs, basis, years, age_range, parameter_curve,
       se, se_type, line_size, line_color, line_type, se_color, se_alpha, errorbar_alpha,
       text_color, text_size, point_size, observed_color, observed_name, title, xlab, ylab,
       font_family, x_breaks,
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
-                      legend_text_size, base_theme = base_theme, title_hjust = title_hjust)))
+                      legend_text_size, base_theme = base_theme, title_hjust = title_hjust))))
   if (!is.null(years)) {
     if (!is.numeric(years) || !length(years) || any(!is.finite(years)))
       stop("years must be finite numeric time steps of fit.", call. = FALSE)
@@ -243,8 +254,11 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
       ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)) +
     ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "age") else xlab,
                   y = if (is.null(ylab)) .acl_lab("y", "growth") else ylab,
-                  title = if (is.null(title)) .acl_title("VB") else title) +
-    .acl_growth_annotation(growth, text_size, text_color, annotation_font) +
+                  title = .acl_plot_title(title, "VB")) +
+    .acl_growth_annotation(growth, text_size, text_color, annotation_font,
+                           marks = rbind(data.frame(x = data$age, y = data$length),
+                                         if (se) data.frame(x = data$age, y = data$upper),
+                                         if (!is.null(obs)) data.frame(x = obs$age, y = obs$mean_length))) +
     .acl_scale_x(x_breaks, n_breaks = 10, values = c(data$age, obs$age)) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
                     strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
@@ -255,6 +269,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
                          c(line_type, "blank"), c(NA, 16)) +
       ggplot2::labs(caption = .acl_caption(.acl_observed_caption(obs))) + .acl_series_theme()
 
+  p <- .acl_tidy_axes(p)
   return(p)
 }
 
@@ -303,20 +318,48 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
       bars <- data.frame(age = fitted_ages, length = at_ages$estimate,
                          lower = at_ages$lower, upper = at_ages$upper)
   }
-  bar_width <- if (!identical(bars, data) && nrow(bars) > 1L)
-    min(.3, .4 * min(diff(bars$age))) else .1
+  # Caps a quarter of the spacing of the fitted ages; short ones for a
+  # single age or for bars on the 0.1-year grid of the curve.
+  bar_width <- if (!identical(bars, data)) .acl_cap_width(bars$age) else 0.06
   ggplot2::geom_errorbar(data = bars, ggplot2::aes(x = age, ymin = lower, ymax = upper),
                          color = se_color, alpha = errorbar_alpha, width = bar_width, inherit.aes = FALSE)
 }
 
-# Annotation of Linf and k in the upper left corner, both lines left-justified
-# at the same position inside the panel.
-.acl_growth_annotation <- function(growth, text_size, text_color, font, heading = NULL) {
-  ggplot2::annotate("text", x = -Inf, y = Inf,
-    label = paste0(if (!is.null(heading)) paste0("  ", heading, "\n"),
-                   "  Linf = ", round(growth$Linf, 2), "\n  k = ", round(growth$k, 2), " per year"),
-    hjust = 0, vjust = if (is.null(heading)) 1.5 else 1.3, size = text_size, color = text_color,
-    family = font)
+# Annotation of Linf and k in the upper left corner, all lines left-justified
+# at the same position inside the panel. When the marks of the plot (`marks`,
+# a data frame of the x and y values drawn: curve, interval and
+# observations) reach the area that the text takes in the upper left corner
+# at the recommended figure size, the text goes to the lower right corner,
+# below the right end of the increasing curve, with its lines right-justified.
+# The text is at least 8 pt.
+.acl_growth_annotation <- function(growth, text_size, text_color, font, heading = NULL, marks = NULL) {
+  size <- max(text_size, 8 / ggplot2::.pt)
+  lines <- c(heading, paste0("Asymptotic length (Linf) = ", round(growth$Linf, 2)),
+             paste0("Growth rate (k) = ", round(growth$k, 2), " per year"))
+  corner <- .acl_annotation_corner(marks, max(nchar(lines)) + 2L, length(lines), size)
+  if (corner == "top_left")
+    return(ggplot2::annotate("text", x = -Inf, y = Inf, label = paste0("  ", lines, collapse = "\n"),
+      hjust = 0, vjust = if (is.null(heading)) 1.5 else 1.3, size = size, color = text_color,
+      family = font))
+  ggplot2::annotate("text", x = Inf, y = -Inf, label = paste0(lines, "  ", collapse = "\n"),
+    hjust = 1, vjust = -0.6, size = size, color = text_color, family = font)
+}
+
+# Corner of a panel for a text of `chars` characters on `n_lines` lines at
+# `size` mm: "top_left" unless a mark falls in the area the text takes
+# there, in a panel of about 7.2 x 3.4 inches (an 8 inch wide figure), with
+# room for the padding of the text; then "bottom_right".
+.acl_annotation_corner <- function(marks, chars, n_lines, size) {
+  if (is.null(marks) || !nrow(marks)) return("top_left")
+  marks <- marks[is.finite(marks$x) & is.finite(marks$y), , drop = FALSE]
+  if (!nrow(marks)) return("top_left")
+  points <- size * ggplot2::.pt
+  width <- min(0.9, chars * 0.55 * points / 72 / 7.2 + 0.03)
+  height <- min(0.9, (n_lines + 1) * 1.2 * points / 72 / 3.4)
+  xr <- range(marks$x); yr <- range(marks$y)
+  xr <- xr + c(-1, 1) * 0.03 * diff(xr); yr <- yr + c(-1, 1) * 0.05 * diff(yr)
+  inside <- marks$x <= xr[1L] + width * diff(xr) & marks$y >= yr[2L] - height * diff(yr)
+  if (any(inside)) "bottom_right" else "top_left"
 }
 
 # Mean length at age from numbers by length and age, against age: the figure
@@ -339,7 +382,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   data <- data.frame(age = series$ages[shown], length = series$mean[shown])
   main_name <- "Mean length at age (model)"
   is_acl <- series$model == "ACL"
-  curve_name <- if (is_acl) "Von Bertalanffy curve (population)" else "Curve from Linf, k and t0"
+  curve_name <- if (is_acl) "Von Bertalanffy curve (population)" else "Curve from the growth parameters"
 
   curve <- NULL; growth <- NULL
   if (parameter_curve) {
@@ -395,17 +438,21 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   if (!is.null(curve))
     p <- p + .acl_growth_annotation(growth, text_size, text_color,
       if (is.null(font_family)) acl_theme("font_family") else font_family,
-      heading = paste0(curve_name, ":"))
+      heading = curve_name,
+      marks = rbind(data.frame(x = data$age, y = data$length),
+                    data.frame(x = curve$age, y = curve$length),
+                    if (se) data.frame(x = curve$age, y = curve$upper),
+                    if (has_observed) data.frame(x = obs$age, y = obs$mean_length)))
   curve_text <- if (is.null(curve) || is_acl) NULL else
     if (identical(model_result$structure$initial_length, "growth"))
-      "Curve from Linf, k and t0: its value at the first age class is the mean length of recruits." else
-      "Curve from Linf, k and t0: mean length at age in the first time step and mean length of recruits in every time step."
+      "The curve from the growth parameters gives the mean length of recruits at the first age class." else
+      "The curve from the growth parameters gives the mean length at age in the first time step and the mean length of recruits in every time step."
   caption <- c(curve_text, if (has_observed) .acl_observed_caption(obs))
   plus_age <- if (length(series$ages) %in% shown) series$ages[length(series$ages)] else NULL
   p <- p +
     ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "age") else xlab,
                   y = if (is.null(ylab)) .acl_lab("y", "growth") else ylab,
-                  title = if (is.null(title)) .acl_title("length_at_age") else title,
+                  title = .acl_plot_title(title, "length_at_age"),
                   subtitle = .acl_growth_subtitle(basis, series$years, series$all_years,
                                                   model_result$growth_step),
                   caption = .acl_caption(caption)) +

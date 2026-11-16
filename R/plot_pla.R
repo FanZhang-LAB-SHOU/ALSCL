@@ -14,7 +14,10 @@
 #' @param low_col Character or NULL. NULL inherits the global low_col setting.
 #' @param high_col Character or NULL. NULL inherits the global high_col setting.
 #'
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses the global ylab$length setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -76,7 +79,8 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
   }
   age_breaks <- if (is.null(breaks)) age_labels else age_labels[breaks]
 
-  len_levels <- .acl_fix_len_labels(len_label)
+  # The axis title names the length; the tick labels are the bins.
+  len_levels <- trimws(.acl_fix_len_labels(len_label, prefix = ""))
   df$LengthGroup <- factor(len_levels, levels = len_levels)
 
   dfm <- data.frame(
@@ -94,10 +98,12 @@ plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL
         ggplot2::waiver() else function(x) sub("^Age ", "", x)) +
     ggplot2::scale_fill_gradient(low = low_col, high = high_col) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+    .acl_no_grid() +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else
       # Results without age metadata show positions, which have no unit.
       if (is.null(.acl_fitted_ages(model_result, length(age_labels))) &&
-          identical(.acl_lab("x", "age"), "Age (years)")) "Age group" else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = if (!is.null(title)) title else .acl_title("pla"))
+          identical(.acl_lab("x", "age"), .acl_defaults$xlab$age)) "Age bin" else .acl_lab("x", "age"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "length"), fill = "Probability", title = .acl_plot_title(title, "pla"))
 
+  p <- .acl_tidy_axes(p)
   return(p)
 }

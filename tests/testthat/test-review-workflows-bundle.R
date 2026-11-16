@@ -8,7 +8,7 @@ test_that("an ACL-only fit_config leaves ALSCL on the shared settings (F73)", {
   expect_identical(checked$errors, character())
   expect_null(ALSCL:::.acl_bundle_args(x, "alscl")$map)
   expect_identical(ALSCL:::.acl_bundle_args(x, "acl")$map, list(log_Linf = factor(NA)))
-  expect_identical(ALSCL:::.acl_bundle_args(x, "alscl"),
+  expect_identical(ALSCL:::.acl_drop_t0_sources(ALSCL:::.acl_bundle_args(x, "alscl")),
                    c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args))
   # An entry of the wrong type is still rejected.
   x$fit_config$alscl <- 1

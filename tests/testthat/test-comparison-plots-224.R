@@ -108,7 +108,7 @@ test_that("time-series and F plots preserve each fit's calendar and dimensions",
 
   for (method in c("mean", "apical")) {
     p <- plot_compare_F_ts(m1, m2, method = method)
-    expect_equal(p$labels$title, "Fishing mortality by time step")
+    expect_equal(p$labels$title, "Fishing mortality rate of ALSCL (group_year) and ALSCL (year) over time")
     expect_equal(p$data$Year, c(m1$year, m2$year))
     summary <- function(m) if (method == "mean") colMeans(m$report$FL)
                            else apply(m$report$FL, 2L, max)
@@ -191,7 +191,7 @@ test_that("metric plots do not label unavailable parameter counts as zero", {
     p <- plot_compare_metrics(m1, m2, data, metrics = metric)
     d <- comparison_panel_data_224(p)[[1L]]
     unavailable <- d$Model == "ALSCL (group_year)" &
-      d$Metric_Name %in% c("N. Parameters", "AIC", "BIC")
+      d$Metric_Name %in% c("npar", "AIC", "BIC")
     expect_true(any(unavailable))
     expect_true(all(is.na(d$Metric_Value[unavailable])))
     known <- d$Model == "ALSCL (year)"

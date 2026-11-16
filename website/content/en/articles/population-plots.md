@@ -5,24 +5,22 @@ First complete the [worked YTF example](first-model.html) to create the input bu
 ```r
 library(ggplot2)
 library(patchwork)
-acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ## Survey index by length bin (log scale)
 
 ```r
 # Draw this figure
-plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
 ```
 
 [![Survey index by length bin (log scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_FALSE.png?raw=true)
 
-One panel per length bin, time on the horizontal axis and the log survey index on the vertical axis: vermilion points are the observed log index and the navy curve is the fitted `Elog_index`. Use it to judge the fit bin by bin; a run of points on one side of the curve, as in bins 16 and 50 here, marks a bin the model under- or over-predicts, and the log scale shows this equally well in small and large bins.
+One panel per length bin, with time on the horizontal axis and the log survey index on the vertical axis. Orange points ("Observed" in the legend) are the observed log index and the dark blue line ("Fitted") is the fitted `Elog_index`. Use it to judge the fit bin by bin; a run of points on one side of the line, as in bins 16 and 50 here, marks a bin the model under- or over-predicts, and the log scale shows this equally well in small and large bins.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -30,15 +28,14 @@ One panel per length bin, time on the horizontal axis and the log survey index o
 
 ```r
 # Draw this figure
-plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
 ```
 
 [![Survey index by length bin (original scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_TRUE.png?raw=true)
 
-The same panels on the original scale: the navy curve is `exp(Elog_index)`, the median of the fitted lognormal distribution, and the vermilion points are the observed index. Use it to read the misfit in index units; the error is multiplicative, so a gap that looks large at high values can be the same relative misfit as a small gap at low values.
+The same panels on the original scale. The dark blue line is `exp(Elog_index)`, the median of the fitted lognormal distribution, and the orange points are the observed index. Use it to read the misfit in index units; the error is multiplicative, so a gap that looks large at high values can be the same relative misfit as a small gap at low values.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -46,9 +43,8 @@ The same panels on the original scale: the navy curve is `exp(Elog_index)`, the 
 
 ```r
 # Draw this figure
-plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
@@ -56,7 +52,7 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
 
 In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
-One panel per time step, length on the horizontal axis and the log survey index on the vertical axis: the thin vermilion curve is the observed log index across lengths and the thick navy curve is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the navy curve misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
+One panel per time step, with length on the horizontal axis and the log survey index on the vertical axis. The thin orange line ("Observed") is the observed log index across lengths and the thick dark blue line ("Fitted") is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the dark blue line misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -64,9 +60,8 @@ One panel per time step, length on the horizontal axis and the log survey index 
 
 ```r
 # Draw this figure
-plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
@@ -82,13 +77,13 @@ The curves show fitted survey-index medians on the original scale, `exp(Elog_ind
 
 ```r
 # Draw this figure
-plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "N", se = TRUE,
   line_size = 0.6)
 ```
 
 [![Abundance N](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true)
 
-Total abundance sums the estimated numbers across all groups in each time step. Shading shows the approximate 95% interval, which is lognormal by default: `exp(log(estimate) +/- 1.96 * SE / estimate)`, where SE is the standard error of the estimate. This interval cannot fall below zero; `interval = "wald"` draws the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. The rise in abundance in 2012 coincides with a peak in estimated recruitment.
+Total abundance sums the estimated numbers across all groups in each time step. Shading shows the approximate 95% interval, which is lognormal by default, `exp(log(estimate) +/- 1.96 * SE / estimate)`, where SE is the standard error of the estimate. This interval cannot fall below zero; `interval = "wald"` draws the symmetric interval `estimate +/- 1.96 * SE`. The rise in abundance in 2012 coincides with a peak in estimated recruitment.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_abundance)
 
@@ -96,7 +91,7 @@ Total abundance sums the estimated numbers across all groups in each time step. 
 
 ```r
 # Draw this figure
-plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "NA", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -110,7 +105,7 @@ Each panel shows numbers at one age with an approximate 95% interval. Panels are
 
 ```r
 # Draw this figure
-plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "NL", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -124,7 +119,7 @@ Each panel shows estimated numbers in one length bin with an approximate 95% int
 
 ```r
 # Draw this figure
-plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "B", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -138,7 +133,7 @@ Total biomass by time step with an approximate 95% interval. Compare it with tot
 
 ```r
 # Draw this figure
-plot_biomass(b, type = "BA", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "BA", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -152,7 +147,7 @@ Biomass at age, one panel per age class with free vertical scales and the 95% ba
 
 ```r
 # Draw this figure
-plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "BL", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -162,93 +157,93 @@ Each panel shows biomass in one length bin and its approximate 95% interval. Com
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_biomass)
 
-## Spawning biomass SSB
+## Spawning stock biomass SSB
 
 ```r
 # Draw this figure
-plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SSB", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Spawning biomass SSB](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)
+[![Spawning stock biomass SSB](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)
 
-Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute spawning biomass from a maturity ogive by age with `ssb_at_age()`.
+Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute SSB from a maturity ogive by age with `ssb_at_age()`.
 
 `plot_SSB(b, maturity_at_age = ogive)` adds the SSB calculated from a maturity ogive by age (`ssb_at_age()`) as a dashed line next to the SSB of the model, which uses maturity at length; `ogive` holds one proportion mature per age class ([Assessment workflows](assessment-workflows.html#outputs)). Without this argument the figure is unchanged.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB)
 
-## Spawning biomass SBA
+## Spawning stock biomass SBA
 
 ```r
 # Draw this figure
-plot_SSB(b, type = "SBA", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SBA", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Spawning biomass SBA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true)
+[![Spawning stock biomass SBA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBA.png?raw=true)
 
-Spawning biomass at age, one panel per age class with the 95% band. Use it to see which ages spawn; the youngest classes sit near zero because the maturity table gives them almost no mature fish, so compare panels by their axis values rather than by the shape of the curves.
+SSB at age, one panel per age class with the 95% band. Use it to see which ages spawn; the youngest classes sit near zero because the maturity table gives them almost no mature fish, so compare panels by their axis values rather than by the shape of the curves.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB)
 
-## Spawning biomass SBL
+## Spawning stock biomass SBL
 
 ```r
 # Draw this figure
-plot_SSB(b, type = "SBL", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SBL", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Spawning biomass SBL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true)
+[![Spawning stock biomass SBL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SBL.png?raw=true)
 
-Spawning biomass at length, one panel per length bin with the 95% band. Use it to see which lengths spawn; the small bins sit near zero for the same reason, and the mature bins above 30 follow the total spawning biomass.
+SSB at length, one panel per length bin with the 95% band. Use it to see which lengths spawn; the small bins sit near zero for the same reason, and the mature bins above 30 follow the total SSB.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB)
 
-## Catch numbers CN
+## Catch in numbers CN
 
 ```r
 # Draw this figure
-plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CN", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Catch numbers CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)
+[![Catch in numbers CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)
 
-Model-derived catch in numbers (`CN`) by time step with an approximate 95% interval. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause. A fit to a survey index alone does not determine the level of catch, which depends on the supplied natural mortality rate and survey catchability. `relative_catch()` returns catch divided by its mean over the time steps, for a comparison of trends with reported catch.
+Model-derived catch in numbers (`CN`) by time step, drawn as bars with approximate 95% error bars; `geom = "line"` draws a line with a shaded band. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause. A fit to a survey index alone does not determine the level of catch, which depends on the supplied natural mortality rate and survey catchability. `relative_catch()` returns catch divided by its mean over the time steps, for a comparison of trends with reported catch.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## Catch numbers CNA
+## Catch in numbers CNA
 
 ```r
 # Draw this figure
-plot_catch(b, type = "CNA", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CNA", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Catch numbers CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)
+[![Catch in numbers CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)
 
 Each panel shows estimated catch in numbers for one age class, with an approximate 95% interval. In this example, catches are largest in the younger age classes. Read the values against the vertical scale of each panel.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## Catch numbers CNL
+## Catch in numbers CNL
 
 ```r
 # Draw this figure
-plot_catch(b, type = "CNL", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CNL", se = TRUE,
   line_size = 0.6)
 ```
 
-[![Catch numbers CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)
+[![Catch in numbers CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)
 
 Each panel shows the expected catch in numbers for one length bin, with an approximate 95% interval. For a group with starting abundance N and instantaneous mortality rates F and M per time step, the Baranov catch equation gives `C = N × (F/Z) × (1 − exp(−Z))`, where `Z = F + M`. ALSCL sums these catches across ages within each length bin. [Baranov catch equation, eq. 15](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11).
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## Relative catch
+## Catch relative to its mean
 
 ```r
 # Draw this figure
@@ -257,9 +252,9 @@ plot_relative_catch(b,
   type = "weight", observed_name = "Simulated catch")
 ```
 
-[![Relative catch](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)
+[![Catch relative to its mean](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)
 
-The line is the model catch in weight divided by its mean over the time steps, from `relative_catch()`. The points are the catch in weight of the simulation that generated `YTF_example`, divided by its mean over the same time steps. With your own data, pass the reported catch as `observed`, a data frame with the columns `year` and `catch` in any unit. A fit to a survey index alone has no information on the absolute level of catch, which depends on the assumed natural mortality rate and survey catchability, so the figure compares trends only: the y-axis label states that the values are relative, and the dotted line marks the mean. When the reported series covers part of the time steps, the mean is taken over the time steps that both series have, and `years` restricts it further. The catch in the last time step is a prediction, because no observation informs F in that time step.
+The line is the model catch in weight divided by its mean over the time steps, from `relative_catch()`. The points are the catch in weight of the simulation that generated `YTF_example`, divided by its mean over the same time steps. With your own data, pass the reported catch as `observed`, a data frame with the columns `year` and `catch` in any unit. A fit to a survey index alone has no information on the absolute level of catch, which depends on the assumed natural mortality rate and survey catchability, so the figure compares trends only. The y-axis label states that each series is divided by its mean, the subtitle names the time steps of the mean, and the dotted line marks 1. When the reported series covers part of the time steps, the mean is taken over the time steps that both series have, and `years` restricts it further. The catch in the last time step is a prediction, because no observation informs F in that time step.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_relative_catch)
 
@@ -272,20 +267,20 @@ plot_recruitment(b, se = TRUE)
 
 [![Recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true)
 
-Recruitment is the estimated number entering the youngest age class per time step. The shaded band gives the approximate 95% interval. Estimated recruitment peaks in 2012 in this example. The age at entry is set by `rec.age`.
+Recruitment is the estimated number entering the youngest age class per time step. The bars show the estimates and the error bars the approximate 95% intervals; `geom = "line"` draws a line with a shaded band. Estimated recruitment peaks in 2012 in this example. The age at entry is set by `rec.age`.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_recruitment)
 
-## Spawning biomass and recruitment
+## Spawning stock biomass and recruitment
 
 ```r
 # Draw this figure
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-[![Spawning biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
+[![Spawning stock biomass and recruitment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
 
-Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock-recruitment curve.
+Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age, which is 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock-recruitment curve.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -302,7 +297,7 @@ stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 
 ## Displaying a single saved estimate
 
-This display-only list contains the final spawning-biomass estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
+This display-only list contains the final SSB estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
 
 ```r
 # Display one saved estimate without refitting.

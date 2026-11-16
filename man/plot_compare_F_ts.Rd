@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_F_ts}
 \alias{plot_compare_F_ts}
-\title{Compare Fishing Mortality by Time Step}
+\title{Compare the fishing mortality rate by time step}
 \usage{
 plot_compare_F_ts(
   model1,
@@ -15,7 +15,8 @@ plot_compare_F_ts(
   line_size = NULL,
   ...,
   point_size = NULL,
-  basis = c("native", "age")
+  basis = c("native", "age"),
+  title = NULL
 )
 }
 \arguments{
@@ -58,9 +59,15 @@ and time step when the fit holds numbers at length and age; otherwise it
 has no plus-group row and no value for the last time step, and the
 comparison leaves out the ACL plus group and the last time step. The two
 fits must have the same time step.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
-A ggplot object.
+A ggplot object. With the global y_zero setting (TRUE under the
+default style) the y axis starts at zero.
 }
 \description{
 One summary value of the fishing mortality rate (F) per model time step for

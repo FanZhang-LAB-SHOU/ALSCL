@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_residuals}
 \alias{plot_compare_residuals}
-\title{Compare Residual Diagnostics Between Two Models}
+\title{Compare the residual diagnostics of two models}
 \usage{
 plot_compare_residuals(
   model1,
@@ -17,8 +17,9 @@ plot_compare_residuals(
   legend_pos = NULL,
   bins = 35,
   qq_alpha = 0.6,
-  errorbar_width = 0.3,
-  ...
+  errorbar_width = NULL,
+  ...,
+  title = NULL
 )
 }
 \arguments{
@@ -49,9 +50,15 @@ NULL inherits the comparison point-size override, if set, or global point_size.}
 
 \item{qq_alpha}{Numeric. QQ point transparency. Default 0.6.}
 
-\item{errorbar_width}{Numeric. Error bar cap width. Default 0.3.}
+\item{errorbar_width}{Numeric or NULL. Error bar cap width in years. NULL
+(default) uses a quarter of the time step.}
 
 \item{...}{The former argument name linewidth, accepted with a warning.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object (combined 4-panel via patchwork).
@@ -73,6 +80,9 @@ The mean-residual axis retains the full fitted time range, including
 unobserved first or last periods. The line breaks at unobserved periods. Isolated
 observed periods remain visible as points; an SD bar requires at least
 two observed length bins in that period.
+
+\code{title} is the title of the whole figure. The titles of the
+panels stay when it is removed, because they name the panels.
 }
 \examples{
 \donttest{

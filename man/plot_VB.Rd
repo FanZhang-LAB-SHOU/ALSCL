@@ -15,7 +15,7 @@ plot_VB(
   se_alpha = NULL,
   se_type = c("ribbon", "errorbar"),
   text_color = "black",
-  text_size = 5,
+  text_size = 3.5,
   title = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -53,7 +53,10 @@ explicit range selects the age classes within it; the curve from Linf,
 k and t0 is then drawn from t0 or the start of the range, whichever is
 later.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -69,8 +72,9 @@ fitted numbers; see Details.}
 
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
-\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
-global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
+inherits the global se_alpha setting (0.3 under the standard style, 0.2
+under classic). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. Type of interval display: "ribbon" (shaded area) or
 "errorbar" (error bars). Error bars are drawn at the fitted ages in
@@ -81,10 +85,17 @@ Default is "ribbon".}
 \item{text_color}{Character. Color of the growth-parameter annotation in all
 display modes. Default is "black".}
 
-\item{text_size}{Numeric. Size of the growth-parameter annotation in all
-display modes. Default is 5.}
+\item{text_size}{Numeric. Size in mm of the growth-parameter annotation in
+all display modes, as for \code{ggplot2::geom_text()}. Default is 3.5
+(about 10 pt); smaller values are drawn at 8 pt, the smallest size of
+text in the package figures. The annotation is placed in the upper left
+corner of the panel, or in the lower right corner when the curve, its
+interval or the observations reach the upper left corner.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -193,7 +204,7 @@ caption of the figure states which of the two cases applies.
 Changes from earlier versions for ALSCL fits: the default figure showed
 the curve computed from Linf, k and t0 with an annotation of Linf and k.
 The annotation is now drawn only with that curve, under the heading
-"Curve from Linf, k and t0". \code{se = TRUE} without \code{parameter_curve = TRUE} gives a
+"Curve from the growth parameters". \code{se = TRUE} without \code{parameter_curve = TRUE} gives a
 warning and draws the estimate only, because the model reports no
 standard error for mean length at age from the fitted numbers. Scripts
 that used the interval of the earlier figure must add

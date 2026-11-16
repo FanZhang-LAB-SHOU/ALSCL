@@ -62,7 +62,7 @@ test_that("an ALSCL fit shows mean length at age from its numbers, with the para
       expect_true(all(curve$lower <= curve$length & curve$upper >= curve$length))
       if (fixed) expect_equal(curve$lower, curve$upper)
       expect_length(layer_of(r, if (kind == "ribbon") "GeomRibbon" else "GeomErrorbar"), 1L)
-      expect_match(ggplot2::ggplot_build(r)$data[[layer_of(r, "GeomText")]]$label, "Curve from Linf, k and t0:")
+      expect_match(ggplot2::ggplot_build(r)$data[[layer_of(r, "GeomText")]]$label, "Curve from the growth parameters")
       expect_match(r$labels$caption, "mean length at age in the first time step")
       expect_equal(r$data, p$data)
     }
@@ -127,10 +127,9 @@ test_that("growth annotations and axis labels respect global and per-call styles
     expect_equal(b$data[[text_layer]]$family, "mono")
     expect_equal(b$data[[text_layer]]$size, 4.1)
     expect_equal(b$data[[text_layer]]$colour, "orange")
-    expect_match(b$data[[text_layer]]$label, "Linf = 60")
+    expect_match(b$data[[text_layer]]$label, "Asymptotic length (Linf) = 60", fixed = TRUE)
     expect_equal(p$labels$y, "Length (cm)")
-    for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
-      expect_s3_class(ggplot2::calc_element(grid, b$plot$theme), "element_blank")
+    expect_style_grid(b$plot$theme)
     args$font_family <- "serif"; args$ylab <- "Body length"
     p <- do.call(plot_VB, args)
     b <- ggplot2::ggplot_build(p)

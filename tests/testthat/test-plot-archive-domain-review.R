@@ -6,12 +6,12 @@ plot_review_panels_242 <- function(plot) {
   panels
 }
 
+# The grid of the current style in every panel: horizontal major lines only
+# by default, none in heat maps (tile layers) or under the classic style.
 expect_grid_free_242 <- function(plot) {
   for (panel in plot_review_panels_242(plot)) {
-    theme <- ggplot2::ggplot_build(panel)$plot$theme
-    for (grid in c("panel.grid.major.x", "panel.grid.major.y",
-                   "panel.grid.minor.x", "panel.grid.minor.y"))
-      expect_s3_class(ggplot2::calc_element(grid, theme), "element_blank")
+    heat_map <- any(vapply(panel$layers, function(layer) inherits(layer$geom, "GeomTile"), logical(1)))
+    expect_style_grid(ggplot2::ggplot_build(panel)$plot$theme, heat_map = heat_map)
   }
 }
 
@@ -125,24 +125,24 @@ test_that("fitted reference growth curves respect their own growth origin", {
                                     data = observed, start = start))
   plot <- plot_compare_growth(fit, fit, ref_data = observed, nls_start = start)
   data <- growth_comparison_data_242(plot)
-  reference <- data[data$Model == "Observed VB", ]
+  reference <- data[data$Model == "Von Bertalanffy curve from age readings", ]
   expect_true(nrow(reference) > 1L)
   expect_true(all(reference$Length >= 0))
   expect_equal(range(reference$Age), c(unname(estimate["t0"]), 8))
   expect_equal(reference$Length[1L], 0)
-  expect_equal(range(data$Age[data$Model != "Observed VB"]), c(1, 8))
+  expect_equal(range(data$Age[data$Model != "Von Bertalanffy curve from age readings"]), c(1, 8))
   expect_grid_free_242(plot)
   # The subtitle gives the parameters of the fitted reference curve only.
   panel <- Filter(function(panel) is.data.frame(panel$data) &&
     "Model" %in% names(panel$data) && !"Probability" %in% names(panel$data),
     plot_review_panels_242(plot))[[1L]]
-  expect_match(panel$labels$subtitle, "Observed VB: Linf = ", fixed = TRUE)
+  expect_match(panel$labels$subtitle, "Von Bertalanffy curve from age readings with asymptotic length (Linf) ", fixed = TRUE)
   expect_false(grepl("ACL", panel$labels$subtitle, fixed = TRUE))
 
   expect_warning(plot <- plot_compare_growth(fit, fit, age_range = c(1, 1.5),
     ref_data = observed, nls_start = start), "no positive age span.*Skipping reference curve")
   data <- growth_comparison_data_242(plot)
-  expect_false("Observed VB" %in% data$Model)
+  expect_false("Von Bertalanffy curve from age readings" %in% data$Model)
   # One age class lies in this range; each model is then drawn as a point.
   expect_equal(range(data$Age), c(1, 1))
   panel <- Filter(function(panel) is.data.frame(panel$data) &&
@@ -161,11 +161,12 @@ test_that("fitted reference growth curves respect their own growth origin", {
   expect_warning(plot <- plot_compare_growth(fit, fit, ref_data = observed,
     nls_start = list(Linf = -60, k = -.2, t0 = 0)),
     "finite positive Linf and k.*Skipping reference curve")
-  expect_false("Observed VB" %in% growth_comparison_data_242(plot)$Model)
+  expect_false("Von Bertalanffy curve from age readings" %in% growth_comparison_data_242(plot)$Model)
 })
 
 test_that("retrospective and metric labels inherit fonts while keeping grids hidden", {
-  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   acl_theme_set(font_family = "mono")
   retro_data <- expand.grid(Year = 2000:2002,
     RetrospectiveYear = c("2004", "2003"), Variable = "SSB")

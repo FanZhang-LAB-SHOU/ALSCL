@@ -29,15 +29,14 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 先读每次拟合的数值检查（[理解第一次拟合](first-model.html#checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。在记录运行（[comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，调查指数 RMSE 也更小，为 2.5 对 4.4。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
 
-![模拟 YTF：ACL 与 ALSCL 的残差比较](../assets/manual/figures/ytf/compare_residuals.png)
+![模拟 YTF：ACL 与 ALSCL 的残差](../assets/manual/figures/ytf/compare_residuals.png)
 
-四个面板分别是残差直方图、QQ 图、逐年平均残差（误差线为一个标准差）和按体长组的绝对残差；[判断拟合是否可用](diagnostics.html#residuals)解释这些规律。
+四个面板分别是对数残差的分布、正态分位数-分位数图、按时间步的平均对数残差（误差线为均值两侧各一个标准差）和按体长组的绝对对数残差；[判断拟合是否可用](diagnostics.html#residuals)解释这些规律。
 
 <h2 id="survey">3. 比较对调查观测的拟合</h2>
 
 ```r
-plot_compare_CatL(a, b, x$data.CatL,
-                  years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
+plot_compare_CatL(a, b, x$data.CatL, years = c(2000, 2005, 2010, 2015))
 ```
 
 ![模拟 YTF：四个年份的调查观测及拟合中位数](../assets/manual/figures/ytf/compare_CatL.png)
@@ -47,7 +46,7 @@ plot_compare_CatL(a, b, x$data.CatL,
 <h2 id="estimates">4. 比较种群估计</h2>
 
 ```r
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 comparison$correlation
 comparison$length_at_age
 comparison$growth
@@ -55,7 +54,7 @@ comparison$growth
 
 ![模拟 YTF 示例的条件种群估计](../assets/manual/figures/ytf/compare_ts.png)
 
-先比较点估计的时间位置、趋势和大小，再检查不确定性；`se = TRUE` 加上各拟合的近似区间。仅凭重叠不能说明点估计接近：很宽的区间即使点估计差异很大也可能重叠。定量比较时，报告同一时间的估计差或比值。由于两次拟合使用同一数据，对差异作统计推断时需要考虑其联合不确定性。本例只描述这一组数据。
+先比较点估计的时间位置、趋势和大小，再检查不确定性；`se = TRUE` 加上各拟合的近似区间。仅凭重叠不能说明点估计接近，因为很宽的区间即使点估计差异很大也可能重叠。定量比较时，报告同一时间的估计差或比值。由于两次拟合使用同一数据，对差异作统计推断时需要考虑其联合不确定性。本例只描述这一组数据。
 
 `comparison$correlation` 对产卵生物量、补充量、生物量和丰度给出两次拟合之间的相关系数和均值之比。渔获量按相对渔获量比较（`CN (relative)` 和 `CB (relative)` 两行，不给比值），因为只拟合调查指数时渔获量的水平无法确定。生长的比较看 `comparison$length_at_age`，即两次拟合各年龄的平均体长。`comparison$growth` 把 `Linf`、`k` 和 `t0` 按模型分开列出，因为它们在 ACL 中是各年龄平均体长的 von Bertalanffy 曲线参数，在 ALSCL 中决定体长别生长增量（[判断拟合是否可用](diagnostics.html#compare)）。
 
@@ -65,7 +64,7 @@ comparison$growth
 plot_compare_F(a, b)
 ```
 
-![模拟 YTF：年龄别与体长别捕捞死亡率](../assets/manual/figures/ytf/compare_F.png)
+![模拟 YTF：ACL 的年龄别捕捞死亡率与 ALSCL 的体长别捕捞死亡率](../assets/manual/figures/ytf/compare_F.png)
 
 ACL 按年龄估计捕捞死亡率，ALSCL 按体长估计，所以两个面板的单元格只在时间上对应。`plot_compare_F_ts()` 用最大值（`method = "apical"`，默认）或均值汇总每个时间步的各组；季度值仍按季度计。
 
@@ -77,15 +76,14 @@ write.csv(comparison$summary, "my_model_comparison/summary.csv", row.names = FAL
 write.csv(comparison$fit_metrics, "my_model_comparison/fit_metrics.csv", row.names = FALSE)
 write.csv(comparison$fit_diagnostics, "my_model_comparison/fit_diagnostics.csv", row.names = FALSE)
 p_population <- plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
-ggplot2::ggsave("my_model_comparison/population.png", p_population,
-               width = 10, height = 7, dpi = 300)
+acl_save_plot(p_population, "my_model_comparison/population.png")
 saveRDS(list(inputs = inputs, fit_args = x$fit_args, fit_config = x$fit_config,
              comparison = comparison, ACL_report = a$report, ALSCL_report = b$report),
         "my_model_comparison/summary.rds")
 writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 ```
 
-文件夹里有 CSV 表、种群图、装有输入、设置、比较结果和两个报告的 RDS 文件，以及会话信息。报告时一并写明时间窗、固定的生物学设置、零值的处理和对固定值的敏感性。
+`acl_save_plot()` 以 300 dpi 保存包内绘图，尺寸取 `acl_figure_size()` 按图形布局给出的推荐值。文件夹里有 CSV 表、种群图、装有输入、设置、比较结果和两个报告的 RDS 文件，以及会话信息。报告时一并写明时间窗、固定的生物学设置、零值的处理和对固定值的敏感性。
 
 <h2 id="next">下一步</h2>
 

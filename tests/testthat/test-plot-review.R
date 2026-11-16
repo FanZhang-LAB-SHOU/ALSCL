@@ -197,7 +197,7 @@ test_that("default time-series comparison works for both real models with uncert
   alscl <- fit_fixture("ALSCL")$result
   expect_identical(eval(formals(plot_compare_ts)$quantities), c("SSB", "R", "B", "N", "CN"))
   labels <- c("Spawning stock biomass (SSB)", "Recruitment", "Total biomass",
-              "Total abundance", "Catch numbers")
+              "Total abundance", "Catch in numbers")
   for (models in list(list(acl, alscl), list(acl, acl), list(alscl, alscl))) {
     for (se in c(FALSE, TRUE)) {
       out <- plot_compare_ts(models[[1L]], models[[2L]], se = se, return_data = TRUE)
@@ -218,6 +218,6 @@ test_that("default time-series comparison works for both real models with uncert
   for (se in c(FALSE, TRUE)) {
     out <- plot_compare_ts(supplied, supplied, quantities = "CB", se = se, return_data = TRUE)
     expect_equal(out$data$Value, rep(c(3, 4, 5), 2L))
-    expect_identical(levels(out$data$Quantity), "Catch biomass")
+    expect_identical(levels(out$data$Quantity), "Catch in weight")
   }
 })

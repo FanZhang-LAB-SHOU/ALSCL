@@ -336,7 +336,8 @@
   .acl_partial_set_note(prepared$structure, model, silent)
   .acl_q_age_start_note(setup$mean_log_R_shift, d$q_age, silent)
   .acl_symmetric_start_note(.acl_symmetric_supplied(prepared$structure, parameters, model), silent)
-  .acl_t0_lower_start_note(.acl_t0_lower_start(prepared$t0_lower, parameters, model), silent)
+  .acl_t0_lower_start_note(.acl_t0_lower_start(prepared$t0_lower, parameters, model,
+                                                isTRUE(.acl_notes$t0_sources_differ)), silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",
@@ -483,8 +484,7 @@
                 fishing_mortality = function() plot_fishing_mortality(result),
                 residuals = function() plot_residuals(result), VB = function() plot_VB(result))
   for (nm in names(plots)) tryCatch({
-    ggplot2::ggsave(file.path("output/figures/result", paste0("plot_", nm, ".png")),
-                   plot = plots[[nm]](), width = 12, height = 7, dpi = 300)
+    acl_save_plot(plots[[nm]](), file.path("output/figures/result", paste0("plot_", nm, ".png")))
   }, error = function(e) warning("Could not save ", nm, ": ", conditionMessage(e)))
   utils::write.csv(diagnose_model(data.CatL, result), "output/tables/diagnostics.csv", row.names = FALSE)
   invisible(NULL)

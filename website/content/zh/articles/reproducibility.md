@@ -119,7 +119,7 @@ list.files(getOption("ALSCL.tmb.cache"))
 | `plot_VB()` 只画出一条线，没有区间 | 生长参数被固定 | 属于预期；用 `map` 释放 |
 | 第一次拟合报错，信息中出现 `TMB::compile`、`make`、`g++` 或 `clang` | 没有编译器，或 Rtools 对应另一个 R 版本 | 安装编译器（第 4 步），重启 R |
 | `Install RcppEigen to compile model templates` 或 `Model sources are missing` | 缺少 RcppEigen，或安装损坏 | 安装 RcppEigen 或重新安装 ALSCL |
-| `All optimization starts failed`，信息中有 `NA/NaN`，且之前有警告说 TMB 构建时用的是另一个 Matrix ABI 版本 | TMB 的二进制包与已安装的 Matrix 不匹配 | 运行 `install.packages("TMB", type = "source")` 并重启 R；原因在此时，报错信息会给出两个 ABI 版本 |
+| `All optimization starts failed`，信息中有 `NA/NaN`，且之前有警告说 TMB 构建时用的是另一个 Matrix ABI 版本 | TMB 的二进制包与已安装的 Matrix 不匹配 | 运行 `install.packages("TMB", type = "source")` 并重启 R；若是这个原因，报错信息会给出两个 ABI 版本 |
 | 安装或 `library(ALSCL)` 提示需要 TMB 1.9.21 或更高版本 | CRAN 不再为当前 R 版本更新软件包，它提供的 TMB 版本较旧 | 运行 `install.packages("TMB", type = "source")`（需要 C++ 编译器，见第 4 步），再重新安装 ALSCL |
 | `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中的副本 | 只保留一个安装，或用 `ncores = 1` |
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` | 新的 R 进程无法启动 | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` |

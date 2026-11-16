@@ -12,7 +12,7 @@
 
 utils::globalVariables("survey_run")
 
-#' Plot Fitted and Observed Survey Indices over Time or across Lengths
+#' Plot fitted and observed survey indices over time or across lengths
 #'
 #' Compare observed survey indices with their fitted lognormal medians over time
 #' or across length bins. Elog_index contains predicted natural-log survey indices;
@@ -25,18 +25,20 @@ utils::globalVariables("survey_run")
 #' @param line_size Numeric or NULL. Line thickness for facet_by = "length"; NULL inherits global line_size.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type for facet_by = "length" plot. Default is "solid".
-#' @param line_size1 Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (default 1.8).
+#' @param line_size1 Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the standard style).
 #' @param line_color1 Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type1 Character. Line type for estimated line. Default is "solid".
 #' @param line_alpha1 Numeric. Transparency for estimated line (0-1). Default is 1.
-#' @param line_size2 Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (default 1.0).
+#' @param line_size2 Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the standard style).
 #' @param line_color2 Character or NULL. NULL inherits the global observed_color setting.
 #' @param line_type2 Character. Line type for observed line. Default is "solid".
 #' @param line_alpha2 Numeric. Transparency for observed line (0-1). Default is 0.6.
 #' @param point_color Character or NULL. NULL inherits the global observed_color setting.
 #' @param point_size Numeric or NULL. Point size for observations, including isolated points in year facets; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.
-#' @param facet_ncol Integer. Specifies the number of columns in the facet_wrap. Default is NULL.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Character. Specifies scales for facet_wrap. Default is "free".
 #' @param facet_by Character. "length" (default) draws one panel per length bin
 #'   with time on the x axis; "year" draws one panel per time step with length
@@ -47,7 +49,10 @@ utils::globalVariables("survey_run")
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #' @param ... The former argument name type, accepted with a warning.
 #'
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label, used verbatim. NULL uses
 #'   Survey index on the original scale and Log survey index on the natural-log
@@ -71,9 +76,8 @@ utils::globalVariables("survey_run")
 #' @details Predicted and observed matrices are aligned by position with fitted
 #'   year and length metadata, independently of optional matrix dimnames. Missing
 #'   and zero observations leave gaps. An isolated observation is drawn as a point.
-#'   With \code{facet_by = "year"} the panels have no legend. A caption states
-#'   which line is fitted and which is observed, from the line widths or, for
-#'   equal widths, the transparencies in use. No caption is drawn when both are equal.
+#'   A legend below the panels names the observed and the fitted series, with
+#'   the widths and transparencies of their lines.
 #'   Dimensions and metadata must agree;
 #'   predictions must be finite, including after an exponential transformation.
 #'
@@ -104,9 +108,9 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
   facet_by <- match.arg(facet_by)
   # NULL inherits the global palette.
   if (is.null(point_size)) point_size <- acl_theme("point_size")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
-  if (is.null(line_size1)) line_size1 <- 1.2 * acl_theme("line_size")
-  if (is.null(line_size2)) line_size2 <- (2 / 3) * acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
+  if (is.null(line_size1)) line_size1 <- 1.2 * .acl_auto_size()
+  if (is.null(line_size2)) line_size2 <- (2 / 3) * .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_color)) point_color <- acl_theme("observed_color")
   if (is.null(line_color1)) line_color1 <- acl_theme("line_color")
@@ -146,16 +150,22 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
     logN_at_len_long <- long_data(logN_at_len)
 
     # Plot Elog_index over the years using ggplot2
+    # A legend names the observed points and the fitted line.
+    series <- c("Observed", "Fitted")
     p <- ggplot2::ggplot() +
-      ggplot2::geom_point(logN_at_len_long, mapping = ggplot2::aes(x = Year, y = Count), na.rm = TRUE, size= point_size, color= point_color,shape=point_shape) +
-      ggplot2::geom_line(Elog_index_long,  mapping = ggplot2::aes(x = Year, y = Count), linewidth = line_size, color = line_color, linetype = line_type) +
+      ggplot2::geom_point(logN_at_len_long, mapping = ggplot2::aes(x = Year, y = Count, color = series[1L]),
+                          na.rm = TRUE, size = point_size, shape = point_shape) +
+      ggplot2::geom_line(Elog_index_long, mapping = ggplot2::aes(x = Year, y = Count, color = series[2L]),
+                         linewidth = line_size, linetype = line_type) +
+      .acl_series_legend(series, c(point_color, line_color), c("blank", line_type), c(point_shape, NA)) +
       ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
-      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = if (!is.null(title)) title else .acl_title("CatL_by_length")) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = .acl_plot_title(title, "CatL_by_length")) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(nrow(Elog_index), facet_ncol),
-                   values = Year, check_overlap = TRUE) +
-      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+                   values = Year, time = TRUE) +
+      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+      .acl_series_theme()
 
-
+    p <- .acl_tidy_axes(p)
     if (return_data) {
       return(list(plot = p, data1 = Elog_index_long,data2=logN_at_len_long))
     } else {
@@ -190,24 +200,24 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
     df_long2$year <- factor(year_levels[match(as.numeric(df_long2$year), year)], levels = year_levels)
 
     runs <- .acl_observed_plot_runs(df_long2, "year", "len_mid", "Abundance")
-    auto_title <- .acl_title("CatL_by_year")
-    # The panels have no legend, so the caption is the key. It follows the
-    # line widths and transparencies in use.
-    caption <- if (line_size1 > line_size2) "Thicker line: fitted; thinner line: observed" else
-      if (line_size1 < line_size2) "Thinner line: fitted; thicker line: observed" else
-        if (line_alpha1 > line_alpha2) "Opaque line: fitted; more transparent line: observed" else
-          if (line_alpha1 < line_alpha2) "More transparent line: fitted; opaque line: observed" else NULL
+    # A legend names the observed and the fitted lines, with their widths
+    # and transparencies.
+    series <- c("Observed", "Fitted")
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
-        mapping = ggplot2::aes(x = len_mid, y = Abundance, group = survey_run),
-        linewidth = line_size2, color = line_color2, linetype = line_type2, alpha = line_alpha2) +
-      ggplot2::geom_line(data=df_long1, mapping = ggplot2::aes(x = len_mid, y = Abundance),linewidth=line_size1,color=line_color1,linetype=line_type1,alpha=line_alpha1) +
+        mapping = ggplot2::aes(x = len_mid, y = Abundance, group = survey_run, color = series[1L]),
+        linewidth = line_size2, linetype = line_type2, alpha = line_alpha2) +
+      ggplot2::geom_line(data = df_long1, mapping = ggplot2::aes(x = len_mid, y = Abundance, color = series[2L]),
+                         linewidth = line_size1, linetype = line_type1, alpha = line_alpha1) +
+      .acl_series_legend(series, c(line_color2, line_color1), c(line_type2, line_type1), c(NA, NA),
+                         linewidths = c(line_size2, line_size1), alphas = c(line_alpha2, line_alpha1)) +
       ggplot2::facet_wrap(~year, scales = facet_scales,ncol=facet_ncol) +
-      ggplot2::labs(caption = caption, x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = if (!is.null(title)) title else auto_title) +
+      ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = .acl_plot_title(title, "CatL_by_year")) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, budget = 20),
                    values = len_mid, check_overlap = TRUE) +
-      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+      .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+      .acl_series_theme()
 
 
     if (any(runs$run_size == 1L)) {
@@ -215,6 +225,7 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
         mapping = ggplot2::aes(x = len_mid, y = Abundance), size = point_size, shape = point_shape,
         color = line_color2, fill = line_color2, alpha = line_alpha2)
     }
+    p <- .acl_tidy_axes(p)
     if (return_data) {
       return(list(plot = p, data1 = df_long1, data2=df_long2))
     } else {

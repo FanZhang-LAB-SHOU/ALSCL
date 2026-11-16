@@ -7,7 +7,8 @@
 extract_estimates(
   fit,
   quantities = c("SSB", "Rec", "B", "N", "CN", "F"),
-  conf_level = 0.95
+  conf_level = 0.95,
+  interval = c("lognormal", "wald")
 )
 }
 \arguments{
@@ -24,8 +25,13 @@ missing value (use N_at_age, or \code{na.strings = ""} when reading).
 In the fitted report the matrix is \code{fit$report[["NA"]]}; the
 double brackets are needed because NA is a reserved word in R.}
 
-\item{conf_level}{Nominal confidence level of approximate normal intervals
+\item{conf_level}{Nominal confidence level of the approximate intervals
 on the reported scale, strictly between zero and one.}
+
+\item{interval}{Form of the interval. \code{"lognormal"} (default) is
+\verb{exp(log(estimate) +/- z * SE / estimate)}, as in the plots of the
+package and in \code{\link[=self_test]{self_test()}}. \code{"wald"} is \verb{estimate +/- z * SE}, the
+default before version 2.5.0, and gives the former bounds.}
 }
 \value{
 A long data frame with quantity, report_name, year, age, length,
@@ -41,7 +47,11 @@ Extract population estimates with explicit time and group coordinates
 \details{
 Estimates come from report. Complete finite nonnegative standard errors
 come from exact matching rows of est_std. Incomplete uncertainty for a quantity
-remains NA. Normal intervals are not truncated at zero. FA uses source ages
+remains NA, and so do its interval bounds. Lognormal intervals of a
+positive estimate stay positive. An estimate of zero, or one whose
+lognormal upper bound overflows, keeps the Wald bounds with the lower
+bound stopped at zero, and a negative estimate keeps the Wald bounds.
+Wald intervals are not truncated at zero. FA uses source ages
 and source periods of the cohort-survival interval, not destination labels.
 
 No observation informs F in the terminal period. The survey index of a

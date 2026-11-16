@@ -32,7 +32,7 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs),
 str(inputs)
 ```
 
-`initialize_params()` 建立 flatfish 预设（年龄结构动态，80 年预热后保留 20 个年度时间步，标签 2000-2019），`sim_cal()` 推出生物学数组，`sim_data()` 运行种群：`iter_range` 给出重复编号，也是随机种子；每次重复用 `save()` 保存为 `sim_rep<编号>`（用 `load()` 读回）；`return_iter = 4` 把该次重复作为 `sm` 返回，其中有调查数量 `SN_at_len`、保留的 `years` 以及真值 `SSB`、`Rec` 和 `TB`（[模拟调查数据](simulation.html#generate)列出了每个元素）。`simulation_to_tables(sm, pa)` 返回三张表，行是体长组中点，列是 `sm$years`；`str(inputs)` 应显示三个 23 行 21 列的数据框。若转换器因 `len_mid` 与重复中记录的坐标不同而停止，请传入生成该文件的参数列表。
+`initialize_params()` 建立 flatfish 预设（年龄结构动态，80 年预热后保留 20 个年度时间步，标签 2000-2019），`sim_cal()` 推出生物学数组，`sim_data()` 运行种群。`iter_range` 给出重复编号，也是随机种子；每次重复用 `save()` 保存为 `sim_rep<编号>`（用 `load()` 读回）；`return_iter = 4` 把该次重复作为 `sm` 返回，其中有调查数量 `SN_at_len`、保留的 `years` 以及真值 `SSB`、`Rec` 和 `TB`（[模拟调查数据](simulation.html#generate)列出了每个元素）。`simulation_to_tables(sm, pa)` 返回三张表，行是体长组中点，列是 `sm$years`；`str(inputs)` 应显示三个 23 行 21 列的数据框。若转换器因 `len_mid` 与重复中记录的坐标不同而停止，请传入生成该文件的参数列表。
 
 <h2 id="plot">3. 绘制模拟观测</h2>
 
@@ -44,22 +44,22 @@ observations <- data.frame(
   Length = rep(pa$len_mid, length(years)),
   Index = as.vector(as.matrix(inputs$data.CatL[-1])))
 p_data <- ggplot(observations, aes(Year, Length, fill = log10(Index))) +
-  geom_tile() + scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(fill = "log10 index") + theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = acl_palette(role = "primary")) +
+  labs(x = "Year", y = "Length (cm)", fill = "Survey index (log10)") + theme_acl()
 p_data
-ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 160)
+ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 300)
 ```
 
 热图显示按年份和体长组排列的 log10 调查指数，`pa$len_mid` 是 23 个体长组中点。
 
-![完整 flatfish 模拟：体长与年份上的调查数量](../assets/manual/figures/cases/flatfish_data.png)
+![完整 flatfish 模拟：按体长和年份的模拟调查指数](../assets/manual/figures/cases/flatfish_data.png)
 
 图中显示调查指数随体长和年份的分布。移动的条带可能反映世代生长，但一个体长组可包含多个年龄；追踪某个世代时应查看模拟的年龄别状态。指数在 10 cm 以下很小（那里的可捕性低于 0.1），在 15-30 cm 最大。在同一种群状态下，改变调查可捕性会改变期望调查指数。
 
 ![生成模型的生长曲线、成熟比例与调查可捕性](../assets/manual/figures/cases/flatfish_biology.png)
 
-上图是生长曲线，从 1 龄 11 cm 到 15 龄 57 cm。下图是成熟比例（L50 为 35 cm，来自 `data.mat`）和调查可捕性（L50 为 15 cm，来自 `sel_L50` 和 `sel_L95`）；你的种群需要自己的数值。
+左图是生长曲线，从 1 龄 11 cm 到 15 龄 57 cm。右图是成熟比例（L50 为 35 cm，来自 `data.mat`）和调查可捕性（L50 为 15 cm，来自 `sel_L50` 和 `sel_L95`）；你的种群需要自己的数值。
 
 <h2 id="fit">4. 对这次重复拟合两个模型</h2>
 
@@ -90,7 +90,7 @@ checks <- list(ACL = diagnose_model(x$data.CatL, a),
 c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 ```
 
-输入列表 `x` 在 `fit_args` 中装入生成模型的生物学设置，在 `fit_config` 中按各模型自己的参数名装入初值和 `map`。平均生长参数和同龄体长 CV 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上，但年龄型 flatfish 生成器不使用这个参数。对于 F，`pa$F_sd` 是创新 SD，因此代码用 `pa$F_sd / sqrt(1 - pa$F_ar^2)` 换算成拟合模型的边际 SD（该预设为 0.3023716）。初始数量 SD 和补充量相关系数按指定的拟合假设固定，两个 F 相关系数均固定为 0.75。每个模型估计 5 个标量参数。
+输入列表 `x` 在 `fit_args` 中装入生成模型的生物学设置，在 `fit_config` 中按各模型自己的参数名装入初值和 `map`。平均生长参数和同龄体长 CV 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上，但年龄型的 flatfish 生成器不使用这个参数。对于 F，`pa$F_sd` 是创新 SD，因此代码用 `pa$F_sd / sqrt(1 - pa$F_ar^2)` 换算成拟合模型的边际 SD（该预设为 0.3023716）。初始数量 SD 和补充量相关系数按指定的拟合假设固定，两个 F 相关系数均固定为 0.75。每个模型估计 5 个标量参数。
 
 操作模型用共用的 F 时间序列乘以选择性。本例的评估模型允许 F 随组别和时间变化。操作模型和评估模型都在对数尺度上加入独立扰动，逐龄递推初始尾数。操作模型在预热期开始时初始化，评估模型在保留序列的第一期初始化。见[年度与季度时间步](case-studies.html#annual)。
 
@@ -99,8 +99,9 @@ c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 <h2 id="truth">5. 将估计值与生成真值比较</h2>
 
 ```r
+panels <- c("Total biomass", "Spawning stock biomass (SSB)", "Recruitment")
 truth <- data.frame(Year = rep(years, 3),
-  Quantity = rep(c("B", "SSB", "Rec"), each = length(years)),
+  Quantity = factor(rep(panels, each = length(years)), levels = panels),
   Truth = c(sm$TB, sm$SSB, sm$Rec))
 estimates <- rbind(
   data.frame(Year = rep(years, 3), Quantity = truth$Quantity,
@@ -108,22 +109,25 @@ estimates <- rbind(
   data.frame(Year = rep(years, 3), Quantity = truth$Quantity,
     Value = c(b$report$B, b$report$SSB, b$report$Rec), Model = "ALSCL"))
 p_truth <- ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() +
-  geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
-  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) + theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  scale_color_manual(values = acl_palette(2)) +
+  geom_line(data = truth, aes(Year, Truth, linetype = "Simulated value"),
+            inherit.aes = FALSE) +
+  scale_linetype_manual(values = 2, name = NULL) +
+  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) +
+  labs(y = "Estimate", color = NULL) + theme_acl()
 p_truth
 ggsave("my_full_simulation/truth_comparison.png", p_truth,
-       width = 10, height = 6, dpi = 160)
+       width = 10, height = 6, dpi = 300)
 saveRDS(list(parameters = pa, truth = sm, inputs = inputs, checks = checks,
              ACL_report = a$report, ALSCL_report = b$report),
         "my_full_simulation/assessment_summary.rds")
 ```
 
-模拟器把总生物量叫 `TB`，拟合报告叫 `B`；代码先按年份和指标把两者对齐。
+模拟器把总生物量叫 `TB`，拟合报告叫 `B`；代码按年份和指标把两者对齐，并像下图一样标注各面板。
 
 ![flatfish 第 4 次重复：生成真值与 ACL/ALSCL 条件估计](../assets/manual/figures/cases/flatfish_truth.png)
 
-虚线是真值，实线是两个条件估计；各面板的纵轴自由缩放，所以在同一面板内比较。对于生物量和产卵生物量，两个模型都跟上了 2010 年前的下降和之后的回升，ALSCL 在 2014 年后的生物量和产卵生物量低于真值。这里只展示年龄结构生成模型的一次重复；要给模型排序，需要很多次重复并保留失败的拟合，[模拟调查数据](simulation.html#fit)用 `summarize_simulations()` 做汇总。
+虚线是模拟值（即真值），实线是两个条件估计；各面板的纵轴自由缩放，所以在同一面板内比较。对于总生物量和产卵生物量，两个模型都跟上了 2010 年前的下降和之后的回升，ALSCL 在 2014 年后的这两个量都低于真值。这里只展示年龄结构生成模型的一次重复；要给模型排序，需要很多次重复并保留失败的拟合，[模拟调查数据](simulation.html#fit)用 `summarize_simulations()` 做汇总。
 
 <h2 id="next">下一步</h2>
 

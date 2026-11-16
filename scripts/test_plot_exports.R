@@ -1,5 +1,10 @@
 # Run from the repository root. Check export guards, then execute the plotting
 # tutorials using freshly fitted teaching models; no cached assessments required.
+# The script first loads the ALSCL code of this checkout (with pkgload, or the
+# installed package if it matches the checkout), because save_grid_free_plot()
+# saves through ALSCL::acl_save_plot(); no installed ALSCL is needed.
+source('scripts/checkout_guard.R')
+use_checkout_alscl()
 library(ggplot2)
 library(patchwork)
 source('scripts/plot_helpers.R')

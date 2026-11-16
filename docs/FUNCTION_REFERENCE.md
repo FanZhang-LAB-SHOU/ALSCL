@@ -1,8 +1,8 @@
 # 函数与参数参考 · Function reference
 
-对应 ALSCL 2.4.5，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.5.0，覆盖 **81 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **77 exported functions** of ALSCL 2.4.5 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **81 exported functions** of ALSCL 2.5.0 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](USER_GUIDE.md) · [图谱 / Gallery](PLOT_GALLERY.md)
 
@@ -44,9 +44,13 @@ dat <- x$data.CatL
 - [extract_estimates](#extract_estimates) — 统一提取带坐标的种群估计 / Extract population estimates with coordinates
 - [check_fit](#check_fit) — 用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time-length heatmap, actual-time lag correlations and a normal QQ plot.
 - [check_alscl_data](#check_alscl_data) — 在编译或拟合之前检查完整数据和模型设置。 / Check complete data and model settings before compiling or fitting.
+- [acl_palette](#acl_palette) — ALSCL 绘图的颜色 / Colors of the ALSCL plots
 - [acl_theme](#acl_theme) — 读取全局主题 / Read global theme settings
 - [acl_theme_reset](#acl_theme_reset) — 恢复默认主题 / Reset theme settings
 - [acl_theme_set](#acl_theme_set) — 设置全局主题 / Set global theme settings
+- [theme_acl](#theme_acl) — 用于自己的 ggplot 的 ALSCL 绘图主题 / Theme of the ALSCL plots for your own ggplots
+- [acl_figure_size](#acl_figure_size) — 保存图时建议的尺寸 / Recommended size of a saved figure
+- [acl_save_plot](#acl_save_plot) — 按建议尺寸保存图 / Save a plot at its recommended size
 - [alscl_speed](#alscl_speed) — 设置拟合速度选项 / Set speed options for model fitting
 - [alscl_speed_info](#alscl_speed_info) — 查看速度设置的实际效果 / Show how fits will use the speed settings
 - [compare_models](#compare_models) — 生成两个模型的数值比较表 / Compare fitted model summaries
@@ -102,10 +106,49 @@ dat <- x$data.CatL
 - [ssb_at_age](#ssb_at_age) — 按年龄别成熟比例计算产卵生物量 / Spawning stock biomass from maturity at age
 - [relative_catch](#relative_catch) — 各时间步的相对渔获量 / Relative catch by time step
 
+<a id="acl_palette"></a>
+## `acl_palette()`
+
+ALSCL 绘图的颜色 / Colors of the ALSCL plots
+
+返回当前色板或指定色板的分类颜色，或绘图中各角色所用的颜色，使自己的图与包内绘图一致。
+
+Returns the categorical colors of the active palette, or of a named one, or the colors that the plots use for each role, so that figures of your own match the package plots.
+
+```r
+acl_palette (n = NULL, palette = NULL, role = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `n` | `NULL` | 颜色个数。NULL 返回色板的原有颜色；多于色板颜色数时在色板颜色之间插值。 | Integer or NULL. Number of colors. NULL returns the native colors of the palette; more colors than the palette holds are interpolated between its colors. |
+| `palette` | `NULL` | "standard"、"npg"、"aaas"、"nejm"、"lancet" 或 "jama"；NULL 使用 `acl_theme_set()` 设定的色板。 | Character or NULL. "standard", "npg", "aaas", "nejm", "lancet" or "jama"; NULL uses the palette set with `acl_theme_set()`. |
+| `role` | `NULL` | 颜色角色名："stock"、"F"、"recruitment"、"catch"（四个数量）、"primary"（线和点）、"accent"（观测值）、"smooth"（平滑线）和 "reference"（参考线）。`palette = NULL` 时取当前设置中的颜色，没有自己颜色的数量取 primary 颜色；给出色板名时取该色板的默认颜色。此时忽略 `n`。 | Character vector or NULL. Names of color roles: "stock", "F", "recruitment", "catch" (the quantity families), "primary" (lines and points), "accent" (observations), "smooth" (smoothers) and "reference" (reference lines). With `palette = NULL` the colors are those of the current settings; a quantity without its own color uses the primary color. With a palette name they are the defaults of that palette. `n` is ignored. |
+
+**返回 / Returns:** 颜色字符向量；给出 `role` 时按角色命名。
+
+A character vector of colors, named by role when `role` is given.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+acl_palette()
+acl_palette(3)
+acl_palette(12, palette = "npg")
+acl_palette(role = c("stock", "F", "recruitment", "catch", "primary", "accent"))
+```
+
+![示例图 / Example figure: `acl_palette(palette = p)` for the six palettes](figures/palettes/palettes.png)
+
 <a id="acl_theme"></a>
 ## `acl_theme()`
 
 读取全局主题 / Read global theme settings
+
+所有 ALSCL 绘图函数（包括模型比较图）的全局设置。默认样式为 `"standard"`；`style = "classic"` 恢复 ALSCL 2.4.5 的外观。`theme_acl()` 和 `acl_palette()` 让你自己的 ggplot 具有同样的外观。
+
+Global settings for all ALSCL plot functions, including model comparison plots. The default style is `"standard"`; `style = "classic"` restores the look of ALSCL 2.4.5. `theme_acl()` and `acl_palette()` give your own ggplots the same look.
 
 ```r
 acl_theme (what = NULL)
@@ -141,9 +184,9 @@ acl_theme_reset ()
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 
-**返回 / Returns:** 把每项主题设置恢复为包的默认值，并用 message 报告（可用 `suppressMessages()` 关闭），然后不可见地返回 NULL。
+**返回 / Returns:** 把每项主题设置恢复为包的默认值，即 "standard" 样式，并用 message 报告（可用 `suppressMessages()` 关闭），然后不可见地返回 NULL。要得到 ALSCL 2.4.5 的外观，用 `acl_theme_set(style = "classic")`。
 
-Restores every theme setting to the package default and reports this with a message, which `suppressMessages()` silences. Returns NULL, invisibly.
+Restores every theme setting to the package default, the "standard" style, and reports this with a message, which `suppressMessages()` silences. Returns NULL, invisibly. Use `acl_theme_set(style = "classic")` for the look of ALSCL 2.4.5.
 
 **示例 / Example:**
 
@@ -161,9 +204,13 @@ acl_theme_reset()
 
 Save `old <- acl_theme()` and restore the settings with `do.call(acl_theme_set, old)`. Explicit `x_breaks = NULL` restores automatic breaks and `ylab = list(survey = NULL)` clears a survey-label override; omitted arguments leave current values unchanged.
 
-省略的 `line_size` 与 `se_alpha` 参数继承 `acl_theme_set()`（默认 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差和指标组合图的标题及 F 分面文字继承全局字体设置。默认无网格。
+省略的 `line_size` 与 `se_alpha` 参数继承 `acl_theme_set()`（"standard" 样式默认为 1 与 0.3，"classic" 为 1.5 与 0.2），函数显式参数优先。比较曲线遵守 `linetypes` 与 `compare_linetypes`，残差和指标组合图的标题及 F 分面文字继承全局字体设置。
 
-Omitted `line_size` and `se_alpha` arguments inherit `acl_theme_set()` (defaults 1.5 and 0.2); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`, and the titles of the combined residual and metric plots and the F facet labels inherit the global typography. Grid lines are absent by default.
+`style` 是所有图外观的预设。默认 `"standard"` 让每个数量有自己的颜色，总补充量和总渔获量画成柱，种群大小、补充量、渔获量和 F 图的纵轴从零开始，标题为黑色粗体、左对齐，分面标签不带框，图例在下方；两种样式都不画网格线。`acl_theme_set(style = "classic")` 一次调用即恢复 ALSCL 2.4.5 的外观（npg 色板、居中的普通标题、所有序列画成线、纵轴随数据变化、灰色分面标签条）；图中的默认文字、分面列数和刻度标签的规则在两种样式下相同，不会恢复为 2.4.5 的样子。设置样式会替换 palette、grid、title_face、title_hjust、title_color、四个数量颜色、bars、y_zero、se_alpha、compare_se_alpha、strip、legend_position、axis_color、line_size、compare_line_size 以及由色板派生的颜色；同一调用中的其他参数在样式之后生效。单独设置一项只改变该项，例如用 `acl_theme_set(grid = "y")` 加上水平网格线。
+
+Omitted `line_size` and `se_alpha` arguments inherit `acl_theme_set()` (1 and 0.3 under the "standard" style, 1.5 and 0.2 under "classic"); explicit function arguments take priority. Comparison curves honor `linetypes` and `compare_linetypes`, and the titles of the combined residual and metric plots and the F facet labels inherit the global typography.
+
+`style` is a preset of the look of all plots. The default, `"standard"`, gives each quantity its own color, draws total recruitment and total catch as bars, starts the y axes of stock size, recruitment, catch and F plots at zero, makes titles black, bold and left aligned, and draws facet labels without a box and legends at the bottom; neither style draws grid lines. `acl_theme_set(style = "classic")` restores the look of ALSCL 2.4.5 in one call (npg palette, centered plain titles, lines for every series, y axes that follow the data, grey facet strips); the default texts in the figures, the number of facet columns and the rules for tick labels are the same under both styles and do not return to those of 2.4.5. Setting a style replaces palette, grid, title_face, title_hjust, title_color, the four quantity colors, bars, y_zero, se_alpha, compare_se_alpha, strip, legend_position, axis_color, line_size, compare_line_size and the palette-derived colors; other arguments of the same call are applied after the preset. Setting a single key changes only that key, for example `acl_theme_set(grid = "y")` for horizontal grid lines.
 
 ```r
 acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_hjust = NULL, 
@@ -174,7 +221,10 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
     compare_legend_pos = NULL, compare_facet_ncol = NULL, compare_facet_scales = NULL, 
     titles = NULL, xlab = NULL, ylab = NULL, palette = NULL, point_color = NULL, 
     observed_color = NULL, smooth_color = NULL, hline_color = NULL, low_col = NULL, 
-    high_col = NULL, ..., interval = NULL)
+    high_col = NULL, style = NULL, grid = NULL, title_face = NULL, title_color = NULL, 
+    stock_color = NULL, F_color = NULL, recruitment_color = NULL, catch_color = NULL, 
+    bars = NULL, y_zero = NULL, strip = NULL, legend_position = NULL, axis_color = NULL, 
+    ..., interval = NULL, show_title = NULL, x_angle = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -182,7 +232,7 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `base_theme` | `NULL` | 基础主题名称："bw"、"minimal"、"classic"、"gray"、"grey"、"light"、"linedraw"、"dark" 或 "void"，可带 "theme_" 前缀。其他取值报错。 | Character. Base ggplot2 theme name: "bw", "minimal", "classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or without the "theme_" prefix. Any other value is an error. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for all text. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Plot title size in pt. |
-| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric. Title alignment (0=left, 0.5=center, 1=right). |
+| `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。由样式设定："standard" 为 0，"classic" 为 0.5。 | Numeric. Title alignment (0=left, 0.5=center, 1=right). Set by the style: 0 under "standard", 0.5 under "classic". |
 | `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric. Axis title size. |
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric. Axis tick label size. |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric. Facet label size. |
@@ -190,34 +240,81 @@ acl_theme_set (base_theme = NULL, font_family = NULL, title_size = NULL, title_h
 | `x_breaks` | `NULL` | 横轴刻度向量或 NULL。同一设置用于时间、年龄和体长坐标轴：只有至少一个刻度落在某张图的横轴范围内时，该图才使用它，否则自动选择刻度；因此按年份设置的刻度不会清空年龄轴或体长轴。显式传入 NULL 恢复自动刻度；省略该参数则保留当前设置。 | Numeric vector or NULL. Custom x-axis breaks. One setting serves time, age and length axes. A plot uses it only when at least one break lies within the range of its x axis; otherwise that plot chooses its breaks automatically. Calendar-year breaks therefore do not blank age or length axes. Pass NULL explicitly to restore automatically selected breaks; omitting the argument leaves the current setting unchanged. |
 | `x_expand` | `NULL` | 横轴留白设置，长度 2 的数值向量。 | Numeric vector of length 2. X-axis expansion. |
 | `line_color` | `NULL` | 单模型线条颜色。 | Character. Default line color for single-model plots. |
-| `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
+| `line_size` | `NULL` | 单模型图的默认线宽（"standard" 样式为 1，"classic" 为 1.5）。面板多的图自动用较细的线，除非绘图调用给出 line_size。 | Numeric. Default line width of single-model plots (1 under the "standard" style, 1.5 under "classic"). Figures with many panels use thinner lines unless a plot call gives line_size. |
 | `point_size` | `NULL` | 所有含点图的默认点大小（2.5）；比较图可单独覆盖。 | Default point size for all point-drawing plots (2.5); comparison plots can override it. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character. Default CI color. |
-| `se_alpha` | `NULL` | 区间阴影的默认透明度（0.2）。绘图参数为 NULL 时继承该值，显式给出的透明度优先。误差棒默认不透明，除非绘图调用给出 se_alpha。 | Numeric. Default transparency of interval ribbons (0.2). Plot arguments set to NULL inherit this value; explicit alpha takes priority. Error bars are drawn opaque unless a plot call supplies se_alpha. |
+| `se_alpha` | `NULL` | 区间阴影的默认透明度（"standard" 样式为 0.3，"classic" 为 0.2）。绘图参数为 NULL 时继承该值，显式给出的透明度优先。误差棒默认不透明，除非绘图调用给出 se_alpha。 | Numeric. Default transparency of interval ribbons (0.3 under the "standard" style, 0.2 under "classic"). Plot arguments set to NULL inherit this value; explicit alpha takes priority. Error bars are drawn opaque unless a plot call supplies se_alpha. |
 | `compare_colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Character vector of 2 colors. Can be unnamed (positional) or named. The first color is always model1, second is model2. Examples: c("blue", "red"), c(ACL = "blue", ALSCL = "red"), c("M=0" = "steelblue", "M=0.5" = "tomato"). |
 | `compare_linetypes` | `NULL` | 按模型顺序提供两种线型。 | Character vector of 2 linetypes. Same rules as colors. |
-| `compare_line_size` | `NULL` | 比较图全局线宽。 | Numeric. Line width for comparison plots. |
+| `compare_line_size` | `NULL` | 比较图的线宽（"standard" 样式为 0.9，"classic" 为 1.2）。 | Numeric. Line width for comparison plots (0.9 under the "standard" style, 1.2 under "classic"). |
 | `compare_point_size` | `NULL` | 可选的比较图点大小；显式 NULL 清除覆盖，恢复继承 point_size。 | Optional comparison point-size override; explicit NULL clears it and restores point_size inheritance. |
-| `compare_se_alpha` | `NULL` | 比较图区间透明度。 | Numeric. CI ribbon alpha for comparison plots. |
+| `compare_se_alpha` | `NULL` | 比较图区间透明度（"standard" 样式为 0.25，"classic" 为 0.15）。 | Numeric. CI ribbon alpha for comparison plots (0.25 under the "standard" style, 0.15 under "classic"). |
 | `compare_legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position for comparison plots. |
-| `compare_facet_ncol` | `NULL` | 比较图全局分面列数。 | Integer. Default facet columns in comparison plots. |
+| `compare_facet_ncol` | `NULL` | 比较图的分面列数。NULL（默认）与单模型图一样按面板数选择列数；显式传入 NULL 恢复该默认。 | Integer or NULL. Facet columns of comparison plots. NULL (default) chooses the columns from the number of panels, as the single-model plots do; pass NULL explicitly to restore it. |
 | `compare_facet_scales` | `NULL` | 比较图全局分面尺度。 | Character. Facet scales for comparison plots. |
-| `titles` | `NULL` | 以图名为键的标题列表，用于全局覆盖。 | Named list. Override specific titles. |
+| `titles` | `NULL` | 以图名为键的标题列表，用于全局覆盖。键见 `acl_theme("titles")`，包括 `check_fit()` 三个面板的 `check_residuals`、`check_lag` 和 `check_qq`。某个键设为 "" 或 NA 时只去掉该图的标题。 | Named list. Override specific titles. The keys are listed in `acl_theme("titles")`, including `check_residuals`, `check_lag` and `check_qq` for the three panels of `check_fit()`. A key set to "" or NA removes the title of that plot only. |
 | `xlab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Named list. Override specific x-axis labels. |
 | `ylab` | `NULL` | 命名列表，覆盖指定的纵轴标签。默认的捕捞死亡率标签会加上拟合的时间基准，例如 "(per year)" 或 "(per quarter)"；自定义的 `F` 标签原样使用。 | Named list. Override specific y-axis labels. The default fishing mortality label gains the time basis of the fit, for example "(per year)" or "(per quarter)"; a customized `F` label is used verbatim. |
-| `palette` | `NULL` | ggsci 色板名；NULL 继承全局设置，部分图也保留旧色板。 | Character or NULL. ggsci palette: "npg" (default), "aaas", "nejm", "lancet", or "jama". Changing it resets palette-derived colors; explicit color arguments in the same call take precedence. No arguments leaves settings unchanged; use acl_theme_reset() to reset. |
+| `palette` | `NULL` | 分类色板："standard"（默认样式的色板，默认），或 ggsci 色板 "npg"、"aaas"、"nejm"、"lancet"、"jama"。切换色板会重设由色板派生的颜色（线、区间、点、观测、平滑线、比较图和热图颜色），四个数量颜色不变；同一调用中显式给出的颜色优先。不带参数调用不改变设置；用 acl_theme_reset() 恢复默认。 | Character or NULL. Categorical palette: "standard" (default), the palette of the default style, or the ggsci palettes "npg", "aaas", "nejm", "lancet" and "jama". Changing it resets palette-derived colors (line, interval, point, observation, smoother, comparison and heat map colors); explicit color arguments in the same call take precedence. No arguments leaves settings unchanged; use acl_theme_reset() to reset. |
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
 | `observed_color` | `NULL` | 观测数据颜色；NULL 继承全局角色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
 | `smooth_color` | `NULL` | 残差平滑线颜色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
 | `hline_color` | `NULL` | 残差零参考线颜色。 | Character or NULL. Default point, observation, smoother and reference-line colors. |
 | `low_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. Continuous heatmap endpoints. |
 | `high_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. Continuous heatmap endpoints. |
+| `style` | `NULL` | 所有图外观的预设："standard"（默认）或 "classic"，后者恢复 ALSCL 2.4.5 的外观（npg 色板、居中的普通标题、所有序列画成线、纵轴不强制从零开始、灰色分面标签条）。设置样式会用预设值替换 palette、grid、title_face、title_hjust、title_color、四个数量颜色、bars、y_zero、se_alpha、compare_se_alpha、strip、legend_position、axis_color、line_size、compare_line_size 以及由色板派生的颜色。同一调用中的其他参数在预设之后生效。单独设置一项只改变该项，所以两种样式可以混合。 | Character or NULL. A preset of the look of all plots: "standard" (default) or "classic", which restores the look of ALSCL 2.4.5 (npg palette, centered plain title, lines for every series, y axes not forced to zero, grey facet strips). Setting a style replaces palette, grid, title_face, title_hjust, title_color, the four quantity colors, bars, y_zero, se_alpha, compare_se_alpha, strip, legend_position, axis_color, line_size, compare_line_size and the palette-derived colors with the values of the preset. Other arguments of the same call are applied after the preset and win. Setting a single key changes only that key, so styles can be mixed. |
+| `grid` | `NULL` | 网格线："none"（无网格线，两种样式的默认值）或 "y"（只有水平主网格线）。热图从不显示网格线。 | Character or NULL. Grid lines: "none" (no grid lines, the default of both styles) or "y" (horizontal major lines only). Heat maps never show grid lines. |
+| `title_face` | `NULL` | 标题字体样式："bold"（"standard"）、"plain"（"classic"）、"italic" 或 "bold.italic"。 | Character or NULL. Face of plot titles: "bold" ("standard"), "plain" ("classic"), "italic" or "bold.italic". |
+| `title_color` | `NULL` | 标题颜色：两种样式均为 "black"。"quantity" 让标题取图中数量（种群大小、捕捞压力、补充量或渔获量）的主题颜色，必要时加深，使其与白色的对比度不低于 4.5 比 1（线和柱保持原色），其他图为黑色；其他颜色名或颜色代码按原样使用。 | Character or NULL. Color of plot titles: "black" in both styles. "quantity" gives the title the theme color of the quantity that the plot shows (stock size, fishing pressure, recruitment or catch), darkened where needed for a contrast ratio of at least 4.5 to 1 with white (lines and bars keep the exact color), and black for other plots; any other color name or code is used as given. |
+| `stock_color` | `NULL` | 种群大小（plot_SSB()、plot_biomass()、plot_abundance()）的线或柱颜色。"standard" 样式为 "#047c6c"；NULL（"classic"）使用 line_color。显式传入 NULL 清除该颜色。 | Character or NULL. Line or bar color of stock size (plot_SSB(), plot_biomass(), plot_abundance()). The "standard" style uses "#047c6c"; NULL ("classic") uses line_color. Interval bands take the color of their line unless se_color is set apart from line_color. Pass NULL explicitly to clear a color. |
+| `F_color` | `NULL` | 捕捞压力（plot_fishing_mortality()、plot_deviance() 的 F 偏差）的颜色。"standard" 样式为 "#ed5f26"；NULL（"classic"）使用 line_color。 | Character or NULL. Color of fishing pressure (plot_fishing_mortality(), the F deviations of plot_deviance()). The "standard" style uses "#ed5f26"; NULL ("classic") uses line_color. |
+| `recruitment_color` | `NULL` | 补充量（plot_recruitment()、plot_deviance() 的补充量偏差）的颜色。"standard" 样式为 "#28b3e8"；NULL（"classic"）使用 line_color。 | Character or NULL. Color of recruitment (plot_recruitment(), the recruitment deviations of plot_deviance()). The "standard" style uses "#28b3e8"; NULL ("classic") uses line_color. |
+| `catch_color` | `NULL` | 渔获量（plot_catch()、plot_relative_catch() 的拟合序列）的颜色。"standard" 样式为 "#002b5f"；NULL（"classic"）使用 line_color。 | Character or NULL. Color of catch (plot_catch(), the fitted series of plot_relative_catch()). The "standard" style uses "#002b5f"; NULL ("classic") uses line_color. |
+| `bars` | `NULL` | 把总补充量和总渔获量画成柱（TRUE，"standard"）或线（FALSE，"classic"）。plot_recruitment() 和 plot_catch() 的 geom 参数可逐次选择。 | Logical or NULL. Draw total recruitment and total catch as bars (TRUE, "standard") or lines (FALSE, "classic"). The geom argument of plot_recruitment() and plot_catch() chooses per call. |
+| `y_zero` | `NULL` | 种群大小、补充量、渔获量和捕捞死亡率图以及 plot_compare_ts() 和 plot_compare_F_ts() 的纵轴从零开始且零以下不留空（TRUE，"standard"），或随数据变化（FALSE，"classic"）。 | Logical or NULL. Start the y axis of stock size, recruitment, catch and fishing mortality plots, and of plot_compare_ts() and plot_compare_F_ts(), at zero with no gap below it (TRUE, "standard"), or let it follow the data (FALSE, "classic"). |
+| `strip` | `NULL` | 分面标签："plain"（不带框、左对齐的黑色粗体文字，"standard"）或 "box"（基础主题的标签条，"classic"）。 | Character or NULL. Facet strips: "plain" (bold, left aligned black text without a box, "standard") or "box" (the strips of the base theme, "classic"). |
+| `legend_position` | `NULL` | 有图例的图的图例位置："bottom"（"standard"）、"top"、"left"、"right" 或 "none"。NULL（"classic"）保留各图自己的位置。比较图使用 compare_legend_pos。 | Character or NULL. Position of the legend of plots that have one: "bottom" ("standard"), "top", "left", "right" or "none". NULL ("classic") keeps the position of each plot. Comparison plots use compare_legend_pos. |
+| `axis_color` | `NULL` | 使用默认基础主题（"theme_bw"）时，面板边框、坐标轴文字和刻度的颜色，面板为白色（"standard" 为 "black"）。NULL（"classic"）保留基础主题的设置。 | Character or NULL. With the default base theme ("theme_bw"), the color of the panel border, axis text and ticks, on a white panel ("black" under "standard"). NULL ("classic") keeps the base theme. |
 | `...` | 可选 / optional | 旧参数名 compare_linewidth，仍可使用但会给出警告。 | The former argument name compare_linewidth, accepted with a warning. |
 | `interval` | `NULL` | 正值量（丰度、生物量、产卵生物量、补充量、渔获量和捕捞死亡率）默认的 95% 区间："lognormal"（默认）或 "wald"。公式见 `plot_abundance()`。 | Character. Default 95% interval for positive quantities (abundance, biomass, spawning stock biomass, recruitment, catch and fishing mortality): "lognormal" (default) or "wald". See `plot_abundance()` for the formulas. |
+| `show_title` | `NULL` | 是否画默认标题（TRUE，两种样式的默认值）。FALSE 去掉所有图的默认标题；绘图调用中以字符串给出的标题照常画出，多面板图中为各面板命名的标题也保留。 | Logical or NULL. Draw the default titles of the plots (TRUE, the default of both styles). FALSE removes them from every plot; a title given as a character string in a plot call is still drawn, and the titles of the panels of multi-panel figures stay because they name the panels. |
+| `x_angle` | `NULL` | 多面板图时间轴刻度标签的角度（度）。NULL（默认）在标签能以清楚的间隔放下时水平显示，否则倾斜 45 度；0 保持水平并减少标签；其他数值使用该角度。单面板图保持水平，除非设为 0 以外的数值。用 `+ ggplot2::theme()` 加上的 `axis.text.x` 优先。 | Numeric or NULL. Angle in degrees of the tick labels of time axes in multi-panel figures. NULL (default) draws them horizontal when they fit the width of the panels with a clear gap and at 45 degrees when they do not; 0 keeps them horizontal and thins them instead; another number uses that angle. Single-panel figures keep horizontal labels unless a number other than 0 is set. An `axis.text.x` element added with `+ ggplot2::theme()` wins. |
 
 **返回 / Returns:** 不可见地返回原 `acl.theme` 选项，并更新当前全局选项。不支持的设置（例如未知的基础主题、少于两种颜色的 `compare_colors`、"lognormal" 和 "wald" 以外的 `interval`）会报错，不改动当前设置。
 
 The previous `acl.theme` option, returned invisibly. The active global option is updated. An unsupported setting, such as an unknown base theme, a `compare_colors` vector with fewer than two colors or an `interval` other than "lognormal" and "wald", is an error and leaves the current settings unchanged.
+
+两种样式的取值 / Values of the two styles:
+
+| 设置 / Setting | `style = "standard"`（默认 / default） | `style = "classic"` |
+|---|---|---|
+| palette | "standard" | "npg" |
+| grid | "none" | "none" |
+| title_face | "bold" | "plain" |
+| title_hjust | 0 | 0.5 |
+| title_color | "black" | "black" |
+| stock_color | "#047c6c" | NULL（取 line_color / uses line_color） |
+| F_color | "#ed5f26" | NULL（取 line_color / uses line_color） |
+| recruitment_color | "#28b3e8" | NULL（取 line_color / uses line_color） |
+| catch_color | "#002b5f" | NULL（取 line_color / uses line_color） |
+| bars | TRUE | FALSE |
+| y_zero | TRUE | FALSE |
+| se_alpha | 0.3 | 0.2 |
+| compare_se_alpha | 0.25 | 0.15 |
+| strip | "plain" | "box" |
+| legend_position | "bottom" | NULL |
+| axis_color | "black" | NULL |
+| line_size | 1 | 1.5 |
+| compare_line_size | 0.9 | 1.2 |
+| line_color, se_color, point_color | "#002b5f" | "#3C5488FF" |
+| observed_color | "#eb5c24" | "#E64B35FF" |
+| smooth_color | "#00b29d" | "#00A087FF" |
+| compare_colors | c("#002b5f", "#eb5c24") | c("#3C5488FF", "#E64B35FF") |
+| low_col, high_col | "#ffffff", "#002b5f" | "#F7F9FC", "#3C5488FF" |
+
+其他设置不随样式改变，例如 `show_title`（TRUE）、`x_angle`（NULL）和 `compare_facet_ncol`（NULL）。
+
+The other settings do not change with the style, for example `show_title` (TRUE), `x_angle` (NULL) and `compare_facet_ncol` (NULL).
 
 **示例 / Example:**
 
@@ -226,7 +323,119 @@ The previous `acl.theme` option, returned invisibly. The active global option is
 acl_theme_set(base_theme = "bw", line_color = "navy")
 ```
 
-![示例图 / Example figure: `acl_theme_set(palette = "npg")`](figures/palettes/palettes.png)
+![示例图 / Example figure: `acl_theme_set(palette = p)` for the six palettes](figures/palettes/palettes.png)
+
+<a id="theme_acl"></a>
+## `theme_acl()`
+
+用于自己的 ggplot 的 ALSCL 绘图主题 / Theme of the ALSCL plots for your own ggplots
+
+返回在当前 `acl_theme_set()` 设置下 ALSCL 绘图函数所加的主题图层：基础主题、字体与字号、网格线、标题、分面标签和当前样式的图例位置。把它加到任何 ggplot 上，自己的图就具有包内绘图的外观。之后再调用 `acl_theme_set()`，再次调用 `theme_acl()` 时会采用新的设置。
+
+Returns the theme layers that the ALSCL plot functions add, under the current `acl_theme_set()` settings: the base theme, font and text sizes, grid lines, title, facet strips and legend position of the active style. Add it to any ggplot to give a figure of your own the look of the package plots. It follows later calls to `acl_theme_set()` when it is called again.
+
+```r
+theme_acl (font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
+    strip_text_size = NULL, legend_text_size = NULL, base_theme = NULL, title_hjust = NULL, 
+    quantity = NULL, x_angle = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `font_family` | `NULL` | 字体；NULL 使用全局设置，与绘图函数相同。 | Character or NULL for the global setting, as in the plot functions. |
+| `title_size` | `NULL` | 标题字号；NULL 使用全局设置。 | Numeric or NULL for the global setting, as in the plot functions. |
+| `axis_title_size` | `NULL` | 坐标轴标题字号；NULL 使用全局设置。 | Numeric or NULL for the global setting, as in the plot functions. |
+| `axis_text_size` | `NULL` | 坐标刻度文字字号；NULL 使用全局设置。 | Numeric or NULL for the global setting, as in the plot functions. |
+| `strip_text_size` | `NULL` | 分面标签字号；NULL 使用全局设置。 | Numeric or NULL for the global setting, as in the plot functions. |
+| `legend_text_size` | `NULL` | 图例文字字号；NULL 使用全局设置。 | Numeric or NULL for the global setting, as in the plot functions. |
+| `base_theme` | `NULL` | 基础 ggplot2 主题名称；NULL 使用全局设置。 | Character or NULL. Base ggplot2 theme name; NULL uses the global setting. |
+| `title_hjust` | `NULL` | 标题对齐；NULL 使用全局设置。 | Numeric or NULL. Title alignment; NULL uses the global setting. |
+| `quantity` | `NULL` | 在 `acl_theme_set(title_color = "quantity")` 下，标题取该数量的颜色："stock"、"F"、"recruitment" 或 "catch"。默认 `title_color = "black"` 下标题为黑色，NULL 也给出黑色标题。 | Character or NULL. Under `acl_theme_set(title_color = "quantity")`, the title takes the color of this quantity family: "stock", "F", "recruitment" or "catch". Under the default `title_color = "black"` the title is black, and NULL also gives a black title. |
+| `x_angle` | `NULL` | 横轴刻度标签的角度（度）；倾斜的标签以刻度线为终点。NULL 使用全局 x_angle 设置（如有），否则不改变标签。 | Numeric or NULL. Angle in degrees of the x tick labels; slanted labels end at their tick mark. NULL uses the global x_angle setting when one is set, and otherwise leaves the labels unchanged. |
+
+**返回 / Returns:** 由 ggplot2 主题图层组成的列表，用 `+` 加到 ggplot 上。
+
+A list of ggplot2 theme layers, to be added to a ggplot with `+`.
+
+包内绘图在默认样式下还让纵轴从零开始，这一点属于坐标尺度而不是主题；在自己的图中可加 `ggplot2::expand_limits(y = 0)`。
+
+Under the default style the package plots also start the y axis at zero, which is a scale and not part of the theme; add `ggplot2::expand_limits(y = 0)` to a figure of your own.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+d <- data.frame(year = 2001:2010, value = c(3, 5, 4, 6, 8, 7, 9, 8, 10, 11))
+ggplot2::ggplot(d, ggplot2::aes(year, value)) +
+  ggplot2::geom_line(colour = acl_palette(role = "primary")) +
+  ggplot2::labs(title = "My series") +
+  theme_acl()
+```
+
+<a id="acl_figure_size"></a>
+## `acl_figure_size()`
+
+保存图时建议的尺寸 / Recommended size of a saved figure
+
+根据图的版面计算保存时便于阅读的宽和高（英寸）：面板的行数和列数、标题、副标题和说明文字、倾斜的年份标签以及面板下方的图例。单条时间序列约 8 x 4.5 英寸；带分面的图和多面板图宽约 10 英寸，每行面板高 1.5 到 1.9 英寸；一个数量对另一个数量的图（如 `plot_SSB_Rec()` 和分位数-分位数图）接近正方形；热图的格子不会过扁或过高。
+
+Computes the width and height in inches at which a plot reads well when saved, from the layout of the plot: the rows and columns of panels, the title, subtitle and caption, slanted year labels, and a legend below the panels. A single time series gets about 8 x 4.5 inches; faceted plots and multi-panel figures about 10 inches of width and 1.5 to 1.9 inches of height per row of panels; plots of one quantity against another, such as `plot_SSB_Rec()` and quantile-quantile plots, a near-square shape; and heat maps cells that are neither very flat nor very tall.
+
+```r
+acl_figure_size (plot, width = NULL)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `plot` | `必填 / required` | ggplot 或 patchwork 对象，例如包内绘图函数的结果。 | A ggplot or patchwork object, such as the result of a plot function of the package. |
+| `width` | `NULL` | 宽度（英寸）。NULL 按版面选择宽度；给出数值时固定宽度并返回相应的高度。 | Numeric or NULL. Width in inches. NULL chooses the width from the layout; a number fixes the width and returns the matching height. |
+
+**返回 / Returns:** 命名数值向量 `c(width = , height = )`，单位为英寸，每个值在 3 到 14 之间。
+
+A named numeric vector `c(width = , height = )` in inches, each between 3 and 14.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+p <- plot_SSB(a, se = TRUE)
+acl_figure_size(p)
+acl_figure_size(p, width = 6)
+```
+
+<a id="acl_save_plot"></a>
+## `acl_save_plot()`
+
+按建议尺寸保存图 / Save a plot at its recommended size
+
+用 `ggplot2::ggsave()` 保存图。没有给出的宽或高取自 `acl_figure_size()`：两者都不给时使用建议尺寸，只给宽度时取相应的高度。默认分辨率为 300 dpi，背景为白色。`run_acl()` 和 `run_alscl()` 在 `output = TRUE` 时也用它保存图。
+
+Saves a plot with `ggplot2::ggsave()`. A width or height that is not given comes from `acl_figure_size()`: with both missing the recommended size is used, and a given width gets the matching height. The default resolution is 300 dots per inch and the background is white. `run_acl()` and `run_alscl()` save their figures with it when `output = TRUE`.
+
+```r
+acl_save_plot (plot, filename, width = NULL, height = NULL, dpi = 300, ...)
+```
+
+| 参数 / Argument | 默认值 / Default | 中文说明 | English |
+|---|---|---|---|
+| `plot` | `必填 / required` | ggplot 或 patchwork 对象。 | A ggplot or patchwork object. |
+| `filename` | `必填 / required` | 要写入的文件；扩展名决定格式，与 `ggplot2::ggsave()` 相同。 | Character. File to write; the extension chooses the format, as in `ggplot2::ggsave()`. |
+| `width` | `NULL` | 宽度（英寸）；NULL 取 `acl_figure_size()` 的值。 | Numeric or NULL. Width in inches. NULL takes the value of `acl_figure_size()`. |
+| `height` | `NULL` | 高度（英寸）；NULL 取 `acl_figure_size()` 的值。 | Numeric or NULL. Height in inches. NULL takes the value of `acl_figure_size()`. |
+| `dpi` | `300` | 位图格式的分辨率（每英寸点数），默认 300；给出较低的值时按该值保存。 | Numeric. Resolution of raster formats in dots per inch, 300 by default. A lower value is used when it is given. |
+| `...` | 可选 / optional | `ggplot2::ggsave()` 的其他参数，如 `device` 或 `bg`（默认 `"white"`）。 | Further arguments of `ggplot2::ggsave()`, such as `device` or `bg` (default `"white"`). |
+
+**返回 / Returns:** 不可见地返回文件名。
+
+The file name, invisibly.
+
+**示例 / Example:**
+
+```r
+# 调用示例；变量按上文创建 / Use objects defined above
+acl_save_plot(plot_SSB(a, se = TRUE), "SSB.png")
+acl_save_plot(plot_compare_ts(a, b), "compare_ts.pdf", width = 8)
+```
 
 <a id="alscl_speed"></a>
 ## `alscl_speed()`
@@ -637,9 +846,9 @@ All modes inherit global titles (N, NA_, NL; interval variants use the correspon
 
 矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。 Matrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -654,16 +863,16 @@ plot_abundance (model_result, line_size = NULL, line_color = NULL, line_type = "
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 stock_color，它为 NULL 时继承 line_color。 | Character or NULL. NULL inherits the global stock_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
+| `se_color` | `NULL` | 区间颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 stock_color 为 NULL 时，取全局 se_color）。 | Character or NULL. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when stock_color is NULL). |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("N", "NA", "NL")` | N 为总尾数，NA 为年龄别尾数，NL 为体长别尾数。 | Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Number of columns in facet wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Scales for facet wrap. Default is "free". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return processed data. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承主题。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -693,11 +902,10 @@ Age panels are labelled with the fitted ages in `model_result$age`. The oldest a
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_abundance(b, type = "N", se = TRUE, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_abundance_N.png)
+![示例图 / Example figure: `plot_abundance(b, type = "N", se = TRUE, line_size = 0.6)`](figures/ytf/plot_abundance_N.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_abundance)。
 
@@ -714,9 +922,9 @@ All modes inherit global titles (B, BL, BA; interval variants use the correspond
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -731,16 +939,16 @@ plot_biomass (model_result, line_size = NULL, line_color = NULL, line_type = "so
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 stock_color，它为 NULL 时继承 line_color。 | Character or NULL. NULL inherits the global stock_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
+| `se_color` | `NULL` | 区间颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 stock_color 为 NULL 时，取全局 se_color）。 | Character or NULL. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when stock_color is NULL). |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("B", "BL", "BA")` | B 为总生物量，BA 为年龄别生物量，BL 为体长别生物量。 | Character. "B" (total), "BL" (at length), or "BA" (at age). Default is "B". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Columns in facet_wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet_wrap. Default is "free". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return processed data. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承主题。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -770,11 +978,10 @@ Age panels are labelled with the fitted ages in `model_result$age`. The oldest a
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_biomass(b, type = "B", se = TRUE, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_biomass_B.png)
+![示例图 / Example figure: `plot_biomass(b, type = "B", se = TRUE, line_size = 0.6)`](figures/ytf/plot_biomass_B.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_biomass)。
 
@@ -791,9 +998,9 @@ All modes inherit global titles (CN, CNA, CNL; interval variants use the corresp
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -801,23 +1008,23 @@ plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "soli
     type = c("CN", "CNA", "CNL"), return_data = FALSE, title = NULL, xlab = NULL, 
     ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
-    title_hjust = NULL, interval = NULL)
+    title_hjust = NULL, interval = NULL, geom = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线或柱的颜色；NULL 继承全局 catch_color，它为 NULL 时继承 line_color。 | Character or NULL. Line or bar color. NULL inherits the global catch_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
+| `se_color` | `NULL` | 区间带的颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 catch_color 为 NULL 时，取全局 se_color）。柱上的误差线为深灰色，带浅色描边，除非给出 se_color。 | Character or NULL. Ribbon color. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when catch_color is NULL). Error bars on bars are dark grey with a light outline unless se_color is given. |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
-| `type` | `c("CN", "CNA", "CNL")` | CN 为总捕捞尾数，CNA 为年龄别捕捞尾数，CNL 为体长别捕捞尾数。 | Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN". |
+| `type` | `c("CN", "CNA", "CNL")` | CN 为总渔获尾数，CNA 为年龄别渔获尾数，CNL 为体长别渔获尾数。 | Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return processed data. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承主题。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -830,6 +1037,7 @@ plot_catch (model_result, line_size = NULL, line_color = NULL, line_type = "soli
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 | `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
+| `geom` | `NULL` | 总渔获量（`type = "CN"`）的画法："bar" 画成宽 0.8 个时间步的柱，`se = TRUE` 时带误差线；"line" 画成带区间带的线。NULL（默认）跟随全局 bars 设置：默认 "standard" 样式下为柱，"classic" 下为线。按年龄和按体长的渔获量始终画成线。 | Character or NULL. Form of total catch (`type = "CN"`): "bar" draws bars 0.8 of a time step wide, with error bars when `se = TRUE`; "line" draws a line with a ribbon. NULL (default) follows the global bars setting: bars under the default "standard" style, a line under "classic". Catch at age and at length are always lines. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
@@ -847,11 +1055,10 @@ Age panels are labelled with the fitted ages in `model_result$age`. The oldest a
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_catch(b, type = "CN", se = TRUE, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_catch_CN.png)
+![示例图 / Example figure: `plot_catch(b, type = "CN", se = TRUE, line_size = 0.6)`](figures/ytf/plot_catch_CN.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_catch)。
 
@@ -901,12 +1108,12 @@ plot_CatL (model_result, point_size = NULL, point_color = NULL, point_shape = 16
 | `line_color2` | `NULL` | 观测曲线颜色；NULL 继承全局 observed_color。 | Character or NULL. NULL inherits the global observed_color setting. |
 | `line_type2` | `"solid"` | 观测曲线线型。 | Character. Line type for observed line. Default is "solid". |
 | `line_alpha2` | `0.6` | 观测曲线透明度（0–1）。 | Numeric. Transparency for observed line (0-1). Default is 0.6. |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Specifies the number of columns in the facet_wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Specifies scales for facet_wrap. Default is "free". |
 | `facet_by` | `c("length", "year")` | 布局："length" 每个体长组一个面板、横轴为时间；"year" 每个时间步一个面板、横轴为体长。 | "length" (default) draws one panel per length bin with time on the x axis; "year" draws one panel per time step with length on the x axis. |
 | `exp_transform` | `FALSE` | TRUE 将对数观测和拟合值取指数，恢复原调查指数尺度；拟合曲线表示条件中位数。FALSE 保留对数尺度。 | TRUE exponentiates the logged observations and fitted values to the original survey-index scale; fitted curves represent conditional medians. FALSE keeps the log scale. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -928,13 +1135,12 @@ A ggplot object; with `return_data=TRUE`, a list with `plot`, `data1` (fitted) a
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
 ```
 
-![示例图 / Example figure: `plot_CatL(b, facet_by = "year", facet_ncol = 4)`](figures/ytf/CatL_year_FALSE.png)
+![示例图 / Example figure: `plot_CatL(b, facet_by = "year", line_size1 = 0.6, line_size2 = 0.4, ylab = "Log survey index")`](figures/ytf/CatL_year_FALSE.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_CatL)。
 
@@ -973,9 +1179,9 @@ plot_compare_F_ts(a, b, method = "apical")
 
 ```r
 plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, model2_name = NULL, 
-    colors = NULL, linetypes = NULL, line_size = NULL, facet_ncol = 4, facet_scales = "free_y", 
+    colors = NULL, linetypes = NULL, line_size = NULL, facet_ncol = NULL, facet_scales = "free_y", 
     obs_color = "grey40", obs_size = NULL, obs_alpha = 0.6, obs_shape = 16, legend_pos = NULL,
-    ..., point_size = NULL)
+    ..., point_size = NULL, title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -989,7 +1195,7 @@ plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, 
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
-| `facet_ncol` | `4` | 分面排列的列数。 | Integer. Facet columns. Default 4. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择。 | Integer or NULL. Facet columns; NULL (default) chooses them from the number of panels. |
 | `facet_scales` | `"free_y"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet facet_scales. Default "free_y". |
 | `obs_color` | `"grey40"` | 观测点颜色。 | Character. Color for observed points. Default "grey40". |
 | `obs_size` | `NULL` | 旧的观测点大小设置；NULL 继承主题。显式 point_size 优先于此值。 | Legacy observed-point size; NULL inherits the theme. An explicit point_size takes priority. |
@@ -998,10 +1204,11 @@ plot_compare_CatL (model1, model2, data.CatL, years = NULL, model1_name = NULL, 
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth、ncol、scales，仍可使用但会给出警告。 | The former argument names linewidth, ncol and scales, accepted with a warning. |
 | `point_size` | `NULL` | 点大小；NULL 先使用显式 obs_size，再继承比较图覆盖值或全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL uses an explicit obs_size first, then a comparison override or global point_size (default 2.5). A supplied value takes priority. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1011,10 +1218,10 @@ Comparison plots give distinct default labels to two fits of the same model: for
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
+plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015))
 ```
 
-![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)`](figures/ytf/compare_CatL.png)
+![示例图 / Example figure: `plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015))`](figures/ytf/compare_CatL.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_CatL)。
 
@@ -1023,12 +1230,12 @@ plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
 
 死亡率矩阵比较 / Fishing mortality matrices
 
-ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。ALSCL 的各行对应拟合的体长组。ACL 拟合与 ALSCL 拟合的行不同，两张热图不能逐行比较；要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
+ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。最大的年龄组是 plus group，用加号标出，例如 "Age 15+"。旧拟合缺少年龄坐标时，行标签为 "Age bin 1" 这样的年龄组序号。ALSCL 的各行对应拟合的体长组。ACL 拟合与 ALSCL 拟合的行不同，两张热图不能逐行比较；要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
 
-The ACL rows show fitted ages, including fractional ages for seasonal data. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". For an older fit without age coordinates, the rows are labelled as numbered age groups. ALSCL rows follow the fitted length bins. An ACL fit and an ALSCL fit have different rows, so their heatmaps cannot be compared row by row. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = "age")`.
+The ACL rows show fitted ages, including fractional ages for seasonal data. The oldest age class is a plus group and is marked with a plus sign, for example "Age 15+". For an older fit without age coordinates, the rows are labelled with numbered age bins, such as "Age bin 1". ALSCL rows follow the fitted length bins. An ACL fit and an ALSCL fit have different rows, so their heatmaps cannot be compared row by row. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = "age")`.
 
 ```r
-plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette = NULL)
+plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette = NULL, title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1037,11 +1244,12 @@ plot_compare_F (model1, model2, model1_name = NULL, model2_name = NULL, palette 
 | `model2` | `必填 / required` | 第二个拟合对象。 | Second model result (alternative). |
 | `model1_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
-| `palette` | `NULL` | ggsci 色板名；NULL 继承全局设置，部分图也保留旧色板。 | Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them. |
+| `palette` | `NULL` | NULL 使用全局连续色（默认样式下从白色到深蓝）；ggsci 色板名或 viridis 选项可覆盖。 | Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1051,7 +1259,7 @@ Comparison plots give distinct default labels to two fits of the same model: for
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
+plot_compare_F(a, b)
 ```
 
 ![示例图 / Example figure: `plot_compare_F(a, b)`](figures/ytf/compare_F.png)
@@ -1070,7 +1278,7 @@ By default (`basis = "native"`) ACL summarizes F across age groups and ALSCL acr
 ```r
 plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, method = c("apical", 
     "mean"), colors = NULL, linetypes = NULL, line_size = NULL, ..., point_size = NULL, 
-    basis = c("native", "age"))
+    basis = c("native", "age"), title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1086,10 +1294,11 @@ plot_compare_F_ts (model1, model2, model1_name = NULL, model2_name = NULL, metho
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
 | `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
 | `basis` | `c("native", "age")` | 汇总 F 时所用的组别。"native"（默认）使用各模型估计的 F 矩阵：ACL 为年龄别 F，ALSCL 为体长别 F。"age" 对两个拟合都使用年龄别 F（ACL 的 `report$F` 和 ALSCL 推算的 `report$FA`），只汇总两者共有的拟合年龄和时间步。拟合结果含有体长—年龄别尾数（`report$NLA`）时，ALSCL 的年龄别 F 覆盖每个年龄（包括 plus group）和每个时间步；否则没有 plus group 一行，也没有最后一个时间步的值，比较时不含 ACL 的 plus group 和最后一个时间步。两个拟合的时间步长必须相同。 | Character. The groups over which F is summarized. "native" (default) uses the F matrix that each model estimates: F at age for ACL and F at length for ALSCL. "age" uses F at age for both fits: `report$F` for ACL and the derived `report$FA` for ALSCL. Only the fitted ages and the time steps present in both fits are summarized. ALSCL F at age covers every age, including the plus group, and every time step when the fit holds numbers at length and age (`report$NLA`); otherwise it has no plus-group row and no value for the last time step, and the comparison leaves out the ACL plus group and the last time step. The two fits must have the same time step. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1099,11 +1308,11 @@ Comparison plots give distinct default labels to two fits of the same model: for
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_compare_F_ts(a, b, method = "apical") +
-  labs(title = "Apical fishing mortality")
+plot_compare_F_ts(a, b, method = "apical",
+  title = "Apical fishing mortality rate by time step")
 ```
 
-![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical")`](figures/ytf/compare_F_apical.png)
+![示例图 / Example figure: `plot_compare_F_ts(a, b, method = "apical", title = "Apical fishing mortality rate by time step")`](figures/ytf/compare_F_apical.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_F_ts)。
 
@@ -1138,10 +1347,11 @@ When supplying `ref_data`, use a nonempty `ref_name` distinct from both model la
 
 ```r
 plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model2_name = NULL,
-    colors = NULL, linetypes = NULL, line_size = NULL, ref_data = NULL, ref_name = "Observed VB", 
-    ref_color = "grey30", ref_linetype = "dotdash", show_points = TRUE, point_size = NULL, 
-    point_alpha = 0.4, nls_start = NULL, ..., observed = NULL, basis = c("population", "survey"), 
-    years = NULL, observed_name = "Age readings")
+    colors = NULL, linetypes = NULL, line_size = NULL, ref_data = NULL,
+    ref_name = "Von Bertalanffy curve from age readings", ref_color = "grey30",
+    ref_linetype = "dotdash", show_points = TRUE, point_size = NULL, point_alpha = 0.4,
+    nls_start = NULL, ..., observed = NULL, basis = c("population", "survey"), years = NULL,
+    observed_name = "Age readings", title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1155,7 +1365,7 @@ plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `ref_data` | `NULL` | 可选 Age、Length 列的参考个体生长数据。 | Optional data.frame with columns Age and Length containing observed age-length measurements (e.g. from otolith readings). If provided, a VB curve is fitted via nls() and overlaid as a reference, with the raw data as scatter points. |
-| `ref_name` | `"Observed VB"` | 参考曲线名称；提供 ref_data 时必须非空，且不与任一模型标签重复。 | Nonempty reference-curve label distinct from both model labels when ref_data is supplied. |
+| `ref_name` | `"Von Bertalanffy curve from age readings"` | 参考曲线名称；提供 ref_data 时必须非空，且不与任一模型标签重复。 | Nonempty reference-curve label distinct from both model labels when ref_data is supplied. |
 | `ref_color` | `"grey30"` | 参考曲线及其数据点的颜色，也是 `observed` 的点的颜色。 | Character. Color for the reference curve and its points, and for the points of `observed`. Default "grey30". |
 | `ref_linetype` | `"dotdash"` | 参考曲线线型。 | Character. Linetype for reference curve. Default "dotdash". |
 | `show_points` | `TRUE` | 是否显示参考数据点。 | Logical. Show raw data points from ref_data. Default TRUE. |
@@ -1167,10 +1377,11 @@ plot_compare_growth (model1, model2, age_range = NULL, model1_name = NULL, model
 | `basis` | `c("population", "survey")` | `"population"`（默认）：种群口径的各年龄平均体长和体长分布。`"survey"`：调查口径，即体长别尾数先乘以拟合所用的体长别调查可捕性；与调查中采集的年龄鉴定资料比较时用这一口径。 | `"population"` (default): mean length at age and the length distribution at age in the population. `"survey"`: in the survey catch, that is, with numbers at length multiplied by the survey catchability at length used in each fit. Use `"survey"` to compare with age readings of fish caught in the survey. |
 | `years` | `NULL` | NULL（每次拟合的全部时间步），或求均值的时间步；必须是两次拟合共有的时间步。 | NULL (all time steps of each fit) or the time steps over which the values are averaged. They must be time steps of both fits. |
 | `observed_name` | `"Age readings"` | `observed` 的点在图例中的名称，须与两个模型标签和 `ref_name` 不同。 | Character. Name of the points of `observed` in the legend, distinct from both model labels and from `ref_name`. Default is "Age readings". |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** 可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。
+**返回 / Returns:** 可直接显示或用 `acl_save_plot()` 保存的组合图对象。
 
-A plot composition that can be displayed or saved with `ggplot2::ggsave()`.
+A plot composition that can be displayed or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1184,7 +1395,7 @@ set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, 0.2, 1/60, ref$Age) + stats::rnorm(nrow(ref), sd = 2)
 plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
-    ref_name = "Synthetic reference", nls_start = list(Linf = 60, k = 0.2, t0 = 1/60))
+    ref_name = "Simulated age readings", nls_start = list(Linf = 60, k = 0.2, t0 = 1/60))
 ```
 
 ![示例图 / Example figure: `plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref)`](figures/ytf/compare_growth.png)
@@ -1201,7 +1412,7 @@ plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
 ```r
 plot_compare_metrics (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL, colors = NULL, 
     metrics = NULL, facet_ncol = NULL, legend_pos = NULL, label_size = 3.2, bar_width = 0.6, 
-    bar_alpha = 0.85, ...)
+    bar_alpha = 0.85, ..., title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1213,16 +1424,17 @@ plot_compare_metrics (model1, model2, data.CatL, model1_name = NULL, model2_name
 | `model2_name` | `NULL` | 图例中的模型名称；NULL 自动判断。 | Character. Labels. Auto-detected if NULL. |
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `metrics` | `NULL` | 选择 error、R2、MAPE、IC、npar 面板。 | Character vector selecting which panels to show. Options: "error" (RMSE, MAE), "R2", "MAPE", "IC" (AIC, BIC, NLL), "npar". Default NULL = all five panels. E.g. metrics = c("error", "R2", "IC"). |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Columns for panel layout. Default: auto. |
+| `facet_ncol` | `NULL` | 分面列数；NULL 按面板数选择，图例放在空出的格子里。 | Integer or NULL. Columns of panels. NULL chooses them from the number of panels; the legend fills an empty cell. |
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme. |
 | `label_size` | `3.2` | 柱图数值标签字号。 | Numeric. Text label size on bars. Default 3.2. |
 | `bar_width` | `0.6` | 柱子宽度。 | Numeric. Bar width. Default 0.6. |
 | `bar_alpha` | `0.85` | 柱子透明度。 | Numeric. Bar transparency. Default 0.85. |
 | `...` | 可选 / optional | 旧参数名 ncol，仍可使用但会给出警告。 | The former argument name ncol, accepted with a warning. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** 可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。
+**返回 / Returns:** 可直接显示或用 `acl_save_plot()` 保存的组合图对象。
 
-A plot composition that can be displayed or saved with `ggplot2::ggsave()`.
+A plot composition that can be displayed or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1232,11 +1444,10 @@ Comparison plots give distinct default labels to two fits of the same model: for
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
-    0.3)))
+plot_compare_metrics(a, b, dat)
 ```
 
-![示例图 / Example figure: `plot_compare_metrics(a, b, dat, facet_ncol = 2)`](figures/ytf/compare_metrics.png)
+![示例图 / Example figure: `plot_compare_metrics(a, b, dat)`](figures/ytf/compare_metrics.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_metrics)。
 
@@ -1252,7 +1463,7 @@ The mean-residual panel retains the full fitted time range, including unobserved
 ```r
 plot_compare_residuals (model1, model2, data.CatL, model1_name = NULL, model2_name = NULL, colors = NULL, 
     linetypes = NULL, line_size = NULL, point_size = NULL, legend_pos = NULL, bins = 35, 
-    qq_alpha = 0.6, errorbar_width = 0.3, ...)
+    qq_alpha = 0.6, errorbar_width = NULL, ..., title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1269,12 +1480,13 @@ plot_compare_residuals (model1, model2, data.CatL, model1_name = NULL, model2_na
 | `legend_pos` | `NULL` | 图例位置，如 bottom、right、none。 | Character. Legend position. NULL = use global theme (default "bottom"). |
 | `bins` | `35` | 残差直方图分箱数量。 | Integer. Histogram bins. Default 35. |
 | `qq_alpha` | `0.6` | QQ 图点的透明度。 | Numeric. QQ point transparency. Default 0.6. |
-| `errorbar_width` | `0.3` | 年度残差 SD 误差棒端帽宽度。 | Numeric. Error bar cap width. Default 0.3. |
+| `errorbar_width` | `NULL` | 年度残差 SD 误差线的端帽宽度（年）；`NULL` 取时间步的四分之一（2.5.0 之前默认为 0.3）。 | Numeric or NULL. Error bar cap width in years. NULL (default) uses a quarter of the time step; the default was 0.3 before 2.5.0. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** 可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。
+**返回 / Returns:** 可直接显示或用 `acl_save_plot()` 保存的组合图对象。
 
-A plot composition that can be displayed or saved with `ggplot2::ggsave()`.
+A plot composition that can be displayed or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1306,7 +1518,7 @@ Saved assessments from `read_assessment()` can be plotted directly: fixed survey
 
 ```r
 plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL, colors = NULL, 
-    linetypes = NULL, line_size = NULL, ..., point_size = NULL)
+    linetypes = NULL, line_size = NULL, ..., point_size = NULL, title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1320,10 +1532,11 @@ plot_compare_selectivity (model1, model2, model1_name = NULL, model2_name = NULL
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
 | `...` | 可选 / optional | 旧参数名 linewidth，仍可使用但会给出警告。 | The former argument name linewidth, accepted with a warning. |
 | `point_size` | `NULL` | 点大小；NULL 优先继承比较图覆盖值，否则继承全局 point_size（默认 2.5）。显式值优先。 | Point size; NULL inherits an explicit comparison override or global point_size (default 2.5). A supplied value takes priority. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。
 
@@ -1353,14 +1566,14 @@ Fishing-mortality plots use matrix positions and fitted time/group metadata, so 
 
 `plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_F_ts(a, b, method = "apical")` or `method = "mean"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_compare_ts (model1, model2, quantities = c("SSB", "R", "B", "N", "CN"), se = FALSE, 
     model1_name = NULL, model2_name = NULL, colors = NULL, linetypes = NULL, line_size = NULL, 
-    facet_ncol = NULL, facet_scales = NULL, return_data = FALSE, ..., interval = NULL)
+    facet_ncol = NULL, facet_scales = NULL, return_data = FALSE, ..., interval = NULL, title = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
@@ -1374,11 +1587,12 @@ plot_compare_ts (model1, model2, quantities = c("SSB", "R", "B", "N", "CN"), se 
 | `colors` | `NULL` | 按两个模型顺序提供两种颜色；名称可选。 | Named character vector of 2 colors. NULL = use global theme. |
 | `linetypes` | `NULL` | 按模型顺序提供两种线型。 | Named character vector of 2 linetypes. NULL = use global theme. |
 | `line_size` | `NULL` | 线宽；参数名按函数区别使用。 | Numeric. NULL = use global theme. |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. Facet columns. NULL = use global theme. |
+| `facet_ncol` | `NULL` | 分面列数；NULL 使用全局 compare_facet_ncol，其默认值按面板数选择列数。比较五个数量时，图例放在空出的格子里。 | Integer or NULL. Facet columns; NULL uses the global compare_facet_ncol, which by default chooses the columns from the number of panels. With five quantities the legend fills the empty cell. |
 | `facet_scales` | `NULL` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet facet_scales. NULL = use global theme. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Return data alongside plot. Default FALSE. |
 | `...` | 可选 / optional | 旧参数名 linewidth、ncol、scales，仍可使用但会给出警告。 | The former argument names linewidth, ncol and scales, accepted with a warning. |
 | `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
@@ -1392,10 +1606,10 @@ Comparison plots give distinct default labels to two fits of the same model: for
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
+plot_compare_ts(a, b, se = TRUE)
 ```
 
-![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)`](figures/ytf/compare_ts.png)
+![示例图 / Example figure: `plot_compare_ts(a, b, se = TRUE)`](figures/ytf/compare_ts.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_compare_ts)。
 
@@ -1416,7 +1630,7 @@ A `title`, `xlab`, `ylab` or typography argument given in the call replaces the 
 
 ```r
 plot_deviance (model_result, se = FALSE, point_size = NULL, point_color = "white", point_shape = 21, 
-    line_size = NULL, line_color = NULL, line_type = "solid", se_color = NULL, se_width = 0.5, 
+    line_size = NULL, line_color = NULL, line_type = "solid", se_color = NULL, se_width = NULL, 
     facet_ncol = NULL, facet_scales = "free", log = TRUE, type = c("R", "F"), title = NULL, 
     xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, 
     axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, 
@@ -1431,15 +1645,15 @@ plot_deviance (model_result, se = FALSE, point_size = NULL, point_color = "white
 | `point_color` | `"white"` | 点颜色。 | Character. The color of the point. Default is "white". |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. The shape of the point. Default is 21. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 recruitment_color（type "R"）或 F_color（type "F"），它为 NULL 时继承 line_color。 | Character or NULL. NULL inherits the global recruitment_color (type "R") or F_color (type "F") setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character, the line type. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_width` | `0.5` | 误差棒端帽宽度，不改变标准误或区间长度。 | Width of the error-bar caps; does not change the standard errors or interval lengths. |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Number of columns in facet wrap. Default is NULL. |
+| `se_color` | `NULL` | 误差线颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或该数量没有自己的颜色时，取全局 se_color）。 | Character or NULL. Error bar color. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when the quantity has no color of its own). |
+| `se_width` | `NULL` | 误差线的端帽宽度（年），不改变标准误或区间长度；`NULL` 取时间步的四分之一（2.5.0 之前默认为 0.5）。 | Numeric or NULL. Width of the error-bar caps in years; does not change the standard errors or interval lengths. NULL (default) uses a quarter of the time step; the default was 0.5 before 2.5.0. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Scales for facet wrap. Default is "free". |
 | `log` | `TRUE` | TRUE 为对数过程偏差；FALSE 取指数，参考值为 1。 | TRUE plots log process deviations; FALSE plots exponentiated multipliers, not likelihood deviances. |
 | `type` | `c("R", "F")` | R 为补充过程偏差，F 为捕捞死亡率过程偏差；均不是似然离差。 | Character. "R" for recruitment deviation, "F" for fishing mortality deviation. |
-| `title` | `NULL` | 自定义图标题；NULL 继承主题。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1452,20 +1666,19 @@ plot_deviance (model_result, se = FALSE, point_size = NULL, point_color = "white
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_deviance(b, type = "R", log = TRUE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
-![示例图 / Example figure: `plot_deviance(b, type = "R", log = TRUE, se = TRUE, facet_ncol = 3)`](figures/ytf/deviation_R_TRUE.png)
+![示例图 / Example figure: `plot_deviance(b, type = "R", log = TRUE, se = TRUE, point_size = 1.2, line_size = 0.5)`](figures/ytf/deviation_R_TRUE.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_deviance)。
 
@@ -1474,17 +1687,17 @@ plot_deviance(b, type = "R", log = TRUE, se = TRUE,
 
 按年龄或体长绘制捕捞死亡率 / Plot fishing mortality by age or length
 
-所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。年龄坐标轴和年龄分面使用 `model_result$age` 中的拟合年龄，默认标签为 "Age (years)"；保存时没有年龄元数据的结果按组序号绘制，未自定义的年龄轴标为 Age group。`base_theme` 接受 `"theme_bw"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。
+所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。年龄坐标轴和年龄分面使用 `model_result$age` 中的拟合年龄，默认标签为 "Age (years)"；保存时没有年龄元数据的结果按组序号绘制，未自定义的年龄轴标为 "Age bin"。`base_theme` 接受 `"theme_bw"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。
 
-All modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Age axes and age panels use the fitted ages in `model_result$age`, with the default label "Age (years)". Results saved without age metadata are plotted against group positions, and their uncustomized age axis is labeled Age group. `base_theme` accepts a theme name such as `"theme_bw"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.
+All modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Age axes and age panels use the fitted ages in `model_result$age`, with the default label "Age (years)". Results saved without age metadata are plotted against group positions, and their uncustomized age axis is labeled "Age bin". `base_theme` accepts a theme name such as `"theme_bw"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.
 
 捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -1499,23 +1712,23 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list obtained from run_acl or run_alscl. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 F_color，它为 NULL 时继承 line_color。 | Character or NULL. NULL inherits the global F_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line. Default is "solid". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer. The number of columns in facet_wrap. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet_wrap. Default is "free". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
+| `se_color` | `NULL` | 区间颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 F_color 为 NULL 时，取全局 se_color）。 | Character or NULL. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when F_color is NULL). |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认样式为 0.3，"classic" 为 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (0.3 under the default style, 0.2 under "classic"). Error bars are opaque unless se_alpha is given. |
 | `se_type` | `"ribbon"` | 区间样式：ribbon 或 errorbar。 | Character. "ribbon" or "errorbar". Default is "ribbon". |
 | `type` | `c("year", "age", "length")` | year 为时间横轴；age 按年绘年龄别 F；ALSCL length 按年绘实际体长别 F。ACL 旧 length 别名仍画年龄并警告。 | year uses a time axis; age facets F-at-age by year; ALSCL length uses actual midpoints and year facets. The legacy ACL length alias still draws age and warns. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return data alongside the plot. Default is FALSE. |
 | `x_breaks` | `NULL` | 横轴刻度向量或 NULL。NULL 时，全局 x_breaks 至少有一个值落在该坐标轴上才继承，否则自动选择刻度。留白沿用全局 x_expand。 | Numeric vector or NULL. Custom x-axis breaks. NULL inherits the global x_breaks setting when at least one of its values lies on this axis; otherwise the breaks are chosen automatically. Expansion follows global x_expand. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character. Custom plot title. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character. Custom x-axis label. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承全局 ylab$F。默认标签带有拟合的时间基准，例如 "Fishing mortality rate (per year)"。 | Character or NULL. Custom y-axis label; NULL inherits global ylab$F. The default label gains the time basis of the fit, for example "Fishing mortality rate (per year)". |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character. Font family for text elements. |
 | `title_size` | `NULL` | 图标题字号。 | Numeric. Title text size. |
-| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局，保持无网格。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Panels remain grid-free. |
+| `base_theme` | `NULL` | 主题名称（如 theme_bw）或 ggplot2 主题对象（如 theme_bw()）；NULL 继承全局。网格线由 `grid` 设置决定。 | Theme name or ggplot2 theme object; NULL inherits the global base theme. Grid lines follow the `grid` setting. |
 | `axis_title_size` | `NULL` | 坐标轴标题字号。 | Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12). |
 | `axis_text_size` | `NULL` | 坐标刻度文字字号。 | Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10). |
 | `strip_text_size` | `NULL` | 分面标签字号。 | Numeric or NULL. Facet label size in pt. If NULL, uses global theme (default 10). |
@@ -1527,19 +1740,19 @@ plot_fishing_mortality (model_result, line_size = NULL, line_color = NULL, line_
 
 A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.
 
-F 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 "Age 15+" 或刻度标签 "15+"。ALSCL 的 `type = "age"` 不带区间时，绘制每个年龄（包括 plus group）和每个时间步的年龄别 F。拟合报告（`report$FA`）包含 plus group 之前的年龄和最后一个时间步之前的各时间步，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出，没有标准误。因此 `se = TRUE` 时只绘制 plus group 之前的年龄和最后一个时间步之前的各时间步。不含体长—年龄别尾数的结果（例如手工构造的列表）只绘制报告中的单元格。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。`return_data = TRUE` 且 `type = "age"` 时，数据在 `AgeGroup` 中保留组序号，并在 `Age` 中给出拟合年龄。各组共享 F（`F_structure = "year"`）时，每组的序列相同，`type = "year"` 只画一个标为 "Shared F" 的分面，返回的数据仍包含每一组。
+F 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 "Age 15+" 或刻度标签 "15+"。ALSCL 的 `type = "age"` 不带区间时，绘制每个年龄（包括 plus group）和每个时间步的年龄别 F。拟合报告（`report$FA`）包含 plus group 之前的年龄和最后一个时间步之前的各时间步，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出，没有标准误。因此 `se = TRUE` 时只绘制 plus group 之前的年龄和最后一个时间步之前的各时间步。不含体长—年龄别尾数的结果（例如手工构造的列表）只绘制报告中的单元格。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。`return_data = TRUE` 且 `type = "age"` 时，数据在 `AgeGroup` 中保留组序号，并在 `Age` 中给出拟合年龄。各组共享 F（`F_structure = "year"`）时，每组的序列相同，`type = "year"` 只画一个分面，ACL 拟合标为 "All age classes"，ALSCL 拟合标为 "All length bins"，返回的数据仍包含每一组。
 
-F is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title "Age 15+" or the tick label "15+". For ALSCL, `type = "age"` without intervals shows F at age for every age, including the plus group, and for every time step. The fitted report (`report$FA`) holds the ages before the plus group and the time steps before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula, and they have no standard errors. With `se = TRUE` the plot therefore shows the ages before the plus group and the time steps before the last. A result without numbers at length and age, for example a hand-made list, is drawn with the reported cells only. F in the last time step is predicted by the F process and is not informed by observations. With `return_data = TRUE` and `type = "age"`, the data keep the group position in `AgeGroup` and add the fitted age in `Age`. When F is shared across groups (`F_structure = "year"`), every group has the same series, and `type = "year"` draws one panel labelled "Shared F"; the returned data still hold every group.
+F is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title "Age 15+" or the tick label "15+". For ALSCL, `type = "age"` without intervals shows F at age for every age, including the plus group, and for every time step. The fitted report (`report$FA`) holds the ages before the plus group and the time steps before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula, and they have no standard errors. With `se = TRUE` the plot therefore shows the ages before the plus group and the time steps before the last. A result without numbers at length and age, for example a hand-made list, is drawn with the reported cells only. F in the last time step is predicted by the F process and is not informed by observations. With `return_data = TRUE` and `type = "age"`, the data keep the group position in `AgeGroup` and add the fitted age in `Age`. When F is shared across groups (`F_structure = "year"`), every group has the same series, and `type = "year"` draws one panel, labelled "All age classes" for ACL and "All length bins" for ALSCL; the returned data still hold every group.
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_fishing_mortality(a, type = "year",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, facet_ncol = 4, line_size = 0.6)`](figures/ytf/F_ALSCL_year.png)
+![示例图 / Example figure: `plot_fishing_mortality(b, type = "year", se = TRUE, line_size = 0.6)`](figures/ytf/F_ALSCL_year.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_fishing_mortality)。
 
@@ -1575,17 +1788,17 @@ plot_length_at_age (fit, observed = NULL, basis = c("population", "survey"), yea
 | `basis` | `c("population", "survey")` | `"population"`（默认）：种群口径的各年龄平均体长。`"survey"`：调查口径，即体长别尾数先乘以拟合所用的体长别调查可捕性；与调查中采集的年龄鉴定资料比较时用这一口径。 | `"population"` (default): mean length at age in the population. `"survey"`: mean length at age in the survey catch, that is, with numbers at length multiplied by the survey catchability at length used in the fit. Use `"survey"` to compare with age readings of fish caught in the survey. |
 | `years` | `NULL` | NULL（全部时间步），或要画的时间步，取 `fit$year` 中的值。 | NULL (all time steps) or the time steps to draw, as values of `fit$year`. |
 | `ages` | `NULL` | NULL（全部年龄组），或要画的年龄组，取 `fit$age` 中的值。 | NULL (all age classes) or the age classes to draw, as values of `fit$age`. |
-| `facet_by` | `c("age", "none")` | `"age"`（默认）：每个年龄组一个分面。`"none"`：只有一个面板，每个年龄组一条线，按年龄组着色。 | `"age"` (default): one panel per age class. `"none"`: one panel with one line per age class, coloured by age class. |
+| `facet_by` | `c("age", "none")` | `"age"`（默认）：每个年龄组一个分面。`"none"`：只有一个面板，每个年龄组一条线，按年龄组着色。 | `"age"` (default): one panel per age class. `"none"`: one panel with one line per age class, colored by age class. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | `facet_by = "age"` 时的线条颜色；NULL 继承全局 line_color。`facet_by = "none"` 时各线使用全局配色。 | Character or NULL. Line colour with `facet_by = "age"`; NULL inherits the global line_color setting. With `facet_by = "none"` the lines take the colours of the global palette. |
+| `line_color` | `NULL` | `facet_by = "age"` 时的线条颜色；NULL 继承全局 line_color。`facet_by = "none"` 时各线使用全局配色。 | Character or NULL. Line color with `facet_by = "age"`; NULL inherits the global line_color setting. With `facet_by = "none"` the lines take the colors of the global palette. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `point_size` | `NULL` | 观测点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the observed points; NULL inherits the global point_size setting (default 2.5). |
-| `observed_color` | `NULL` | `facet_by = "age"` 时观测点的颜色；NULL 继承全局 observed_color。`facet_by = "none"` 时点的颜色与其年龄组相同。 | Character or NULL. Colour of the observed points with `facet_by = "age"`; NULL inherits the global observed_color setting. With `facet_by = "none"` the points take the colour of their age class. |
+| `observed_color` | `NULL` | `facet_by = "age"` 时观测点的颜色；NULL 继承全局 observed_color。`facet_by = "none"` 时点的颜色与其年龄组相同。 | Character or NULL. Color of the observed points with `facet_by = "age"`; NULL inherits the global observed_color setting. With `facet_by = "none"` the points take the color of their age class. |
 | `observed_name` | `"Age readings"` | 观测点在图例和图注中的名称。 | Character. Name of the observed points in the legend and the caption. Default is "Age readings". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1606,14 +1819,14 @@ A ggplot object, or a list with `plot` and `data` when `return_data = TRUE`. `da
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2)
+plot_length_at_age(b, ages = c(2, 5, 8, 11))
 # 调查口径，并加上各时间步的年龄鉴定均值（本例为模拟值） / Survey basis, with mean length at age from age readings by time step (made up here)
 readings <- subset(length_at_age(b, basis = "survey"), age %in% c(2, 5) & year %% 2 == 0)
 readings$mean_length <- readings$mean_length + rep(c(-1, 1), length.out = nrow(readings))
 plot_length_at_age(b, observed = readings, basis = "survey", ages = c(2, 5))
 ```
 
-![示例图 / Example figure: `plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2, line_size = 0.6)`](figures/ytf/length_at_age.png)
+![示例图 / Example figure: `plot_length_at_age(b, ages = c(2, 5, 8, 11), line_size = 0.6)`](figures/ytf/length_at_age.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_length_at_age)。
 
@@ -1645,10 +1858,10 @@ plot_natural_mortality (fit, line_size = NULL, line_color = NULL, line_type = "s
 | `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `point_size` | `NULL` | 年龄组或体长组上的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points at the age classes or length bins; NULL inherits the global point_size setting (default 2.5). |
-| `facet_ncol` | `NULL` | M 按年龄组和时间步给定时的分面列数。 | Numeric. Columns in facet wrap, for M by age class and time step. Default is NULL. |
+| `facet_ncol` | `NULL` | M 按年龄组和时间步给定时的分面列数；NULL 按面板数选择。 | Integer or NULL. Columns of panels, for M by age class and time step; NULL chooses them from the number of panels. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1687,9 +1900,9 @@ head(plot_natural_mortality(b, return_data = TRUE)$data)
 
 `pla` is a static matrix of length probabilities conditional on age. ACL uses it at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in `NLA` to obtain the realized distribution at a given age and time in ALSCL.
 
-各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 "15+"。保存时没有年龄元数据的结果按年龄组的位置标注，横轴标签为 "Age group"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。
+各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 "15+"。保存时没有年龄元数据的结果按年龄组的位置标注，横轴标签为 "Age bin"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。
 
-Columns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "15+". A result saved without age metadata is labelled with the positions of the age classes, and the axis label reads "Age group". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.
+Columns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example "15+". A result saved without age metadata is labelled with the positions of the age classes, and the axis label reads "Age bin". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.
 
 ```r
 plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, 
@@ -1703,7 +1916,7 @@ plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NU
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains model output. The model output should include a PLA report. |
 | `low_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. NULL inherits the global low_col setting. |
 | `high_col` | `NULL` | 概率热图的低值 / 高值颜色。 | Character or NULL. NULL inherits the global high_col setting. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1716,9 +1929,9 @@ plot_pla (model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NU
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 **示例 / Example:**
 
@@ -1738,31 +1951,30 @@ plot_pla(b) + scale_x_discrete(labels = as.character(1:15))
 
 标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。 Standard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
-    se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), 
-    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, 
-    title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, 
-    legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, 
-    interval = NULL)
+    se = FALSE, se_color = NULL, se_alpha = NULL, se_type = NULL, return_data = FALSE, 
+    title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, 
+    axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, 
+    x_breaks = NULL, base_theme = NULL, title_hjust = NULL, interval = NULL, geom = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English |
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线或柱的颜色；NULL 继承全局 recruitment_color，它为 NULL 时继承 line_color。 | Character or NULL. Line or bar color. NULL inherits the global recruitment_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Specifies the type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Draw approximate pointwise 95% confidence intervals using model-based standard errors. Default FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
-| `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon 或 errorbar。 | Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon". |
+| `se_color` | `NULL` | 区间带或线周围误差线的颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 recruitment_color 为 NULL 时，取全局 se_color）。柱上的误差线为深灰色，带浅色描边，除非给出 se_color。 | Character or NULL. Color of the ribbon or of error bars around a line. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when recruitment_color is NULL). Error bars on bars are dark grey with a light outline unless se_color is given. |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认样式为 0.3，"classic" 为 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (0.3 under the default style, 0.2 under "classic"). Error bars are opaque unless se_alpha is given. |
+| `se_type` | `NULL` | 区间样式："ribbon"（阴影区间带）或 "errorbar"（误差线）。NULL（默认）在柱上画误差线，在线的周围画区间带。 | Character or NULL. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). NULL (default) draws error bars on bars and a ribbon around a line. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1775,6 +1987,7 @@ plot_recruitment (model_result, line_size = NULL, line_color = NULL, line_type =
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 | `interval` | `NULL` | `se = TRUE` 时绘制的 95% 区间。"lognormal" 为 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；"wald" 为 `estimate +/- 1.96 * SE`，可能低于零。NULL 继承全局 `interval` 设置（默认 "lognormal"）。两种区间的点估计相同。 | Character or NULL. The 95% interval drawn when `se = TRUE`. "lognormal" is `exp(log(estimate) +/- 1.96 * SE / estimate)` and stays above zero. "wald" is `estimate +/- 1.96 * SE` and can fall below zero. NULL inherits the global `interval` setting (default "lognormal"). Point estimates are the same for both. |
+| `geom` | `NULL` | "bar" 把序列画成宽 0.8 个时间步的柱，"line" 画成线。NULL（默认）跟随全局 bars 设置：默认 "standard" 样式下为柱，"classic" 下为线。 | Character or NULL. "bar" draws the series as bars 0.8 of a time step wide, "line" as a line. NULL (default) follows the global bars setting: bars under the default "standard" style, a line under "classic". |
 
 **返回 / Returns:** ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。
 
@@ -1824,13 +2037,13 @@ plot_relative_catch (fit, observed = NULL, type = c("number", "weight"), years =
 | `type` | `c("number", "weight")` | `"number"`（默认）：渔获尾数。`"weight"`：渔获重量。 | `"number"` (default): catch in numbers. `"weight"`: catch in weight. |
 | `years` | `NULL` | NULL，或计算均值所用的时间步，取 `fit$year` 中的值。NULL 使用拟合的全部时间步；给出 `observed` 时使用其中有上报渔获量的时间步。给出 `observed` 时，`years` 中没有上报渔获量的时间步不计入。 | NULL or the time steps over which the mean is calculated, as values of `fit$year`. NULL uses all time steps of the fit, or, with `observed`, the time steps of the fit that have a reported catch. With `observed`, time steps without a reported catch are left out of `years`. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 拟合序列的颜色；NULL 继承全局 catch_color，它为 NULL 时继承 line_color。 | Character or NULL. Color of the fitted series. NULL inherits the global catch_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `point_size` | `NULL` | `observed` 的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points of `observed`; NULL inherits the global point_size setting (default 2.5). |
-| `observed_color` | `NULL` | `observed` 的点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Colour of the points of `observed`; NULL inherits the global observed_color setting. |
+| `observed_color` | `NULL` | `observed` 的点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Color of the points of `observed`; NULL inherits the global observed_color setting. |
 | `observed_name` | `"Reported catch"` | 上报序列在图例中的名称。 | Character. Name of the reported series in the legend. Default is "Reported catch". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1866,7 +2079,7 @@ plot_relative_catch(b, observed = simulated, type = "weight", observed_name = "S
 
 按时间步或体长组绘制调查指数的对数残差 / Log survey-index residuals by time step or length bin
 
-每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
+每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2 至 5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
 
 Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
@@ -1896,11 +2109,11 @@ plot_residuals (model_result, f = 0.4, line_color = NULL, smooth_color = NULL, h
 | `hline_color` | `NULL` | 残差零参考线颜色。 | Character or NULL. NULL inherits the global hline_color setting. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric, optional. Number of columns in facet wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_by` | `c("length", "year")` | 布局："length" 每个体长组一个面板、横轴为时间；"year" 每个时间步一个面板、横轴为体长。 | "length" (default) draws one panel per length bin with time on the x axis; "year" draws one panel per time step with length on the x axis. |
 | `resid_cap` | `NULL` | 有限正数或 NULL。将显示的残差对称裁剪到正负该阈值，NULL 不裁剪。只改变显示范围；使用时报告阈值及受影响的点。 | Finite positive scalar or NULL. Symmetrically cap displayed residuals at +/- this value; NULL disables capping. This changes the display only. Report the threshold and which points are affected. |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -1926,11 +2139,10 @@ A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015))
+plot_residuals(b, facet_by = "length", line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_residuals(b, facet_by = "year", facet_ncol = 4)`](figures/ytf/residuals_year.png)
+![示例图 / Example figure: `plot_residuals(b, facet_by = "year", line_size = 0.6)`](figures/ytf/residuals_year.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_residuals)。
 
@@ -1958,9 +2170,9 @@ plot_retro (retro_result, rho_digits = 4, rho_position = "top_right", rho_size =
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales. Default is "free". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer or NULL. Number of facet columns. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_nrow` | `NULL` | 分面排列的行数。 | Integer or NULL. Number of facet rows. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Font family. |
@@ -1972,26 +2184,26 @@ plot_retro (retro_result, rho_digits = 4, rho_position = "top_right", rho_size =
 | `x_breaks` | `NULL` | 横轴刻度向量；NULL 自动。 | Numeric vector or NULL. Custom x-axis breaks. |
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment. |
-| `palette` | `NULL` | ggsci 色板名；NULL 继承全局设置，部分图也保留旧色板。 | Character or NULL. ggsci palette name; NULL inherits acl_theme(). Native colors are interpolated when there are more peels than colors. |
+| `palette` | `NULL` | 色板名（"standard"、"npg"、"aaas"、"nejm"、"lancet"、"jama"）；NULL 继承 acl_theme()。轮数多于色板颜色时插值。在 "standard" 全局色板（默认样式）下取 NULL 时，完整拟合为橙色，较早的拟合为灰色，第一轮最深。 | Character or NULL. Palette name ("standard", "npg", "aaas", "nejm", "lancet", "jama"); NULL inherits acl_theme(). Native colors are interpolated when there are more peels than colors. With NULL under the "standard" global palette (the default style), the full fit is orange and the earlier fits are greys, darkest for the first peel. |
 | `colors` | `NULL` | 按截止期降序给色，或按截止期命名；需覆盖每条曲线。 | Character vector or NULL. Explicit period colors, ordered by descending terminal period or named by terminal period. Overrides palette. |
 | `...` | 可选 / optional | 旧参数名 facet_col、facet_row，仍可使用但会给出警告。 | The former argument names facet_col and facet_row, accepted with a warning. |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 "Terminal year"，更短的时间步为 "Terminal period"，季度时期标为 "2019 Q4" 这样的形式，`peel_step` 大于 1 时也是如此（例如按年回溯的季度模型标为 "2004 Q4"）。默认颜色随回溯轮次固定，所以某个末期的拟合不论其他拟合是否给出估计值都保持同一颜色。未通过数值检查的拟合用虚线绘制，并增加 "Numerical screen" 图例。没有估计值的拟合（例如拟合出错）仍留在图例中，标为 "(no estimates)"。副标题列出这两类拟合；Mohn's rho 不予给出时，每个分面说明有多少轮回溯有效。
+每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 "Terminal year"，更短的时间步为 "Terminal period"，季度时期标为 "2019 Q4" 这样的形式，`peel_step` 大于 1 时也是如此（例如按年回溯的季度模型标为 "2004 Q4"）。默认颜色随回溯轮次固定，所以某个末期的拟合不论其他拟合是否给出估计值都保持同一颜色。未通过数值检查的拟合用虚线绘制，并增加 "Numerical checks" 图例。没有估计值的拟合（例如拟合出错）仍留在图例中，标为 "(no estimates)"。副标题列出这两类拟合；Mohn's rho 不予给出时，每个分面说明有多少轮回溯有效。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
-Each line is one fit and is identified by the terminal period of its data. The legend is titled "Terminal year" for annual steps and "Terminal period" for shorter steps, where quarterly periods are labelled as in "2019 Q4", also when `peel_step` is above 1 (for example "2004 Q4" for annual peels of a quarterly model). Default colors follow the retrospective peel, so the fit with a given terminal period has the same color whether or not another fit returned estimates. A fit that failed the numerical screen is drawn with a dashed line and a "Numerical screen" legend is added. A requested fit without estimates, for example after a fit error, stays in the legend and is marked "(no estimates)". The subtitle names both kinds of fit, and each panel states how many requested peels are valid when Mohn's rho is withheld.
+Each line is one fit and is identified by the terminal period of its data. The legend is titled "Terminal year" for annual steps and "Terminal period" for shorter steps, where quarterly periods are labelled as in "2019 Q4", also when `peel_step` is above 1 (for example "2004 Q4" for annual peels of a quarterly model). Default colors follow the retrospective peel, so the fit with a given terminal period has the same color whether or not another fit returned estimates. A fit that failed the numerical checks is drawn with a dashed line and a "Numerical checks" legend is added. A requested fit without estimates, for example after a fit error, stays in the legend and is marked "(no estimates)". The subtitle names both kinds of fit, and each panel states how many requested peels are valid when Mohn's rho is withheld.
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_retro(rb, facet_ncol = 2, rho_digits = 3)
+plot_retro(rb, rho_digits = 3)
 ```
 
-![示例图 / Example figure: `plot_retro(rb, facet_ncol = 2, rho_digits = 3)`](figures/ytf/retro_ALSCL.png)
+![示例图 / Example figure: `plot_retro(rb, rho_digits = 3)`](figures/ytf/retro_ALSCL.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_retro)。
 
@@ -2013,7 +2225,7 @@ Saved fits containing observations and fitted reports support `plot_ridges()` wi
 Both ridge panels retain the full model length range, even when the shortest or longest bins are unobserved or all observations are missing. Custom `x_breaks` and global `x_expand` apply to both panels. `ridges_scale` must be `NULL` (automatic height) or one finite positive number; zero, negative values, missing values, infinity and vectors are rejected.
 
 ```r
-plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "viridis", 
+plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = NULL, 
     title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, 
     axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, 
     x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
@@ -2024,8 +2236,8 @@ plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "v
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list containing the model result, which includes a data frame of Elog_index and logN_at_len, len_mid, and year. |
 | `ridges_alpha` | `0.8` | 山脊图透明度。 | Numeric. Specifies the transparency of the ridgeline plots. Default is 0.8. |
 | `ridges_scale` | `NULL` | NULL 自动设定高度，否则须为一个有限正数。 | One finite positive number or NULL. Multiplier for ridge height. When NULL (default), auto-scales so the tallest peak fills ~80\% of inter-year spacing. Increase for taller ridges, decrease for flatter. Useful when many length bins make proportions small (e.g. tuna with 22 bins). |
-| `palette` | `"viridis"` | 按时间顺序渐变；NULL 同样使用 viridis，不继承全局分类色板。可选 cividis、plasma、ocean 或自定义渐变端点。 | Sequential gradient across ordered years; NULL also uses viridis independently of the global categorical palette. Accepts other named gradients or a color vector; explicit journal palettes remain available. |
-| `title` | `NULL` | 整张图的总标题。NULL 使用全局 `ridges` 标题，空字符串不画标题。两个面板保留各自的标题（全局键 `CatL_obs_length` 和 `CatL_est_length`），因此观测面板和拟合面板始终有标注。 | Character or NULL. One title for the whole figure. NULL uses the global `ridges` title; an empty string draws none. The two panels keep their own titles, from the global `CatL_obs_length` and `CatL_est_length` keys, so observed and fitted panels stay labelled. See acl_theme_set(). |
+| `palette` | `NULL` | 按时间顺序的渐变色。NULL（默认）跟随全局调色板：在 "standard" 下（默认样式）为由浅蓝到深蓝的渐变，与 `palette = "standard"` 相同；在其他全局调色板下（包括 "classic" 样式）为 viridis，与早期版本相同。可选 viridis、cividis、plasma、ocean 等渐变名称或一组颜色。 | Character, character vector or NULL. Sequential gradient across ordered years. NULL (default) follows the global palette: under "standard" (the default style) a gradient from light blue to dark blue, the same as `palette = "standard"`; under any other global palette, including the "classic" style, "viridis" as in earlier versions. Accepts other named gradients such as "viridis", "cividis", "plasma" or "ocean", or a color vector. |
+| `title` | `NULL` | 整张图的总标题。NULL（默认）使用全局 `ridges` 标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。两个面板保留各自的标题（全局键 `CatL_obs_length` 和 `CatL_est_length`），因此观测面板和拟合面板始终有标注。 | Character, FALSE or NULL. One title for the whole figure. NULL (default) uses the global `ridges` title, FALSE, NA or "" draws none, and a character string draws that string. The two panels keep their own titles, from the global `CatL_obs_length` and `CatL_est_length` keys, so observed and fitted panels stay labelled. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2038,9 +2250,9 @@ plot_ridges (model_result, ridges_alpha = 0.8, ridges_scale = NULL, palette = "v
 | `base_theme` | `NULL` | 基础主题名称，如 bw、minimal 或 theme_bw。 | Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting. |
 | `title_hjust` | `NULL` | 标题水平对齐：0 左、0.5 中、1 右。 | Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting. |
 
-**返回 / Returns:** patchwork 对象，包含观测面板和拟合面板，可用 ggplot2::ggsave() 保存。用 `p[[1]]` 或 `p[[2]]` 取出单个面板。时间轴在年度拟合中显示整年（"2000"），在季度拟合中显示季度（"2000 Q2"），其他时间步保留小数标签。
+**返回 / Returns:** patchwork 对象，包含观测面板和拟合面板，可用 `acl_save_plot()` 保存。用 `p[[1]]` 或 `p[[2]]` 取出单个面板。时间轴在年度拟合中显示整年（"2000"），在季度拟合中显示季度（"2000 Q2"），其他时间步保留小数标签。
 
-A patchwork object holding the observed panel and the fitted panel, compatible with ggplot2::ggsave(). Extract a panel with `p[[1]]` or `p[[2]]`. The time axis shows whole years for annual fits ("2000") and quarters for quarterly fits ("2000 Q2"); other time steps keep their decimal labels.
+A patchwork object holding the observed panel and the fitted panel, which can be saved with `acl_save_plot()`. Extract a panel with `p[[1]]` or `p[[2]]`. The time axis shows whole years for annual fits ("2000") and quarters for quarterly fits ("2000 Q2"); other time steps keep their decimal labels.
 
 `plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。
 
@@ -2074,9 +2286,9 @@ All modes inherit global titles (SSB, SBL, SBA; interval variants use the corres
 
 Fishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid", 
@@ -2092,16 +2304,16 @@ plot_SSB (model_result, line_size = NULL, line_color = NULL, line_type = "solid"
 |---|---|---|---|
 | `model_result` | `必填 / required` | 单次模型拟合结果。 | A list from run_acl or run_alscl. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 单模型线条颜色。 | Character or NULL. NULL inherits the global line_color setting. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 stock_color，它为 NULL 时继承 line_color。 | Character or NULL. NULL inherits the global stock_color setting, or line_color when that is NULL. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. Line type. Default is "solid". |
 | `se` | `FALSE` | 是否绘制可用标准误对应的近似区间。 | Logical. Whether to plot confidence intervals. Default is FALSE. |
-| `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
+| `se_color` | `NULL` | 区间颜色；NULL 取线条的颜色（全局 se_color 与 line_color 设得不同时，或 stock_color 为 NULL 时，取全局 se_color）。 | Character or NULL. NULL takes the color of the line (the global se_color when it is set apart from line_color, or when stock_color is NULL). |
 | `se_alpha` | `NULL` | NULL 继承全局 se_alpha，显式值优先。 | NULL inherits global se_alpha; explicit values take priority. |
 | `type` | `c("SSB", "SBL", "SBA")` | SSB 为总产卵生物量，SBA 为年龄别产卵生物量，SBL 为体长别产卵生物量。 | Character. "SSB" (total), "SBL" (at length), or "SBA" (at age). Default is "SSB". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Numeric. Columns in facet wrap. Default is NULL. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Scales for facet wrap. Default is "free". |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | Logical. Whether to return processed data. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承主题。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2137,11 +2349,10 @@ Age panels are labelled with the fitted ages in `model_result$age`. The oldest a
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
-plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_SSB(b, type = "SSB", se = TRUE, line_size = 0.6)
 ```
 
-![示例图 / Example figure: `plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)`](figures/ytf/plot_SSB_SSB.png)
+![示例图 / Example figure: `plot_SSB(b, se = TRUE, line_size = 0.6)`](figures/ytf/plot_SSB_SSB.png)
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](PLOT_GALLERY.md#plot_SSB)。
 
@@ -2166,7 +2377,7 @@ plot_SSB_Rec (model_result, age_at_recruitment = NULL, point_size = NULL, point_
 | `point_color` | `NULL` | 点颜色。 | Character or NULL. NULL inherits the global point_color setting. |
 | `point_shape` | `16` | 点形状编号，如 16、21。 | Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle). |
 | `return_data` | `FALSE` | TRUE 同时返回绘图对象及整理后的数据；结构见返回说明。 | A logical indicating whether to return the processed data alongside the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2203,9 +2414,9 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 自检的相对误差 / Relative errors of a self-test
 
-上图按时间序列给出各时间步相对误差的中位数（线）和两个百分位数之间的带，下图给出各估计参数的中位数和同样的百分位数，虚线表示误差为零。只画通过数值检查的重新拟合，副标题给出画出的个数。参数取 `extract_parameters()` 的自然尺度和名称；真值为零的参数没有相对误差，不画。标题使用主题键 `self_test`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_error`。
+上图按时间序列给出各时间步相对误差的中位数（线）和两个百分位数之间的带，下图给出各估计参数的中位数和同样的百分位数，虚线表示误差为零。只画通过数值检查的重新拟合，副标题给出画出的个数。参数取 `extract_parameters()` 的自然尺度，并用文字命名，例如 `log_Linf` 写作 "Asymptotic length (Linf)"；真值为零的参数没有相对误差，不画。标题使用主题键 `self_test`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_error`。
 
-The upper panels show, for each time series, the median relative error by time step (line) and a band between two percentiles; the lower panel shows the median and the same percentiles for each estimated parameter. A dashed line marks no error. Only refits that pass the numerical checks are drawn, and the subtitle gives their number. Parameters are on the natural scale of `extract_parameters()` and keep its names; a parameter whose truth is zero has no relative error and is not drawn. The title uses the theme key `self_test`; the axis labels use `xlab$year` and `ylab$relative_error`.
+The upper panels show, for each time series, the median relative error by time step (line) and a band between two percentiles; the lower panel shows the median and the same percentiles for each estimated parameter. A dashed line marks no error. Only refits that pass the numerical checks are drawn, and the subtitle gives their number. Parameters are on the natural scale of `extract_parameters()` and are named in words, for example "Asymptotic length (Linf)" for `log_Linf`; a parameter whose truth is zero has no relative error and is not drawn. The title uses the theme key `self_test`; the axis labels use `xlab$year` and `ylab$relative_error`.
 
 ```r
 plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9), line_size = NULL, 
@@ -2221,14 +2432,14 @@ plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9)
 | `what` | `c("both", "series", "parameters")` | both 把时间序列画在参数之上；series 或 parameters 只画一部分。 | both draws the time series above the parameters; series or parameters draws one part. |
 | `probs` | `c(0.1, 0.9)` | 带的下、上百分位对应的两个概率，默认第 10 和第 90 百分位数。 | Two probabilities, the lower and upper percentiles of the band; default the 10th and 90th percentiles. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 中位数线和点的颜色；NULL 继承全局 line_color。 | Colour of the median line and points; NULL inherits the global line_color setting. |
-| `se_color` | `NULL` | 带的颜色；NULL 继承全局 se_color。 | Colour of the band; NULL inherits the global se_color setting. |
+| `line_color` | `NULL` | 中位数线和点的颜色；NULL 继承全局 line_color。 | Color of the median line and points; NULL inherits the global line_color setting. |
+| `se_color` | `NULL` | 带的颜色；NULL 继承全局 se_color。 | Color of the band; NULL inherits the global se_color setting. |
 | `se_alpha` | `NULL` | 带的不透明度；NULL 继承全局 se_alpha。 | Opacity of the band; NULL inherits the global se_alpha setting. |
 | `point_size` | `NULL` | 参数中位数点的大小；NULL 继承全局 point_size。 | Size of the median of a parameter; NULL inherits the global point_size setting. |
-| `facet_ncol` | `NULL` | 时间序列分面的列数；NULL 时一行最多三幅。 | Columns of the time-series panels; NULL puts up to three panels in a row. |
+| `facet_ncol` | `NULL` | 时间序列分面的列数；NULL 按面板数选择。 | Numeric or NULL. Columns of the time-series panels; NULL chooses them from the number of panels. |
 | `facet_scales` | `"free_y"` | 时间序列分面的坐标尺度："fixed"、"free"、"free_x" 或 "free_y"，默认 "free_y"。 | Character. Scales of the time-series panels: "fixed", "free", "free_x" or "free_y". Default is "free_y". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义相对误差轴标签；NULL 继承主题。 | Character or NULL. Custom label of the relative-error axis. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2284,11 +2495,11 @@ plot_survey_catchability (fit, type = c("length", "age"), line_size = NULL, line
 | `fit` | `必填 / required` | ACL 或 ALSCL 的拟合结果，包括用 `read_assessment()` 读取的保存结果。 | A fitted ACL or ALSCL result, including a saved assessment read with `read_assessment()`. |
 | `type` | `c("length", "age")` | `"length"`（默认）：体长别调查可捕性，横轴为体长组中点。`"age"`：年龄别可捕性乘数（`survey_q_age`），横轴为年龄；拟合没有这一输入时报错。 | `"length"` (default): survey catchability at length, against the midpoints of the length bins. `"age"`: the survey catchability multiplier by age class (`survey_q_age`), against age; an error for a fit without this input. |
 | `line_size` | `NULL` | NULL 继承全局 line_size，显式值优先。 | NULL inherits global line_size; explicit values take priority. |
-| `line_color` | `NULL` | 线条颜色；NULL 继承全局 line_color。体长别可捕性随时间变化时，各线使用全局配色。 | Character or NULL. NULL inherits the global line_color setting. When catchability at length changes over time, the lines take the colours of the global palette. |
+| `line_color` | `NULL` | 线条颜色；NULL 继承全局 line_color。体长别可捕性随时间变化时，各线使用全局配色。 | Character or NULL. NULL inherits the global line_color setting. When catchability at length changes over time, the lines take the colors of the global palette. |
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `point_size` | `NULL` | 体长组或年龄组上的点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the points at the length bins or age classes; NULL inherits the global point_size setting (default 2.5). |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2344,7 +2555,7 @@ For the VB curve of an ACL fit, `age_range = NULL` uses the fitted age range; ol
 ```r
 plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, line_type = "solid", 
     se = FALSE, se_color = NULL, se_alpha = NULL, se_type = c("ribbon", "errorbar"), 
-    text_color = "black", text_size = 5, title = NULL, xlab = NULL, ylab = NULL, 
+    text_color = "black", text_size = 3.5, title = NULL, xlab = NULL, ylab = NULL, 
     font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, 
     strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, 
     title_hjust = NULL, observed = NULL, basis = c("population", "survey"), years = NULL, 
@@ -2361,11 +2572,11 @@ plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, li
 | `line_type` | `"solid"` | 线型，如 solid、dashed。 | Character. The type of the line in the plot. Default is "solid". |
 | `se` | `FALSE` | 是否画由 Linf、k 和 t0 计算的曲线的 95% 置信区间（delta 法）。对 ACL 拟合是图中曲线的区间；对 ALSCL 拟合，区间画在 `parameter_curve = TRUE` 的参考线周围。 | Logical. Whether to draw the 95% confidence interval of the curve computed from Linf, k and t0 (delta method). Default FALSE. For an ACL fit it is the interval of the figure; for an ALSCL fit it is drawn around the reference line when `parameter_curve = TRUE`. |
 | `se_color` | `NULL` | 区间阴影或误差棒的颜色。 | Character or NULL. NULL inherits the global se_color setting. |
-| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given. |
+| `se_alpha` | `NULL` | 区间阴影的透明度；NULL 继承全局 se_alpha（默认样式为 0.3，"classic" 为 0.2）。误差棒不透明，除非给出 se_alpha。 | Numeric or NULL. Transparency of the interval ribbon; NULL inherits the global se_alpha setting (0.3 under the default style, 0.2 under "classic"). Error bars are opaque unless se_alpha is given. |
 | `se_type` | `c("ribbon", "errorbar")` | 区间样式：ribbon（阴影）或 errorbar（误差棒）。误差棒画在 age_range 内的拟合年龄（model_result$age）上；没有年龄元数据的结果，或范围内没有拟合年龄时，画在每个绘图年龄上。 | Character. Type of interval display: "ribbon" (shaded area) or "errorbar" (error bars). Error bars are drawn at the fitted ages in model_result$age that lie within age_range. Results saved without age metadata, and ranges that contain no fitted age, use every plotted age. Default is "ribbon". |
 | `text_color` | `"black"` | 生长参数标注文字颜色。 | Character. The color of the text in the plot. Default is "black". |
-| `text_size` | `5` | 生长参数标注文字大小。 | Numeric. The thickness of the text in the plot. Default is 5. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
+| `text_size` | `3.5` | 生长参数标注的文字大小。 | Numeric. Size of the growth-parameter annotation in all display modes. Default is 3.5. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
 | `ylab` | `NULL` | 自定义纵轴标签；NULL 继承主题。 | Character or NULL. Custom y-axis label. If NULL, uses global theme setting. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans"). |
@@ -2382,19 +2593,19 @@ plot_VB (model_result, age_range = NULL, line_size = NULL, line_color = NULL, li
 | `years` | `NULL` | NULL（全部时间步），或对由尾数算出的平均体长求均值的时间步，取 `model_result$year` 中的值。不改变 ACL 的 VB 曲线。 | NULL (all time steps) or the time steps over which mean length at age from the fitted numbers is averaged, as values of `model_result$year`. It does not change the von Bertalanffy curve of an ACL fit. |
 | `parameter_curve` | `FALSE` | 对 ALSCL 拟合，以及 `basis = "survey"` 的 ACL 拟合，是否加画由 Linf、k 和 t0 计算的曲线作为虚线参考线，并在图例和图注中说明。对 ACL 的 VB 曲线没有作用。 | Logical. For an ALSCL fit, and for an ACL fit with `basis = "survey"`, whether to add the curve computed from Linf, k and t0 as a dashed reference line, named in the legend and explained in the caption. It has no effect on the von Bertalanffy curve of an ACL fit. |
 | `point_size` | `NULL` | 观测点的大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. Size of the observed points; NULL inherits the global point_size setting (default 2.5). |
-| `observed_color` | `NULL` | 观测点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Colour of the observed points; NULL inherits the global observed_color setting. |
+| `observed_color` | `NULL` | 观测点的颜色；NULL 继承全局 observed_color。 | Character or NULL. Color of the observed points; NULL inherits the global observed_color setting. |
 | `observed_name` | `"Age readings"` | 观测点在图例中的名称。 | Character. Name of the observed points in the legend. Default is "Age readings". |
 
-**返回 / Returns:** ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。
+**返回 / Returns:** ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。
 
-A ggplot object, suitable for further styling or `ggplot2::ggsave()`.
+A ggplot object, which can be styled further or saved with `acl_save_plot()`.
 
 **示例 / Example:**
 
 ```r
 # 调用示例；变量按上文创建 / Use objects defined above
 plot_VB(b)
-# 模拟的年龄鉴定资料；体长先归入模型体长组 / Synthetic age readings; each length is assigned to its model length bin
+# 模拟的年龄鉴定资料；体长先归入模型体长组 / Simulated age readings; each length is assigned to its model length bin
 set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, 0.2, 1/60, ref$Age) + stats::rnorm(nrow(ref), sd = 2)
@@ -2450,10 +2661,10 @@ retro_acl (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape for endpoints. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales argument. Default is "free". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer or NULL. Number of facet columns. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_nrow` | `NULL` | 分面排列的行数。 | Integer or NULL. Number of facet rows. |
 | `train_times` | `1` | 每个初始点连续优化的次数。 | Number of successive optimization passes per start; not independent random starts. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Character or NULL. Custom x-axis label. |
 | `ylab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Character or NULL. Custom y-axis label. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Font family. |
@@ -2498,7 +2709,7 @@ ra$fit_diagnostics
 ra$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)`](figures/ytf/retro_ACL.png)
+![示例图 / Example figure: `plot_retro(retro_acl(x, nyear = 3))`](figures/ytf/retro_ACL.png)
 
 <a id="retro_alscl"></a>
 ## `retro_alscl()`
@@ -2555,7 +2766,7 @@ rb$fit_diagnostics
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)`](figures/ytf/retro_ALSCL.png)
+![示例图 / Example figure: `plot_retro(retro_alscl(x, nyear = 3))`](figures/ytf/retro_ALSCL.png)
 
 <a id="retro_model"></a>
 ## `retro_model()`
@@ -2611,9 +2822,9 @@ retro_model (nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50
 | `point_size` | `NULL` | 点大小；NULL 继承全局 point_size（默认 2.5）。 | Numeric or NULL. NULL inherits the global point_size setting (default 2.5). |
 | `point_shape` | `21` | 点形状编号，如 16、21。 | Numeric. Point shape for endpoints. Default is 21. |
 | `facet_scales` | `"free"` | fixed、free、free_x 或 free_y；自由尺度有助观察组内变化。 | Character. Facet scales argument. Default is "free". |
-| `facet_ncol` | `NULL` | 分面排列的列数。 | Integer or NULL. Number of facet columns. |
+| `facet_ncol` | `NULL` | 分面列数；NULL（默认）按面板数选择，例如 15 个面板排成 5 x 3，23 个排成 6 x 4。 | Integer or NULL. Columns of panels; NULL chooses them from the number of panels (for example 5 x 3 for 15 panels, 6 x 4 for 23). |
 | `facet_nrow` | `NULL` | 分面排列的行数。 | Integer or NULL. Number of facet rows. |
-| `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. |
+| `title` | `NULL` | NULL（默认）画默认标题；FALSE、NA 或 "" 不画标题；字符串按原样画出。默认标题和 show_title 设置见 `acl_theme_set()`。 | NULL (default) draws the default title, FALSE, NA or "" draws no title, and a character string draws that string; see `acl_theme_set()` for the default titles and the show_title setting. |
 | `xlab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Character or NULL. Custom x-axis label. |
 | `ylab` | `NULL` | 坐标轴标签；主题设置函数中使用命名列表。 | Character or NULL. Custom y-axis label. |
 | `font_family` | `NULL` | 文本字体；请使用本机可用字体。 | Character or NULL. Font family. |
@@ -2671,7 +2882,7 @@ rb$rho_by_peel
 rb$rho_text
 ```
 
-![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"), facet_ncol = 2)`](figures/ytf/retro_ALSCL.png)
+![示例图 / Example figure: `plot_retro(retro_model(x, nyear = 3, model = "alscl"))`](figures/ytf/retro_ALSCL.png)
 
 <a id="run_acl"></a>
 ## `run_acl()`
@@ -2807,7 +3018,7 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `structure` | `list()` | 可选的模型结构：一组设置的名称，或各项设置的命名列表。默认（空列表）和 "original" 在每项设置上都是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。"von_bertalanffy" 同时选用 `growth_increment = "von_bertalanffy"`、`growth_transition = "bin"`、`initial_length = "growth"` 和 `initial_plus_group = "equilibrium"`，使第一期和生长转移遵循同一个生长模型。列表可以先指定一组设置再追加单项设置，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。"published" 和 "consistent" 是 "original" 和 "von_bertalanffy" 以前的名称，仍然可以使用。"von_bertalanffy" 的四项设置是作为一组检验的：每个时间步的生长增量相对组宽较小时，只用其中一部分的拟合可能失败。因此 `structure` 列表只改了四项中的一项、两项或三项时，拟合给出一条提示，列出仍为原始取值的设置（`silent = TRUE` 时不显示；一次调用中运行多个拟合的函数只提示一次）。"von_bertalanffy" 既是这组设置的名称，也是单项设置 `growth_increment` 的一个取值：`structure = list(growth_increment = "von_bertalanffy")` 只改一项，`structure = "von_bertalanffy"` 四项都改。先指定这组设置再替换其中一项的列表，例如 `list(set = "von_bertalanffy", growth_transition = "midpoint")`，视为有意的选择，不给提示。`correlation_range` 不属于这组设置。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`。Zhang 和 Cadigan (2022) 定义了这个函数，但没有给出增量等于最大值 50% 和 95% 时的体长，也没有说明增量怎样换算到短于一年的时间步：体长 0.5 Linf 和 0.05 Linf 以及乘以 `growth_step` 是代码中的取法。"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。这时个体长到 Linf 附近就停止生长，Linf 在第一期之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，Linf 的标准误可能非常小。logistic 增量在 Linf 以上仍为正。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），个体仍会进入下一个体长组。这时，组宽为增量的几倍时，世代的平均体长与生长曲线接近；组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_deviations`：第一期各年龄对数尾数（初始尾数）的偏差。"cumulative"，第一个年龄之后每个年龄的对数尾数等于前一年龄的对数尾数减去 init_Z 再加一个正态偏差，因此偏差沿年龄累加，`dev_log_N0` 有 `nage - 1` 个元素；"independent"，Zhang 和 Cadigan (2022) 的式 11，对年龄 a = 1 到 `nage`，log N(a) = log R(1) - init_Z (a - 1) + e(a)，其中 R(1) 是第一期的补充量，偏差 e(a) 相互独立，服从标准差为初始偏差标准差的正态分布；这时 `dev_log_N0` 有 `nage` 个元素。第一个年龄也有偏差；第一期报告的补充量 `Rec`（及其标准误）等于该期第一个年龄的尾数，包含这个偏差，补充量偏差 `dev_log_R` 的概率密度不变。`initial_plus_group = "equilibrium"` 时，plus group 的偏差乘在所有更老世代之和上。`initial_length = "growth"` 时，每个年龄的体长分布由不含偏差的生长和按 init_Z 的存活得到，某个年龄的偏差只乘在该年龄的尾数上。这项设置不属于 "von_bertalanffy" 这组设置。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；原始结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中；`initial_deviations` 只在取 "independent" 时保存，因此默认形式的拟合所保存的结构与以前的版本相同。 | Optional model structures: the name of a set or a named list of settings. The default, an empty list, and "original" are the original structure for every setting: the structure of the package as first released, which implements the model of Zhang and Cadigan (2022). "von_bertalanffy" selects `growth_increment = "von_bertalanffy"`, `growth_transition = "bin"`, `initial_length = "growth"` and `initial_plus_group = "equilibrium"` together, so that the first period and the growth transition follow one growth model. A list can name a set and add single settings, for example `list(set = "von_bertalanffy", correlation_range = "symmetric")`. "published" and "consistent" are accepted as the earlier names of "original" and "von_bertalanffy". The four settings of "von_bertalanffy" were tested as a set. A fit with only some of them can fail when the growth increment per time step is small relative to the bin width. A `structure` list that changes one, two or three of the four settings therefore gives a message that names the settings left at their original values (unless `silent = TRUE`; a function that runs several fits in one call gives it once). "von_bertalanffy" is the name of the set and also a value of the single setting `growth_increment`. `structure = list(growth_increment = "von_bertalanffy")` changes one setting, and `structure = "von_bertalanffy"` changes all four. A list that names the set and replaces one of its settings, for example `list(set = "von_bertalanffy", growth_transition = "midpoint")`, is taken as a deliberate choice and gives no message. `correlation_range` does not belong to the set. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`. Zhang and Cadigan (2022) define this function. They give neither the lengths at which the increment is 50% and 95% of its maximum nor the conversion of the increment to a time step shorter than one year. The lengths 0.5 Linf and 0.05 Linf and the multiplication by `growth_step` are those of the code. "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. Fish then stop growing at about Linf, so Linf acts as an upper limit of length after the first period: data with many fish larger than the mean asymptotic length fit poorly, and the standard error of Linf can be very small. The logistic increment stays positive above Linf. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin and the transition is integrated over the bin, so fish keep moving to the next bin when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). The mean length of a cohort then follows the growth curve closely for bins a few times wider than the increment; with much wider bins it remains approximate, because fish are spread evenly over their bin after every step. `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". `initial_deviations`: deviations of the log numbers at age in the first period (the initial numbers). "cumulative", the log numbers of each age after the first are those of the previous age minus init_Z plus a normal deviation, so the deviations accumulate over ages and `dev_log_N0` has `nage - 1` entries; "independent", Equation 11 of Zhang and Cadigan (2022), log N(a) = log R(1) - init_Z (a - 1) + e(a) for ages a = 1 to `nage`, where R(1) is the recruitment of the first period and the deviations e(a) are independent normal with the standard deviation of the initial deviations; `dev_log_N0` then has `nage` entries. The first age also has a deviation, and the reported recruitment `Rec` of the first period (with its standard error) is the number at the first age in that period, this deviation included; the recruitment deviations `dev_log_R` keep their density. With `initial_plus_group = "equilibrium"` the deviation of the plus group multiplies the sum of the older cohorts. With `initial_length = "growth"` the length distribution of each age follows from growth and survival at init_Z without deviations, and the deviation of an age multiplies the numbers of that age only. This setting does not belong to the set "von_bertalanffy". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the original structure it does not. The settings used are stored in the `structure` element of the fit; `initial_deviations` is stored only when it is "independent", so that the stored structure of a fit with the default form is the same as in earlier versions. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
-| `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是原始的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。给出的 log_t0 按新的下限解读，拟合会给出提示信息，说明它对应的 t0（`silent = TRUE` 时不显示）。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. A supplied log_t0 is read with the new limit, and the fit gives a message with the t0 that it means (unless `silent = TRUE`). |
+| `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是原始的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。没有给出 log_t0 时，其默认初值会换算，使 t0 保持默认值 1/60 年（默认固定）。给出的 log_t0 按新的下限解读。t0_lower 和 log_t0 来自不同地方时（一个来自调用的参数，另一个来自输入列表或保存的拟合配方，例如 `run_alscl(YTF_example, t0_lower = -1)`，其输入列表保存的 log_t0 是按 t0_lower = 0 选定的），拟合会给出提示信息，说明它对应的 t0（`silent = TRUE` 时不显示）。两者都保存在输入列表中（如 `whiting_example`）或在同一调用中同时给出时，没有提示。报告的 t0 始终在自然尺度上。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. When log_t0 is not supplied, its default start is converted so that t0 keeps its default value (1/60 year, fixed by default). A supplied log_t0 is read with the new limit. When t0_lower and log_t0 come from different places, one from the arguments of the call and the other from the bundle or a saved recipe (for example `run_alscl(YTF_example, t0_lower = -1)`, whose bundle stores a log_t0 chosen for t0_lower = 0), the fit gives a message with the t0 that it means (unless `silent = TRUE`). There is no message when both are stored in the bundle, as in `whiting_example`, or both are given in the same call. Reported t0 values are always on the natural scale. |
 | `survey_q` | `NULL` | 可选的体长别调查可捕性：每个体长组一个正值的数值向量，用来代替由 sel_L50 和 sel_L95 得到的 logistic 曲线，例如穹顶形曲线；`survey_catchability()` 可以算出 logistic 和穹顶形曲线。每个体长组一行、每个时间步一列的矩阵给出按体长和时间步的调查可捕性，例如用于调查网具更换之后；只有一列的矩阵按向量读取。survey_q 与 sel_L50 或 sel_L95 同时给出会报错；输入列表或已保存的拟合中已有这两项时，在调用中加上 `sel_L50 = NULL, sel_L95 = NULL`。这些值是固定输入，不参与估计。 | Optional survey catchability at length: a numeric vector with one positive value per length bin. It is used in place of the logistic curve from sel_L50 and sel_L95, for example for a dome-shaped curve; `survey_catchability()` computes logistic and dome-shaped curves. A matrix with one row per length bin and one column per time step gives survey catchability by length and time step, for example after a change of survey gear; a matrix with one column is read as the vector. Supplying survey_q together with sel_L50 or sel_L95 is an error; when an input bundle or a stored fit already holds these two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are fixed inputs and are not estimated. |
 | `survey_q_age` | `NULL` | 可选的按年龄的调查可捕性系数：每个年龄组一个正值的数值向量。默认 NULL 表示各年龄均为 1。这时体长别调查指数的期望值等于 q(体长) 乘以各年龄的 `survey_q_age[年龄]` 与该体长、该年龄尾数乘积之和，其中 q(体长) 是由 sel_L50 和 sel_L95 或由 survey_q 得到的体长别调查可捕性。给出 survey_q_age 而 parameters 中没有 mean_log_R 的初值时，mean_log_R 的默认初值提高 `-log(survey_q_age[1])`，因为调查只看到补充个体的这一部分。此时拟合给出一条提示（`silent = TRUE` 时不给出），同一次调用中的多次拟合只给出一次。 | Optional survey catchability multiplier by age: a numeric vector with one positive value per age class. The default NULL is 1 for every age. The expected survey index at length is then q(length) times the sum over ages of `survey_q_age[age]` times numbers at that length and age, where q(length) is the survey catchability at length from sel_L50 and sel_L95 or from survey_q. When survey_q_age is supplied and parameters holds no start for mean_log_R, the default start of mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then sees only that fraction of the recruits. The fit gives a message with this change unless `silent = TRUE`, once per call of a function that runs several fits. |
 
@@ -3254,7 +3465,8 @@ checks$plots$qq
 统一提取带坐标的种群估计 / Extract population estimates with coordinates
 
 ```r
-extract_estimates (fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = 0.95)
+extract_estimates (fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = 0.95, 
+    interval = c("lognormal", "wald"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
@@ -3262,6 +3474,7 @@ extract_estimates (fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_
 | `fit` | `必填 / required` | ACL 或 ALSCL 拟合结果；保存的可移植结果也可使用。 | An ACL or ALSCL fit, including a portable saved result. |
 | `quantities` | `c("SSB", "Rec", "B", "N", "CN", "F")` | SSB、Rec、B、N、CN、CB、F 及模型实际报告的年龄、体长或联合数组。年龄别尾数可用 N_at_age 请求，它是 NA 的别名。 | Reported population vectors and age, length or joint arrays; F resolves to ACL F or ALSCL FL. Numbers at age can be requested as N_at_age, an alias of NA. |
 | `conf_level` | `0.95` | 近似区间的名义置信水平，严格介于 0 与 1。 | Nominal confidence level of the approximate intervals, strictly between zero and one. |
+| `interval` | `c("lognormal", "wald")` | 区间形式："lognormal"（默认）为 `exp(log(estimate) +/- z * SE / estimate)`，"wald" 为 `estimate +/- z * SE`，与包内绘图和 `self_test()` 相同。2.5.0 起默认从 Wald 形式改为对数正态形式；`interval = "wald"` 给出原来的区间。估计值为零时保留 Wald 区间并把下限截在零，估计值为负时保留 Wald 区间。 | Form of the interval: "lognormal" (default), `exp(log(estimate) +/- z * SE / estimate)`, or "wald", `estimate +/- z * SE`, as in the plots of the package and in `self_test()`. The default changed from the Wald form to the lognormal form in version 2.5.0; `interval = "wald"` gives the former bounds. An estimate of zero keeps the Wald bounds with the lower bound stopped at zero, and a negative estimate keeps the Wald bounds. |
 
 **返回 / Returns:** 含量名、实际报告名、年份、年龄、体长、估计、SE、区间、numerical_ok 及 extrapolated 的长表。numerical_ok 是该拟合的数值检查结论，与 summary() 报告的相同。依赖末期捕捞死亡率的行 extrapolated 为 TRUE。
 
@@ -3804,7 +4017,8 @@ lapply(fits, function(fit) fit$diagnostics)
 使用明确分母汇总模拟偏差、RMSE、区间覆盖率、拟合失败与耗时。 / Summarize simulation bias, RMSE, interval coverage, fitting failures and timing with explicit denominators.
 
 ```r
-summarize_simulations (fits, truth, quantities = c("SSB", "Rec"), conf_level = 0.95)
+summarize_simulations (fits, truth, quantities = c("SSB", "Rec"), conf_level = 0.95, 
+    interval = c("lognormal", "wald"))
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
@@ -3812,7 +4026,8 @@ summarize_simulations (fits, truth, quantities = c("SSB", "Rec"), conf_level = 0
 | `fits` | `必填 / required` | 具名拟合或错误记录列表，如 sim_model() 输出。 | A named list of fits or error records, such as sim_model() output. |
 | `truth` | `必填 / required` | 与 fits 同名的逐重复列表；每项包含 year 及所选量的真值向量，坐标必须匹配。 | A same-named per-replicate list; each entry contains year and vectors for all requested quantities. Coordinates must match exactly. |
 | `quantities` | `c("SSB", "Rec")` | SSB、Rec、B、N、CN、CB 中互不重复的总体时序，默认 SSB 和 Rec。 | Distinct aggregate time series from SSB, Rec, B, N, CN, CB; default SSB and Rec. |
-| `conf_level` | `0.95` | 基于报告标准误构造正态区间的名义置信水平；实际覆盖率另行计算。 | Nominal confidence level used to construct normal intervals from reported SEs; empirical coverage is calculated separately. |
+| `conf_level` | `0.95` | 基于报告标准误构造区间的名义置信水平；实际覆盖率另行计算。 | Nominal confidence level of the intervals based on reported SEs; empirical coverage is calculated separately. |
+| `interval` | `c("lognormal", "wald")` | 计算覆盖率所用区间的形式："lognormal"（默认）为 `exp(log(estimate) +/- z * SE / estimate)`，"wald" 为 `estimate +/- z * SE`，与 `extract_estimates()`、包内绘图和 `self_test()` 相同。2.5.0 起默认从 Wald 形式改为对数正态形式；`interval = "wald"` 给出原来的区间和覆盖率。 | Form of the interval whose coverage is reported: "lognormal" (default), `exp(log(estimate) +/- z * SE / estimate)`, or "wald", `estimate +/- z * SE`, as in `extract_estimates()`, the plots of the package and `self_test()`. The default changed from the Wald form to the lognormal form in version 2.5.0; `interval = "wald"` gives the former bounds and coverage. |
 
 **返回 / Returns:** 返回按量跨重复/时间合并的 summary、逐重复状态/耗时（replicates），以及保留失败点的逐点估计和真值（estimates）。summary_converged 对全部收敛的拟合重复 summary 的统计量，不论是否通过数值检查。failures 按原因统计未通过检查的重复：n_replicates 是有该原因的重复数，n_sole 是只有该原因的重复数。replicates 中 converged 标出收敛的拟合，failure_reasons 列出每个重复的原因；estimates 中 converged 和 covered_converged 对每个估计对给出同样的信息。
 
@@ -3911,7 +4126,7 @@ self_test (fit, nsim = 20, seed = NULL, process = c("conditional", "resample"), 
 | `quantities` | `c("SSB", "Rec", "F")` | 比较的时间序列，取自 SSB、Rec、F、B、N。 | Time series to compare, from SSB, Rec, F, B and N. |
 | `F_summary` | `c("mean", "apical")` | 每个时间步 F 在各年龄（ACL）或各体长组（ALSCL）上的汇总：不加权平均值或最大值。 | Summary of F over ages (ACL) or length bins (ALSCL) at each time step: the unweighted mean or the maximum. |
 | `conf_level` | `0.95` | 计算覆盖率的区间的名义置信水平。 | Nominal confidence level of the intervals whose coverage is reported. |
-| `interval` | `c("lognormal", "wald")` | 时间序列区间的形式，与绘图函数相同。 | Form of the interval of a time series, as in the plots. |
+| `interval` | `c("lognormal", "wald")` | 时间序列区间的形式，与绘图函数、`extract_estimates()` 和 `summarize_simulations()` 相同。 | Form of the interval of a time series, as in the plots, `extract_estimates()` and `summarize_simulations()`. |
 | `preserve_missing` | `TRUE` | 传给 `simulate_fit()`；保留原来缺失和为零的调查格。 | Passed to `simulate_fit()`; keeps missing and zero survey cells as they are. |
 | `silent` | `TRUE` | 不显示拟合过程信息。 | Suppress fitting progress messages. |
 | `save_fits` | `FALSE` | 是否在结果中保留各次重新拟合（不含 TMB 对象）。 | Keep the refits, without the TMB object, in the result. |

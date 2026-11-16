@@ -356,7 +356,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(retro_model(x, nyear = 3, model = \"alscl\"), facet_ncol = 2)",
+      "code": "plot_retro(retro_model(x, nyear = 3, model = \"alscl\"))",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -382,7 +382,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ACL.png",
-      "code": "plot_retro(retro_acl(x, nyear = 3), facet_ncol = 2)",
+      "code": "plot_retro(retro_acl(x, nyear = 3))",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -408,7 +408,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(retro_alscl(x, nyear = 3), facet_ncol = 2)",
+      "code": "plot_retro(retro_alscl(x, nyear = 3))",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -434,7 +434,7 @@
     ],
     "figure": {
       "src": "figures/ytf/CatL_year_FALSE.png",
-      "code": "plot_CatL(b, facet_by = \"year\", facet_ncol = 4)",
+      "code": "plot_CatL(b, facet_by = \"year\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -451,8 +451,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Choose `N`, `NA` or `NL`. Abundance is conditional on fixed survey catchability and other model assumptions.\n\nMatrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.\n\nAll modes inherit global titles (N, NA_, NL; interval variants use the corresponding `_se` keys, with `NA_se` for abundance at age), `xlab$year`, `ylab$abundance`, `x_breaks` and `x_expand`. A `title`, `xlab`, `ylab`, typography or line argument given in the call takes priority. Default panels have no gridlines.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
-      "zh": "选择 `N`、`NA` 或 `NL`。丰度以固定调查可捕性及其他模型假设为条件。\n\n矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。\n\n所有模式继承全局标题（N, NA_, NL；区间使用对应的 `_se` 键，年龄丰度为 `NA_se`）、`xlab$year`、`ylab$abundance`、`x_breaks` 与 `x_expand`。调用中给出的 `title`、`xlab`、`ylab`、字体和线条参数优先，默认无网格。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
+      "en": "Choose `N`, `NA` or `NL`. Abundance is conditional on fixed survey catchability and other model assumptions.\n\nMatrix dimnames are not indices; time and length labels come from fitted metadata. Standard errors must be complete, finite and nonnegative.\n\nAll modes inherit global titles (N, NA_, NL; interval variants use the corresponding `_se` keys, with `NA_se` for abundance at age), `xlab$year`, `ylab$abundance`, `x_breaks` and `x_expand`. A `title`, `xlab`, `ylab`, typography or line argument given in the call takes priority. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
+      "zh": "选择 `N`、`NA` 或 `NL`。丰度以固定调查可捕性及其他模型假设为条件。\n\n矩阵行列名称不作为下标；年份及体长标签来自拟合元数据。标准误必须完整、有限且非负。\n\n所有模式继承全局标题（N, NA_, NL；区间使用对应的 `_se` 键，年龄丰度为 `NA_se`）、`xlab$year`、`ylab$abundance`、`x_breaks` 与 `x_expand`。调用中给出的 `title`、`xlab`、`ylab`、字体和线条参数优先；网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
     },
     "articles": [
       "population-plots",
@@ -460,7 +460,7 @@
     ],
     "figure": {
       "src": "figures/ytf/plot_abundance_N.png",
-      "code": "plot_abundance(b, type = \"N\", se = TRUE, facet_ncol = 3, line_size = 0.6)",
+      "code": "plot_abundance(b, type = \"N\", se = TRUE, line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -477,8 +477,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Choose `B`, `BA` or `BL`. Units depend on input individual weight and the abundance scale.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
-      "zh": "选择 `B`、`BA` 或 `BL`。单位取决于输入个体重量及丰度尺度。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
+      "en": "Choose `B`, `BA` or `BL`. Units depend on input individual weight and the abundance scale.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
+      "zh": "选择 `B`、`BA` 或 `BL`。单位取决于输入个体重量及丰度尺度。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
     },
     "articles": [
       "population-plots",
@@ -486,7 +486,7 @@
     ],
     "figure": {
       "src": "figures/ytf/plot_biomass_B.png",
-      "code": "plot_biomass(b, type = \"B\", se = TRUE, facet_ncol = 3, line_size = 0.6)",
+      "code": "plot_biomass(b, type = \"B\", se = TRUE, line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -495,7 +495,7 @@
   },
   "plot_SSB": {
     "description": {
-      "en": "Plot spawning biomass in total or by age/length.",
+      "en": "Plot spawning stock biomass in total or by age/length.",
       "zh": "绘制总产卵生物量及年龄别/体长别产卵生物量。"
     },
     "value": {
@@ -503,8 +503,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Choose `SSB`, `SBA` or `SBL`. Maturity and weight inputs determine the conversion from numbers to spawning biomass.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.\n\nThe models calculate SSB from the proportion mature at length. With `maturity_at_age`, the figure adds the SSB that `ssb_at_age()` calculates from maturity at age (the sum over age classes of biomass at age multiplied by the proportion mature at age), for a comparison with an age-based assessment that uses a maturity ogive by age. The interval of `se = TRUE` belongs to the SSB of the model; the added series has no standard error. Both series are in the unit of model biomass, whose level depends on the assumed survey catchability. Without `maturity_at_age` the figure is the same as before.",
-      "zh": "选择 `SSB`、`SBA` 或 `SBL`。成熟比例与个体重量共同决定尾数到产卵生物量的转换。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。\n\n模型按体长别成熟比例计算 SSB。给出 `maturity_at_age` 时，图中加画 `ssb_at_age()` 按年龄别成熟比例算出的 SSB（各年龄生物量乘以该年龄成熟比例后求和），用于和使用年龄别成熟曲线的年龄结构评估比较。`se = TRUE` 的区间属于模型的 SSB，加画的序列没有标准误。两条序列的单位都是模型生物量，其水平取决于假定的调查可捕性。不给 `maturity_at_age` 时图形与以前相同。"
+      "en": "Choose `SSB`, `SBA` or `SBL`. Maturity and weight inputs determine the conversion from numbers to spawning stock biomass.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.\n\nThe models calculate SSB from the proportion mature at length. With `maturity_at_age`, the figure adds the SSB that `ssb_at_age()` calculates from maturity at age (the sum over age classes of biomass at age multiplied by the proportion mature at age), for a comparison with an age-based assessment that uses a maturity ogive by age. The interval of `se = TRUE` belongs to the SSB of the model; the added series has no standard error. Both series are in the unit of model biomass, whose level depends on the assumed survey catchability. Without `maturity_at_age` the figure is the same as before.",
+      "zh": "选择 `SSB`、`SBA` 或 `SBL`。成熟比例与个体重量共同决定尾数到产卵生物量的转换。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。\n\n模型按体长别成熟比例计算 SSB。给出 `maturity_at_age` 时，图中加画 `ssb_at_age()` 按年龄别成熟比例算出的 SSB（各年龄生物量乘以该年龄成熟比例后求和），用于和使用年龄别成熟曲线的年龄结构评估比较。`se = TRUE` 的区间属于模型的 SSB，加画的序列没有标准误。两条序列的单位都是模型生物量，其水平取决于假定的调查可捕性。不给 `maturity_at_age` 时图形与以前相同。"
     },
     "articles": [
       "population-plots",
@@ -512,7 +512,7 @@
     ],
     "figure": {
       "src": "figures/ytf/plot_SSB_SSB.png",
-      "code": "plot_SSB(b, se = TRUE, facet_ncol = 3, line_size = 0.6)",
+      "code": "plot_SSB(b, se = TRUE, line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -529,8 +529,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Choose total catch in numbers (`CN`), catch at age (`CNA`) or catch at length (`CNL`). These estimates use the Baranov catch equation and depend on starting abundance, fishing mortality and natural mortality.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
-      "zh": "选择总渔获尾数（`CN`）、年龄别渔获尾数（`CNA`）或体长别渔获尾数（`CNL`）。模型根据期初尾数、捕捞死亡率和自然死亡率，用 Baranov 渔获方程计算预期渔获尾数。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
+      "en": "Choose total catch in numbers (`CN`), catch at age (`CNA`) or catch at length (`CNL`). Total catch is drawn as bars, with dark-grey error bars that have a light outline when `se = TRUE`, under the default style and as a line under `acl_theme_set(style = \"classic\")`; `geom` chooses for one call. Catch at age and at length are lines. These estimates use the Baranov catch equation and depend on starting abundance, fishing mortality and natural mortality.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.\n\nAge panels are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". Results saved without age metadata keep the position labels \"Age bin 1\", \"Age bin 2\" and so on.",
+      "zh": "选择总渔获尾数（`CN`）、年龄别渔获尾数（`CNA`）或体长别渔获尾数（`CNL`）。默认样式下总渔获量画成柱，`se = TRUE` 时带浅色描边的深灰色误差线；`acl_theme_set(style = \"classic\")` 下画成线；`geom` 只对本次调用起作用。按年龄和按体长的渔获量画成线。模型根据期初尾数、捕捞死亡率和自然死亡率，用 Baranov 渔获方程计算预期渔获尾数。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。\n\n年龄分面用 `model_result$age` 中的拟合年龄标注。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。保存时没有年龄元数据的结果沿用位置标签 \"Age bin 1\"、\"Age bin 2\" 等。"
     },
     "articles": [
       "population-plots",
@@ -538,7 +538,7 @@
     ],
     "figure": {
       "src": "figures/ytf/plot_catch_CN.png",
-      "code": "plot_catch(b, type = \"CN\", se = TRUE, facet_ncol = 3, line_size = 0.6)",
+      "code": "plot_catch(b, type = \"CN\", se = TRUE, line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -555,8 +555,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Recruitment enters the youngest modeled age group. Its scale is conditional on catchability assumptions.\n\nStandard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.",
-      "zh": "补充量进入模型的最小年龄组，尺度以可捕性等假设为条件。\n\n标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。"
+      "en": "Total recruitment is drawn as bars with dark-grey error bars that have a light outline under the default style and as a line with a ribbon under `acl_theme_set(style = \"classic\")`; `geom = \"bar\"` or `geom = \"line\"` chooses for one call, and `se_type` chooses error bars or a ribbon.\n\nRecruitment enters the youngest modeled age group. Its scale is conditional on catchability assumptions.\n\nStandard errors must be complete, finite and nonnegative; use `se = FALSE` for estimates only.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.",
+      "zh": "默认样式下总补充量画成带深灰色误差线（浅色描边）的柱，`acl_theme_set(style = \"classic\")` 下画成带区间带的线；`geom = \"bar\"` 或 `geom = \"line\"` 只对本次调用起作用，`se_type` 选择误差线或区间带。\n\n补充量进入模型的最小年龄组，尺度以可捕性等假设为条件。\n\n标准误必须完整、有限且非负；仅绘制估计值时使用 `se = FALSE`。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。"
     },
     "articles": [
       "population-plots",
@@ -603,8 +603,8 @@
       "zh": "绘制各年龄平均体长：ACL 拟合画 von Bertalanffy 曲线，ALSCL 拟合画由拟合尾数算出的各年龄平均体长，可加画年龄鉴定得到的观测均值。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "The figure shows mean length at age of a fitted model. What is drawn depends on the model, because the growth parameters have different meanings in ACL and ALSCL. For an ACL fit, `Linf`, `vbk` and `t0` are the parameters of a von Bertalanffy (VB) curve of mean length at age in the population; the figure shows this curve with an annotation of `Linf` and `k`, and `t0` is the theoretical age at zero length. For an ALSCL fit, `Linf` and `k` set the mean growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits; they are not the parameters of a curve of mean length at age. The figure then shows mean length at age calculated from the fitted numbers by length bin and age class (`length_at_age()`), averaged over the time steps, without an annotation of `Linf` and `k`.\n\n`basis = \"survey\"` uses the survey basis (numbers at length multiplied by the survey catchability at length used in the fit); use it to compare with age readings of fish caught in the survey. An ACL fit then also shows mean length at age from its age-length key. `years` selects the time steps of the mean. `observed` supplies mean length at age from age readings, drawn as points, with an optional standard deviation or interval. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line; the legend and the caption say what it is: with the original structure, the mean length at age in the first time step and the mean length of recruits in every time step. The interval of `se = TRUE` belongs to this curve. The model reports no standard error for mean length at age from the fitted numbers, so a request for an interval without the curve gives a warning and the estimate only. Scripts that used the interval of the figure of an ALSCL fit before version 2.4.4 must add `parameter_curve = TRUE`, which draws that curve with its interval.\n\nEach length bin is represented by its midpoint, including the two open-ended outer bins. Where a large share of an age class lies in the first or the last length bin, its mean length is drawn toward the midpoint of that bin. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model and average the bin midpoints, so that both means are calculated in the same way.\n\nFor the VB curve of an ACL fit, `age_range = NULL` uses the fitted age range; older results without age metadata fall back to 1-25 years, and the automatic lower endpoint is at least `t0`. An explicit range must be a finite increasing pair starting at or after `t0`. For mean length at age from the numbers, `age_range = NULL` draws all age classes and an explicit range selects the age classes within it; it may start before `t0`. The parameter annotation honors `text_size`, `text_color` and `font_family`. The y-axis label inherits `ylab$growth`; the package holds no unit for length, so give it in `ylab`, for example `ylab = \"Length (cm)\"`. An ALSCL result without ages, time steps, length-bin midpoints or numbers by length and age is an error.\n\n`ylab` is honored in every mode; unavailable covariance triggers a warning and an estimate-only curve that retains all custom styling.",
@@ -629,12 +629,12 @@
       "zh": "展示给定年龄的体长概率。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
-      "en": "Each column of `pla` gives the probabilities of the length bins at one age. The highest length bin includes the upper tail for that age. ACL uses this static matrix at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in NLA for the realized distribution at a given age and time in ALSCL.\n\nColumns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"15+\". A result saved without age metadata is labelled with the positions of the age classes, and the axis label reads \"Age group\". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.",
-      "zh": "`pla` 的每一列给出同龄个体落入各体长组的概率。最高体长组包含该年龄体长分布的右尾。ACL 在每个时间步使用此静态矩阵；ALSCL 用它初始化种群并分配补充个体体长。ALSCL 某年龄、某时期的实际分布应由 NLA 中对应的体长向量归一化得到。\n\n各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 \"15+\"。保存时没有年龄元数据的结果按年龄组的位置标注，横轴标签为 \"Age group\"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。"
+      "en": "Each column of `pla` gives the probabilities of the length bins at one age. The highest length bin includes the upper tail for that age. ACL uses this static matrix at every time step; ALSCL uses it for initialization and recruitment. Normalize the corresponding length vector in NLA for the realized distribution at a given age and time in ALSCL.\n\nColumns are labelled with the fitted ages in `model_result$age`. The oldest age class is a plus group and is marked with a plus sign, for example \"15+\". A result saved without age metadata is labelled with the positions of the age classes, and the axis label reads \"Age bin\". `plot_pla(x_breaks = c(1, 5, 10, 15))` selects the positions of the age classes to label without removing heatmap cells.",
+      "zh": "`pla` 的每一列给出同龄个体落入各体长组的概率。最高体长组包含该年龄体长分布的右尾。ACL 在每个时间步使用此静态矩阵；ALSCL 用它初始化种群并分配补充个体体长。ALSCL 某年龄、某时期的实际分布应由 NLA 中对应的体长向量归一化得到。\n\n各列用 `model_result$age` 中的拟合年龄标注，最大的年龄组是 plus group，用加号标出，例如 \"15+\"。保存时没有年龄元数据的结果按年龄组的位置标注，横轴标签为 \"Age bin\"。`plot_pla(x_breaks = c(1, 5, 10, 15))` 选择要标注的年龄组位置，不删除热图单元。"
     },
     "articles": [
       "growth-mortality",
@@ -659,8 +659,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL calculates F at age as the negative log of the proportion surviving the time step, minus natural mortality. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Age axes and age panels use the fitted ages in `model_result$age`, with the default label \"Age (years)\". Results saved without age metadata are plotted against group positions, and their uncustomized age axis is labeled Age group. `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; both preserve grid-free panels.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nF is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis, for example \"Fishing mortality rate (per year)\". With `se = TRUE` the default interval is lognormal; see the `interval` argument. An estimate that is not positive, which can occur for ALSCL F at age, keeps the Wald bounds, with the lower bound at zero when the estimate is exactly zero. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title \"Age 15+\" or the tick label \"15+\". For ALSCL, `type = \"age\"` without intervals shows F at age for every age, including the plus group, and for every time step. The fitted report (`report$FA`) holds the ages before the plus group and the time steps before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula, and they have no standard errors. With `se = TRUE` the plot therefore shows the ages before the plus group and the time steps before the last. A result without numbers at length and age, for example a hand-made list, is drawn with the reported cells only. F in the last time step is predicted by the F process and is not informed by observations. When F is shared across groups (`F_structure = \"year\"`), `type = \"year\"` draws one panel labelled \"Shared F\"; the returned data still hold every group.",
-      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 先计算同一年龄组在该期的存活比例，取负对数后减去自然死亡率，得到年龄别 F。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。年龄坐标轴和年龄分面使用 `model_result$age` 中的拟合年龄，默认标签为 \"Age (years)\"；保存时没有年龄元数据的结果按组序号绘制，未自定义的年龄轴标为 Age group。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式均保持无网格。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\nF 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准，例如 \"Fishing mortality rate (per year)\"。`se = TRUE` 时默认绘制对数正态区间，见 `interval` 参数；估计值不为正时保留 Wald 区间（估计值恰为零时下限取零），ALSCL 的年龄别 F 可能出现这种情况。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 \"Age 15+\" 或刻度标签 \"15+\"。ALSCL 的 `type = \"age\"` 不带区间时，绘制每个年龄（包括 plus group）和每个时间步的年龄别 F。拟合报告（`report$FA`）包含 plus group 之前的年龄和最后一个时间步之前的各时间步，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出，没有标准误。因此 `se = TRUE` 时只绘制 plus group 之前的年龄和最后一个时间步之前的各时间步。不含体长—年龄别尾数的结果（例如手工构造的列表）只绘制报告中的单元格。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。各组共享 F（`F_structure = \"year\"`）时，`type = \"year\"` 只画一个标为 \"Shared F\" 的分面，返回的数据仍包含每一组。"
+      "en": "ALSCL type=\"length\" plots F against numeric `len_mid`, faceted by period; intervals use the same length-by-time cell order. type=\"year\" plots time series by length group. ACL estimates F by age and has no length-specific F; its legacy type=\"length\" alias still returns age curves but warns. Prefer type=\"age\" for ACL. ALSCL calculates F at age as the negative log of the proportion surviving the time step, minus natural mortality. F remains per model time step.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\nAll modes inherit global titles `F_year`, `F_age`, or `F_length` (append `_se` for intervals), matching x-axis labels, `ylab$F`, `x_breaks`, and `x_expand`. Explicit plot arguments take priority. Age axes and age panels use the fitted ages in `model_result$age`, with the default label \"Age (years)\". Results saved without age metadata are plotted against group positions, and their uncustomized age axis is labeled \"Age bin\". `base_theme` accepts a theme name such as `\"theme_bw\"` or a ggplot2 theme object such as `ggplot2::theme_bw()`; grid lines follow the `grid` setting in both cases.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nF is an instantaneous rate per model time step: per year for annual fits and per quarter for quarterly fits. The default y-axis label states this time basis, for example \"Fishing mortality rate (per year)\". With `se = TRUE` the default interval is lognormal; see the `interval` argument. An estimate that is not positive, which can occur for ALSCL F at age, keeps the Wald bounds, with the lower bound at zero when the estimate is exactly zero. The oldest age class of an ACL fit is a plus group and is marked with a plus sign, for example the panel title \"Age 15+\" or the tick label \"15+\". For ALSCL, `type = \"age\"` without intervals shows F at age for every age, including the plus group, and for every time step. The fitted report (`report$FA`) holds the ages before the plus group and the time steps before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula, and they have no standard errors. With `se = TRUE` the plot therefore shows the ages before the plus group and the time steps before the last. A result without numbers at length and age, for example a hand-made list, is drawn with the reported cells only. F in the last time step is predicted by the F process and is not informed by observations. When F is shared across groups (`F_structure = \"year\"`), `type = \"year\"` draws one panel, labelled \"All age classes\" for ACL and \"All length bins\" for ALSCL; the returned data still hold every group.",
+      "zh": "ALSCL 的 type=\"length\" 以数值 `len_mid` 为横轴、按时期分面，区间按同一体长—时间单元顺序对应；type=\"year\" 按体长组绘制时间序列。ACL 按年龄估计 F，没有体长别 F；旧 type=\"length\" 别名仍返回年龄曲线并警告，ACL 请优先用 type=\"age\"。ALSCL 先计算同一年龄组在该期的存活比例，取负对数后减去自然死亡率，得到年龄别 F。F 始终按每个模型时间步计。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n所有模式继承全局标题 `F_year`、`F_age` 或 `F_length`（区间加 `_se`）、对应的横轴标签、`ylab$F`、`x_breaks` 和 `x_expand`；显式绘图参数优先。年龄坐标轴和年龄分面使用 `model_result$age` 中的拟合年龄，默认标签为 \"Age (years)\"；保存时没有年龄元数据的结果按组序号绘制，未自定义的年龄轴标为 \"Age bin\"。`base_theme` 接受 `\"theme_bw\"` 等主题名称，也保留 `ggplot2::theme_bw()` 等主题对象，两种方式下网格线都由 `grid` 设置决定。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\nF 是每个模型时间步的瞬时率：年度拟合为每年，季度拟合为每季度，默认纵轴标签注明这一时间基准，例如 \"Fishing mortality rate (per year)\"。`se = TRUE` 时默认绘制对数正态区间，见 `interval` 参数；估计值不为正时保留 Wald 区间（估计值恰为零时下限取零），ALSCL 的年龄别 F 可能出现这种情况。ACL 拟合的最大年龄组是 plus group，用加号标出，例如分面标题 \"Age 15+\" 或刻度标签 \"15+\"。ALSCL 的 `type = \"age\"` 不带区间时，绘制每个年龄（包括 plus group）和每个时间步的年龄别 F。拟合报告（`report$FA`）包含 plus group 之前的年龄和最后一个时间步之前的各时间步，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出，没有标准误。因此 `se = TRUE` 时只绘制 plus group 之前的年龄和最后一个时间步之前的各时间步。不含体长—年龄别尾数的结果（例如手工构造的列表）只绘制报告中的单元格。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。各组共享 F（`F_structure = \"year\"`）时，`type = \"year\"` 只画一个分面，ACL 拟合标为 \"All age classes\"，ALSCL 拟合标为 \"All length bins\"，返回的数据仍包含每一组。"
     },
     "articles": [
       "growth-mortality",
@@ -668,7 +668,7 @@
     ],
     "figure": {
       "src": "figures/ytf/F_ALSCL_year.png",
-      "code": "plot_fishing_mortality(b, type = \"year\", se = TRUE, facet_ncol = 4, line_size = 0.6)",
+      "code": "plot_fishing_mortality(b, type = \"year\", se = TRUE, line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -685,8 +685,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Both ACL and ALSCL fits are supported. `facet_by = \"length\"` uses time on the x-axis and one facet per length bin; `facet_by = \"year\"` uses length on the x-axis and one facet per model period, including quarterly periods. Residuals are observed log index minus fitted `Elog_index`. Missing and excluded observations are not evidence of a perfect fit. Inspect time and length structure as well as overall error size.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nBoth residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. For example, `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` uses the supplied labels and a left-aligned title. Default plots remain free of major and minor gridlines.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nWithin each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.",
-      "zh": "支持 ACL 和 ALSCL 拟合。`facet_by = \"length\"` 横轴为时间、按体长组分面；`facet_by = \"year\"` 横轴为体长、按模型时期分面，也适用于季度时期。残差为观测对数指数减去拟合 `Elog_index`。缺失或排除的观测不意味着完美拟合；除误差大小外还应检查时间与体长结构。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n残差图的两种布局均遵守单次调用的 `title`、`xlab`、`ylab` 和 `title_hjust`。例如 `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` 使用指定标签并左对齐标题。所有默认图继续不显示主、次网格线。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。"
+      "en": "Both ACL and ALSCL fits are supported. `facet_by = \"length\"` uses time on the x-axis and one facet per length bin; `facet_by = \"year\"` uses length on the x-axis and one facet per model period, including quarterly periods. Residuals are observed log index minus fitted `Elog_index`. Missing and excluded observations are not evidence of a perfect fit. Inspect time and length structure as well as overall error size.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nBoth residual layouts honor per-call `title`, `xlab`, `ylab` and `title_hjust`. For example, `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` uses the supplied labels and a left-aligned title. Grid lines follow the `grid` setting of `acl_theme_set()`; minor grid lines are never drawn.\n\nSurvey fit plots align both observed and predicted matrices by their positions and fitted calendar/length metadata, even if dimnames are added or removed. Missing and zero observations stay excluded. Use `exp_transform = FALSE` if exponentiating predictions would overflow. In residual plots, `resid_cap` must be a finite positive scalar or `NULL` to disable capping; negative or zero caps cannot erase the diagnostic pattern.\n\nWithin each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.",
+      "zh": "支持 ACL 和 ALSCL 拟合。`facet_by = \"length\"` 横轴为时间、按体长组分面；`facet_by = \"year\"` 横轴为体长、按模型时期分面，也适用于季度时期。残差为观测对数指数减去拟合 `Elog_index`。缺失或排除的观测不意味着完美拟合；除误差大小外还应检查时间与体长结构。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n残差图的两种布局均遵守单次调用的 `title`、`xlab`、`ylab` 和 `title_hjust`。例如 `plot_residuals(b, facet_by = \"year\", title = \"Survey residuals\", xlab = \"Length (cm)\", ylab = \"Log residual\", title_hjust = 0)` 使用指定标签并左对齐标题。网格线由 `acl_theme_set()` 的 `grid` 设置决定，从不画次网格线。\n\n调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。\n\n每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2 至 5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。"
     },
     "articles": [
       "growth-mortality",
@@ -694,7 +694,7 @@
     ],
     "figure": {
       "src": "figures/ytf/residuals_year.png",
-      "code": "plot_residuals(b, facet_by = \"year\", facet_ncol = 4)",
+      "code": "plot_residuals(b, facet_by = \"year\", line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -707,8 +707,8 @@
       "zh": "绘制补充量或捕捞死亡率的过程偏差。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "Choose recruitment (`R`) or fishing mortality (`F`). The log deviation is zero at the process median. Exponentiating gives a ratio to that median, with a reference value of one.\n\n`se = FALSE` uses reported deviations without a standard-error table; intervals require complete, finite, nonnegative standard errors.\n\nA `title`, `xlab`, `ylab` or typography argument given in the call replaces the corresponding theme setting. ACL F-deviation age panels keep numeric order.\n\n`log = TRUE` labels log process deviations; `log = FALSE` labels multiplicative factors. Titles and y-axis labels use `dev_R`/`dev_F`, or `dev_R_multiplier`/`dev_F_multiplier` after exponentiation. These quantities are not likelihood deviances.",
@@ -720,7 +720,7 @@
     ],
     "figure": {
       "src": "figures/ytf/deviation_R_TRUE.png",
-      "code": "plot_deviance(b, type = \"R\", log = TRUE, se = TRUE, facet_ncol = 3)",
+      "code": "plot_deviance(b, type = \"R\", log = TRUE, se = TRUE, point_size = 1.2, line_size = 0.5)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -733,12 +733,12 @@
       "zh": "按时间顺序绘制体长组成山脊图。"
     },
     "value": {
-      "zh": "patchwork 对象，包含观测面板和拟合面板，可用 ggplot2::ggsave() 保存。用 `p[[1]]` 或 `p[[2]]` 取出单个面板。",
-      "en": "A patchwork object holding the observed panel and the fitted panel, compatible with ggplot2::ggsave(). Extract a panel with `p[[1]]` or `p[[2]]`."
+      "zh": "patchwork 对象，包含观测面板和拟合面板，可用 `acl_save_plot()` 保存。用 `p[[1]]` 或 `p[[2]]` 取出单个面板。",
+      "en": "A patchwork object holding the observed panel and the fitted panel, which can be saved with `acl_save_plot()`. Extract a panel with `p[[1]]` or `p[[2]]`."
     },
     "details": {
-      "en": "The default viridis progression encodes time.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nSaved fits containing observations and fitted reports support `plot_ridges()` without a live TMB object. Older fits without saved observations still require their original live object or refitting. Record version, commit, seed, provenance, units, maps, bounds, time step and diagnostics. An RDS file does not preserve a portable compiled model. The default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.\n\nPanel titles identify observed and fitted survey length compositions, normalized separately within each period; they do not describe total catch.\n\nBoth ridge panels retain the full model length range, even when the shortest or longest bins are unobserved or all observations are missing. Custom `x_breaks` and global `x_expand` apply to both panels. `ridges_scale` must be `NULL` (automatic height) or one finite positive number; zero, negative values, missing values, infinity and vectors are rejected.\n\nThe figure has one title (the `title` argument or the global `ridges` title), and the two panels keep their own titles. The time axis shows whole years for annual fits (\"2000\") and quarters for quarterly fits (\"2000 Q2\"); other time steps keep their decimal labels.",
-      "zh": "默认 viridis 渐变表示时间顺序。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n保存了观测与拟合报告的结果可直接使用 `plot_ridges()`，不需要活跃 TMB 对象。未保存观测的旧结果仍需原会话对象或重新拟合。记录包版本、提交号、随机种子、数据来源、三表单位、固定参数、边界、时间步和诊断；RDS 不保存可跨会话执行的编译模型。 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。\n\n分面标题明确标为观测与拟合的调查体长组成，每个时段分别归一化；不表示总捕获量。\n\n山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。\n\n整张图只有一个总标题（`title` 参数或全局 `ridges` 标题），两个面板保留各自的标题。时间轴在年度拟合中显示整年（\"2000\"），在季度拟合中显示季度（\"2000 Q2\"），其他时间步保留小数标签。"
+      "en": "The default gradient encodes time: under the standard palette of the default style it runs from light to dark blue, and under any other palette, including the \"classic\" style, it is viridis.\n\n`plot_ridges()` and `plot_residuals()` use saved `observations` to preserve the same positive-observation mask as fitting; legacy fits can use their TMB data. NA and excluded zero cells are never converted to artificial observations or zero residuals. A wholly unobserved period has no observed ridge. With partial coverage, the observed ridge is normalized over observed positive cells, whereas predictions cover all bins: do not interpret this as agreement over unobserved bins. These plots work after removing `obj` from a fit that retains `observations`.\n\nSaved fits containing observations and fitted reports support `plot_ridges()` without a live TMB object. Older fits without saved observations still require their original live object or refitting. Record version, commit, seed, provenance, units, maps, bounds, time step and diagnostics. An RDS file does not preserve a portable compiled model. The default `plot_CatL(exp_transform = FALSE)` displays natural-log survey indices and labels that scale explicitly. `exp_transform = TRUE` displays original-scale survey indices; curves are fitted medians. An explicit `ylab` overrides the automatic label. Ridge compositions are normalized stably on the log scale, including very large or small finite log predictions; nonfinite predictions are rejected.\n\nPanel titles identify observed and fitted survey length compositions, normalized separately within each period; they do not describe total catch.\n\nBoth ridge panels retain the full model length range, even when the shortest or longest bins are unobserved or all observations are missing. Custom `x_breaks` and global `x_expand` apply to both panels. `ridges_scale` must be `NULL` (automatic height) or one finite positive number; zero, negative values, missing values, infinity and vectors are rejected.\n\nThe figure has one title (the `title` argument or the global `ridges` title), and the two panels keep their own titles. The time axis shows whole years for annual fits (\"2000\") and quarters for quarterly fits (\"2000 Q2\"); other time steps keep their decimal labels.",
+      "zh": "默认渐变表示时间顺序：默认样式的 standard 调色板下由浅蓝到深蓝，其他调色板下（包括 \"classic\" 样式）为 viridis。\n\n`plot_ridges()` 和 `plot_residuals()` 使用保存的 `observations`，保留与拟合一致的正观测掩码；旧结果可读取 TMB 数据。NA 和拟合时排除的零值不会变成人造观测或零残差。整期缺测不绘制观测山脊；部分缺测时，观测比例只在有效正观测中归一化，预测比例则覆盖全部体长组，不能把它解释为未观测组也拟合良好。保留 `observations` 的拟合结果移除 `obj` 后仍可使用这两个绘图函数。\n\n保存了观测与拟合报告的结果可直接使用 `plot_ridges()`，不需要活跃 TMB 对象。未保存观测的旧结果仍需原会话对象或重新拟合。记录包版本、提交号、随机种子、数据来源、三表单位、固定参数、边界、时间步和诊断；RDS 不保存可跨会话执行的编译模型。 默认 `plot_CatL(exp_transform = FALSE)` 绘制自然对数调查指数，并在纵轴标明尺度；`exp_transform = TRUE` 绘制原尺度调查指数，预测曲线为中位数。显式 `ylab` 覆盖自动标签。山脊图在对数尺度稳定归一化，极大或极小的有限对数预测仍可绘制；非有限预测会报错。\n\n分面标题明确标为观测与拟合的调查体长组成，每个时段分别归一化；不表示总捕获量。\n\n山脊图两栏均保留模型的完整体长范围，包括最小或最大体长组缺测以及全部观测缺失的情况。自定义 `x_breaks` 和全局 `x_expand` 同时作用于两栏。`ridges_scale` 必须为 `NULL`（自动高度）或一个有限正数；零、负数、缺失值、无穷大和向量均会报错。\n\n整张图只有一个总标题（`title` 参数或全局 `ridges` 标题），两个面板保留各自的标题。时间轴在年度拟合中显示整年（\"2000\"），在季度拟合中显示季度（\"2000 Q2\"），其他时间步保留小数标签。"
     },
     "articles": [
       "growth-mortality",
@@ -759,12 +759,12 @@
       "zh": "绘制回溯轨迹与 Mohn rho。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
-      "en": "Use the output of `retro_model()`, `retro_acl()` or `retro_alscl()`. Compare each terminal point with the full fit at that same time; inspect trajectories, not only the average rho.\n\nRetrospective rho labels and comparison metric labels inherit `font_family`, including explicit per-call fonts where supported.\n\nEach line is one fit and is identified by the terminal period of its data. The legend is titled \"Terminal year\" for annual steps and \"Terminal period\" for shorter steps, where quarterly periods are labelled as in \"2019 Q4\", also when `peel_step` is above 1 (for example \"2004 Q4\" for annual peels of a quarterly model). Default colors follow the retrospective peel. A fit that failed the numerical screen is drawn with a dashed line and a \"Numerical screen\" legend is added. A requested fit without estimates stays in the legend and is marked \"(no estimates)\".",
-      "zh": "输入 `retro_model()`、`retro_acl()` 或 `retro_alscl()` 的结果。将每个终点与全长拟合同期比较；除了平均 rho，还应检查各条轨迹。\n\n回溯图 rho 和比较图数值标注继承 `font_family`；支持单次调用字体参数的函数也遵守该设置。\n\n每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 \"Terminal year\"，更短的时间步为 \"Terminal period\"，季度时期标为 \"2019 Q4\" 这样的形式，`peel_step` 大于 1 时也是如此（例如按年回溯的季度模型标为 \"2004 Q4\"）。默认颜色随回溯轮次固定。未通过数值检查的拟合用虚线绘制，并增加 \"Numerical screen\" 图例；没有估计值的拟合仍留在图例中，标为 \"(no estimates)\"。"
+      "en": "Use the output of `retro_model()`, `retro_acl()` or `retro_alscl()`. Compare each terminal point with the full fit at that same time; inspect trajectories, not only the average rho.\n\nRetrospective rho labels and comparison metric labels inherit `font_family`, including explicit per-call fonts where supported.\n\nEach line is one fit and is identified by the terminal period of its data. The legend is titled \"Terminal year\" for annual steps and \"Terminal period\" for shorter steps, where quarterly periods are labelled as in \"2019 Q4\", also when `peel_step` is above 1 (for example \"2004 Q4\" for annual peels of a quarterly model). Default colors follow the retrospective peel: under the default style the full fit is orange and drawn on top and the peels are greys, darkest for the first peel; under another palette its colors are used in order. A fit that failed the numerical checks is drawn with a dashed line and a \"Numerical checks\" legend is added. A requested fit without estimates stays in the legend and is marked \"(no estimates)\".",
+      "zh": "输入 `retro_model()`、`retro_acl()` 或 `retro_alscl()` 的结果。将每个终点与全长拟合同期比较；除了平均 rho，还应检查各条轨迹。\n\n回溯图 rho 和比较图数值标注继承 `font_family`；支持单次调用字体参数的函数也遵守该设置。\n\n每条线是一次拟合，用其数据的末期标识。年度时间步的图例标题为 \"Terminal year\"，更短的时间步为 \"Terminal period\"，季度时期标为 \"2019 Q4\" 这样的形式，`peel_step` 大于 1 时也是如此（例如按年回溯的季度模型标为 \"2004 Q4\"）。默认颜色随回溯轮次固定：默认样式下完整拟合为橙色并画在最上层，各轮为灰色，第一轮最深；其他调色板下按顺序使用该调色板的颜色。未通过数值检查的拟合用虚线绘制，并增加 \"Numerical checks\" 图例；没有估计值的拟合仍留在图例中，标为 \"(no estimates)\"。"
     },
     "articles": [
       "retrospectives",
@@ -772,7 +772,7 @@
     ],
     "figure": {
       "src": "figures/ytf/retro_ALSCL.png",
-      "code": "plot_retro(rb, facet_ncol = 2, rho_digits = 3)",
+      "code": "plot_retro(rb, rho_digits = 3)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -789,8 +789,8 @@
       "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
     },
     "details": {
-      "en": "Use compatible observations, units and time steps. Optional intervals are conditional on each model’s fixed assumptions.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\n`plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_F_ts(a, b, method = \"apical\")` or `method = \"mean\"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.",
-      "zh": "应使用相容的观测、单位和时间步长。可选区间以各模型的固定假设为条件。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n`plot_compare_ts()` 默认比较两模型共有的 SSB、补充量、B、N、CN。显式请求 CB 时，两模型都必须包含它（ACL 不报告 CB）；当前两模型均不报告 CB 标准误。请求的每种输出都必须存在；未知或不可用的输出会明确报错。捕捞死亡率请使用 `plot_compare_F_ts(a, b, method = \"apical\")` 或 `method = \"mean\"`。这两个选项分别取每个模型时期的组间最大值或非加权均值，不合并多个时期；该函数不提供汇总 F 的不确定性区间。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。"
+      "en": "Use compatible observations, units and time steps. Optional intervals are conditional on each model’s fixed assumptions.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nFishing-mortality plots use matrix positions and fitted time/group metadata, so matrix dimnames cannot alter the coordinates. Age panels in biomass, SSB, catch and F plots retain numeric group order with or without intervals. F plots and time-series comparisons require complete finite estimates and nonnegative finite standard errors when `se = TRUE`; missing summaries are errors rather than recycled values or silently removed intervals. Use `se = FALSE` explicitly for estimates only.\n\n`plot_compare_ts()` defaults to the common SSB, recruitment, B, N and CN series. Explicit CB comparisons require CB in both models (ACL does not report it); CB uncertainty is not reported by either current model. Every requested quantity must be available; unknown or unavailable quantities produce an error. For fishing mortality use `plot_compare_F_ts(a, b, method = \"apical\")` or `method = \"mean\"`. These summarize F across groups per model period, not across periods; the mean is unweighted. This helper does not provide an uncertainty interval for the aggregate.\n\nA panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.\n\nWith `se = TRUE` the default interval is lognormal, `exp(log(estimate) +/- 1.96 * SE / estimate)`, and cannot fall below zero; the estimate and its standard error (SE) are those stored in `model_result$est_std`. `interval = \"wald\"`, or `acl_theme_set(interval = \"wald\")`, restores the symmetric interval `estimate +/- 1.96 * SE` used by earlier versions. An estimate that is exactly zero keeps the Wald bounds, with the lower bound at zero. Neither interval corrects for a poorly determined fit; inspect fit diagnostics before using uncertainty intervals.",
+      "zh": "应使用相容的观测、单位和时间步长。可选区间以各模型的固定假设为条件。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n捕捞死亡率图按矩阵位置和拟合年份、组别元数据构造坐标，矩阵行列名不会改变坐标。生物量、SSB、捕获量和 F 的年龄分面在有无区间时都按数值组序排列。F 图和时间序列比较在 `se = TRUE` 时要求完整、有限的估计与有限非负标准误；缺失摘要会报错，不再重复填充或静默取消区间。只画估计时请明确使用 `se = FALSE`。\n\n`plot_compare_ts()` 默认比较两模型共有的 SSB、补充量、B、N、CN。显式请求 CB 时，两模型都必须包含它（ACL 不报告 CB）；当前两模型均不报告 CB 标准误。请求的每种输出都必须存在；未知或不可用的输出会明确报错。捕捞死亡率请使用 `plot_compare_F_ts(a, b, method = \"apical\")` 或 `method = \"mean\"`。这两个选项分别取每个模型时期的组间最大值或非加权均值，不合并多个时期；该函数不提供汇总 F 的不确定性区间。\n\n面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。\n\n`se = TRUE` 时默认绘制对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，不会低于零；估计值及其标准误（SE）取自 `model_result$est_std`。`interval = \"wald\"` 或 `acl_theme_set(interval = \"wald\")` 恢复早期版本使用的对称区间 `estimate +/- 1.96 * SE`。估计值恰为零时保留 Wald 区间，下限取零。两种区间都不能弥补数值状态不好的拟合；使用区间前先检查拟合诊断。"
     },
     "articles": [
       "model-comparison",
@@ -798,7 +798,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_ts.png",
-      "code": "plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)",
+      "code": "plot_compare_ts(a, b, se = TRUE)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -811,8 +811,8 @@
       "zh": "比较两个模型对调查指数的拟合。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "Compares the same survey observations with exp(Elog_index) from both models, on the original scale. These predictions are medians, without lognormal mean correction.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.",
@@ -824,7 +824,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_CatL.png",
-      "code": "plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)",
+      "code": "plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015))",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -837,12 +837,12 @@
       "zh": "比较年龄或体长结构的捕捞死亡率矩阵。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
-      "en": "ACL and ALSCL estimate F on different structural axes. A visual comparison should state the axis and time-step units.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nThe ACL rows show fitted ages, including fractional ages for seasonal data. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". For an older fit without age coordinates, the rows are labelled as numbered age groups. An ACL fit and an ALSCL fit have different rows, so their heatmaps cannot be compared row by row. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = \"age\")`.",
-      "zh": "ACL 和 ALSCL 在不同结构维度估计 F，比较时应说明年龄/体长维度及时间步单位。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\nACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。ACL 拟合与 ALSCL 拟合的行不同，两张热图不能逐行比较；要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = \"age\")`。"
+      "en": "ACL and ALSCL estimate F on different structural axes. A visual comparison should state the axis and time-step units.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nThe ACL rows show fitted ages, including fractional ages for seasonal data. The oldest age class is a plus group and is marked with a plus sign, for example \"Age 15+\". For an older fit without age coordinates, the rows are labelled with numbered age bins, such as \"Age bin 1\". An ACL fit and an ALSCL fit have different rows, so their heatmaps cannot be compared row by row. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = \"age\")`.",
+      "zh": "ACL 和 ALSCL 在不同结构维度估计 F，比较时应说明年龄/体长维度及时间步单位。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\nACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄。最大的年龄组是 plus group，用加号标出，例如 \"Age 15+\"。旧拟合缺少年龄坐标时，行标签为 \"Age bin 1\" 这样的年龄组序号。ACL 拟合与 ALSCL 拟合的行不同，两张热图不能逐行比较；要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = \"age\")`。"
     },
     "articles": [
       "model-comparison",
@@ -863,8 +863,8 @@
       "zh": "比较汇总捕捞死亡率时间序列。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "`apical` is the maximum and `mean` the unweighted arithmetic mean across groups in each model time step. By default (`basis = \"native\"`) ACL uses age groups and ALSCL length bins, so both summaries depend on the grouping; read the time pattern of such a pair, not the difference in level. `basis = \"age\"` uses F at age for both fits and summarizes only the fitted ages and time steps present in both. ALSCL F at age covers every age, including the plus group, and every time step. The values for the plus group and the last time step are not in the fitted report; the function computes them from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula. A result without numbers at length and age, for example a hand-made list, has no plus-group row and no value for the last time step, and the comparison then leaves out the ACL plus group and the last time step. The two fits must have the same time step, because F is a rate per time step, and the function stops when the steps differ. An age-group maximum need not equal a length-bin maximum, because age-specific F combines survival across lengths. Quarterly rates are not annualized. The y-axis label gives the time basis of the rate and the caption states the groups that each summary covers.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nThe default method is apical (maximum across groups); method = \"mean\" is the arithmetic mean across groups. Before 2.4.0 the function was called `plot_compare_annual_F()`; that name still works and warns once per session.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.",
@@ -876,7 +876,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_F_apical.png",
-      "code": "plot_compare_F_ts(a, b, method = \"apical\")",
+      "code": "plot_compare_F_ts(a, b, method = \"apical\", title = \"Apical fishing mortality rate by time step\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -889,8 +889,8 @@
       "zh": "plot_compare_F_ts() 的旧名。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "Deprecated. The function summarizes F per model time step and never annualized quarterly values, so it is now called `plot_compare_F_ts()`. Calling the former name warns once per session; a later release removes it.",
@@ -907,8 +907,8 @@
       "zh": "按同一口径比较两次拟合的各年龄平均体长和给定年龄的体长分布，可加画年龄鉴定得到的观测均值。"
     },
     "value": {
-      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
-      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+      "en": "A plot composition that can be displayed or saved with `acl_save_plot()`.",
+      "zh": "可直接显示或用 `acl_save_plot()` 保存的组合图对象。"
     },
     "details": {
       "en": "The left panel compares mean length at age of the two fits, calculated on the same basis for both (`length_at_age()`) and averaged over the time steps: for ACL from the age-length key, for ALSCL from the fitted numbers by length bin and age class. The right panel shows heatmaps of the probability of length given age on the same basis and for the same time steps, with cells at the ages in `model$age` and at the length-bin midpoints in `model$len_mid`. For an ACL fit on the population basis the heatmap is `report$pla`. For an ALSCL fit it is the proportion of each age class in each length bin from the fitted numbers; `report$pla` of an ALSCL fit is the length distribution of recruits (and, with the original structure, of every age class in the first time step) and is shown by `plot_pla()`.\n\nThe left panel no longer draws curves computed from the growth parameters, and the subtitle no longer lists `Linf` and `k` of the two models. In ACL these are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits. They have different meanings and are not compared. The subtitle states the basis and the time steps of the mean. Both panels need the ages, the length-bin midpoints and the time steps of each fit, and an ALSCL fit needs its numbers by length and age; a result without them is an error.\n\n`observed` supplies mean length at age from age readings, drawn as points with an optional standard deviation or interval; use `basis = \"survey\"` for readings of fish caught in the survey. `ref_data` still takes individual ages and lengths, to which `nls()` fits a VB reference curve; the subtitle gives `Linf` and `k` of that curve.\n\nThe optional reference curve is drawn only at ages at or above its own fitted `t0`. If its fitted growth parameters are invalid or no positive age span remains, a warning explains why the reference curve is omitted; the lines of the two models and the observed points remain.\n\nOmit `age_range` to draw all age classes of both fits. An explicit range must contain two finite increasing ages and selects the age classes within it; each fit needs at least one age class in the range.\n\nWhen supplying `ref_data`, use a nonempty `ref_name` distinct from both model labels; duplicate names are rejected before fitting the reference curve.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\nExternal data must use the age and length units of the fits. Simulated truth is an illustration, not independent validation.",
@@ -920,7 +920,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_growth.png",
-      "code": "plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref)",
+      "code": "plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = \"Simulated age readings\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -933,8 +933,8 @@
       "zh": "比较固定的调查可捕性曲线。"
     },
     "value": {
-      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
-      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+      "en": "A ggplot object, which can be styled further or saved with `acl_save_plot()`.",
+      "zh": "ggplot 对象，可继续调整样式，或用 `acl_save_plot()` 保存。"
     },
     "details": {
       "en": "The historical function name says selectivity, but the plotted q curves come from supplied survey catchability settings. They are not estimated fishery selectivity.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\nSaved assessments from `read_assessment()` can be plotted directly: fixed survey catchability is recovered from the retained input recipe, or taken from its survey_q when the fit used survey catchability at length supplied directly. When survey_q was supplied by length and time step, one line is drawn for each distinct curve and a caption says so. A survey catchability multiplier by age (survey_q_age) is not shown. A legacy live fit can use its TMB data; an older saved fit without the required inputs must first be saved again with its original input bundle `x`.\n\n`plot_survey_catchability()` draws the catchability of one fit, names the time steps of each curve when catchability changes over time, and shows the catchability multiplier by age.",
@@ -959,12 +959,12 @@
       "zh": "比较模型间的残差分布与结构。"
     },
     "value": {
-      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
-      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+      "en": "A plot composition that can be displayed or saved with `acl_save_plot()`.",
+      "zh": "可直接显示或用 `acl_save_plot()` 保存的组合图对象。"
     },
     "details": {
       "en": "Use the same observation cells and inspect both distributions and systematic patterns. Residual similarity does not establish identical population estimates.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\nThe mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.",
-      "zh": "应使用相同观测单元，并同时检查分布和系统性模式。残差相近不代表种群估计相同。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。"
+      "zh": "应使用相同观测单元，并同时检查分布和系统性模式。残差相近不代表种群估计相同。\n\n同一模型的两份结果会自动使用不同图例，例如 `ACL (group_year)` 和 `ACL (year)`，仍支持显式指定不同的 `model1_name`、`model2_name`。时间序列与 F 图保留每份结果自己的真实年份，可以显示不同时间范围。与 `data.CatL` 配对的图会核对已知时间和体长元数据，再匹配观测与预测；网格不一致时明确报错。图形比较不代表似然或生物假设具有可比性。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差线。"
     },
     "articles": [
       "model-comparison",
@@ -985,8 +985,8 @@
       "zh": "展示所选拟合指标与信息准则的比较。"
     },
     "value": {
-      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
-      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+      "en": "A plot composition that can be displayed or saved with `acl_save_plot()`.",
+      "zh": "可直接显示或用 `acl_save_plot()` 保存的组合图对象。"
     },
     "details": {
       "en": "Different panels use different units and optimization directions. Numerical convergence and likelihood comparability must be checked before interpreting ranks.\n\nThe metric bars now use the same calculation as `diagnostic_metrics()`: only finite positive observations contribute, so missing and zero observations do not turn every error metric into `NA`. Nonfinite predictions at observed cells and mismatched dimensions are errors. Undefined measures, such as R-squared for constant observations, remain `NA`. The figure is descriptive; use `compare_models()` to check comparability and numerical eligibility before interpreting differences.\n\nComparison plots give distinct default labels to two fits of the same model: for example, `ACL (group_year)` and `ACL (year)`. Explicit distinct `model1_name` and `model2_name` remain supported. Time-series and F plots retain each fit's own calendar, including different time spans. Plots paired with `data.CatL` check known time and length metadata before matching observations to predictions; inconsistent grids are errors. A visual comparison does not establish that likelihoods or biological assumptions are comparable.\n\nRetrospective rho labels and comparison metric labels inherit `font_family`, including explicit per-call fonts where supported.",
@@ -998,7 +998,7 @@
     ],
     "figure": {
       "src": "figures/ytf/compare_metrics.png",
-      "code": "plot_compare_metrics(a, b, dat, facet_ncol = 2)",
+      "code": "plot_compare_metrics(a, b, dat)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -1015,8 +1015,8 @@
       "zh": "`what=NULL` 时返回完整设置列表，否则返回指定设置项。"
     },
     "details": {
-      "en": "Function-level arguments override inherited settings where supported. Use `acl_theme_set()` to change defaults and `acl_theme_reset()` to restore package defaults.",
-      "zh": "支持的函数级参数可覆盖继承的全局设置。使用 `acl_theme_set()` 修改默认值，使用 `acl_theme_reset()` 恢复包默认值。"
+      "en": "Function-level arguments override inherited settings where supported. Use `acl_theme_set()` to change defaults and `acl_theme_reset()` to restore package defaults. `acl_theme(\"style\")` gives the active style; `theme_acl()` and `acl_palette()` give your own ggplots the look and colors of the package plots.",
+      "zh": "支持的函数级参数可覆盖继承的全局设置。使用 `acl_theme_set()` 修改默认值，使用 `acl_theme_reset()` 恢复包默认值。`acl_theme(\"style\")` 返回当前样式；`theme_acl()` 和 `acl_palette()` 让你自己的 ggplot 具有包内绘图的外观和颜色。"
     },
     "articles": [
       "plot-customization"
@@ -1032,23 +1032,23 @@
   },
   "acl_theme_set": {
     "description": {
-      "en": "Set global plot colors, typography, labels and layout defaults.",
-      "zh": "设置全局绘图颜色、字体、标签和布局默认值。"
+      "en": "Set the style, colors, typography, labels and layout defaults of all plots.",
+      "zh": "设置所有图的样式、颜色、字体、标签和布局默认值。"
     },
     "value": {
       "en": "The previous `acl.theme` option, returned invisibly. The active global option is updated.",
       "zh": "不可见地返回原 `acl.theme` 选项，并更新当前全局选项。"
     },
     "details": {
-      "en": "Choose supported ggsci palettes or explicit role colors. Omitted arguments leave existing settings unchanged. Explicit `x_breaks = NULL` restores automatic breaks and `ylab = list(survey = NULL)` clears a survey-label override. Snapshots from `acl_theme()` preserve these nullable settings for `do.call(acl_theme_set, old)`. Changes apply to subsequently constructed plots, not already-created plot objects.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\n`interval` sets the default 95% interval for positive quantities (abundance, biomass, spawning stock biomass, recruitment, catch and fishing mortality): \"lognormal\" (default) or \"wald\". A global `x_breaks` is used by a plot only when at least one break lies within the range of its x axis, so calendar-year breaks do not blank age or length axes. Error bars are drawn opaque unless a plot call supplies `se_alpha`. An unsupported setting, such as an unknown base theme, is an error.",
-      "zh": "可选择支持的 ggsci 色板或直接指定各角色颜色。省略参数保留现有设置。显式 `x_breaks = NULL` 恢复自动刻度，`ylab = list(survey = NULL)` 清除调查标签覆盖值。`acl_theme()` 保存这些可为空的设置，供 `do.call(acl_theme_set, old)` 恢复。修改对之后构造的图生效，不会改动已经生成的图对象。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n`interval` 设定正值量（丰度、生物量、产卵生物量、补充量、渔获量和捕捞死亡率）默认的 95% 区间：\"lognormal\"（默认）或 \"wald\"。全局 `x_breaks` 只在至少一个刻度落在某张图的横轴范围内时用于该图，因此按年份设置的刻度不会清空年龄轴或体长轴。误差棒默认不透明，除非绘图调用给出 `se_alpha`。不支持的设置（例如未知的基础主题）会报错。"
+      "en": "`style = \"standard\"` is the default, and `style = \"classic\"` restores the look of ALSCL 2.4.5 in one call: the npg palette, lines for every series, centered plain titles, boxed facet labels and y axes that follow the data. The default texts in the figures, the number of facet columns and the rules for tick labels are the same under both styles. A style sets `palette`, `grid`, `title_face`, `title_hjust`, `title_color`, the four quantity colors, `bars`, `y_zero`, `line_size` and `compare_line_size` (1 and 0.9 under the standard style, 1.5 and 1.2 under the classic style), `se_alpha`, `compare_se_alpha`, `strip`, `legend_position` and `axis_color`; each of them can also be set alone, for example `acl_theme_set(grid = \"y\")` for horizontal grid lines, which neither style draws. Choose the standard palette, a ggsci palette or explicit role colors. Omitted arguments leave existing settings unchanged. Explicit `x_breaks = NULL` restores automatic breaks and `ylab = list(survey = NULL)` clears a survey-label override. Snapshots from `acl_theme()` preserve these nullable settings for `do.call(acl_theme_set, old)`. Changes apply to subsequently constructed plots, not already-created plot objects.\n\nTitles are black, bold and left aligned under the default style; `title_color = \"quantity\"` gives the stock size, fishing mortality, recruitment and catch plots a title in the color of their quantity. `show_title = FALSE` removes the default titles of all plots and keeps titles given in a plot call; a key of `titles` set to `\"\"` or `NA` removes one title. `x_angle` sets the angle of the year labels of multi-panel figures: NULL slants them by 45 degrees only when they would touch, 0 keeps them horizontal and thins them. `compare_facet_ncol = NULL`, the default, chooses the columns of comparison plots from the number of panels.\n\nPoint sizes inherit global `point_size` (default 2.5) unless `compare_point_size` explicitly overrides comparison plots. A per-call `point_size` takes priority; in `plot_compare_CatL()`, a legacy `obs_size` takes priority over the theme. Use `acl_theme_set(compare_point_size = NULL)` to restore global inheritance.\n\n`interval` sets the default 95% interval for positive quantities (abundance, biomass, spawning stock biomass, recruitment, catch and fishing mortality): \"lognormal\" (default) or \"wald\". A global `x_breaks` is used by a plot only when at least one break lies within the range of its x axis, so calendar-year breaks do not blank age or length axes. Error bars are drawn opaque unless a plot call supplies `se_alpha`. An unsupported setting, such as an unknown base theme, is an error.",
+      "zh": "`style = \"standard\"` 为默认样式，`style = \"classic\"` 一次调用即恢复 ALSCL 2.4.5 的外观：npg 调色板、所有序列画成线、居中的普通标题、带框的分面标签和随数据变化的纵轴。图中的默认文字、分面列数和刻度标签的规则在两种样式下相同。样式设定 `palette`、`grid`、`title_face`、`title_hjust`、`title_color`、四个数量颜色、`bars`、`y_zero`、`line_size` 和 `compare_line_size`（standard 样式下为 1 和 0.9，classic 样式下为 1.5 和 1.2）、`se_alpha`、`compare_se_alpha`、`strip`、`legend_position` 和 `axis_color`；每一项也可单独设置，例如用 `acl_theme_set(grid = \"y\")` 加上两种样式都不画的水平网格线。可选择 standard 调色板、ggsci 调色板或直接指定各角色颜色。省略参数保留现有设置。显式 `x_breaks = NULL` 恢复自动刻度，`ylab = list(survey = NULL)` 清除调查标签覆盖值。`acl_theme()` 保存这些可为空的设置，供 `do.call(acl_theme_set, old)` 恢复。修改对之后构造的图生效，不会改动已经生成的图对象。\n\n默认样式下标题为黑色粗体、左对齐；`title_color = \"quantity\"` 让种群大小、捕捞死亡率、补充量和渔获量图的标题取其数量的颜色。`show_title = FALSE` 去掉所有图的默认标题，保留绘图调用中给出的标题；`titles` 的某个键设为 `\"\"` 或 `NA` 只去掉该图的标题。`x_angle` 设定多面板图年份标签的角度：NULL 只在标签会相互接触时倾斜 45 度，0 保持水平并减少标签。`compare_facet_ncol = NULL`（默认）按面板数选择比较图的列数。\n\n点大小继承全局 `point_size`（默认 2.5），除非显式设置 `compare_point_size` 覆盖比较图。调用中的 `point_size` 优先；`plot_compare_CatL()` 的旧参数 `obs_size` 优先于主题。用 `acl_theme_set(compare_point_size = NULL)` 恢复全局继承。\n\n`interval` 设定正值量（丰度、生物量、产卵生物量、补充量、渔获量和捕捞死亡率）默认的 95% 区间：\"lognormal\"（默认）或 \"wald\"。全局 `x_breaks` 只在至少一个刻度落在某张图的横轴范围内时用于该图，因此按年份设置的刻度不会清空年龄轴或体长轴。误差线默认不透明，除非绘图调用给出 `se_alpha`。不支持的设置（例如未知的基础主题）会报错。"
     },
     "articles": [
       "plot-customization"
     ],
     "figure": {
       "src": "figures/palettes/palettes.png",
-      "code": "acl_theme_set(palette = \"npg\")",
+      "code": "acl_theme_set(palette = p) for the six palettes",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -1065,8 +1065,8 @@
       "zh": "把每项主题设置恢复为包的默认值，并用 message 报告，然后不可见地返回 NULL。"
     },
     "details": {
-      "en": "This changes global plot settings for future plots in the current R session. It does not refit models or alter their estimates.",
-      "zh": "重置当前 R 会话中后续绘图使用的全局设置，不会重新拟合模型或更改估计值。"
+      "en": "Restores the default style, \"standard\"; use `acl_theme_set(style = \"classic\")` for the look of ALSCL 2.4.5. This changes global plot settings for future plots in the current R session. It does not refit models or alter their estimates.",
+      "zh": "恢复默认样式 \"standard\"；要得到 ALSCL 2.4.5 的外观，用 `acl_theme_set(style = \"classic\")`。重置当前 R 会话中后续绘图使用的全局设置，不会重新拟合模型或更改估计值。"
     },
     "articles": [
       "plot-customization"
@@ -1099,8 +1099,8 @@
       "zh": "列表包含残差表 residuals、滞后相关表 lag_correlations（体长、滞后、实际时间差、有效配对数、相关系数与状态）、汇总 QQ 数据、三张图 plots$heatmap/lag/qq、time_step 和解释说明。无法计算的相关系数保留为 NA，并给出原因。"
     },
     "details": {
-      "en": "residuals(fit, type = \"log\") returns a long table of observed minus fitted log index; type = \"standardized\" divides by the fitted observation SD. It retains original observations, model times and length coordinates, marks excluded cells, and assigns NA residuals to zero/missing observations. check_fit() uses standardized residuals. Gaps are never compressed; correlations require at least three finite paired values at the requested actual lag and nonconstant values on both sides. These residuals condition on fitted latent effects: standardization is not a guarantee of independence, calibrated tests or model adequacy. Plots follow the package's grid-free theme.\n\nThe QQ plot uses the line of equality as its reference, but this line is not the distribution of the residuals under a correct model: the fitted random effects absorb part of the observation error, so the points of a correctly specified model have a slope below one (the standardized conditional residuals had a standard deviation of 0.91 to 0.96 in simulation tests with the package examples) and lie inside the line at both tails. Read curvature and asymmetry of the points, not their distance from the line, as signs of skewness or heavy tails.",
-      "zh": "residuals(fit, type = \"log\") 返回观测对数值减去拟合对数值的长表；type = \"standardized\" 再除以拟合的观测标准差。表中保留原始观测、模型时间与体长坐标，标记被排除的单元，零值或缺失观测的残差为 NA。check_fit() 使用标准化残差。缺失时段不会压缩；相关系数要求在指定实际时间间隔上至少有三对有限观测，且两侧均非常数。这些残差以拟合的潜在效应为条件：标准化不代表残差独立、检验已校准或模型适合度已得到证明。绘图遵循包的无网格主题。\n\nQQ 图以等值线为参照，但这条线不是模型正确时残差的分布：拟合的随机效应吸收了一部分观测误差，所以正确设定的模型的点斜率小于 1（用包内示例做的模拟检验中，标准化条件残差的标准差为 0.91 到 0.96），并在两端落在参照线内侧。判断偏态或厚尾时看点的弯曲和不对称，不看点到参照线的距离。"
+      "en": "residuals(fit, type = \"log\") returns a long table of observed minus fitted log index; type = \"standardized\" divides by the fitted observation SD. It retains original observations, model times and length coordinates, marks excluded cells, and assigns NA residuals to zero/missing observations. check_fit() uses standardized residuals. Gaps are never compressed; correlations require at least three finite paired values at the requested actual lag and nonconstant values on both sides. These residuals condition on fitted latent effects: standardization is not a guarantee of independence, calibrated tests or model adequacy. The lag and QQ plots follow the `grid` setting of `acl_theme_set()`; the heat map has no grid lines.\n\nThe QQ plot uses the line of equality as its reference, but this line is not the distribution of the residuals under a correct model: the fitted random effects absorb part of the observation error, so the points of a correctly specified model have a slope below one (the standardized conditional residuals had a standard deviation of 0.91 to 0.96 in simulation tests with the package examples) and lie inside the line at both tails. Read curvature and asymmetry of the points, not their distance from the line, as signs of skewness or heavy tails.",
+      "zh": "residuals(fit, type = \"log\") 返回观测对数值减去拟合对数值的长表；type = \"standardized\" 再除以拟合的观测标准差。表中保留原始观测、模型时间与体长坐标，标记被排除的单元，零值或缺失观测的残差为 NA。check_fit() 使用标准化残差。缺失时段不会压缩；相关系数要求在指定实际时间间隔上至少有三对有限观测，且两侧均非常数。这些残差以拟合的潜在效应为条件：标准化不代表残差独立、检验已校准或模型适合度已得到证明。滞后相关图和 QQ 图的网格线由 `acl_theme_set()` 的 `grid` 设置决定，热图没有网格线。\n\nQQ 图以等值线为参照，但这条线不是模型正确时残差的分布：拟合的随机效应吸收了一部分观测误差，所以正确设定的模型的点斜率小于 1（用包内示例做的模拟检验中，标准化条件残差的标准差为 0.91 到 0.96），并在两端落在参照线内侧。判断偏态或厚尾时看点的弯曲和不对称，不看点到参照线的距离。"
     },
     "articles": [
       "assessment-workflows"
@@ -1124,8 +1124,8 @@
       "en": "A long table containing quantity, report name, time, age, length, estimate, SE, interval, numerical_ok and extrapolated. extrapolated is TRUE for rows that depend on the fishing mortality rate (F) of the terminal period."
     },
     "details": {
-      "zh": "估计来自 report，SE 只按完整、精确同名的 est_std 行提取。未报告 SE 时保留 NA，不造出区间。F 保留原分组和每模型步单位，不自动求平均或年化。FA 使用存活区间的起始年龄和时期；正态区间不截零。\n\n`conf_level` 指构造近似区间所用的名义置信水平。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。\n\n没有观测为末期的 F 提供信息：某一期的调查指数反映该期开始时的丰度，而期初丰度只取决于此前各期的 F。因此报告的末期 F（F 和 FL）是由上一期按一阶自回归（AR(1)）过程得到的预测，其标准误反映 F 过程而不是数据。末期的渔获尾数（CN、CNA、CNL、CNLA）和渔获重量（CB、CBA、CBL、CBLA）是有数据支持的丰度与这一预测 F 的乘积。这些行的 extrapolated 为 TRUE，ALSCL 年龄别 F（FA）的末期各行也是如此。最后几期没有正的调查观测时，从最后一个有观测的时期起 F 都是预测，这些时期也会被标记。ALSCL 的 FA 覆盖每个年龄（包括 plus group）和每个时期。拟合报告（`fit$report$FA`）包含 plus group 之前的年龄和末期之前的时期，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`fit$report$NLA`）和体长别总死亡率（`fit$report$ZL`）算出，标准误为 NA。这些单元格在拟合之后计算，因为在模型模板内计算会使拟合值在舍入水平上改变。不含体长—年龄别尾数的结果（例如手工构造的列表）只返回报告中的单元格。\n\n年龄别尾数可用 N_at_age 请求，它是 NA 的别名：标签为 \"NA\" 的表写入 CSV 文件后，用 `read.csv()` 的默认设置读回时，\"NA\" 会被读成缺失值，标签因此丢失（请使用 N_at_age，或在读取时设 `na.strings = \"\"`）。拟合报告中的矩阵是 `fit$report[[\"NA\"]]`；NA 是 R 的保留字，所以要用双方括号。",
-      "en": "Estimates use report and complete exact-name SE rows from est_std. Missing uncertainty remains NA. F retains native groups and per-step units without averaging or annualization. FA uses source ages and periods. Normal intervals are not truncated at zero.\n\n`conf_level` specifies the nominal confidence level used to construct the approximate intervals. Empirical coverage is the proportion of eligible simulation intervals containing their corresponding true values and is reported separately by summarize_simulations().\n\nNo observation informs F in the terminal period. The survey index of a period measures abundance at the start of that period, and abundance at the start of a period depends on F in earlier periods only. The reported terminal-period F (F and FL) is therefore the first-order autoregressive (AR(1)) prediction from the preceding period, and its standard error reflects the F process, not data. Terminal-period catch in number (CN, CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of an abundance that the data inform and this predicted F. These rows have extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age (FA). When the last periods have no positive survey observation, F is a prediction from the last period with an observation onwards, and those periods are marked as well. For ALSCL, FA covers every age, including the plus group, and every period. The fitted report (`fit$report$FA`) holds the ages before the plus group and the periods before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`fit$report$NLA`) and total mortality at length (`fit$report$ZL`) by the same formula, and their standard errors are NA. They are computed after fitting because computing them in the model template changed fitted values at rounding level. A result without numbers at length and age, for example a hand-made list, returns the reported cells only.\n\nNumbers at age can be requested as N_at_age, an alias of NA: a table with the label \"NA\" loses that label when it is written to a CSV file and read back with the default settings of `read.csv()`, which read \"NA\" as a missing value (use N_at_age, or `na.strings = \"\"` when reading). In the fitted report the matrix is `fit$report[[\"NA\"]]`; the double brackets are needed because NA is a reserved word in R."
+      "zh": "估计来自 report，SE 只按完整、精确同名的 est_std 行提取。未报告 SE 时保留 NA，不造出区间。F 保留原分组和每模型步单位，不自动求平均或年化。FA 使用存活区间的起始年龄和时期；区间默认为对数正态区间，与图中相同，正估计值的对数正态区间始终为正；`interval = \"wald\"` 给出对称区间，不在零处截断。估计值为零时保留 Wald 区间并把下限截在零，估计值为负时保留 Wald 区间。\n\n`conf_level` 指构造近似区间所用的名义置信水平。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。\n\n没有观测为末期的 F 提供信息：某一期的调查指数反映该期开始时的丰度，而期初丰度只取决于此前各期的 F。因此报告的末期 F（F 和 FL）是由上一期按一阶自回归（AR(1)）过程得到的预测，其标准误反映 F 过程而不是数据。末期的渔获尾数（CN、CNA、CNL、CNLA）和渔获重量（CB、CBA、CBL、CBLA）是有数据支持的丰度与这一预测 F 的乘积。这些行的 extrapolated 为 TRUE，ALSCL 年龄别 F（FA）的末期各行也是如此。最后几期没有正的调查观测时，从最后一个有观测的时期起 F 都是预测，这些时期也会被标记。ALSCL 的 FA 覆盖每个年龄（包括 plus group）和每个时期。拟合报告（`fit$report$FA`）包含 plus group 之前的年龄和末期之前的时期，并带有标准误；其余单元格按同一公式由报告的体长—年龄别尾数（`fit$report$NLA`）和体长别总死亡率（`fit$report$ZL`）算出，标准误为 NA。这些单元格在拟合之后计算，因为在模型模板内计算会使拟合值在舍入水平上改变。不含体长—年龄别尾数的结果（例如手工构造的列表）只返回报告中的单元格。\n\n年龄别尾数可用 N_at_age 请求，它是 NA 的别名：标签为 \"NA\" 的表写入 CSV 文件后，用 `read.csv()` 的默认设置读回时，\"NA\" 会被读成缺失值，标签因此丢失（请使用 N_at_age，或在读取时设 `na.strings = \"\"`）。拟合报告中的矩阵是 `fit$report[[\"NA\"]]`；NA 是 R 的保留字，所以要用双方括号。",
+      "en": "Estimates use report and complete exact-name SE rows from est_std. Missing uncertainty remains NA. F retains native groups and per-step units without averaging or annualization. FA uses source ages and periods. The interval is lognormal by default, as in the plots, and a lognormal interval of a positive estimate stays positive; `interval = \"wald\"` gives the symmetric interval, which is not truncated at zero. An estimate of zero keeps the Wald bounds with the lower bound stopped at zero, and a negative estimate keeps the Wald bounds.\n\n`conf_level` specifies the nominal confidence level used to construct the approximate intervals. Empirical coverage is the proportion of eligible simulation intervals containing their corresponding true values and is reported separately by summarize_simulations().\n\nNo observation informs F in the terminal period. The survey index of a period measures abundance at the start of that period, and abundance at the start of a period depends on F in earlier periods only. The reported terminal-period F (F and FL) is therefore the first-order autoregressive (AR(1)) prediction from the preceding period, and its standard error reflects the F process, not data. Terminal-period catch in number (CN, CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of an abundance that the data inform and this predicted F. These rows have extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age (FA). When the last periods have no positive survey observation, F is a prediction from the last period with an observation onwards, and those periods are marked as well. For ALSCL, FA covers every age, including the plus group, and every period. The fitted report (`fit$report$FA`) holds the ages before the plus group and the periods before the last, with standard errors. The other cells are computed from the reported numbers at length and age (`fit$report$NLA`) and total mortality at length (`fit$report$ZL`) by the same formula, and their standard errors are NA. They are computed after fitting because computing them in the model template changed fitted values at rounding level. A result without numbers at length and age, for example a hand-made list, returns the reported cells only.\n\nNumbers at age can be requested as N_at_age, an alias of NA: a table with the label \"NA\" loses that label when it is written to a CSV file and read back with the default settings of `read.csv()`, which read \"NA\" as a missing value (use N_at_age, or `na.strings = \"\"` when reading). In the fitted report the matrix is `fit$report[[\"NA\"]]`; the double brackets are needed because NA is a reserved word in R."
     },
     "articles": [
       "assessment-workflows"
@@ -1387,8 +1387,8 @@
       "zh": "返回按量跨重复/时间合并的 summary、逐重复状态/耗时，以及保留失败点的逐点估计和真值。summary_converged 对全部收敛的拟合重复 summary 的统计量，不论是否通过数值检查；failures 按原因统计未通过检查的重复（n_replicates 为有该原因的重复数，n_sole 为只有该原因的重复数）。"
     },
     "details": {
-      "en": "Bias/RMSE use numerically valid estimate pairs; coverage additionally requires finite reported SEs. Attempted/valid replicate, point and interval counts and failure_rate are reported. Missing SEs are not counted as failed coverage. Relative bias excludes zero truth. F is excluded because its aggregation and uncertainty must be explicitly defined. These conditional performance summaries are not proof of general model superiority.\n\n`conf_level` specifies the nominal confidence level used to construct the approximate intervals. Empirical coverage is the proportion of eligible simulation intervals containing their corresponding true values and is reported separately by summarize_simulations().\n\nBoth the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.\n\nA converged fit returned no error and has a finite objective and a maximum absolute gradient below 1e-3. Such a fit can still fail the numerical screen, for example because an estimated correlation or SD lies at a boundary, a parameter is at its limit in practice (the reason \"parameter at its limit in practice\" in failures) or the Hessian is not positive definite. Compare summary with summary_converged to see whether the fits excluded by the screen change bias, RMSE or coverage, and read failures before treating the failure rate as a convergence rate.",
-      "zh": "偏差和 RMSE 使用数值有效估计对，覆盖率额外要求有限的报告标准误。报告尝试/有效重复、点及区间数和 failure_rate。缺失标准误不算覆盖失败。相对偏差排除真值为零的点。F 因需要明确定义聚合和不确定性而排除。这些条件性能统计不证明模型普遍更优。\n\n`conf_level` 指构造近似区间所用的名义置信水平。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。\n\n时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。\n\n收敛的拟合指没有报错、目标函数有限且最大绝对梯度低于 1e-3 的拟合；这样的拟合仍可能通不过数值检查，例如估计的相关系数或标准差落在边界上、某个参数实际上已到极限（failures 中的原因为 \"parameter at its limit in practice\"），或 Hessian 不正定。比较 summary 与 summary_converged，看被检查排除的拟合是否改变偏差、RMSE 或覆盖率；把失败率当作收敛率之前先读 failures。"
+      "en": "Bias/RMSE use numerically valid estimate pairs; coverage additionally requires finite reported SEs. Attempted/valid replicate, point and interval counts and failure_rate are reported. Missing SEs are not counted as failed coverage. Relative bias excludes zero truth. F is excluded because its aggregation and uncertainty must be explicitly defined. These conditional performance summaries are not proof of general model superiority.\n\n`conf_level` specifies the nominal confidence level used to construct the approximate intervals. `interval` chooses their form: lognormal by default, as in the plots, `extract_estimates()` and `self_test()`, or `\"wald\"` for the symmetric interval `estimate +/- z * SE`. Empirical coverage is the proportion of eligible simulation intervals containing their corresponding true values and is reported separately by summarize_simulations().\n\nBoth the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.\n\nA converged fit returned no error and has a finite objective and a maximum absolute gradient below 1e-3. Such a fit can still fail the numerical screen, for example because an estimated correlation or SD lies at a boundary, a parameter is at its limit in practice (the reason \"parameter at its limit in practice\" in failures) or the Hessian is not positive definite. Compare summary with summary_converged to see whether the fits excluded by the screen change bias, RMSE or coverage, and read failures before treating the failure rate as a convergence rate.",
+      "zh": "偏差和 RMSE 使用数值有效估计对，覆盖率额外要求有限的报告标准误。报告尝试/有效重复、点及区间数和 failure_rate。缺失标准误不算覆盖失败。相对偏差排除真值为零的点。F 因需要明确定义聚合和不确定性而排除。这些条件性能统计不证明模型普遍更优。\n\n`conf_level` 指构造近似区间所用的名义置信水平。`interval` 选择区间形式：默认为对数正态区间，与绘图、`extract_estimates()` 和 `self_test()` 相同；`\"wald\"` 为对称区间 `estimate +/- z * SE`。经验覆盖率是有效模拟区间包含对应真值的比例，由 summarize_simulations() 另行汇总。\n\n时间坐标和每个量必须是一维实数数值向量。矩阵和数组即使总长度与时间步数相同也会被拒绝。先将年龄别或体长别数量按所需定义汇总为时间序列，不要把分组数据直接展平当作时间。\n\n收敛的拟合指没有报错、目标函数有限且最大绝对梯度低于 1e-3 的拟合；这样的拟合仍可能通不过数值检查，例如估计的相关系数或标准差落在边界上、某个参数实际上已到极限（failures 中的原因为 \"parameter at its limit in practice\"），或 Hessian 不正定。比较 summary 与 summary_converged，看被检查排除的拟合是否改变偏差、RMSE 或覆盖率；把失败率当作收敛率之前先读 failures。"
     },
     "articles": [
       "assessment-workflows"
@@ -1556,7 +1556,7 @@
     ],
     "figure": {
       "src": "figures/ytf/length_at_age.png",
-      "code": "plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2, line_size = 0.6)",
+      "code": "plot_length_at_age(b, ages = c(2, 5, 8, 11), line_size = 0.6)",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -1582,7 +1582,7 @@
     ],
     "figure": {
       "src": "figures/ytf/inputs.png",
-      "code": "plot_natural_mortality(b) | plot_survey_catchability(b)",
+      "code": "plot_natural_mortality(b, title = \"Natural mortality rate\") | plot_survey_catchability(b, title = \"Survey catchability at length\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -1634,7 +1634,7 @@
     ],
     "figure": {
       "src": "figures/ytf/inputs.png",
-      "code": "plot_natural_mortality(b) | plot_survey_catchability(b)",
+      "code": "plot_natural_mortality(b, title = \"Natural mortality rate\") | plot_survey_catchability(b, title = \"Survey catchability at length\")",
       "caption": {
         "en": "Example figure",
         "zh": "示例图"
@@ -1677,8 +1677,8 @@
       "zh": "ggplot 对象（`what = \"both\"` 时为 patchwork）；`return_data = TRUE` 时返回列表，含 `plot`、`series` 和 `parameters`（画出的中位数和百分位数，单位为 %）。"
     },
     "details": {
-      "en": "The upper panels show, for each time series, the median relative error by time step (line) and a band between two percentiles; the lower panel shows the median and the same percentiles for each estimated parameter. A dashed line marks no error. Only refits that pass the numerical checks are drawn, and the subtitle gives their number. Parameters are on the natural scale of `extract_parameters()` and keep its names; a parameter whose truth is zero has no relative error and is not drawn. The title uses the theme key `self_test`; the axis labels use `xlab$year` and `ylab$relative_error`.",
-      "zh": "上图按时间序列给出各时间步相对误差的中位数（线）和两个百分位数之间的带，下图给出各估计参数的中位数和同样的百分位数，虚线表示误差为零。只画通过数值检查的重新拟合，副标题给出画出的个数。参数取 `extract_parameters()` 的自然尺度和名称；真值为零的参数没有相对误差，不画。标题使用主题键 `self_test`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_error`。"
+      "en": "The upper panels show, for each time series, the median relative error by time step (line) and a band between two percentiles; the lower panel shows the median and the same percentiles for each estimated parameter. A dashed line marks no error. Only refits that pass the numerical checks are drawn, and the subtitle gives their number. Parameters are on the natural scale of `extract_parameters()` and are named in words, for example \"Asymptotic length (Linf)\" for `log_Linf`; a parameter whose truth is zero has no relative error and is not drawn. The title uses the theme key `self_test`; the axis labels use `xlab$year` and `ylab$relative_error`.",
+      "zh": "上图按时间序列给出各时间步相对误差的中位数（线）和两个百分位数之间的带，下图给出各估计参数的中位数和同样的百分位数，虚线表示误差为零。只画通过数值检查的重新拟合，副标题给出画出的个数。参数取 `extract_parameters()` 的自然尺度，并用文字命名，例如 `log_Linf` 写作 \"Asymptotic length (Linf)\"；真值为零的参数没有相对误差，不画。标题使用主题键 `self_test`，坐标轴标签使用 `xlab$year` 和 `ylab$relative_error`。"
     },
     "articles": [
       "case-model-validation"
@@ -1691,5 +1691,86 @@
         "zh": "示例图"
       }
     }
+  },
+  "theme_acl": {
+    "description": {
+      "en": "Give a ggplot of your own the theme of the ALSCL plots.",
+      "zh": "让你自己的 ggplot 采用 ALSCL 绘图的主题。"
+    },
+    "value": {
+      "en": "A list of ggplot2 theme layers, to be added to a ggplot with `+`.",
+      "zh": "由 ggplot2 主题图层组成的列表，用 `+` 加到 ggplot 上。"
+    },
+    "details": {
+      "en": "The layers are those that the plot functions add under the current `acl_theme_set()` settings: the base theme, font and text sizes, grid lines, title face, alignment and color, facet labels and legend position of the active style. Call `theme_acl()` again after a change of the settings. `x_angle` slants the x tick labels, for example `theme_acl(x_angle = 45)`. With `quantity = \"stock\"`, `\"F\"`, `\"recruitment\"` or `\"catch\"` the title takes the color of that quantity under `title_color = \"quantity\"`. Colors of lines, points and fills are not part of a theme; take them from `acl_palette()`. Under the default style the package plots also start the y axis at zero, which is a scale; add `ggplot2::expand_limits(y = 0)` to a figure of your own.",
+      "zh": "这些图层就是绘图函数在当前 `acl_theme_set()` 设置下所加的图层：基础主题、字体与字号、网格线、标题的字体样式、对齐和颜色、分面标签以及当前样式的图例位置。修改设置后要再次调用 `theme_acl()`。`x_angle` 让横轴刻度标签倾斜，例如 `theme_acl(x_angle = 45)`。给出 `quantity = \"stock\"`、`\"F\"`、`\"recruitment\"` 或 `\"catch\"` 时，在 `title_color = \"quantity\"` 下标题取该数量的颜色。线、点和填充的颜色不属于主题，请从 `acl_palette()` 取得。默认样式下包内绘图还让纵轴从零开始，这属于坐标尺度；在自己的图中可加 `ggplot2::expand_limits(y = 0)`。"
+    },
+    "articles": [
+      "plot-customization",
+      "assessment-workflows"
+    ],
+    "figure": null
+  },
+  "acl_palette": {
+    "description": {
+      "en": "Return the colors of the ALSCL plots for figures of your own.",
+      "zh": "返回 ALSCL 绘图的颜色，供你自己的图使用。"
+    },
+    "value": {
+      "en": "A character vector of colors, named by role when `role` is given.",
+      "zh": "颜色字符向量；给出 `role` 时按角色命名。"
+    },
+    "details": {
+      "en": "Without arguments the function returns the native colors of the active palette: eight for `\"standard\"`, the default, whose first two colors are dark blue `#002b5f` and orange `#eb5c24`. `n` gives that many colors, interpolated when the palette holds fewer. `role` returns the colors that the plots use: under the default style `\"stock\"` is `#047c6c`, `\"F\"` `#ed5f26`, `\"recruitment\"` `#28b3e8` and `\"catch\"` `#002b5f`; under `\"classic\"` these four take the primary color of the palette.",
+      "zh": "不带参数时返回当前调色板的原有颜色：默认 `\"standard\"` 调色板有 8 种颜色，前两种为深蓝 `#002b5f` 和橙色 `#eb5c24`。给出 `n` 时返回 `n` 种颜色，调色板颜色不够时插值。`role` 返回绘图所用的颜色：默认样式下 `\"stock\"` 为 `#047c6c`，`\"F\"` 为 `#ed5f26`，`\"recruitment\"` 为 `#28b3e8`，`\"catch\"` 为 `#002b5f`；`\"classic\"` 样式下这四种都取调色板的 primary 颜色。"
+    },
+    "articles": [
+      "plot-customization",
+      "assessment-workflows"
+    ],
+    "figure": {
+      "src": "figures/palettes/palettes.png",
+      "code": "acl_palette(palette = p) for the six palettes",
+      "caption": {
+        "en": "Example figure",
+        "zh": "示例图"
+      }
+    }
+  },
+  "acl_figure_size": {
+    "description": {
+      "en": "Recommend the width and height at which a plot is saved.",
+      "zh": "给出保存一张图时建议的宽和高。"
+    },
+    "value": {
+      "en": "A named numeric vector `c(width = , height = )` in inches, each between 3 and 14.",
+      "zh": "命名数值向量 `c(width = , height = )`，单位为英寸，每个值在 3 到 14 之间。"
+    },
+    "details": {
+      "en": "The size comes from the layout of the plot: the rows and columns of panels, the title, subtitle and caption, slanted year labels and a legend below the panels. A single time series gets about 8 x 4.5 inches, faceted and multi-panel figures about 10 inches of width and 1.5 to 1.9 inches of height per row of panels, and plots of one quantity against another, such as `plot_SSB_Rec()`, a near-square shape. `width` fixes the width and returns the matching height. `acl_save_plot()` saves a plot at this size.",
+      "zh": "尺寸由图的版面决定：面板的行数和列数、标题、副标题和说明文字、倾斜的年份标签以及面板下方的图例。单条时间序列约 8 x 4.5 英寸；带分面的图和多面板图宽约 10 英寸，每行面板高 1.5 到 1.9 英寸；一个数量对另一个数量的图（如 `plot_SSB_Rec()`）接近正方形。给出 `width` 时固定宽度并返回相应的高度。`acl_save_plot()` 按这个尺寸保存图。"
+    },
+    "articles": [
+      "plot-customization"
+    ],
+    "figure": null
+  },
+  "acl_save_plot": {
+    "description": {
+      "en": "Save a plot at its recommended size, at 300 dpi on a white background.",
+      "zh": "按建议尺寸保存图，分辨率 300 dpi，背景为白色。"
+    },
+    "value": {
+      "en": "The file name, invisibly.",
+      "zh": "不可见地返回文件名。"
+    },
+    "details": {
+      "en": "A width or height that is not given comes from `acl_figure_size()`; a given width gets the matching height. The extension of `filename` chooses the format, as in `ggplot2::ggsave()`, and further arguments such as `device` are passed to it. `run_acl()` and `run_alscl()` save the figures of `output = TRUE` with this function.",
+      "zh": "没有给出的宽或高取自 `acl_figure_size()`；只给宽度时取相应的高度。`filename` 的扩展名决定格式，与 `ggplot2::ggsave()` 相同，`device` 等其他参数传给它。`run_acl()` 和 `run_alscl()` 在 `output = TRUE` 时用这个函数保存图。"
+    },
+    "articles": [
+      "plot-customization"
+    ],
+    "figure": null
   }
 }

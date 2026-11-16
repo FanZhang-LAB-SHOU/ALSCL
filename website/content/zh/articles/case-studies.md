@@ -50,7 +50,7 @@ c(a$diagnostics$numerical_ok, b$diagnostics$numerical_ok)
 plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 ```
 
-`prepare_alscl_data()` 用三张表和 `fit_args` 中两个模型共用的生物学设置构建输入列表 `x`；体长组来自行标签（中点为 6 至 50、间隔 2，边界取相邻中点的中间值）。`fit_config` 存放各模型的初值和 `map`。平均生长参数和同龄体长 CV 用 `factor(NA)` 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上；体长型生成器会使用它，年龄型 flatfish 生成器则不使用。F 的标准差先从操作模型的创新 SD 换算为拟合模型使用的边际 SD：`0.2 / sqrt(1 - 0.75^2)`，即 0.3023716。初始数量 SD、补充量相关系数和 F 相关系数也按指定的拟合假设固定，每个模型留下五个自由标量参数。
+`prepare_alscl_data()` 用三张表和 `fit_args` 中两个模型共用的生物学设置构建输入列表 `x`；体长组来自行标签（中点为 6 至 50、间隔 2，边界取相邻中点的中间值）。`fit_config` 存放各模型的初值和 `map`。平均生长参数和同龄体长 CV 用 `factor(NA)` 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上；体长型生成器会使用它，年龄型的鲽鱼生成器则不使用。F 的标准差先从操作模型的创新 SD 换算为拟合模型使用的边际 SD：`0.2 / sqrt(1 - 0.75^2)`，即 0.3023716。初始数量 SD、补充量相关系数和 F 相关系数也按指定的拟合假设固定，每个模型留下五个自由标量参数。
 
 操作模型用一个共用的 F 时间序列乘以选择性，生成各组捕捞死亡率。评估模型则估计各组和各期的 F，本例将组间和时间相关系数均固定为 0.75。初始化时，两类模型都逐龄递推尾数，每一步在对数尺度上加入独立扰动。模拟从预热期开始，评估从保留的第一个调查时间步开始。设置和作图代码见[案例脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R)。
 
@@ -58,15 +58,15 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![鲽鱼模拟调查](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_data.png?raw=true)
 
-热图按年份和体长组显示 log10 调查指数：10 cm 以下很小，因为那里的调查可捕性低于 0.1；15-30 cm 最大。
+热图按年份和体长组显示 log10 调查指数。指数在 10 cm 以下很小，因为那里的调查可捕性低于 0.1，在 15-30 cm 最大。
 
 ![鲽鱼的生长、成熟与调查可捕性](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_biology.png?raw=true)
 
-生长曲线从 1 龄的 11 cm 到 15 龄的 57 cm。成熟（L50 为 35 cm，来自 `data.mat`）和调查可捕性（L50 为 15 cm，由 `sel_L50` 和 `sel_L95` 设定）是两条不同的曲线。
+生长曲线（左图）从 1 龄的 11 cm 到 15 龄的 57 cm。成熟比例（L50 为 35 cm，来自 `data.mat`）和调查可捕性（L50 为 15 cm，由 `sel_L50` 和 `sel_L95` 设定）是两条不同的曲线（右图）。
 
 ![鲽鱼的生成真值与条件估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/flatfish_truth.png?raw=true)
 
-虚线是生成真值，实线是两个模型的条件估计。对于生物量和产卵生物量，两个模型都跟上了 2010 年之前的下降和之后的回升；2014 年以后 ALSCL 的生物量和产卵生物量低于真值。`plot_compare_ts()` 画出的是同样的轨迹，并附有区间。
+虚线是模拟值，即生成真值，实线是两个模型的条件估计。对于总生物量和产卵生物量，两个模型都跟上了 2010 年之前的下降和之后的回升；2014 年以后 ALSCL 的这两个量都低于真值。`plot_compare_ts()` 画出的是同样的轨迹，并附有区间。
 
 <h2 id="quarterly">3. 拟合季度金枪鱼案例</h2>
 
@@ -91,7 +91,7 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 代码相同，但四项设置的含义变了。`growth_step = 0.25` 使每一列代表一个季度，因此时间标签必须相隔 0.25。`M` 和捕捞死亡率都按时间步计：年 M 为 0.8 要输入 `M = 0.2`，而 `vbk` 仍按年计。`rec.age` 以年为单位，0.25 表示一个季度龄补充；`nage = 20` 数的是季度龄组，从 0.25 龄到 5 龄，最后一组包括 5 龄及以上个体；`t0` 必须小于 `rec.age`。
 
-`check_alscl_data()$time` 打印 2000 到 2004.75 的 20 个季度：这里的二十个时间步是五年。重新生成的案例中，两次拟合都通过数值检查；可用每份结果的 `elapsed` 字段记录本机耗时。如果标签的间隔不等于 `growth_step`，拟合会停在 `Time column spacing must equal growth_step`；请保留每个季度一列，没有调查的季度填 `NA`，体重和成熟比例则要完整。
+`check_alscl_data()$time` 打印 2000 到 2004.75 的 20 个季度。这里的二十个时间步是五年。在记录运行中，两次拟合都通过数值检查；可用每份结果的 `elapsed` 字段记录本机耗时。如果标签的间隔不等于 `growth_step`，拟合会停在 `Time column spacing must equal growth_step`；请保留每个季度一列，没有调查的季度填 `NA`，体重和成熟比例则要完整。
 
 ![金枪鱼模拟调查](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_data.png?raw=true)
 
@@ -99,11 +99,11 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![金枪鱼的生长、成熟与调查可捕性](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_biology.png?raw=true)
 
-生长曲线从 0.25 龄的 13 cm 到 5 龄的 129 cm（`vbk` 为每年 0.38）；成熟（L50 为 100 cm）远高于调查可捕性（L50 为 30 cm）。
+生长曲线从 0.25 龄的 13 cm 到 5 龄的 129 cm（`vbk` 为每年 0.38）；成熟比例（L50 为 100 cm）远高于调查可捕性（L50 为 30 cm）。
 
 ![金枪鱼的生成真值与条件估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-补充量按季度计。ALSCL 的生物量和产卵生物量跟随真值，估计值与真值相差约 11% 以内。ACL 的生物量和产卵生物量在每个季度都低于真值。它的产卵生物量相对真值在 2000 年初以及 2002-2003 年最低（约为真值的 0.68 到 0.77），到 2003 年末才接近真值。两个模型都在 20 个季度中的 19 个高估了补充量，ALSCL 平均高估 9%，ACL 平均高估 31%。该案例使用体长生长转移；拟合过程的假设仍与操作模型不同，因此单个重复不能给两个模型排名。
+补充量按季度计。ALSCL 的总生物量和产卵生物量跟随真值，估计值与真值相差约 11% 以内。ACL 的总生物量和产卵生物量在每个季度都低于真值。它的产卵生物量相对真值在 2000 年初以及 2002-2003 年最低（约为真值的 0.68 到 0.77），到 2003 年末才接近真值。两个模型都在 20 个季度中的 19 个高估了补充量，ALSCL 平均高估 9%，ACL 平均高估 31%。该案例使用体长生长转移；拟合过程的假设仍与操作模型不同，因此单个重复不能给两个模型排名。
 
 <h2 id="simulation">4. 扩展为模拟实验</h2>
 
@@ -127,4 +127,4 @@ case_status <- run_case_studies(out = "my_cases")
 | 决定哪些参数固定、哪些估计 | [拟合设置](fitting-controls.html) |
 | 生成调查数据并批量拟合重复 | [模拟与批量实验](simulation.html) |
 | 从拟合模型模拟调查数据，或预测留出的年份 | [模型验证](case-model-validation.html) |
-| 拟合真实的调查指数，并与年龄判读结果和资源评估对比 | [真实调查数据的拟合结果，哪些可以用？](case-north-sea-whiting.html) |
+| 拟合真实的调查指数，并与年龄鉴定资料和资源评估对比 | [真实调查数据的拟合结果，哪些可以用？](case-north-sea-whiting.html) |

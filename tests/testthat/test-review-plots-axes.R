@@ -94,7 +94,7 @@ test_that("F at age is plotted against fitted ages with a marked plus group", {
   legacy <- acl; legacy$age <- NULL
   out <- plot_fishing_mortality(legacy, type = "age", return_data = TRUE)
   expect_false("Age" %in% names(out$data))
-  expect_identical(out$plot$labels$x, "Age group")
+  expect_identical(out$plot$labels$x, "Age bin")
 })
 
 test_that("comparison heatmaps use fitted ages and length midpoints", {
@@ -121,8 +121,10 @@ test_that("comparison heatmaps use fitted ages and length midpoints", {
   heat <- suppressMessages(plot_compare_F(acl, alscl))
   expect_true("Age 5+" %in% levels(heat$data$Label))
   expect_false("Age 5" %in% levels(heat$data$Label))
-  expect_identical(heat$labels$y, "Age class or length bin")
-  expect_identical(plot_compare_F(acl, acl, model2_name = "Other")$labels$y, "Age class")
+  # Rows of both kinds name their kind in the tick labels; rows of one kind
+  # take the axis title of that kind.
+  expect_null(heat$labels$y)
+  expect_identical(plot_compare_F(acl, acl, model2_name = "Other")$labels$y, "Age (years)")
 })
 
 test_that("global year breaks leave age, length and biomass axes readable", {
@@ -166,13 +168,18 @@ test_that("default faceted survey diagnostics keep year ticks apart", {
   for (p in list(plot_CatL(fit), plot_residuals(fit))) {
     built <- ggplot2::ggplot_build(p)
     expect_equal(nrow(built$layout$layout), 23L)
+    # 23 panels in six columns: every fifth year, slanted, with a minor
+    # tick mark at every year.
+    expect_identical(p$facet$params$ncol, 6L)
     for (panel in built$layout$panel_params) {
       labels <- panel$x$get_labels()
-      # Ten labels per panel overprinted; two or three fit a five-column layout.
-      expect_lte(sum(!is.na(labels)), 3L)
-      expect_gte(sum(!is.na(labels)), 2L)
+      expect_identical(labels[!is.na(labels)], c("2000", "2005", "2010", "2015"))
+      expect_true(all(seq(2000, 2019) %in% round(panel$x$get_breaks_minor(), 8)))
     }
-    expect_true(isTRUE(p$scales$get_scales("x")$guide$params$check.overlap))
+    guide <- p$scales$get_scales("x")$guide
+    expect_true(isTRUE(guide$params$minor.ticks))
+    expect_true(isTRUE(guide$params$check.overlap))
+    expect_identical(ggplot2::calc_element("axis.text.x", ggplot2::complete_theme(p$theme))$angle, 45)
   }
   # Breaks chosen in the call are drawn as given.
   chosen <- plot_CatL(fit, x_breaks = seq(2000, 2018, 2))

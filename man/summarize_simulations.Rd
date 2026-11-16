@@ -8,7 +8,8 @@ summarize_simulations(
   fits,
   truth,
   quantities = c("SSB", "Rec"),
-  conf_level = 0.95
+  conf_level = 0.95,
+  interval = c("lognormal", "wald")
 )
 }
 \arguments{
@@ -22,9 +23,15 @@ or arrays; grouped quantities must be aggregated explicitly before calling.}
 
 \item{quantities}{Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.}
 
-\item{conf_level}{Nominal confidence level of normal intervals based on
+\item{conf_level}{Nominal confidence level of the intervals based on
 reported standard errors, strictly between zero and one. The returned
 coverage is the observed fraction of usable intervals containing truth.}
+
+\item{interval}{Form of the interval whose coverage is reported.
+\code{"lognormal"} (default) is \verb{exp(log(estimate) +/- z * SE / estimate)}, as
+in \code{\link[=extract_estimates]{extract_estimates()}}, the plots of the package and \code{\link[=self_test]{self_test()}}.
+\code{"wald"} is \verb{estimate +/- z * SE}, the default before version 2.5.0, and
+gives the former bounds and coverage.}
 }
 \value{
 A list with summary (pooled over replicates and time by quantity),

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_CatL.R
 \name{plot_CatL}
 \alias{plot_CatL}
-\title{Plot Fitted and Observed Survey Indices over Time or across Lengths}
+\title{Plot fitted and observed survey indices over time or across lengths}
 \usage{
 plot_CatL(
   model_result,
@@ -56,7 +56,7 @@ and time/length metadata.}
 
 \item{line_type}{Character. Line type for facet_by = "length" plot. Default is "solid".}
 
-\item{line_size1}{Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (default 1.8).}
+\item{line_size1}{Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the standard style).}
 
 \item{line_color1}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -64,7 +64,7 @@ and time/length metadata.}
 
 \item{line_alpha1}{Numeric. Transparency for estimated line (0-1). Default is 1.}
 
-\item{line_size2}{Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (default 1.0).}
+\item{line_size2}{Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the standard style).}
 
 \item{line_color2}{Character or NULL. NULL inherits the global observed_color setting.}
 
@@ -72,7 +72,9 @@ and time/length metadata.}
 
 \item{line_alpha2}{Numeric. Transparency for observed line (0-1). Default is 0.6.}
 
-\item{facet_ncol}{Integer. Specifies the number of columns in the facet_wrap. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Character. Specifies scales for facet_wrap. Default is "free".}
 
@@ -86,7 +88,10 @@ conditional medians. FALSE keeps the log scale.}
 
 \item{return_data}{A logical indicating whether to return the processed data alongside the plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -134,9 +139,8 @@ Facets separate length groups or time periods.
 Predicted and observed matrices are aligned by position with fitted
 year and length metadata, independently of optional matrix dimnames. Missing
 and zero observations leave gaps. An isolated observation is drawn as a point.
-With \code{facet_by = "year"} the panels have no legend. A caption states
-which line is fitted and which is observed, from the line widths or, for
-equal widths, the transparencies in use. No caption is drawn when both are equal.
+A legend below the panels names the observed and the fitted series, with
+the widths and transparencies of their lines.
 Dimensions and metadata must agree;
 predictions must be finite, including after an exponential transformation.
 }

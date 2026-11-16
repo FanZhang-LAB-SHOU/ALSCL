@@ -18,8 +18,13 @@
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
 #' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
-#' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
 #' @param facet_by Character. "length" (default) draws one panel per length bin
 #'   with time on the x axis; "year" draws one panel per time step with length
@@ -31,7 +36,10 @@
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #' @param ... The former argument name type, accepted with a warning.
 #'
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -65,7 +73,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
   if (missing(facet_by) && !is.null(renamed$facet_by)) facet_by <- renamed$facet_by
   facet_by <- match.arg(facet_by)
   # NULL inherits the global palette.
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(smooth_color)) smooth_color <- acl_theme("smooth_color")
   if (is.null(hline_color)) hline_color <- acl_theme("hline_color")
@@ -123,14 +131,14 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
         mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
       trend_layers(runs) +
-      ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
+      ggplot2::geom_hline(yintercept = 0, color = hline_color, linewidth = .acl_reference_linewidth) +
       ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(num_indices, facet_ncol, 8),
-                   values = plot_data$year, check_overlap = TRUE) +
+                   values = plot_data$year, time = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
       ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "year") else xlab,
         y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,
-        title = if (is.null(title)) .acl_title("resid_length") else title)
+        title = .acl_plot_title(title, "resid_length"))
 
     data_out <-plot_data
 
@@ -166,14 +174,14 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
       ggplot2::geom_line(data = runs[runs$run_size > 1L, , drop = FALSE],
         mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
       trend_layers(runs) +
-      ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
+      ggplot2::geom_hline(yintercept = 0, color = hline_color, linewidth = .acl_reference_linewidth) +
       ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, 8, budget = 20),
                    values = df_long$length, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
       ggplot2::labs(x = if (is.null(xlab)) .acl_lab("x", "length") else xlab,
         y = if (is.null(ylab)) .acl_lab("y", "residual") else ylab,
-        title = if (is.null(title)) .acl_title("resid_year") else title)
+        title = .acl_plot_title(title, "resid_year"))
 
     data_out <-df_long
 
@@ -182,6 +190,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     p <- p + ggplot2::geom_point(data = runs[runs$run_size == 1L, , drop = FALSE],
       color = line_color, size = acl_theme("point_size"))
   }
+  p <- .acl_tidy_axes(p)
   if (return_data) {
     return(list(plot = p, data = data_out))
   } else {

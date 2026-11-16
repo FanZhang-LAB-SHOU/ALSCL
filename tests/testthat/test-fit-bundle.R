@@ -2,7 +2,8 @@ test_that("structured bundles select the correct model and preserve explicit ove
   for (model in c("acl", "alscl")) {
     x <- YTF_example
     legacy <- c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args, x$fit_config[[model]])
-    expect_identical(.acl_bundle_args(x, model), legacy)
+    # The sources of t0_lower and log_t0 are an internal attribute.
+    expect_identical(.acl_drop_t0_sources(.acl_bundle_args(x, model)), legacy)
     x$fit_args$control <- list(iter.max = 50, eval.max = 100)
     x$fit_config[[model]]$M <- .3
     x$fit_config[[model]]$control <- list(iter.max = 60)
@@ -30,7 +31,7 @@ test_that("bundles reject malformed or incomplete settings before fitting", {
   x <- YTF_example
   x$fit_config$acl <- NULL
   # A model without a fit_config entry uses the shared fit_args (review finding F73).
-  expect_identical(.acl_bundle_args(x, "acl"),
+  expect_identical(.acl_drop_t0_sources(.acl_bundle_args(x, "acl")),
                    c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args))
   x$fit_config$alscl <- 1
   expect_error(run_alscl(x), "unique, non-empty names")

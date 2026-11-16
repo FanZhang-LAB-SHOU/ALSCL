@@ -11,7 +11,7 @@ test_that("plain growth curves honor custom and empty y-axis labels", {
   expect_identical(plot_VB(model, se = FALSE, ylab = "Length (cm)")$labels$y,
                    "Length (cm)")
   expect_identical(plot_VB(model, se = FALSE, ylab = "")$labels$y, "")
-  expect_identical(plot_VB(model, se = FALSE)$labels$y, "Length")
+  expect_identical(plot_VB(model, se = FALSE)$labels$y, "Mean length")
 })
 
 test_that("unavailable growth intervals preserve all estimate-only styling", {
@@ -48,15 +48,13 @@ test_that("unavailable growth intervals preserve all estimate-only styling", {
     expect_equal(element("legend.text")$size, 15, info = name)
     expect_identical(element("axis.text.x")$family, "mono", info = name)
     expect_equal(th, plain_built$plot$theme, info = name)
-    for (grid in c("panel.grid.major.x", "panel.grid.major.y",
-                   "panel.grid.minor.x", "panel.grid.minor.y"))
-      expect_s3_class(element(grid), "element_blank")
+    expect_style_grid(th)
     expect_equal(built$data[[1]]$linewidth, rep(2.3, nrow(plain$data)), info = name)
     expect_true(all(built$data[[1]]$colour == "navy"), info = name)
     expect_true(all(built$data[[1]]$linetype == "dashed"), info = name)
     expect_identical(built$data[[2]]$colour, "orange", info = name)
     expect_equal(built$data[[2]]$size, 8, info = name)
-    expect_match(built$data[[2]]$label, "Linf = 70", info = name)
+    expect_match(built$data[[2]]$label, "Asymptotic length (Linf) = 70", fixed = TRUE, info = name)
   }
 })
 

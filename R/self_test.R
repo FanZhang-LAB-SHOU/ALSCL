@@ -16,23 +16,6 @@
 # truth of zero.
 .acl_relative_error <- function(error, truth) ifelse(truth != 0, error / abs(truth), NA_real_)
 
-# Approximate interval of a positive or signed quantity from its standard
-# error, with the two forms used by the plots of the package.
-.acl_self_test_interval <- function(estimate, se, z, interval) {
-  low <- high <- rep(NA_real_, length(estimate))
-  usable <- is.finite(estimate) & is.finite(se) & se >= 0
-  if (interval == "lognormal") {
-    usable <- usable & estimate > 0
-    width <- z * se[usable] / estimate[usable]
-    low[usable] <- estimate[usable] * exp(-width)
-    high[usable] <- estimate[usable] * exp(width)
-  } else {
-    low[usable] <- estimate[usable] - z * se[usable]
-    high[usable] <- estimate[usable] + z * se[usable]
-  }
-  list(low = low, high = high)
-}
-
 .acl_self_test_quantile <- function(x, p) {
   x <- x[is.finite(x)]
   if (length(x)) unname(stats::quantile(x, p, names = FALSE)) else NA_real_
@@ -90,9 +73,10 @@
 #'   maximum, as in [fit_scenarios()].
 #' @param conf_level Nominal confidence level of the intervals whose coverage
 #'   is reported, strictly between zero and one. Default 0.95.
-#' @param interval Form of the interval of a time series: `"lognormal"`
-#'   (default), `exp(log(estimate) +/- z * SE / estimate)`, or `"wald"`,
-#'   `estimate +/- z * SE`, as in the plots of the package.
+#' @param interval Form of the interval of a time series. `"lognormal"`
+#'   (default) is `exp(log(estimate) +/- z * SE / estimate)`, as in the plots
+#'   of the package and in [extract_estimates()]. `"wald"` is
+#'   `estimate +/- z * SE`.
 #' @param preserve_missing Logical; passed to [simulate_fit()]. Default TRUE
 #'   keeps missing and zero survey cells as they are in the observations.
 #' @param silent Suppress fitting progress messages; default TRUE.
@@ -314,12 +298,14 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
         candidate <- tab[which(rownames(tab) == q), "Std. Error"]
         if (is.numeric(candidate) && length(candidate) == Y) se <- as.numeric(candidate)
       }
-      bounds <- .acl_self_test_interval(estimate, se, z, interval)
+      # The interval of the plots, extract_estimates() and
+      # summarize_simulations(); a negative standard error has no interval.
+      bounds <- .acl_interval(estimate, ifelse(se >= 0, se, NA_real_), interval, z)
       error <- estimate - true_value
-      covered <- ifelse(is.finite(bounds$low) & is.finite(bounds$high),
-                        true_value >= bounds$low & true_value <= bounds$high, NA)
+      covered <- ifelse(is.finite(bounds$lower) & is.finite(bounds$upper),
+                        true_value >= bounds$lower & true_value <= bounds$upper, NA)
       data.frame(replicate = id, quantity = q, year = as.numeric(fit$year), truth = true_value,
-        estimate = estimate, std_error = se, conf_low = bounds$low, conf_high = bounds$high,
+        estimate = estimate, std_error = se, conf_low = bounds$lower, conf_high = bounds$upper,
         error = error, relative_error = .acl_relative_error(error, true_value),
         covered = covered, numerical_ok = unname(ok[id]), stringsAsFactors = FALSE)
     }))

@@ -1,6 +1,6 @@
 # 如何拟合自己的调查数据？
 
-本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装 ALSCL 2.4.0 或更高版本（[安装 ALSCL](getting-started.html)）、按[准备调查数据](data-preparation.html)排好的三张表，以及你的种群的生物学数值（`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border`），[该页第 4 步](data-preparation.html#bundle)逐项解释了它们。
+本页带你从 CSV 或 Excel 文件中的三张调查表出发，得到 ACL 和 ALSCL 两个拟合好的模型，以及它们的数值检查、图和保存的结果。本页按照脚本 [fit_own_data_example.R](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/fit_own_data_example.R) 展开，该脚本用内附的教学数据完整运行一遍，然后你把其中的数值换成自己的。你需要已安装 ALSCL 2.5.0 或更高版本（[安装 ALSCL](getting-started.html)）、按[准备调查数据](data-preparation.html)排好的三张表，以及你的种群的生物学数值（`rec.age`、`nage`、`M`、`sel_L50`、`sel_L95`、`growth_step`、`len_mid`、`len_border`），[该页第 4 步](data-preparation.html#bundle)逐项解释了它们。
 
 <h2 id="bundle">1. 准备并检查输入列表</h2>
 
@@ -27,13 +27,13 @@ plan[, c("parameter", "status", "map_source", "natural_start")]
 inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural_start")]
 ```
 
-`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态，例如 `free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 默认作为随机效应估计。不要把它们写进 `map`：过程似然覆盖每个块的全部偏差，所以固定其中一些偏差或重复使用因子水平的 map 会被拒绝，除非该过程的标准差和相关系数也都固定。需要所有组共用一个捕捞死亡率时，使用 `F_structure = "year"`。[选择拟合设置](fitting-controls.html#parameters)列出了两个模型的全部标量参数，并说明这一限制。
+`inspect_parameters()` 列出一个模型的各个参数、自然尺度上的初值及其状态，例如 `free`（估计）、`fixed`（固定）或 `tied`（共享）；`map_source` 说明固定状态来自模型默认还是你的 `map`。默认情况下，ACL 固定 `log_std_log_F`、`logit_log_F_y`、`logit_log_F_a` 和 `t0`，估计其余 10 个标量参数；ALSCL 固定 `log_sigma_log_F` 和 `log_t0`，估计 13 个。过程偏差 `dev_log_R`、`dev_log_F` 和 `dev_log_N0` 默认作为随机效应估计。不要把它们写进 `map`，因为过程似然覆盖每个块的全部偏差，所以固定其中一些偏差或重复使用因子水平的 map 会被拒绝，除非该过程的标准差和相关系数也都固定。需要所有组共用一个捕捞死亡率时，使用 `F_structure = "year"`。[选择拟合设置](fitting-controls.html#parameters)列出了两个模型的全部标量参数，并说明这一限制。
 
-初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，因此它的 `t0` 必须在 0 和 `rec.age` 之间。填写初值不会固定参数：只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法确定某个参数时，固定该参数，并记录每个固定值的来源。[选择拟合设置](fitting-controls.html)给出 `map`、边界和物种预设的规则；[估计参数列表](estimation-parameters.html)给出全部变换方式。
+初值写在 `x$fit_config$acl$parameters` 或 `x$fit_config$alscl$parameters` 中，采用优化器尺度：渐近体长 60 cm 写 `log_Linf = log(60)`，相关系数 0.1 写 `logit_log_R = qlogis(0.1)`；ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此在默认 `t0_lower = 0` 下它的 `t0` 必须在 0 和 `rec.age` 之间；负的 `t0_lower` 允许 `t0` 为负，如[牙鳕案例](case-north-sea-whiting.html)中的 `t0_lower = -2`。填写初值不会固定参数。只有模型 `map` 中的 `factor(NA)` 才固定参数，具名 `NULL` 项则释放模型默认固定的参数。当外部研究给出的值比拟合更可靠，或第 5 步的检查表明数据无法确定某个参数时，固定该参数，并记录每个固定值的来源。[选择拟合设置](fitting-controls.html)给出 `map`、边界和物种预设的规则；[估计参数列表](estimation-parameters.html)给出全部变换方式。
 
 <h2 id="run">3. 运行完整示例</h2>
 
-下面的脚本用教学数据完整运行每一步：读取 `docs/data` 中的三个 CSV 文件，把生物学设置收在 `bio` 中，由行标签推出体长组中点和边界，设置两个模型的初值和 map，组装并检查 `x`，拟合 ACL（`a`）和 ALSCL（`b`），打印它们的数值检查，绘制 `b` 的残差图和产卵生物量图，并把输入列表、去掉 TMB 对象的两个拟合、两张图和会话信息保存到 `output/own-data-example`。请在下载的仓库根目录运行，因为脚本要加载 `scripts/plot_helpers.R` 并读取 `docs/data`：`source("scripts/fit_own_data_example.R", encoding = "UTF-8")`。
+下面的脚本用教学数据完整运行每一步：读取 `docs/data` 中的三个 CSV 文件，把生物学设置收在 `bio` 中，由行标签推出体长组中点和边界，设置两个模型的初值和 map，组装并检查 `x`，拟合 ACL（`a`）和 ALSCL（`b`），打印它们的数值检查，绘制 `b` 的残差图和产卵生物量图，并把输入列表、去掉 TMB 对象的两个拟合、会话信息和两张图保存到 `output/own-data-example`；保存前检查两张图没有网格线，按 `acl_figure_size()` 推荐的尺寸以 300 dpi 写出。请在下载的仓库根目录运行，因为脚本要加载 `scripts/plot_helpers.R` 并读取 `docs/data`：`source("scripts/fit_own_data_example.R", encoding = "UTF-8")`。
 
 ```r
 # ALSCL: CSV -> x -> ACL / ALSCL -> diagnostics and saved summaries.
@@ -43,8 +43,8 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "map_source", "natural
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-if (packageVersion("ALSCL") < "2.4.0")
-  stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
+if (packageVersion("ALSCL") < "2.5.0")
+  stop("This example requires ALSCL >= 2.5.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
@@ -150,12 +150,17 @@ for (fit in list(a, b)) {
       !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
-residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
+residual_plot <- plot_residuals(b, facet_by = "year",
                                 x_breaks = pretty(len_mid, n = 4))
 # Hessian 非正定时省略近似 95% 区间 / Omit approximate 95% intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
-print(residual_plot)
-print(ssb_plot)
+# 交互会话中显示图形；非交互运行只保存下面的 PNG（否则会在工作目录写出 Rplots.pdf）。
+# Show the plots in an interactive session. A non-interactive run only saves the
+# PNG files below; printing without a screen device would write Rplots.pdf.
+if (interactive()) {
+  print(residual_plot)
+  print(ssb_plot)
+}
 # obj 是当前会话的 TMB 指针，不包含在可移植结果中。
 portable <- function(fit) {
   fit$obj <- NULL
@@ -163,10 +168,10 @@ portable <- function(fit) {
 }
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot,
-                width = 10, height = 8, dpi = 150)
-save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot,
-                width = 8, height = 5, dpi = 150)
+# 尺寸由 acl_figure_size() 按图形布局给出，分辨率 300 dpi。
+# The size comes from acl_figure_size() and the resolution is 300 dpi.
+save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot)
+save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot)
 saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
         file.path(output_dir, "assessment_summary.rds"))
@@ -182,7 +187,7 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 
 ![完整示例的 ALSCL 产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/SSB.png?raw=true)
 
-结合数值诊断检查残差规律，并将区间宽度解释为给定假设下的条件精度。产卵生物量区间较窄本身不能证明模型适用；固定输入的不确定性没有包含在该区间中。若脚本提示 "This example requires ALSCL >= 2.4.0"，安装当前版本（[安装 ALSCL](getting-started.html)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明 R 运行在仓库根目录之外；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现 "Review fit diagnostics" 警告，第 5 步说明要改什么。
+结合数值诊断检查残差规律，并将区间宽度解释为给定假设下的条件精度。产卵生物量区间较窄本身不能证明模型适用；固定输入的不确定性没有包含在该区间中。若脚本提示“This example requires ALSCL >= 2.5.0”，安装当前版本（[安装 ALSCL](getting-started.html)）；若找不到 `scripts/plot_helpers.R` 或 `docs/data`，说明 R 运行在仓库根目录之外；若 `check_alscl_data()` 报错，第 1 步解释了这些信息；若拟合结束时出现“Review fit diagnostics”警告，第 5 步说明要改什么。
 
 <h2 id="replace">4. 换成自己的观测数据</h2>
 
@@ -209,14 +214,14 @@ for (model in c("acl", "alscl")) {
 | 脚本中的行 | 改成 | 注意 |
 |---|---|---|
 | `data_dir <- "docs/data"` | 你的 CSV 文件夹，或 `inputs <- read_survey_excel("my_survey.xlsx")` | 三个文件或工作表必须使用这些名称；调查缺测留空 |
-| `bio <- list(...)` | 你的种群的数值 | `M_annual` 是年值，会乘以 `growth_step`；`vbk` 仍按年计；ALSCL 要求 `0 < t0 < rec.age` |
+| `bio <- list(...)` | 你的种群的数值 | `M_annual` 是年值，会乘以 `growth_step`；`vbk` 仍按年计；ALSCL 要求 `t0_lower < t0 < rec.age`，在默认 `t0_lower = 0` 下即 `0 < t0 < rec.age` |
 | `len_mid <- ...`、`len_border <- ...` | 你的体长组中点和内部边界 | 体长组宽度不等时，删除等宽 `stopifnot()` 和中点公式那两行 |
 | `p_acl`、`p_alscl` | 优化器尺度上的初值 | ACL 填 `t0`，ALSCL 填 `log(t0)` |
 | `map_acl`、`map_alscl` | 你要固定或释放的参数 | 空列表沿用模型默认；每次都列出全部固定项 |
 | `zero_action = "error"` | `"missing"`，把零值当作缺失而不是终止 | 零值随后不进入似然 |
 | `output_dir` | 本次评估的文件夹 | 脚本会覆盖其中的文件 |
 
-修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似 "No positive observations in periods: 2004" 的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
+修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似“No positive observations in periods: 2004”的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
 
 <h2 id="fit">5. 直接拟合并读结果</h2>
 
@@ -234,7 +239,7 @@ plot_residuals(b, facet_by = "year", facet_ncol = 5)
 plot_SSB(b, se = TRUE)
 ```
 
-`x` 装好你的表和设置后，每个模型的拟合就是一次调用；脚本存入 `x$fit_args` 的 `train_times = 2` 和 `nstarts = 1` 随之生效，调用中给出的参数，例如 `run_acl(x, nstarts = 4, ncores = 2)`，只在本次调用中覆盖保存的值。看任何估计值之前先读数值检查：收敛码 0、最大梯度小于 0.001、Hessian 正定、没有参数落在边界上，以及 `numerical_ok` 为 `TRUE`；`b$diagnostics$issues` 给出未通过的项目。`extract_estimates()` 返回一张表，包含 `quantity`、`year`、该量所在的 `age` 或 `length`（如有）、`estimate`、`std_error` 和区间 `conf_low` 到 `conf_high`；`extract_parameters()` 列出每个标量参数在自然尺度上的值及其状态 `estimated`、`fixed` 或 `inactive`（共用 F 结构用不到的相关系数）。`plot_CatL()`、`plot_residuals()` 和 `plot_SSB()` 分别画出对观测的拟合、对数残差和带区间的产卵生物量，与[理解第一次拟合](first-model.html)中相同。
+`x` 装好你的表和设置后，每个模型的拟合就是一次调用；脚本存入 `x$fit_args` 的 `train_times = 2` 和 `nstarts = 1` 随之生效，调用中给出的参数，例如 `run_acl(x, nstarts = 4, ncores = 2)`，只在本次调用中覆盖保存的值。看任何估计值之前先读数值检查：收敛码 0、最大梯度小于 0.001、Hessian 正定、没有参数落在边界上，以及 `numerical_ok` 为 `TRUE`；`b$diagnostics$issues` 给出未通过的项目。`extract_estimates()` 返回一张表，包含 `quantity`、`year`、该量所在的 `age` 或 `length`（如有）、`estimate`、`std_error` 和区间 `conf_low` 到 `conf_high`（默认为对数正态区间，与图中的区间相同；`interval = "wald"` 给出对称区间 `estimate +/- 1.96 * SE`）；`extract_parameters()` 列出每个标量参数在自然尺度上的值及其状态 `estimated`、`fixed` 或 `inactive`（共用 F 结构用不到的相关系数）。`plot_CatL()`、`plot_residuals()` 和 `plot_SSB()` 分别画出对观测的拟合、对数残差和带区间的产卵生物量，与[理解第一次拟合](first-model.html)中相同。
 
 检查未通过时，每次只改一处再重新拟合：收敛码不是 0 或梯度很大时，多用几个初值（`nstarts = 4, ncores = 2`）；Hessian 检查未通过时，检查参数尺度、边界、其他初值和剖面。有诊断及生物学依据后，再固定参数或考虑 `F_structure = "year"`；[理解第一次拟合](first-model.html#checks)中的表把每项未通过的检查对应到常见原因。即使检查通过，相邻体长或相邻年份的残差同号成串也说明模型漏掉了数据中的某种特征；[判断拟合是否可用](diagnostics.html)说明如何检查这类规律，以及对 `M` 和其他固定值的敏感性。
 
@@ -269,13 +274,13 @@ rb$rho_text
 plot_fishing_mortality(b, type = "length", se = TRUE)
 ```
 
-`compare_models()` 先核对两次拟合使用了同一张调查表，再比较 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。AIC 在似然拟合与参数数量之间作权衡；对同一观测和相容似然，AIC 较低表示该准则更支持该候选模型。它的结构是否适合这个种群，要用生物学知识判断。[ACL 与 ALSCL 的评估结果有什么不同？](case-compare-assessments.html)用图继续这一比较。
+`compare_models()` 先核对两次拟合使用了同一张调查表，再比较 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。AIC 在似然拟合与参数数量之间作权衡；在对同一观测的可比拟合之间，AIC 较低表示该准则更支持该候选模型。它的结构是否适合这个种群，要用生物学知识判断。[ACL 与 ALSCL 的评估结果有什么不同？](case-compare-assessments.html)用图继续这一比较。
 
 回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 是回溯的轮数，每一轮多去掉一个时间步，所以季度数据四轮等于一年；`peel_step = 4` 则每轮去掉一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值检查，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的序列（[运行回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
 
-在[2.4.3 的记录运行](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，所有拟合均通过数值筛查，但截至 2018 年和 2016 年的 ALSCL 截断拟合保留了优化器码 1。两次拟合的第一轮实际都返回了 0；第二轮将目标函数降低了不到 `8e-10`，却报告 `false convergence (8)`。由于参数向量存在微小差异，原来的选择规则保留了第二轮。开发中的修正会在目标函数和每个参数均数值等价时保留成功轮次，再进行通常的收尾和独立数值检查。重新拟合后，两次均返回码 0，最大梯度低于 `2e-8`；SSB 和 F 相对原结果的变化小于 `1.2e-11`。
+在[2.4.3 的记录运行](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，所有拟合均通过数值检查，但截至 2018 年和 2016 年的两轮 ALSCL 回溯拟合保留了优化器码 1。这两轮的第一次优化都返回了 0；第二次优化将目标函数降低了不到 `8e-10`，却报告 `false convergence (8)`。由于参数向量存在微小差异，原来的选择规则保留了第二次优化。现行的选择规则在目标函数和每个参数均数值等价时保留成功的那次优化，再进行通常的收尾和独立数值检查。重新拟合后，这两轮都返回码 0，最大梯度低于 `2e-8`；SSB 和 F 相对原结果的变化小于 `1.2e-11`。
 
-查看 `fit_diagnostics$optimizer_message`、`selected_pass`、`optimizer_codes` 和 `optimizer_messages`，区分所选结果与其他轮次。失败的重启仍保留在历史中，实际选中的非零码不会被改写。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关：解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
+查看 `fit_diagnostics$optimizer_message`、`selected_pass`、`optimizer_codes` 和 `optimizer_messages`，区分所选结果与其他各次优化。失败的重启仍保留在历史中，选中的那次优化的非零码不会被改写。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关。解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
 
 <h2 id="next">下一步</h2>
 

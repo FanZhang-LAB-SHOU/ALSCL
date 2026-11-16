@@ -85,7 +85,7 @@ residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
   step
 }
 
-#' Check conditional observation residual patterns
+#' Check patterns in the conditional residuals of the survey index
 #'
 #' @param fit A fitted ACL or ALSCL result.
 #' @param max_lag Positive integer. Maximum lag in model time steps.
@@ -98,7 +98,11 @@ residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
 #'   including for quarterly data. Correlations use observations separated by
 #'   the requested actual time lag. These descriptive checks use fitted latent
 #'   effects and are not independent residual tests, simulation envelopes or
-#'   evidence of model adequacy. All plots inherit the package's grid-free theme.
+#'   evidence of model adequacy. The plots follow the settings of
+#'   [acl_theme_set()]; the heat map never shows grid lines. Their titles are
+#'   the title keys check_residuals, check_lag and check_qq, which
+#'   `acl_theme_set(titles = )` changes or removes;
+#'   `acl_theme_set(show_title = FALSE)` removes all three.
 #'
 #'   The quantile-quantile (QQ) plot shows the pooled conditional log
 #'   residuals divided by the fitted observation standard deviation (SD)
@@ -144,30 +148,36 @@ check_fit <- function(fit, max_lag = 5) {
   heat$length_label <- factor(heat$length_label, levels = coordinates$labels)
   lag_data <- correlations
   lag_data$length_label <- factor(lag_data$length_label, levels = coordinates$labels)
+  # Panels named "Length bin 6" and so on, as in the other plots.
+  bins <- stats::setNames(.acl_fix_len_labels(coordinates$labels), coordinates$labels)
   heatmap <- ggplot2::ggplot(heat, ggplot2::aes(x = year, y = length_label, fill = residual)) +
     ggplot2::geom_tile(width = step * .95) +
     ggplot2::scale_fill_gradient2(low = acl_theme("line_color"), mid = "white",
       high = acl_theme("observed_color"), midpoint = 0, na.value = "grey92") +
-    ggplot2::labs(x = "Time", y = "Length group", fill = "Standardized\nlog residual",
-      title = "Conditional observation residuals") + .acl_plot_theme()
+    ggplot2::labs(x = .acl_lab("x", "year"), y = .acl_lab("y", "length"), fill = "Standardized\nlog residual",
+      title = .acl_plot_title(NULL, "check_residuals")) +
+    .acl_scale_x(values = heat$year, time = TRUE) + .acl_plot_theme() + .acl_no_grid()
   lag_plot <- ggplot2::ggplot(lag_data,
       ggplot2::aes(x = lag, y = correlation, group = length_label)) +
-    ggplot2::geom_hline(yintercept = 0, color = acl_theme("hline_color")) +
+    ggplot2::geom_hline(yintercept = 0, color = acl_theme("hline_color"), linewidth = .acl_reference_linewidth) +
     ggplot2::geom_point(na.rm = TRUE, color = acl_theme("point_color"),
                         size = acl_theme("point_size")) +
-    ggplot2::facet_wrap(~length_label) + ggplot2::scale_y_continuous(limits = c(-1, 1)) +
-    ggplot2::labs(x = "Lag (model time steps)", y = "Paired residual correlation",
-      title = "Residual time dependence") + .acl_plot_theme()
+    ggplot2::facet_wrap(~length_label, labeller = ggplot2::as_labeller(bins)) +
+    ggplot2::scale_y_continuous(limits = c(-1, 1)) +
+    ggplot2::labs(x = "Lag (time steps)", y = "Correlation of paired residuals",
+      title = .acl_plot_title(NULL, "check_lag")) + .acl_plot_theme()
   qq_plot <- ggplot2::ggplot(qq, ggplot2::aes(x = theoretical, y = residual)) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, color = acl_theme("hline_color")) +
+    ggplot2::geom_abline(intercept = 0, slope = 1, color = acl_theme("hline_color"),
+                         linewidth = .acl_reference_linewidth) +
     ggplot2::geom_point(color = acl_theme("point_color"), size = acl_theme("point_size")) +
     ggplot2::labs(x = "Standard normal quantile",
-      y = "Conditional log residual / fitted SD",
-      title = "Conditional residual QQ plot",
-      subtitle = "Line of equality. A correctly specified model gives a slope below 1.") +
+      y = "Standardized conditional log residual",
+      title = .acl_plot_title(NULL, "check_qq"),
+      subtitle = "The straight line is the line of equality; a correctly specified model gives a slope below 1.") +
     .acl_plot_theme()
   list(residuals = residual, lag_correlations = correlations, qq_data = qq,
-    plots = list(heatmap = heatmap, lag = lag_plot, qq = qq_plot), time_step = step,
+    plots = list(heatmap = .acl_tidy_axes(heatmap), lag = .acl_tidy_axes(lag_plot),
+                 qq = .acl_tidy_axes(qq_plot + ggplot2::theme(aspect.ratio = 1))), time_step = step,
     notes = c("Conditional residuals use fitted latent effects; no independence or calibrated-test claim.",
       "Lag correlations require at least three nonconstant pairs separated by the actual model-time lag.",
       "Standardized conditional residuals of a correctly specified model have a standard deviation below one, so their QQ points lie inside the line of equality at both tails."))

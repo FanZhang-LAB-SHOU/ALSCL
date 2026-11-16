@@ -30,7 +30,10 @@ and length-group metadata.}
 
 \item{high_col}{Character or NULL. NULL inherits the global high_col setting.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 

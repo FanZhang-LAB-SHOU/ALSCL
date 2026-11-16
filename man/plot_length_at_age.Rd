@@ -59,13 +59,13 @@ caught in the survey.}
 \code{fit$age}.}
 
 \item{facet_by}{\code{"age"} (default): one panel per age class. \code{"none"}: one
-panel with one line per age class, coloured by age class.}
+panel with one line per age class, colored by age class.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
 
-\item{line_color}{Character or NULL. Line colour with \code{facet_by = "age"};
+\item{line_color}{Character or NULL. Line color with \code{facet_by = "age"};
 NULL inherits the global line_color setting. With \code{facet_by = "none"} the
-lines take the colours of the global palette.}
+lines take the colors of the global palette.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
@@ -74,19 +74,24 @@ inherits the global point_size setting.}
 
 \item{observed_color}{Character or NULL. Colour of the observed points with
 \code{facet_by = "age"}; NULL inherits the global observed_color setting. With
-\code{facet_by = "none"} the points take the colour of their age class.}
+\code{facet_by = "none"} the points take the color of their age class.}
 
 \item{observed_name}{Character. Name of the observed points in the legend
 and the caption. Default is "Age readings".}
 
-\item{facet_ncol}{Numeric. Columns in facet wrap. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
 
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 

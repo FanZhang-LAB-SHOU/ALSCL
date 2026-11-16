@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_fishing_mortality.R
 \name{plot_fishing_mortality}
 \alias{plot_fishing_mortality}
-\title{Plot Fishing Mortality from ACL or ALSCL Model}
+\title{Plot the fishing mortality rate from an ACL or ALSCL model}
 \usage{
 plot_fishing_mortality(
   model_result,
@@ -35,22 +35,31 @@ plot_fishing_mortality(
 \arguments{
 \item{model_result}{A list obtained from \code{run_acl} or \code{run_alscl}.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. NULL inherits the global F_color
+setting, or line_color when that is NULL.}
 
 \item{line_type}{Character. The type of the line. Default is "solid".}
 
-\item{facet_ncol}{Integer. The number of columns in facet_wrap.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Character. Scales for facet_wrap. Default is "free".}
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
+\item{se_color}{Character or NULL. Color of the interval. NULL takes the
+color of the line, or the global se_color when that differs from the
+global line_color or when F_color is NULL.}
 
-\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
-global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
+inherits the global se_alpha setting (0.3 under the standard style, 0.2
+under classic). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
 
@@ -68,12 +77,14 @@ the global x_breaks setting when at least one of its values lies on this
 axis; otherwise the breaks are chosen automatically. Expansion follows
 global x_expand.}
 
-\item{title}{Character or NULL. Custom plot title; NULL inherits the global
-F_year, F_age or F_length title, with _se appended for interval plots.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label; NULL inherits the global
 year, age or length label. Results saved without age metadata are plotted
-against group positions, and their uncustomized age axis is labeled Age group.}
+against group positions, and their uncustomized age axis is labelled Age bin.}
 
 \item{ylab}{Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
 The default label gains the time basis of the fit, for example
@@ -86,8 +97,8 @@ The default label gains the time basis of the fit, for example
 \item{base_theme}{A ggplot2 theme object, a supported theme name such as
 "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 settings in theme objects are retained; typography follows the global
-settings and the explicit typography arguments. Major and minor
-grids are removed for every base theme.}
+settings and the explicit typography arguments. Grid lines follow the
+global grid setting for every base theme.}
 
 \item{axis_title_size}{Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).}
 
@@ -130,7 +141,7 @@ informed by observations.
 \details{
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
-The point uses the global point_size setting and the estimate's line colour.
+The point uses the global point_size setting and the estimate's line color.
 
 Age axes and age panels use the fitted ages in \code{model_result$age}.
 The oldest age class of an ACL fit is a plus group and is marked with a
@@ -141,8 +152,12 @@ data keep the group position in \code{AgeGroup} and add the fitted age in
 
 When F is shared across groups (\code{F_structure = "year"}), every
 group has the same series. \code{type = "year"} then draws one panel
-labelled "Shared F" instead of one identical panel per group. The returned
+labelled "All age classes" (ACL) or "All length bins" (ALSCL) instead of
+one identical panel per group. The returned
 data still hold every group.
+
+With the global y_zero setting (TRUE under the default style) the
+y axis of every panel starts at zero.
 
 Matrix positions are matched to fitted time and group metadata;
 optional matrix dimnames do not replace these coordinates. Intervals require

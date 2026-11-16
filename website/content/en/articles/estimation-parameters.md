@@ -11,14 +11,14 @@ On this page you see every scalar parameter of both models, its transformation t
 | `logit_log_R` | `logit_log_R` | plogis; 2 * plogis - 1 with `correlation_range = "symmetric"` |Recruitment correlation, between 0 and 1 by default and between -1 and 1 with the symmetric range|
 | `mean_log_F` | `mean_log_F` | exp |Log F process mean; exp gives its natural-scale median|
 | `log_std_log_F` | `log_sigma_log_F` | exp |Marginal SD of log F deviations|
-| `logit_log_F_y` | `logit_log_F_y` | As `logit_log_R` |Temporal F correlation|
-| `logit_log_F_a` | `logit_log_F_l` | As `logit_log_R` |Age/length F correlation|
-| `log_vbk` | `log_vbk` | exp |Annual VB k|
+| `logit_log_F_y` | `logit_log_F_y` | As `logit_log_R` |Correlation of F between time steps|
+| `logit_log_F_a` | `logit_log_F_l` | As `logit_log_R` |Correlation of F between ages (ACL) or length bins (ALSCL)|
+| `log_vbk` | `log_vbk` | exp |Growth rate k of the von Bertalanffy curve, per year|
 | `log_Linf` | `log_Linf` | exp |Asymptotic length|
-| `t0` | `log_t0` |Identity (ACL); `t0_lower` + exp (ALSCL)|VB t0; in ALSCL it lies above `t0_lower`, which is 0 by default, so it is positive unless you set a negative `t0_lower`|
+| `t0` | `log_t0` |Identity (ACL); `t0_lower` + exp (ALSCL)|Age at length zero, t0, of the von Bertalanffy curve; in ALSCL it lies above `t0_lower`, which is 0 by default, so it is positive unless you set a negative `t0_lower`|
 | `log_cv_len` | `log_cv_len` | exp |Coefficient of variation of length among fish of the same age|
 | none | `log_cv_grow` | exp |Coefficient of variation of growth increments|
-| `log_std_index` | `log_sigma_index` | exp |Log survey observation SD|
+| `log_std_index` | `log_sigma_index` | exp |Standard deviation of the log survey index|
 
 <h2 id="inspect">1. Inspect a preset</h2>
 

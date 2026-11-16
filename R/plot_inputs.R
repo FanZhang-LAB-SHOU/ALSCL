@@ -56,8 +56,8 @@ utils::globalVariables(c("Value", "AgeClass", "Curve", "Year", "Age", "Length"))
 #' @param line_type Character. Line type. Default is "solid".
 #' @param point_size Numeric or NULL. Size of the points at the age classes or
 #'   length bins; NULL inherits the global point_size setting.
-#' @param facet_ncol Numeric. Columns in facet wrap, for M by age class and
-#'   time step. Default is NULL.
+#' @param facet_ncol Integer or NULL. Number of columns of panels of M by age
+#'   class and time step. NULL chooses it from the number of panels.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
@@ -107,7 +107,7 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
                                    axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
                                    x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   .acl_check_flag(return_data, "return_data")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   info <- .acl_derived_fit(fit)
@@ -121,7 +121,7 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
     data <- data.frame(Year = times, Value = input$M)
     p <- ggplot2::ggplot(data, ggplot2::aes(x = Year, y = Value)) + line
     x_key <- "year"; form <- "One value for all age classes and time steps"
-    scale_x <- .acl_scale_x(x_breaks, n_breaks = 10, values = times)
+    scale_x <- .acl_scale_x(x_breaks, n_breaks = 10, values = times, time = TRUE)
   } else if (input$form == "length") {
     mid <- fit$len_mid
     if (!is.numeric(mid) || length(mid) != length(input$M) || any(!is.finite(mid)))
@@ -146,17 +146,18 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
       ggplot2::facet_wrap(~AgeClass, ncol = facet_ncol, scales = facet_scales)
     x_key <- "year"; form <- "By age class and time step"
     scale_x <- .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(ages), facet_ncol, 5),
-                            values = times, check_overlap = TRUE)
+                            values = times, time = TRUE)
   }
   p <- p +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", x_key),
                   y = if (!is.null(ylab)) ylab else .acl_M_label(.acl_rate_basis(fit)),
-                  title = if (!is.null(title)) title else .acl_title("natural_mortality"),
+                  title = .acl_plot_title(title, "natural_mortality"),
                   subtitle = form) +
     scale_x +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
   p <- .acl_show_singletons(p, intersect("AgeClass", names(data)), point_size = point_size)
+  p <- .acl_tidy_axes(p)
   if (return_data) list(plot = p, data = data) else p
 }
 
@@ -176,7 +177,7 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. NULL inherits the global line_color
 #'   setting. When catchability at length changes over time, the lines take
-#'   the colours of the global palette.
+#'   the colors of the global palette.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param point_size Numeric or NULL. Size of the points at the length bins
 #'   or age classes; NULL inherits the global point_size setting.
@@ -220,7 +221,7 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
                                      x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   type <- match.arg(type)
   .acl_check_flag(return_data, "return_data")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (!is.list(fit)) stop("fit must be a fitted ACL or ALSCL result.", call. = FALSE)
@@ -268,18 +269,20 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
       p <- ggplot2::ggplot(data, ggplot2::aes(x = Length, y = Value, color = Curve)) +
         ggplot2::geom_line(linewidth = line_size, linetype = line_type) +
         ggplot2::geom_point(size = point_size) +
-        ggplot2::scale_color_manual(name = "Time steps", values = palette)
-      subtitle <- "By length and time step: one line for each distinct curve"
+        ggplot2::scale_color_manual(name = "Time steps", values = palette,
+                                    guide = .acl_legend_rows(length(palette), 5L))
+      subtitle <- "By length and time step, with one line for each distinct curve"
     }
   }
   p <- p +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", x_key),
                   y = if (!is.null(ylab)) ylab else .acl_lab("y", y_key),
-                  title = if (!is.null(title)) title else .acl_title(title_key),
+                  title = .acl_plot_title(title, title_key),
                   subtitle = subtitle) +
     scale_x +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
   if (!is.null(subtitle)) p <- p + ggplot2::theme(legend.position = "bottom")
+  p <- .acl_tidy_axes(p)
   if (return_data) list(plot = p, data = data) else p
 }

@@ -33,8 +33,8 @@ test_that("native F summaries are unchanged and state their groups", {
     expect_identical(p$data, plot_compare_F_ts(acl, alscl, method = method, basis = "native")$data)
     expect_equal(p$data$MeanF, c(summarize(acl$report$F), summarize(alscl$report$FL)))
     expect_equal(p$data$Year, c(acl$year, alscl$year))
-    expect_match(p$labels$caption, "ACL: .* across 4 ages")
-    expect_match(p$labels$caption, "ALSCL: .* across 3 length bins")
+    expect_match(p$labels$caption, "^ACL takes the .* across 4 ages")
+    expect_match(p$labels$caption, "ALSCL the .* across 3 length bins")
     expect_match(p$labels$y, if (method == "apical") "^Apical fishing mortality rate \\(per year\\)$"
                  else "^Mean fishing mortality rate \\(per year\\)$")
   }
@@ -51,7 +51,7 @@ test_that("the age basis summarizes both fits over shared ages and time steps", 
     expect_equal(p$data$Year, rep(2000:2003, 2L))
     expect_equal(p$data$MeanF, c(summarize(acl$report$F[1:3, 1:4]), summarize(alscl$report$FA)))
     expect_identical(as.character(p$data$Model), rep(c("ACL", "ALSCL"), each = 4L))
-    expect_match(p$labels$caption, "Both fits: .* across 3 ages \\(1 to 3\\), in the 4 time steps")
+    expect_match(p$labels$caption, "Both fits take the .* across 3 ages \\(1 to 3\\) in the 4 time steps")
   }
   # Two ACL fits keep the plus group, which means the same fish in both.
   same <- plot_compare_F_ts(acl, acl, model2_name = "Other", method = "mean", basis = "age")
@@ -90,7 +90,7 @@ test_that("the heatmap note no longer calls the native summary comparable", {
   expect_match(note, "basis = \"age\"", fixed = TRUE)
   expect_false(grepl("comparable summary", note))
   expect_silent(p <- plot_compare_F(acl, acl, model2_name = "Other"))
-  expect_identical(p$scales$get_scales("fill")$name, "F (per year)")
+  expect_identical(p$scales$get_scales("fill")$name, "Fishing mortality rate (per year)")
 })
 
 test_that("shared F is drawn once and the returned data keep every group", {
@@ -104,7 +104,7 @@ test_that("shared F is drawn once and the returned data keep every group", {
       built <- ggplot2::ggplot_build(out$plot)
       expect_equal(nrow(built$layout$layout), 1L)
       expect_identical(as.character(built$layout$layout[[if (model == "ACL") "AgeGroup" else "Group"]]),
-                       "Shared F")
+                       if (model == "ACL") "All age classes" else "All length bins")
       expect_equal(built$data[[1L]]$y, series, ignore_attr = TRUE)
       expect_equal(nrow(out$data), groups * length(fit$year))
       # Layouts with one panel per time step keep the flat profile across groups.
@@ -128,7 +128,8 @@ test_that("ridge plots have one figure title and keep their panel titles", {
   fit <- review_compare_fit("ACL")
   panel_titles <- c("Observed survey length composition over time",
                     "Fitted survey length composition over time")
-  titles <- function(p) c(p[[1L]]$labels$title, p[[2L]]$labels$title)
+  # Long panel titles are wrapped onto two lines so that they fit half a figure.
+  titles <- function(p) gsub("\n", " ", c(p[[1L]]$labels$title, p[[2L]]$labels$title), fixed = TRUE)
   default <- plot_ridges(fit)
   expect_s3_class(default, "patchwork")
   expect_identical(default$patches$annotation$title, "Observed and fitted survey length compositions")
@@ -213,7 +214,7 @@ test_that("acl_theme_reset reports with a message that can be suppressed", {
   withr::local_options(list(acl.theme = NULL))
   acl_theme_set(line_size = 3)
   expect_message(acl_theme_reset(), "reset to defaults")
-  expect_equal(acl_theme("line_size"), 1.5)
+  expect_equal(acl_theme("line_size"), 1)
   expect_silent(suppressMessages(acl_theme_reset()))
   expect_identical(capture.output(result <- suppressMessages(acl_theme_reset())), character())
   expect_null(result)
@@ -241,22 +242,25 @@ test_that("default labels spell out terms and state the time basis of rates", {
   expect_identical(plot_residuals(annual)$labels$y, "Log residual")
   expect_identical(plot_compare_ts(annual, quarterly, model2_name = "Quarterly")$labels$y, "Estimate")
   label <- ggplot2::ggplot_build(plot_VB(annual))$data[[2L]]$label
-  expect_identical(label, "  Linf = 60\n  k = 0.2 per year")
+  expect_identical(label, "  Asymptotic length (Linf) = 60\n  Growth rate (k) = 0.2 per year")
   expect_equal(ggplot2::ggplot_build(plot_VB(annual))$data[[2L]]$hjust, 0)
 })
 
-test_that("the survey index caption follows the line styles in use", {
+test_that("a legend names the observed and fitted survey indices with the line styles in use", {
   withr::local_options(list(acl.theme = NULL))
   fit <- review_compare_fit("ACL")
-  caption <- function(...) plot_CatL(fit, facet_by = "year", ...)$labels$caption
-  expect_identical(caption(), "Thicker line: fitted; thinner line: observed")
-  expect_identical(caption(line_size1 = 1, line_size2 = 3), "Thinner line: fitted; thicker line: observed")
-  expect_identical(caption(line_size1 = 1, line_size2 = 1),
-                   "Opaque line: fitted; more transparent line: observed")
-  expect_identical(caption(line_size1 = 1, line_size2 = 1, line_alpha1 = .3, line_alpha2 = 1),
-                   "More transparent line: fitted; opaque line: observed")
-  expect_null(caption(line_size1 = 1, line_size2 = 1, line_alpha2 = 1))
-  expect_null(plot_CatL(fit)$labels$caption)
+  keys <- function(p) {
+    scale <- p$scales$get_scales("colour")
+    list(labels = scale$breaks, guide = p$guides$guides$colour$params$override.aes)
+  }
+  for (facet_by in c("length", "year")) {
+    p <- plot_CatL(fit, facet_by = facet_by)
+    expect_null(p$labels$caption)
+    expect_identical(keys(p)$labels, c("Observed", "Fitted"))
+  }
+  styled <- keys(plot_CatL(fit, facet_by = "year", line_size1 = 1, line_size2 = 3, line_alpha2 = .4))
+  expect_equal(styled$guide$linewidth, c(3, 1))
+  expect_equal(styled$guide$alpha, c(.4, 1))
 })
 
 test_that("matrices are reshaped in column-major order with integer positions", {

@@ -4,6 +4,12 @@
 #            (docs/results/speed/runs.csv and summary.csv).
 # agreement: every reported estimate and standard error of one fit, original
 #            code against the speed settings (agreement_YTF_ALSCL.csv).
+# The figures use the package style (theme_acl(), acl_palette()); loading the
+# checkout does not fit anything.
+suppressPackageStartupMessages(library(ggplot2))
+suppressMessages(pkgload::load_all('.', quiet = TRUE, export_all = FALSE))
+source('scripts/plot_helpers.R')
+suppressMessages(acl_theme_reset())
 args <- commandArgs(trailingOnly = TRUE)
 results <- if (length(args)) args[1] else 'docs/results/speed'
 figures <- if (length(args) > 1) args[2] else 'docs/figures/speed'
@@ -22,52 +28,52 @@ runs_text <- if (length(n_runs) == 1L) sprintf('median of %d runs', n_runs) else
 computer <- if (is.na(field('CPU'))) 'Computer' else field('CPU')
 cores <- if (is.na(field('Logical CPUs'))) '' else sprintf(' on %s cores', field('Logical CPUs'))
 settings <- c(original = 'Original code (ALSCL 2.0.0)',
-              cppad_par = 'Default: parallel standard errors (CppAD)',
-              tmbad_par = 'Option: framework = "TMBad"')
-cols <- c(original = '#8a8984', cppad_par = '#2a78d6', tmbad_par = '#eb6834')
-pchs <- c(original = 21, cppad_par = 22, tmbad_par = 24)
-ink <- '#0b0b0b'; muted <- '#52514e'; reference <- '#e6e5e1'
-render <- function(name, draw, width = 10, height = 5) {
-  png(file.path(figures, paste0(name, '.png')), width = width * 160, height = height * 160,
-      res = 160, type = 'cairo', bg = 'white'); draw(); dev.off()
-}
+              cppad_par = 'Default, parallel standard errors (CppAD)',
+              tmbad_par = 'Option framework = "TMBad"')
+# The original code is a gray reference; the two speed settings take the
+# primary and accent colors of the package style.
+cols <- c(original = 'grey55', cppad_par = unname(acl_palette(role = 'primary')),
+          tmbad_par = unname(acl_palette(role = 'accent')))
+shapes <- c(original = 21, cppad_par = 22, tmbad_par = 24)
 load <- range(runs$load, na.rm = TRUE)
+case_names <- c(tuna = 'Tuna\n(20 quarters)', flatfish = 'Flatfish\n(20 years)',
+                YTF = 'YTF_example\n(20 years)')
 
-render('timing', function() {
-  par(mfrow = c(1, 2), mar = c(4.5, 6.5, 3, 1), oma = c(5.5, 0, 2.2, 0), las = 1,
-      col.axis = muted, col.lab = ink, fg = muted)
-  cases <- c('tuna', 'flatfish', 'YTF')
-  labels <- c(tuna = 'Tuna\n(20 quarters)', flatfish = 'Flatfish\n(20 years)', YTF = 'YTF_example\n(20 years)')
-  for (model in c('ACL', 'ALSCL')) {
-    r <- runs[runs$model == model & runs$config %in% names(settings), ]
-    s <- summary[summary$model == model & summary$config %in% names(settings), ]
-    xmax <- max(r$elapsed) * 1.32
-    plot(NA, xlim = c(0, xmax), ylim = c(.5, 3.5), yaxt = 'n', xaxs = 'i',
-         xlab = 'Elapsed time per fit (s)', ylab = '', main = model, col.main = ink)
-    axis(2, at = 1:3, labels = labels[cases], tick = FALSE, cex.axis = .85)
-    for (k in seq_along(cases)) for (j in seq_along(settings)) {
-      cfg <- names(settings)[j]; y <- k + (2 - j) * .25
-      t <- r$elapsed[r$case == cases[k] & r$config == cfg]
-      m <- s[s$case == cases[k] & s$config == cfg, ]
-      points(t, rep(y, length(t)), pch = 16, cex = .55, col = adjustcolor(cols[cfg], .45))
-      points(m$median_seconds, y, pch = pchs[cfg], bg = cols[cfg], col = 'white', cex = 1.5, lwd = 1.2)
-      # Label to the right of the slowest run, so that labels do not cover points.
-      text(max(t, m$median_seconds), y, pos = 4, offset = .6, cex = .72, col = ink,
-           labels = if (cfg == 'original') sprintf('%.1f s', m$median_seconds)
-                    else sprintf('%.1f s (%.2fx)', m$median_seconds, m$speedup))
-    }
-  }
-  mtext('Fit time before and after the speed settings', side = 3, outer = TRUE, font = 2,
-        col = ink, line = .6)
-  par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
-  plot(0, 0, type = 'n', bty = 'n', xaxt = 'n', yaxt = 'n')
-  legend('bottom', legend = settings, pch = pchs, pt.bg = cols, col = 'white', pt.cex = 1.4,
-         ncol = 3, bty = 'n', cex = .8, text.col = ink, inset = c(0, .07), x.intersp = .7,
-         text.width = max(strwidth(settings, cex = .8)) * 1.12)
-  mtext(sprintf(paste('Large symbol: %s; small dots: each run; (x): speed-up relative to',
-                      'the original code. %s, shared with other jobs (load average %.0f-%.0f%s).'),
-                runs_text, computer, load[1], load[2], cores), side = 1, line = -1.2, cex = .68, col = muted)
-}, height = 5.4)
+# Elapsed time per fit: each run (small dots) and the median (large symbol,
+# labeled with the time and the speed-up relative to the original code).
+r <- runs[runs$config %in% names(settings), ]
+m <- summary[summary$config %in% names(settings), ]
+for (nm in c('r', 'm')) {
+  z <- get(nm)
+  z$case <- factor(case_names[z$case], levels = case_names)
+  z$config <- factor(z$config, levels = names(settings))
+  assign(nm, z)
+}
+slowest <- aggregate(elapsed ~ case + model + config, r, max)
+m <- merge(m, setNames(slowest, c('case', 'model', 'config', 'slowest')))
+m$label <- ifelse(m$config == 'original', sprintf('%.1f s', m$median_seconds),
+                  sprintf('%.1f s (%.2fx)', m$median_seconds, m$speedup))
+dodge <- position_dodge(width = .75)
+p <- ggplot(m, aes(median_seconds, case, group = config)) +
+  geom_point(data = r, aes(elapsed, case, colour = config), position = dodge,
+             size = .9, alpha = .5, show.legend = FALSE) +
+  geom_point(aes(fill = config, shape = config), position = dodge, size = 3, colour = 'white', stroke = .6) +
+  geom_text(aes(x = pmax(slowest, median_seconds), label = label), position = dodge,
+            hjust = -.15, size = 2.9) +
+  facet_wrap(~model, scales = 'free_x') +
+  scale_colour_manual(values = cols, guide = 'none') +
+  scale_fill_manual(values = cols, labels = settings, name = NULL) +
+  scale_shape_manual(values = shapes, labels = settings, name = NULL) +
+  scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, .35))) +
+  labs(x = 'Elapsed time per fit (seconds)', y = NULL,
+       title = 'Fit time before and after the speed settings',
+       caption = sprintf(paste('Large symbols give the %s, small dots single runs, and the number in parentheses',
+                               'the speed-up relative to the original code.\n%s, shared with other jobs',
+                               '(load average %.0f-%.0f%s).'),
+                         runs_text, computer, load[1], load[2], cores)) +
+  theme_acl() + guides(fill = guide_legend(nrow = 1), shape = guide_legend(nrow = 1))
+# Nine rows of symbols and labels need more height than acl_figure_size() gives a facet.
+save_grid_free_plot(file.path(figures, 'timing.png'), p, height = 6.2)
 
 # The agreement file holds the original values and the exact differences of
 # each setting from them (setting minus original), because R does not parse
@@ -75,42 +81,49 @@ render('timing', function() {
 agreement <- file.path(results, 'agreement_YTF_ALSCL.csv')
 if (file.exists(agreement)) {
   a <- read.csv(agreement)
-  render('agreement', function() {
-    par(mfrow = c(1, 2), mar = c(4.5, 6.4, 3, 2), oma = c(4.2, 0, 2.2, 0), las = 1,
-        col.axis = muted, col.lab = ink, fg = muted)
-    panels <- list(c('estimate', 'Estimate'), c('std_error', 'Standard error'))
-    for (p in panels) {
-      x <- a[[paste0('original_', p[1])]]
-      diff <- function(cfg) a[[paste0(cfg, '_', p[1], '_diff')]]
-      keep <- is.finite(x) & x > 0
-      lim <- range(x[keep])
-      plot(NA, xlim = lim, ylim = lim, log = 'xy', main = p[2], col.main = ink,
-           xlab = paste(p[2], 'with the original code'), ylab = '')
-      title(ylab = paste(p[2], 'with the speed setting'), line = 5)
-      abline(0, 1, col = reference, lwd = 2)
-      for (cfg in c('tmbad_par', 'cppad_par')) {
-        y <- x + diff(cfg)
-        points(x[keep], y[keep], pch = pchs[cfg], cex = .55, col = cols[cfg],
-               bg = adjustcolor(cols[cfg], .35), lwd = .6)
-      }
-      rel <- function(cfg) { ok <- is.finite(x) & x != 0; max(abs(diff(cfg)[ok]) / abs(x[ok])) }
-      describe <- function(cfg) if (all(diff(cfg) == 0, na.rm = TRUE)) 'identical (every difference 0)'
-                                else sprintf('max. relative difference %.1e', rel(cfg))
-      legend('topleft', bty = 'n', cex = .75, text.col = ink, pch = pchs[c('cppad_par', 'tmbad_par')],
-             col = cols[c('cppad_par', 'tmbad_par')], pt.bg = adjustcolor(cols[c('cppad_par', 'tmbad_par')], .35),
-             legend = c(paste('Default:', describe('cppad_par')), paste('TMBad:', describe('tmbad_par'))))
-    }
-    mtext('Results before and after the speed settings: ALSCL fitted to YTF_example', side = 3,
-          outer = TRUE, font = 2, col = ink, line = .6)
-    exact_default <- all(a$cppad_par_estimate_diff == 0, na.rm = TRUE) &&
-      all(a$cppad_par_std_error_diff == 0, na.rm = TRUE)
-    mtext(sprintf(paste('Each point is one row of summary(sdreport) (%s rows: fixed effects, random effects and',
-                        'ADREPORT quantities; positive values shown on log scales).\nPoints on the grey line are',
-                        'equal; %s'),
-                  format(nrow(a), big.mark = ','),
-                  if (exact_default) 'the default settings reproduce the original code exactly.'
-                  else 'the legends give the largest relative difference of each setting.'),
-          side = 1, outer = TRUE, line = 2.6, cex = .72, col = muted)
-  }, height = 5.4)
+  panels <- c(estimate = 'Estimate', std_error = 'Standard error')
+  d <- do.call(rbind, lapply(names(panels), function(k) {
+    x <- a[[paste0('original_', k)]]
+    do.call(rbind, lapply(c('tmbad_par', 'cppad_par'), function(cfg) {
+      diff <- a[[paste0(cfg, '_', k, '_diff')]]
+      data.frame(panel = panels[[k]], config = cfg, original = x, new = x + diff, diff = diff)
+    }))
+  }))
+  d <- d[is.finite(d$original) & d$original > 0, ]
+  d$panel <- factor(d$panel, levels = panels)
+  d$config <- factor(d$config, levels = c('cppad_par', 'tmbad_par'))
+  # The largest relative difference of each setting in each panel.
+  describe <- function(z) {
+    if (all(z$diff == 0)) return('identical (every difference 0)')
+    sprintf('largest relative difference %.1e', max(abs(z$diff) / abs(z$original)))
+  }
+  # Panel names carry the largest difference of each setting.
+  strips <- vapply(levels(d$panel), function(k) paste0(k, '\nDefault ',
+    describe(d[d$panel == k & d$config == 'cppad_par', ]), '\nTMBad ',
+    describe(d[d$panel == k & d$config == 'tmbad_par', ])), character(1))
+  d$panel <- factor(strips[as.character(d$panel)], levels = strips)
+  note_cols <- cols[c('cppad_par', 'tmbad_par')]
+  exact_default <- all(a$cppad_par_estimate_diff == 0, na.rm = TRUE) &&
+    all(a$cppad_par_std_error_diff == 0, na.rm = TRUE)
+  p <- ggplot(d, aes(original, new)) +
+    geom_abline(slope = 1, intercept = 0, colour = 'grey55', linewidth = .8) +
+    geom_point(aes(colour = config, fill = config, shape = config), size = 1.1, stroke = .4, alpha = .7) +
+    facet_wrap(~panel, scales = 'free') +
+    scale_x_log10() + scale_y_log10() +
+    scale_colour_manual(values = note_cols, labels = settings[names(note_cols)], name = NULL) +
+    scale_fill_manual(values = note_cols, labels = settings[names(note_cols)], name = NULL) +
+    scale_shape_manual(values = shapes[names(note_cols)], labels = settings[names(note_cols)], name = NULL) +
+    labs(x = 'Value with the original code', y = 'Value with the speed setting',
+         title = 'Results before and after the speed settings',
+         subtitle = 'ALSCL fitted to YTF_example',
+         caption = sprintf(paste('Each point is one reported value of the fit, %s values of fixed effects, random effects',
+                                 'and derived quantities (positive values, log scales).\nPoints on the gray line are equal; %s'),
+                           format(nrow(a), big.mark = ','),
+                           if (exact_default) 'the default settings reproduce the original code exactly.'
+                           else 'the panel names give the largest relative difference of each setting.')) +
+    theme_acl() + theme(aspect.ratio = 1) +
+    guides(colour = guide_legend(override.aes = list(size = 3, alpha = 1)))
+  # Two square panels side by side; acl_figure_size() treats a fixed aspect ratio as one square plot.
+  save_grid_free_plot(file.path(figures, 'agreement.png'), p, width = 10, height = 7)
 }
 cat('Figures written to', figures, '\n')

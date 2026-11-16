@@ -28,7 +28,9 @@ test_that("simulation summaries also report all converged fits and failure reaso
   expect_equal(z$summary$n_valid_fits, c(1, 1))
   expect_equal(z$summary$failure_rate, c(.75, .75))
   expect_equal(z$summary$bias, c(-.5, 1))
-  expect_equal(z$summary$coverage, c(.5, 1))
+  # Lognormal intervals (the default since 2.5.0): 18 * exp(+/- 1.96 / 18)
+  # contains the truth 20, which 18 +/- 1.96 does not.
+  expect_equal(z$summary$coverage, c(1, 1))
 
   # Converged fits: replicates one and two.
   expect_identical(z$replicates$converged, c(TRUE, TRUE, FALSE, FALSE))
@@ -38,7 +40,7 @@ test_that("simulation summaries also report all converged fits and failure reaso
   expect_equal(z$summary_converged$bias, c(mean(c(1, -2, 2, 3)), 1))
   expect_equal(z$summary_converged$rmse, c(sqrt(mean(c(1, 4, 4, 9))), sqrt(2)))
   expect_equal(z$summary_converged$n_intervals, c(4, 2))
-  expect_equal(z$summary_converged$coverage, c(.25, 1))
+  expect_equal(z$summary_converged$coverage, c(.5, 1))
   expect_identical(z$estimates$converged, rep(c(TRUE, TRUE, FALSE, FALSE), each = 4))
   expect_true(all(is.na(z$estimates$covered_converged[!z$estimates$converged])))
   # Coverage of valid fits is unchanged by the new columns.

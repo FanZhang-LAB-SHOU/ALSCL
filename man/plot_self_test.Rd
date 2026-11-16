@@ -54,8 +54,8 @@ global se_alpha setting.}
 \item{point_size}{Numeric or NULL. Size of the median of a parameter; NULL
 inherits the global point_size setting.}
 
-\item{facet_ncol}{Numeric or NULL. Columns of the time-series panels; NULL
-puts up to three panels in a row.}
+\item{facet_ncol}{Numeric or NULL. Number of columns of the time-series
+panels. NULL chooses it from the number of panels.}
 
 \item{facet_scales}{Character. Scales of the time-series panels: "fixed",
 "free", "free_x" or "free_y". Default is "free_y".}
@@ -63,7 +63,10 @@ puts up to three panels in a row.}
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -110,6 +113,9 @@ has no relative error and is not drawn.
 
 The title uses the theme key \code{self_test}; the axis labels use
 \code{xlab$year} and \code{ylab$relative_error}.
+
+\code{title} is the title of the whole figure. The titles of the
+panels stay when it is removed, because they name the panels.
 }
 \examples{
 \donttest{

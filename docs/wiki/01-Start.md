@@ -4,7 +4,7 @@
 
 [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.4.5 · 简体中文 / English**
+**ALSCL 2.5.0 · 简体中文 / English**
 
 本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
 
@@ -67,9 +67,9 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching dataset generated using the yellowtail flounder (*Limanda ferruginea*) biological settings in `YTF`. It contains a survey-index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length-bin rows and 20 year columns. The first column contains length-bin labels; the remaining columns contain years. [Species identity](https://www.fisheries.noaa.gov/species/yellowtail-flounder).
 
-你应看到 2.4.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
+你应看到 2.5.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
 
-You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.5.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
 如果加载时出现警告，说 TMB 构建时用的是另一个 Matrix ABI 版本，说明 TMB 的二进制包与已安装的 Matrix 不匹配，之后每次拟合都可能以 `All optimization starts failed` 和 `NA/NaN` 失败。运行 `install.packages("TMB", type = "source")`，重启 R 后重新加载软件包。
 
@@ -85,13 +85,13 @@ a <- run_acl(x, silent = TRUE)
 diagnose_model(x$data.CatL, a)
 ```
 
-`run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟；拟合本身约二十秒。`silent = TRUE` 不显示进度信息。
+`run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟；拟合本身约十秒。`silent = TRUE` 不显示进度信息。
 
-`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about twenty seconds. `silent = TRUE` hides the progress messages.
+`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about ten seconds. `silent = TRUE` hides the progress messages.
 
-`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 状态及参数边界检查。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过，并且没有实际上已到极限的参数。优化器原始收敛码和强参数相关须另行检查。即使该筛查通过，也要阅读 `a$diagnostics$issues`；[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)解释各项检查及提示问题的处理方法。
+`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 状态及参数边界检查。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过，并且没有实际上已到极限的参数。优化器原始收敛码和强参数相关须另行检查。即使这些检查通过，也要阅读 `a$diagnostics$issues`；[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)解释各项检查及提示问题的处理方法。
 
-`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when this screen passes; [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin) explains the checks and how to investigate a flagged result.
+`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when these checks pass; [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin) explains the checks and how to investigate a flagged result.
 
 本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
 

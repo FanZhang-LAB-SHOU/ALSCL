@@ -1,7 +1,12 @@
-"Parameter","ACL","ALSCL"
-"Linf",60,60
-"k (vbk)",0.2,0.2
-"t0",0.0167,0.0167
-"cv_len",0.2,0.2
-"cv_grow",NA,0.2
-"sigma_index",0.0995,0.1761
+"Model","Parameter","Estimate","Meaning"
+"ACL","Linf",60,"asymptote of the von Bertalanffy curve of mean length at age (length unit)"
+"ACL","k (vbk)",0.2,"growth coefficient of that curve (per year)"
+"ACL","t0",0.0167,"age at which mean length on that curve is zero (years)"
+"ACL","cv_len",0.2,"coefficient of variation of length at age"
+"ACL","sigma_index",0.0995,"standard deviation of the observation error of the log survey index"
+"ALSCL","Linf",60,"sets the growth increment at length and the mean length of recruits (length unit)"
+"ALSCL","k (vbk)",0.2,"sets the growth increment at length and the mean length of recruits (per year)"
+"ALSCL","t0",0.0167,"sets the mean length of recruits (years)"
+"ALSCL","cv_len",0.2,"coefficient of variation of the length of recruits"
+"ALSCL","cv_grow",0.2,"coefficient of variation of the growth increment"
+"ALSCL","sigma_index",0.1761,"standard deviation of the observation error of the log survey index"

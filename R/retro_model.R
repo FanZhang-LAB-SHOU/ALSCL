@@ -146,7 +146,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
   do.call(retro_model, c(args, unname(extra[!named])))
 }
 
-#' Retrospective Analysis for ACL or ALSCL Models
+#' Retrospective analysis for ACL or ALSCL models
 #'
 #' Conduct a retrospective analysis by sequentially removing the most recent
 #' time steps of data and re-fitting the model. Computes Mohn's rho for SSB,
@@ -222,13 +222,21 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param plot Logical. If TRUE, include plot in return value. Default is FALSE.
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
 #' @param point_size Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape for endpoints. Default is 21.
 #' @param facet_scales Character. Facet scales argument. Default is "free".
-#' @param facet_ncol Integer or NULL. Number of facet columns.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_nrow Integer or NULL. Number of facet rows.
-#' @param title Character or NULL. Custom plot title.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label.
 #' @param ylab Character or NULL. Custom y-axis label.
 #' @param font_family Character or NULL. Font family.
@@ -377,7 +385,8 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
          ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
   q_age_shift <- .acl_q_age_start_shift(fit_args)
   symmetric_starts <- .acl_symmetric_supplied(fit_args$structure, fit_args$parameters, model_type)
-  t0_start <- .acl_t0_lower_start(fit_args$t0_lower, fit_args$parameters, model_type)
+  t0_start <- .acl_t0_lower_start(fit_args$t0_lower, fit_args$parameters, model_type,
+                                  .acl_t0_sources(fit_args))
   fit_args <- .acl_retro_fixed_scalars(fit_args)
   # The full fit and the peels are silent fits, so the notes on a part of the
   # set "von_bertalanffy", on the start of mean_log_R with survey_q_age, on
@@ -516,7 +525,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 }
 
 
-#' Retrospective Analysis for ACL Model
+#' Retrospective analysis for the ACL model
 #'
 #' Convenience wrapper that calls `retro_model(..., model_type = "acl")`.
 #' See [retro_model()] for full documentation of all parameters.
@@ -550,7 +559,7 @@ retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M
 }
 
 
-#' Retrospective Analysis for ALSCL Model
+#' Retrospective analysis for the ALSCL model
 #'
 #' Convenience wrapper that calls `retro_model(..., model_type = "alscl")`.
 #' See [retro_model()] for full documentation of all parameters.
@@ -589,7 +598,21 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 }
 
 
-#' Plot Retrospective Analysis Results
+# Colors of the full fit and of n - 1 peels. With palette = NULL under the
+# "standard" global palette: orange for the full fit and greys for the peels,
+# darkest first, interpolated for more than five peels. Otherwise the
+# colors of the palette.
+.acl_retro_colors <- function(n, palette = NULL) {
+  if (is.null(palette) && identical(acl_theme("palette"), "standard")) {
+    greys <- .acl_standard_colors$retro_peels
+    peels <- n - 1L
+    if (peels > length(greys)) greys <- grDevices::colorRampPalette(greys[c(1L, length(greys))])(peels)
+    return(c(.acl_standard_colors$F, greys[seq_len(peels)]))
+  }
+  .acl_palette(palette %||% acl_theme("palette"), n)
+}
+
+#' Plot the results of a retrospective analysis
 #'
 #' Generate or re-generate the retrospective plot from stored results.
 #' This allows changing display options without re-running the computation.
@@ -598,13 +621,21 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param rho_digits Integer. Decimal places for Mohn's rho. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
 #' @param point_size Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape. Default is 21.
 #' @param facet_scales Character. Facet scales. Default is "free".
-#' @param facet_ncol Integer or NULL. Number of facet columns.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_nrow Integer or NULL. Number of facet rows.
-#' @param title Character or NULL. Custom plot title.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label.
 #' @param ylab Character or NULL. Custom y-axis label.
 #' @param font_family Character or NULL. Font family.
@@ -617,8 +648,12 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param base_theme Character or NULL. Base ggplot2 theme name.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment.
 #' @return A ggplot object.
-#' @param palette Character or NULL. ggsci palette name; NULL inherits acl_theme().
-#'   Native colors are interpolated when there are more peels than colors.
+#' @param palette Character or NULL. Palette name ("standard", "npg", "aaas",
+#'   "nejm", "lancet", "jama"). NULL inherits the global palette. The colors
+#'   of the palette are interpolated when there are more fits than colors.
+#'   With NULL under the "standard" global palette (the default style), the
+#'   full fit is orange and the earlier fits are greys, darkest for the first
+#'   peel.
 #' @param colors Character vector or NULL. Explicit period colors, ordered by
 #'   descending terminal period or named by terminal period. Overrides palette.
 #'   Names are the numeric terminal periods, for example "2019" or "2019.75".
@@ -628,11 +663,14 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #'   as in "2019 Q4". Default colors follow the retrospective peel, so the fit
 #'   with a given terminal period has the same color whether or not another
 #'   fit returned estimates. A fit that failed the numerical screen is drawn
-#'   with a dashed line and a "Numerical screen" legend is added. A requested
+#'   with a dashed line and a "Numerical checks" legend is added. A requested
 #'   fit without estimates, for example after a fit error, stays in the legend
 #'   and is marked "(no estimates)". The subtitle names both kinds of fit, and
 #'   each panel states how many requested peels are valid when Mohn's rho is
 #'   withheld.
+#'   Each panel leaves room for the rho text above the lines (below them for
+#'   the bottom positions). With the default colors of the "standard" palette
+#'   the full fit is drawn again on top of the earlier fits.
 #' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @export
 #' @examples
@@ -658,7 +696,7 @@ plot_retro <- function(retro_result,
   renamed <- .acl_renamed(list(...), "plot_retro")
   if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
   if (is.null(facet_nrow)) facet_nrow <- renamed$facet_nrow
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(font_family)) font_family <- acl_theme("font_family")
   results     <- retro_result$results
@@ -687,11 +725,14 @@ plot_retro <- function(retro_result,
   if (all(is.finite(numeric_periods))) periods <- periods[order(numeric_periods, decreasing = TRUE)]
   peel_of <- peel_of[periods]
   present <- periods %in% as_period(results$RetrospectiveYear[is.finite(results$Value)])
+  # With the colors of the standard palette the full fit is drawn again
+  # on top of the grey peels.
+  full_on_top <- is.null(colors) && is.null(palette) && identical(acl_theme("palette"), "standard")
   if (is.null(colors)) {
     index <- if (anyNA(peel_of) || anyDuplicated(peel_of)) seq_along(periods) else peel_of + 1L
     requested_peels <- suppressWarnings(max(rho_text$RequestedPeels, na.rm = TRUE))
     n_colors <- max(index, if (is.finite(requested_peels)) requested_peels + 1L else 1L)
-    colors <- stats::setNames(.acl_palette(palette %||% acl_theme("palette"), n_colors)[index], periods)
+    colors <- stats::setNames(.acl_retro_colors(n_colors, palette)[index], periods)
   } else {
     if (length(colors) < length(periods)) stop("colors must cover every retrospective period.")
     if (!is.null(names(colors))) {
@@ -703,6 +744,13 @@ plot_retro <- function(retro_result,
   }
   results$RetrospectiveYear <- factor(as_period(results$RetrospectiveYear), levels = periods)
   last_points$RetrospectiveYear <- factor(as_period(last_points$RetrospectiveYear), levels = periods)
+  # Panels named by the full names of the quantities, in the order of the
+  # results.
+  variables <- unique(as.character(results$Variable))
+  panel <- function(x) factor(.acl_quantity_name(x), levels = unique(.acl_quantity_name(variables)))
+  results$Variable <- panel(results$Variable)
+  last_points$Variable <- panel(last_points$Variable)
+  rho_text$Variable <- panel(rho_text$Variable)
 
   # Legend text: quarter labels for quarterly steps, and a statement for a
   # requested fit that returned no estimates.
@@ -743,12 +791,15 @@ plot_retro <- function(retro_result,
     rho_y <- -Inf
     rho_vjust <- -0.5
   }
+  # Each panel has room for the rho text above (or below) the lines, so that
+  # the text does not cover the terminal estimates.
+  rho_room <- ggplot2::scale_y_continuous(expand = ggplot2::expansion(
+      mult = if (pos %in% c("top_right", "top_left")) c(0.05, 0.22) else c(0.22, 0.05)))
 
-  auto_title <- if (!is.null(retro_result$model_type)) {
-    paste0(.acl_title("retro"), " (", toupper(retro_result$model_type), ")")
-  } else {
-    .acl_title("retro")
-  }
+  # The model type is added to the default title in parentheses.
+  auto_title <- .acl_title_text(.acl_title("retro"))
+  if (!is.null(auto_title) && !is.null(retro_result$model_type))
+    auto_title <- paste0(auto_title, " (", toupper(retro_result$model_type), ")")
 
   # A fit that failed the numerical screen is drawn with a dashed line.
   line_layer <- if (mark_screen)
@@ -760,19 +811,21 @@ plot_retro <- function(retro_result,
                                               group = RetrospectiveYear)) +
     line_layer +
     ggplot2::scale_color_manual(values = colors, breaks = periods,
-                                labels = period_labels, drop = FALSE) +
+                                labels = period_labels, drop = FALSE,
+                                guide = .acl_legend_rows(length(periods), 6L)) +
     ggplot2::geom_point(data = last_points, size = point_size, shape = point_shape) +
     ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_ncol, nrow = facet_nrow) +
-    .acl_scale_x(x_breaks, n_breaks = 10) +
+    .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(unique(results$Variable)), facet_ncol, 10),
+                 values = results$Year, time = TRUE) + rho_room +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
                     strip_text_size, legend_text_size,
                     base_theme = base_theme, title_hjust = title_hjust) +
     ggplot2::theme(legend.position = "bottom") +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
-                  y = if (!is.null(ylab)) ylab else "Value", color = legend_title,
-                  title = if (!is.null(title)) title else auto_title)
+                  y = if (!is.null(ylab)) ylab else "Estimate", color = legend_title,
+                  title = .acl_plot_title(title, default = auto_title %||% NA))
   if (mark_screen)
-    p <- p + ggplot2::scale_linetype_manual(name = "Numerical screen",
+    p <- p + ggplot2::scale_linetype_manual(name = "Numerical checks",
       values = c(Passed = "solid", Failed = "dashed"), drop = FALSE) +
       ggplot2::theme(legend.box = "vertical")
 
@@ -780,8 +833,8 @@ plot_retro <- function(retro_result,
   counts <- if (all(c("ValidPeels", "RequestedPeels") %in% names(rho_text)))
     paste0(" (", rho_text$ValidPeels, " of ", rho_text$RequestedPeels, " peels valid)") else ""
   rho_text$Label <- ifelse(is.finite(rho_text$Rho),
-    paste0("rho = ", sprintf(paste0("%.", rho_digits, "f"), rho_text$Rho)),
-    paste0("rho unavailable", counts, ": check diagnostics"))
+    paste0("Mohn's rho = ", sprintf(paste0("%.", rho_digits, "f"), rho_text$Rho)),
+    paste0("Mohn's rho not available", counts, "; see the fit diagnostics"))
   p <- p + ggplot2::geom_text(
     data = rho_text,
     ggplot2::aes(x = Year, label = Label),
@@ -789,15 +842,28 @@ plot_retro <- function(retro_result,
     size = rho_size, family = font_family,
     inherit.aes = FALSE
   )
+  if (full_on_top) {
+    full <- names(peel_of)[which(peel_of == 0L)]
+    if (!length(full)) full <- periods[1L]
+    full_line <- results[as_period(results$RetrospectiveYear) == full[1L], , drop = FALSE]
+    full_point <- last_points[as_period(last_points$RetrospectiveYear) == full[1L], , drop = FALSE]
+    if (nrow(full_line)) p <- p + if (mark_screen)
+      ggplot2::geom_line(data = full_line, ggplot2::aes(linetype = Screen), linewidth = line_size,
+                         show.legend = FALSE) else
+      ggplot2::geom_line(data = full_line, linewidth = line_size, show.legend = FALSE)
+    if (nrow(full_point)) p <- p + ggplot2::geom_point(data = full_point, size = point_size,
+                                                       shape = point_shape, show.legend = FALSE)
+  }
   if (any(!is.finite(rho_text$Rho)) || mark_screen || length(absent_periods)) {
     unit <- if (annual) "terminal year" else "terminal period"
+    fits <- function(periods) paste0(if (length(periods) == 1L) "The fit with " else "The fits with ",
+      unit, if (length(periods) > 1L) "s", " ", paste(periods, collapse = ", "))
     p <- p + ggplot2::labs(subtitle = paste(c(
-      "Available estimates shown; numerical checks or terminal estimates are incomplete.",
-      if (length(failed_periods)) paste0("Failed the numerical screen: ", unit, " ",
-        paste(failed_periods, collapse = ", "), "."),
-      if (length(absent_periods)) paste0("No estimates: ", unit, " ",
-        paste(absent_periods, collapse = ", "), ".")), collapse = "\n"))
+      "The figure shows the available estimates; some fits failed the numerical checks or have no terminal estimates.",
+      if (length(failed_periods)) paste0(fits(failed_periods), " failed the numerical checks."),
+      if (length(absent_periods)) paste0(fits(absent_periods), " returned no estimates.")), collapse = "\n"))
   }
 
+  p <- .acl_tidy_axes(p)
   return(p)
 }

@@ -14,7 +14,7 @@ plot_compare_growth(
   linetypes = NULL,
   line_size = NULL,
   ref_data = NULL,
-  ref_name = "Observed VB",
+  ref_name = "Von Bertalanffy curve from age readings",
   ref_color = "grey30",
   ref_linetype = "dotdash",
   show_points = TRUE,
@@ -25,7 +25,8 @@ plot_compare_growth(
   observed = NULL,
   basis = c("population", "survey"),
   years = NULL,
-  observed_name = "Age readings"
+  observed_name = "Age readings",
+  title = NULL
 )
 }
 \arguments{
@@ -59,7 +60,8 @@ The subtitle gives Linf and k of this curve, which are the parameters
 of a von Bertalanffy curve of the observed lengths at age.}
 
 \item{ref_name}{Character. Nonempty label for the reference curve, distinct
-from both model labels when ref_data is supplied. Default "Observed VB".}
+from both model labels when ref_data is supplied. Default "Von
+Bertalanffy curve from age readings".}
 
 \item{ref_color}{Character. Color for the reference curve and its points,
 and for the points of \code{observed}. Default "grey30".}
@@ -98,6 +100,11 @@ the values are averaged. They must be time steps of both fits.}
 \item{observed_name}{Character. Name of the points of \code{observed} in the
 legend, distinct from both model labels and from \code{ref_name}. Default is
 "Age readings".}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object.
@@ -133,6 +140,9 @@ numbers, averaged over the time steps; \code{report$pla} of an ALSCL fit
 is the length distribution of recruits (and, with the original structure,
 of every age class in the first time step) and is shown by \code{\link[=plot_pla]{plot_pla()}}.
 The subtitle of the left panel states the basis and the time steps.
+
+\code{title} is the title of the whole figure. The titles of the
+panels stay when it is removed, because they name the panels.
 }
 \examples{
 \donttest{

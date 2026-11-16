@@ -14,9 +14,9 @@ a <- run_acl(x, silent = TRUE)
 b <- run_alscl(x, silent = TRUE)
 ```
 
-ALSCL offers two models of the same data. ACL (`run_acl()`) follows the number of fish at each age and converts ages to lengths with an age-length probability matrix. ALSCL (`run_alscl()`) follows the number of fish at each length and age and moves survivors between length bins with a growth transition matrix, which suits stocks that are hard to age. The ACL fit takes about twenty seconds for this example and the ALSCL fit about two minutes, after the one-time compilation of each model. Without `silent = TRUE`, each fit prints its progress and a message that one start was used; [Choose the fitting settings](fitting-controls.html#optimizer) explains when to use more starts.
+ALSCL offers two models of the same data. ACL (`run_acl()`) follows the number of fish at each age and converts ages to lengths with an age-length probability matrix. ALSCL (`run_alscl()`) follows the number of fish at each length and age and moves survivors between length bins with a growth transition matrix, which suits stocks that are hard to age. The ACL fit takes about ten seconds for this example and the ALSCL fit about two minutes, after the one-time compilation of each model. Without `silent = TRUE`, each fit prints its progress and a message that one start was used; [Choose the fitting settings](fitting-controls.html#optimizer) explains when to use more starts.
 
-Both calls read the same `x`: the three tables, the shared biology in `x$fit_args` (recruitment age, number of ages, natural mortality `M`, survey catchability `sel_L50` and `sel_L95`, length bins and time step) and the model's own starting values and `map` in `x$fit_config$acl` or `x$fit_config$alscl`. The [bundle section](#bundle) explains `x` in detail.
+Both calls read the same `x`, which holds the three tables, the shared biology in `x$fit_args` (recruitment age, number of ages, natural mortality `M`, survey catchability `sel_L50` and `sel_L95`, length bins and time step) and the model's own starting values and `map` in `x$fit_config$acl` or `x$fit_config$alscl`. The [bundle section](#bundle) explains `x` in detail.
 
 <h2 id="checks">2. Read the numerical checks</h2>
 
@@ -28,9 +28,9 @@ a$diagnostics$advice
 a$diagnostics$plausibility$note
 ```
 
-Read the numerical checks before interpreting estimates. `diagnose_model()` prints the raw optimizer convergence code (0 means normal termination), the maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. `Numerical checks`, also stored as `a$diagnostics$numerical_ok`, requires a gradient below 0.001, a positive-definite Hessian and covariance matrix, no flagged parameter boundaries and no parameter at its limit in practice. This numerical screen does not include the raw optimizer code or strong parameter correlations; inspect those separately in `a$diagnostics$issues`. Passing the screen supports further examination of the fit but does not establish a unique or global optimum.
+Read the numerical checks before interpreting estimates. `diagnose_model()` prints the raw optimizer convergence code (0 means normal termination), the maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. `Numerical checks`, also stored as `a$diagnostics$numerical_ok`, requires a gradient below 0.001, a positive-definite Hessian and covariance matrix, no flagged parameter boundaries and no parameter at its limit in practice. These checks do not include the raw optimizer code or strong parameter correlations; inspect those separately in `a$diagnostics$issues`. Passing the checks supports further examination of the fit but does not establish a unique or global optimum.
 
-A parameter is at its limit in practice when it has run so far on the optimizer scale that its natural value equals a limit, although no optimizer bound was reached: a variance estimated at zero, a correlation at the end of its range, or the ALSCL growth parameter `t0` at its lower limit `t0_lower`. `a$diagnostics$advice` then says what to do, and it also names the bounds of ACL that can be widened. `a$diagnostics$plausibility$note` holds notes on estimates that pass the numerical checks but have implausible values, such as an estimated initial total mortality rate below the natural mortality rate. The notes do not change the verdict. Both are empty for this fit, and `diagnose_model()` prints the two counts as `Parameters at their limit in practice` and `Plausibility notes`. [Judge whether a fit can be used](diagnostics.html#numerical) describes every check.
+A parameter is at its limit in practice when it has run so far on the optimizer scale that its natural value equals a limit, although no optimizer bound was reached, for example a variance estimated at zero, a correlation at the end of its range, or the ALSCL growth parameter `t0` at its lower limit `t0_lower`. `a$diagnostics$advice` then says what to do, and it also names the bounds of ACL that can be widened. `a$diagnostics$plausibility$note` holds notes on estimates that pass the numerical checks but have implausible values, such as an estimated initial total mortality rate below the natural mortality rate. The notes do not change the verdict. Both are empty for this fit, and `diagnose_model()` prints the two counts as `Parameters at their limit in practice` and `Plausibility notes`. [Judge whether a fit can be used](diagnostics.html#numerical) describes every check.
 
 | Failed check | Possible causes | What to try |
 |---|---|---|
@@ -53,7 +53,7 @@ extract_parameters(a)
 plot_SSB(a, se = TRUE)
 ```
 
-`extract_estimates()` returns one table for the population quantities: spawning biomass `SSB`, recruitment `Rec`, total biomass `B`, abundance `N`, catch numbers `CN` and fishing mortality `F`, with the year, the age or length where the quantity has one, the estimate, its standard error and a 95% interval. The last column, `extrapolated`, is `TRUE` for the fishing mortality and catch of the last time step: no observation informs them, so they are predictions from the F process. When the last time steps have no positive survey observation, the rows from the last time step with an observation onwards are marked as well. `extract_parameters()` lists the scalar parameters with their status (`estimated`, `fixed` or `inactive`) and estimates on the natural scale. `plot_SSB()` draws spawning biomass with its interval; the other plot functions follow the same pattern.
+`extract_estimates()` returns one table for the population quantities: spawning stock biomass `SSB`, recruitment `Rec`, total biomass `B`, abundance `N`, catch in numbers `CN` and fishing mortality `F`, with the year, the age or length where the quantity has one, the estimate, its standard error and a 95% interval (lognormal by default, the interval of the plots; `interval = "wald"` gives the symmetric `estimate +/- 1.96 * SE`). The last column, `extrapolated`, is `TRUE` for the fishing mortality and catch of the last time step; no observation informs them, so they are predictions from the F process. When the last time steps have no positive survey observation, the rows from the last time step with an observation onwards are marked as well. `extract_parameters()` lists the scalar parameters with their status (`estimated`, `fixed` or `inactive`) and estimates on the natural scale. `plot_SSB()` draws spawning stock biomass with its interval; the other plot functions follow the same pattern.
 
 The intervals come from the standard errors of the estimated parameters only; the fixed values in `x$fit_config` contribute no uncertainty. The raw arrays behind the table are in `a$report` (for example `a$report$SSB`), and `a$sd_info` records how the standard errors were computed.
 
@@ -66,12 +66,12 @@ plot_CatL(a, facet_by = "year", facet_ncol = 5)
 plot_residuals(a, facet_by = "year", facet_ncol = 5)
 ```
 
-`plot_CatL()` shows the observed and fitted survey indices across length bins, one panel per year. `plot_residuals()` shows observed minus fitted values on the log scale for those panels. Look for residuals centred near zero and for persistent signs across lengths or time. Such patterns can motivate checks of growth, cohort dynamics or survey catchability, but do not identify a unique cause; [Diagnostics](diagnostics.html) explains how to investigate them.
+`plot_CatL()` shows the observed and fitted survey indices across length bins, one panel per year. `plot_residuals()` shows observed minus fitted values on the log scale for those panels. Look for residuals centered near zero and for persistent signs across lengths or time. Such patterns can motivate checks of growth, cohort dynamics or survey catchability, but do not identify a unique cause; [Diagnostics](diagnostics.html) explains how to investigate them.
 
 <h2 id="compare">5. Compare ACL and ALSCL</h2>
 
 ```r
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$comparison
 comparison$fit_diagnostics
@@ -80,13 +80,13 @@ comparison$growth
 comparison$correlation
 ```
 
-![ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
+![Spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers of ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true)
 
-The figure shows both models' total biomass, spawning biomass and recruitment with intervals. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale calls for closer comparison of growth, mortality and age-length conversion assumptions.
+The figure shows spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers of both models with 95% confidence intervals, ACL as a solid dark-blue line and ALSCL as a dashed orange line. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale calls for closer comparison of growth, mortality and age-length conversion assumptions.
 
 `compare_models()` first verifies that both fits used the same observations, then prints AIC, BIC and fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and any `issues`. AIC balances likelihood fit against parameter count; among compatible fits to the same observations, a lower value supports that candidate under this criterion. Whether its assumptions suit the stock is a separate, biological decision.
 
-Three further tables compare the estimates. `comparison$length_at_age` gives the mean length at age of both fits, averaged over the time steps, and is the comparison of growth. `comparison$growth` lists the growth parameters in a separate block of rows for each model, with their meaning: in ACL, `Linf`, `k` and `t0` are the parameters of a von Bertalanffy curve of mean length at age, whereas in ALSCL they set the growth increment at length and the mean length of recruits, so the two sets are different quantities ([Model principles](model-theory.html#difference-increment)). `comparison$correlation` gives the correlation between the series of the two fits and the ratio of their means. The catch rows are labelled `CN (relative)` and `CB (relative)` and have no ratio, because a fit to a survey index does not determine the level of catch. Here both fits use the same fixed growth parameters, yet mean length at age differs from age 2 on, by up to 2.3 cm at age 10.
+Three further tables compare the estimates. `comparison$length_at_age` gives the mean length at age of both fits, averaged over the time steps, and is the comparison of growth. `comparison$growth` lists the growth parameters in a separate block of rows for each model, with their meaning. In ACL, `Linf`, `k` and `t0` are the parameters of a von Bertalanffy curve of mean length at age, whereas in ALSCL they set the growth increment at length and the mean length of recruits, so the two sets are different quantities ([Model principles](model-theory.html#difference-increment)). `comparison$correlation` gives the correlation between the series of the two fits and the ratio of their means. The catch rows are labelled `CN (relative)` and `CB (relative)` and have no ratio, because a fit to a survey index does not determine the level of catch. Here both fits use the same fixed growth parameters, yet mean length at age differs from age 2 on, by up to 2.3 cm at age 10.
 
 <h2 id="save">6. Save the fit</h2>
 
@@ -126,7 +126,7 @@ Every table and setting can also be passed as a separate argument, as in `do.cal
 | `YTF` | The original list of 26 biological parameters, without survey tables |
 | `example_data` | Three ALSCL tables (9 bins, 2001-2021) of unverified origin, for trying the functions only |
 
-`YTF_example` was generated with ALSCL 2.0.0 (seed 4, 80 burn-in years, 20 retained years, survey log SD 0.1) and is not the empirical dataset of the paper. Its `fit_config` fixes the standard deviation of the log F deviations at 0.302 for both models. This is the marginal SD of the generating AR(1) process, `F_sd / sqrt(1 - F_ar^2)` with `F_sd` = 0.2 and `F_ar` = 0.75; releases up to 2.4.3 stored 0.2, so fits of the example differ from those releases. The data tables are unchanged. The [generation script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) runs the same settings with the installed simulator and records its version. Load the bundled dataset to reproduce the values used in this guide.
+`YTF_example` was generated with ALSCL 2.0.0 (seed 4, 80 burn-in years, 20 retained years, survey log SD 0.1) and is not the empirical dataset of the paper. Its `fit_config` fixes the standard deviation of the log F deviations at 0.302 for both models. This is the marginal SD of the generating AR(1) process, `F_sd / sqrt(1 - F_ar^2)` with `F_sd` = 0.2 and `F_ar` = 0.75. The [generation script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) runs the same settings with the installed simulator and records its version. Load the bundled dataset to reproduce the values used in this guide.
 
 <h2 id="next">What next</h2>
 

@@ -1,6 +1,6 @@
-> 利用调查体长数据的年龄结构与年龄—体长联合结构资源评估模型
+> 利用调查体长数据的年龄结构与年龄-体长联合结构资源评估模型
 
-**ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构 catch-at-length 模型 **ACL**，以及年龄—体长联合结构统计 catch-at-length 模型 **ALSCL**（age- and length-structured statistical catch-at-length），并提供模拟、诊断、模型比较和绘图工具。
+**ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构 catch-at-length 模型 **ACL**，以及年龄-体长联合结构统计 catch-at-length 模型 **ALSCL**（age- and length-structured statistical catch-at-length），并提供模拟、诊断、模型比较和绘图工具。
 
 模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。先选择下面适合自己的入口；首页目录列出基本使用方法，专题案例展示解决具体问题的完整过程。
 
@@ -35,14 +35,14 @@ library(ALSCL)
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
 
-网站对应 ALSCL 2.4.5；各版本变化见[更新记录](news/index.html)。
+网站对应 ALSCL 2.5.0；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 
 | | ACL | ALSCL |
 |---|---|---|
 | 种群状态 | 年龄 × 时间的尾数 | 体长 × 年龄 × 时间的尾数 |
-| 体长与生长表达 | 年龄—体长概率矩阵 | 补充和初始状态使用年龄—体长概率矩阵；存活个体通过生长转移矩阵推进 |
+| 体长与生长表达 | 年龄-体长概率矩阵 | 补充和初始状态使用年龄-体长概率矩阵；存活个体通过生长转移矩阵推进 |
 | 捕捞死亡率 | 按年龄估计 | 按体长估计；年龄别 F 由模型推导 |
 | 拟合函数 | `run_acl()` | `run_alscl()` |
 
@@ -59,12 +59,12 @@ a <- run_acl(x, silent = TRUE)    # 年龄结构模型
 b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型
 diagnose_model(x$data.CatL, a)    # 读任何估计值前先看数值检查
 diagnose_model(x$data.CatL, b)
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 ```
 
 `run_acl(x)` 和 `run_alscl(x)` 读取同一个输入列表 `x`（三张表加设置），各自选择保存的配置。[理解第一次拟合](articles/first-model.html)逐步解释拟合结果、检查和估计值；[选择拟合设置](articles/fitting-controls.html)说明可以修改什么，[速度设置](articles/speed.html)说明如何使用多核。
 
-![模拟 YTF 示例中 ACL 与 ALSCL 的生物量、产卵生物量和补充量估计](assets/manual/figures/ytf/compare_ts.png)
+![ACL 与 ALSCL 对模拟 YTF 示例估计的产卵生物量、补充量、总生物量、总丰度和渔获尾数](assets/manual/figures/ytf/compare_ts.png)
 
 本示例固定了部分生物与过程参数，区间以这些设置为条件。[完整示例](articles/first-model.html) 解释输入、拟合结果与数据来源。
 
@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-先读数值检查（收敛码、梯度、Hessian、边界、已到极限的参数），再看残差规律，然后看对自然死亡率、调查可捕性等固定输入的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较图](articles/model-comparison.html)展示比较图形。
+先读数值检查（收敛码、梯度、Hessian、边界、已到极限的参数），再看残差规律，然后看对自然死亡率、调查可捕性等固定输入的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较与真值](articles/model-comparison.html)展示比较图形。
 
 <h2 id="learn-more">基本功能</h2>
 
@@ -95,6 +95,6 @@ Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical cat
 
 Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1-22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
 
-该研究将 ACL 与 ALSCL 应用于南极磷虾，考察同一队列内体长相关的生长和死亡率差异如何影响资源评估结果。
+该研究将 ACL 与 ALSCL 应用于南极磷虾，考察同一世代内随体长变化的生长和死亡率如何影响资源评估结果。
 
 `citation("ALSCL")` 会给出模型论文和软件包的文献。报告分析时，也应记录 ALSCL 版本、代码提交号、数据来源与拟合假设。

@@ -6,11 +6,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.4.5 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.5.0 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.5。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.5.0。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.5.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.5.0.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -44,7 +44,7 @@ Use these task-based entry points without reading every chapter in numerical ord
 | 10 | [模型比较与真值 · Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) |
 | 11 | [回溯分析 · Retrospectives](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives) |
 | 12 | [年度与季度案例 · Annual and quarterly cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) |
-| 13 | [ggsci 配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) |
+| 13 | [配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) |
 | 14 | [全部函数与参数 · Complete function reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference) |
 | 15 | [复现与故障处理 · Reproducibility and troubleshooting](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility) |
 | 16 | [评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows) |

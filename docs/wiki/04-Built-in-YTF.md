@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation)
 
-**ALSCL 2.4.5 · 简体中文 / English**
+**ALSCL 2.5.0 · 简体中文 / English**
 
 [安装软件包](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)之后，你已经有了输入列表 `x` 和拟合好的 ACL 模型 `a`。本页说明拟合结果包含什么、怎样判断它可用、怎样读估计值，以及第二个模型 ALSCL 与它有何不同。请在同一个 R 会话中按步骤运行；后面的页面会继续使用 `x`、`a` 和 `b`。
 
@@ -26,13 +26,13 @@ a <- run_acl(x, silent = TRUE)
 b <- run_alscl(x, silent = TRUE)
 ```
 
-ALSCL 为同一套调查数据提供两个模型。ACL（`run_acl()`）追踪每个年龄的尾数，用年龄-体长概率矩阵把年龄换算成体长。ALSCL（`run_alscl()`）追踪每个体长和年龄的尾数，用生长转移矩阵把存活个体在体长组之间推进，适合难以鉴定年龄的种群。本例 ACL 拟合约二十秒，ALSCL 约两分钟，不含每个模型只做一次的编译。不设 `silent = TRUE` 时，每次拟合会打印进度，并提示只用了一个初值；什么时候该用更多初值，见[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer)。
+ALSCL 为同一套调查数据提供两个模型。ACL（`run_acl()`）追踪每个年龄的尾数，用年龄-体长概率矩阵把年龄换算成体长。ALSCL（`run_alscl()`）追踪每个体长和年龄的尾数，用生长转移矩阵把存活个体在体长组之间推进，适合难以鉴定年龄的种群。本例 ACL 拟合约十秒，ALSCL 约两分钟，不含每个模型只做一次的编译。不设 `silent = TRUE` 时，每次拟合会打印进度，并提示只用了一个初值；什么时候该用更多初值，见[选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer)。
 
-ALSCL offers two models of the same data. ACL (`run_acl()`) follows the number of fish at each age and converts ages to lengths with an age-length probability matrix. ALSCL (`run_alscl()`) follows the number of fish at each length and age and moves survivors between length bins with a growth transition matrix, which suits stocks that are hard to age. The ACL fit takes about twenty seconds for this example and the ALSCL fit about two minutes, after the one-time compilation of each model. Without `silent = TRUE`, each fit prints its progress and a message that one start was used; [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer) explains when to use more starts.
+ALSCL offers two models of the same data. ACL (`run_acl()`) follows the number of fish at each age and converts ages to lengths with an age-length probability matrix. ALSCL (`run_alscl()`) follows the number of fish at each length and age and moves survivors between length bins with a growth transition matrix, which suits stocks that are hard to age. The ACL fit takes about ten seconds for this example and the ALSCL fit about two minutes, after the one-time compilation of each model. Without `silent = TRUE`, each fit prints its progress and a message that one start was used; [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-optimizer) explains when to use more starts.
 
-两次调用读取同一个 `x`：三张表、`x$fit_args` 中两个模型共用的生物学设置（补充年龄、年龄组数、自然死亡率 `M`、调查可捕性 `sel_L50` 和 `sel_L95`、体长组和时间步），以及 `x$fit_config$acl` 或 `x$fit_config$alscl` 中各模型自己的初值和 `map`。[输入列表一节](#first-model-bundle)详细说明 `x`。
+两次调用读取同一个 `x`，其中有三张表、`x$fit_args` 中两个模型共用的生物学设置（补充年龄、年龄组数、自然死亡率 `M`、调查可捕性 `sel_L50` 和 `sel_L95`、体长组和时间步），以及 `x$fit_config$acl` 或 `x$fit_config$alscl` 中各模型自己的初值和 `map`。[输入列表一节](#first-model-bundle)详细说明 `x`。
 
-Both calls read the same `x`: the three tables, the shared biology in `x$fit_args` (recruitment age, number of ages, natural mortality `M`, survey catchability `sel_L50` and `sel_L95`, length bins and time step) and the model's own starting values and `map` in `x$fit_config$acl` or `x$fit_config$alscl`. The [bundle section](#first-model-bundle) explains `x` in detail.
+Both calls read the same `x`, which holds the three tables, the shared biology in `x$fit_args` (recruitment age, number of ages, natural mortality `M`, survey catchability `sel_L50` and `sel_L95`, length bins and time step) and the model's own starting values and `map` in `x$fit_config$acl` or `x$fit_config$alscl`. The [bundle section](#first-model-bundle) explains `x` in detail.
 
 <a id="first-model-checks"></a>
 
@@ -46,13 +46,13 @@ a$diagnostics$advice
 a$diagnostics$plausibility$note
 ```
 
-解释估计值之前先读数值检查。`diagnose_model()` 打印优化器原始收敛码（0 表示正常结束）、最大绝对梯度、Hessian 和协方差状态，以及参数边界检查。`Numerical checks` 与 `a$diagnostics$numerical_ok` 相同，要求梯度小于 0.001、Hessian 和协方差矩阵正定，没有标记出的参数边界问题，也没有实际上已到极限的参数。该筛查不包括优化器原始收敛码和强参数相关；须在 `a$diagnostics$issues` 中另行检查。通过筛查后仍需评估拟合，不能据此确认唯一解或全局最优解。
+解释估计值之前先读数值检查。`diagnose_model()` 打印优化器原始收敛码（0 表示正常结束）、最大绝对梯度、Hessian 和协方差状态，以及参数边界检查。`Numerical checks` 与 `a$diagnostics$numerical_ok` 相同，要求梯度小于 0.001、Hessian 和协方差矩阵正定，没有标记出的参数边界问题，也没有实际上已到极限的参数。这些检查不包括优化器原始收敛码和强参数相关；须在 `a$diagnostics$issues` 中另行检查。通过这些检查后仍需评估拟合，不能据此确认唯一解或全局最优解。
 
-Read the numerical checks before interpreting estimates. `diagnose_model()` prints the raw optimizer convergence code (0 means normal termination), the maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. `Numerical checks`, also stored as `a$diagnostics$numerical_ok`, requires a gradient below 0.001, a positive-definite Hessian and covariance matrix, no flagged parameter boundaries and no parameter at its limit in practice. This numerical screen does not include the raw optimizer code or strong parameter correlations; inspect those separately in `a$diagnostics$issues`. Passing the screen supports further examination of the fit but does not establish a unique or global optimum.
+Read the numerical checks before interpreting estimates. `diagnose_model()` prints the raw optimizer convergence code (0 means normal termination), the maximum absolute gradient, Hessian and covariance status, and parameter-boundary checks. `Numerical checks`, also stored as `a$diagnostics$numerical_ok`, requires a gradient below 0.001, a positive-definite Hessian and covariance matrix, no flagged parameter boundaries and no parameter at its limit in practice. These checks do not include the raw optimizer code or strong parameter correlations; inspect those separately in `a$diagnostics$issues`. Passing the checks supports further examination of the fit but does not establish a unique or global optimum.
 
-参数“实际上已到极限”，是指它在优化器尺度上走得很远，自然尺度上的值已等于极限值，但并没有碰到优化器的边界：方差被估计为零，相关系数落在取值范围的端点，或者 ALSCL 的生长参数 `t0` 等于下限 `t0_lower`。这时 `a$diagnostics$advice` 给出处理建议，其中也会指出 ACL 可以放宽的边界。`a$diagnostics$plausibility$note` 存放合理性提示：估计值通过了数值检查但数值不合理，例如估计的初始总死亡率低于自然死亡率。这些提示不改变检查结论。本例两者都为空，`diagnose_model()` 以 `Parameters at their limit in practice` 和 `Plausibility notes` 两行打印它们的个数。每项检查的说明见[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-numerical)。
+参数“实际上已到极限”，是指它在优化器尺度上走得很远，自然尺度上的值已等于极限值，但并没有碰到优化器的边界，例如方差被估计为零，相关系数落在取值范围的端点，或者 ALSCL 的生长参数 `t0` 等于下限 `t0_lower`。这时 `a$diagnostics$advice` 给出处理建议，其中也会指出 ACL 可以放宽的边界。`a$diagnostics$plausibility$note` 存放合理性提示：估计值通过了数值检查但数值不合理，例如估计的初始总死亡率低于自然死亡率。这些提示不改变检查结论。本例两者都为空，`diagnose_model()` 以 `Parameters at their limit in practice` 和 `Plausibility notes` 两行打印它们的个数。每项检查的说明见[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-numerical)。
 
-A parameter is at its limit in practice when it has run so far on the optimizer scale that its natural value equals a limit, although no optimizer bound was reached: a variance estimated at zero, a correlation at the end of its range, or the ALSCL growth parameter `t0` at its lower limit `t0_lower`. `a$diagnostics$advice` then says what to do, and it also names the bounds of ACL that can be widened. `a$diagnostics$plausibility$note` holds notes on estimates that pass the numerical checks but have implausible values, such as an estimated initial total mortality rate below the natural mortality rate. The notes do not change the verdict. Both are empty for this fit, and `diagnose_model()` prints the two counts as `Parameters at their limit in practice` and `Plausibility notes`. [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-numerical) describes every check.
+A parameter is at its limit in practice when it has run so far on the optimizer scale that its natural value equals a limit, although no optimizer bound was reached, for example a variance estimated at zero, a correlation at the end of its range, or the ALSCL growth parameter `t0` at its lower limit `t0_lower`. `a$diagnostics$advice` then says what to do, and it also names the bounds of ACL that can be widened. `a$diagnostics$plausibility$note` holds notes on estimates that pass the numerical checks but have implausible values, such as an estimated initial total mortality rate below the natural mortality rate. The notes do not change the verdict. Both are empty for this fit, and `diagnose_model()` prints the two counts as `Parameters at their limit in practice` and `Plausibility notes`. [Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-numerical) describes every check.
 
 | 未通过的检查 / Failed check | 可能原因 / Possible causes | 可以尝试 / What to try |
 |---|---|---|
@@ -77,9 +77,9 @@ extract_parameters(a)
 plot_SSB(a, se = TRUE)
 ```
 
-`extract_estimates()` 把种群量整理成一张表：产卵生物量 `SSB`、补充量 `Rec`、总生物量 `B`、丰度 `N`、捕获尾数 `CN` 和捕捞死亡率 `F`，每行有年份、该量所在的年龄或体长（如有）、估计值、标准误和 95% 区间。最后一列 `extrapolated` 在最后一个时间步的捕捞死亡率和渔获量上为 `TRUE`：没有观测为它们提供信息，它们是由 F 过程得到的预测。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的各行也会被标记。`extract_parameters()` 列出标量参数的状态（`estimated`、`fixed` 或 `inactive`）和自然尺度上的估计值。`plot_SSB()` 画出产卵生物量及其区间，其他绘图函数用法相同。
+`extract_estimates()` 把种群量整理成一张表：产卵生物量 `SSB`、补充量 `Rec`、总生物量 `B`、丰度 `N`、渔获尾数 `CN` 和捕捞死亡率 `F`，每行有年份、该量所在的年龄或体长（如有）、估计值、标准误和 95% 区间（默认为对数正态区间，与图中的区间相同；`interval = "wald"` 给出对称区间 `estimate +/- 1.96 * SE`）。最后一列 `extrapolated` 在最后一个时间步的捕捞死亡率和渔获量上为 `TRUE`；没有观测为它们提供信息，它们是由 F 过程得到的预测。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的各行也会被标记。`extract_parameters()` 列出标量参数的状态（`estimated`、`fixed` 或 `inactive`）和自然尺度上的估计值。`plot_SSB()` 画出产卵生物量及其区间，其他绘图函数用法相同。
 
-`extract_estimates()` returns one table for the population quantities: spawning biomass `SSB`, recruitment `Rec`, total biomass `B`, abundance `N`, catch numbers `CN` and fishing mortality `F`, with the year, the age or length where the quantity has one, the estimate, its standard error and a 95% interval. The last column, `extrapolated`, is `TRUE` for the fishing mortality and catch of the last time step: no observation informs them, so they are predictions from the F process. When the last time steps have no positive survey observation, the rows from the last time step with an observation onwards are marked as well. `extract_parameters()` lists the scalar parameters with their status (`estimated`, `fixed` or `inactive`) and estimates on the natural scale. `plot_SSB()` draws spawning biomass with its interval; the other plot functions follow the same pattern.
+`extract_estimates()` returns one table for the population quantities: spawning stock biomass `SSB`, recruitment `Rec`, total biomass `B`, abundance `N`, catch in numbers `CN` and fishing mortality `F`, with the year, the age or length where the quantity has one, the estimate, its standard error and a 95% interval (lognormal by default, the interval of the plots; `interval = "wald"` gives the symmetric `estimate +/- 1.96 * SE`). The last column, `extrapolated`, is `TRUE` for the fishing mortality and catch of the last time step; no observation informs them, so they are predictions from the F process. When the last time steps have no positive survey observation, the rows from the last time step with an observation onwards are marked as well. `extract_parameters()` lists the scalar parameters with their status (`estimated`, `fixed` or `inactive`) and estimates on the natural scale. `plot_SSB()` draws spawning stock biomass with its interval; the other plot functions follow the same pattern.
 
 区间只来自被估计参数的标准误；`x$fit_config` 中固定的值不贡献不确定性。表格背后的原始数组在 `a$report` 中（例如 `a$report$SSB`），`a$sd_info` 记录标准误的计算方式。
 
@@ -100,14 +100,14 @@ plot_residuals(a, facet_by = "year", facet_ncol = 5)
 
 `plot_CatL()` 按年份分面显示各体长组的观测与拟合调查指数。`plot_residuals()` 显示相应面板中对数尺度的观测值减去拟合值。检查残差是否以零附近为中心，以及是否沿体长或时间持续同号。这些规律可提示检查生长、世代动态或调查可捕性，但不能唯一确定原因；[诊断](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics)说明如何进一步检查。
 
-`plot_CatL()` shows the observed and fitted survey indices across length bins, one panel per year. `plot_residuals()` shows observed minus fitted values on the log scale for those panels. Look for residuals centred near zero and for persistent signs across lengths or time. Such patterns can motivate checks of growth, cohort dynamics or survey catchability, but do not identify a unique cause; [Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) explains how to investigate them.
+`plot_CatL()` shows the observed and fitted survey indices across length bins, one panel per year. `plot_residuals()` shows observed minus fitted values on the log scale for those panels. Look for residuals centered near zero and for persistent signs across lengths or time. Such patterns can motivate checks of growth, cohort dynamics or survey catchability, but do not identify a unique cause; [Diagnostics](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics) explains how to investigate them.
 
 <a id="first-model-compare"></a>
 
 ### 5. 比较 ACL 与 ALSCL / Compare ACL and ALSCL
 
 ```r
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 comparison <- compare_models(a, b, x$data.CatL)
 comparison$comparison
 comparison$fit_diagnostics
@@ -116,19 +116,19 @@ comparison$growth
 comparison$correlation
 ```
 
-![ACL 与 ALSCL 的生物量、产卵生物量和补充量估计 / ACL and ALSCL biomass, spawning biomass and recruitment estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=5ec8cc9f7b69)
+![ACL 与 ALSCL 的产卵生物量、补充量、总生物量、总丰度和渔获尾数 / Spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers of ACL and ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/compare_ts.png?raw=true&v=c39a43a2ba88)
 
-图中是两个模型的总生物量、产卵生物量和补充量及其区间。轨迹相似说明两种种群结构对趋势的判断一致；若估计尺度持续不同，应进一步比较两种结构的生长、死亡率和年龄–体长转换假设。
+图中是两个模型的产卵生物量、补充量、总生物量、总丰度和渔获尾数及其 95% 置信区间，ACL 为深蓝色实线，ALSCL 为橙色虚线。轨迹相似说明两种种群结构对趋势的判断一致；若估计尺度持续不同，应进一步比较两种结构的生长、死亡率和年龄-体长转换假设。
 
-The figure shows both models' total biomass, spawning biomass and recruitment with intervals. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale calls for closer comparison of growth, mortality and age-length conversion assumptions.
+The figure shows spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers of both models with 95% confidence intervals, ACL as a solid dark-blue line and ALSCL as a dashed orange line. Similar trajectories mean the two population structures agree on the trend; a persistent difference in scale calls for closer comparison of growth, mortality and age-length conversion assumptions.
 
 `compare_models()` 先核对两次拟合使用的观测相同，再打印 AIC、BIC 和拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过数值检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。AIC 在似然拟合与参数数量之间作权衡；对同一观测和相容似然，AIC 较低表示该准则更支持该候选模型。它的假设是否适合这个种群，是另一个需要用生物学知识回答的问题。
 
 `compare_models()` first verifies that both fits used the same observations, then prints AIC, BIC and fit statistics. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the numerical checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and any `issues`. AIC balances likelihood fit against parameter count; among compatible fits to the same observations, a lower value supports that candidate under this criterion. Whether its assumptions suit the stock is a separate, biological decision.
 
-另有三张表比较估计结果。`comparison$length_at_age` 给出两次拟合各年龄的平均体长（对各时间步取平均），生长的比较看这张表。`comparison$growth` 把每个模型的生长参数各列成一组行，并注明含义：在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长的 von Bertalanffy 曲线参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两组参数不是同一种量（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)）。`comparison$correlation` 给出两次拟合各序列之间的相关系数和均值之比。渔获量的两行标为 `CN (relative)` 和 `CB (relative)`，不给比值，因为只拟合调查指数时渔获量的水平无法确定。本例两次拟合固定的生长参数相同，但从 2 龄起各年龄平均体长就有差别，10 龄时相差最大，为 2.3 cm。
+另有三张表比较估计结果。`comparison$length_at_age` 给出两次拟合各年龄的平均体长（对各时间步取平均），生长的比较看这张表。`comparison$growth` 把每个模型的生长参数各列成一组行，并注明含义。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长的 von Bertalanffy 曲线参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两组参数不是同一种量（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)）。`comparison$correlation` 给出两次拟合各序列之间的相关系数和均值之比。渔获量的两行标为 `CN (relative)` 和 `CB (relative)`，不给比值，因为只拟合调查指数时渔获量的水平无法确定。本例两次拟合固定的生长参数相同，但从 2 龄起各年龄平均体长就有差别，10 龄时相差最大，为 2.3 cm。
 
-Three further tables compare the estimates. `comparison$length_at_age` gives the mean length at age of both fits, averaged over the time steps, and is the comparison of growth. `comparison$growth` lists the growth parameters in a separate block of rows for each model, with their meaning: in ACL, `Linf`, `k` and `t0` are the parameters of a von Bertalanffy curve of mean length at age, whereas in ALSCL they set the growth increment at length and the mean length of recruits, so the two sets are different quantities ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)). `comparison$correlation` gives the correlation between the series of the two fits and the ratio of their means. The catch rows are labelled `CN (relative)` and `CB (relative)` and have no ratio, because a fit to a survey index does not determine the level of catch. Here both fits use the same fixed growth parameters, yet mean length at age differs from age 2 on, by up to 2.3 cm at age 10.
+Three further tables compare the estimates. `comparison$length_at_age` gives the mean length at age of both fits, averaged over the time steps, and is the comparison of growth. `comparison$growth` lists the growth parameters in a separate block of rows for each model, with their meaning. In ACL, `Linf`, `k` and `t0` are the parameters of a von Bertalanffy curve of mean length at age, whereas in ALSCL they set the growth increment at length and the mean length of recruits, so the two sets are different quantities ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-difference-increment)). `comparison$correlation` gives the correlation between the series of the two fits and the ratio of their means. The catch rows are labelled `CN (relative)` and `CB (relative)` and have no ratio, because a fit to a survey index does not determine the level of catch. Here both fits use the same fixed growth parameters, yet mean length at age differs from age 2 on, by up to 2.3 cm at age 10.
 
 <a id="first-model-save"></a>
 
@@ -184,9 +184,9 @@ Every table and setting can also be passed as a separate argument, as in `do.cal
 | `YTF` | 原有的 26 项生物参数列表，不含调查表 / The original list of 26 biological parameters, without survey tables |
 | `example_data` | 三张 ALSCL 数据表（9 个体长组，2001-2021），来源未核实，只用于试运行函数 / Three ALSCL tables (9 bins, 2001-2021) of unverified origin, for trying the functions only |
 
-`YTF_example` 由 ALSCL 2.0.0 的模拟器生成（种子 4，预热 80 年，保留 20 年，调查对数 SD 0.1），不是论文的实测数据。它的 `fit_config` 把两个模型对数 F 偏差的标准差都固定在 0.302。这是生成数据的 AR(1) 过程的边际标准差 `F_sd / sqrt(1 - F_ar^2)`，其中 `F_sd` = 0.2，`F_ar` = 0.75；2.4.3 及之前的版本保存的是 0.2，所以示例的拟合结果与这些版本不同。数据表没有变化。[生成脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R)会用当前安装的模拟器运行同一组设置，并记录版本。复现本说明书中的数值时，请读取包内随附的数据。
+`YTF_example` 由 ALSCL 2.0.0 的模拟器生成（种子 4，预热 80 年，保留 20 年，调查对数 SD 0.1），不是论文的实测数据。它的 `fit_config` 把两个模型对数 F 偏差的标准差都固定在 0.302。这是生成数据的 AR(1) 过程的边际标准差 `F_sd / sqrt(1 - F_ar^2)`，其中 `F_sd` = 0.2，`F_ar` = 0.75。[生成脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R)会用当前安装的模拟器运行同一组设置，并记录版本。复现本说明书中的数值时，请读取包内随附的数据。
 
-`YTF_example` was generated with ALSCL 2.0.0 (seed 4, 80 burn-in years, 20 retained years, survey log SD 0.1) and is not the empirical dataset of the paper. Its `fit_config` fixes the standard deviation of the log F deviations at 0.302 for both models. This is the marginal SD of the generating AR(1) process, `F_sd / sqrt(1 - F_ar^2)` with `F_sd` = 0.2 and `F_ar` = 0.75; releases up to 2.4.3 stored 0.2, so fits of the example differ from those releases. The data tables are unchanged. The [generation script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) runs the same settings with the installed simulator and records its version. Load the bundled dataset to reproduce the values used in this guide.
+`YTF_example` was generated with ALSCL 2.0.0 (seed 4, 80 burn-in years, 20 retained years, survey log SD 0.1) and is not the empirical dataset of the paper. Its `fit_config` fixes the standard deviation of the log F deviations at 0.302 for both models. This is the marginal SD of the generating AR(1) process, `F_sd / sqrt(1 - F_ar^2)` with `F_sd` = 0.2 and `F_ar` = 0.75. The [generation script](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/data-raw/YTF_example.R) runs the same settings with the installed simulator and records its version. Load the bundled dataset to reproduce the values used in this guide.
 
 <a id="first-model-next"></a>
 

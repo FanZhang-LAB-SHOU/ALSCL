@@ -239,8 +239,14 @@ example -1, to allow negative t0; a known t0 is then supplied as
 \code{parameters = list(log_t0 = log(t0 - t0_lower))}. When log_t0 is not
 supplied, its default start is converted so that t0 keeps its default
 value (1/60 year, fixed by default). A supplied log_t0 is read with the
-new limit, and the fit gives a message with the t0 that it means (unless
-\code{silent = TRUE}). Reported t0 values are always on the natural scale.}
+new limit. When t0_lower and log_t0 come from different places, one from
+the arguments of the call and the other from the bundle or a saved
+recipe (for example \code{run_alscl(YTF_example, t0_lower = -1)}, whose
+bundle stores a log_t0 chosen for t0_lower = 0), the fit gives a message
+with the t0 that it means (unless \code{silent = TRUE}). There is no message
+when both are stored in the bundle, as in \link{whiting_example}, or both are
+given in the same call. Reported t0 values are always on the natural
+scale.}
 
 \item{survey_q}{Optional survey catchability at length: a numeric vector
 with one positive value per length bin. It is used in place of the

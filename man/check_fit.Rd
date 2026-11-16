@@ -2,7 +2,7 @@
 % Please edit documentation in R/check_fit.R
 \name{check_fit}
 \alias{check_fit}
-\title{Check conditional observation residual patterns}
+\title{Check patterns in the conditional residuals of the survey index}
 \usage{
 check_fit(fit, max_lag = 5)
 }
@@ -19,14 +19,18 @@ correlation and status. Fewer than three pairs or constant paired values
 yield NA, not an artificial zero correlation.
 }
 \description{
-Check conditional observation residual patterns
+Check patterns in the conditional residuals of the survey index
 }
 \details{
 Missing periods are never compressed: lag one means one model step,
 including for quarterly data. Correlations use observations separated by
 the requested actual time lag. These descriptive checks use fitted latent
 effects and are not independent residual tests, simulation envelopes or
-evidence of model adequacy. All plots inherit the package's grid-free theme.
+evidence of model adequacy. The plots follow the settings of
+\code{\link[=acl_theme_set]{acl_theme_set()}}; the heat map never shows grid lines. Their titles are
+the title keys check_residuals, check_lag and check_qq, which
+\code{acl_theme_set(titles = )} changes or removes;
+\code{acl_theme_set(show_title = FALSE)} removes all three.
 
 The quantile-quantile (QQ) plot shows the pooled conditional log
 residuals divided by the fitted observation standard deviation (SD)

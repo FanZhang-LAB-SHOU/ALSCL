@@ -10,7 +10,8 @@
   values = NULL,
   auto_breaks = NULL,
   labels = ggplot2::waiver(),
-  check_overlap = FALSE
+  check_overlap = FALSE,
+  time = FALSE
 )
 }
 \arguments{
@@ -26,12 +27,17 @@
 
 \item{check_overlap}{Logical. Omit automatic tick labels that would
 overprint in narrow facets.}
+
+\item{time}{Logical. The axis is a time axis in years: labels at whole
+years by the rule of \code{.acl_time_axis()} and unlabelled minor tick
+marks between them. \code{.acl_tidy_axes()} adapts both to the layout.}
 }
 \description{
 Explicit breaks from the plot call are always used. The global x_breaks
 setting is used only when at least one of its values lies within the range
 of \code{values}, the x coordinates of the plot; one global setting cannot
 fit time, age and length axes at once. Otherwise the breaks are
-\code{auto_breaks}, or pretty breaks when that is NULL.
+\code{auto_breaks}, or pretty breaks when that is NULL, or the breaks of
+a time axis when \code{time = TRUE}.
 }
 \keyword{internal}

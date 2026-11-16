@@ -96,7 +96,7 @@ Glossary (one term per concept):
 | Datasets generated from a fitted model (`simulate_fit()`) | fitted-model simulation | 从拟合模型模拟调查数据 |
 | A fit saved without the live TMB object (`save_assessment()`) | saved fit | 保存的拟合结果 |
 | Standard errors from `TMB::sdreport()` | standard errors | 标准误 |
-| `B`, `SSB`, `Rec`, `N`, `F` | biomass, spawning biomass, recruitment, abundance, fishing mortality | 生物量、产卵生物量、补充量、丰度、捕捞死亡率 |
+| `B`, `SSB`, `Rec`, `N`, `F` | biomass, spawning stock biomass, recruitment, abundance, fishing mortality | 生物量、产卵生物量、补充量、丰度、捕捞死亡率 |
 
 ## Validation
 

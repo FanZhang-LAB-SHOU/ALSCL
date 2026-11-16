@@ -58,7 +58,6 @@ First complete chapter 04 to create the input bundle `x` and the fits `a` and `b
 ```r
 library(ggplot2)
 library(patchwork)
-acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
 '''
@@ -75,7 +74,7 @@ chapters=[
 ('10-Model-Comparisons','模型比较与真值 · Model comparisons',gallery_chapter('10-Model-Comparisons')),
 ('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
-('13-Colors-and-Export','ggsci 配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
+('13-Colors-and-Export','配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),
 ('14-Function-Reference','全部函数与参数 · Complete function reference',no_title(read('FUNCTION_REFERENCE.md'))),
 ('15-Reproducibility','复现与故障处理 · Reproducibility and troubleshooting',no_title(read('ADVANCED_WORKFLOWS.md'))),
 ('16-Assessment-Workflows','评估工作流 · Assessment workflows',no_title(read('ASSESSMENT_WORKFLOWS.md'))),

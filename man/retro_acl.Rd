@@ -2,7 +2,7 @@
 % Please edit documentation in R/retro_model.R
 \name{retro_acl}
 \alias{retro_acl}
-\title{Retrospective Analysis for ACL Model}
+\title{Retrospective analysis for the ACL model}
 \usage{
 retro_acl(
   nyear = 5,
@@ -88,7 +88,10 @@ including dev_log_N0 and named NULL releases, are unchanged.}
 When no finite estimates are available, return plot = NULL with a warning;
 fit_diagnostics and errors remain available.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
 \item{point_size}{Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).}
 
@@ -96,14 +99,19 @@ fit_diagnostics and errors remain available.}
 
 \item{facet_scales}{Character. Facet scales argument. Default is "free".}
 
-\item{facet_ncol}{Integer or NULL. Number of facet columns.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_nrow}{Integer or NULL. Number of facet rows.}
 
 \item{train_times}{Positive integer. Number of consecutive optimization passes
 per start. Default is 1; nstarts controls the number of independent starts.}
 
-\item{title}{Character or NULL. Custom plot title.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label.}
 

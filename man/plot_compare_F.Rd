@@ -2,14 +2,15 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_F}
 \alias{plot_compare_F}
-\title{Compare Fishing Mortality Heatmaps Between Two Models}
+\title{Compare the fishing mortality heat maps of two models}
 \usage{
 plot_compare_F(
   model1,
   model2,
   model1_name = NULL,
   model2_name = NULL,
-  palette = NULL
+  palette = NULL,
+  title = NULL
 )
 }
 \arguments{
@@ -19,13 +20,23 @@ plot_compare_F(
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{palette}{Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them.}
+\item{palette}{Character or NULL. Fill colors of the heat maps. NULL uses
+the global low_col and high_col settings (white to dark blue under the
+standard style). A palette name ("standard", "npg", "aaas", "nejm",
+"lancet" or "jama") gives a gradient to the primary color of that
+palette, and any other name is taken as a viridis option, such as
+"magma".}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Compare Fishing Mortality Heatmaps Between Two Models
+Compare the fishing mortality heat maps of two models
 }
 \details{
 ACL rows use the ages stored in each fit. The oldest age class is a

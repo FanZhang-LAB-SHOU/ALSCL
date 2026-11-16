@@ -41,8 +41,7 @@ test_that("process labels distinguish log deviations from multipliers without ch
       expect_s3_class(ggplot2::ggplot_build(b), "ggplot_built")
       for (panel in ggplot2::ggplot_build(b)$layout$panel_params)
         expect_lte(sum(is.finite(panel$x$breaks)), 6L)
-      expect_s3_class(b$theme$panel.grid.major, "element_blank")
-      expect_s3_class(b$theme$panel.grid.minor, "element_blank")
+      expect_style_grid(ggplot2::ggplot_build(b)$plot$theme)
     }
   }
   acl_theme_set(titles = list(dev_R_multiplier = "Recruitment factors"),
@@ -68,9 +67,9 @@ test_that("survey titles identify indices and normalized compositions and honor 
   expect_equal(plot_CatL(fit, facet_by = "year")$labels$title, "By survey period")
   p <- plot_ridges(fit, ridges_scale = 1)
   for (panel in list(p[[1L]], p[[2L]])) {
-    expect_match(panel$labels$title, "survey length composition")
+    # Long panel titles are wrapped onto two lines.
+    expect_match(gsub("\n", " ", panel$labels$title, fixed = TRUE), "survey length composition")
     expect_equal(as.numeric(tapply(panel$data$Abundance, panel$data$year, sum)), rep(1, 3))
-    expect_s3_class(panel$theme$panel.grid.major, "element_blank")
-    expect_s3_class(panel$theme$panel.grid.minor, "element_blank")
+    expect_style_grid(ggplot2::ggplot_build(panel)$plot$theme)
   }
 })

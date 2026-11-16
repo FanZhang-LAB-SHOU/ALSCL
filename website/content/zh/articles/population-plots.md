@@ -5,24 +5,22 @@
 ```r
 library(ggplot2)
 library(patchwork)
-acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
 ## 各体长组的调查指数（对数尺度）
 
 ```r
 # 绘制本图
-plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
 ```
 
 [![各体长组的调查指数（对数尺度）](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_FALSE.png?raw=true)
 
-每个体长组一个面板，横轴为时间，纵轴为对数调查指数：朱红色点为观测的对数指数，深蓝色曲线为拟合的 `Elog_index`。用它逐组检查拟合；点连续偏在曲线一侧（如本例的 16 组和 50 组）说明该组被系统低估或高估，对数尺度让大小体长组的偏离同样可读。
+每个体长组一个面板，横轴为时间，纵轴为对数调查指数。橙色点（图例“Observed”）为观测的对数指数，深蓝色线（“Fitted”）为拟合的 `Elog_index`。用它逐组检查拟合；点连续偏在线的一侧（如本例的 16 组和 50 组）说明该组被系统低估或高估，对数尺度让大小体长组的偏离同样可读。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -30,15 +28,14 @@ plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
 ```
 
 [![各体长组的调查指数（原尺度）](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_length_TRUE.png?raw=true)
 
-同样的面板改为原尺度：深蓝色曲线为 `exp(Elog_index)`，即拟合对数正态分布的中位数，朱红色点为观测指数。用它按指数单位读取偏差；误差是乘性的，高值处看似很大的差距与低值处的小差距可能是相同的相对偏差。
+同样的面板改为原尺度。深蓝色线为 `exp(Elog_index)`，即拟合对数正态分布的中位数，橙色点为观测指数。用它按指数单位读取偏差；误差是乘性的，高值处看似很大的差距与低值处的小差距可能是相同的相对偏差。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -46,9 +43,8 @@ plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
@@ -56,7 +52,7 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。
 
-每个时间步一个面板，横轴为体长，纵轴为对数调查指数：细朱红线为观测对数指数随体长的变化，粗深蓝线为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
+每个时间步一个面板，横轴为体长，纵轴为对数调查指数。细橙色线（“Observed”）为观测对数指数随体长的变化，粗深蓝线（“Fitted”）为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -64,9 +60,8 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
@@ -82,13 +77,13 @@ plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
 
 ```r
 # 绘制本图
-plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "N", se = TRUE,
   line_size = 0.6)
 ```
 
 [![丰度 N](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_abundance_N.png?raw=true)
 
-总丰度是每个时间步各组估计尾数之和。阴影为近似 95% 区间，默认是对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，其中 SE 是估计值的标准误。该区间不会低于零；`interval = "wald"` 绘制早期版本使用的对称区间 `estimate +/- 1.96 * SE`。本例总丰度在 2012 年上升，同年估计补充量达到峰值。
+总丰度是每个时间步各组估计尾数之和。阴影为近似 95% 区间，默认是对数正态区间 `exp(log(estimate) +/- 1.96 * SE / estimate)`，其中 SE 是估计值的标准误。该区间不会低于零；`interval = "wald"` 绘制对称区间 `estimate +/- 1.96 * SE`。本例总丰度在 2012 年上升，同年估计补充量达到峰值。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_abundance)
 
@@ -96,7 +91,7 @@ plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "NA", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -110,7 +105,7 @@ plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
+plot_abundance(b, type = "NL", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -124,7 +119,7 @@ plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "B", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -138,7 +133,7 @@ plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_biomass(b, type = "BA", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "BA", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -152,7 +147,7 @@ plot_biomass(b, type = "BA", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
+plot_biomass(b, type = "BL", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -166,13 +161,13 @@ plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SSB", se = TRUE,
   line_size = 0.6)
 ```
 
 [![产卵生物量 SSB](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_SSB_SSB.png?raw=true)
 
-产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。SSB 的水平取决于拟合时给定的调查可捕性。要与使用年龄别成熟比例的评估比较趋势，请用 `ssb_at_age()` 按年龄别成熟比例计算产卵生物量。
+产卵生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。SSB 的水平取决于拟合时给定的调查可捕性。要与使用年龄别成熟比例的评估比较趋势，请用 `ssb_at_age()` 按年龄别成熟比例计算产卵生物量。
 
 `plot_SSB(b, maturity_at_age = ogive)` 把按年龄别成熟比例算出的 SSB（`ssb_at_age()`）加画为虚线，与模型按体长别成熟比例算出的 SSB 并列；`ogive` 给出每个年龄组的成熟比例（[评估工作流](assessment-workflows.html#outputs)）。不给这个参数时图形不变。
 
@@ -182,7 +177,7 @@ plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_SSB(b, type = "SBA", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SBA", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -196,7 +191,7 @@ plot_SSB(b, type = "SBA", se = TRUE, facet_ncol = 3,
 
 ```r
 # 绘制本图
-plot_SSB(b, type = "SBL", se = TRUE, facet_ncol = 3,
+plot_SSB(b, type = "SBL", se = TRUE,
   line_size = 0.6)
 ```
 
@@ -206,49 +201,49 @@ plot_SSB(b, type = "SBL", se = TRUE, facet_ncol = 3,
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB)
 
-## 捕获尾数 CN
+## 渔获尾数 CN
 
 ```r
 # 绘制本图
-plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CN", se = TRUE,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)
+[![渔获尾数 CN](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CN.png?raw=true)
 
-模型推导的捕捞尾数（`CN`）随时间步变化，带近似 95% 区间。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。只拟合调查指数时渔获量的水平无法确定，它取决于给定的自然死亡率和调查可捕性。`relative_catch()` 返回渔获量除以其在各时间步上的均值，用于与上报渔获量比较趋势。
+模型推导的渔获尾数（`CN`）按时间步画成柱，误差线为近似 95% 区间；`geom = "line"` 改画带阴影区间带的线。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。上岸量可能不包括丢弃的渔获，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。只拟合调查指数时渔获量的水平无法确定，它取决于给定的自然死亡率和调查可捕性。`relative_catch()` 返回渔获量除以其在各时间步上的均值，用于与上报渔获量比较趋势。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## 捕获尾数 CNA
+## 渔获尾数 CNA
 
 ```r
 # 绘制本图
-plot_catch(b, type = "CNA", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CNA", se = TRUE,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)
+[![渔获尾数 CNA](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNA.png?raw=true)
 
 每个面板显示一个年龄组的估计渔获尾数和近似 95% 区间。本例中，较年轻的年龄组渔获尾数较高。比较时请看各面板纵轴的数值。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## 捕获尾数 CNL
+## 渔获尾数 CNL
 
 ```r
 # 绘制本图
-plot_catch(b, type = "CNL", se = TRUE, facet_ncol = 3,
+plot_catch(b, type = "CNL", se = TRUE,
   line_size = 0.6)
 ```
 
-[![捕获尾数 CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)
+[![渔获尾数 CNL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/plot_catch_CNL.png?raw=true)
 
 每个面板显示一个体长组的预期渔获尾数和近似 95% 区间。设组内期初尾数为 N，F 和 M 分别为每个时间步的瞬时捕捞死亡率和自然死亡率。按 Baranov 渔获方程，`C = N × (F/Z) × (1 − exp(−Z))`，其中 `Z = F + M`。ALSCL 将同一体长组各年龄的渔获尾数相加。[Baranov 渔获方程，式（15）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_catch)
 
-## 相对渔获量
+## 渔获量相对于其均值
 
 ```r
 # 绘制本图
@@ -257,9 +252,9 @@ plot_relative_catch(b,
   type = "weight", observed_name = "Simulated catch")
 ```
 
-[![相对渔获量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)
+[![渔获量相对于其均值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/relative_catch.png?raw=true)
 
-线是模型渔获重量除以它在各时间步上的均值，数值来自 `relative_catch()`。点是生成 `YTF_example` 的模拟中的渔获重量，除以它在同样时间步上的均值。用自己的数据时，把上报渔获量作为 `observed` 传入，它是含 `year` 和 `catch` 两列的数据框，单位不限。只拟合调查指数时，渔获量的绝对水平无法确定，它取决于假定的自然死亡率和调查可捕性，所以本图只比较趋势：纵轴标签写明数值是相对值，点线标出均值。上报序列只覆盖部分时间步时，均值取两条序列共有的时间步，`years` 可进一步限定。最后一个时间步的渔获量是预测值，因为该时间步的 F 没有观测提供信息。
+线是模型渔获重量除以它在各时间步上的均值，数值来自 `relative_catch()`。点是生成 `YTF_example` 的模拟中的渔获重量，除以它在同样时间步上的均值。用自己的数据时，把上报渔获量作为 `observed` 传入，它是含 `year` 和 `catch` 两列的数据框，单位不限。只拟合调查指数时，渔获量的绝对水平无法确定，它取决于假定的自然死亡率和调查可捕性，所以本图只比较趋势。纵轴标签写明每条序列都除以其均值，副标题给出计算均值的时间步，点线标出 1。上报序列只覆盖部分时间步时，均值取两条序列共有的时间步，`years` 可进一步限定。最后一个时间步的渔获量是预测值，因为该时间步的 F 没有观测提供信息。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_relative_catch)
 
@@ -272,7 +267,7 @@ plot_recruitment(b, se = TRUE)
 
 [![补充量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/recruitment.png?raw=true)
 
-补充量表示每个时间步进入最小年龄组的估计尾数，阴影为近似 95% 区间。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
+补充量表示每个时间步进入最小年龄组的估计尾数。柱为估计值，误差线为近似 95% 区间；`geom = "line"` 改画带阴影区间带的线。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_recruitment)
 
@@ -285,7 +280,7 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 [![亲体与补充关系](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/SSB_Rec.png?raw=true)
 
-每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
+每个点把某期的产卵生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄，本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -302,10 +297,10 @@ stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 
 ## 显示一个已保存的估计值
 
-此列表仅用于显示 `b` 最后一期的产卵群体生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
+此列表仅用于显示 `b` 最后一期的产卵生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
 
 ```r
-# Display one saved estimate without refitting.
+# 不重新拟合，只显示一个已保存的估计值
 ssb_rows <- which(rownames(b$est_std) == "SSB")
 one_period <- list(
   model_type = b$model_type,

@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF)
 
-**ALSCL 2.4.5 · 简体中文 / English**
+**ALSCL 2.5.0 · 简体中文 / English**
 
 本页把你的调查观测整理成 `run_acl(x)` 和 `run_alscl(x)` 可以接受的输入列表 `x`，并在第一次拟合前检查它。你需要已安装的软件包（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）、按年或按季度的体长别调查尾数、体长别平均体重和成熟比例，以及第 4 步列出的本种群生物学数值。
 
@@ -39,9 +39,9 @@ Both models read three tables with the same layout: the survey index table `data
 
 #### 调查指数表 data.CatL / Survey index table data.CatL
 
-填入体长别调查尾数，或经一致标准化的指数（例如每网次尾数），可以有小数。模型输出的尺度就是这个指数的尺度。使用默认的 logistic 曲线时，调查可捕性对大个体上升到固定的最大值 1，模型不估计可捕性的比例系数。因此，只有当指数本身是体长别绝对丰度估计（例如按扫海面积扩展到种群分布区的尾数）时，丰度、生物量、产卵生物量、补充量和捕获量才是绝对估计。使用每网次尾数这类相对指数时，这些量是以指数单位表示的相对值，坐标轴也应这样标注。捕捞死亡率不受指数尺度影响。某个体长组在某个时间步没有观测时，单元格留空或写 `NA`；不要用 0、短横线或 `<1` 表示未知。0 表示调查在该体长组确实没有捕到。
+填入体长别调查尾数，或经一致标准化的指数（例如每网次尾数），可以有小数。模型输出的尺度就是这个指数的尺度。使用默认的 logistic 曲线时，调查可捕性对大个体上升到固定的最大值 1，模型不估计可捕性的比例系数。因此，只有当指数本身是体长别绝对丰度估计（例如按扫海面积扩展到种群分布区的尾数）时，丰度、生物量、产卵生物量、补充量和渔获量才是绝对估计。使用每网次尾数这类相对指数时，这些量是以指数单位表示的相对值，坐标轴也应这样标注。捕捞死亡率不受指数尺度影响。某个体长组在某个时间步没有观测时，单元格留空或写 `NA`；不要用 0、短横线或 `<1` 表示未知。0 表示调查在该体长组确实没有捕到。
 
-Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. The model outputs are on the scale of this index. With the default logistic curve, survey catchability rises to a fixed maximum of 1 for large fish, and no catchability scale is estimated. Abundance, biomass, spawning biomass, recruitment and catch are therefore absolute estimates only when the index is an absolute abundance estimate at length, such as swept-area numbers expanded to the stock area. With a relative index such as numbers per tow, read them as relative values in the units of the index and label the axes accordingly. Fishing mortality rates do not depend on the scale of the index. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
+Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. The model outputs are on the scale of this index. With the default logistic curve, survey catchability rises to a fixed maximum of 1 for large fish, and no catchability scale is estimated. Abundance, biomass, spawning stock biomass (SSB), recruitment and catch are therefore absolute estimates only when the index is an absolute abundance estimate at length, such as swept-area numbers expanded to the stock area. With a relative index such as numbers per tow, read them as relative values in the units of the index and label the axes accordingly. Fishing mortality rates do not depend on the scale of the index. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
 
 ![调查指数工作表 / Survey index worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true&v=86653ca443d4)
 
@@ -61,7 +61,7 @@ Enter the mean weight of one fish in each bin and time step, in one unit through
 
 填入 0 到 1 之间的成熟比例（60% 写 0.6）。每个单元格都要有值，0 和 1 都可以。产卵生物量等于尾数乘体重乘成熟比例，这张表决定哪些体长组算作亲体。
 
-Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cell needs a value; 0 and 1 are valid. Spawning biomass is numbers times weight times maturity, so this table decides which bins count as spawners.
+Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cell needs a value; 0 and 1 are valid. Spawning stock biomass is numbers times weight times maturity, so this table decides which bins count as spawners.
 
 ![成熟比例工作表 / Maturity worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true&v=8d3c34642af1)
 
@@ -69,9 +69,9 @@ Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cel
 
 ### 2. 确定时间步并处理缺口 / Choose the time step and handle gaps
 
-模型逐个时间步推进种群，`growth_step` 是一个时间步的长度（年）：年度调查为 1，季度调查为 0.25。相邻列标签之差必须恰好等于 `growth_step`，模型才知道两列之间过了多长时间。没有调查的时间步仍要保留为一列，调查单元格留空，体重和成熟比例照常填写；模型会把这一步当作未观测。
+模型逐个时间步推进种群，`growth_step` 是一个时间步的长度（年），年度调查为 1，季度调查为 0.25。相邻列标签之差必须恰好等于 `growth_step`，模型才知道两列之间过了多长时间。没有调查的时间步仍要保留为一列，调查单元格留空，体重和成熟比例照常填写；模型会把这一步当作未观测。
 
-The models advance the population one time step at a time, and `growth_step` is the length of that step in years: 1 for annual surveys, 0.25 for quarterly surveys. Consecutive column labels must differ by exactly `growth_step`, so the models know how much time passed between two columns. A time step without a survey stays in the table as a column of blank survey cells with its weight and maturity filled in; the models then treat that step as unobserved.
+The models advance the population one time step at a time, and `growth_step` is the length of that step in years, 1 for annual surveys and 0.25 for quarterly surveys. Consecutive column labels must differ by exactly `growth_step`, so the models know how much time passed between two columns. A time step without a survey stays in the table as a column of blank survey cells with its weight and maturity filled in; the models then treat that step as unobserved.
 
 | 情况 / Situation | 如何填写 / What to enter |
 |---|---|
@@ -80,9 +80,9 @@ The models advance the population one time step at a time, and `growth_step` is 
 | 某个体长组在某个时间步没有观测 / One bin not observed in one time step | 该调查单元格留空 / Leave that survey cell blank |
 | 记录到的零值 / A recorded zero | 保留 0；在第 4 步决定零值按缺失处理（默认 `zero_action = "missing"`）还是终止拟合（`"error"`） / Keep the 0; decide in step 4 whether zeros are treated as missing (`zero_action = "missing"`, the default) or stop the fit (`"error"`) |
 
-提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。计算年龄–体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界：行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
+提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。计算年龄-体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界。行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
 
-Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length. For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design: when the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
+Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length. For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design. When the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
 
 <a id="data-preparation-import"></a>
 
@@ -164,9 +164,9 @@ x_dome <- prepare_alscl_data(tables, fit_args = list(
 check_alscl_data(x_dome, "acl")$valid
 ```
 
-`M` 有三种形式，由它的 `dim` 属性区分。一个数表示所有年龄、体长和时间步共用一个死亡率。每个年龄组一行的矩阵是按年龄的 M：每个时间步一列，或者只有一列并用于所有时间步，所以不随时间变化的年龄别 M 写作 `matrix(M_at_age, ncol = 1)`。没有维度的数值向量，每个体长组一个值，是按体长的 M。`run_alscl()` 接受这种形式，`run_acl()` 不接受，因为 ACL 只跟踪各年龄的尾数。所有数值都是每个时间步的死亡率。代码中的数字只用来演示这些形式。
+`M` 有三种形式，由它的 `dim` 属性区分。一个数表示所有年龄、体长和时间步共用一个死亡率。每个年龄组一行的矩阵是按年龄的 M，每个时间步一列，或者只有一列并用于所有时间步，所以不随时间变化的年龄别 M 写作 `matrix(M_at_age, ncol = 1)`。没有维度的数值向量，每个体长组一个值，是按体长的 M。`run_alscl()` 接受这种形式，`run_acl()` 不接受，因为 ACL 只跟踪各年龄的尾数。所有数值都是每个时间步的死亡率。代码中的数字只用来演示这些形式。
 
-`M` has three forms, and its `dim` attribute tells them apart. A single number is one rate for all ages, lengths and time steps. A matrix with one row per age class is M by age: it has one column per time step, or one column that is used for every time step, so M by age that is constant over time is `matrix(M_at_age, ncol = 1)`. A numeric vector without dimensions, with one value per length bin, is M by length. `run_alscl()` accepts it and `run_acl()` rejects it, because ACL follows numbers at age only. All values are rates per time step. The numbers in the block only show the forms.
+`M` has three forms, and its `dim` attribute tells them apart. A single number is one rate for all ages, lengths and time steps. A matrix with one row per age class is M by age. It has one column per time step, or one column that is used for every time step, so M by age that is constant over time is `matrix(M_at_age, ncol = 1)`. A numeric vector without dimensions, with one value per length bin, is M by length. `run_alscl()` accepts it and `run_acl()` rejects it, because ACL follows numbers at age only. All values are rates per time step. The numbers in the block only show the forms.
 
 `lorenzen_M()` 按 `M_ref * (length / L_ref)^exponent` 返回按体长的 M。默认指数 -1 使 M 与体长成反比，这是 [Lorenzen 等 (2022)](https://doi.org/10.1016/j.fishres.2022.106327) 得到的种群内部 M 随体长的变化；[Lorenzen (2022)](https://doi.org/10.1016/j.fishres.2022.106454) 指出，体长小于渐近体长的约 20% 时会偏离这一关系。`M_ref` 是体长为 `L_ref` 时的死亡率，而文献中的单一 M 通常代表成鱼，所以 `L_ref` 应取成鱼的体长，数值来自年龄鉴定资料或文献。不要用模型估计的 `Linf`，否则所假定的 M 会依赖于使用它的那次拟合。`round(M_length, 2)` 对 6 cm 组给出 1.33，对 50 cm 组给出 0.16，所以拟合前要检查最小几个体长组的死亡率。
 

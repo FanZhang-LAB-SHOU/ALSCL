@@ -65,9 +65,10 @@ maximum, as in \code{\link[=fit_scenarios]{fit_scenarios()}}.}
 \item{conf_level}{Nominal confidence level of the intervals whose coverage
 is reported, strictly between zero and one. Default 0.95.}
 
-\item{interval}{Form of the interval of a time series: \code{"lognormal"}
-(default), \verb{exp(log(estimate) +/- z * SE / estimate)}, or \code{"wald"},
-\verb{estimate +/- z * SE}, as in the plots of the package.}
+\item{interval}{Form of the interval of a time series. \code{"lognormal"}
+(default) is \verb{exp(log(estimate) +/- z * SE / estimate)}, as in the plots
+of the package and in \code{\link[=extract_estimates]{extract_estimates()}}. \code{"wald"} is
+\verb{estimate +/- z * SE}.}
 
 \item{preserve_missing}{Logical; passed to \code{\link[=simulate_fit]{simulate_fit()}}. Default TRUE
 keeps missing and zero survey cells as they are in the observations.}

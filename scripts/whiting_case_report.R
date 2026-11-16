@@ -28,11 +28,13 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   dir.create(res, recursive = TRUE, showWarnings = FALSE)
   dir.create(fig, recursive = TRUE, showWarnings = FALSE)
   old <- acl_theme(); on.exit(do.call(acl_theme_set, old), add = TRUE)
-  acl_theme_set(palette = "npg", base_theme = "theme_bw")
-  plain <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-  save_plot <- function(id, p, width = 9, height = 5)
-    save_grid_free_plot(file.path(fig, paste0(id, ".png")), p, width = width, height = height,
-                        dpi = 160, bg = "white")
+  # The package style; the figures built here add theme_acl() and take their
+  # colors from acl_palette() and the comparison colors.
+  suppressMessages(acl_theme_reset())
+  plain <- theme_acl()
+  # 300 dpi; the size comes from acl_figure_size() unless width or height is given.
+  save_plot <- function(id, p, width = NULL, height = NULL)
+    save_grid_free_plot(file.path(fig, paste0(id, ".png")), p, width = width, height = height)
   numbers <- list()
   num <- function(id, value, description) {
     numbers[[length(numbers) + 1L]] <<- data.frame(id = id, value = signif(value, 6),
@@ -66,10 +68,10 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   num("data_index_max_year", years[which.max(total)], "Year of the largest annual index")
   obs <- data.frame(Year = rep(years, each = length(mid)), Length = rep(mid, length(years)),
                     Value = as.vector(index))
-  save_plot("index", ggplot(obs, aes(Year, Length, fill = log10(Value))) + geom_tile() +
-    scale_fill_gradient(low = acl_theme("low_col"), high = acl_theme("high_col")) +
-    labs(x = "Year", y = "Length (cm)", fill = "log10 of the survey index\n(number per hour)") + plain,
-    height = 4)
+  save_plot("index", tidy_time_axis(ggplot(obs, aes(Year, Length, fill = log10(Value))) + geom_tile() +
+    scale_fill_gradient(low = "white", high = acl_palette(role = "primary")) +
+    labs(x = "Year", y = "Length (cm)", fill = "Survey index, log10\n(number per hour)") + plain +
+    theme(legend.key.width = unit(1.6, "cm")), years))
 
   # ---- numerical checks and starts ---------------------------------------------
   at_bound <- function(f) {
@@ -171,8 +173,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
                                         ymax = age_readings + age_readings_sd), size = 0.3) +
     scale_colour_manual(values = cols) + scale_x_continuous(breaks = 1:9) +
     labs(x = "Age (years)", y = "Mean length at age in the survey catch (cm)", colour = NULL,
-         subtitle = "Points: age readings, mean and one standard deviation; lines: fitted models") + plain,
-    width = 7, height = 4.5)
+         subtitle = "Points show the mean and one standard deviation of the age readings, lines the fitted models") + plain)
 
   # ---- index at age and apparent total mortality -------------------------------
   # The index at age that a fit implies: numbers by length and age times survey
@@ -273,16 +274,16 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   trend <- function(quantity, column) rbind(
     data.frame(Year = years, Quantity = quantity, Source = "ALSCL", Value = standard(series[series$fit == "alscl", column])),
     data.frame(Year = years, Quantity = quantity, Source = "ICES assessment", Value = standard(series[series$fit == "ices", column])))
-  panels <- rbind(trend("Spawning biomass (log, standardized)", "SSB"),
+  panels <- rbind(trend("Spawning stock biomass (log, standardized)", "SSB"),
                   trend("Recruitment at age 1 (log, standardized)", "recruitment"),
                   data.frame(Year = years, Quantity = "Mean fishing mortality rate, ages 2 to 5 (per year)",
                              Source = rep(c("ALSCL", "ICES assessment"), each = length(years)),
                              Value = c(replace(series$F_ages_2_5[series$fit == "alscl"], length(years), NA), ices_f)))
   panels$Quantity <- factor(panels$Quantity, unique(panels$Quantity))
   two <- stats::setNames(acl_theme("compare_colors")[2:1], c("ALSCL", "ICES assessment"))
-  save_plot("ices_comparison", ggplot(panels[is.finite(panels$Value), ], aes(Year, Value, colour = Source)) +
+  save_plot("ices_comparison", tidy_time_axis(ggplot(panels[is.finite(panels$Value), ], aes(Year, Value, colour = Source)) +
     geom_line() + facet_wrap(~Quantity, ncol = 1, scales = "free_y") + scale_colour_manual(values = two) +
-    labs(x = "Year", y = NULL, colour = NULL) + plain + theme(legend.position = "top"), width = 8, height = 7.5)
+    labs(x = "Year", y = NULL, colour = NULL) + plain, years))
 
   # ---- sensitivity fits -----------------------------------------------------------
   M_mean <- rowMeans(inputs$M_ices)
@@ -301,9 +302,10 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
     geom_line() + geom_point(size = 1) + scale_colour_manual(values = in_cols) +
     scale_x_continuous(breaks = 1:10) + expand_limits(y = 0) +
     labs(x = "Age (years)", y = "Natural mortality rate (per year)", colour = NULL,
-         subtitle = "Bars: range over the years") + plain
+         subtitle = "Bars show the range over the years") + plain
+  # Two panels side by side: acl_figure_size() gives them too little height.
   save_plot("sensitivity_inputs", (p_q | p_M) + plot_layout(guides = "collect") &
-    theme(legend.position = "top"), width = 9, height = 4.2)
+    theme(legend.position = "bottom"), height = 4.6)
   num("q_dome_at_30", inputs$q_dome[mid == 31], "Survey catchability of the sensitivity fit in the bin labelled 31 cm")
   num("q_dome_at_43", inputs$q_dome[mid == 43], "Survey catchability of the sensitivity fit in the last length bin")
   num("q_dome_max", max(inputs$q_dome), "Largest survey catchability of the sensitivity fit")
@@ -319,10 +321,11 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   for (i in seq_len(nrow(sens))) for (v in setdiff(names(sens), "fit"))
     num(paste0(v, "_", sens$fit[i]), sens[[v]][i], paste0(gsub("_", " ", v), ", ", label[[sens$fit[i]]]))
   relative <- function(v) v / mean(v)
-  three <- c(alscl = "Main fit", alscl_M = "M by age and year", alscl_q = "Catchability declining with length")
+  three <- c(alscl = "Main fit", alscl_M = "Natural mortality rate by age and year",
+             alscl_q = "Catchability declining with length")
   lines <- do.call(rbind, lapply(names(three), function(n) {
     s <- series[series$fit == n, ]
-    rbind(data.frame(Year = years, Quantity = "Spawning biomass divided by its mean", Fit = three[[n]], Value = relative(s$SSB)),
+    rbind(data.frame(Year = years, Quantity = "Spawning stock biomass divided by its mean", Fit = three[[n]], Value = relative(s$SSB)),
           data.frame(Year = years, Quantity = "Recruitment divided by its mean", Fit = three[[n]], Value = relative(s$recruitment)),
           data.frame(Year = years, Quantity = "Mean fishing mortality rate, ages 2 to 5 (per year)", Fit = three[[n]],
                      Value = replace(s$F_ages_2_5, length(years), NA)))
@@ -330,16 +333,15 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   lines <- rbind(lines, data.frame(Year = years, Quantity = "Mean fishing mortality rate, ages 2 to 5 (per year)",
                                    Fit = "ICES assessment", Value = ices_f))
   lines$Quantity <- factor(lines$Quantity, unique(lines$Quantity)); lines$Fit <- factor(lines$Fit, c(three, "ICES assessment"))
-  save_plot("sensitivity_results", ggplot(lines[is.finite(lines$Value), ], aes(Year, Value, colour = Fit, linetype = Fit)) +
+  save_plot("sensitivity_results", tidy_time_axis(ggplot(lines[is.finite(lines$Value), ], aes(Year, Value, colour = Fit, linetype = Fit)) +
     geom_line() + facet_wrap(~Quantity, ncol = 1, scales = "free_y") +
     scale_colour_manual(values = c(unname(two[1]), "grey35", "grey35", unname(two[2]))) +
     scale_linetype_manual(values = c("solid", "dashed", "dotted", "solid")) + expand_limits(y = 0) +
-    labs(x = "Year", y = NULL, colour = NULL, linetype = NULL) + plain + theme(legend.position = "top"),
-    width = 8, height = 7.5)
+    labs(x = "Year", y = NULL, colour = NULL, linetype = NULL) + plain, years))
 
   # ---- residuals of the main fit ---------------------------------------------------
-  save_plot("residuals", plot_residuals(fit$alscl, facet_by = "length", facet_ncol = 6, title = "") +
-    labs(x = "Year", y = "Residual of the log survey index"), width = 11, height = 6)
+  save_plot("residuals", plot_residuals(fit$alscl, facet_by = "length", title = "") +
+    labs(x = "Year", y = "Residual of the log survey index"))
   r <- fit$alscl$report$resid_index
   mean_resid <- rowMeans(r)
   utils::write.csv(data.frame(length_bin = mid, mean_residual = mean_resid,

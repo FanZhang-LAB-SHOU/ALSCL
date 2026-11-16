@@ -34,10 +34,16 @@ run_case_studies <- function(out='docs') {
   cache <- Sys.getenv('ALSCL_MANUAL_CACHE')
   if(nzchar(cache)) options(ALSCL.tmb.cache=cache)
   old <- acl_theme(); on.exit(do.call(acl_theme_set,old),add=TRUE)
-  acl_theme_set(palette='npg',base_theme='theme_bw')
+  # The package style; hand-built figures add theme_acl() and take colors from acl_palette().
+  suppressMessages(acl_theme_reset())
   cols <- setNames(acl_theme('compare_colors'),c('ACL','ALSCL'))
+  # A wider color bar keeps the labels of a bottom legend apart.
+  wide_key <- theme(legend.key.width=unit(1.6,'cm'))
   fig <- file.path(out,'figures','cases'); dir.create(fig,recursive=TRUE,showWarnings=FALSE)
-  save_plot <- function(id,p,height=5) save_grid_free_plot(file.path(fig,paste0(id,'.png')),p,width=10,height=height,dpi=160,bg='white')
+  # Size from acl_figure_size() unless given; 300 dpi.
+  save_plot <- function(id,p,...) save_grid_free_plot(file.path(fig,paste0(id,'.png')),p,...)
+  case_name <- c(flatfish='flatfish case',tuna='tuna case')
+  quantity_names <- c(B='Total biomass',SSB='Spawning stock biomass (SSB)',Rec='Recruitment')
   statuses <- list()
   for(sp in c('flatfish','tuna')) {
     message('CASE ',sp)
@@ -55,9 +61,10 @@ run_case_studies <- function(out='docs') {
     years <- a$year
     obs <- data.frame(Year=rep(years,each=length(pa$len_mid)),
       Length=rep(pa$len_mid,length(years)),Value=as.vector(t(sm$SN_at_len)))
-    save_plot(paste0(sp,'_data'),ggplot(obs,aes(Year,Length,fill=log10(Value)))+
-      geom_tile()+scale_fill_gradient(low=acl_theme('low_col'),high=acl_theme('high_col'))+
-      labs(title=paste(sp,'synthetic survey'),fill='log10 index')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),4)
+    save_plot(paste0(sp,'_data'),tidy_time_axis(ggplot(obs,aes(Year,Length,fill=log10(Value)))+
+      geom_tile()+scale_fill_gradient(low='white',high=acl_palette(role='primary'))+
+      labs(x='Year',y='Length (cm)',fill='Survey index (log10)',
+        title=paste('Simulated survey index of the',case_name[[sp]]))+theme_acl()+wide_key,years))
     truth <- data.frame(Year=rep(years,3),Quantity=rep(c('B','SSB','Rec'),each=length(years)),
       Truth=c(sm$TB,sm$SSB,sm$Rec))
     estimates <- rbind(data.frame(Year=rep(years,3),Quantity=truth$Quantity,
@@ -66,24 +73,38 @@ run_case_studies <- function(out='docs') {
       Value=c(b$report$B,b$report$SSB,b$report$Rec),Model='ALSCL'))
     write.csv(truth,file.path(folder,'truth_timeseries.csv'),row.names=FALSE)
     write.csv(estimates,file.path(folder,'estimated_timeseries.csv'),row.names=FALSE)
-    save_plot(paste0(sp,'_truth'),ggplot(estimates,aes(Year,Value,color=Model))+
-      geom_line()+scale_color_manual(values=cols)+
-      geom_line(data=truth,aes(Year,Truth),inherit.aes=FALSE,linetype=2)+
-      facet_wrap(~Quantity,scales='free_y',ncol=1)+labs(y=NULL,subtitle='Dashed: generating truth; solid: conditional estimates')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),6)
+    # The simulated values are a black dashed line in the same legend as the two fits.
+    series <- rbind(estimates[c('Year','Quantity','Value','Model')],
+      data.frame(Year=truth$Year,Quantity=truth$Quantity,Value=truth$Truth,Model='Simulated value'))
+    series$Quantity <- factor(quantity_names[series$Quantity],levels=quantity_names)
+    series$Model <- factor(series$Model,levels=c('ACL','ALSCL','Simulated value'))
+    save_plot(paste0(sp,'_truth'),tidy_time_axis(ggplot(series,aes(Year,Value,colour=Model,linetype=Model))+
+      geom_line()+expand_limits(y=0)+
+      scale_colour_manual(values=c(cols,'Simulated value'='black'))+
+      scale_linetype_manual(values=c(ACL='solid',ALSCL='solid','Simulated value'='dashed'))+
+      facet_wrap(~Quantity,scales='free_y',ncol=1)+
+      labs(x='Year',y='Estimate',colour=NULL,linetype=NULL,
+        title=paste('Estimated and simulated population of the',case_name[[sp]]))+theme_acl(),years))
     growth <- data.frame(Age=pa$ages,Length=VB_func(pa$Linf,pa$vbk,pa$t0,pa$ages))
-    prob <- rbind(data.frame(Length=pa$len_mid,Value=mat_func(pa$mat_L50,pa$mat_L95,pa$len_mid),Type='Maturity'),
-      data.frame(Length=pa$len_mid,Value=bio$q_surv,Type='Survey q'))
-    save_plot(paste0(sp,'_biology'),(ggplot(growth,aes(Age,Length))+geom_line(color=cols[1])+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))/
+    prob <- rbind(data.frame(Length=pa$len_mid,Value=mat_func(pa$mat_L50,pa$mat_L95,pa$len_mid),Type='Proportion mature'),
+      data.frame(Length=pa$len_mid,Value=bio$q_surv,Type='Survey catchability'))
+    save_plot(paste0(sp,'_biology'),(ggplot(growth,aes(Age,Length))+geom_line(color=acl_palette(role='primary'))+
+        expand_limits(y=0)+labs(x='Age (years)',y='Length (cm)',
+          title=paste('Growth, maturity and survey catchability of the',case_name[[sp]]))+theme_acl())|
       (ggplot(prob,aes(Length,Value,color=Type))+geom_line()+
-       scale_color_manual(values=setNames(unname(cols),c('Maturity','Survey q')))+
-       labs(y='Probability')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())),6)
+       scale_color_manual(values=setNames(acl_palette(2),c('Proportion mature','Survey catchability')))+
+       labs(x='Length (cm)',y='Proportion',colour=NULL)+theme_acl()),
+      # Two panels side by side; acl_figure_size() gives them too little height.
+      width=10,height=4.6)
     if(sp=='tuna') {
       G <- b$report$G
       stopifnot(max(abs(colSums(G)-1))<1e-10,all(is.finite(G)),all(G>=0))
       g <- expand.grid(Destination=pa$len_mid,Source=pa$len_mid);g$Probability<-as.vector(G)
       save_plot('tuna_growth_transition',ggplot(g,aes(Source,Destination,fill=Probability))+
-        geom_tile()+coord_equal()+scale_fill_gradient(low=acl_theme('low_col'),high=acl_theme('high_col'))+
-        labs(title='ALSCL growth transition G',subtitle='Columns sum to one; no shrinkage')+theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),6)
+        geom_tile()+coord_equal()+scale_fill_gradient(low='white',high=acl_palette(role='primary'))+
+        labs(x='Length at the start of a quarter (cm)',y='Length at the end of the quarter (cm)',
+          title='ALSCL growth transition of the tuna case',
+          subtitle='Each column sums to one; fish do not shrink')+theme_acl()+wide_key)
     }
   }
   checks <- do.call(rbind,statuses);print(checks)

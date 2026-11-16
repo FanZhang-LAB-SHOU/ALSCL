@@ -2,7 +2,7 @@
 % Please edit documentation in R/retro_model.R
 \name{retro_alscl}
 \alias{retro_alscl}
-\title{Retrospective Analysis for ALSCL Model}
+\title{Retrospective analysis for the ALSCL model}
 \usage{
 retro_alscl(
   nyear = 5,

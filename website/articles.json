@@ -68,7 +68,7 @@
     "source": "docs/FUNCTION_REFERENCE.md",
     "description": {
       "en": "Review all scalar estimation keys, their optimizer-scale transformations, initial values and lower and upper bounds.",
-      "zh": "查阅全部标量估计参数、优化尺度变换、初值以及上下界。"
+      "zh": "查阅全部标量估计参数、优化器尺度变换、初值以及上下界。"
     }
   },
   {
@@ -115,7 +115,7 @@
     },
     "source": "docs/wiki/11-Retrospectives.md",
     "description": {
-      "en": "Refit shortened series with retro_acl() or retro_alscl(), then visualize revisions with plot_retro() and interpret Mohn’s rho.",
+      "en": "Refit shortened series with retro_acl() or retro_alscl(), then visualize revisions with plot_retro() and interpret Mohn's rho.",
       "zh": "用 retro_acl() 或 retro_alscl() 拟合截短序列，以 plot_retro() 展示估计修订，并解释 Mohn rho。"
     }
   },
@@ -127,7 +127,7 @@
     },
     "source": "docs/ASSESSMENT_WORKFLOWS.md",
     "description": {
-      "en": "Prepare inputs, inspect maps, extract and save results, check residuals, run sensitivity/profile analyses, project conditional scenarios and summarize simulations.",
+      "en": "Prepare inputs, inspect maps, extract and save results, check residuals, run sensitivity analyses and likelihood profiles, project conditional scenarios and summarize simulations.",
       "zh": "整理输入、检查 map、提取和保存结果、检查残差、运行敏感性与剖面、投影条件情景并汇总模拟表现。"
     }
   },
@@ -139,8 +139,8 @@
     },
     "source": "docs/wiki/08-Population-Plots.md",
     "description": {
-      "en": "Plot survey numbers, abundance, biomass, spawning biomass, recruitment and catch with the population plotting functions.",
-      "zh": "使用种群绘图函数展示调查数量、丰度、生物量、产卵生物量、补充量与捕获量。"
+      "en": "Plot survey numbers, abundance, biomass, spawning stock biomass, recruitment and catch with the population plotting functions.",
+      "zh": "使用种群绘图函数展示调查数量、丰度、生物量、产卵生物量、补充量与渔获量。"
     }
   },
   {
@@ -152,19 +152,19 @@
     "source": "docs/wiki/09-Growth-and-Mortality.md",
     "description": {
       "en": "Inspect growth curves, age-length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
-      "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄—体长概率、捕捞死亡率与残差结构。"
+      "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄-体长概率、捕捞死亡率与残差结构。"
     }
   },
   {
     "slug": "plot-customization",
     "title": {
       "en": "Colors and export",
-      "zh": "ggsci 配色与导出"
+      "zh": "配色与导出"
     },
     "source": "docs/wiki/13-Colors-and-Export.md",
     "description": {
-      "en": "Apply shared colors and themes with acl_theme_set(), refine ggplot objects, and export figures at an explicit size and resolution.",
-      "zh": "用 acl_theme_set() 设置统一配色与主题，调整 ggplot 图形，并按指定尺寸和分辨率导出。"
+      "en": "Choose with acl_theme_set() between the default style and the look of earlier versions, give your own ggplots the same look with theme_acl() and acl_palette(), and save figures at their recommended size with acl_save_plot() or at a size of your choice.",
+      "zh": "用 acl_theme_set() 在默认样式和早期版本的外观之间选择，用 theme_acl() 和 acl_palette() 让自己的 ggplot 具有同样的外观，并用 acl_save_plot() 按建议尺寸或自选尺寸保存图。"
     }
   },
   {

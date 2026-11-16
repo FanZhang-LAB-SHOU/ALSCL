@@ -65,11 +65,8 @@ ns_readings <- function(fit, basis = "survey") {
   out$sd_length <- c(2, 2.5, 3, 3.5)
   out
 }
-ns_grid_free <- function(p) {
-  theme <- ggplot2::ggplot_build(p)$plot$theme
-  for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
-    expect_s3_class(ggplot2::calc_element(grid, theme), "element_blank")
-}
+# The grid of the current style: horizontal major lines only by default.
+ns_grid_free <- function(p) expect_style_grid(ggplot2::ggplot_build(p)$plot$theme)
 
 test_that("plot_VB keeps the von Bertalanffy curve of an ACL fit and adds observed points", {
   withr::local_options(list(acl.theme = NULL))
@@ -81,8 +78,9 @@ test_that("plot_VB keeps the von Bertalanffy curve of an ACL fit and adds observ
   expect_equal(range(p$data$age), c(1, 4))
   expect_equal(p$data$length, 60 * (1 - exp(-.2 * (p$data$age - fit$report$t0))))
   expect_length(ns_layers(p, "GeomLine"), 1L)
-  expect_match(ggplot2::ggplot_build(p)$data[[ns_layers(p, "GeomText")]]$label, "Linf = 60")
-  expect_identical(ggplot2::ggplot_build(p)$plot$theme$legend.position %||% "right", "right")
+  expect_match(ggplot2::ggplot_build(p)$data[[ns_layers(p, "GeomText")]]$label, "Asymptotic length (Linf) = 60", fixed = TRUE)
+  # The legend position of the default style; the curve alone has no legend.
+  expect_identical(ggplot2::ggplot_build(p)$plot$theme$legend.position %||% "right", "bottom")
   # years and parameter_curve do not change this curve.
   expect_equal(plot_VB(fit, years = 2001, parameter_curve = TRUE)$data, p$data)
 
@@ -130,7 +128,7 @@ test_that("plot_VB shows mean length at age from the fitted numbers of an ALSCL 
   expect_gt(max(abs(p$data$length - 60 * (1 - exp(-.2 * (1:4 - fit$report$t0))))), .1)
   expect_identical(p$labels$title, "Mean length at age")
   expect_identical(p$labels$subtitle, "In the population, mean of the time steps 2000-2004")
-  expect_identical(p$labels$x, "Age (years)"); expect_identical(p$labels$y, "Length")
+  expect_identical(p$labels$x, "Age (years)"); expect_identical(p$labels$y, "Mean length")
   expect_null(p$labels$caption)
   expect_length(ns_layers(p, "GeomText"), 0L)
   expect_length(ns_layers(p, "GeomLine"), 1L)
@@ -156,11 +154,12 @@ test_that("plot_VB shows mean length at age from the fitted numbers of an ALSCL 
   built <- ggplot2::ggplot_build(r)
   expect_true(all(built$data[[lines[2L]]]$linetype == "dashed"))
   expect_identical(ns_legend(r, "colour"),
-                   c("Mean length at age (model)", "Curve from Linf, k and t0"))
+                   c("Mean length at age (model)", "Curve from the growth parameters"))
   expect_match(r$labels$caption, "mean length at age in the first time step")
-  expect_match(built$data[[ns_layers(r, "GeomText")]]$label, "Curve from Linf, k and t0:\n  Linf = 60")
+  expect_match(built$data[[ns_layers(r, "GeomText")]]$label,
+               "Curve from the growth parameters\n  Asymptotic length (Linf) = 60", fixed = TRUE)
   growth <- fit; growth$structure$initial_length <- "growth"
-  expect_match(plot_VB(growth, parameter_curve = TRUE)$labels$caption, "first age class is the mean length of recruits")
+  expect_match(plot_VB(growth, parameter_curve = TRUE)$labels$caption, "mean length of recruits at the first age class")
   # The interval belongs to the curve from the parameters.
   expect_warning(plot_VB(fit, se = TRUE), "no standard error for mean length at age")
   covariance <- diag(c(.001, .002, .0005)); dimnames(covariance) <- rep(list(c("log_Linf", "log_vbk", "log_t0")), 2L)
@@ -247,7 +246,7 @@ test_that("plot_compare_growth compares mean length at age on one basis", {
       expect_equal(left$data$Age[left$data$Model == name], expected$age)
       expect_equal(left$data$Length[left$data$Model == name], expected$mean_length, tolerance = 1e-12)
     }
-    expect_identical(left$labels$title, "Mean length at age")
+    expect_identical(left$labels$title, "Mean length at age of ACL and ALSCL")
     expect_identical(left$labels$subtitle, paste0(if (basis == "survey") "In the survey catch" else
       "In the population", ", mean of the time steps 2000-2004"))
     expect_false(grepl("Linf", left$labels$subtitle))
@@ -300,7 +299,7 @@ test_that("plot_length_at_age draws mean length at age by time step", {
   expect_identical(names(p$facet$params$facets), "AgeClass")
   expect_identical(p$labels$title, "Mean length at age by time step")
   expect_identical(p$labels$subtitle, "In the population")
-  expect_identical(p$labels$x, "Year"); expect_identical(p$labels$y, "Length")
+  expect_identical(p$labels$x, "Year"); expect_identical(p$labels$y, "Mean length")
   expect_length(ns_layers(p, "GeomLine"), 1L)
   ns_grid_free(p)
   expect_s3_class(ggplot2::ggplot_build(p), "ggplot_built")
@@ -332,7 +331,7 @@ test_that("plot_length_at_age draws mean length at age by time step", {
   expect_identical(n$scales$get_scales("colour")$name, "Age class")
   expect_identical(ns_legend(n, "colour"), c("1", "2", "3", "4+"))
   expect_length(unique(ggplot2::ggplot_build(n)$data[[1L]]$group), 4L)
-  expect_match(n$labels$caption, "Lines: model. Points: Age readings.")
+  expect_match(n$labels$caption, "Lines show the model and points show Age readings.", fixed = TRUE)
 
   # ACL uses one age-length key: mean length at age does not change with time.
   a <- plot_length_at_age(z$acl, return_data = TRUE)$data
@@ -365,7 +364,7 @@ test_that("plot_relative_catch draws catch divided by its mean and scales report
     expect_identical(out$data$extrapolated, rel$extrapolated)
     expect_null(out$observed)
     expect_identical(p$labels$y, "Catch in numbers divided by its mean")
-    expect_identical(p$labels$title, "Relative catch")
+    expect_identical(p$labels$title, "Catch relative to its mean")
     expect_identical(p$labels$subtitle, "Divided by the mean of the time steps 2000-2004")
     expect_length(ns_layers(p, "GeomLine"), 1L)
     expect_equal(ggplot2::ggplot_build(p)$data[[ns_layers(p, "GeomHline")]]$yintercept, 1)
@@ -428,7 +427,7 @@ test_that("plot_natural_mortality follows the form of the input", {
     out <- plot_natural_mortality(fit, return_data = TRUE)
     expect_s3_class(out$plot, "ggplot")
     expect_equal(out$data$Year, 2000:2004); expect_equal(out$data$Value, rep(.2, 5L))
-    expect_identical(out$plot$labels$title, "Natural mortality rate (M) used in the fit")
+    expect_identical(out$plot$labels$title, "Natural mortality rate used in the fit")
     expect_identical(out$plot$labels$subtitle, "One value for all age classes and time steps")
     expect_identical(out$plot$labels$y, "Natural mortality rate (per year)")
     expect_identical(out$plot$labels$x, "Year")
@@ -492,11 +491,11 @@ test_that("plot_survey_catchability draws the catchability used in the fit", {
     expect_identical(levels(out$data$Curve), c("2000-2001", "2002-2004"))
     expect_equal(out$data$Value, c(z$q, z$q_late))
     expect_identical(out$plot$scales$get_scales("colour")$name, "Time steps")
-    expect_identical(out$plot$labels$subtitle, "By length and time step: one line for each distinct curve")
+    expect_identical(out$plot$labels$subtitle, "By length and time step, with one line for each distinct curve")
     expect_identical(ggplot2::ggplot_build(out$plot)$plot$theme$legend.position, "bottom")
     age <- plot_survey_catchability(fit, type = "age", return_data = TRUE)
     expect_equal(age$data$Age, 1:4); expect_equal(age$data$Value, c(.4, .8, 1, 1))
-    expect_identical(age$plot$labels$title, "Survey catchability multiplier by age used in the fit")
+    expect_identical(age$plot$labels$title, "Survey catchability multiplier at age used in the fit")
     expect_identical(age$plot$labels$y, "Survey catchability multiplier")
     expect_identical(age$plot$labels$x, "Age (years)")
   }
@@ -580,7 +579,7 @@ test_that("the new plots take the label and typography arguments and the theme k
   expect_identical(utils::tail(names(formals(plot_VB)), 7L),
     c("observed", "basis", "years", "parameter_curve", "point_size", "observed_color", "observed_name"))
   expect_identical(utils::tail(names(formals(plot_compare_growth)), 5L),
-    c("...", "observed", "basis", "years", "observed_name"))
+    c("observed", "basis", "years", "observed_name", "title"))
   expect_identical(utils::tail(names(formals(plot_SSB)), 3L), c("interval", "maturity_at_age", "weight_at_age"))
   # Titles, labels and colours come from the theme.
   acl_theme_set(titles = list(length_at_age = "Growth", length_at_age_time = "Growth by year",

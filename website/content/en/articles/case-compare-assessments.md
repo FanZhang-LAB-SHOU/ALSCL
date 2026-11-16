@@ -29,15 +29,14 @@ plot_compare_residuals(a, b, x$data.CatL)
 
 Read the numerical checks first ([Understand your first fit](first-model.html#checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.4. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
-![Synthetic YTF: residual comparison for ACL and ALSCL](../assets/manual/figures/ytf/compare_residuals.png)
+![Synthetic YTF: residuals of ACL and ALSCL](../assets/manual/figures/ytf/compare_residuals.png)
 
-The four panels show the residual histogram, the QQ plot, the mean residual by year (error bars: one standard deviation) and the absolute residual by length bin; [Judge whether a fit can be used](diagnostics.html#residuals) explains the patterns.
+The four panels show the distribution of the log residuals, a normal quantile-quantile plot, the mean log residual by time step with error bars of one standard deviation on each side, and the absolute log residual by length bin; [Judge whether a fit can be used](diagnostics.html#residuals) explains the patterns.
 
 <h2 id="survey">3. Compare the fit to the survey observations</h2>
 
 ```r
-plot_compare_CatL(a, b, x$data.CatL,
-                  years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
+plot_compare_CatL(a, b, x$data.CatL, years = c(2000, 2005, 2010, 2015))
 ```
 
 ![Synthetic YTF: observed survey indices and fitted medians in four years](../assets/manual/figures/ytf/compare_CatL.png)
@@ -47,7 +46,7 @@ Points are the observations and curves the fitted medians in the four selected y
 <h2 id="estimates">4. Compare the population estimates</h2>
 
 ```r
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 comparison$correlation
 comparison$length_at_age
 comparison$growth
@@ -55,9 +54,9 @@ comparison$growth
 
 ![Conditional population estimates from the synthetic YTF example](../assets/manual/figures/ytf/compare_ts.png)
 
-Compare the timing, trends and magnitudes of the point estimates, then inspect their uncertainty; `se = TRUE` adds each fit's approximate intervals. Overlap alone does not show that point estimates are close: wide intervals can overlap despite large differences. For a quantitative comparison, report differences or ratios at matching times. Inference about those differences requires their joint uncertainty because the fits use the same data. This example describes one dataset.
+Compare the timing, trends and magnitudes of the point estimates, then inspect their uncertainty; `se = TRUE` adds each fit's approximate intervals. Overlap alone does not show that point estimates are close, because wide intervals can overlap despite large differences. For a quantitative comparison, report differences or ratios at matching times. Inference about those differences requires their joint uncertainty because the fits use the same data. This example describes one dataset.
 
-`comparison$correlation` gives the correlation between the two fits and the ratio of their means for spawning biomass, recruitment, biomass and abundance. Catch is compared as relative catch (rows `CN (relative)` and `CB (relative)`, without a ratio), because a fit to a survey index does not determine the level of catch. Compare growth through `comparison$length_at_age`, the mean length at age of both fits. `comparison$growth` lists `Linf`, `k` and `t0` in a separate block for each model, because they are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length in ALSCL ([Judge whether a fit can be used](diagnostics.html#compare)).
+`comparison$correlation` gives the correlation between the two fits and the ratio of their means for spawning stock biomass (SSB), recruitment, biomass and abundance. Catch is compared as relative catch (rows `CN (relative)` and `CB (relative)`, without a ratio), because a fit to a survey index does not determine the level of catch. Compare growth through `comparison$length_at_age`, the mean length at age of both fits. `comparison$growth` lists `Linf`, `k` and `t0` in a separate block for each model, because they are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length in ALSCL ([Judge whether a fit can be used](diagnostics.html#compare)).
 
 <h2 id="mortality">5. Compare fishing mortality</h2>
 
@@ -65,7 +64,7 @@ Compare the timing, trends and magnitudes of the point estimates, then inspect t
 plot_compare_F(a, b)
 ```
 
-![Synthetic YTF: age-based and length-based fishing mortality](../assets/manual/figures/ytf/compare_F.png)
+![Synthetic YTF: fishing mortality rate at age (ACL) and at length (ALSCL)](../assets/manual/figures/ytf/compare_F.png)
 
 ACL estimates fishing mortality by age and ALSCL by length, so the panels' cells match only in time. `plot_compare_F_ts()` summarizes the groups of each time step by their maximum (`method = "apical"`, the default) or mean; quarterly values stay per quarter.
 
@@ -77,15 +76,14 @@ write.csv(comparison$summary, "my_model_comparison/summary.csv", row.names = FAL
 write.csv(comparison$fit_metrics, "my_model_comparison/fit_metrics.csv", row.names = FALSE)
 write.csv(comparison$fit_diagnostics, "my_model_comparison/fit_diagnostics.csv", row.names = FALSE)
 p_population <- plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
-ggplot2::ggsave("my_model_comparison/population.png", p_population,
-               width = 10, height = 7, dpi = 300)
+acl_save_plot(p_population, "my_model_comparison/population.png")
 saveRDS(list(inputs = inputs, fit_args = x$fit_args, fit_config = x$fit_config,
              comparison = comparison, ACL_report = a$report, ALSCL_report = b$report),
         "my_model_comparison/summary.rds")
 writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 ```
 
-The folder holds the CSV tables, the population figure, an RDS with the inputs, settings, comparison and both reports, and the session information. Report with it the time window, fixed biology, zero treatment and sensitivity to the fixed values.
+`acl_save_plot()` saves a package plot at 300 dpi in the size that `acl_figure_size()` recommends for its layout. The folder holds the CSV tables, the population figure, an RDS with the inputs, settings, comparison and both reports, and the session information. Report with it the time window, fixed biology, zero treatment and sensitivity to the fixed values.
 
 <h2 id="next">What next</h2>
 

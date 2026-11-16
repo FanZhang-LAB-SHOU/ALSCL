@@ -4,7 +4,7 @@ test_that("the QQ plot states that its reference is not calibrated (GR1)", {
   checks <- check_fit(fit, max_lag = 2)
   qq <- checks$plots$qq
   expect_identical(qq$labels$x, "Standard normal quantile")
-  expect_identical(qq$labels$y, "Conditional log residual / fitted SD")
+  expect_identical(qq$labels$y, "Standardized conditional log residual")
   expect_match(qq$labels$subtitle, "slope below 1")
   expect_length(checks$notes, 3L)
   expect_match(checks$notes[3L], "standard deviation below one")

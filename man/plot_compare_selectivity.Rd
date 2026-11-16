@@ -13,7 +13,8 @@ plot_compare_selectivity(
   linetypes = NULL,
   line_size = NULL,
   ...,
-  point_size = NULL
+  point_size = NULL,
+  title = NULL
 )
 }
 \arguments{
@@ -36,6 +37,11 @@ a warning and the global setting is used.}
 
 \item{point_size}{Numeric or NULL. Point size. NULL inherits the comparison
 point-size override, if set, or the global point_size setting.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object.

@@ -1,6 +1,6 @@
 # 估计参数列表
 
-本页列出两个模型的全部标量参数、它们到自然尺度的变换，以及一个预设的初值和边界。表中的键名就是 `parameters`、`parameters.L` 和 `parameters.U` 的条目名，都在优化尺度上填写。
+本页列出两个模型的全部标量参数、它们到自然尺度的变换，以及一个预设的初值和边界。表中的键名就是 `parameters`、`parameters.L` 和 `parameters.U` 的条目名，都在优化器尺度上填写。
 
 |ACL 键名|ALSCL 键名|变换|含义|
 |---|---|---|---|
@@ -8,17 +8,17 @@
 | `log_std_log_N0` | `log_sigma_log_N0` | exp |初始年龄结构中逐龄独立对数增量的标准差|
 | `mean_log_R` | `mean_log_R` | exp |对数补充量过程的均值；exp 后为自然尺度的中位数|
 | `log_std_log_R` | `log_sigma_log_R` | exp |对数补充量偏差的边际标准差|
-| `logit_log_R` | `logit_log_R` | plogis；`correlation_range = "symmetric"` 时为 2 * plogis - 1 |补充 AR(1) 相关，默认在 0 和 1 之间，对称范围下在 -1 和 1 之间|
+| `logit_log_R` | `logit_log_R` | plogis；`correlation_range = "symmetric"` 时为 2 * plogis - 1 |补充量在时间上的相关，默认在 0 和 1 之间，对称范围下在 -1 和 1 之间|
 | `mean_log_F` | `mean_log_F` | exp |对数 F 过程的均值；exp 后为自然尺度的中位数|
 | `log_std_log_F` | `log_sigma_log_F` | exp |对数 F 偏差的边际标准差|
-| `logit_log_F_y` | `logit_log_F_y` | 同 `logit_log_R` |F 的时间相关|
-| `logit_log_F_a` | `logit_log_F_l` | 同 `logit_log_R` |F 的年龄/体长相关|
-| `log_vbk` | `log_vbk` | exp |VB k，单位为每年|
+| `logit_log_F_y` | `logit_log_F_y` | 同 `logit_log_R` |F 在时间步之间的相关|
+| `logit_log_F_a` | `logit_log_F_l` | 同 `logit_log_R` |F 在年龄组（ACL）或体长组（ALSCL）之间的相关|
+| `log_vbk` | `log_vbk` | exp |von Bertalanffy 曲线的生长率 k，单位为每年|
 | `log_Linf` | `log_Linf` | exp |渐近体长|
-| `t0` | `log_t0` |ACL 原值；ALSCL 为 `t0_lower` + exp|VB t0；ALSCL 中它大于 `t0_lower`（默认 0），因此除非把 `t0_lower` 设为负值，否则为正|
+| `t0` | `log_t0` |ACL 原值；ALSCL 为 `t0_lower` + exp|von Bertalanffy 曲线的零体长年龄 t0；ALSCL 中它大于 `t0_lower`（默认 0），因此除非把 `t0_lower` 设为负值，否则为正|
 | `log_cv_len` | `log_cv_len` | exp |同龄个体体长的变异系数|
 | 无 | `log_cv_grow` | exp |生长增量的变异系数|
-| `log_std_index` | `log_sigma_index` | exp |对数调查观测 SD|
+| `log_std_index` | `log_sigma_index` | exp |对数调查指数的标准差|
 
 <h2 id="inspect">1. 查看一个预设</h2>
 
