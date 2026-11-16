@@ -1,4 +1,4 @@
-#' @title Plot Observed and Fitted Survey Length Compositions over Time
+#' @title Plot observed and fitted survey length compositions over time
 #'
 #' @description This function takes the model result as an input and creates two ridgeline plots to
 #' visualize observed and predicted survey length compositions over time.
@@ -31,23 +31,26 @@
 #'   of periods with at least two observed bins. Increase for
 #'   taller ridges, decrease for flatter. Useful when many length bins make proportions
 #'   small (e.g. tuna with 22 bins).
-#' @param palette Character or character vector. Color palette for the fill.
-#'   Default "viridis" (and NULL) uses a sequential gradient across ordered years,
-#'   independently of the global categorical palette. Also accepts "npg", "aaas", "nejm",
-#'   "lancet", "jama". Gradient palette names: \code{"viridis"}, \code{"plasma"},
+#' @param palette Character, character vector or NULL. Fill colors of the
+#'   ridges, ordered by year. NULL (default) follows the global palette: a
+#'   gradient from light blue to dark blue under "standard" (the default
+#'   style), the same as \code{palette = "standard"}, and \code{"viridis"}, as
+#'   in earlier versions, under any other global palette, including that of
+#'   the "classic" style. The names "npg", "aaas", "nejm", "lancet" and
+#'   "jama" give the colors of these palettes. Gradient palette names: \code{"viridis"}, \code{"plasma"},
 #'   \code{"inferno"}, \code{"cividis"}, \code{"turbo"}, \code{"magma"},
 #'   \code{"ocean"}, \code{"sunset"}, \code{"forest"}, \code{"fire"},
 #'   \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
-#'   \code{"BrBG"}, \code{"rainbow"}, \code{"terrain"}, \code{"heat"},
-#'   \code{"topo"}.
+#'   \code{"PRGn"}, \code{"RdBu"}, \code{"BrBG"}, \code{"rainbow"},
+#'   \code{"terrain"}, \code{"heat"}, \code{"topo"}. All names are matched
+#'   without regard to case, so \code{"Standard"} and \code{"rdbu"} work too.
 #'   Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 #'   which will be interpolated to match the number of years.
 #'
-#' @param title Character or NULL. One title for the whole figure. NULL uses
-#'   the global \code{ridges} title; an empty string draws none. The two panels
-#'   keep their own titles, from the global \code{CatL_obs_length} and
-#'   \code{CatL_est_length} keys, so observed and fitted panels stay labelled.
-#'   See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -75,10 +78,14 @@
 #' # Custom colors, interpolated over the years
 #' plot_ridges(fit, palette = c("navy", "white", "firebrick"))
 #' }
+#' @details \code{title} is the title of the whole figure. The two panels keep
+#'   their own titles, from the global \code{CatL_obs_length} and
+#'   \code{CatL_est_length} keys, so that observed and fitted panels stay
+#'   labelled when the figure title is removed.
 #' @export
 plot_ridges <- function(model_result, ridges_alpha = 0.8,
                         ridges_scale = NULL,
-                        palette = "viridis",
+                        palette = NULL,
                         title = NULL, xlab = NULL, ylab = NULL,
                         font_family = NULL, title_size = NULL,
                         axis_title_size = NULL, axis_text_size = NULL,
@@ -179,9 +186,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
       expand = ggplot2::expansion(add = 0)) +
     ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_title("CatL_obs_length")) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_wrap_text(.acl_title_text(.acl_title("CatL_obs_length")), 34)) +
     .acl_scale_x(x_breaks, n_breaks = 8, values = len_mid) +
-    .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+    .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+    .acl_panel_title_theme(title_size)
 
   p_estimated <- ggplot2::ggplot(df_estimated_long, ggplot2::aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(alpha = ridges_alpha, na.rm = TRUE) +
@@ -189,9 +197,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
       expand = ggplot2::expansion(add = 0)) +
     ggplot2::coord_cartesian(ylim = y_limits) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_title("CatL_est_length")) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = .acl_wrap_text(.acl_title_text(.acl_title("CatL_est_length")), 34)) +
     .acl_scale_x(x_breaks, n_breaks = 8, values = len_mid) +
-    .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+    .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust) +
+    .acl_panel_title_theme(title_size)
 
   if (any(runs$run_size == 1L)) {
     p_observed <- p_observed + ggplot2::geom_point(
@@ -204,15 +213,9 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   p_observed <- p_observed + ggplot2::expand_limits(x = range(len_mid))
   p_estimated <- p_estimated + ggplot2::expand_limits(x = range(len_mid))
   # One title for the figure; the panel titles tell observed from fitted.
-  overall <- if (!is.null(title)) title else .acl_title("ridges")
-  if (!is.character(overall) || length(overall) != 1L || is.na(overall) || !nzchar(overall))
-    overall <- NULL
-  annotation_theme <- ggplot2::theme(
-    text = ggplot2::element_text(family = if (is.null(font_family)) acl_theme("font_family") else font_family),
-    plot.title = ggplot2::element_text(
-      size = if (is.null(title_size)) acl_theme("title_size") else title_size,
-      hjust = if (is.null(title_hjust)) acl_theme("title_hjust") else title_hjust))
-  p <- patchwork::wrap_plots(p_observed, p_estimated, ncol = 2) +
+  overall <- .acl_plot_title(title, "ridges")
+  annotation_theme <- .acl_annotation_theme(NULL, font_family, title_size, title_hjust)
+  p <- patchwork::wrap_plots(.acl_tidy_axes(p_observed, 2L), .acl_tidy_axes(p_estimated, 2L), ncol = 2) +
     patchwork::plot_annotation(title = overall, theme = annotation_theme)
 
   return(p)
@@ -226,9 +229,15 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 #' @keywords internal
 .acl_ridges_palette <- function(palette, n) {
 
-  if (is.null(palette)) palette <- "viridis"
-  if (length(palette) == 1 && tolower(palette) %in% c("npg", "aaas", "nejm", "lancet", "jama")) {
-    return(ggplot2::scale_fill_manual(values = .acl_palette(palette, n), guide = "none"))
+  if (is.null(palette))
+    palette <- if (identical(acl_theme("palette"), "standard")) "standard" else "viridis"
+  # Palette names are matched without regard to case.
+  named <- length(palette) == 1L && is.character(palette) && !is.na(palette)
+  if (named && tolower(palette) == "standard")
+    return(ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(.acl_standard_colors$ramp)(n),
+                                      guide = "none"))
+  if (named && tolower(palette) %in% c("npg", "aaas", "nejm", "lancet", "jama")) {
+    return(ggplot2::scale_fill_manual(values = .acl_palette(tolower(palette), n), guide = "none"))
   }
   # viridis-family palettes
   viridis_opts <- c("viridis" = "D", "magma" = "A", "inferno" = "B",
@@ -291,7 +300,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
     # Fallback: unrecognized name
     message("Unknown palette '", palette, "', using 'viridis'. Available: ",
-            paste(c(names(viridis_opts), names(brewer_div),
+            paste(c("standard", "npg", "aaas", "nejm", "lancet", "jama",
+                    names(viridis_opts), unname(brewer_div),
                     "ocean", "sunset", "forest", "fire",
                     "rainbow", "terrain", "heat", "topo"), collapse = ", "))
     return(ggplot2::scale_fill_viridis_d(option = "D", guide = "none"))

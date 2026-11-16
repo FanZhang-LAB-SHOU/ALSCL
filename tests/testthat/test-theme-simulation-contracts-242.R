@@ -29,8 +29,8 @@ test_that("theme snapshots restore nullable axes and nested labels", {
 })
 
 test_that("restored axes and survey labels are used in grid-free plots", {
-  original <- options(acl.theme = NULL)
-  on.exit(options(original), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   model <- fit_fixture("ACL")$result
   old <- acl_theme_set(line_size = 3)
   before <- ggplot2::ggplot_build(plot_CatL(model))

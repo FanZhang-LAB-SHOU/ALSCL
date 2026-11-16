@@ -26,7 +26,10 @@ test_that("population plots inherit titles, labels and time scales in every mode
   breaks <- m$year[c(1, 3, 4)]
   for (spec in population_theme_specs()) for (type in spec$types) {
     for (se in c(FALSE, TRUE)) {
+      # Lines without grid lines: the classic style. The bars and grid of the
+      # default style are tested in test-default-style-250.R.
       options(acl.theme = NULL)
+      acl_theme_set(style = "classic")
       baseline <- spec$fun(m, type = type, se = se, return_data = TRUE)
       key <- if (se) paste0(type, "_se") else if (type == "NA") "NA_" else type
       wanted_title <- paste("Custom title for", key)
@@ -60,7 +63,7 @@ test_that("population plots have meaningful default titles for every quantity", 
       expect_type(title, "character")
       expect_length(title, 1L)
       expect_false(identical(title, key))
-      if (se) expect_match(title, "95% CI", fixed = TRUE)
+      if (se) expect_match(title, "95% confidence intervals", fixed = TRUE)
     }
   }
 })
@@ -68,7 +71,8 @@ test_that("population plots have meaningful default titles for every quantity", 
 test_that("population plot scales apply asymmetric expansion without changing style overrides", {
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   m <- population_theme_fixture()
-  acl_theme_set(x_expand = c(.1, .2), line_size = 3, se_alpha = .8)
+  # Total catch drawn as a line, as the other quantities.
+  acl_theme_set(x_expand = c(.1, .2), line_size = 3, se_alpha = .8, bars = FALSE)
   expected_range <- range(m$year) + diff(range(m$year)) * c(-.1, .2)
   for (spec in population_theme_specs()) {
     p <- spec$fun(m, se = TRUE, line_size = .4, line_color = "black",

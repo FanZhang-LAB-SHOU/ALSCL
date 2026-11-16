@@ -94,7 +94,9 @@ test_that("real ACL and ALSCL outputs follow the documented plot support matrix"
       } else {
         out <- spec$fun(fit, type = type, se = se, return_data = TRUE)
         expect_s3_class(ggplot2::ggplot_build(out$plot), "ggplot_built")
-        expect_length(out$plot$layers, if (se) 2L else 1L)
+        # Bars of a total carry error bars over a white underlay.
+        bars <- type %in% c("CN") && isTRUE(acl_theme("bars"))
+        expect_length(out$plot$layers, if (se) (if (bars) 3L else 2L) else 1L)
         if (se) {
           errors <- fit$est_std[rownames(fit$est_std) == type, "Std. Error"]
           # Lognormal interval: log(upper / lower) = 3.92 SE / estimate.

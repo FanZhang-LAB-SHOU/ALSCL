@@ -39,7 +39,7 @@ fit without this input.}
 
 \item{line_color}{Character or NULL. NULL inherits the global line_color
 setting. When catchability at length changes over time, the lines take
-the colours of the global palette.}
+the colors of the global palette.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
@@ -49,7 +49,10 @@ or age classes; NULL inherits the global point_size setting.}
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 

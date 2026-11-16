@@ -289,7 +289,7 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
   names(paths) <- names(settings)
   fits <- lapply(results, `[[`, "fit")
   list(predictions = predictions, scores = .acl_hindcast_scores(predictions, horizon),
-    diagnostics = diagnostics, settings = settings,
+    diagnostics = diagnostics, settings = .acl_drop_t0_sources(settings, nested = TRUE),
     recipes = lapply(fits, `[[`, "recipe"),
     start_diagnostics = lapply(fits, `[[`, "start_diagnostics"),
     process_paths = paths, fits = if (save_fits) fits else NULL, model = model,

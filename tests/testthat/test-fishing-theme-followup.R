@@ -11,11 +11,14 @@ fishing_theme_fixture <- function(model = "ACL") {
     report = report, est_std = estimates)
 }
 
+# The grid of the current style: none under the classic style, horizontal
+# major lines only under the default style.
 fishing_assert_no_grid <- function(p) {
   theme <- ggplot2::ggplot_build(p)$plot$theme
-  for (name in c("panel.grid.major", "panel.grid.minor", "panel.grid.major.x",
-                 "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
-    expect_s3_class(ggplot2::calc_element(name, theme), "element_blank")
+  if (identical(acl_theme("grid"), "none"))
+    for (name in c("panel.grid.major", "panel.grid.minor"))
+      expect_s3_class(ggplot2::calc_element(name, theme), "element_blank")
+  expect_style_grid(theme)
 }
 
 test_that("all F layouts inherit global labels and scales without changing plotting data", {
@@ -81,7 +84,8 @@ test_that("F plots honor explicit labels breaks and styles before global setting
 })
 
 test_that("F theme names and theme objects retain layout while staying grid free", {
-  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   fit <- fishing_theme_fixture()
   custom <- ggplot2::theme_minimal() + ggplot2::theme(
     panel.background = ggplot2::element_rect(fill = "ivory", colour = NA),
@@ -116,7 +120,7 @@ test_that("F age coordinates remain group positions and the ACL alias remains su
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   fit <- fishing_theme_fixture("ACL")
   a <- plot_fishing_mortality(fit, type = "age", return_data = TRUE)
-  expect_equal(a$plot$labels$x, "Age group")
+  expect_equal(a$plot$labels$x, "Age bin")
   expect_warning(b <- plot_fishing_mortality(fit, type = "length", return_data = TRUE),
     "legacy alias")
   expect_equal(a$data, b$data)

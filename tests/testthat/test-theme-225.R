@@ -17,6 +17,8 @@ theme_grid_elements_225 <- function(plot) {
 }
 
 test_that("every exported plot family and comparison panel defaults to no grid", {
+  # Neither style has grid lines; grid = "y" gives horizontal major lines
+  # only, and none in heat maps.
   old <- options(acl.theme = NULL); on.exit(options(old))
   fixture <- fit_fixture("ALSCL")
   m <- fixture$result
@@ -44,18 +46,29 @@ test_that("every exported plot family and comparison panel defaults to no grid",
   exported_plots <- grep("^plot_", getNamespaceExports("ALSCL"), value = TRUE)
   # Former names are wrappers of the functions already in the list.
   expect_setequal(names(calls), setdiff(exported_plots, names(ALSCL:::.acl_deprecated_functions)))
-  for (name in names(calls)) {
-    plot <- do.call(getExportedValue("ALSCL", name), calls[[name]])
-    for (panel in theme_panels_225(plot)) {
-      grid <- theme_grid_elements_225(panel)
-      expect_true(all(vapply(grid, inherits, logical(1), "element_blank")),
-                  info = paste(name, "must suppress major/minor grids on both axes"))
+  heat_maps <- c("plot_pla", "plot_compare_F")
+  for (setting in c("classic", "standard", "standard with grid = y")) {
+    acl_theme_set(style = sub(" .*", "", setting))
+    horizontal <- grepl("grid", setting)
+    if (horizontal) acl_theme_set(grid = "y")
+    for (name in names(calls)) {
+      plot <- do.call(getExportedValue("ALSCL", name), calls[[name]])
+      for (panel in theme_panels_225(plot)) {
+        grid <- vapply(theme_grid_elements_225(panel), inherits, logical(1), "element_blank")
+        if (!horizontal || name %in% heat_maps)
+          expect_true(all(grid), info = paste(name, "must suppress major/minor grids on both axes"))
+        else
+          expect_true(all(grid[-2L]), info = paste(name, "must show only horizontal major grid lines"))
+      }
     }
+    # With grid = "y" the other plots show the horizontal major lines.
+    if (horizontal)
+      expect_s3_class(theme_grid_elements_225(plot_SSB(m))[[2L]], "element_line")
   }
 })
 
 test_that("grid-free defaults apply to every base theme and can be overridden", {
-  old <- options(acl.theme = NULL); on.exit(options(old))
+  local_classic_style()
   fixture <- list(report = list(Rec = 1:4), year = 2000:2003)
   themes <- c("theme_bw", "theme_minimal", "theme_classic", "theme_gray",
               "theme_grey", "theme_light", "theme_linedraw", "theme_dark", "theme_void")
@@ -73,8 +86,9 @@ test_that("grid-free defaults apply to every base theme and can be overridden", 
                  c("grey80", "grey80", "grey90", "grey90"))
   }
   acl_theme_set(base_theme = "theme_dark")
-  acl_theme_reset()
+  suppressMessages(acl_theme_reset())
   expect_identical(acl_theme("base_theme"), "theme_bw")
+  # The default style has no grid lines either.
   expect_true(all(vapply(theme_grid_elements_225(plot_recruitment(fixture)),
                          inherits, logical(1), "element_blank")))
 })

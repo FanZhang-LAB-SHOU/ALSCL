@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme_reset}
 \alias{acl_theme_reset}
-\title{Reset ALSCL Plot Theme to Defaults}
+\title{Reset the ALSCL plot theme to its defaults}
 \usage{
 acl_theme_reset()
 }
@@ -10,9 +10,26 @@ acl_theme_reset()
 \code{NULL}, invisibly.
 }
 \description{
-Restores every theme setting to the package default and reports this with
-a message, which \code{suppressMessages()} silences.
+Restores every theme setting to the package default, the \code{"standard"}
+style, and reports this with a message, which \code{suppressMessages()}
+silences. Use \code{acl_theme_set(style = "classic")} for the colors and
+forms of ALSCL 2.4.5.
 }
 \examples{
+old <- acl_theme_set(style = "classic")
 acl_theme_reset()
+acl_theme("style")
+
+# Restore the settings in use before this example
+do.call(acl_theme_set, old)
 }
+\seealso{
+Other acl_theme:
+\code{\link[=acl_figure_size]{acl_figure_size()}},
+\code{\link[=acl_palette]{acl_palette()}},
+\code{\link[=acl_save_plot]{acl_save_plot()}},
+\code{\link[=acl_theme]{acl_theme()}},
+\code{\link[=acl_theme_set]{acl_theme_set()}},
+\code{\link[=theme_acl]{theme_acl()}}
+}
+\concept{acl_theme}

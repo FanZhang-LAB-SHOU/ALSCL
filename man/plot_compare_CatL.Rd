@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_CatL}
 \alias{plot_compare_CatL}
-\title{Compare Observed and Fitted Survey Indices at Length}
+\title{Compare observed and fitted survey indices at length}
 \usage{
 plot_compare_CatL(
   model1,
@@ -14,7 +14,7 @@ plot_compare_CatL(
   colors = NULL,
   linetypes = NULL,
   line_size = NULL,
-  facet_ncol = 4,
+  facet_ncol = NULL,
   facet_scales = "free_y",
   obs_color = "grey40",
   obs_size = NULL,
@@ -22,7 +22,8 @@ plot_compare_CatL(
   obs_shape = 16,
   legend_pos = NULL,
   ...,
-  point_size = NULL
+  point_size = NULL,
+  title = NULL
 )
 }
 \arguments{
@@ -47,7 +48,8 @@ a warning and the global setting is used.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
-\item{facet_ncol}{Integer. Facet columns. Default 4.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL
+(default) chooses it from the number of panels.}
 
 \item{facet_scales}{Character. Facet scales. Default "free_y".}
 
@@ -68,12 +70,17 @@ line_size, ncol for facet_ncol and scales for facet_scales.}
 \item{point_size}{Numeric or NULL. Size of observed points. NULL uses an
 explicit obs_size first, then the comparison point-size override, if set,
 or the global point_size setting.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Compare Observed and Fitted Survey Indices at Length
+Compare observed and fitted survey indices at length
 }
 \details{
 Positive observations and their missing-data mask must match both

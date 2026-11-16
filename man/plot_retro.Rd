@@ -2,7 +2,7 @@
 % Please edit documentation in R/retro_model.R
 \name{plot_retro}
 \alias{plot_retro}
-\title{Plot Retrospective Analysis Results}
+\title{Plot the results of a retrospective analysis}
 \usage{
 plot_retro(
   retro_result,
@@ -41,7 +41,10 @@ plot_retro(
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
 \item{point_size}{Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).}
 
@@ -49,11 +52,16 @@ plot_retro(
 
 \item{facet_scales}{Character. Facet scales. Default is "free".}
 
-\item{facet_ncol}{Integer or NULL. Number of facet columns.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_nrow}{Integer or NULL. Number of facet rows.}
 
-\item{title}{Character or NULL. Custom plot title.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label.}
 
@@ -77,8 +85,12 @@ plot_retro(
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
 
-\item{palette}{Character or NULL. ggsci palette name; NULL inherits acl_theme().
-Native colors are interpolated when there are more peels than colors.}
+\item{palette}{Character or NULL. Palette name ("standard", "npg", "aaas",
+"nejm", "lancet", "jama"). NULL inherits the global palette. The colors
+of the palette are interpolated when there are more fits than colors.
+With NULL under the "standard" global palette (the default style), the
+full fit is orange and the earlier fits are greys, darkest for the first
+peel.}
 
 \item{colors}{Character vector or NULL. Explicit period colors, ordered by
 descending terminal period or named by terminal period. Overrides palette.
@@ -100,11 +112,14 @@ its data. The legend is titled "Terminal year" for annual steps and
 as in "2019 Q4". Default colors follow the retrospective peel, so the fit
 with a given terminal period has the same color whether or not another
 fit returned estimates. A fit that failed the numerical screen is drawn
-with a dashed line and a "Numerical screen" legend is added. A requested
+with a dashed line and a "Numerical checks" legend is added. A requested
 fit without estimates, for example after a fit error, stays in the legend
 and is marked "(no estimates)". The subtitle names both kinds of fit, and
 each panel states how many requested peels are valid when Mohn's rho is
 withheld.
+Each panel leaves room for the rho text above the lines (below them for
+the bottom positions). With the default colors of the "standard" palette
+the full fit is drawn again on top of the earlier fits.
 }
 \examples{
 \donttest{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme_set}
 \alias{acl_theme_set}
-\title{Set ALSCL Plot Theme Options}
+\title{Set ALSCL plot theme options}
 \usage{
 acl_theme_set(
   base_theme = NULL,
@@ -38,8 +38,23 @@ acl_theme_set(
   hline_color = NULL,
   low_col = NULL,
   high_col = NULL,
+  style = NULL,
+  grid = NULL,
+  title_face = NULL,
+  title_color = NULL,
+  stock_color = NULL,
+  F_color = NULL,
+  recruitment_color = NULL,
+  catch_color = NULL,
+  bars = NULL,
+  y_zero = NULL,
+  strip = NULL,
+  legend_position = NULL,
+  axis_color = NULL,
   ...,
-  interval = NULL
+  interval = NULL,
+  show_title = NULL,
+  x_angle = NULL
 )
 }
 \arguments{
@@ -51,7 +66,8 @@ without the "theme_" prefix. Any other value is an error.}
 
 \item{title_size}{Numeric. Plot title size in pt.}
 
-\item{title_hjust}{Numeric. Title alignment (0=left, 0.5=center, 1=right).}
+\item{title_hjust}{Numeric. Title alignment (0=left, 0.5=center, 1=right).
+Set by the style: 0 under "standard", 0.5 under "classic".}
 
 \item{axis_title_size}{Numeric. Axis title size.}
 
@@ -72,8 +88,12 @@ omitting the argument leaves the current setting unchanged.}
 
 \item{line_color}{Character. Default line color for single-model plots.}
 
-\item{line_size}{Numeric. Default line width for single-model plots (1.5).
-Plot arguments set to NULL inherit this value; explicit widths take priority.}
+\item{line_size}{Numeric. Default line width for single-model plots: 1
+under the "standard" style, 1.5 under "classic".
+Plot arguments set to NULL inherit this value; explicit widths take priority.
+While it keeps the value of the style, facets of 5 to 12 panels draw their
+lines at two thirds of it and facets of more panels at half of it; another
+value set here is used as given. The same holds for compare_line_size.}
 
 \item{point_size}{Numeric. Default point size for all point plots (2.5).
 Plot arguments set to NULL inherit this value unless a comparison-specific
@@ -81,7 +101,8 @@ override is set. Explicit per-call sizes take priority.}
 
 \item{se_color}{Character. Default CI color.}
 
-\item{se_alpha}{Numeric. Default transparency of interval ribbons (0.2).
+\item{se_alpha}{Numeric. Default transparency of interval ribbons (0.3
+under the "standard" style, 0.2 under "classic").
 Plot arguments set to NULL inherit this value; explicit alpha takes priority.
 Error bars are drawn opaque unless a plot call supplies se_alpha.}
 
@@ -93,18 +114,22 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 
 \item{compare_linetypes}{Character vector of 2 linetypes. Same rules as colors.}
 
-\item{compare_line_size}{Numeric. Line width for comparison plots (1.2).}
+\item{compare_line_size}{Numeric. Line width for comparison plots: 0.9
+under the "standard" style, 1.2 under "classic".}
 
 \item{compare_point_size}{Numeric or NULL. Optional point-size override for
 comparison plots. The default NULL inherits point_size. Existing explicit
 values remain supported; a plot's point_size argument takes priority.
 Pass NULL explicitly to clear a comparison-specific override.}
 
-\item{compare_se_alpha}{Numeric. CI ribbon alpha for comparison plots.}
+\item{compare_se_alpha}{Numeric. CI ribbon alpha for comparison plots
+(0.25 under the "standard" style, 0.15 under "classic").}
 
 \item{compare_legend_pos}{Character. Legend position for comparison plots.}
 
-\item{compare_facet_ncol}{Integer. Default facet columns in comparison plots.}
+\item{compare_facet_ncol}{Integer or NULL. Facet columns of comparison
+plots. NULL (default) chooses the columns from the number of panels, as
+the single-model plots do; pass NULL explicitly to restore it.}
 
 \item{compare_facet_scales}{Character. Facet scales for comparison plots.}
 
@@ -123,15 +148,87 @@ survey plots retain a legacy customized abundance label or use Survey index.
 Set a named label to NULL to restore its default, for example
 \code{ylab = list(survey = NULL)}.}
 
-\item{palette}{Character or NULL. ggsci palette: "npg" (default), "aaas",
-"nejm", "lancet", or "jama". Changing it resets palette-derived colors;
+\item{palette}{Character or NULL. Categorical palette: "standard" (default),
+the colors of the default style (dark blue, orange, teal, yellow, light
+blue, green, sky blue, dark green), or the ggsci palettes "npg",
+"aaas", "nejm", "lancet" and "jama". Changing it resets palette-derived colors
+(line, interval, point, observation, smoother, comparison and heat map colors);
 explicit color arguments in the same call take precedence. No arguments
 leaves settings unchanged; use acl_theme_reset() to reset.}
 
 \item{point_color, observed_color, smooth_color, hline_color}{Character or NULL.
 Default point, observation, smoother and reference-line colors.}
 
-\item{low_col, high_col}{Character or NULL. Continuous heatmap endpoints.}
+\item{low_col, high_col}{Character or NULL. Colors at the low and high ends
+of heat maps.}
+
+\item{style}{Character or NULL. A preset of the colors and forms of all
+plots. \code{"standard"} (default) draws stock size, fishing mortality,
+recruitment and catch each in its own color, draws total recruitment and
+total catch as bars, starts the y axis of these plots at zero, puts the
+legend below the plot, and uses bold left-aligned titles, plain facet
+labels and a black panel border, without grid lines.
+\code{"classic"} restores the colors and forms of ALSCL 2.4.5 (the npg
+palette, centered plain titles, lines for every series, y axes not forced
+to zero and grey boxed facet labels, without grid lines). Under both
+styles the default texts in the figures, the number of facet columns and
+the tick labels follow the rules of version 2.5.0. Setting a style
+replaces palette, grid, title_face, title_hjust, title_color, the four
+quantity colors (stock_color, F_color, recruitment_color, catch_color),
+bars, y_zero, se_alpha, compare_se_alpha, strip, legend_position,
+axis_color, line_size, compare_line_size and the palette-derived colors
+with the values of the
+preset. Other arguments of the same call are applied after the preset
+and win. Setting a single key changes only that key, so styles can be
+mixed.}
+
+\item{grid}{Character or NULL. Grid lines: \code{"none"} (no grid lines,
+the default of both styles) or \code{"y"} (horizontal major lines only,
+in light grey). Heat maps never show grid lines.}
+
+\item{title_face}{Character or NULL. Face of plot titles: "bold" ("standard"),
+"plain" ("classic"), "italic" or "bold.italic".}
+
+\item{title_color}{Character or NULL. Color of plot titles: "black" in
+both styles. \code{"quantity"} gives the title the theme color of the
+quantity that the plot shows (stock size, fishing mortality, recruitment or
+catch) and black for other plots, darkened where needed for a contrast
+ratio of at least 4.5 to 1 with white so that the title reads well (lines
+and bars keep the exact color); any other color name or code is used as
+given.}
+
+\item{stock_color, F_color, recruitment_color, catch_color}{Character or NULL.
+Line or bar colors of stock size (plot_SSB(), plot_biomass(),
+plot_abundance()), fishing mortality (plot_fishing_mortality(), the F
+deviations of plot_deviance()), recruitment (plot_recruitment(), the
+recruitment deviations of plot_deviance()) and catch (plot_catch(), the
+fitted series of plot_relative_catch()). The "standard" style uses
+"#047c6c", "#ed5f26", "#28b3e8" and "#002b5f"; NULL ("classic") uses
+line_color. Interval bands of these plots take the color of their line
+unless se_color is set to a color different from line_color. Pass NULL
+explicitly to clear a color.}
+
+\item{bars}{Logical or NULL. Draw total recruitment and total catch as
+bars (TRUE, "standard") or lines (FALSE, "classic"). The geom argument of
+plot_recruitment() and plot_catch() chooses per call.}
+
+\item{y_zero}{Logical or NULL. Start the y axis of stock size,
+recruitment, catch and fishing mortality plots, and of
+plot_compare_ts() and plot_compare_F_ts(), at zero with no gap below it
+(TRUE, "standard"), or let it follow the data (FALSE, "classic").}
+
+\item{strip}{Character or NULL. Facet strips: \code{"plain"} (bold, left
+aligned black text without a box, "standard") or \code{"box"} (the strips of
+the base theme, "classic").}
+
+\item{legend_position}{Character or NULL. Position of the legend of
+plots that have one: "bottom" ("standard"), "top", "left", "right" or "none".
+NULL ("classic") keeps the position of each plot. Comparison plots use
+compare_legend_pos.}
+
+\item{axis_color}{Character or NULL. With the default base theme
+("theme_bw"), the color of the panel border, axis text and ticks, on a
+white panel ("black" under "standard"). NULL ("classic") keeps the base theme.}
 
 \item{...}{The former argument name compare_linewidth, accepted with a warning.}
 
@@ -139,6 +236,21 @@ Default point, observation, smoother and reference-line colors.}
 (abundance, biomass, spawning stock biomass, recruitment, catch and
 fishing mortality): \code{"lognormal"} (default) or \code{"wald"}. See
 \code{\link{plot_abundance}} for the formulas.}
+
+\item{show_title}{Logical or NULL. Draw the default titles of the plots
+(TRUE, the default of both styles). FALSE removes them from every plot;
+a title given as a character string in a plot call is still drawn, and
+the titles of the panels of multi-panel figures stay because they name
+the panels. A key of \code{titles} set to \code{""} or \code{NA} removes
+the title of that plot only.}
+
+\item{x_angle}{Numeric or NULL. Angle in degrees of the tick labels of
+time axes in multi-panel figures. NULL (default) draws them horizontal
+when they fit the width of the panels with a clear gap and at 45 degrees
+when they do not; 0 keeps them horizontal and thins them instead; another
+number uses that angle. Single-panel figures keep horizontal labels
+unless a number other than 0 is set. A \code{axis.text.x} element added
+with \code{+ ggplot2::theme()} wins.}
 }
 \value{
 Invisible previous settings. Save these or the result of acl_theme(),
@@ -149,12 +261,39 @@ Modify one or more global theme settings. Partial updates are supported:
 only the fields you specify will be changed; all others keep their
 current values.
 }
+\section{Plots combined in a figure of your own}{
+
+A single-panel plot such as \code{plot_SSB()} chooses its year labels for
+a figure of its own, and the package cannot know the width it gets when
+you place it next to other plots, for example in a patchwork of three
+columns, where the labels may touch. Before making the plots, set
+\code{acl_theme_set(x_angle = 45)} to slant the labels, or set fewer
+labels with \code{x_breaks}, for example
+\code{acl_theme_set(x_breaks = seq(2000, 2020, by = 5))}; both
+settings also work as arguments of the plot functions and of
+\code{theme_acl()}.
+}
+
 \examples{
 # --- Set just one thing ---
 # The first call returns the previous settings, which are restored at the end.
 old <- acl_theme_set(base_theme = "theme_classic")
 acl_theme_set(font_family = "Times New Roman")
 acl_theme_set(compare_line_size = 2)
+
+# --- The colors and forms of ALSCL 2.4.5 ---
+acl_theme_set(style = "classic")
+acl_theme("style")
+
+# --- The default style with another palette and horizontal grid lines ---
+acl_theme_set(style = "standard", palette = "npg")
+acl_theme_set(grid = "y")
+
+# --- No default titles; a title given in a plot call is still drawn ---
+acl_theme_set(show_title = FALSE)
+
+# --- Slanted year labels for plots placed side by side ---
+acl_theme_set(x_angle = 45)
 
 # --- Compare ACL vs ALSCL (default) ---
 acl_theme_set(
@@ -178,3 +317,13 @@ acl_theme_set(
 # --- Restore the previous settings ---
 do.call(acl_theme_set, old)
 }
+\seealso{
+Other acl_theme:
+\code{\link[=acl_figure_size]{acl_figure_size()}},
+\code{\link[=acl_palette]{acl_palette()}},
+\code{\link[=acl_save_plot]{acl_save_plot()}},
+\code{\link[=acl_theme]{acl_theme()}},
+\code{\link[=acl_theme_reset]{acl_theme_reset()}},
+\code{\link[=theme_acl]{theme_acl()}}
+}
+\concept{acl_theme}

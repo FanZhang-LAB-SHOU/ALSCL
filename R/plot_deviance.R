@@ -1,26 +1,40 @@
-#' Plot Deviation of Recruitment (R) and Fishing Mortality (F) Over Years
+#' Plot log recruitment and log fishing mortality deviations over time
 #'
-#' This function calculates the deviations of R and F in the ACL or ALSCL model results.
+#' This function calculates the log recruitment deviations and the log
+#' fishing mortality (F) deviations in the ACL or ALSCL model results.
 #' For ACL, F deviations are at the age level (A x Y).
 #' For ALSCL, F deviations are at the length level (L x Y).
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
 #' @param se Logical. Whether to draw 95% intervals from the standard errors. Default is FALSE.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
-#' @param line_color Character or NULL. NULL inherits the global line_color setting.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
+#' @param line_color Character or NULL. NULL inherits the global
+#'   recruitment_color (type "R") or F_color (type "F") setting, or
+#'   line_color when that is NULL.
 #' @param line_type Character, the line type.
 #' @param point_color Character. The color of the point. Default is "white".
 #' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the point. Default is 21.
-#' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_width Numeric. Width of the error-bar caps; does not change the
-#'   standard errors or interval lengths.
+#' @param se_color Character or NULL. Color of the error bars. NULL takes
+#'   the color of the line, or the global se_color when that differs from the
+#'   global line_color or when the quantity has no color of its own.
+#' @param se_width Numeric or NULL. Width of the error-bar caps in years;
+#'   does not change the standard errors or interval lengths. NULL (default)
+#'   uses a quarter of the time step.
 #' @param log Logical. TRUE plots log process deviations; FALSE plots the corresponding
 #'   ratios to the process median, obtained by exponentiating the deviations.
-#' @param facet_ncol Number of columns in facet wrap. Default is NULL.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Scales for facet wrap. Default is "free".
 #' @param type Character. "R" for recruitment deviation, "F" for fishing mortality deviation.
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -63,7 +77,7 @@
 #' @export
 plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_color = "white",
                           point_shape = 21, line_size = NULL, line_color = NULL,
-                          line_type = "solid", se_color = NULL, se_width = 0.5,
+                          line_type = "solid", se_color = NULL, se_width = NULL,
                           facet_ncol = NULL, facet_scales = "free", log = TRUE,
                           type = c("R", "F"), title = NULL, xlab = NULL, ylab = NULL,
                           font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
@@ -71,10 +85,12 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
                           title_hjust = NULL) {
   .acl_stop_if_failed(model_result, "model_result")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
-  if (is.null(line_color)) line_color <- acl_theme("line_color")
-  if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   type <- match.arg(type)
+  family <- if (type == "R") "recruitment" else "F"
+  colors <- .acl_quantity_colors(family, line_color, se_color)
+  line_color <- colors$line
+  se_color <- colors$se
   .acl_check_flag(se, "se")
   .acl_check_flag(log, "log")
   years <- model_result$year
@@ -113,14 +129,14 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
                    lower = values - 1.96 * errors, upper = values + 1.96 * errors)
   if (type == "F") {
     if (shared) {
-      ci$Group <- "Shared F"
+      ci$Group <- if (is_alscl) "All length bins" else "All age classes"
     } else if (is_alscl) {
       labels <- model_result$len_label
       if (is.null(labels)) labels <- paste0("L", seq_len(n_groups))
       if (length(labels) != n_groups || anyNA(labels) ||
           any(!nzchar(as.character(labels))) || anyDuplicated(labels))
         stop("model_result$len_label must identify every length group uniquely.", call. = FALSE)
-      labels <- .acl_fix_len_labels(labels, prefix = "Length")
+      labels <- .acl_fix_len_labels(labels)
       ci$Group <- factor(rep(labels, times = length(years)), levels = labels)
     } else {
       labels <- .acl_age_labels(model_result, n_groups)
@@ -139,13 +155,16 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
     ggplot2::geom_point(size = point_size, fill = point_color, shape = point_shape) +
     ggplot2::labs(y = if (!is.null(ylab)) ylab else .acl_lab("y", label_key),
       x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
-      title = if (!is.null(title)) title else .acl_title(label_key)) +
-    .acl_scale_x(x_breaks, n_breaks = 5, values = years) +
+      title = .acl_plot_title(title, label_key)) +
+    .acl_scale_x(x_breaks, n_breaks = 5, values = years, time = TRUE) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
-                    legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+                    legend_text_size, base_theme = base_theme, title_hjust = title_hjust,
+                    quantity = family)
   if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = facet_scales)
   if (se) plot <- plot +
-    ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color, width = se_width) +
+    ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color,
+                           width = se_width %||% .acl_cap_width(years)) +
     ggplot2::geom_point(size = point_size, fill = point_color, shape = point_shape)
+  plot <- .acl_tidy_axes(plot)
   plot
 }

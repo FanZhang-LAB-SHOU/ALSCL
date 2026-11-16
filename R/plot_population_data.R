@@ -74,6 +74,11 @@
     tabulate(group)[as.integer(group)] == 1L
   }
   points <- list()
+  # Caps of the replacement error bars: a quarter of the spacing of the x
+  # values of the plot, or short ones for a single x value.
+  x_values <- .acl_finite_values(.acl_aes_value(plot, "x"))
+  cap <- .acl_cap_width(x_values)
+  replaced <- FALSE
   for (i in seq_along(plot$layers)) {
     layer <- plot$layers[[i]]
     line <- inherits(layer$geom, "GeomLine")
@@ -108,10 +113,15 @@
       if (!is.null(colour)) args$colour <- colour
       # The ribbon's transparency suits a filled area, not a thin line: the
       # replacement bar is drawn opaque.
-      args <- c(args, style[intersect("linewidth", names(style))], list(width = .3))
+      args <- c(args, style[intersect("linewidth", names(style))], list(width = cap))
       plot <- plot + do.call(ggplot2::geom_errorbar, args)
+      replaced <- TRUE
     }
   }
+  # A plot of a single x value spans at least one unit of x, so that its
+  # error bar keeps a short cap instead of filling the panel.
+  if (replaced && length(unique(x_values)) == 1L)
+    plot <- plot + ggplot2::expand_limits(x = x_values[1L] + c(-0.5, 0.5))
   # Keep estimate points above their uncertainty intervals.
   plot + points
 }

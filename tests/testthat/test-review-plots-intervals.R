@@ -151,7 +151,9 @@ test_that("error bars are opaque unless the call sets se_alpha", {
   layer_alpha <- function(p, geom) {
     built <- ggplot2::ggplot_build(p)
     index <- which(vapply(p$layers, function(x) inherits(x$geom, geom), logical(1)))
-    expect_length(index, 1L)
+    # Error bars on bars have a white underlay; the last layer is the bar.
+    expect_gte(length(index), 1L)
+    index <- index[length(index)]
     unique(built$data[[index]]$alpha)
   }
   plots <- list(
@@ -162,9 +164,10 @@ test_that("error bars are opaque unless the call sets se_alpha", {
     expect_equal(layer_alpha(draw(se_type = "errorbar"), "GeomErrorbar"), 1)
     expect_equal(layer_alpha(draw(se_type = "errorbar", se_alpha = .4), "GeomErrorbar"), .4)
     # The ribbon keeps the global transparency of a filled area.
-    expect_equal(layer_alpha(draw(se_type = "ribbon"), "GeomRibbon"), .2)
+    expect_equal(layer_alpha(draw(se_type = "ribbon"), "GeomRibbon"), acl_theme("se_alpha"))
   }
-  # A single estimate replaces its ribbon by a bar, which must not inherit 0.2.
+  # A single estimate replaces its ribbon by a bar, which must not inherit
+  # the transparency of the ribbon.
   one <- fit
   one$year <- fit$year[1L]
   one$report$SSB <- fit$report$SSB[1L]

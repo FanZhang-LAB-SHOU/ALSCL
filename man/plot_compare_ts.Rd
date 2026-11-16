@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_ts}
 \alias{plot_compare_ts}
-\title{Compare Time-Series Outputs of Two Models}
+\title{Compare the time series of two models}
 \usage{
 plot_compare_ts(
   model1,
@@ -18,7 +18,8 @@ plot_compare_ts(
   facet_scales = NULL,
   return_data = FALSE,
   ...,
-  interval = NULL
+  interval = NULL,
+  title = NULL
 )
 }
 \arguments{
@@ -46,7 +47,10 @@ a warning and the global setting is used.}
 
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
-\item{facet_ncol}{Integer or NULL. Facet columns; NULL uses the global compare_facet_ncol.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL uses
+the global compare_facet_ncol setting, which by default chooses it from
+the number of panels. With five quantities the legend fills the empty
+cell.}
 
 \item{facet_scales}{Character or NULL. Facet scales; NULL uses the global compare_facet_scales.}
 
@@ -61,6 +65,11 @@ stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
+
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 }
 \value{
 A ggplot object (can be further modified with + theme(), + labs(), etc.)
@@ -79,6 +88,8 @@ finite estimates and finite nonnegative standard errors for every requested
 quantity. Use se = FALSE when uncertainty is unavailable.
 A model with one estimate in a panel is drawn as a point, with an error
 bar when se = TRUE. Models with multiple estimates retain lines and ribbons.
+With the global y_zero setting (TRUE under the default style) the y axis
+of every panel starts at zero.
 }
 \examples{
 \donttest{

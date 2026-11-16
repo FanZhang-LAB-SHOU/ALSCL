@@ -25,7 +25,8 @@ expect_grid_free_style_243 <- function(plot) {
 
 test_that("F and both growth comparison panels obey global legend position", {
   skip_if_not_installed("patchwork")
-  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   fit <- plot_style_fixture_243()
   file <- tempfile(fileext = ".pdf")
   grDevices::pdf(file)
@@ -54,7 +55,8 @@ test_that("F and both growth comparison panels obey global legend position", {
 })
 
 test_that("conditional residual diagnostic points inherit the global point size", {
-  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   fit <- plot_style_fixture_243()
   for (size in c(acl_theme("point_size"), 7)) {
     acl_theme_set(point_size = size, point_color = "purple", base_theme = "theme_bw")

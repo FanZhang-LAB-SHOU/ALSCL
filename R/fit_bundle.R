@@ -50,10 +50,21 @@
         args <- overlay(args, validate(configs[[model]],
                                       paste0("x$fit_config$", model), allowed))
     }
+    stored_names <- names(args)
   } else {
     args <- validate(x, "x", allowed)
+    stored_names <- names(args)
   }
   args <- overlay(args, validate(overrides, "Overrides", allowed))
+  # Where t0_lower and the parameters list (with log_t0) come from: "call"
+  # for the arguments of the call, "stored" for the bundle or a saved recipe.
+  # A list resolved earlier keeps its sources (see .acl_t0_sources()).
+  sources <- attr(x, "acl_t0_sources")
+  if (!is.list(sources)) sources <- list()
+  for (nm in c("t0_lower", "parameters"))
+    if (nm %in% names(overrides)) sources[[nm]] <- "call" else
+      if (is.null(sources[[nm]]) && nm %in% stored_names) sources[[nm]] <- "stored"
+  attr(args, "acl_t0_sources") <- sources
   required <- allowed[vapply(formals(fun), function(v) identical(v, quote(expr = )), logical(1))]
   absent <- required[!required %in% names(args)]
   if (length(absent))
@@ -109,5 +120,34 @@
   stored <- .acl_stored_parameters(x, model)
   .acl_replaced_parameters_note(.acl_replaced_parameters(stored$parameters, overrides, args$map),
                                 isTRUE(args$silent), stored$label)
-  do.call(if (model == "acl") run_acl else run_alscl, args, quote = TRUE)
+  .acl_with_t0_sources(args, do.call(if (model == "acl") run_acl else run_alscl, args, quote = TRUE))
+}
+
+# TRUE when t0_lower and the parameters list of resolved arguments come from
+# different places: one from the call and the other from the bundle or a
+# saved recipe. Only then is a supplied log_t0 named under t0_lower (see
+# .acl_t0_lower_start()): when both are stored or both are typed in one call,
+# they were chosen together.
+.acl_t0_sources <- function(args) {
+  sources <- attr(args, "acl_t0_sources")
+  is.list(sources) && all(c("t0_lower", "parameters") %in% names(sources)) &&
+    !identical(sources[["t0_lower"]], sources[["parameters"]])
+}
+
+# Resolved arguments without the internal source attribute, for lists that
+# are returned to the user or saved (scenario and fold settings, recipes).
+# `x` is one argument list or a list of them.
+.acl_drop_t0_sources <- function(x, nested = FALSE) {
+  if (nested) return(lapply(x, .acl_drop_t0_sources))
+  attr(x, "acl_t0_sources") <- NULL
+  x
+}
+
+# Evaluate a fit of resolved arguments with the source flag of t0_lower and
+# log_t0 set, so that .acl_fit() can read it, and restore the previous flag.
+.acl_with_t0_sources <- function(args, expr) {
+  previous <- .acl_notes$t0_sources_differ
+  .acl_notes$t0_sources_differ <- .acl_t0_sources(args)
+  on.exit(.acl_notes$t0_sources_differ <- previous, add = TRUE)
+  expr
 }

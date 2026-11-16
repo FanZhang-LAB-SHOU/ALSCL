@@ -26,14 +26,14 @@ singleton_panel_grobs <- function(plot, kind) {
   unlist(lapply(grob$grobs[grepl("^panel", grob$layout$name)], collect), recursive = FALSE)
 }
 
-singleton_assert_grid_free <- function(plot) {
-  theme <- ggplot2::ggplot_build(plot)$plot$theme
-  for (axis in c("major.x", "major.y", "minor.x", "minor.y"))
-    expect_s3_class(ggplot2::calc_element(paste0("panel.grid.", axis), theme), "element_blank")
-}
+# The grid of the current style: horizontal major lines only by default.
+singleton_assert_grid_free <- function(plot)
+  expect_style_grid(ggplot2::ggplot_build(plot)$plot$theme)
 
 test_that("single-period population panels draw estimates and intervals", {
-  withr::local_options(list(acl.theme = NULL))
+  # Lines in line_color: the classic style. A single bar of the default
+  # style is tested in test-default-style-250.R.
+  local_classic_style()
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   acl_theme_set(point_size = 3.5, line_color = "navy", se_color = "orange")
   for (model in c("ACL", "ALSCL")) {

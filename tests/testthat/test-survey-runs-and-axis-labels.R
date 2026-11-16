@@ -50,9 +50,7 @@ test_that("rendered survey and residual panels retain isolated observations and 
       drawn <- Filter(function(grob) inherits(grob, "points"), as.list(children))
       expect_length(drawn, 1L)
       expect_length(drawn[[1L]]$x, length(expected))
-      for (axis in c("major.x", "major.y", "minor.x", "minor.y"))
-        expect_s3_class(ggplot2::calc_element(paste0("panel.grid.", axis),
-                                              built$plot$theme), "element_blank")
+      expect_style_grid(built$plot$theme)
     }
   }
 })
@@ -86,7 +84,8 @@ test_that("F heatmaps use fitted ages and order overlapping age grids independen
       # The oldest age class is a plus group and carries a plus sign.
       age_labels <- paste("Age", original$age)
       age_labels[length(age_labels)] <- paste0(age_labels[length(age_labels)], "+")
-      expect_equal(breaks, rev(age_labels))
+      # The axis title names the age, so the tick labels are the ages alone.
+      expect_equal(breaks, rev(sub("^Age ", "", age_labels)), ignore_attr = TRUE)
       model_data <- plot$data[as.integer(plot$data$Model) == model, ]
       expect_equal(as.character(model_data$Label), rep(age_labels, length(original$year)))
       expect_equal(model_data$F_value, as.numeric(original$report$F))
@@ -94,7 +93,7 @@ test_that("F heatmaps use fitted ages and order overlapping age grids independen
   }
   a$age <- NULL
   labels <- ggplot2::ggplot_build(plot_compare_F(q, a))$layout$panel_params[[2L]]$y$get_labels()
-  expect_equal(labels, paste("Age group", 4:1))
+  expect_equal(labels, paste("Age bin", 4:1), ignore_attr = TRUE)
   for (bad in list(c(1, 2), c(1, 2, 2, 4), c(1, 2, NA, 4))) {
     a$age <- bad
     expect_error(plot_compare_F(q, a), "ages must")

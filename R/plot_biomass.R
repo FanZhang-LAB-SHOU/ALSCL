@@ -1,16 +1,24 @@
 utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
-#' @title Plot Biomass Over Years from ACL or ALSCL Model
+#' @title Plot biomass over time from an ACL or ALSCL model
 #'
 #' @description Plots biomass over years. Supports total biomass ("B"),
 #' biomass at length ("BL"), and biomass at age ("BA").
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
-#' @param line_color Character or NULL. NULL inherits the global line_color setting.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
+#' @param line_color Character or NULL. NULL inherits the global stock_color
+#'   setting, or line_color when that is NULL.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
-#' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).
+#' @param se_color Character or NULL. Color of the interval. NULL takes the
+#'   color of the line, or the global se_color when that differs from the
+#'   global line_color or when stock_color is NULL.
+#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
+#'   inherits the global se_alpha setting (0.3 under the standard style, 0.2
+#'   under classic).
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
 #'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
@@ -18,10 +26,15 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
 #' @param type Character. "B" (total), "BL" (at length), or "BA" (at age). Default is "B".
-#' @param facet_ncol Integer. Columns in facet_wrap. Default is NULL.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
-#' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
 #' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
@@ -63,7 +76,9 @@ utils::globalVariables(c("Biomass", "AgeGroup", "LengthGroup", "Count", "SBA"))
 #'   theme label, and the typography arguments replace the corresponding theme settings.
 #' @details A group or panel with only one estimate is drawn as a point.
 #'   When intervals are requested, its ribbon is replaced by an error bar.
-#'   The point uses the global point_size setting and the estimate's line colour.
+#'   The point uses the global point_size setting and the estimate's line color.
+#' @details With the global y_zero setting (TRUE under the default style) the
+#'   y axis of every panel starts at zero.
 #' @return A ggplot object or a list with plot and data.
 #' @examples
 #' \donttest{
@@ -84,9 +99,10 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
                          strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
                          title_hjust = NULL, interval = NULL) {
   # NULL inherits the global palette.
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
-  if (is.null(line_color)) line_color <- acl_theme("line_color")
-  if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
+  colors <- .acl_quantity_colors("stock", line_color, se_color)
+  line_color <- colors$line
+  se_color <- colors$se
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
@@ -97,7 +113,7 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
   Year <- model_result[["year"]]
   current_theme <- .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
                                    strip_text_size, legend_text_size, base_theme = base_theme,
-                                   title_hjust = title_hjust)
+                                   title_hjust = title_hjust, quantity = "stock")
 
   # ==========================
   # Type = "B": Total biomass
@@ -202,11 +218,12 @@ plot_biomass <- function(model_result, line_size = NULL, line_color = NULL, line
   title_key <- if (se) paste0(type, "_se") else type
   p <- p + ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
                          y = if (!is.null(ylab)) ylab else .acl_lab("y", "biomass"),
-                         title = if (!is.null(title)) title else .acl_title(title_key)) +
-    .acl_scale_x(x_breaks, n_breaks = 5, values = Year) + current_theme
+                         title = .acl_plot_title(title, title_key)) +
+    .acl_scale_x(x_breaks, n_breaks = 5, values = Year, time = TRUE) + .acl_y_zero() + current_theme
 
   p <- .acl_show_singletons(p, intersect(c("AgeGroup", "LengthGroup"), names(p$data)))
 
+  p <- .acl_tidy_axes(p)
   if (return_data) {
     return(list(plot = p, data = data_out))
   } else {

@@ -24,9 +24,7 @@ test_that("survey and catch labels identify different quantities without changin
     y <- as.integer(curve$PANEL[1])
     expect_equal(curve$y, exp(m$report$Elog_index[, y]))
   }
-  for (element in c("panel.grid.major.x", "panel.grid.major.y",
-                    "panel.grid.minor.x", "panel.grid.minor.y"))
-    expect_s3_class(ggplot2::calc_element(element, built$plot$theme), "element_blank")
+  expect_style_grid(built$plot$theme)
 })
 
 test_that("survey labels have independent global control and preserve legacy abundance settings", {

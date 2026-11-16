@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme}
 \alias{acl_theme}
-\title{ALSCL Plot Theme Configuration}
+\title{ALSCL plot theme configuration}
 \usage{
 acl_theme(what = NULL)
 }
@@ -17,7 +17,13 @@ is specified.
 \description{
 Global settings for all ALSCL plot functions, including model comparison plots.
 Change titles, axis labels, font family, colors, line sizes, and
-comparison plot styles in one place.
+comparison plot styles in one place. The default style, \code{"standard"},
+draws stock size, fishing mortality, recruitment and catch each in its own
+color, draws total recruitment and total catch as bars, starts the y axis
+of these plots at zero, and uses bold left-aligned titles and facet labels
+without boxes. \code{style = "classic"} restores the colors and forms of
+ALSCL 2.4.5 (see \code{\link{acl_theme_set}()}). \code{\link{theme_acl}()}
+and \code{\link{acl_palette}()} give your own ggplots the same look.
 
 Returns the current global theme settings used by all ALSCL plot functions.
 }
@@ -26,6 +32,10 @@ Returns the current global theme settings used by all ALSCL plot functions.
 \preformatted{
 # View current settings
 acl_theme()
+
+# The colors and forms of ALSCL 2.4.5, then back to the default style
+acl_theme_set(style = "classic")
+acl_theme_set(style = "standard")
 
 # Change just one thing
 acl_theme_set(font_family = "Times New Roman")
@@ -64,4 +74,15 @@ acl_theme_reset()
 acl_theme()
 acl_theme("font_family")
 acl_theme("compare_colors")
+acl_theme("style")
 }
+\seealso{
+Other acl_theme:
+\code{\link[=acl_figure_size]{acl_figure_size()}},
+\code{\link[=acl_palette]{acl_palette()}},
+\code{\link[=acl_save_plot]{acl_save_plot()}},
+\code{\link[=acl_theme_reset]{acl_theme_reset()}},
+\code{\link[=acl_theme_set]{acl_theme_set()}},
+\code{\link[=theme_acl]{theme_acl()}}
+}
+\concept{acl_theme}

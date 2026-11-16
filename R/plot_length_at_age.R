@@ -95,10 +95,12 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 # One colour legend for series drawn in separate layers, some as lines and
 # some as points. `linetypes` is "blank" and `shapes` is NA where a series
 # has no line or no points.
-.acl_series_legend <- function(labels, colors, linetypes, shapes) {
+.acl_series_legend <- function(labels, colors, linetypes, shapes, linewidths = NULL, alphas = NULL) {
+  keys <- list(linetype = linetypes, shape = shapes)
+  if (!is.null(linewidths)) keys$linewidth <- as.numeric(linewidths)
+  if (!is.null(alphas)) keys$alpha <- alphas
   list(ggplot2::scale_color_manual(name = NULL, values = stats::setNames(colors, labels), breaks = labels),
-       ggplot2::guides(color = ggplot2::guide_legend(
-         override.aes = list(linetype = linetypes, shape = shapes))))
+       ggplot2::guides(color = ggplot2::guide_legend(override.aes = keys)))
 }
 
 # Theme for a plot with a legend of series and a caption of full sentences:
@@ -131,8 +133,8 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 # Caption for the meaning of the bars of observed mean length at age.
 .acl_observed_caption <- function(obs) {
   if (is.null(obs) || !nrow(obs)) return(NULL)
-  switch(attr(obs, "spread"), sd = "Bars: one standard deviation on each side of the observed mean.",
-         interval = "Bars: the supplied interval of the observed mean.", NULL)
+  switch(attr(obs, "spread"), sd = "Error bars span one standard deviation on each side of the observed mean.",
+         interval = "Error bars show the supplied interval of the observed mean.", NULL)
 }
 
 #' Plot mean length at age by time step
@@ -163,20 +165,22 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 #' @param ages NULL (all age classes) or the age classes to draw, as values of
 #'   `fit$age`.
 #' @param facet_by `"age"` (default): one panel per age class. `"none"`: one
-#'   panel with one line per age class, coloured by age class.
+#'   panel with one line per age class, colored by age class.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
-#' @param line_color Character or NULL. Line colour with `facet_by = "age"`;
+#' @param line_color Character or NULL. Line color with `facet_by = "age"`;
 #'   NULL inherits the global line_color setting. With `facet_by = "none"` the
-#'   lines take the colours of the global palette.
+#'   lines take the colors of the global palette.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param point_size Numeric or NULL. Size of the observed points; NULL
 #'   inherits the global point_size setting.
 #' @param observed_color Character or NULL. Colour of the observed points with
 #'   `facet_by = "age"`; NULL inherits the global observed_color setting. With
-#'   `facet_by = "none"` the points take the colour of their age class.
+#'   `facet_by = "none"` the points take the color of their age class.
 #' @param observed_name Character. Name of the observed points in the legend
 #'   and the caption. Default is "Age readings".
-#' @param facet_ncol Numeric. Columns in facet wrap. Default is NULL.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
@@ -233,7 +237,7 @@ plot_length_at_age <- function(fit, observed = NULL, basis = c("population", "su
   basis <- match.arg(basis)
   facet_by <- match.arg(facet_by)
   .acl_check_flag(return_data, "return_data")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(observed_color)) observed_color <- acl_theme("observed_color")
@@ -305,22 +309,25 @@ plot_length_at_age <- function(fit, observed = NULL, basis = c("population", "su
                                    size = point_size, inherit.aes = FALSE, show.legend = FALSE)
     }
     p <- p + ggplot2::scale_color_manual(name = "Age class", values = palette,
-                                         labels = sub("^Age ", "", names(palette)))
+                                         labels = sub("^Age ", "", names(palette)),
+                                         guide = .acl_legend_rows(length(palette), 10L))
     n_breaks <- 10
     caption <- if (has_observed)
-      .acl_caption(paste(c(paste0("Lines: model. Points: ", observed_name, "."), bars_text), collapse = " "))
+      .acl_caption(paste(c(paste0("Lines show the model and points show ", observed_name, "."), bars_text),
+                         collapse = " "))
   }
   p <- p +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
                   y = if (!is.null(ylab)) ylab else .acl_lab("y", "growth"),
-                  title = if (!is.null(title)) title else .acl_title("length_at_age_time"),
+                  title = .acl_plot_title(title, "length_at_age_time"),
                   subtitle = .acl_growth_subtitle(basis, by_time = TRUE), caption = caption) +
-    .acl_scale_x(x_breaks, n_breaks = n_breaks, values = long$Year, check_overlap = TRUE) +
+    .acl_scale_x(x_breaks, n_breaks = n_breaks, values = long$Year, time = TRUE) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
   if (has_observed) p <- p + if (facet_by == "age") .acl_series_theme() else
     ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
   p <- .acl_show_singletons(p, "AgeClass", point_size = point_size)
+  p <- .acl_tidy_axes(p)
   if (return_data) list(plot = p, data = long) else p
 }
 

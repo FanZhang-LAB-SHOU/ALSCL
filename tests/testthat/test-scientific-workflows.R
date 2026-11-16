@@ -53,8 +53,8 @@ test_that("lag correlations preserve missing periods and report sparse or consta
 })
 
 test_that("residual check plots retain grid-free global styles and empty support", {
-  old <- acl_theme()
-  on.exit(do.call(acl_theme_set, old), add = TRUE)
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   acl_theme_set(font_family = "serif", base_theme = "theme_minimal", point_color = "purple")
   checks <- check_fit(science_residual_fixture(), 3)
   for (p in checks$plots) {
@@ -87,8 +87,7 @@ test_that("residual-lag facets retain physical length order for multiple uneven 
   expect_identical(levels(result$plots$heatmap$data$length_label), f$len_label)
   expect_type(result$lag_correlations$length_label, "character")
   expect_identical(unique(result$lag_correlations$length_label), f$len_label)
-  expect_s3_class(result$plots$lag$theme$panel.grid.major, "element_blank")
-  expect_s3_class(result$plots$lag$theme$panel.grid.minor, "element_blank")
+  expect_style_grid(ggplot2::ggplot_build(result$plots$lag)$plot$theme)
 })
 
 science_projection_fixture <- function(model = "ACL", A = 3L) {

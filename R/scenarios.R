@@ -31,7 +31,7 @@
   started <- proc.time()[["elapsed"]]
   warnings <- character()
   result <- tryCatch(withCallingHandlers({
-    value <- do.call(if (model == "acl") run_acl else run_alscl, args)
+    value <- .acl_with_t0_sources(args, do.call(if (model == "acl") run_acl else run_alscl, args))
     value$obj <- NULL
     value
   }, warning = function(w) {
@@ -65,7 +65,7 @@
   if (workers > 1L)
     for (args in settings)
       if (!isTRUE(args$silent) && .acl_t0_lower_start_note(
-          .acl_t0_lower_start(args$t0_lower, args$parameters, model), FALSE)) break
+          .acl_t0_lower_start(args$t0_lower, args$parameters, model, .acl_t0_sources(args)), FALSE)) break
   .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
 }
 
@@ -182,7 +182,7 @@ fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,
   fits <- lapply(results, `[[`, "fit")
   status <- .acl_batch_status(results)
   rownames(status) <- NULL
-  list(fits = fits, settings = settings, status = status,
+  list(fits = fits, settings = .acl_drop_t0_sources(settings, nested = TRUE), status = status,
     elapsed = unname(proc.time()[["elapsed"]] - started),
     estimates = .acl_scenario_estimates(fits, status, F_summary),
     model = model, F_summary = F_summary, workers = .acl_workers(min(ncores, length(settings))))

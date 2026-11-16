@@ -2,7 +2,7 @@
 % Please edit documentation in R/derived_outputs.R
 \name{relative_catch}
 \alias{relative_catch}
-\title{Relative catch by time step}
+\title{Catch relative to its mean by time step}
 \usage{
 relative_catch(fit, years = NULL)
 }
@@ -23,7 +23,7 @@ see Details) and numerical_ok (the numerical screen of the fit).
 }
 \description{
 Model catch in numbers and in weight for each time step, each divided by
-its mean over the time steps. Use it to compare the trend of the model
+its mean over the time steps: the catch relative to its mean. Use it to compare the trend of the model
 catch with reported catch.
 }
 \details{

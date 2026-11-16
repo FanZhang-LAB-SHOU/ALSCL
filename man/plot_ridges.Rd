@@ -2,13 +2,13 @@
 % Please edit documentation in R/plot_ridges.R
 \name{plot_ridges}
 \alias{plot_ridges}
-\title{Plot Observed and Fitted Survey Length Compositions over Time}
+\title{Plot observed and fitted survey length compositions over time}
 \usage{
 plot_ridges(
   model_result,
   ridges_alpha = 0.8,
   ridges_scale = NULL,
-  palette = "viridis",
+  palette = NULL,
   title = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -35,23 +35,26 @@ of periods with at least two observed bins. Increase for
 taller ridges, decrease for flatter. Useful when many length bins make proportions
 small (e.g. tuna with 22 bins).}
 
-\item{palette}{Character or character vector. Color palette for the fill.
-Default "viridis" (and NULL) uses a sequential gradient across ordered years,
-independently of the global categorical palette. Also accepts "npg", "aaas", "nejm",
-"lancet", "jama". Gradient palette names: \code{"viridis"}, \code{"plasma"},
+\item{palette}{Character, character vector or NULL. Fill colors of the
+ridges, ordered by year. NULL (default) follows the global palette: a
+gradient from light blue to dark blue under "standard" (the default
+style), the same as \code{palette = "standard"}, and \code{"viridis"}, as
+in earlier versions, under any other global palette, including that of
+the "classic" style. The names "npg", "aaas", "nejm", "lancet" and
+"jama" give the colors of these palettes. Gradient palette names: \code{"viridis"}, \code{"plasma"},
 \code{"inferno"}, \code{"cividis"}, \code{"turbo"}, \code{"magma"},
 \code{"ocean"}, \code{"sunset"}, \code{"forest"}, \code{"fire"},
 \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
-\code{"BrBG"}, \code{"rainbow"}, \code{"terrain"}, \code{"heat"},
-\code{"topo"}.
+\code{"PRGn"}, \code{"RdBu"}, \code{"BrBG"}, \code{"rainbow"},
+\code{"terrain"}, \code{"heat"}, \code{"topo"}. All names are matched
+without regard to case, so \code{"Standard"} and \code{"rdbu"} work too.
 Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 which will be interpolated to match the number of years.}
 
-\item{title}{Character or NULL. One title for the whole figure. NULL uses
-the global \code{ridges} title; an empty string draws none. The two panels
-keep their own titles, from the global \code{CatL_obs_length} and
-\code{CatL_est_length} keys, so observed and fitted panels stay labelled.
-See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -104,6 +107,12 @@ its point is drawn at the height of the tallest ridge.
 
 The time axis shows whole years for annual fits ("2000") and quarters for
 quarterly fits ("2000 Q2"). Other time steps keep their decimal labels.
+}
+\details{
+\code{title} is the title of the whole figure. The two panels keep
+their own titles, from the global \code{CatL_obs_length} and
+\code{CatL_est_length} keys, so that observed and fitted panels stay
+labelled when the figure title is removed.
 }
 \examples{
 \donttest{

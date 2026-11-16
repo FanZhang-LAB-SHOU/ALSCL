@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_deviance.R
 \name{plot_deviance}
 \alias{plot_deviance}
-\title{Plot Deviation of Recruitment (R) and Fishing Mortality (F) Over Years}
+\title{Plot log recruitment and log fishing mortality deviations over time}
 \usage{
 plot_deviance(
   model_result,
@@ -14,7 +14,7 @@ plot_deviance(
   line_color = NULL,
   line_type = "solid",
   se_color = NULL,
-  se_width = 0.5,
+  se_width = NULL,
   facet_ncol = NULL,
   facet_scales = "free",
   log = TRUE,
@@ -44,18 +44,28 @@ plot_deviance(
 
 \item{point_shape}{Numeric. The shape of the point. Default is 21.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. NULL inherits the global
+recruitment_color (type "R") or F_color (type "F") setting, or
+line_color when that is NULL.}
 
 \item{line_type}{Character, the line type.}
 
-\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
+\item{se_color}{Character or NULL. Color of the error bars. NULL takes
+the color of the line, or the global se_color when that differs from the
+global line_color or when the quantity has no color of its own.}
 
-\item{se_width}{Numeric. Width of the error-bar caps; does not change the
-standard errors or interval lengths.}
+\item{se_width}{Numeric or NULL. Width of the error-bar caps in years;
+does not change the standard errors or interval lengths. NULL (default)
+uses a quarter of the time step.}
 
-\item{facet_ncol}{Number of columns in facet wrap. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Scales for facet wrap. Default is "free".}
 
@@ -64,7 +74,10 @@ ratios to the process median, obtained by exponentiating the deviations.}
 
 \item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -94,7 +107,8 @@ lies on this axis; otherwise the breaks are chosen automatically.}
 A ggplot2 object.
 }
 \description{
-This function calculates the deviations of R and F in the ACL or ALSCL model results.
+This function calculates the log recruitment deviations and the log
+fishing mortality (F) deviations in the ACL or ALSCL model results.
 For ACL, F deviations are at the age level (A x Y).
 For ALSCL, F deviations are at the length level (L x Y).
 }

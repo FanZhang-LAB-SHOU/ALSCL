@@ -8,7 +8,9 @@
   defaults <- formals(fun)
   for (nm in setdiff(names(defaults), names(args)))
     assign(nm, eval(defaults[[nm]], envir = frame), envir = frame)
-  mget(names(defaults), envir = frame, inherits = FALSE)
+  resolved <- mget(names(defaults), envir = frame, inherits = FALSE)
+  attr(resolved, "acl_t0_sources") <- attr(args, "acl_t0_sources")
+  resolved
 }
 
 .acl_input_list <- function(x, label, allowed = NULL) {

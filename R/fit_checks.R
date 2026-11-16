@@ -342,8 +342,12 @@
 # create_parameters()) when that t0 is above t0_lower; otherwise it means
 # t0 = t0_lower + 1/60. Returns c(t0_lower, log_t0) with
 # log_t0 = NA for the default start that cannot be converted, or NULL when
-# there is nothing to report.
-.acl_t0_lower_start <- function(t0_lower, parameters, model) {
+# there is nothing to report. A supplied start is reported only when
+# `differ` is TRUE: t0_lower and log_t0 come from different places, one from
+# the call and the other from the bundle or a saved recipe (see
+# .acl_t0_sources()). Values stored together, or given together in one call,
+# were chosen for each other.
+.acl_t0_lower_start <- function(t0_lower, parameters, model, differ = TRUE) {
   if (toupper(model) != "ALSCL" || !is.numeric(t0_lower) || length(t0_lower) != 1L ||
       !is.finite(t0_lower) || t0_lower == 0) return(NULL)
   x <- if (is.list(parameters)) parameters[["log_t0"]]
@@ -351,7 +355,7 @@
     if (1 / 60 > t0_lower) return(NULL)
     return(c(t0_lower = t0_lower, log_t0 = NA_real_))
   }
-  if (!is.numeric(x) || length(x) != 1L || !is.finite(x)) return(NULL)
+  if (!isTRUE(differ) || !is.numeric(x) || length(x) != 1L || !is.finite(x)) return(NULL)
   c(t0_lower = t0_lower, log_t0 = as.numeric(x))
 }
 

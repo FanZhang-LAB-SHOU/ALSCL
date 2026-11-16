@@ -1,6 +1,6 @@
 # Attach plain inputs rather than retaining a caller environment or TMB pointer.
 .acl_attach_recipe <- function(result, model, args) {
-  result$recipe <- list(schema_version = 1L, model = tolower(model), args = args,
+  result$recipe <- list(schema_version = 1L, model = tolower(model), args = .acl_drop_t0_sources(args),
     versions = list(ALSCL = as.character(utils::packageVersion("ALSCL")),
                     TMB = as.character(utils::packageVersion("TMB")),
                     R = as.character(getRversion())),
@@ -334,8 +334,12 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   missing value (use N_at_age, or \code{na.strings = ""} when reading).
 #'   In the fitted report the matrix is \code{fit$report[["NA"]]}; the
 #'   double brackets are needed because NA is a reserved word in R.
-#' @param conf_level Nominal confidence level of approximate normal intervals
+#' @param conf_level Nominal confidence level of the approximate intervals
 #'   on the reported scale, strictly between zero and one.
+#' @param interval Form of the interval. `"lognormal"` (default) is
+#'   `exp(log(estimate) +/- z * SE / estimate)`, as in the plots of the
+#'   package and in [self_test()]. `"wald"` is `estimate +/- z * SE`, the
+#'   default before version 2.5.0, and gives the former bounds.
 #' @return A long data frame with quantity, report_name, year, age, length,
 #'   length_label, estimate, std_error, conf_low, conf_high, numerical_ok and
 #'   extrapolated. Unavailable SEs remain NA. No averaging of F or annualization
@@ -344,7 +348,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   on the fishing mortality rate (F) of the terminal period (see Details).
 #' @details Estimates come from report. Complete finite nonnegative standard errors
 #'   come from exact matching rows of est_std. Incomplete uncertainty for a quantity
-#'   remains NA. Normal intervals are not truncated at zero. FA uses source ages
+#'   remains NA, and so do its interval bounds. Lognormal intervals of a
+#'   positive estimate stay positive. An estimate of zero, or one whose
+#'   lognormal upper bound overflows, keeps the Wald bounds with the lower
+#'   bound stopped at zero, and a negative estimate keeps the Wald bounds.
+#'   Wald intervals are not truncated at zero. FA uses source ages
 #'   and source periods of the cohort-survival interval, not destination labels.
 #'
 #'   No observation informs F in the terminal period. The survey index of a
@@ -376,8 +384,10 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #' unlink(path)
 #' }
 #' @export
-extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = .95) {
+extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = .95,
+                              interval = c("lognormal", "wald")) {
   z <- .acl_conf_level(conf_level)
+  interval <- match.arg(interval)
   if (!is.character(quantities) || !length(quantities) || anyNA(quantities) || anyDuplicated(quantities))
     stop("quantities must be distinct, nonmissing quantity names.", call. = FALSE)
   .acl_stop_if_failed(fit)
@@ -441,10 +451,11 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
         se <- as.numeric(placed)
       }
     }
+    bounds <- .acl_interval(value, se, interval, z)
     data.frame(quantity = quantity, report_name = if (quantity == "N_at_age") quantity else nm,
       coords, estimate = as.numeric(value),
-      std_error = se, conf_low = as.numeric(value) - z * se,
-      conf_high = as.numeric(value) + z * se, numerical_ok = numerical_ok,
+      std_error = se, conf_low = bounds$lower,
+      conf_high = bounds$upper, numerical_ok = numerical_ok,
       extrapolated = nm %in% terminal_F & coords$year >= last_informed, row.names = NULL)
   })
   do.call(rbind, rows)
@@ -891,5 +902,5 @@ refit_model <- function(fit, ...) {
   .acl_replaced_parameters_note(.acl_replaced_parameters(recipe$args$parameters, overrides, args$map),
                                 isTRUE(args$silent), "fit$recipe$args$parameters")
   previous <- options(recipe$settings); on.exit(options(previous), add = TRUE)
-  do.call(if (recipe$model == "acl") run_acl else run_alscl, args)
+  .acl_with_t0_sources(args, do.call(if (recipe$model == "acl") run_acl else run_alscl, args))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_relative_catch.R
 \name{plot_relative_catch}
 \alias{plot_relative_catch}
-\title{Plot relative catch by time step}
+\title{Plot catch relative to its mean by time step}
 \usage{
 plot_relative_catch(
   fit,
@@ -50,7 +50,8 @@ values of \code{fit$year}. NULL uses all time steps of the fit, or, with
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. Color of the fitted series. NULL
+inherits the global catch_color setting, or line_color when that is NULL.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
@@ -66,7 +67,10 @@ Default is "Reported catch".}
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -98,9 +102,9 @@ Year, relative and extrapolated) and \code{observed} (the reported series:
 Year and relative, or NULL) when \code{return_data = TRUE}.
 }
 \description{
-Plots the model catch in numbers or in weight divided by its mean, from
-\code{\link[=relative_catch]{relative_catch()}}, and optionally a reported catch series divided by its
-mean over the same time steps. Use it to compare the trend of the model
+Plots the model catch in numbers or in weight divided by its mean (the
+catch relative to its mean), from \code{\link[=relative_catch]{relative_catch()}}, and optionally a
+reported catch series divided by its mean over the same time steps. Use it to compare the trend of the model
 catch with reported catch.
 }
 \details{

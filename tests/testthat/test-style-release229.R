@@ -60,19 +60,28 @@ test_that("single-model widths and uncertainty alpha inherit global defaults", {
     for (type in types) {
       args <- list(model_result = m, se = TRUE)
       if (!is.null(type)) args$type <- type
-      check(do.call(spec$fun, args), 1.5, .2)
+      # Total catch and recruitment as lines; bars are tested in test-default-style-250.R.
+      if (identical(spec$fun, plot_catch) || identical(spec$fun, plot_recruitment)) args$geom <- "line"
+      # The default width is thinner in facets of more than four panels.
+      p <- do.call(spec$fun, args)
+      panels <- ALSCL:::.acl_facet_dims(p)[["panels"]]
+      check(p, acl_theme("line_size") * (if (panels <= 4L) 1 else if (panels <= 12L) 2 / 3 else 1 / 2), acl_theme("se_alpha"))
       acl_theme_set(line_size = 4, se_alpha = .7)
       check(do.call(spec$fun, args), 4, .7)
       check(do.call(spec$fun, c(args, list(line_size = .8, se_alpha = .3))), .8, .3)
-      acl_theme_reset()
+      suppressMessages(acl_theme_reset())
     }
   }
   acl_theme_set(line_size = 4)
   p <- plot_residuals(m)
   built <- ggplot2::ggplot_build(p)
-  for (i in seq_along(p$layers))
-    if (inherits(p$layers[[i]]$geom, c("GeomLine", "GeomHline")))
+  # Data lines take line_size; the zero reference line stays thin.
+  for (i in seq_along(p$layers)) {
+    if (inherits(p$layers[[i]]$geom, "GeomLine"))
       expect_true(all(built$data[[i]]$linewidth == 4))
+    if (inherits(p$layers[[i]]$geom, "GeomHline"))
+      expect_true(all(built$data[[i]]$linewidth == 0.4))
+  }
   rd <- expand.grid(Year = 2000:2002, RetrospectiveYear = c("2003", "2002"),
                     Variable = "SSB")
   rd$Value <- seq_len(nrow(rd))
@@ -81,8 +90,9 @@ test_that("single-model widths and uncertainty alpha inherit global defaults", {
   for (width in c(4, .6)) {
     p <- if (width == 4) plot_retro(retro) else plot_retro(retro, line_size = width)
     built <- ggplot2::ggplot_build(p)
-    i <- which(vapply(p$layers, function(x) inherits(x$geom, "GeomLine"), logical(1)))
-    expect_true(all(built$data[[i]]$linewidth == width))
+    # Under the default style the full fit is drawn again on top: two line layers.
+    for (i in which(vapply(p$layers, function(x) inherits(x$geom, "GeomLine"), logical(1))))
+      expect_true(all(built$data[[i]]$linewidth == width))
   }
 })
 
@@ -106,7 +116,7 @@ test_that("comparison line types reach data layers and displayed legends", {
       model1_name = "First", model2_name = "Second"), extra))
     panels <- style_panels_229(p)
     panels <- panels[vapply(panels, function(x)
-      x$labels$title %in% c("QQ plot", "Mean residual by year"), logical(1))]
+      x$labels$title %in% c("Normal quantile-quantile plot", "Mean log residual by time step"), logical(1))]
     expect_length(panels, 2L)
     for (panel in panels) {
       layer <- ggplot2::ggplot_build(panel)$data[[2L]]

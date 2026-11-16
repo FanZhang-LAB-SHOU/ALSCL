@@ -82,7 +82,7 @@ test_that("the renamed theme keys and the renamed function keep working", {
 
   expect_warning(p <- plot_compare_annual_F(fit, fit, method = "mean"), "plot_compare_annual_F\\(\\) is deprecated")
   expect_s3_class(p, "ggplot")
-  expect_equal(p$labels$title, "Fishing mortality by time step")
+  expect_equal(p$labels$title, "Fishing mortality rate of ACL (1) and ACL (2) over time")
   expect_equal(p$data, plot_compare_F_ts(fit, fit, method = "mean")$data)
   acl_theme_set(titles = list(compare_F_ts = "F summary"))
   expect_equal(plot_compare_F_ts(fit, fit)$labels$title, "F summary")
@@ -189,8 +189,7 @@ test_that("comparison point plots inherit the shared point size and keep legacy 
     expect_equal(size_of(draws[[nm]](), layer[[nm]]), 3, label = nm)
     expect_equal(size_of(draws[[nm]](point_size = 4), layer[[nm]]), 4, label = nm)
     p <- ggplot2::ggplot_build(draws[[nm]](point_size = 4))$plot
-    for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
-      expect_true(inherits(ggplot2::calc_element(grid, p$theme), "element_blank"), info = nm)
+    expect_style_grid(p$theme)
   }
   expect_equal(size_of(plot_CatL(fit), 1L), 7)
   expect_equal(size_of(draws$survey(obs_size = 1), 1L), 1)
@@ -225,8 +224,7 @@ test_that("fishing mortality retains the former positional base_theme argument",
   args$axis_title_size <- 19
   styled <- ggplot2::ggplot_build(do.call(plot_fishing_mortality, args))$plot
   expect_equal(ggplot2::calc_element("axis.title", styled$theme)$size, 19)
-  for (grid in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
-    expect_s3_class(ggplot2::calc_element(grid, styled$theme), "element_blank")
+  expect_style_grid(styled$theme)
 })
 
 

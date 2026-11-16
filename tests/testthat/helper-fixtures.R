@@ -63,3 +63,23 @@ growth_plot_fixture <- function(fit, year = 2000:2002) {
       sweep(fit$report$pla, 2L, fit$report[["NA"]][, y], "*"), fit$report$pla), c(L, A, Y))
   fit
 }
+
+# The classic style, the look of ALSCL 2.4.5, for the rest of a test that is
+# about that look (for example plots without grid lines). The caller's theme
+# settings are restored when the test ends.
+local_classic_style <- function(env = parent.frame()) {
+  old <- options(acl.theme = NULL)
+  withr::defer(options(old), envir = env)
+  acl_theme_set(style = "classic")
+  invisible(old)
+}
+
+# Grid lines of the current settings in a complete theme: none by default
+# (both styles), horizontal major lines only with grid = "y". Heat maps have
+# no grid lines in either case.
+expect_style_grid <- function(theme, heat_map = FALSE) {
+  for (name in c("panel.grid.major.x", "panel.grid.minor.x", "panel.grid.minor.y"))
+    expect_s3_class(ggplot2::calc_element(name, theme), "element_blank")
+  expected <- if (!heat_map && identical(acl_theme("grid"), "y")) "element_line" else "element_blank"
+  expect_s3_class(ggplot2::calc_element("panel.grid.major.y", theme), expected)
+}

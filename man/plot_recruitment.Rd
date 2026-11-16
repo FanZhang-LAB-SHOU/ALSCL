@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_recruitment.R
 \name{plot_recruitment}
 \alias{plot_recruitment}
-\title{Plot Recruitment over the years}
+\title{Plot recruitment over time}
 \usage{
 plot_recruitment(
   model_result,
@@ -12,7 +12,7 @@ plot_recruitment(
   se = FALSE,
   se_color = NULL,
   se_alpha = NULL,
-  se_type = c("ribbon", "errorbar"),
+  se_type = NULL,
   return_data = FALSE,
   title = NULL,
   xlab = NULL,
@@ -26,30 +26,44 @@ plot_recruitment(
   x_breaks = NULL,
   base_theme = NULL,
   title_hjust = NULL,
-  interval = NULL
+  interval = NULL,
+  geom = NULL
 )
 }
 \arguments{
 \item{model_result}{A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. Line or bar color. NULL inherits the
+global recruitment_color setting, or line_color when that is NULL.}
 
 \item{line_type}{Character. Specifies the type of the line in the plot. Default is "solid".}
 
 \item{se}{Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
+\item{se_color}{Character or NULL. Color of the interval. NULL takes the
+color of the line, or the global se_color when that differs from the
+global line_color or when recruitment_color is NULL. Error bars on bars
+are dark grey unless se_color is given.}
 
-\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
-global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
+inherits the global se_alpha setting (0.3 under the standard style, 0.2
+under classic). Error bars are opaque unless se_alpha is given.}
 
-\item{se_type}{Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".}
+\item{se_type}{Character or NULL. Form of the interval: "ribbon" (shaded
+area) or "errorbar" (error bars). NULL (default) draws error bars on bars
+and a ribbon around a line.}
 
 \item{return_data}{A logical indicating whether to return the processed data alongside the plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -81,14 +95,21 @@ stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
+
+\item{geom}{Character or NULL. Form of recruitment. "bar" draws bars 0.8
+of a time step wide, with error bars when \code{se = TRUE}. "line" draws
+a line, with a ribbon when \code{se = TRUE}. NULL (default) follows the
+global bars setting: bars under the "standard" style and a line under
+"classic". \code{se_type} changes the form of the interval.}
 }
 \value{
 A ggplot object representing the plot.
 }
 \description{
 Plot the estimated recruitment, the number of fish entering the youngest
-age class, in each time step. With \code{se = TRUE} a ribbon shows the 95\%
-interval. The default interval is lognormal and cannot fall below zero;
+age class, in each time step, as bars (default style) or a line. With
+\code{se = TRUE} error bars on the bars, or a ribbon around the line, show the
+95\% interval. The default interval is lognormal and cannot fall below zero;
 see the \code{interval} argument.
 }
 \details{
@@ -99,7 +120,10 @@ to plot reported estimates alone.
 
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
-The point uses the global point_size setting and the estimate's line colour.
+The point uses the global point_size setting and the estimate's line color.
+
+With the global y_zero setting (TRUE under the default style) the
+y axis starts at zero.
 }
 \examples{
 \donttest{
@@ -110,5 +134,8 @@ plot_recruitment(fit)
 
 # Recruitment with 95\% confidence intervals
 plot_recruitment(fit, se = TRUE)
+
+# A line with a ribbon, and no title
+plot_recruitment(fit, se = TRUE, geom = "line", title = FALSE)
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_SSB.R
 \name{plot_SSB}
 \alias{plot_SSB}
-\title{Plot spawning biomass (SSB), SBL or SBA over time}
+\title{Plot spawning stock biomass in total, at length or at age over time}
 \usage{
 plot_SSB(
   model_result,
@@ -36,27 +36,40 @@ plot_SSB(
 \arguments{
 \item{model_result}{A list from \code{run_acl} or \code{run_alscl}.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. NULL inherits the global stock_color
+setting, or line_color when that is NULL.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
+\item{se_color}{Character or NULL. Color of the interval. NULL takes the
+color of the line, or the global se_color when that differs from the
+global line_color or when stock_color is NULL.}
 
-\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
+inherits the global se_alpha setting (0.3 under the standard style, 0.2
+under classic).}
 
 \item{type}{Character. "SSB" (total), "SBL" (at length), or "SBA" (at age). Default is "SSB".}
 
-\item{facet_ncol}{Numeric. Columns in facet wrap. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
 
 \item{return_data}{Logical. Whether to return processed data. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -102,8 +115,9 @@ two series. It is an error with the other types.}
 A ggplot object or a list with plot and data.
 }
 \description{
-Plots SSB, spawning biomass at length (SBL), or spawning biomass
-at age (SBA) from ACL or ALSCL model results.
+Plots spawning stock biomass (SSB, \code{type = "SSB"}),
+spawning stock biomass at length (\code{type = "SBL"}) or spawning stock
+biomass at age (\code{type = "SBA"}) from ACL or ALSCL model results.
 }
 \details{
 ALSCL reports SSB, SBL and SBA with standard errors. ACL reports SSB
@@ -143,7 +157,10 @@ theme label, and the typography arguments replace the corresponding theme settin
 
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
-The point uses the global point_size setting and the estimate's line colour.
+The point uses the global point_size setting and the estimate's line color.
+
+With the global y_zero setting (TRUE under the default style) the
+y axis of every panel starts at zero.
 }
 \examples{
 \donttest{

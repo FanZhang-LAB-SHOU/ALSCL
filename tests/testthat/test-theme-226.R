@@ -6,7 +6,8 @@ grid_elements_226 <- function(p) {
 }
 
 test_that("all six theme recovery paths keep panel grids hidden", {
-  old <- options(acl.theme = NULL); on.exit(options(old))
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   m <- fit_fixture("ALSCL")$result
   local_mocked_bindings(acl_get_theme = function() stop("theme unavailable"),
                         .package = "ALSCL")

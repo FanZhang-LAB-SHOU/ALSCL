@@ -1,10 +1,10 @@
 utils::globalVariables(c("relative", "Series"))
 
-#' Plot relative catch by time step
+#' Plot catch relative to its mean by time step
 #'
-#' Plots the model catch in numbers or in weight divided by its mean, from
-#' [relative_catch()], and optionally a reported catch series divided by its
-#' mean over the same time steps. Use it to compare the trend of the model
+#' Plots the model catch in numbers or in weight divided by its mean (the
+#' catch relative to its mean), from [relative_catch()], and optionally a
+#' reported catch series divided by its mean over the same time steps. Use it to compare the trend of the model
 #' catch with reported catch.
 #'
 #' @param fit A fitted ACL or ALSCL result, including a saved assessment read
@@ -21,7 +21,8 @@ utils::globalVariables(c("relative", "Series"))
 #'   `observed`, the time steps of the fit that have a reported catch. With
 #'   `observed`, time steps without a reported catch are left out of `years`.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
-#' @param line_color Character or NULL. NULL inherits the global line_color setting.
+#' @param line_color Character or NULL. Color of the fitted series. NULL
+#'   inherits the global catch_color setting, or line_color when that is NULL.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param point_size Numeric or NULL. Size of the points of `observed`; NULL
 #'   inherits the global point_size setting.
@@ -78,8 +79,8 @@ plot_relative_catch <- function(fit, observed = NULL, type = c("number", "weight
                                 x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
   type <- match.arg(type)
   .acl_check_flag(return_data, "return_data")
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
-  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
+  line_color <- .acl_quantity_colors("catch", line_color)$line
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(observed_color)) observed_color <- acl_theme("observed_color")
 
@@ -121,7 +122,8 @@ plot_relative_catch <- function(fit, observed = NULL, type = c("number", "weight
   data <- data.frame(Year = times, relative = value, extrapolated = model$extrapolated)
 
   p <- ggplot2::ggplot(data, ggplot2::aes(x = Year, y = relative)) +
-    ggplot2::geom_hline(yintercept = 1, linetype = "dotted", color = acl_theme("hline_color") %||% "grey55")
+    ggplot2::geom_hline(yintercept = 1, linetype = "dotted", color = acl_theme("hline_color") %||% "grey55",
+                        linewidth = .acl_reference_linewidth)
   if (is.null(reported)) {
     p <- p + ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
   } else {
@@ -140,12 +142,14 @@ plot_relative_catch <- function(fit, observed = NULL, type = c("number", "weight
   p <- p +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
                   y = if (!is.null(ylab)) ylab else .acl_lab("y", paste0("relative_catch_", type)),
-                  title = if (!is.null(title)) title else .acl_title("relative_catch"),
+                  title = .acl_plot_title(title, "relative_catch"),
                   subtitle = subtitle) +
-    .acl_scale_x(x_breaks, n_breaks = 10, values = times) +
+    .acl_scale_x(x_breaks, n_breaks = 10, values = times, time = TRUE) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
-                    legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
+                    legend_text_size, base_theme = base_theme, title_hjust = title_hjust,
+                    quantity = "catch")
   if (!is.null(reported)) p <- p + .acl_series_theme()
   p <- .acl_show_singletons(p, point_size = point_size)
+  p <- .acl_tidy_axes(p)
   if (return_data) list(plot = p, data = data, observed = reported[c("Year", "relative")]) else p
 }

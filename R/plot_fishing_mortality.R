@@ -1,4 +1,4 @@
-#' @title Plot Fishing Mortality from ACL or ALSCL Model
+#' @title Plot the fishing mortality rate from an ACL or ALSCL model
 #'
 #' @description This function takes the output from \code{run_acl} or \code{run_alscl}
 #' and plots the fishing mortality rate (F) over time steps, ages, or length-bin
@@ -16,13 +16,20 @@
 #' informed by observations.
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
-#' @param line_size Numeric or NULL. NULL inherits the global line_size setting (default 1.5).
-#' @param line_color Character or NULL. NULL inherits the global line_color setting.
+#' @param line_size Numeric or NULL. NULL inherits the global line_size setting
+#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   the value of the style, facets of more than
+#'   four panels draw thinner lines.
+#' @param line_color Character or NULL. NULL inherits the global F_color
+#'   setting, or line_color when that is NULL.
 #' @param line_type Character. The type of the line. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
-#' @param se_color Character or NULL. NULL inherits the global se_color setting.
-#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon; NULL inherits the
-#'   global se_alpha setting (default 0.2). Error bars are opaque unless se_alpha is given.
+#' @param se_color Character or NULL. Color of the interval. NULL takes the
+#'   color of the line, or the global se_color when that differs from the
+#'   global line_color or when F_color is NULL.
+#' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
+#'   inherits the global se_alpha setting (0.3 under the standard style, 0.2
+#'   under classic). Error bars are opaque unless se_alpha is given.
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
@@ -32,7 +39,9 @@
 #'   "lognormal"). Point estimates are the same for both. An estimate that is
 #'   not positive, which can occur for ALSCL F at age because it is derived as
 #'   total mortality minus natural mortality, keeps the Wald bounds.
-#' @param facet_ncol Integer. The number of columns in facet_wrap.
+#' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
+#'   it from the number of panels, for example 5 columns for 15 panels and 6
+#'   for 23.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
 #' @param type Character. Which dimension of F runs along the x axis: "year"
 #'   (one panel per age or length group), "age" (one panel per time step) or
@@ -45,11 +54,13 @@
 #'   the global x_breaks setting when at least one of its values lies on this
 #'   axis; otherwise the breaks are chosen automatically. Expansion follows
 #'   global x_expand.
-#' @param title Character or NULL. Custom plot title; NULL inherits the global
-#'   F_year, F_age or F_length title, with _se appended for interval plots.
+#' @param title Character, FALSE or NULL. NULL (default) draws the default
+#'   title, FALSE (or NA or "") draws no title, and a character string is
+#'   drawn as the title. The default titles and the show_title setting are
+#'   described in \code{\link{acl_theme_set}()}.
 #' @param xlab Character or NULL. Custom x-axis label; NULL inherits the global
 #'   year, age or length label. Results saved without age metadata are plotted
-#'   against group positions, and their uncustomized age axis is labeled Age group.
+#'   against group positions, and their uncustomized age axis is labelled Age bin.
 #' @param ylab Character or NULL. Custom y-axis label; NULL inherits global ylab$F.
 #'   The default label gains the time basis of the fit, for example
 #'   "Fishing mortality rate (per year)".
@@ -63,12 +74,12 @@
 #' @param base_theme A ggplot2 theme object, a supported theme name such as
 #'   "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 #'   settings in theme objects are retained; typography follows the global
-#'   settings and the explicit typography arguments. Major and minor
-#'   grids are removed for every base theme.
+#'   settings and the explicit typography arguments. Grid lines follow the
+#'   global grid setting for every base theme.
 #'
 #' @details A group or panel with only one estimate is drawn as a point.
 #'   When intervals are requested, its ribbon is replaced by an error bar.
-#'   The point uses the global point_size setting and the estimate's line colour.
+#'   The point uses the global point_size setting and the estimate's line color.
 #' @details Age axes and age panels use the fitted ages in \code{model_result$age}.
 #'   The oldest age class of an ACL fit is a plus group and is marked with a
 #'   plus sign, for example "Age 15+" or the tick label "15+". ALSCL F at age
@@ -77,8 +88,11 @@
 #'   \code{Age}.
 #' @details When F is shared across groups (\code{F_structure = "year"}), every
 #'   group has the same series. \code{type = "year"} then draws one panel
-#'   labelled "Shared F" instead of one identical panel per group. The returned
+#'   labelled "All age classes" (ACL) or "All length bins" (ALSCL) instead of
+#'   one identical panel per group. The returned
 #'   data still hold every group.
+#' @details With the global y_zero setting (TRUE under the default style) the
+#'   y axis of every panel starts at zero.
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
 #' @details Matrix positions are matched to fitted time and group metadata;
 #'   optional matrix dimnames do not replace these coordinates. Intervals require
@@ -105,9 +119,10 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
                                    strip_text_size = NULL, legend_text_size = NULL,
                                    title_hjust = NULL, interval = NULL) {
   # NULL inherits the global palette.
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
-  if (is.null(line_color)) line_color <- acl_theme("line_color")
-  if (is.null(se_color)) se_color <- acl_theme("se_color")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
+  colors <- .acl_quantity_colors("F", line_color, se_color)
+  line_color <- colors$line
+  se_color <- colors$se
   # Error bars are thin lines: draw them opaque unless the call sets se_alpha.
   errorbar_alpha <- if (is.null(se_alpha)) 1 else se_alpha
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
@@ -146,11 +161,16 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       (!is.character(base_theme) || length(base_theme) != 1L ||
        is.na(base_theme) || !nzchar(base_theme)))
     stop("base_theme must be a ggplot2 theme object, a theme name, or NULL.", call. = FALSE)
+  # A theme object keeps its panel and legend: the panel colors of the style
+  # belong to theme_bw, so the style layer is built on another base theme.
   common_theme <- .acl_base_theme(font_family = font_family, title_size = title_size,
     axis_title_size = axis_title_size, axis_text_size = axis_text_size,
     strip_text_size = strip_text_size, legend_text_size = legend_text_size,
-    base_theme = if (theme_object) "bw" else base_theme, title_hjust = title_hjust)
+    base_theme = if (theme_object) "minimal" else base_theme, title_hjust = title_hjust,
+    quantity = "F")
   current_theme <- if (theme_object) list(base_theme, common_theme[[2L]]) else common_theme
+  if (theme_object && !is.null(base_theme$legend.position))
+    current_theme <- c(current_theme, list(ggplot2::theme(legend.position = base_theme$legend.position)))
   if (theme_object) {
     text_elements <- names(base_theme)[vapply(base_theme, inherits, logical(1), "element_text")]
     family <- if (is.null(font_family)) acl_theme("font_family") else font_family
@@ -158,10 +178,13 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       stats::setNames(lapply(text_elements, function(x) ggplot2::element_text(family = family)),
                       text_elements))))
   }
-  current_theme <- c(current_theme, list(ggplot2::theme(
-    panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank(),
-    panel.grid.major.x = ggplot2::element_blank(), panel.grid.major.y = ggplot2::element_blank(),
-    panel.grid.minor.x = ggplot2::element_blank(), panel.grid.minor.y = ggplot2::element_blank())))
+  # The grid of the style replaces the grid of a supplied theme object.
+  grid <- .acl_grid_elements()
+  for (nm in c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y"))
+    if (is.null(grid[[nm]])) grid[[nm]] <- grid[[sub("\\.[xy]$", "", nm)]]
+  current_theme <- c(current_theme, list(do.call(ggplot2::theme,
+    c(list(panel.grid.major = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank()),
+      grid[c("panel.grid.major.x", "panel.grid.major.y", "panel.grid.minor.x", "panel.grid.minor.y")]))))
 
   # One panel is enough when F is shared across groups (F_structure = "year"):
   # every row of the reported matrix then holds the same time series.
@@ -172,7 +195,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   }
   one_shared_panel <- function(data, group) {
     data <- data[data[[group]] == levels(data[[group]])[1L], , drop = FALSE]
-    data[[group]] <- factor("Shared F")
+    data[[group]] <- factor(if (is_alscl) "All length bins" else "All age classes")
     data
   }
   # Estimate line, optional interval and facets. The returned data keep
@@ -183,7 +206,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
     if (se) p <- p + if (se_type == "ribbon")
       ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) else
       ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color,
-                             alpha = errorbar_alpha, width = 0.3)
+                             alpha = errorbar_alpha, width = .acl_cap_width(plot_data[[x]]))
     p + ggplot2::facet_wrap(facet, ncol = facet_ncol, scales = facet_scales)
   }
   interval_table <- function(name, n) {
@@ -215,7 +238,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
         }
       }
 
-      GroupLabels <- .acl_fix_len_labels(len_label, prefix = "Length")
+      GroupLabels <- .acl_fix_len_labels(len_label)
       GroupLabels <- factor(GroupLabels, levels = GroupLabels)
 
       if (!se) {
@@ -354,10 +377,10 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   axis_label <- .acl_lab("x", type)
   # Without age metadata the coordinates are positions, not ages.
   if (type == "age" && is.null(ages) && identical(axis_label, .acl_defaults$xlab$age))
-    axis_label <- "Age group"
+    axis_label <- "Age bin"
   p <- p +
     ggplot2::labs(
-      title = if (!is.null(title)) title else .acl_title(title_key),
+      title = .acl_plot_title(title, title_key),
       x     = if (!is.null(xlab)) xlab else axis_label,
       y     = if (!is.null(ylab)) ylab else .acl_F_label(.acl_rate_basis(model_result))
     ) +
@@ -366,13 +389,14 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       auto_breaks = if (is.null(ages)) NULL else .acl_age_breaks(ages,
         .acl_facet_n_breaks(nlevels(p$data$Period), facet_ncol, 5, budget = 20)),
       labels = if (is.null(plus_age)) ggplot2::waiver() else .acl_age_axis_labels(plus_age),
-      check_overlap = !is.null(ages)) +
-    current_theme
+      check_overlap = !is.null(ages), time = x_name == "Year") +
+    .acl_y_zero() + current_theme
 
   groups <- if (type == "year")
     if (is_alscl) "Group" else "AgeGroup" else "Period"
   p <- .acl_show_singletons(p, groups)
 
+  p <- .acl_tidy_axes(p)
   if (return_data) {
     return(list(plot = p, data = data_out))
   } else {

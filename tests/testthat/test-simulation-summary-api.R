@@ -20,7 +20,10 @@ test_that("simulation summaries count failures and only use available valid unce
   expect_equal(z$summary$bias, c(-.5, 1))
   expect_equal(z$summary$rmse, c(sqrt(2.5), sqrt(2)))
   expect_equal(z$summary$n_intervals, c(2, 1))
-  expect_equal(z$summary$coverage, c(.5, 1))
+  # Lognormal intervals (the default since 2.5.0): 18 * exp(+/- 1.96 / 18)
+  # contains the truth 20, which 18 +/- 1.96 does not.
+  expect_equal(z$summary$coverage, c(1, 1))
+  expect_equal(summarize_simulations(fits, truth, interval = "wald")$summary$coverage, c(.5, 1))
   expect_equal(z$summary$failure_rate, c(2/3, 2/3))
   expect_equal(z$summary$mean_elapsed, c(4, 4))
   expect_identical(z$replicates$replicate, names(fits))

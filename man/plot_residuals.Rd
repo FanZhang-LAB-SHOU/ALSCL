@@ -47,11 +47,16 @@ observations use a linear trend; longer runs use loess with at least five neighb
 
 \item{hline_color}{Character or NULL. NULL inherits the global hline_color setting.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
 \item{facet_scales}{Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".}
 
-\item{facet_ncol}{Numeric, optional. Number of columns in facet wrap.  Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_by}{Character. "length" (default) draws one panel per length bin
 with time on the x axis; "year" draws one panel per time step with length
@@ -64,7 +69,10 @@ are affected when using capping.}
 
 \item{return_data}{A logical indicating whether to return the processed data alongside the plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 

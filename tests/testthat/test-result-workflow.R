@@ -36,7 +36,9 @@ test_that("population extraction preserves physical coordinates and available un
     expect_identical(ssb$year, fit$year)
     expect_equal(ssb$estimate, as.numeric(fit$report$SSB))
     expect_equal(ssb$std_error, unname(fit$est_std[rownames(fit$est_std) == "SSB", "Std. Error"]))
-    expect_equal(ssb$conf_low, ssb$estimate - qnorm(.975) * ssb$std_error)
+    expect_equal(ssb$conf_low, ssb$estimate * exp(-qnorm(.975) * ssb$std_error / ssb$estimate))
+    expect_equal(extract_estimates(fit, "SSB", interval = "wald")$conf_low,
+                 ssb$estimate - qnorm(.975) * ssb$std_error)
     ages <- data[data$quantity == "NA", ]
     expect_identical(ages$age, rep(fit$age, length(fit$year)))
     expect_equal(ages$estimate, as.numeric(fit$report[["NA"]]))

@@ -127,7 +127,8 @@ test_that("catch comparison rejects nonfinite predictions at drawn missing cells
 test_that("validated comparison panels retain grid-free defaults", {
   fixture <- comparison_review_fixture()
   m <- fixture$model; data <- fixture$data
-  old <- options(acl.theme = NULL); on.exit(options(old))
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   for (plot in list(plot_compare_CatL(m, m, data),
                     plot_compare_residuals(m, m, data))) {
     for (panel in comparison_review_panels(plot)) {

@@ -6,9 +6,14 @@
 #'   Time coordinates and quantity values must be numeric vectors, not matrices
 #'   or arrays; grouped quantities must be aggregated explicitly before calling.
 #' @param quantities Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.
-#' @param conf_level Nominal confidence level of normal intervals based on
+#' @param conf_level Nominal confidence level of the intervals based on
 #'   reported standard errors, strictly between zero and one. The returned
 #'   coverage is the observed fraction of usable intervals containing truth.
+#' @param interval Form of the interval whose coverage is reported.
+#'   `"lognormal"` (default) is `exp(log(estimate) +/- z * SE / estimate)`, as
+#'   in [extract_estimates()], the plots of the package and [self_test()].
+#'   `"wald"` is `estimate +/- z * SE`, the default before version 2.5.0, and
+#'   gives the former bounds and coverage.
 #' @return A list with summary (pooled over replicates and time by quantity),
 #'   replicates (numerical status, elapsed seconds and errors), and estimates
 #'   (every replicate/time/truth/estimate pair, including failed or invalid fits).
@@ -58,8 +63,10 @@
 #' unlink(folder, recursive = TRUE)
 #' }
 #' @export
-summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), conf_level = .95) {
+summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), conf_level = .95,
+                                  interval = c("lognormal", "wald")) {
   z <- .acl_conf_level(conf_level)
+  interval_form <- match.arg(interval)
   named <- function(x) is.list(x) && !is.data.frame(x) && length(x) &&
     !is.null(names(x)) && !anyNA(names(x)) && all(nzchar(names(x))) && !anyDuplicated(names(x))
   numeric_vector <- function(x) is.numeric(x) && !is.complex(x) && is.null(dim(x))
@@ -118,7 +125,8 @@ summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), con
         if (is.numeric(candidate) && length(candidate) == length(year))
           se[is.finite(candidate) & candidate >= 0] <- candidate[is.finite(candidate) & candidate >= 0]
       }
-      low <- value - z * se; high <- value + z * se
+      bounds <- .acl_interval(value, se, interval_form, z)
+      low <- bounds$lower; high <- bounds$upper
       valid <- isTRUE(status$numerical_ok) & is.finite(value)
       interval <- valid & is.finite(low) & is.finite(high)
       covered <- rep(NA, length(year))

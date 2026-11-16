@@ -143,7 +143,8 @@ test_that("observed ridge polygons stop at gaps and isolated bins remain visible
 })
 
 test_that("ridge panels share limits, time colors and grid-free axes with sparse observations", {
-  withr::local_options(list(acl.theme = NULL))
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   grDevices::pdf(NULL); on.exit(grDevices::dev.off(), add = TRUE)
   for (all_missing in c(FALSE, TRUE)) for (scale in list(NULL, 3)) {
     fit <- survey_gap_fixture(periods = 3L)

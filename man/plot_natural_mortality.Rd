@@ -40,15 +40,18 @@ with \code{\link[=read_assessment]{read_assessment()}}.}
 \item{point_size}{Numeric or NULL. Size of the points at the age classes or
 length bins; NULL inherits the global point_size setting.}
 
-\item{facet_ncol}{Numeric. Columns in facet wrap, for M by age class and
-time step. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels of M by age
+class and time step. NULL chooses it from the number of panels.}
 
 \item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
 
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 

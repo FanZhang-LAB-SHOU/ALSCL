@@ -12,10 +12,13 @@
   strip_text_size = NULL,
   legend_text_size = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  quantity = NULL
 )
 }
 \description{
-Build the standard ALSCL ggplot theme layer
+\code{quantity} is the quantity of the plot ("stock", "F",
+"recruitment" or "catch"), which gives the title its color under
+\code{title_color = "quantity"}; NULL for other plots.
 }
 \keyword{internal}

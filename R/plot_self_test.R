@@ -48,8 +48,8 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #'   global se_alpha setting.
 #' @param point_size Numeric or NULL. Size of the median of a parameter; NULL
 #'   inherits the global point_size setting.
-#' @param facet_ncol Numeric or NULL. Columns of the time-series panels; NULL
-#'   puts up to three panels in a row.
+#' @param facet_ncol Numeric or NULL. Number of columns of the time-series
+#'   panels. NULL chooses it from the number of panels.
 #' @param facet_scales Character. Scales of the time-series panels: "fixed",
 #'   "free", "free_x" or "free_y". Default is "free_y".
 #' @param return_data Logical. Whether to return the plotted data with the
@@ -75,6 +75,8 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #' plot_self_test(st)
 #' plot_self_test(st, what = "series", probs = c(0.05, 0.95))
 #' }
+#' @details \code{title} is the title of the whole figure. The titles of the
+#'   panels stay when it is removed, because they name the panels.
 #' @export
 plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9),
                            line_size = NULL, line_color = NULL, se_color = NULL, se_alpha = NULL,
@@ -91,7 +93,7 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
   if (!is.numeric(probs) || length(probs) != 2L || any(!is.finite(probs)) ||
       any(probs < 0 | probs > 1) || probs[1L] >= probs[2L])
     stop("probs must be two increasing probabilities between 0 and 1.", call. = FALSE)
-  if (is.null(line_size)) line_size <- acl_theme("line_size")
+  if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(se_color)) se_color <- acl_theme("se_color")
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
@@ -109,55 +111,72 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
 
   series <- if (what == "parameters") NULL else
     .acl_self_test_band(x$series, c("quantity", "year"), probs)
-  F_label <- paste(if (s$F_summary == "mean") "Mean F over" else "Apical F over",
+  F_label <- paste(if (s$F_summary == "mean") "Mean fishing mortality rate over" else
+                     "Apical fishing mortality rate over",
                    if (s$F_group == "age") "ages" else "length bins")
-  names_q <- c(SSB = "Spawning stock biomass (SSB)", Rec = "Recruitment (R)", F = F_label,
-               B = "Total biomass (B)", N = "Total abundance (N)")
+  names_q <- c(SSB = .acl_quantity_name("SSB"), Rec = .acl_quantity_name("Rec"), F = F_label,
+               B = .acl_quantity_name("B"), N = .acl_quantity_name("N"))
   p_series <- NULL
   if (!is.null(series)) {
     series$Quantity <- factor(names_q[series$quantity], levels = names_q[s$quantities])
-    ncol <- if (is.null(facet_ncol)) min(3L, length(unique(series$quantity))) else facet_ncol
+    ncol <- facet_ncol
     p_series <- ggplot2::ggplot(series, ggplot2::aes(x = year, y = median_re)) +
-      ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = zero) +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = zero,
+                          linewidth = .acl_reference_linewidth) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin = low_re, ymax = high_re), fill = se_color,
                            alpha = se_alpha) +
       ggplot2::geom_line(linewidth = line_size, color = line_color) +
       ggplot2::facet_wrap(~Quantity, ncol = ncol, scales = facet_scales) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = y_label) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(unique(series$quantity)), ncol),
-                   values = series$year) +
+                   values = series$year, time = TRUE) +
       theme_layers
   }
   parameters <- if (what == "series") NULL else .acl_self_test_band(x$parameters, "parameter", probs)
   p_parameters <- NULL
   if (!is.null(parameters)) {
     order <- unique(x$parameters$parameter)
-    parameters$Parameter <- factor(parameters$parameter, levels = rev(order[order %in% parameters$parameter]))
+    # Readable names of the parameters, whose values are on the natural scale.
+    shown <- rev(order[order %in% parameters$parameter])
+    wrap <- function(x) vapply(x, function(name) paste(strwrap(name, 60), collapse = "\n"), character(1))
+    parameters$Parameter <- factor(wrap(.acl_parameter_name(parameters$parameter)),
+                                   levels = unique(wrap(.acl_parameter_name(shown))))
     p_parameters <- ggplot2::ggplot(parameters, ggplot2::aes(y = Parameter, x = median_re)) +
-      ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = zero) +
+      ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = zero,
+                          linewidth = .acl_reference_linewidth) +
       ggplot2::geom_linerange(ggplot2::aes(xmin = low_re, xmax = high_re), color = line_color,
                               linewidth = line_size) +
       ggplot2::geom_point(color = line_color, size = point_size) +
-      ggplot2::labs(x = y_label, y = "Parameter (natural scale)") +
+      ggplot2::labs(x = y_label, y = NULL) +
       theme_layers
   }
   if (is.null(p_series) && is.null(p_parameters))
     stop("x has no relative errors to plot.", call. = FALSE)
-  band <- paste0("median (line) and ", .acl_percentile_label(probs[1L]), " to ",
-                 .acl_percentile_label(probs[2L]), " percentiles (", if (what == "parameters")
-                 "range" else "band", ")")
-  subtitle <- paste0(s$model, ", process = \"", s$process, "\", start = \"", s$start, "\": ",
-                     band, " of ", passed, " of ", s$nsim, " refits that pass the numerical checks")
-  main <- if (!is.null(title)) title else .acl_title("self_test")
+  band <- paste0("Median (", if (what == "parameters") "point" else "line", ") and ",
+                 .acl_percentile_label(probs[1L]), " to ", .acl_percentile_label(probs[2L]),
+                 " percentiles (", if (what == "parameters") "range" else "band", ")")
+  # The settings of the self-test in words.
+  simulated <- if (identical(s$process, "resample"))
+    "data simulated from new process deviations drawn from their estimated distribution" else
+    "data simulated from the fitted population with new observation errors"
+  started <- if (identical(s$start, "estimates")) "the values used to simulate" else
+    "the starting values of the fit"
+  subtitle <- paste0(s$model, " refits to ", simulated, ", started from ", started, ". ",
+                     band, " of the ", passed, " of ", s$nsim, " refits that pass the numerical checks.")
+  main <- .acl_plot_title(title, "self_test")
+  if (!is.null(p_series)) p_series <- .acl_tidy_axes(p_series)
+  if (!is.null(p_parameters)) p_parameters <- .acl_tidy_axes(p_parameters)
   if (what == "both" && !is.null(p_series) && !is.null(p_parameters)) {
     p_parameters <- p_parameters + ggplot2::labs(title = NULL)
-    p <- patchwork::wrap_plots(p_series, p_parameters, ncol = 1,
+    # The parameter panel is not aligned with the panels above, so that its
+    # long tick labels leave their width to the time series.
+    p <- patchwork::wrap_plots(p_series, patchwork::free(p_parameters), ncol = 1,
                                heights = c(1, max(0.5, 0.12 * nrow(parameters)))) +
-      patchwork::plot_annotation(title = main, subtitle = paste(strwrap(subtitle, 110), collapse = "\n"),
+      patchwork::plot_annotation(title = main, subtitle = paste(strwrap(subtitle, 100), collapse = "\n"),
                                  theme = .acl_annotation_theme("none", font_family, title_size, title_hjust))
   } else {
     p <- (if (is.null(p_series)) p_parameters else p_series) +
-      ggplot2::labs(title = main, subtitle = paste(strwrap(subtitle, 90), collapse = "\n"))
+      ggplot2::labs(title = main, subtitle = paste(strwrap(subtitle, 100), collapse = "\n"))
   }
   if (return_data) list(plot = p, series = series, parameters = parameters) else p
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_catch.R
 \name{plot_catch}
 \alias{plot_catch}
-\title{Plot Catch Number (CN), Catch by Age (CNA), or Catch by Length (CNL) Over Years}
+\title{Plot catch in numbers in total (CN), at age (CNA) or at length (CNL) over time}
 \usage{
 plot_catch(
   model_result,
@@ -28,25 +28,37 @@ plot_catch(
   x_breaks = NULL,
   base_theme = NULL,
   title_hjust = NULL,
-  interval = NULL
+  interval = NULL,
+  geom = NULL
 )
 }
 \arguments{
 \item{model_result}{A list from \code{run_acl} or \code{run_alscl}.}
 
-\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting (default 1.5).}
+\item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
+(1 under the standard style, 1.5 under classic). While that setting keeps
+the value of the style, facets of more than
+four panels draw thinner lines.}
 
-\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
+\item{line_color}{Character or NULL. Line or bar color. NULL inherits the
+global catch_color setting, or line_color when that is NULL.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
+\item{se_color}{Character or NULL. Color of the interval. NULL takes the
+color of the line, or the global se_color when that differs from the
+global line_color or when catch_color is NULL. Error bars on bars are
+dark grey unless se_color is given.}
 
-\item{se_alpha}{Numeric or NULL. NULL inherits the global se_alpha setting (default 0.2).}
+\item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
+inherits the global se_alpha setting (0.3 under the standard style, 0.2
+under classic). Error bars are opaque unless se_alpha is given.}
 
-\item{facet_ncol}{Numeric. Columns in facet wrap. Default is NULL.}
+\item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
+it from the number of panels, for example 5 columns for 15 panels and 6
+for 23.}
 
 \item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
 
@@ -54,7 +66,10 @@ plot_catch(
 
 \item{return_data}{Logical. Whether to return processed data. Default is FALSE.}
 
-\item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
+\item{title}{Character, FALSE or NULL. NULL (default) draws the default
+title, FALSE (or NA or "") draws no title, and a character string is
+drawn as the title. The default titles and the show_title setting are
+described in \code{\link{acl_theme_set}()}.}
 
 \item{xlab}{Character or NULL. Custom x-axis label. If NULL, uses global theme setting.}
 
@@ -86,6 +101,13 @@ stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both.}
+
+\item{geom}{Character or NULL. Form of total catch (\code{type = "CN"}).
+"bar" draws bars 0.8 of a time step wide, with error bars when
+\code{se = TRUE}. "line" draws a line, with a ribbon when
+\code{se = TRUE}. NULL (default) follows the global bars setting: bars
+under the "standard" style and a line under "classic". Catch at age and
+at length are always lines.}
 }
 \value{
 A ggplot object or a list with plot and data.
@@ -125,7 +147,10 @@ theme label, and the typography arguments replace the corresponding theme settin
 
 A group or panel with only one estimate is drawn as a point.
 When intervals are requested, its ribbon is replaced by an error bar.
-The point uses the global point_size setting and the estimate's line colour.
+The point uses the global point_size setting and the estimate's line color.
+
+With the global y_zero setting (TRUE under the default style) the
+y axis of every panel starts at zero.
 }
 \examples{
 \donttest{
@@ -133,6 +158,9 @@ fit <- run_acl(YTF_example, silent = TRUE)
 
 # Total catch in numbers with 95\% confidence intervals
 plot_catch(fit, se = TRUE)
+
+# The same as a line with a ribbon
+plot_catch(fit, se = TRUE, geom = "line")
 
 # Catch in numbers at age, one panel per age
 plot_catch(fit, type = "CNA")

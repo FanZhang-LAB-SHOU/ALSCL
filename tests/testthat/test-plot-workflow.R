@@ -30,7 +30,7 @@ test_that("comparison plots use the diagnostic observation mask and metrics", {
                    rep(expected$Value[expected$Metric == metric], 2L))
     }
     if (panel_name == "IC") {
-      expect_equal(plot_data$Metric_Value[plot_data$Metric_Name == "Neg. Log-Likelihood"], c(10, 10))
+      expect_equal(plot_data$Metric_Value[plot_data$Metric_Name == "NLL"], c(10, 10))
     }
     if (panel_name == "npar") {
       expect_equal(plot_data$Metric_Value, c(2, 2))
@@ -97,5 +97,5 @@ test_that("length plots reject incomplete outputs and identify the legacy ACL al
                  "ACL has no length-specific F")
   expected <- plot_fishing_mortality(model, type = "age", return_data = TRUE)
   expect_equal(out$data, expected$data)
-  expect_equal(out$plot$labels$x, "Age group")
+  expect_equal(out$plot$labels$x, "Age bin")
 })

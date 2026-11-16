@@ -350,10 +350,10 @@ ssb_at_age <- function(fit, maturity, weight = NULL) {
        weight = if (is.null(weight)) NULL else as.numeric(weight))
 }
 
-#' Relative catch by time step
+#' Catch relative to its mean by time step
 #'
 #' Model catch in numbers and in weight for each time step, each divided by
-#' its mean over the time steps. Use it to compare the trend of the model
+#' its mean over the time steps: the catch relative to its mean. Use it to compare the trend of the model
 #' catch with reported catch.
 #'
 #' @param fit A fitted ACL or ALSCL result, including a saved assessment read

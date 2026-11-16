@@ -110,7 +110,7 @@ test_that("one invalid peel suppresses aggregate rho without discarding raw esti
   expect_true(any(!out$results$NumericalOK))
   plot <- plot_retro(out)
   built <- ggplot2::ggplot_build(plot)
-  expect_true(all(grepl("unavailable", built$data[[3]]$label)))
+  expect_true(all(grepl("not available", built$data[[3]]$label)))
   expect_match(plot$labels$subtitle, "numerical checks")
 })
 
@@ -326,6 +326,8 @@ test_that("stored retrospective plots require a finite time-estimate pair", {
 })
 
 test_that("retrospective plots retain gaps between available estimates without grids", {
+  # Grid lines are absent under the classic style.
+  local_classic_style()
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   f <- fixture_frames()
