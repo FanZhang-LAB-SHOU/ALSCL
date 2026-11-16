@@ -35,7 +35,7 @@ remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # 开发版（main �
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.5")   # 指定版本
 ```
 
-ALSCL 需要 R 4.1 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
+ALSCL 需要 R 4.1 或更高版本、TMB 1.9.21 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
 
 ## 快速开始
 

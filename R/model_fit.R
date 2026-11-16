@@ -369,7 +369,7 @@
     cl <- NULL
   }
   values <- vapply(starts, function(x) if (is.finite(x$objective)) x$objective else Inf, numeric(1))
-  if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "), call. = FALSE)
+  if (all(!is.finite(values))) stop(.acl_starts_failed_message(starts), call. = FALSE)
   opt <- starts[[which.min(values)]]
   start_diagnostics <- do.call(rbind, lapply(starts, function(s) data.frame(
     start_id = s$start_id, pid = s$pid, started_at = s$started_at, finished_at = s$finished_at,

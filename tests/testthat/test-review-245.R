@@ -131,3 +131,28 @@ test_that("sim_model() takes t0_lower for ALSCL only", {
   expect_error(sim_model(iter_range = 1, sim_data_path = tempdir(), model = "acl", t0_lower = -1),
                "ALSCL only")
 })
+
+test_that("the error of failed starts names a TMB and Matrix mismatch and its remedy", {
+  starts <- list(list(message = "NA/NaN function evaluation"),
+                 list(message = "NA/NaN gradient evaluation"))
+  mismatch <- ALSCL:::.acl_starts_failed_message(starts,
+    abi = list(built = "1", current = "2", ok = FALSE))
+  expect_match(mismatch, "^All optimization starts failed: NA/NaN function evaluation; NA/NaN gradient evaluation")
+  expect_match(mismatch, "built with Matrix ABI version 1, but the installed Matrix package has ABI version 2", fixed = TRUE)
+  expect_match(mismatch, 'install.packages("TMB", type = "source")', fixed = TRUE)
+  for (abi in list(list(built = "2", current = "2", ok = TRUE), list(built = "2", current = "2", ok = NA), NULL))
+    expect_identical(ALSCL:::.acl_starts_failed_message(starts, abi = abi),
+                     "All optimization starts failed: NA/NaN function evaluation; NA/NaN gradient evaluation")
+
+  abi <- ALSCL:::.acl_tmb_matrix_abi()
+  skip_if(is.null(abi), "This TMB version has no Matrix ABI check")
+  check <- utils::getFromNamespace("checkMatrixPackageVersion", "TMB")
+  expect_identical(abi$ok, suppressWarnings(as.logical(check())))
+})
+
+test_that("DESCRIPTION requires a TMB version that the checks have used", {
+  imports <- utils::packageDescription("ALSCL")$Imports
+  expect_match(imports, "TMB \\(>= 1\\.9\\.21\\)")
+  expect_true(utils::packageVersion("TMB") >= "1.9.21")
+  expect_true("1.9.21" %in% ALSCL:::.acl_tmb_checked)
+})

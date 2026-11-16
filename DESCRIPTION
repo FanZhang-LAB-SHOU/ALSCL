@@ -33,7 +33,7 @@ Imports:
     stats,
     utils,
     scales,
-    TMB (>= 1.9.0),
+    TMB (>= 1.9.21),
     Matrix,
     RcppEigen,
     dplyr,

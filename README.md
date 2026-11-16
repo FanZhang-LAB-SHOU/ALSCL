@@ -35,7 +35,7 @@ remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # development versio
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.5")   # a specific release
 ```
 
-ALSCL needs R 4.1 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
+ALSCL needs R 4.1 or later, TMB 1.9.21 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
 
 ## Quick start
 
