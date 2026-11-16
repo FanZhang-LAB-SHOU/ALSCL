@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website describes ALSCL 2.4.4.9000, the development version on `main` after release 2.4.4; see [News](news/index.html) for the changes in each release and for the changes that are not yet released.
+The website describes ALSCL 2.4.5; see [News](news/index.html) for the changes in each release and for the changes that are not yet released.
 
 <h2 id="models">Two model structures</h2>
 
@@ -97,4 +97,4 @@ Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality with
 
 This study applies ACL and ALSCL to Antarctic krill to examine how length-dependent growth and mortality within cohorts affect assessment results.
 
-When reporting analyses, also record the ALSCL version, code revision, data source and fitted assumptions.
+`citation("ALSCL")` prints the model paper and the reference of the package. When reporting analyses, also record the ALSCL version, code revision, data source and fitted assumptions.

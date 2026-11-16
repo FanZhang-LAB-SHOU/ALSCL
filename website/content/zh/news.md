@@ -1,11 +1,24 @@
-## 未发布
+## ALSCL 2.4.5
 
-- `self_test()` 取 `process = "conditional"` 时，mean_log_F 和 mean_log_R 的真值改为源拟合的对数 F 和对数补充量的均值，即其估计值加上拟合偏差的均值，这正是重新拟合所估计的量。原来的真值是源拟合的估计值，所以汇总中这两个参数的偏差有一部分来自真值的定义。在 20 套数据的自检中，mean_log_F 的中位相对误差由 +12.4% 变为 -4.5%（YTF_example，ALSCL），由 +72.1% 变为 +30.1%（牙鳕 1983-2002，ALSCL）。`settings$process_mean_truth` 和 `print()` 说明采用的是哪种真值；resample 模式不变。
+- 条件模式下，`self_test()` 仍以源拟合的估计值作为 mean_log_F 和 mean_log_R 的真值（与 2.4.4 相同），帮助和模型验证文章现在说明了原因。在估计值处，AR(1) 过程的均值参数等于拟合过程的加权平均，其中第一个和最后一个时间步的权重较大，而不是算术平均；重新拟合若找回了这个过程，也就找回了这个加权平均。2.4.4 之后的一个开发版曾以源估计值加上拟合偏差的算术平均作为真值；这个真值比较的不是同一个量，并把偏差的符号弄反了。在 20 套数据的自检中（YTF_example，ALSCL），mean_log_F 的中位相对误差对那个真值为 -4.2%，对源估计值为 +12.7%，比较拟合与重新拟合的对数 F 算术平均时为 +7.1%。F 和补充量的水平由时间序列衡量。
 - 取 `structure = list(initial_deviations = "independent")` 时，第一个时间步报告的补充量（`Rec` 及其标准误，因而还有 `plot_recruitment()`、`plot_SSB_Rec()`、`extract_estimates()` 和 `self_test()` 的真值）是该时间步第一个年龄组的尾数，包含它的初始偏差；原来不含这个偏差。估计值和默认形式的拟合不变。
 - `survey_q_age` 使 mean_log_R 的默认初值改变 `-log(survey_q_age[1])` 时，`run_acl()` 和 `run_alscl()` 给出一条提示，并说明如何自行给出初值。每次调用只提示一次，`silent = TRUE` 时不提示。
 - 自 2.4.4 起，`compare_models()$growth` 是含 Model、Parameter、Estimate 和 Meaning 四列的表。为原来的表编写的代码（如 `cmp$growth$ALSCL`）现在会报错并给出 `subset(cmp$growth, Model == "ALSCL")`，而不是返回 NULL。打印和 `write.csv()` 不变。
 - 对 ALSCL 拟合，`plot_VB(fit, se = TRUE)` 仍不画区间。警告现在说明如何画出 2.4.4 之前图中的区间：依赖该区间的脚本必须加上 `parameter_curve = TRUE`，它画出由 Linf、k 和 t0 计算的曲线及其区间。
 - 文献：`self_test()` 的帮助列出 Deroba et al. (2015) 的全部作者。`survey_catchability()` 的帮助只在随年龄增大而下降的选择性与自然死亡率相互混淆这一点上引用 Thompson (1994)，只用调查指数的情形引用 Cook (2013)。`whiting_example` 的帮助说明 `ices$M` 和 `ices$maturity` 与 WGNSSK 2026 报告的表 22.15 和表 22.14 逐格相同。
+- `run_alscl()` 设了 `t0_lower` 而没有给出 `log_t0` 的初值时，默认初值会换算，使 t0 保持默认值 1/60 年，与对称范围下默认相关系数初值保持原值的做法相同。原来这个初值被读作 `t0_lower + 1/60`，所以 `t0_lower = -1` 时拟合把 t0 固定在 -0.98 年，且没有提示。给出 `log_t0` 的拟合和默认 `t0_lower = 0` 的拟合不变。
+- `self_test()` 用真值的绝对值去除误差，所以相对误差为正总表示高估，真值为负（如负的 t0 或相关系数）时也是如此。真值为正时相对误差不变。
+- `hindcast_model()` 接受负的补充量和 F 相关系数拟合值，`structure = list(correlation_range = "symmetric")` 允许出现这种值；原来这些折被记为预测失败。`profile_model()` 与 `refit_model()`、`summary()` 一样，去掉 2.4.3 存档中释放模型并不具有的参数的 map 条目；原来这类存档的每个网格拟合都会失败。
+- 没有存档诊断信息的旧拟合，若某个存档字段显示失败（收敛码非零、梯度不小于 0.001、Hessian 非正定或参数到达边界），`project_model()` 和 `simulate_fit()` 现在会拒绝它；原来这类拟合以 "unknown" 状态照常使用。`allow_failed_fit = TRUE` 仍可使用它们。
+- 季度拟合中取整数的时间步标为第一季度（"2004 Q1"），而不是 "Year 2004"：见 `plot_retro()` 的图例（例如数据止于第一季度、`peel_step = 4` 时），以及 `plot_relative_catch()`、`plot_VB()` 和 `plot_length_at_age()` 的副标题。
+- `plot_self_test()`：`what = "both"` 时，总标题遵循 `font_family`、`title_size` 和 `title_hjust`；新参数 `facet_scales`（默认 `"free_y"`）设定时间序列分面的坐标尺度。
+- 批量拟合的失败记录（类 `alscl_fit_error`）新增 `logLik()`、`nobs()` 和 `fitted()` 方法：`AIC()` 和 `BIC()` 返回 NA，对批量结果循环时不再停在失败的拟合上。各绘图函数、`extract_estimates()`、`extract_parameters()`、`refit_model()`、`project_model()` 和 `simulate_fit()` 遇到失败记录时给出其错误信息并停止，不再给出缺少元数据之类的提示。
+- 取 `structure = list(correlation_range = "symmetric")` 时，若给出的相关系数初值按对称尺度解读，`run_acl()`、`run_alscl()`、`retro_model()` 和批量函数会给出提示。例如 `YTF_example` 的 `logit_log_R` 初值在默认范围下是相关系数 0.1，在对称范围下变成固定的 -0.8；提示给出这个值并说明如何保持原值。`silent = TRUE` 时不提示。
+- 设定 `t0_lower` 不为 0 的 ALSCL 拟合读取给出的 `log_t0` 时会给出提示，说明该值对应的 t0。例如 `YTF_example` 固定 `log_t0 = log(1/60)`，取 `t0_lower = -1` 时它对应的 t0 是 -0.983 年。`t0_lower` 为正且不小于默认 t0（1/60 年）时也会给出提示。调用中的 `parameters` 列表漏掉保存的参数值时，`run_acl()`、`run_alscl()`、`refit_model()`、`retro_model()`、`hindcast_model()` 和 `fit_scenarios()` 会给出提示：该列表替换保存的列表，提示列出不再使用的值以及 map 仍把哪些参数固定在默认值上。例如 `run_alscl(YTF_example, parameters = list(logit_log_R = qlogis(0.2)))` 把 Linf 固定在默认值 55，而不是保存的 60。对称范围下相关系数初值的提示现在说明应在拟合使用的 parameters 列表中设定该值。`silent = TRUE` 时不提示。
+- `sim_model()` 和 `sim_alscl()` 新增 `t0_lower`，用负 t0 生成的模拟重复可以用真实的生长参数拟合。`simulate_example_data(seed = )` 使用与 `sim_data()` 相同的随机数发生器，同一种子在任何会话中给出相同数据；使用默认发生器时数据不变。会话使用 `RNGversion("3.5.0")` 时，`sim_data()`、`simulate_fit()` 或 `self_test()` 恢复会话设置时不再重复 R 关于 "Rounding" 抽样器的警告。
+- 一次拟合的所有初值都失败时，报错信息会说明 TMB 构建时用的 Matrix ABI 版本是否与已安装的 Matrix 不同，并给出解决办法 `install.packages("TMB", type = "source")`。这样的 TMB 二进制包可能使所有初值都失败。这适用于 `run_acl()`、`run_alscl()` 及调用它们的函数。ALSCL 现在要求 TMB 1.9.21 或更高版本，即检查中用过的最早版本；原来也允许更早的版本，但检查不覆盖它们。安装页和故障排查表说明了 TMB 加载时给出的警告。R-CMD-check 工作流还在 Windows 上用上一个 R 发行版检查软件包，安装页说明了可用的 TMB 低于 1.9.21 时的处理办法。
+- 协方差矩阵非正定的拟合在计算标准误时不再给出 R 警告“NaNs produced”。标准误不变，方差为负处仍为 NaN。未通过的数值检查仍与以前一样指出 Hessian 的问题。例如诊断一文中放开 F 年龄间相关系数的拟合：`cfg$map["logit_log_F_a"] <- list(NULL)` 之后调用 `run_acl(x, map = cfg$map)`。
+- 文档：`run_acl()` 和 `run_alscl()` 的帮助页按源码重新生成；原来仍描述上面那项改动之前的首期补充量。更正了 `polish`（第二轮精修）、`t0_lower`、`inspect_parameters()` 和 `extract_parameters()`（对称范围和 `t0_lower` 的变换）以及 `simulation_to_tables()`（体长组宽度不等时传入 `len_border = sm$len_border`）的帮助。帮助页与 roxygen 注释不一致时，R-CMD-check 工作流会报错。`citation("ALSCL")` 给出模型论文和软件包两条文献（新增 `inst/CITATION`），包描述引用了模型论文。README 中应用案例数改为七个。英文文本中的范围和复合词使用连字符，`website/check.py` 拒绝英文页面中的 en dash 和 em dash，并核对 README 中引用的绘图函数数、应用案例数和章节数。
 
 ## ALSCL 2.4.4
 

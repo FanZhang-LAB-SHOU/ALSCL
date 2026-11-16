@@ -1,6 +1,6 @@
 Package: ALSCL
 Title: Age- and Length-Structured Statistical Catch-at-Length Models
-Version: 2.4.4.9000
+Version: 2.4.5
 Authors@R: c(person("Hongyu", "Lin", role = c("aut", "cre"), email = "linbojun99@gmail.com",
            comment = c(ORCID = "0000-0001-6226-179X")),
              person("Fan", "Zhang", role = "aut", email = "f-zhang@shou.edu.cn",
@@ -14,12 +14,15 @@ Description: Fits two stock assessment models to fishery-independent survey
     age. The age- and length-structured statistical catch-at-length (ALSCL)
     model tracks abundance by length, age and model time step. Length-specific
     mortality determines survival, and a separate growth transition matrix
-    moves survivors between length groups. The package provides multistart
+    moves survivors between length groups (Zhang and Cadigan (2022)
+    <doi:10.1111/faf.12673>). The package provides multistart
     optimization with optional parallel computation, data preparation and
     checks, sensitivity scenarios, likelihood profiles, deterministic
-    projections, fitted-model simulation, hindcast validation, retrospective
-    analysis with Mohn's rho, portable assessment archives, diagnostic plots
-    and comparisons of model configurations.
+    projections, fitted-model simulation, self-tests that refit a model to
+    data simulated from its fit, hindcast validation, retrospective analysis
+    with Mohn's rho, optional model structures such as a von Bertalanffy
+    growth increment, portable assessment archives, diagnostic plots and
+    comparisons of model configurations.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -30,7 +33,7 @@ Imports:
     stats,
     utils,
     scales,
-    TMB (>= 1.9.0),
+    TMB (>= 1.9.21),
     Matrix,
     RcppEigen,
     dplyr,

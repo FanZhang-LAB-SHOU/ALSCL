@@ -50,6 +50,8 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #'   inherits the global point_size setting.
 #' @param facet_ncol Numeric or NULL. Columns of the time-series panels; NULL
 #'   puts up to three panels in a row.
+#' @param facet_scales Character. Scales of the time-series panels: "fixed",
+#'   "free", "free_x" or "free_y". Default is "free_y".
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
 #' @inheritParams plot_SSB
@@ -76,7 +78,8 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #' @export
 plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9),
                            line_size = NULL, line_color = NULL, se_color = NULL, se_alpha = NULL,
-                           point_size = NULL, facet_ncol = NULL, return_data = FALSE,
+                           point_size = NULL, facet_ncol = NULL, facet_scales = "free_y",
+                           return_data = FALSE,
                            title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
                            title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                            strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL,
@@ -119,7 +122,7 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
       ggplot2::geom_ribbon(ggplot2::aes(ymin = low_re, ymax = high_re), fill = se_color,
                            alpha = se_alpha) +
       ggplot2::geom_line(linewidth = line_size, color = line_color) +
-      ggplot2::facet_wrap(~Quantity, ncol = ncol, scales = "free_y") +
+      ggplot2::facet_wrap(~Quantity, ncol = ncol, scales = facet_scales) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = y_label) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(unique(series$quantity)), ncol),
                    values = series$year) +
@@ -151,7 +154,7 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
     p <- patchwork::wrap_plots(p_series, p_parameters, ncol = 1,
                                heights = c(1, max(0.5, 0.12 * nrow(parameters)))) +
       patchwork::plot_annotation(title = main, subtitle = paste(strwrap(subtitle, 110), collapse = "\n"),
-                                 theme = .acl_annotation_theme("none"))
+                                 theme = .acl_annotation_theme("none", font_family, title_size, title_hjust))
   } else {
     p <- (if (is.null(p_series)) p_parameters else p_series) +
       ggplot2::labs(title = main, subtitle = paste(strwrap(subtitle, 90), collapse = "\n"))

@@ -24,8 +24,8 @@ A list with 26 elements:
 \item{std_logR}{standard deviation of recruitment.}
 \item{std_logN0}{standard deviation of initial number at age.}
 \item{std_SN}{survey measurement error.}
-\item{a}{parameter to define length–weight relationship.}
-\item{b}{parameter to define length–weight relationship.}
+\item{a}{parameter to define length-weight relationship.}
+\item{b}{parameter to define length-weight relationship.}
 \item{alpha}{Beverton-Holt model parameter.}
 \item{beta}{Beverton-Holt model parameter.}
 \item{mat_L50}{length at which 50\% of individuals are mature.}

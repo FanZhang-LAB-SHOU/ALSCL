@@ -119,6 +119,8 @@ Error messages are quoted as the package prints them.
 | `plot_VB()` draws a line without an interval | The growth parameters are fixed | Expected; release them with `map` |
 | The first fit names `TMB::compile`, `make`, `g++` or `clang` | No compiler, or Rtools for another R version | Install the compiler (step 4), restart R |
 | `Install RcppEigen to compile model templates` or `Model sources are missing` | RcppEigen absent, or a damaged installation | Install RcppEigen or reinstall ALSCL |
+| `All optimization starts failed` with `NA/NaN`, after a warning that TMB was built with another Matrix ABI version | The TMB binary does not match the installed Matrix package | Run `install.packages("TMB", type = "source")` and restart R; the error names the two ABI versions when this is the cause |
+| The installation or `library(ALSCL)` says that TMB 1.9.21 or later is required | CRAN no longer updates its packages for this R version, so the TMB it offers is older | Run `install.packages("TMB", type = "source")`, which needs a C++ compiler (step 4), then install ALSCL again |
 | `Socket worker loaded a different ALSCL installation` | A worker found another copy in a different library | Keep one installation, or use `ncores = 1` |
 | Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | The new R processes could not start | Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
 | `rho_text$Rho` is `NA` after a retrospective analysis | A fit failed the numerical checks | Read `fit_diagnostics` and `rho_by_peel`, fix that fit |

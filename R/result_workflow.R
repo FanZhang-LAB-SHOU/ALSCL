@@ -114,6 +114,7 @@
 }
 
 .acl_recipe <- function(fit) {
+  .acl_stop_if_failed(fit)
   r <- fit$recipe
   if (!is.list(r) || !identical(r$schema_version, 1L) ||
       length(r$model) != 1L || !r$model %in% c("acl", "alscl") || !is.list(r$args))
@@ -236,7 +237,8 @@
 #'   their standard errors and intervals are NA. Without a recipe, only free
 #'   fixed effects can be identified. Random effects are not included.
 #' @details Natural-scale estimates use exp for log and mean_log parameters,
-#'   plogis for logit parameters, and identity for ACL t0. The natural-scale SE
+#'   plogis for logit parameters (2 * plogis - 1 with correlation_range =
+#'   "symmetric"), identity for ACL t0 and t0_lower + exp for ALSCL log_t0. The natural-scale SE
 #'   uses the delta method; interval endpoints transform an internal-scale Wald
 #'   interval. exp(mean_log_F) and exp(mean_log_R) are baseline process levels,
 #'   not arithmetic averages over time. Parameter names retain their exact
@@ -260,6 +262,7 @@
 #' @export
 extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level = .95) {
   scale <- match.arg(scale); z <- .acl_conf_level(conf_level)
+  .acl_stop_if_failed(fit)
   out <- .acl_extract_parameters(fit, scale, z)
   problem <- attr(out, "inspection_error")
   if (!is.null(problem))
@@ -377,6 +380,7 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
   z <- .acl_conf_level(conf_level)
   if (!is.character(quantities) || !length(quantities) || anyNA(quantities) || anyDuplicated(quantities))
     stop("quantities must be distinct, nonmissing quantity names.", call. = FALSE)
+  .acl_stop_if_failed(fit)
   years <- .acl_plot_year(fit)
   time_only <- c("SSB", "Rec", "B", "N", "CN", "CB")
   age_time <- c("NA", "BA", "SBA", "CNA", "CBA", "F", "FA")
@@ -640,8 +644,9 @@ logLik.alscl_fit <- function(object, ...) {
 #' @return print and summary report the error message. summary returns a
 #'   summary.alscl_fit_error list with the error, the replicate number when
 #'   recorded, and a one-row diagnostics table with numerical_ok = FALSE.
-#'   coef and vcov return NULL, so a loop over a batch of results does not stop
-#'   at a failed fit.
+#'   coef, vcov and fitted return NULL, nobs returns NA and logLik returns an NA
+#'   log-likelihood, so AIC() and BIC() give NA. A loop over a batch of results
+#'   therefore does not stop at a failed fit.
 #' @examples
 #' # A scenario with an invalid natural mortality rate stops before any model
 #' # is fitted, and its error is kept as a failure record.
@@ -650,6 +655,7 @@ logLik.alscl_fit <- function(object, ...) {
 #' failed
 #' summary(failed)$diagnostics$numerical_ok
 #' coef(failed)
+#' AIC(failed)
 #' @export
 summary.alscl_fit_error <- function(object, ...) {
   message_text <- .acl_error_text(object)
@@ -686,6 +692,19 @@ coef.alscl_fit_error <- function(object, ...) NULL
 #' @rdname summary.alscl_fit_error
 #' @export
 vcov.alscl_fit_error <- function(object, ...) NULL
+
+#' @rdname summary.alscl_fit_error
+#' @export
+fitted.alscl_fit_error <- function(object, ...) NULL
+
+#' @rdname summary.alscl_fit_error
+#' @export
+nobs.alscl_fit_error <- function(object, ...) NA_integer_
+
+#' @rdname summary.alscl_fit_error
+#' @export
+logLik.alscl_fit_error <- function(object, ...)
+  structure(NA_real_, df = NA_integer_, nobs = NA_integer_, class = "logLik")
 
 # An older fit can lack fields that later functions read from the result. Its
 # observations may exist only in the live TMB object, which an archive drops.
@@ -869,6 +888,8 @@ refit_model <- function(fit, ...) {
   if (!"output" %in% names(overrides)) overrides$output <- FALSE
   args <- .acl_bundle_args(.acl_recipe_map_compat(recipe$args, recipe$model),
                            recipe$model, overrides)
+  .acl_replaced_parameters_note(.acl_replaced_parameters(recipe$args$parameters, overrides, args$map),
+                                isTRUE(args$silent), "fit$recipe$args$parameters")
   previous <- options(recipe$settings); on.exit(options(previous), add = TRUE)
   do.call(if (recipe$model == "acl") run_acl else run_alscl, args)
 }

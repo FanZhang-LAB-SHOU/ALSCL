@@ -14,6 +14,7 @@ plot_self_test(
   se_alpha = NULL,
   point_size = NULL,
   facet_ncol = NULL,
+  facet_scales = "free_y",
   return_data = FALSE,
   title = NULL,
   xlab = NULL,
@@ -55,6 +56,9 @@ inherits the global point_size setting.}
 
 \item{facet_ncol}{Numeric or NULL. Columns of the time-series panels; NULL
 puts up to three panels in a row.}
+
+\item{facet_scales}{Character. Scales of the time-series panels: "fixed",
+"free", "free_x" or "free_y". Default is "free_y".}
 
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}

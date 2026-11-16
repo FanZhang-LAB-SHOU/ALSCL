@@ -190,6 +190,11 @@
   if (model == "ACL" && t0_lower != 0)
     stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.", call. = FALSE)
   if (t0_lower != 0) d$t0_lower <- t0_lower
+  # A default t0 start keeps its natural value under t0_lower, as default
+  # correlation starts do under the symmetric range: without this, the
+  # default (fixed) t0 of 1/60 year would become t0_lower + 1/60.
+  if (model == "ALSCL" && t0_lower != 0 && is.null(parameters$log_t0) && exp(p$log_t0) > t0_lower)
+    p$log_t0 <- log(exp(p$log_t0) - t0_lower)
   # Natural mortality rate by age and time step or by length (optional data).
   M_data <- .acl_M_data(prepared$natural_mortality, model, d$L, d$A, d$Y)
   d[names(M_data)] <- M_data
@@ -330,6 +335,8 @@
   .acl_report_clamped(setup$clamped_starts, silent)
   .acl_partial_set_note(prepared$structure, model, silent)
   .acl_q_age_start_note(setup$mean_log_R_shift, d$q_age, silent)
+  .acl_symmetric_start_note(.acl_symmetric_supplied(prepared$structure, parameters, model), silent)
+  .acl_t0_lower_start_note(.acl_t0_lower_start(prepared$t0_lower, parameters, model), silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",
@@ -363,7 +370,7 @@
     cl <- NULL
   }
   values <- vapply(starts, function(x) if (is.finite(x$objective)) x$objective else Inf, numeric(1))
-  if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "), call. = FALSE)
+  if (all(!is.finite(values))) stop(.acl_starts_failed_message(starts), call. = FALSE)
   opt <- starts[[which.min(values)]]
   start_diagnostics <- do.call(rbind, lapply(starts, function(s) data.frame(
     start_id = s$start_id, pid = s$pid, started_at = s$started_at, finished_at = s$finished_at,
@@ -391,7 +398,13 @@
          call. = FALSE)
   sd_info <- if (is.null(sdresult)) NULL else attr(sdresult, "acl_sd_info")
   if (!silent && !is.null(sd_info)) message(.acl_sd_message(sd_info))
-  est_std <- if (is.null(sdresult)) NULL else summary(sdresult)
+  # A covariance matrix that is not positive definite can have negative
+  # variances, and their square root in summary() gives the warning
+  # "NaNs produced". The standard errors keep NaN, and the diagnostics report
+  # that matrix, so only this warning is muffled.
+  est_std <- if (is.null(sdresult)) NULL else withCallingHandlers(summary(sdresult),
+    warning = function(w) if (grepl("NaNs produced", conditionMessage(w), fixed = TRUE))
+      invokeRestart("muffleWarning"))
   covariance <- if (is.null(sdresult)) NULL else sdresult$cov.fixed
   if (!is.null(covariance)) dimnames(covariance) <- list(names(opt$par), names(opt$par))
   distances <- c(opt$par - bounds$lower, bounds$upper - opt$par)

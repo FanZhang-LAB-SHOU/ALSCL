@@ -148,6 +148,7 @@
 simulate_fit <- function(fit, nsim = 1, seed = NULL,
                          process = c("conditional", "resample"),
                          preserve_missing = TRUE, allow_failed_fit = FALSE) {
+  .acl_stop_if_failed(fit)
   nsim <- .acl_positive_integer(nsim, "nsim")
   if (!is.null(seed)) seed <- .acl_positive_integer(seed, "seed", minimum = 0L)
   process <- match.arg(process)
@@ -157,10 +158,11 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
       stop(name, " must be TRUE or FALSE.", call. = FALSE)
   }
   setup <- .acl_fit_simulation_setup(fit, process)
-  failed <- isFALSE(fit$diagnostics$numerical_ok)
+  screen <- .acl_source_screen(fit)
+  failed <- isFALSE(screen)
   if (failed) {
     if (!allow_failed_fit)
-      stop("The source fit failed the numerical screen. Review fit$diagnostics; ",
+      stop("The source fit failed the numerical screen. Review summary(fit); ",
         "set allow_failed_fit = TRUE only for exploratory simulation.", call. = FALSE)
     warning("The source fit failed the numerical screen; this exploratory simulation uses that failed fit ",
       "because allow_failed_fit = TRUE.", call. = FALSE)
@@ -196,7 +198,7 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
   if (!is.null(seed)) {
     restore_rng <- .acl_preserve_rng()
     on.exit(restore_rng(), add = TRUE)
-    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion")
+    set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
   }
   rng_kind <- RNGkind()
   random_names <- c("dev_log_R", "dev_log_F", "dev_log_N0")
@@ -246,8 +248,8 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
     parameter_uncertainty = "none", F_structure = setup$preflight$setup$F_structure,
     year = fit$year, age = fit$age, len_mid = fit$len_mid, len_label = fit$len_label,
     observation_mask = is.finite(original) & original > 0,
-    source_fit_status = if (failed) "failed" else if (isTRUE(fit$diagnostics$numerical_ok)) "passed" else "unknown",
-    source_fit_numerical_ok = if (failed) FALSE else if (isTRUE(fit$diagnostics$numerical_ok)) TRUE else NA,
+    source_fit_status = if (failed) "failed" else if (isTRUE(screen)) "passed" else "unknown",
+    source_fit_numerical_ok = screen,
     failed_fit_override = failed && allow_failed_fit,
     source_implementation = setup$recipe$implementation))
 }

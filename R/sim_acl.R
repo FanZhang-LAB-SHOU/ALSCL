@@ -32,6 +32,9 @@
 #'   fits a model with another structure, for example
 #'   `list(initial_deviations = "independent")` for data simulated with
 #'   cumulative initial deviations.
+#' @param t0_lower ALSCL only. Lower limit of t0, as in [run_alscl()]; NULL
+#'   (default) uses 0. Set a negative value, for example -1, to fit
+#'   replicates generated with a negative t0.
 #'
 #' @inheritParams run_acl
 #' @return A list containing the results of the stock assessment model. Failed
@@ -90,8 +93,11 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     map = NULL, M = NULL, ncores = 1, train_times = 1, control = list(),
                     F_structure = c("group_year", "year"), polish = TRUE,
                     model = c("acl", "alscl"), nstarts = 1, allow_M_mismatch = FALSE,
-                    structure = list()) {
+                    structure = list(), t0_lower = NULL) {
   model <- match.arg(model)
+  if (!is.null(t0_lower) && model == "acl")
+    stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.",
+         call. = FALSE)
   .acl_structure(structure, toupper(model))
   F_structure <- match.arg(F_structure)
   ncores <- .acl_positive_integer(ncores, "ncores")
@@ -123,6 +129,7 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
     ncores = 1L, nstarts = nstarts)
   # Passed only when it is set, so that default fits are called as before.
   if (length(structure)) fit_args$structure <- structure
+  if (!is.null(t0_lower)) fit_args$t0_lower <- t0_lower
   fit_one <- function(iter) {
     started <- proc.time()[["elapsed"]]
     id <- .acl_replicate_id(iter)
@@ -309,7 +316,12 @@ sim_alscl <- function(..., nstarts = 1) sim_model(..., model = "alscl", nstarts 
 #' @return A list with data frames \code{data.CatL} (survey catch at length),
 #'   \code{data.wgt} (weight at length) and \code{data.mat} (proportion mature
 #'   at length). Each has a \code{LengthBin} column followed by one column per
-#'   model time step.
+#'   model time step. The rows are labelled with the length midpoints only.
+#'   To fit the tables, also pass the interior borders of the length bins,
+#'   \code{len_border = sm$len_border}, and the midpoints, as
+#'   \code{\link{sim_model}} does: without them the borders are placed
+#'   halfway between midpoints, which differs from the simulated bins when
+#'   the bins have unequal widths (for example the krill preset).
 #' @details The function stops when the dimensions of \code{SN_at_len},
 #'   \code{weight} or \code{mat} do not match the time and length coordinates,
 #'   so rows are never recycled. \code{\link{sim_model}}, \code{\link{sim_acl}}

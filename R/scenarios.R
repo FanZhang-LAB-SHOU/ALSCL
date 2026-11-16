@@ -58,6 +58,14 @@
     for (args in settings)
       if (!isTRUE(args$silent) &&
           .acl_q_age_start_note(.acl_q_age_start_shift(args), args$survey_q_age, FALSE)) break
+  if (workers > 1L)
+    for (args in settings)
+      if (!isTRUE(args$silent) && .acl_symmetric_start_note(
+          .acl_symmetric_supplied(args$structure, args$parameters, model), FALSE)) break
+  if (workers > 1L)
+    for (args in settings)
+      if (!isTRUE(args$silent) && .acl_t0_lower_start_note(
+          .acl_t0_lower_start(args$t0_lower, args$parameters, model), FALSE)) break
   .acl_cluster_lapply(settings, .acl_batch_fit, ncores, model, model = model)
 }
 
@@ -155,6 +163,19 @@ fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,
     args$output <- FALSE
     args
   })
+  # A parameters list of the common overrides or of a scenario replaces the
+  # stored list: one note for the call, for the first such list.
+  stored <- .acl_stored_parameters(x, model)
+  noted <- !isTRUE(common$silent) && .acl_replaced_parameters_note(
+    .acl_replaced_parameters(stored$parameters, overrides, common$map), FALSE, stored$label,
+    "the common overrides")
+  common_label <- if (!"parameters" %in% names(overrides)) stored$label
+  for (i in seq_along(scenarios)) {
+    if (noted) break
+    noted <- !isTRUE(settings[[i]]$silent) && .acl_replaced_parameters_note(
+      .acl_replaced_parameters(common$parameters, scenarios[[i]], settings[[i]]$map), FALSE,
+      common_label, paste0("scenario \"", names(scenarios)[i], "\""))
+  }
   started <- proc.time()[["elapsed"]]
   results <- .acl_batch_apply(settings, model, ncores)
   names(results) <- names(scenarios)

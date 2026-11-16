@@ -21,7 +21,8 @@ sim_model(
   model = c("acl", "alscl"),
   nstarts = 1,
   allow_M_mismatch = FALSE,
-  structure = list()
+  structure = list(),
+  t0_lower = NULL
 )
 }
 \arguments{
@@ -67,7 +68,10 @@ per model step, not per calendar year.}
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
 parameters, a smaller maximum gradient and objective increase at most
-\code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+\code{1e-8} (roundoff tolerance). When the gradient is still 0.001 or more
+after these steps, a second pass of up to five steps accepts an objective
+increase within the working precision of the objective,
+\code{sqrt(.Machine$double.eps)} times its size. FALSE skips refinement. Raw optimizer codes
 remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
@@ -91,6 +95,10 @@ the parameter list that generated the replicates: a different value
 fits a model with another structure, for example
 \code{list(initial_deviations = "independent")} for data simulated with
 cumulative initial deviations.}
+
+\item{t0_lower}{ALSCL only. Lower limit of t0, as in \code{\link[=run_alscl]{run_alscl()}}; NULL
+(default) uses 0. Set a negative value, for example -1, to fit
+replicates generated with a negative t0.}
 }
 \value{
 A list containing the results of the stock assessment model. Failed

@@ -23,7 +23,7 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 | `control` | `nlminb()` controls such as `iter.max` | The call |
 | `silent`, `output` | Hide progress messages; write diagnostics and plots to `output/` | The call |
 
-Values in the call override the stored ones for that call only. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcast validation) should use it; step 8 shows how.
+Values in the call override the stored ones for that call only. A `parameters` list in the call replaces the stored list, and the fit names the stored values that are no longer used. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcast validation) should use it; step 8 shows how.
 
 <h2 id="parameters">2. See which parameters are estimated</h2>
 
@@ -172,7 +172,7 @@ subset(extract_parameters(b_t0), parameter == "log_t0")
 b_t0$t0_lower
 ```
 
-ALSCL holds the von Bertalanffy parameter `t0` on the log scale, as `t0 = t0_lower + exp(log_t0)`. The default `t0_lower = 0` is the original parameterization, in which `t0` is positive. For a stock with a negative `t0`, set `t0_lower` to a value below the smallest `t0` you consider, for example -1, and supply `t0` as `log_t0 = log(t0 - t0_lower)`: the block fixes `t0` at -0.2 years with `log(-0.2 + 1)`. `t0_lower` must be below the recruitment age, and `t0` itself stays below the recruitment age. `inspect_parameters()` shows the natural starting value -0.2 with the transform `t0_lower+exp`. `extract_parameters()`, `plot_VB()`, `profile_model()` and `b_t0$report$t0` give or take `t0` in years, and the fit keeps the limit in `b_t0$t0_lower`. To estimate `t0` in place of fixing it, release it with a named `NULL` in `map` (step 3).
+ALSCL holds the von Bertalanffy parameter `t0` on the log scale, as `t0 = t0_lower + exp(log_t0)`. The default `t0_lower = 0` is the original parameterization, in which `t0` is positive. For a stock with a negative `t0`, set `t0_lower` to a value below the smallest `t0` you consider, for example -1, and supply `t0` as `log_t0 = log(t0 - t0_lower)`: the block fixes `t0` at -0.2 years with `log(-0.2 + 1)`. `t0_lower` must be below the recruitment age, and `t0` itself stays below the recruitment age. `inspect_parameters()` shows the natural starting value -0.2 with the transform `t0_lower+exp`. `extract_parameters()`, `plot_VB()`, `profile_model()` and `b_t0$report$t0` give or take `t0` in years, and the fit keeps the limit in `b_t0$t0_lower`. To estimate `t0` in place of fixing it, release it with a named `NULL` in `map` (step 3). A fit with `t0_lower` gives a message when it reads a supplied `log_t0`, with the `t0` in years that the value means (unless `silent = TRUE`).
 
 The value -0.2 only shows how the argument works. `YTF_example` was generated with a `t0` of 1/60 years, so this fit has a higher objective than the default fit. ACL needs no such argument: its parameter `t0` is on the natural scale and can be negative, and `run_acl()` does not accept `t0_lower`. Store `t0_lower` under `x$fit_config$alscl`, as in the block, and not in `x$fit_args`, which both models read; later ALSCL fits of the bundle, including the retrospective peels, then use it. `retro_alscl()` and `retro_model()` also take `t0_lower` in the call.
 

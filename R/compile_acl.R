@@ -17,6 +17,36 @@
   c(conf, unlist(lapply(makevars, read), use.names = FALSE))
 }
 
+# Matrix ABI version that TMB was built against and the ABI version of the
+# installed Matrix package, read with TMB's own functions. TMB warns as it
+# loads when the two differ, and such a TMB binary can make every start of a
+# fit fail. The functions are internal to TMB, so NULL is returned when a TMB
+# version lacks them, and ok is NA when the versions cannot be compared.
+.acl_tmb_matrix_abi <- function() {
+  get <- function(name) tryCatch(utils::getFromNamespace(name, "TMB"), error = function(e) NULL)
+  built <- get(".Matrix.abi.build.version")
+  current_fun <- get("get_abi_version")
+  if (is.null(built) || !is.function(current_fun)) return(NULL)
+  current <- tryCatch(current_fun(), error = function(e) NULL)
+  if (is.null(current)) return(NULL)
+  ok <- tryCatch(all(current == built), error = function(e) NA)
+  list(built = as.character(built), current = as.character(current),
+       ok = if (is.logical(ok) && length(ok) == 1L) ok else NA)
+}
+
+# Error message when no start gave a finite objective. When TMB and Matrix do
+# not match, it names the mismatch and how to remove it.
+.acl_starts_failed_message <- function(starts, abi = .acl_tmb_matrix_abi()) {
+  msg <- paste0("All optimization starts failed: ",
+                paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "))
+  if (is.list(abi) && isFALSE(abi$ok))
+    msg <- paste0(msg, "\nTMB was built with Matrix ABI version ", abi$built,
+                  ", but the installed Matrix package has ABI version ", abi$current,
+                  ". This mismatch can make every start fail. Reinstall TMB from source with ",
+                  "install.packages(\"TMB\", type = \"source\"), restart R and fit again.")
+  msg
+}
+
 # Name of the cache entry of a model template. It changes with the template
 # sources, the R and package versions, the automatic-differentiation library,
 # the platform and the C++ settings, so each combination has its own folder.

@@ -151,7 +151,7 @@
     },
     "source": "docs/wiki/09-Growth-and-Mortality.md",
     "description": {
-      "en": "Inspect growth curves, age–length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
+      "en": "Inspect growth curves, age-length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
       "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄—体长概率、捕捞死亡率与残差结构。"
     }
   },

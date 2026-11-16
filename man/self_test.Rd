@@ -93,7 +93,9 @@ An object of class \code{alscl_self_test}, a list with:
 \code{failure_reasons} and \code{warnings}, as in \code{\link[=summarize_simulations]{summarize_simulations()}}.}
 \item{series}{One row per replicate, quantity and time step: \code{truth},
 \code{estimate}, \code{std_error}, \code{conf_low}, \code{conf_high}, \code{error} (estimate
-minus truth), \code{relative_error} (error divided by truth), \code{covered}
+minus truth), \code{relative_error} (error divided by the absolute value
+of the truth, so that a positive value is an overestimate also for a
+negative truth), \code{covered}
 and \code{numerical_ok}.}
 \item{parameters}{One row per replicate and estimated scalar parameter,
 on the natural scale of \code{\link[=extract_parameters]{extract_parameters()}}, with the same
@@ -111,10 +113,8 @@ error), \code{n_converged}, \code{n_passed} and \code{pass_rate}, the share of
 replicates that pass the numerical checks.}
 \item{failures}{Reasons of the replicates that fail the numerical
 checks, as in \code{\link[=summarize_simulations]{summarize_simulations()}}.}
-\item{settings}{The arguments used, the model, the number of workers,
-the elapsed time in seconds and \code{process_mean_truth}, the truth of
-mean_log_F and mean_log_R: \code{"realized"} (conditional mode) or
-\code{"source"} (resample mode); see Details.}
+\item{settings}{The arguments used, the model, the number of workers
+and the elapsed time in seconds.}
 \item{simulation}{The \code{metadata} of \code{\link[=simulate_fit]{simulate_fit()}}.}
 \item{fits}{The refits when \code{save_fits = TRUE}, otherwise NULL.}
 }
@@ -146,24 +146,18 @@ catchability, growth and maturity stay as in the source fit in both
 modes. Relative errors are computed against the truth of each replicate.
 
 \strong{Truth of the scalar parameters.} The truth of a scalar parameter is
-its estimate in the source fit, with one exception. In conditional mode
-the deviations are the fitted values, not a draw from their
-distribution, and their mean need not be zero. The truth of the mean of
-a process, mean_log_F (log fishing mortality rate) and mean_log_R (log
-recruitment), is then the mean of the realized process on the log
-scale: the source estimate plus the mean of the fitted deviations over
-all cells of the process (all ages or length bins and time steps for F,
-all time steps for recruitment), with the values that a map ties or
-fixes included as the template uses them. A refit estimates this mean,
-because the data inform the level of the process and not how the level
-is split between the mean parameter and the deviations. In resample mode
-the new deviations are drawn with mean zero and the truth of these two
-parameters is the source estimate. \code{settings$process_mean_truth} records
-which definition applies (\code{"realized"} or \code{"source"}). Other parameters
-can trade off in the same way, for example init_Z with the mean of the
-initial deviations, and keep the source estimate as truth; the relative
-errors of the time series are then a better measure than those of these
-parameters.
+its estimate in the source fit, in both modes. In conditional mode the
+deviations are the fitted values, not a draw from their distribution,
+and their arithmetic mean need not be zero. The truth of mean_log_F (log
+fishing mortality rate) and mean_log_R (log recruitment) is still the
+source estimate: at the estimate, the mean parameter of an AR(1) process
+equals the weighted mean of the fitted process that the AR(1) density
+implies, in which the first and last time steps (and groups) weigh more,
+not its arithmetic mean, and a refit that recovers the process recovers
+this weighted mean. The level of F and recruitment is measured by the
+time series, whose truth is the realized process. Parameters that can
+trade off with the deviations, for example init_Z with the mean of the
+initial deviations, are also better judged by the time series.
 
 \strong{Refits.} Each refit uses the model, structure, map, bounds, fixed
 values and fixed inputs of the source fit, from its recipe. With

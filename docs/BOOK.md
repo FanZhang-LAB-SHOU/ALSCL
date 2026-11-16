@@ -6,11 +6,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.4.4.9000 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.4.5 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.4.9000。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.4.5。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.4.9000.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.4.5.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -91,13 +91,13 @@ install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 ```
 
-ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
+ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB 1.9.21 或更高版本、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
 
-ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
+ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB 1.9.21 or later, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
 
-如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。
+如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。在较旧的 R 版本上，CRAN 提供的 TMB 现成二进制包可能低于 1.9.21，安装或 `library(ALSCL)` 会停止，并提示需要 TMB 1.9.21 或更高版本。运行 `install.packages("TMB", type = "source")`（需要第 1 步的编译器），再重新安装 ALSCL。
 
-If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1.
+If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1. On an older R version, the TMB that CRAN offers as a ready-made package can be older than 1.9.21, and the installation or `library(ALSCL)` then stops with a message that TMB 1.9.21 or later is required. Run `install.packages("TMB", type = "source")`, which needs the compiler from step 1, and install ALSCL again.
 
 <a id="getting-started-load"></a>
 
@@ -117,6 +117,10 @@ Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching
 你应看到 2.4.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
 
 You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+
+如果加载时出现警告，说 TMB 构建时用的是另一个 Matrix ABI 版本，说明 TMB 的二进制包与已安装的 Matrix 不匹配，之后每次拟合都可能以 `All optimization starts failed` 和 `NA/NaN` 失败。运行 `install.packages("TMB", type = "source")`，重启 R 后重新加载软件包。
+
+If loading the package gives a warning that TMB was built with another Matrix ABI version, the TMB binary does not match the installed Matrix package, and every fit can then fail with `All optimization starts failed` and `NA/NaN`. Run `install.packages("TMB", type = "source")`, restart R and load the package again.
 
 <a id="getting-started-first-fit"></a>
 
@@ -929,9 +933,9 @@ plot_SSB(saved, se = TRUE)
 
 The input bundle `x` is a named list. Its three tables `data.CatL`, `data.wgt` and `data.mat` hold the observations. `x$fit_args` holds the settings both models share: `rec.age`, `nage`, `M`, `sel_L50` and `sel_L95` (or `survey_q`), `len_mid`, `len_border` and `growth_step`. `x$fit_config$acl` and `x$fit_config$alscl` hold the starting values (`parameters`) and the `map` of each model. The fitting functions ignore other elements, such as the simulation `truth` and `provenance` of `YTF_example`.
 
-设置按这个顺序读取：数据表，然后 `fit_args`，然后所选模型的 `fit_config`，最后是调用时给出的参数。因此调用中的参数会覆盖保存的值，而 `map` 这类列表参数会整体替换保存的列表。
+设置按这个顺序读取：数据表，然后 `fit_args`，然后所选模型的 `fit_config`，最后是调用时给出的参数。因此调用中的参数会覆盖保存的值，而 `map` 这类列表参数会整体替换保存的列表。调用中的 `parameters` 列表会替换保存的列表，拟合会列出不再使用的保存值。
 
-Settings are read in this order: the tables, then `fit_args`, then the `fit_config` entry of the chosen model, then the arguments of the call. An argument in the call therefore overrides the stored value, and a list argument such as `map` replaces the stored list completely.
+Settings are read in this order: the tables, then `fit_args`, then the `fit_config` entry of the chosen model, then the arguments of the call. An argument in the call therefore overrides the stored value, and a list argument such as `map` replaces the stored list completely. A `parameters` list in the call replaces the stored list, and the fit names the stored values that are no longer used.
 
 ```r
 # 两个工作进程运行四个初值；保存的 M 仅在本次调用中换成 0.25 / Four starts on two workers; the stored M is replaced by 0.25 for this call only
@@ -1192,9 +1196,9 @@ The settings fall into three groups: the biology and data settings in `x$fit_arg
 | `control` | `nlminb()` 的控制参数，如 `iter.max` / `nlminb()` controls such as `iter.max` | 调用 / The call |
 | `silent`、`output` / `silent`, `output` | 不显示进度信息；把诊断和图写入 `output/` / Hide progress messages; write diagnostics and plots to `output/` | 调用 / The call |
 
-调用中给出的值只在本次调用中覆盖保存的值。希望之后的每项分析（回溯分析、情景、预测检验）都使用某个选择时，把它存入 `x`，做法见第 8 步。
+调用中给出的值只在本次调用中覆盖保存的值。调用中的 `parameters` 列表会替换保存的列表，拟合会列出不再使用的保存值。希望之后的每项分析（回溯分析、情景、预测检验）都使用某个选择时，把它存入 `x`，做法见第 8 步。
 
-Values in the call override the stored ones for that call only. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcast validation) should use it; step 8 shows how.
+Values in the call override the stored ones for that call only. A `parameters` list in the call replaces the stored list, and the fit names the stored values that are no longer used. Store a choice in `x` when every later analysis (retrospectives, scenarios, hindcast validation) should use it; step 8 shows how.
 
 <a id="fitting-controls-parameters"></a>
 
@@ -1395,9 +1399,9 @@ subset(extract_parameters(b_t0), parameter == "log_t0")
 b_t0$t0_lower
 ```
 
-ALSCL 在对数尺度上保存 von Bertalanffy 参数 `t0`：`t0 = t0_lower + exp(log_t0)`。默认 `t0_lower = 0` 是原始的参数化，此时 `t0` 为正。种群的 `t0` 为负时，把 `t0_lower` 设为低于你所考虑的最小 `t0` 的值，例如 -1，并把 `t0` 写成 `log_t0 = log(t0 - t0_lower)`：上面的代码用 `log(-0.2 + 1)` 把 `t0` 固定在 -0.2 年。`t0_lower` 必须小于补充年龄，`t0` 本身也始终小于补充年龄。`inspect_parameters()` 显示自然尺度上的初值 -0.2 和变换 `t0_lower+exp`。`extract_parameters()`、`plot_VB()`、`profile_model()` 和 `b_t0$report$t0` 给出或接受的 `t0` 都以年为单位，拟合结果把下限保存在 `b_t0$t0_lower` 中。要估计 `t0` 而不是固定它，在 `map` 中用具名 `NULL` 释放（第 3 步）。
+ALSCL 在对数尺度上保存 von Bertalanffy 参数 `t0`：`t0 = t0_lower + exp(log_t0)`。默认 `t0_lower = 0` 是原始的参数化，此时 `t0` 为正。种群的 `t0` 为负时，把 `t0_lower` 设为低于你所考虑的最小 `t0` 的值，例如 -1，并把 `t0` 写成 `log_t0 = log(t0 - t0_lower)`：上面的代码用 `log(-0.2 + 1)` 把 `t0` 固定在 -0.2 年。`t0_lower` 必须小于补充年龄，`t0` 本身也始终小于补充年龄。`inspect_parameters()` 显示自然尺度上的初值 -0.2 和变换 `t0_lower+exp`。`extract_parameters()`、`plot_VB()`、`profile_model()` 和 `b_t0$report$t0` 给出或接受的 `t0` 都以年为单位，拟合结果把下限保存在 `b_t0$t0_lower` 中。要估计 `t0` 而不是固定它，在 `map` 中用具名 `NULL` 释放（第 3 步）。设定了 `t0_lower` 的拟合读取给出的 `log_t0` 时会给出提示信息，说明该值对应的 `t0`（以年为单位）；`silent = TRUE` 时不显示。
 
-ALSCL holds the von Bertalanffy parameter `t0` on the log scale, as `t0 = t0_lower + exp(log_t0)`. The default `t0_lower = 0` is the original parameterization, in which `t0` is positive. For a stock with a negative `t0`, set `t0_lower` to a value below the smallest `t0` you consider, for example -1, and supply `t0` as `log_t0 = log(t0 - t0_lower)`: the block fixes `t0` at -0.2 years with `log(-0.2 + 1)`. `t0_lower` must be below the recruitment age, and `t0` itself stays below the recruitment age. `inspect_parameters()` shows the natural starting value -0.2 with the transform `t0_lower+exp`. `extract_parameters()`, `plot_VB()`, `profile_model()` and `b_t0$report$t0` give or take `t0` in years, and the fit keeps the limit in `b_t0$t0_lower`. To estimate `t0` in place of fixing it, release it with a named `NULL` in `map` (step 3).
+ALSCL holds the von Bertalanffy parameter `t0` on the log scale, as `t0 = t0_lower + exp(log_t0)`. The default `t0_lower = 0` is the original parameterization, in which `t0` is positive. For a stock with a negative `t0`, set `t0_lower` to a value below the smallest `t0` you consider, for example -1, and supply `t0` as `log_t0 = log(t0 - t0_lower)`: the block fixes `t0` at -0.2 years with `log(-0.2 + 1)`. `t0_lower` must be below the recruitment age, and `t0` itself stays below the recruitment age. `inspect_parameters()` shows the natural starting value -0.2 with the transform `t0_lower+exp`. `extract_parameters()`, `plot_VB()`, `profile_model()` and `b_t0$report$t0` give or take `t0` in years, and the fit keeps the limit in `b_t0$t0_lower`. To estimate `t0` in place of fixing it, release it with a named `NULL` in `map` (step 3). A fit with `t0_lower` gives a message when it reads a supplied `log_t0`, with the `t0` in years that the value means (unless `silent = TRUE`).
 
 -0.2 这个值只用来说明参数的用法。`YTF_example` 是用 1/60 年的 `t0` 生成的，所以这次拟合的目标函数值高于默认拟合。ACL 不需要这个参数：它的 `t0` 在自然尺度上，可以为负，`run_acl()` 不接受 `t0_lower`。请按上面的代码把 `t0_lower` 存在 `x$fit_config$alscl` 之下，不要存入两个模型都读取的 `x$fit_args`；这样该输入列表之后的 ALSCL 拟合（包括回溯分析的每一轮）都会使用它。`retro_alscl()` 和 `retro_model()` 也可以在调用中给出 `t0_lower`。
 
@@ -2129,7 +2133,7 @@ plot_SSB_Rec(b, age_at_recruitment = 1)
 
 每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
-Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock–recruitment curve.
+Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock-recruitment curve.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_SSB_Rec)
 
@@ -2199,14 +2203,14 @@ Each panel shows the mean length of one age class in each time step, from `lengt
 
 
 
-## 22. 年龄—体长概率矩阵 / Age–length probability matrix
+## 22. 年龄—体长概率矩阵 / Age-length probability matrix
 
 ```r
 # 绘制本图 / Draw this figure
 plot_pla(b)
 ```
 
-[![年龄—体长概率矩阵 / Age–length probability matrix](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=90a9ca2b22fd)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=90a9ca2b22fd)
+[![年龄—体长概率矩阵 / Age-length probability matrix](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=90a9ca2b22fd)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true&v=90a9ca2b22fd)
 
 静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 Age group。
 
@@ -2350,7 +2354,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
 
 Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis: the navy line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
 
-Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.
+Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
 [参数及默认值 / Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
 
@@ -2478,7 +2482,7 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 
 这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10–90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
 
-This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10–90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
+This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10-90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
 
 ```r
 # Synthetic display example with missing boundary length bins.
@@ -3076,7 +3080,7 @@ case_status <- run_case_studies(out = "my_cases")
 
 开展模拟研究时，增大 `iter_range` 以增加重复次数，每次改变一项设置，例如调查观测误差或自然死亡率。用全部拟合计算失败率。偏差和 RMSE 只使用通过数值检查且估计值与真值均有限的配对，区间覆盖率只使用可计算的区间。报告指标时分别列出配对数和区间数。见[模拟调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation)。
 
-Increase `iter_range` for a simulation study and vary one setting at a time, such as survey observation error or natural mortality. Report the failure rate across all attempted fits. Bias and RMSE use finite estimate–truth pairs from fits that passed the numerical checks. Interval coverage uses the subset with usable intervals. Report the number of pairs and intervals alongside the respective statistics. See [Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation).
+Increase `iter_range` for a simulation study and vary one setting at a time, such as survey observation error or natural mortality. Report the failure rate across all attempted fits. Bias and RMSE use finite estimate-truth pairs from fits that passed the numerical checks. Interval coverage uses the subset with usable intervals. Report the number of pairs and intervals alongside the respective statistics. See [Simulate survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#simulation).
 
 <a id="case-studies-next"></a>
 
@@ -3255,9 +3259,9 @@ Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is uns
 <a id="chapter-14"></a>
 ## 14 全部函数与参数 · Complete function reference
 
-对应 ALSCL 2.4.4.9000，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
+对应 ALSCL 2.4.5，覆盖 **77 个公开函数**。签名及默认值从实际 R 函数提取；每项参数均有中文说明和英文帮助。签名中的 `c(...)` 通常列出可选值，默认取第一项。`NULL` 的含义依函数而异，未必表示停用。
 
-All **77 exported functions** of ALSCL 2.4.4.9000 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
+All **77 exported functions** of ALSCL 2.4.5 are covered. Signatures/defaults were extracted from R. Each argument has Chinese guidance and English help. For a choice argument, `c(...)` lists options and the first is the default.
 
 [使用指南 / Guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [图谱 / Gallery](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md)
 
@@ -3297,7 +3301,7 @@ dat <- x$data.CatL
 - [fit_scenarios](#fit_scenarios) — 在同一观测数据上串行或 socket 并行拟合具名敏感性情景。 / Fit named sensitivity scenarios on common observations with serial or socket execution.
 - [extract_parameters](#extract_parameters) — 提取参数、尺度与固定状态 / Extract parameters, scales and estimation status
 - [extract_estimates](#extract_estimates) — 统一提取带坐标的种群估计 / Extract population estimates with coordinates
-- [check_fit](#check_fit) — 用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time–length heatmap, actual-time lag correlations and a normal QQ plot.
+- [check_fit](#check_fit) — 用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time-length heatmap, actual-time lag correlations and a normal QQ plot.
 - [check_alscl_data](#check_alscl_data) — 在编译或拟合之前检查完整数据和模型设置。 / Check complete data and model settings before compiling or fitting.
 - [acl_theme](#acl_theme) — 读取全局主题 / Read global theme settings
 - [acl_theme_reset](#acl_theme_reset) — 恢复默认主题 / Reset theme settings
@@ -4446,7 +4450,7 @@ plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref,
 
 [查看实际 YTF 图和解读 / Rendered YTF examples](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md#plot_compare_growth)。
 
-这里的参考点是本例生成的模拟年龄–体长数据，用于演示参考曲线拟合；请用独立采集的年龄–体长观测替换它们。 / These reference points are synthetic age–length data generated in this example to demonstrate the reference fit; replace them with independently collected age–length observations.
+这里的参考点是本例生成的模拟年龄–体长数据，用于演示参考曲线拟合；请用独立采集的年龄–体长观测替换它们。 / These reference points are synthetic age-length data generated in this example to demonstrate the reference fit; replace them with independently collected age-length observations.
 
 <a id="plot_compare_metrics"></a>
 ## `plot_compare_metrics()`
@@ -5123,7 +5127,7 @@ plot_relative_catch(b, observed = simulated, type = "weight", observed_name = "S
 
 每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
 
-Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2–5 observations has a linear trend, and a run of 6 or more uses loess.
+Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
 调查拟合图按矩阵位置及拟合年份、体长元数据对齐观测与预测，增删行列名不会改变坐标；缺失及零观测继续排除。若预测取指数会溢出，请使用 `exp_transform = FALSE`。残差图的 `resid_cap` 必须为有限正标量，或以 `NULL` 关闭截断；不再允许负值或零值抹去诊断特征。
 
@@ -5465,7 +5469,7 @@ The upper panels show, for each time series, the median relative error by time s
 ```r
 plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9), line_size = NULL,
     line_color = NULL, se_color = NULL, se_alpha = NULL, point_size = NULL, facet_ncol = NULL,
-    return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
+    facet_scales = "free_y", return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL,
     title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL,
     legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL)
 ```
@@ -5481,6 +5485,7 @@ plot_self_test (x, what = c("both", "series", "parameters"), probs = c(0.1, 0.9)
 | `se_alpha` | `NULL` | 带的不透明度；NULL 继承全局 se_alpha。 | Opacity of the band; NULL inherits the global se_alpha setting. |
 | `point_size` | `NULL` | 参数中位数点的大小；NULL 继承全局 point_size。 | Size of the median of a parameter; NULL inherits the global point_size setting. |
 | `facet_ncol` | `NULL` | 时间序列分面的列数；NULL 时一行最多三幅。 | Columns of the time-series panels; NULL puts up to three panels in a row. |
+| `facet_scales` | `"free_y"` | 时间序列分面的坐标尺度："fixed"、"free"、"free_x" 或 "free_y"，默认 "free_y"。 | Character. Scales of the time-series panels: "fixed", "free", "free_x" or "free_y". Default is "free_y". |
 | `return_data` | `FALSE` | 是否同时返回绘图数据。 | Logical. Whether to return the plotted data with the plot. Default is FALSE. |
 | `title` | `NULL` | 自定义图标题；NULL 继承默认。 | Character or NULL. Custom plot title. If NULL, uses global theme setting. See acl_theme_set(). |
 | `xlab` | `NULL` | 自定义横轴标签；NULL 继承主题。 | Character or NULL. Custom x-axis label. If NULL, uses global theme setting. |
@@ -6061,7 +6066,7 @@ run_alscl (data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50 = NULL, sel_
 | `polish` | `TRUE` | 默认对所选拟合进行受保护的 Newton 收尾；FALSE 跳过。原始优化代码保留，Hessian 方法与核数记录在 refinement$hessian_calculations。 | Safeguarded refinement of the selected fit; retain raw optimizer codes. refinement$hessian_calculations records Hessian methods and cores; inspect refinement and diagnostics. |
 | `structure` | `list()` | 可选的模型结构：一组设置的名称，或各项设置的命名列表。默认（空列表）和 "original" 在每项设置上都是原始结构，即本包最初发布时的结构，它实现了 Zhang 和 Cadigan (2022) 的模型。"von_bertalanffy" 同时选用 `growth_increment = "von_bertalanffy"`、`growth_transition = "bin"`、`initial_length = "growth"` 和 `initial_plus_group = "equilibrium"`，使第一期和生长转移遵循同一个生长模型。列表可以先指定一组设置再追加单项设置，例如 `list(set = "von_bertalanffy", correlation_range = "symmetric")`。"published" 和 "consistent" 是 "original" 和 "von_bertalanffy" 以前的名称，仍然可以使用。"von_bertalanffy" 的四项设置是作为一组检验的：每个时间步的生长增量相对组宽较小时，只用其中一部分的拟合可能失败。因此 `structure` 列表只改了四项中的一项、两项或三项时，拟合给出一条提示，列出仍为原始取值的设置（`silent = TRUE` 时不显示；一次调用中运行多个拟合的函数只提示一次）。"von_bertalanffy" 既是这组设置的名称，也是单项设置 `growth_increment` 的一个取值：`structure = list(growth_increment = "von_bertalanffy")` 只改一项，`structure = "von_bertalanffy"` 四项都改。先指定这组设置再替换其中一项的列表，例如 `list(set = "von_bertalanffy", growth_transition = "midpoint")`，视为有意的选择，不给提示。`correlation_range` 不属于这组设置。各项设置及取值（默认值在前）如下。`growth_increment`："logistic"，期望生长增量是体长的递减 logistic 函数，再乘以 `growth_step`。Zhang 和 Cadigan (2022) 定义了这个函数，但没有给出增量等于最大值 50% 和 95% 时的体长，也没有说明增量怎样换算到短于一年的时间步：体长 0.5 Linf 和 0.05 Linf 以及乘以 `growth_step` 是代码中的取法。"von_bertalanffy"，体长 L 低于 Linf 时一个时间步的期望增量为 (Linf - L)(1 - exp(-vbk * growth_step))，高于 Linf 时平滑降到零，因此 Linf 和 vbk 的含义与年龄体长曲线中相同。这时个体长到 Linf 附近就停止生长，Linf 在第一期之后相当于体长的上限：数据中有许多个体大于平均渐近体长时拟合较差，Linf 的标准误可能非常小。logistic 增量在 Linf 以上仍为正。`growth_transition`："midpoint"，体长组内所有个体都从组中点开始生长；"bin"，起始体长在组内均匀分布，转移概率在整个体长组上积分，因此每个时间步的增量相对组宽较小时（例如季度时间步配较宽的体长组），个体仍会进入下一个体长组。这时，组宽为增量的几倍时，世代的平均体长与生长曲线接近；组宽大得多时仍是近似，因为每个时间步之后个体都在所在体长组内均匀分布。`initial_length`："length_at_age"，第一期每个年龄都采用变异系数为 cv_len 的年龄体长分布；"growth"，第一个年龄采用该分布，其后每个年龄由前一年龄按 init_Z 存活并生长一步得到，与之后各期相同。`initial_plus_group`："single_cohort"，第一期的 plus group 只含一个世代；"equilibrium"，等于在总死亡率 init_Z 下所有更老世代之和。`correlation_range`："positive"，补充量以及 F 在时间和体长上的 AR(1) 相关系数在 0 和 1 之间，是 `logit_*` 参数的 logistic 变换；"symmetric"，相关系数在 -1 和 1 之间，等于 2 * logistic - 1，因此 `logit_*` 等于 0 表示不相关，也可以估计负相关。`logit_*` 的初值或固定值在两种设置下含义不同：相关系数 rho 在 "positive" 下为 `qlogis(rho)`，在 "symmetric" 下为 `qlogis((rho + 1) / 2)`。`initial_deviations`：第一期各年龄对数尾数（初始尾数）的偏差。"cumulative"，第一个年龄之后每个年龄的对数尾数等于前一年龄的对数尾数减去 init_Z 再加一个正态偏差，因此偏差沿年龄累加，`dev_log_N0` 有 `nage - 1` 个元素；"independent"，Zhang 和 Cadigan (2022) 的式 11，对年龄 a = 1 到 `nage`，log N(a) = log R(1) - init_Z (a - 1) + e(a)，其中 R(1) 是第一期的补充量，偏差 e(a) 相互独立，服从标准差为初始偏差标准差的正态分布；这时 `dev_log_N0` 有 `nage` 个元素。第一个年龄也有偏差；第一期报告的补充量 `Rec`（及其标准误）等于该期第一个年龄的尾数，包含这个偏差，补充量偏差 `dev_log_R` 的概率密度不变。`initial_plus_group = "equilibrium"` 时，plus group 的偏差乘在所有更老世代之和上。`initial_length = "growth"` 时，每个年龄的体长分布由不含偏差的生长和按 init_Z 的存活得到，某个年龄的偏差只乘在该年龄的尾数上。这项设置不属于 "von_bertalanffy" 这组设置。`initial_length = "growth"` 与 `initial_plus_group = "equilibrium"` 同时使用时，补充量恒定、无捕捞且 init_Z 等于 M 的种群保持不变；原始结构做不到这一点。实际采用的设置保存在拟合结果的 `structure` 中；`initial_deviations` 只在取 "independent" 时保存，因此默认形式的拟合所保存的结构与以前的版本相同。 | Optional model structures: the name of a set or a named list of settings. The default, an empty list, and "original" are the original structure for every setting: the structure of the package as first released, which implements the model of Zhang and Cadigan (2022). "von_bertalanffy" selects `growth_increment = "von_bertalanffy"`, `growth_transition = "bin"`, `initial_length = "growth"` and `initial_plus_group = "equilibrium"` together, so that the first period and the growth transition follow one growth model. A list can name a set and add single settings, for example `list(set = "von_bertalanffy", correlation_range = "symmetric")`. "published" and "consistent" are accepted as the earlier names of "original" and "von_bertalanffy". The four settings of "von_bertalanffy" were tested as a set. A fit with only some of them can fail when the growth increment per time step is small relative to the bin width. A `structure` list that changes one, two or three of the four settings therefore gives a message that names the settings left at their original values (unless `silent = TRUE`; a function that runs several fits in one call gives it once). "von_bertalanffy" is the name of the set and also a value of the single setting `growth_increment`. `structure = list(growth_increment = "von_bertalanffy")` changes one setting, and `structure = "von_bertalanffy"` changes all four. A list that names the set and replaces one of its settings, for example `list(set = "von_bertalanffy", growth_transition = "midpoint")`, is taken as a deliberate choice and gives no message. `correlation_range` does not belong to the set. Settings and values (default first) follow. `growth_increment`: "logistic", the expected growth increment is a decreasing logistic function of length, multiplied by `growth_step`. Zhang and Cadigan (2022) define this function. They give neither the lengths at which the increment is 50% and 95% of its maximum nor the conversion of the increment to a time step shorter than one year. The lengths 0.5 Linf and 0.05 Linf and the multiplication by `growth_step` are those of the code. "von_bertalanffy", the expected increment over one time step is (Linf - L)(1 - exp(-vbk * growth_step)) for length L below Linf and declines smoothly to zero above Linf, so Linf and vbk have the same meaning as in the length-at-age curve. Fish then stop growing at about Linf, so Linf acts as an upper limit of length after the first period: data with many fish larger than the mean asymptotic length fit poorly, and the standard error of Linf can be very small. The logistic increment stays positive above Linf. `growth_transition`: "midpoint", every fish in a length bin grows from the bin midpoint; "bin", starting lengths are uniform within the bin and the transition is integrated over the bin, so fish keep moving to the next bin when the increment per time step is small relative to the bin width (for example quarterly steps with wide bins). The mean length of a cohort then follows the growth curve closely for bins a few times wider than the increment; with much wider bins it remains approximate, because fish are spread evenly over their bin after every step. `initial_length`: "length_at_age", in the first period every age has the length-at-age distribution with coefficient of variation cv_len; "growth", the first age has that distribution and each older age is the previous age after survival at init_Z and one growth step, as in all later periods. `initial_plus_group`: "single_cohort", the first-period plus group holds one cohort; "equilibrium", it holds the sum of all older cohorts at total mortality init_Z. `correlation_range`: "positive", the AR(1) correlations of recruitment and of F over time and length lie between 0 and 1, as the logistic transform of the `logit_*` parameters; "symmetric", they lie between -1 and 1, as 2 * logistic - 1, so a `logit_*` value of 0 means no correlation and negative correlation can be estimated. A `logit_*` start or fixed value has a different meaning under the two settings: a correlation rho is `qlogis(rho)` under "positive" and `qlogis((rho + 1) / 2)` under "symmetric". `initial_deviations`: deviations of the log numbers at age in the first period (the initial numbers). "cumulative", the log numbers of each age after the first are those of the previous age minus init_Z plus a normal deviation, so the deviations accumulate over ages and `dev_log_N0` has `nage - 1` entries; "independent", Equation 11 of Zhang and Cadigan (2022), log N(a) = log R(1) - init_Z (a - 1) + e(a) for ages a = 1 to `nage`, where R(1) is the recruitment of the first period and the deviations e(a) are independent normal with the standard deviation of the initial deviations; `dev_log_N0` then has `nage` entries. The first age also has a deviation, and the reported recruitment `Rec` of the first period (with its standard error) is the number at the first age in that period, this deviation included; the recruitment deviations `dev_log_R` keep their density. With `initial_plus_group = "equilibrium"` the deviation of the plus group multiplies the sum of the older cohorts. With `initial_length = "growth"` the length distribution of each age follows from growth and survival at init_Z without deviations, and the deviation of an age multiplies the numbers of that age only. This setting does not belong to the set "von_bertalanffy". With `initial_length = "growth"` and `initial_plus_group = "equilibrium"` a population with constant recruitment, no fishing and init_Z equal to M stays constant over time; with the original structure it does not. The settings used are stored in the `structure` element of the fit; `initial_deviations` is stored only when it is "independent", so that the stored structure of a fit with the default form is the same as in earlier versions. |
 | `start_spread` | `0.15` | 第二个及之后起点的初值上所加正态偏差的标准差（优化器尺度，多数为对数）。默认 0.15 与早期版本的起点相同。用于报告的结果建议用多个起点并取更大的值（例如 0.5），见返回说明之后的段落。 | Standard deviation of the normal deviates added to the starting values (on the scale of the optimizer, mostly logarithms) of the second and later starts. The default 0.15 keeps the starts used by earlier versions. For results that will be reported, use several starts and a larger value (for example 0.5); see the paragraphs after the return value. |
-| `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是原始的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. |
+| `t0_lower` | `0` | von Bertalanffy 参数 t0 的下限，单位为年。模型使用 t0 = t0_lower + exp(log_t0)。默认 0 是原始的参数化，此时 t0 为正。取负值（例如 -1）时允许 t0 为负；已知的 t0 写成 `parameters = list(log_t0 = log(t0 - t0_lower))`。报告的 t0 始终在自然尺度上。给出的 log_t0 按新的下限解读，拟合会给出提示信息，说明它对应的 t0（`silent = TRUE` 时不显示）。 | Lower limit of the von Bertalanffy parameter t0 in years. The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original parameterization, in which t0 is positive. Set a negative value, for example -1, to allow negative t0; a known t0 is then supplied as `parameters = list(log_t0 = log(t0 - t0_lower))`. Reported t0 values are always on the natural scale. A supplied log_t0 is read with the new limit, and the fit gives a message with the t0 that it means (unless `silent = TRUE`). |
 | `survey_q` | `NULL` | 可选的体长别调查可捕性：每个体长组一个正值的数值向量，用来代替由 sel_L50 和 sel_L95 得到的 logistic 曲线，例如穹顶形曲线；`survey_catchability()` 可以算出 logistic 和穹顶形曲线。每个体长组一行、每个时间步一列的矩阵给出按体长和时间步的调查可捕性，例如用于调查网具更换之后；只有一列的矩阵按向量读取。survey_q 与 sel_L50 或 sel_L95 同时给出会报错；输入列表或已保存的拟合中已有这两项时，在调用中加上 `sel_L50 = NULL, sel_L95 = NULL`。这些值是固定输入，不参与估计。 | Optional survey catchability at length: a numeric vector with one positive value per length bin. It is used in place of the logistic curve from sel_L50 and sel_L95, for example for a dome-shaped curve; `survey_catchability()` computes logistic and dome-shaped curves. A matrix with one row per length bin and one column per time step gives survey catchability by length and time step, for example after a change of survey gear; a matrix with one column is read as the vector. Supplying survey_q together with sel_L50 or sel_L95 is an error; when an input bundle or a stored fit already holds these two, add `sel_L50 = NULL, sel_L95 = NULL` to the call. The values are fixed inputs and are not estimated. |
 | `survey_q_age` | `NULL` | 可选的按年龄的调查可捕性系数：每个年龄组一个正值的数值向量。默认 NULL 表示各年龄均为 1。这时体长别调查指数的期望值等于 q(体长) 乘以各年龄的 `survey_q_age[年龄]` 与该体长、该年龄尾数乘积之和，其中 q(体长) 是由 sel_L50 和 sel_L95 或由 survey_q 得到的体长别调查可捕性。给出 survey_q_age 而 parameters 中没有 mean_log_R 的初值时，mean_log_R 的默认初值提高 `-log(survey_q_age[1])`，因为调查只看到补充个体的这一部分。此时拟合给出一条提示（`silent = TRUE` 时不给出），同一次调用中的多次拟合只给出一次。 | Optional survey catchability multiplier by age: a numeric vector with one positive value per age class. The default NULL is 1 for every age. The expected survey index at length is then q(length) times the sum over ages of `survey_q_age[age]` times numbers at that length and age, where q(length) is the survey catchability at length from sel_L50 and sel_L95 or from survey_q. When survey_q_age is supplied and parameters holds no start for mean_log_R, the default start of mean_log_R is raised by `-log(survey_q_age[1])`, because the survey then sees only that fraction of the recruits. The fit gives a message with this change unless `silent = TRUE`, once per call of a function that runs several fits. |
 
@@ -6465,7 +6470,7 @@ check$warnings
 <a id="check_fit"></a>
 ## `check_fit`
 
-用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time–length heatmap, actual-time lag correlations and a normal QQ plot.
+用时间–体长热图、按实际时间间隔计算的滞后相关及正态 QQ 图检查条件观测残差。 / Inspect conditional observation residuals with a time-length heatmap, actual-time lag correlations and a normal QQ plot.
 
 ```r
 check_fit (fit, max_lag = 5)
@@ -7003,7 +7008,7 @@ lapply(fits, function(fit) fit$diagnostics)
 sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters = NULL,
     parameters.L = NULL, parameters.U = NULL, map = NULL, M = NULL, ncores = 1, train_times = 1,
     control = list(), F_structure = c("group_year", "year"), polish = TRUE, model = c("acl",
-        "alscl"), nstarts = 1, allow_M_mismatch = FALSE, structure = list())
+        "alscl"), nstarts = 1, allow_M_mismatch = FALSE, structure = list(), t0_lower = NULL)
 ```
 
 | 参数 / Argument | 默认值 / Default | 中文说明 | English description |
@@ -7025,6 +7030,7 @@ sim_model (iter_range = 4:100, sim_data_path = ".", output_dir = ".", parameters
 | `nstarts` | `1` | 每个模拟重复的独立初值数，在重复内部依次运行；ncores 仍控制外层并行重复数。 | Independent starts per replicate, run sequentially; ncores still controls outer replicate workers. |
 | `allow_M_mismatch` | `FALSE` | 逻辑值。FALSE（默认）在给定的 M 与重复文件记录的自然死亡率不同时停止。TRUE 按给定的 M 拟合，用于研究自然死亡率设定有误的情形。 | Logical. FALSE (default) stops when a supplied M differs from the natural mortality rate recorded in a replicate file. TRUE fits the supplied M, for a study of misspecified natural mortality. |
 | `structure` | `list()` | 拟合模型的可选结构，与 `run_acl()` 和 `run_alscl()` 中相同。默认（空列表）为原始结构。取值不必等于生成模拟重复的参数列表中的 `structure`：取不同的值就是拟合另一种结构的模型，例如对用累加初始偏差模拟的数据使用 `list(initial_deviations = "independent")`。 | Optional model structures of the fitted model, as in `run_acl()` and `run_alscl()`. The default, an empty list, is the original structure. The value need not equal the `structure` element of the parameter list that generated the replicates: a different value fits a model with another structure, for example `list(initial_deviations = "independent")` for data simulated with cumulative initial deviations. |
+| `t0_lower` | `NULL` | 仅用于 ALSCL。t0 的下限，与 `run_alscl()` 相同；NULL（默认）取 0。设为负值（例如 -1）即可拟合用负 t0 生成的重复。 | ALSCL only. Lower limit of t0, as in `run_alscl()`; NULL (default) uses 0. Set a negative value, for example -1, to fit replicates generated with a negative t0. |
 
 **返回 / Returns:** 返回包含 iter 和 elapsed 的具名拟合或错误记录列表；每个结果同时替换对应 `result_rep_<id>` 文件。
 
@@ -7169,13 +7175,13 @@ self_test (fit, nsim = 20, seed = NULL, process = c("conditional", "resample"), 
 | `silent` | `TRUE` | 不显示拟合过程信息。 | Suppress fitting progress messages. |
 | `save_fits` | `FALSE` | 是否在结果中保留各次重新拟合（不含 TMB 对象）。 | Keep the refits, without the TMB object, in the result. |
 
-**返回 / Returns:** `alscl_self_test` 对象：`replicates`（每次重新拟合的数值检查、耗时、报错和警告）、`series` 和 `parameters`（每个重复、量和时间步或参数的真值、估计值、标准误、区间、误差、相对误差和是否覆盖）、`by_year`、`series_summary` 和 `parameter_summary`（通过检查的重新拟合的中位相对误差、第 10 和第 90 百分位数、中位绝对相对误差和覆盖率）、`screen`（通过检查的比例）、`failures`、`settings`（含 `process_mean_truth`，即 mean_log_F 和 mean_log_R 真值的定义）、`simulation`（`simulate_fit()` 的 metadata）和 `fits`。`print()` 和 `summary()` 显示汇总，`plot_self_test()` 画相对误差。
+**返回 / Returns:** `alscl_self_test` 对象：`replicates`（每次重新拟合的数值检查、耗时、报错和警告）、`series` 和 `parameters`（每个重复、量和时间步或参数的真值、估计值、标准误、区间、误差、相对误差和是否覆盖）、`by_year`、`series_summary` 和 `parameter_summary`（通过检查的重新拟合的中位相对误差、第 10 和第 90 百分位数、中位绝对相对误差和覆盖率）、`screen`（通过检查的比例）、`failures`、`settings`、`simulation`（`simulate_fit()` 的 metadata）和 `fits`。`print()` 和 `summary()` 显示汇总，`plot_self_test()` 画相对误差。
 
-An `alscl_self_test` object: `replicates` (numerical checks, time, error and warnings of each refit), `series` and `parameters` (truth, estimate, standard error, interval, error, relative error and coverage for each replicate and quantity and time step, or parameter), `by_year`, `series_summary` and `parameter_summary` (median relative error, 10th and 90th percentiles, median absolute relative error and coverage over the refits that pass the checks), `screen` (the share that pass), `failures`, `settings` (with `process_mean_truth`, the definition of the truth of mean_log_F and mean_log_R), `simulation` (the metadata of `simulate_fit()`) and `fits`. `print()` and `summary()` show the summaries; `plot_self_test()` draws the relative errors.
+An `alscl_self_test` object: `replicates` (numerical checks, time, error and warnings of each refit), `series` and `parameters` (truth, estimate, standard error, interval, error, relative error and coverage for each replicate and quantity and time step, or parameter), `by_year`, `series_summary` and `parameter_summary` (median relative error, 10th and 90th percentiles, median absolute relative error and coverage over the refits that pass the checks), `screen` (the share that pass), `failures`, `settings`, `simulation` (the metadata of `simulate_fit()`) and `fits`. `print()` and `summary()` show the summaries; `plot_self_test()` draws the relative errors.
 
-conditional 时每个重复的真值都是源拟合的种群；resample 时每个重复有自己的种群，由模型从新抽取的偏差算出，检验也包括估计的过程方差。标量参数的真值是源拟合的估计值，只有一个例外。conditional 时偏差是拟合值，而不是从其分布中抽取的值，其均值不一定为零，所以 mean_log_F 和 mean_log_R 的真值取实际的对数 F 和对数补充量的均值，即源拟合的估计值加上拟合偏差在该过程所有格上的均值（F 为所有年龄或体长组和所有时间步，补充量为所有时间步），map 设为共享值或固定值的格按模板实际使用的值计入。重新拟合估计的就是这个均值，因为数据提供的是过程水平的信息，不能区分均值参数和偏差各占多少。resample 时新抽取的偏差均值为零，真值是源拟合的估计值。`settings$process_mean_truth` 相应为 "realized" 或 "source"。其他参数也可能以同样的方式与偏差相互替代，例如 init_Z 与初始偏差的均值，它们的真值仍是源拟合的估计值，此时时间序列比这些参数更能说明问题。两种情形下固定参数、自然死亡率、调查可捕性、生长和成熟度都保持不变。每次重新拟合使用源拟合的模型、结构、map、边界、固定值和固定输入。original 时停在局部最优的重新拟合算作误差，与实际数据的情形一样；estimates 更快，但可能掩盖局部最优和数据不能确定的参数。相对误差为 (估计值 - 真值) / 真值；真值为零时没有定义，真值接近零（如 t0 或接近零的相关系数）时很大，此时看 `error`。时间序列有标准误时（SSB、补充量、总生物量和总丰度，不含 F 的汇总）和估计参数（区间同 `extract_parameters()`）计算覆盖率。
+conditional 时每个重复的真值都是源拟合的种群；resample 时每个重复有自己的种群，由模型从新抽取的偏差算出，检验也包括估计的过程方差。两种情形下标量参数的真值都是源拟合的估计值。conditional 时偏差是拟合值，其算术平均不一定为零；但在估计值处，AR(1) 过程的均值参数（mean_log_F、mean_log_R）等于拟合过程的加权平均，其中第一个和最后一个时间步的权重较大，重新拟合若找回了这个过程，也就找回了这个加权平均。F 和补充量的水平由时间序列衡量，其真值是实现的过程。可能与偏差相互替代的参数（如 init_Z 与初始偏差）也更适合用时间序列判断。两种情形下固定参数、自然死亡率、调查可捕性、生长和成熟度都保持不变。每次重新拟合使用源拟合的模型、结构、map、边界、固定值和固定输入。original 时停在局部最优的重新拟合算作误差，与实际数据的情形一样；estimates 更快，但可能掩盖局部最优和数据不能确定的参数。相对误差为 (估计值 - 真值) / |真值|，所以无论真值正负，正值都表示高估；真值为零时没有定义，真值接近零（如 t0 或接近零的相关系数）时很大，此时看 `error`。时间序列有标准误时（SSB、补充量、总生物量和总丰度，不含 F 的汇总）和估计参数（区间同 `extract_parameters()`）计算覆盖率。
 
-With conditional, the truth of every replicate is the population of the source fit; with resample, each replicate has its own population, computed by the model from the new deviations, and the test also covers the estimated process variances. The truth of a scalar parameter is its estimate in the source fit, with one exception. In conditional mode the deviations are the fitted values, not a draw from their distribution, and their mean need not be zero, so the truth of mean_log_F and mean_log_R is the mean of the realized log F and log recruitment: the source estimate plus the mean of the fitted deviations over all cells of the process (all ages or length bins and time steps for F, all time steps for recruitment), with tied and fixed cells counted at the values the template uses. A refit estimates this mean, because the data inform the level of a process and not its split between the mean parameter and the deviations. In resample mode the new deviations have mean zero and the truth is the source estimate. `settings$process_mean_truth` is "realized" or "source" accordingly. Other parameters can trade off with the deviations in the same way, for example init_Z with the mean of the initial deviations, and keep the source estimate as truth; the time series are then a better measure than these parameters. Fixed parameters, natural mortality, survey catchability, growth and maturity are unchanged in both modes. Each refit uses the model, structure, map, bounds, fixed values and fixed inputs of the source fit. With original, a refit that stops at a local optimum counts as an error, as it would with real data; estimates is faster but can hide local optima and parameters that the data do not determine. The relative error is (estimate - truth) / truth; it is undefined for a zero truth and large for a truth near zero (t0, or a correlation near zero), where `error` is the measure to read. Coverage is computed for series with standard errors (SSB, recruitment, total biomass and abundance, not the summary of F) and for the estimated parameters, with the interval of `extract_parameters()`.
+With conditional, the truth of every replicate is the population of the source fit; with resample, each replicate has its own population, computed by the model from the new deviations, and the test also covers the estimated process variances. The truth of a scalar parameter is its estimate in the source fit, in both modes. In conditional mode the deviations are the fitted values and their arithmetic mean need not be zero, but at the estimate the mean parameter of an AR(1) process (mean_log_F, mean_log_R) equals a weighted mean of the fitted process in which the first and last time steps weigh more, and a refit that recovers the process recovers this weighted mean. The level of F and recruitment is measured by the time series, whose truth is the realized process. Parameters that can trade off with the deviations, for example init_Z with the initial deviations, are also better judged by the time series. Fixed parameters, natural mortality, survey catchability, growth and maturity are unchanged in both modes. Each refit uses the model, structure, map, bounds, fixed values and fixed inputs of the source fit. With original, a refit that stops at a local optimum counts as an error, as it would with real data; estimates is faster but can hide local optima and parameters that the data do not determine. The relative error is (estimate - truth) / |truth|, so a positive value is an overestimate for any sign of the truth; it is undefined for a zero truth and large for a truth near zero (t0, or a correlation near zero), where `error` is the measure to read. Coverage is computed for series with standard errors (SSB, recruitment, total biomass and abundance, not the summary of F) and for the estimated parameters, with the interval of `extract_parameters()`.
 
 估计值能恢复真值的自检说明，在模型假设成立时，模型能从与此类似的数据估计其参数（Deroba et al. 2015）。它不能说明自然死亡率、调查可捕性或生长形式设错带来的偏差；检验这些需要用假设不同的操作模型做模拟（`sim_model()`）。并行进程的个数不改变结果。
 
@@ -7586,6 +7592,8 @@ Error messages are quoted as the package prints them.
 | `plot_VB()` 只画出一条线，没有区间 / `plot_VB()` draws a line without an interval | 生长参数被固定 / The growth parameters are fixed | 属于预期；用 `map` 释放 / Expected; release them with `map` |
 | 第一次拟合报错，信息中出现 `TMB::compile`、`make`、`g++` 或 `clang` / The first fit names `TMB::compile`, `make`, `g++` or `clang` | 没有编译器，或 Rtools 对应另一个 R 版本 / No compiler, or Rtools for another R version | 安装编译器（第 4 步），重启 R / Install the compiler (step 4), restart R |
 | `Install RcppEigen to compile model templates` 或 `Model sources are missing` / `Install RcppEigen to compile model templates` or `Model sources are missing` | 缺少 RcppEigen，或安装损坏 / RcppEigen absent, or a damaged installation | 安装 RcppEigen 或重新安装 ALSCL / Install RcppEigen or reinstall ALSCL |
+| `All optimization starts failed`，信息中有 `NA/NaN`，且之前有警告说 TMB 构建时用的是另一个 Matrix ABI 版本 / `All optimization starts failed` with `NA/NaN`, after a warning that TMB was built with another Matrix ABI version | TMB 的二进制包与已安装的 Matrix 不匹配 / The TMB binary does not match the installed Matrix package | 运行 `install.packages("TMB", type = "source")` 并重启 R；原因在此时，报错信息会给出两个 ABI 版本 / Run `install.packages("TMB", type = "source")` and restart R; the error names the two ABI versions when this is the cause |
+| 安装或 `library(ALSCL)` 提示需要 TMB 1.9.21 或更高版本 / The installation or `library(ALSCL)` says that TMB 1.9.21 or later is required | CRAN 不再为当前 R 版本更新软件包，它提供的 TMB 版本较旧 / CRAN no longer updates its packages for this R version, so the TMB it offers is older | 运行 `install.packages("TMB", type = "source")`（需要 C++ 编译器，见第 4 步），再重新安装 ALSCL / Run `install.packages("TMB", type = "source")`, which needs a C++ compiler (step 4), then install ALSCL again |
 | `Socket worker loaded a different ALSCL installation` | 进程先找到了另一个库中的副本 / A worker found another copy in a different library | 只保留一个安装，或用 `ncores = 1` / Keep one installation, or use `ncores = 1` |
 | Windows 或 RStudio 中 socket 进程失败，或 `Parallel standard errors failed` / Socket workers fail on Windows or in RStudio, or `Parallel standard errors failed` | 新的 R 进程无法启动 / The new R processes could not start | 用 `ncores = 1` 或 `alscl_speed(sd_cores = 1)` / Use `ncores = 1` or `alscl_speed(sd_cores = 1)` |
 | 回溯分析后 `rho_text$Rho` 是 `NA` / `rho_text$Rho` is `NA` after a retrospective analysis | 某次拟合未通过数值检查 / A fit failed the numerical checks | 查看 `fit_diagnostics` 和 `rho_by_peel`，修正该拟合 / Read `fit_diagnostics` and `rho_by_peel`, fix that fit |
@@ -8021,9 +8029,9 @@ plot_self_test(st)
 
 `self_test()` does steps 2 and 3 in one call: it simulates `nsim` data sets with `simulate_fit()`, refits the same model to each with the settings stored in the fit, and compares the estimates with the values used to simulate them. The example uses an ACL fit, `a`, because one ACL fit takes a few seconds; `self_test(b)` works in the same way for ALSCL. `process` has the meaning of step 2. With `"conditional"` the population stays that of the source fit, so the truth is the same in every replicate; with `"resample"` new recruitment, F and initial deviations are drawn from their estimated distribution, so each replicate has its own truth and the test also covers the estimated process variances. By default each refit starts from the starting values of the source fit, with its number of starts, so that a refit that stops at a local optimum counts as an error, as it would with real data. `start = "estimates"` starts each refit at the values used to simulate; this is faster but can hide local optima and parameters that the data do not determine. `ncores` fits several data sets in parallel.
 
-取 `"conditional"` 时，源拟合的偏差保持拟合值不变，其均值不一定为零。数据提供的是 F 和补充量水平的信息，不能区分这一水平中 `mean_log_F` 或 `mean_log_R` 与偏差各占多少，所以这两个参数的真值取源拟合的对数 F 和对数补充量的均值，即其估计值加上拟合偏差的均值（F 取所有年龄或体长组和所有时间步，补充量取所有时间步）。取 `"resample"` 时，新抽取的偏差均值为零，真值是源拟合的估计值。`st$settings$process_mean_truth` 记录采用的是哪种定义（`"realized"` 或 `"source"`）。其他参数的真值仍是源拟合的估计值；其中有些参数（如 `init_Z`）也可能以同样的方式与偏差相互替代，此时时间序列更能说明问题。
+取 `"conditional"` 时，源拟合的偏差保持拟合值不变，其算术平均不一定为零。所有标量参数的真值（包括 `mean_log_F` 和 `mean_log_R`）仍是源拟合的估计值：在估计值处，AR(1) 过程的均值参数等于拟合过程的加权平均，其中第一个和最后一个时间步的权重较大；重新拟合若找回了这个过程，也就找回了这个加权平均。F 和补充量的水平由时间序列衡量，其真值是实现的过程。可能与偏差相互替代的参数（如 `init_Z` 与初始偏差）也更适合用时间序列判断。
 
-With `"conditional"` the deviations of the source fit are kept as they were fitted, and their mean need not be zero. The data inform the level of F and of recruitment, not how that level is split between `mean_log_F` or `mean_log_R` and the deviations, so the truth of these two parameters is the mean of the fitted log F and log recruitment of the source fit: its estimate plus the mean of the fitted deviations (over all ages or length bins and time steps for F, over all time steps for recruitment). With `"resample"` the new deviations are drawn with mean zero and the truth is the estimate of the source fit. `st$settings$process_mean_truth` records which definition applies (`"realized"` or `"source"`). Other parameters keep the source estimate as truth; some of them, such as `init_Z`, can trade off with the deviations in the same way, and the time series are then the better measure.
+With `"conditional"` the deviations of the source fit are kept as they were fitted, and their arithmetic mean need not be zero. The truth of every scalar parameter, `mean_log_F` and `mean_log_R` included, is still its estimate in the source fit: at the estimate, the mean parameter of an AR(1) process equals a weighted mean of the fitted process in which the first and last time steps weigh more, and a refit that recovers the process recovers this weighted mean. The level of F and recruitment is measured by the time series, whose truth is the realized process. Parameters that can trade off with the deviations, such as `init_Z` with the initial deviations, are also better judged by the time series.
 
 打印 `st` 会显示有多少次重新拟合通过数值检查，以及每个时间序列和每个估计参数的中位相对误差（即偏差）、它的第 10 和第 90 百分位数、中位绝对相对误差和近似 95% 区间的覆盖率。相对误差为 (estimate - truth) / truth。这里的 F 是各年龄的平均值，没有标准误，所以没有覆盖率。`st$by_year` 按年份给出同样的汇总，`st$replicates` 给出每次重新拟合的检查结果，`st$series` 和 `st$parameters` 列出每个估计值及其真值；未通过检查的重新拟合留在这些表中，但不进入汇总。在记录运行中五次重新拟合都通过检查。中位相对误差为产卵生物量 -0.2%、补充量 -0.5%、平均 F 1.9%；产卵生物量和补充量的 100 个区间中分别有 99 个和 98 个包含真值（[self-test-summary.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/model-validation/self-test-summary.csv））。五套数据只演示函数的用法；已发表的自检通常每个拟合用 100 套（[Deroba et al. 2015](https://doi.org/10.1093/icesjms/fst237)）。
 

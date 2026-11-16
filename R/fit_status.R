@@ -47,6 +47,36 @@
     stringsAsFactors = FALSE)
 }
 
+# Verdict of the numerical screen of a source fit for project_model() and
+# simulate_fit(): the stored diagnostics when the fit has them. An older fit
+# without them is FALSE when one of its stored fields shows a failure
+# (nonzero convergence code, gradient of 0.001 or more, Hessian not positive
+# definite, a bound reached) and NA (unknown) otherwise.
+.acl_source_screen <- function(fit) {
+  stored <- fit$diagnostics$numerical_ok
+  if (is.logical(stored) && length(stored) == 1L && !is.na(stored)) return(stored)
+  status <- tryCatch(.acl_fit_status(fit), error = function(e) NULL)
+  if (is.null(status)) return(NA)
+  failed <- (!is.na(status$convergence_code) && status$convergence_code != 0) ||
+    (is.finite(status$max_abs_gradient) && status$max_abs_gradient >= 1e-3) ||
+    identical(status$pdHess, FALSE) || isTRUE(status$bound_hit) ||
+    isTRUE(status$natural_boundary)
+  if (failed) FALSE else NA
+}
+
+# Stop with the recorded error when a batch function returned a failure record
+# (class alscl_fit_error, or a list with an error and no report) instead of a
+# fitted result.
+.acl_stop_if_failed <- function(fit, name = "fit") {
+  if (is.list(fit) && is.null(fit$report) &&
+      (inherits(fit, "alscl_fit_error") || !is.null(fit$error) || identical(fit$converge, "FAILED"))) {
+    reason <- if (is.character(fit$error) && length(fit$error) == 1L && !is.na(fit$error))
+      paste0(" Fit error: ", fit$error) else ""
+    stop(name, " is a failed fit without estimates and cannot be used here.", reason, call. = FALSE)
+  }
+  invisible(fit)
+}
+
 # Normalize survey observations once before validating or computing diagnostics.
 .acl_survey_data <- function(data.CatL) {
   if (length(dim(data.CatL)) != 2L || ncol(data.CatL) < 2L)

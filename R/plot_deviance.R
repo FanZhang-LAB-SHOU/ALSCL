@@ -69,6 +69,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
                           font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL,
                           strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL,
                           title_hjust = NULL) {
+  .acl_stop_if_failed(model_result, "model_result")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")

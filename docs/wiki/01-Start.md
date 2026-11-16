@@ -4,7 +4,7 @@
 
 [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.4.4.9000 · 简体中文 / English**
+**ALSCL 2.4.5 · 简体中文 / English**
 
 本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
 
@@ -44,13 +44,13 @@ install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 ```
 
-ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
+ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB 1.9.21 或更高版本、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
 
-ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
+ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB 1.9.21 or later, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
 
-如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。
+如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。在较旧的 R 版本上，CRAN 提供的 TMB 现成二进制包可能低于 1.9.21，安装或 `library(ALSCL)` 会停止，并提示需要 TMB 1.9.21 或更高版本。运行 `install.packages("TMB", type = "source")`（需要第 1 步的编译器），再重新安装 ALSCL。
 
-If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1.
+If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1. On an older R version, the TMB that CRAN offers as a ready-made package can be older than 1.9.21, and the installation or `library(ALSCL)` then stops with a message that TMB 1.9.21 or later is required. Run `install.packages("TMB", type = "source")`, which needs the compiler from step 1, and install ALSCL again.
 
 <a id="getting-started-load"></a>
 
@@ -70,6 +70,10 @@ Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching
 你应看到 2.4.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
 
 You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+
+如果加载时出现警告，说 TMB 构建时用的是另一个 Matrix ABI 版本，说明 TMB 的二进制包与已安装的 Matrix 不匹配，之后每次拟合都可能以 `All optimization starts failed` 和 `NA/NaN` 失败。运行 `install.packages("TMB", type = "source")`，重启 R 后重新加载软件包。
+
+If loading the package gives a warning that TMB was built with another Matrix ABI version, the TMB binary does not match the installed Matrix package, and every fit can then fail with `All optimization starts failed` and `NA/NaN`. Run `install.packages("TMB", type = "source")`, restart R and load the package again.
 
 <a id="getting-started-first-fit"></a>
 

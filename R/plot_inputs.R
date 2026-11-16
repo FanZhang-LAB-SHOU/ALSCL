@@ -224,6 +224,7 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
   if (is.null(line_color)) line_color <- acl_theme("line_color")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (!is.list(fit)) stop("fit must be a fitted ACL or ALSCL result.", call. = FALSE)
+  .acl_stop_if_failed(fit)
   subtitle <- NULL
   if (type == "age") {
     info <- .acl_derived_fit(fit)

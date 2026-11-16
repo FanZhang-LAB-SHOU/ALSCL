@@ -46,6 +46,7 @@
 #' @export
 plot_SSB_Rec <- function(model_result, age_at_recruitment = NULL,
                          point_size = NULL, point_color = NULL, point_shape = 16, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+  .acl_stop_if_failed(model_result, "model_result")
   # NULL inherits the global palette.
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(point_color)) point_color <- acl_theme("point_color")

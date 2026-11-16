@@ -354,8 +354,11 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
   fit_names <- setdiff(fit_names, c("ncores", "silent", "output"))
   if (is.list(data.CatL) && !is.data.frame(data.CatL)) {
     explicit <- intersect(setdiff(supplied, "data.CatL"), fit_names)
-    fit_args <- .acl_bundle_args(data.CatL, model_type,
-                                mget(explicit, envir = environment()))
+    overrides <- mget(explicit, envir = environment())
+    fit_args <- .acl_bundle_args(data.CatL, model_type, overrides)
+    stored <- .acl_stored_parameters(data.CatL, model_type)
+    .acl_replaced_parameters_note(.acl_replaced_parameters(stored$parameters, overrides, fit_args$map),
+                                  silent, stored$label)
   } else {
     fit_args <- mget(fit_names, envir = environment())
   }
@@ -373,12 +376,17 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
          "nyear * peel_step is ", as.double(nyear) * peel_step, " and the data have ",
          ncol(fit_args$data.CatL) - 1L, " time steps.", call. = FALSE)
   q_age_shift <- .acl_q_age_start_shift(fit_args)
+  symmetric_starts <- .acl_symmetric_supplied(fit_args$structure, fit_args$parameters, model_type)
+  t0_start <- .acl_t0_lower_start(fit_args$t0_lower, fit_args$parameters, model_type)
   fit_args <- .acl_retro_fixed_scalars(fit_args)
   # The full fit and the peels are silent fits, so the notes on a part of the
-  # set "von_bertalanffy" and on the start of mean_log_R with survey_q_age are
-  # given here, once for the call.
+  # set "von_bertalanffy", on the start of mean_log_R with survey_q_age, on
+  # correlation starts under the symmetric range and on the start of log_t0
+  # under t0_lower are given here, once for the call.
   .acl_partial_set_note(fit_args$structure, model_type, silent)
   .acl_q_age_start_note(q_age_shift, fit_args$survey_q_age, silent)
+  .acl_symmetric_start_note(symmetric_starts, silent)
+  .acl_t0_lower_start_note(t0_start, silent)
 
   progress <- function(...) if (!silent) message(...)
   t_grand <- proc.time()

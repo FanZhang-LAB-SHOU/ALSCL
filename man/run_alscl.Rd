@@ -122,7 +122,10 @@ per model step, not per calendar year.}
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
 parameters, a smaller maximum gradient and objective increase at most
-\code{1e-8} (roundoff tolerance). FALSE skips refinement. Raw optimizer codes
+\code{1e-8} (roundoff tolerance). When the gradient is still 0.001 or more
+after these steps, a second pass of up to five steps accepts an objective
+increase within the working precision of the objective,
+\code{sqrt(.Machine$double.eps)} times its size. FALSE skips refinement. Raw optimizer codes
 remain unchanged; inspect \code{optimizer_history}, \code{refinement}, and
 \code{diagnostics} separately. This may change estimates at numerical precision.
 On checked TMB versions, the refinement Hessian shares the sd_cores limit
@@ -206,9 +209,10 @@ Zhang and Cadigan (2022), log N(a) = log R(1) - init_Z (a - 1) + e(a)
 for ages a = 1 to \code{nage}, where R(1) is the recruitment of the first
 period and the deviations e(a) are independent normal with the
 standard deviation of the initial deviations; \code{dev_log_N0} then has
-\code{nage} entries. The first age also has a deviation, so the numbers at
-the first age in the first period differ from the reported recruitment
-\code{Rec} of that period. With \code{initial_plus_group = "equilibrium"} the
+\code{nage} entries. The first age also has a deviation, and the reported
+recruitment \code{Rec} of the first period (with its standard error) is the
+number at the first age in that period, this deviation included; the
+recruitment deviations \code{dev_log_R} keep their density. With \code{initial_plus_group = "equilibrium"} the
 deviation of the plus group multiplies the sum of the older cohorts.
 With \code{initial_length = "growth"} the length distribution of each age
 follows from growth and survival at init_Z without deviations, and the
@@ -232,8 +236,11 @@ earlier versions. See Details for when to use a larger value.}
 The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 parameterization, in which t0 is positive. Set a negative value, for
 example -1, to allow negative t0; a known t0 is then supplied as
-\code{parameters = list(log_t0 = log(t0 - t0_lower))}. Reported t0 values are
-always on the natural scale.}
+\code{parameters = list(log_t0 = log(t0 - t0_lower))}. When log_t0 is not
+supplied, its default start is converted so that t0 keeps its default
+value (1/60 year, fixed by default). A supplied log_t0 is read with the
+new limit, and the fit gives a message with the t0 that it means (unless
+\code{silent = TRUE}). Reported t0 values are always on the natural scale.}
 
 \item{survey_q}{Optional survey catchability at length: a numeric vector
 with one positive value per length bin. It is used in place of the
@@ -308,7 +315,9 @@ contains data.CatL, data.wgt and data.mat, shared settings in fit_args, and
 optional model settings in fit_config$alscl. Settings are resolved in this
 order: data tables, fit_args, selected fit_config, explicit call arguments
 (highest priority). Explicit parameters, map and control replace the entire
-corresponding list; NULL is preserved. Other top-level fields in a structured
+corresponding list; NULL is preserved. When an explicit parameters list
+leaves out stored parameter values, the fit gives a message that names
+them (unless \code{silent = TRUE}). Other top-level fields in a structured
 bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.
@@ -413,7 +422,8 @@ same kind. A survey catchability that declines with length or age is
 otherwise fitted as higher mortality.
 
 ALSCL tracks joint length-age abundance and F at length; FA summarizes
-effective cohort survival. log_t0 represents a positive t0 below rec.age.
+effective cohort survival. t0 = t0_lower + exp(log_t0) lies below rec.age;
+with the default t0_lower = 0 it is positive.
 }
 \examples{
 \donttest{

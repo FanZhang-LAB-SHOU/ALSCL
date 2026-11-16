@@ -63,8 +63,51 @@
   args
 }
 
+# The stored parameters list of a bundle and the expression that names it in
+# messages: fit_config$<model>, then fit_args, then a flat list of arguments.
+# The top-level parameters entry of a structured bundle holds simulation
+# settings and is not a fitting setting. NULL when nothing is stored.
+.acl_stored_parameters <- function(x, model) {
+  if (!is.list(x) || is.data.frame(x)) return(NULL)
+  if (any(c("fit_args", "fit_config") %in% names(x))) {
+    config <- if (is.list(x$fit_config)) x$fit_config[[model]]
+    if (is.list(config) && "parameters" %in% names(config))
+      return(list(parameters = config$parameters, label = paste0("x$fit_config$", model, "$parameters")))
+    if (is.list(x$fit_args) && "parameters" %in% names(x$fit_args))
+      return(list(parameters = x$fit_args$parameters, label = "x$fit_args$parameters"))
+    return(NULL)
+  }
+  if ("parameters" %in% names(x)) list(parameters = x$parameters, label = "x$parameters")
+}
+
+# Stored parameter values that a parameters argument of the call drops: a
+# list in the call replaces the stored list, so a stored entry that the call
+# does not repeat takes its default start, and a map entry that fixes it
+# (a factor with only NA values) fixes it at that default. `map` is the map
+# of the resolved fit, which may come from the call. Returns list(dropped,
+# fixed), or NULL when the call has no parameters argument, nothing is stored
+# or nothing is dropped.
+.acl_replaced_parameters <- function(stored, overrides, map) {
+  if (!is.list(overrides) || !"parameters" %in% names(overrides) || !is.list(stored) || !length(stored))
+    return(NULL)
+  new <- overrides[["parameters"]]
+  dropped <- setdiff(names(stored), if (is.list(new)) names(new))
+  dropped <- dropped[!is.na(dropped) & nzchar(dropped)]
+  if (!length(dropped)) return(NULL)
+  fixed <- if (is.list(map) && !is.data.frame(map))
+    dropped[vapply(dropped, function(nm) {
+      entry <- map[[nm]]
+      is.factor(entry) && length(entry) > 0L && all(is.na(entry))
+    }, logical(1))] else character()
+  list(dropped = dropped, fixed = fixed)
+}
+
 .acl_fit_bundle <- function(x, model, call, frame) {
   explicit <- setdiff(names(as.list(call)[-1L]), "data.CatL")
-  args <- .acl_bundle_args(x, model, mget(explicit, envir = frame, inherits = FALSE))
+  overrides <- mget(explicit, envir = frame, inherits = FALSE)
+  args <- .acl_bundle_args(x, model, overrides)
+  stored <- .acl_stored_parameters(x, model)
+  .acl_replaced_parameters_note(.acl_replaced_parameters(stored$parameters, overrides, args$map),
+                                isTRUE(args$silent), stored$label)
   do.call(if (model == "acl") run_acl else run_alscl, args, quote = TRUE)
 }

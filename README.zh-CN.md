@@ -16,7 +16,7 @@ ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估�
 
 围绕这两个模型，软件包提供数据准备与检查、多初值并行拟合、诊断、模型比较、回溯分析、敏感性情景、似然剖面、投影、从拟合模型模拟调查数据、预测检验、可移植的评估存档和 27 个绘图函数。
 
-**最新版本：2.4.4** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
+**最新版本：2.4.5** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
 
 ## 能做什么
 
@@ -32,10 +32,10 @@ ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估�
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # 开发版（main 分支）
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.4")   # 指定版本
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.5")   # 指定版本
 ```
 
-ALSCL 需要 R 4.1 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
+ALSCL 需要 R 4.1 或更高版本、TMB 1.9.21 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
 
 ## 快速开始
 
@@ -86,7 +86,7 @@ save_assessment(a, "ytf_acl.rds")
 
 | 入口 | 内容 |
 |---|---|
-| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，六个应用案例，以及 77 个函数的参考 |
+| **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** · **[English website](https://fanzhang-lab-shou.github.io/ALSCL/)** | 安装、第一次拟合、数据准备、拟合设置、诊断、绘图、模拟、复现，七个应用案例，以及 77 个函数的参考 |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [单页书稿](docs/BOOK.md) | 同一内容的中英对照版本，18 章 |
 | [使用指南](docs/USER_GUIDE.md) | 从安装到回溯分析的双语手册 |
 | [评估工作流](docs/ASSESSMENT_WORKFLOWS.md) · [模型验证](docs/MODEL_VALIDATION.md) · [应用案例](docs/CASES.md) | 结果提取与存档、敏感性、剖面、投影、模拟、预测检验 |
@@ -99,7 +99,7 @@ save_assessment(a, "ytf_acl.rds")
 
 ## 引用
 
-请引用模型论文，并用 `citation("ALSCL")` 引用软件包：
+请同时引用模型论文和软件包。`citation("ALSCL")` 会给出这两条文献。
 
 Zhang, F. and Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, 23(5), 1121-1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)
 

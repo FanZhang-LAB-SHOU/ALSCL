@@ -161,6 +161,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
                     observed = NULL, basis = c("population", "survey"), years = NULL,
                     parameter_curve = FALSE, point_size = NULL, observed_color = NULL,
                     observed_name = "Age readings"){
+  .acl_stop_if_failed(model_result, "model_result")
   # NULL 继承全局色板 / NULL inherits the global palette.
   if (is.null(line_size)) line_size <- acl_theme("line_size")
   if (is.null(line_color)) line_color <- acl_theme("line_color")

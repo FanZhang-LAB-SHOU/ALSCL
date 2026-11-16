@@ -1,45 +1,22 @@
-# Fixes after release 2.4.4: truth of the process means in a conditional
-# self-test, the rule for the last informed time step, the note on the start
+# Fixes after release 2.4.4: truth of the process means in a self-test, the
+# rule for the last informed time step, the note on the start
 # of mean_log_R with survey_q_age, the growth table of compare_models() and
 # the warning of plot_VB(se = TRUE) for ALSCL.
 
 after_count <- function(messages, pattern) sum(grepl(pattern, messages, fixed = TRUE))
 
-test_that("the truth of a process mean is the mean of the realized process in conditional mode", {
-  dev_F <- matrix(c(.1, .3, -.2, .4, 0, .2), 2, 3)
-  truth <- list(parameters = list(mean_log_F = log(.2), mean_log_R = 5, log_init_Z = log(.5)),
-                random_effects = list(dev_log_R = c(.2, .4, -.1), dev_log_F = dev_F, dev_log_N0 = c(.3, .3)))
-  conditional <- ALSCL:::.acl_self_test_truth(truth, "conditional")
-  expect_equal(conditional$mean_log_F, log(.2) + mean(dev_F))
-  expect_equal(conditional$mean_log_R, 5 + mean(c(.2, .4, -.1)))
-  # Other parameters, init_Z included, keep the source estimate.
-  expect_identical(conditional$log_init_Z, log(.5))
-  expect_identical(ALSCL:::.acl_self_test_truth(truth, "resample"), truth$parameters)
-  # One F deviation per time step (F_structure = "year") is shared by all
-  # cells, so its mean is the mean over the cells of the process. Tied and
-  # fixed cells count with the value the template uses, not once per free entry.
-  truth$random_effects$dev_log_F <- matrix(c(.1, .5, -.3), 1, 3)
-  expect_equal(ALSCL:::.acl_self_test_truth(truth, "conditional")$mean_log_F, log(.2) + .1)
-  truth$random_effects$dev_log_F <- matrix(c(.6, .6, .6, 0), 1, 4)
-  expect_equal(ALSCL:::.acl_self_test_truth(truth, "conditional")$mean_log_F, log(.2) + .45)
-})
-
-test_that("self_test() reports the truth of mean_log_R that applies to each mode", {
+test_that("self_test() compares mean_log_R with the source estimate in both modes", {
   skip_on_cran()
   fit <- fit_fixture("ACL")$result
-  st <- self_test(fit, nsim = 2, seed = 3, quantities = "SSB")
-  expect_identical(st$settings$process_mean_truth, "realized")
-  realized <- exp(fit$opt$par[["mean_log_R"]] + mean(fit$report$dev_log_R))
-  rows <- st$parameters[st$parameters$parameter == "mean_log_R", ]
-  expect_equal(rows$truth, rep(unname(realized), 2))
-  expect_equal(rows$relative_error, (rows$estimate - realized) / realized)
-  expect_equal(st$parameter_summary$truth[st$parameter_summary$parameter == "mean_log_R"], unname(realized))
-  expect_output(print(st), "The truth of mean_log_F and mean_log_R is the mean of the fitted log F")
-  resampled <- self_test(fit, nsim = 1, seed = 3, quantities = "SSB", process = "resample")
-  expect_identical(resampled$settings$process_mean_truth, "source")
-  expect_equal(resampled$parameters$truth[resampled$parameters$parameter == "mean_log_R"],
-               exp(fit$opt$par[["mean_log_R"]]))
-  expect_false(any(grepl("The truth of mean_log_F", capture.output(print(resampled)), fixed = TRUE)))
+  source <- exp(fit$opt$par[["mean_log_R"]])
+  for (process in c("conditional", "resample")) {
+    st <- self_test(fit, nsim = 2, seed = 3, quantities = "SSB", process = process)
+    expect_null(st$settings$process_mean_truth)
+    rows <- st$parameters[st$parameters$parameter == "mean_log_R", ]
+    expect_equal(rows$truth, rep(source, 2))
+    expect_equal(rows$relative_error, (rows$estimate - source) / source)
+    expect_equal(st$parameter_summary$truth[st$parameter_summary$parameter == "mean_log_R"], source)
+  }
 })
 
 test_that("extract_estimates() and relative_catch() use one rule for the last informed time step", {
