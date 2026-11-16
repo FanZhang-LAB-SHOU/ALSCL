@@ -398,7 +398,13 @@
          call. = FALSE)
   sd_info <- if (is.null(sdresult)) NULL else attr(sdresult, "acl_sd_info")
   if (!silent && !is.null(sd_info)) message(.acl_sd_message(sd_info))
-  est_std <- if (is.null(sdresult)) NULL else summary(sdresult)
+  # A covariance matrix that is not positive definite can have negative
+  # variances, and their square root in summary() gives the warning
+  # "NaNs produced". The standard errors keep NaN, and the diagnostics report
+  # that matrix, so only this warning is muffled.
+  est_std <- if (is.null(sdresult)) NULL else withCallingHandlers(summary(sdresult),
+    warning = function(w) if (grepl("NaNs produced", conditionMessage(w), fixed = TRUE))
+      invokeRestart("muffleWarning"))
   covariance <- if (is.null(sdresult)) NULL else sdresult$cov.fixed
   if (!is.null(covariance)) dimnames(covariance) <- list(names(opt$par), names(opt$par))
   distances <- c(opt$par - bounds$lower, bounds$upper - opt$par)

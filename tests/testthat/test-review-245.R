@@ -4,7 +4,8 @@
 # methods and messages for failure records, the default t0 start under
 # t0_lower, the note on supplied correlation starts under the symmetric range,
 # relative errors of negative truths, random-number settings and t0_lower in
-# sim_model().
+# sim_model(), and the warning of negative variances in summary() of a
+# covariance matrix that is not positive definite.
 
 failure_record <- function()
   structure(list(converge = "FAILED", error = "M must be positive"), class = "alscl_fit_error")
@@ -263,4 +264,18 @@ test_that("refit_model() names dropped stored values and a supplied log_t0 under
   expect_false(any(grepl("replaces the stored list", messages)))
   expect_silent(suppressWarnings(refit_model(fit, t0_lower = -1, parameters = list(mean_log_R = log(100)),
                                              silent = TRUE)))
+})
+
+test_that("a covariance matrix that is not positive definite gives no NaN warning", {
+  skip_on_cran()
+  x <- YTF_example
+  map <- x$fit_config$acl$map
+  map["logit_log_F_a"] <- list(NULL)
+  expect_no_warning(fit <- run_acl(x, map = map, silent = TRUE))
+  expect_false(fit$diagnostics$numerical_ok)
+  # Whether the covariance matrix has negative variances depends on the
+  # platform, so the issue is required only where the Hessian is reported as
+  # not positive definite.
+  if (!isTRUE(fit$pdHess))
+    expect_true(any(grepl("Hessian or covariance", fit$diagnostics$issues, fixed = TRUE)))
 })
