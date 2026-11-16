@@ -17,7 +17,7 @@ quick$diagnostics$numerical_ok
 
 `whiting_example` is an input bundle. It holds the survey index table `data.CatL`, the weight table `data.wgt` and the maturity table `data.mat` for 18 length bins and 44 years, the settings in `fit_args` and `fit_config`, and the tables that steps 5 and 6 use for checks. `short` keeps the `LengthBin` column and the first 20 years, 1983-2002, with the same settings. It is a subset for speed. With it you can run the code of this page in a few minutes before you start the complete series.
 
-`check_alscl_data()` should show 18 length bins, 20 time steps, 360 positive observations and 13 free scalar parameters. In the recorded run the three starts ended at the same objective (the negative log-likelihood), 245.56, and `numerical_ok` was `TRUE`. The fit took 2.7 minutes with three starts on three cores, about 2 minutes per start. With fewer cores, lower `ncores`; the starts then run one after another. The results in the following steps are those of the complete series `x` and differ from those of `short`.
+`check_alscl_data()` should show 18 length bins, 20 time steps, 360 positive observations and 13 free scalar parameters. In the recorded run the three starts ended at the same objective (the negative log-likelihood), 245.56, and `numerical_ok` was `TRUE`. The fit took 2.8 minutes with three starts on three cores, about 2 minutes per start. With fewer cores, lower `ncores`; the starts then run one after another. The results in the following steps are those of the complete series `x` and differ from those of `short`.
 
 <h2 id="data">2. Read where the data and the fixed inputs come from</h2>
 
@@ -61,7 +61,7 @@ plot_residuals(b, facet_by = "length", facet_ncol = 6)
 
 `nstarts = 5` runs five starts from different starting values, and `ncores = 5` runs them in parallel. `start_spread = 0.5` is the standard deviation of the normal deviates that are added to the starting values of the second and later starts, on the scale of the optimizer; the default is 0.15. The fit keeps the start with the lowest objective.
 
-Four of the five starts ended at 722.59. One start stopped at 755.72, with the coefficient of variation of the growth increment, cv_grow, at its lower bound of 0.01. A fit with that start alone would have returned this solution, and nothing in a single fit shows that a better one exists. `b$diagnostics$issues` reports "starts converged to different optima", and `numerical_ok` is `TRUE` for the start that was kept. `advice`, which says what to do when a check fails, and `plausibility`, which lists estimates with implausible values that do not fail the checks, are both empty. The fit took 12 minutes on five cores.
+Four of the five starts ended at 722.59. One start stopped at 755.72, with the coefficient of variation of the growth increment, cv_grow, at its lower bound of 0.01. A fit with that start alone would have returned this solution, and nothing in a single fit shows that a better one exists. `b$diagnostics$issues` reports "starts converged to different optima", and `numerical_ok` is `TRUE` for the start that was kept. `advice`, which says what to do when a check fails, and `plausibility`, which lists estimates with implausible values that do not fail the checks, are both empty. The fit took 17 minutes on five cores.
 
 When the starts disagree, the fit keeps the lowest objective. Check in `b$start_summary$agree_with_best` that more than one start reached it, and add starts if only one did. When `advice` is not empty, do what it says and refit, as step 4 does for ACL.
 
@@ -131,7 +131,7 @@ keep <- !catch$extrapolated
 cor(log(catch$catch_weight[keep]), log(at(ices$catch)[keep]))
 ```
 
-`x$ices$assessment` holds spawning biomass (SSB), recruitment, the mean fishing mortality rate (F) at ages 2 to 5 and catch from the ICES assessment of 2026 ([ICES 2026](https://doi.org/10.17895/ices.pub.32676345)). That assessment uses catch at age, survey indices for quarters 1 and 3 and a natural mortality rate by age and year, so it is an external comparison and not a true value. SSB and recruitment of a fit are in the unit of the survey index, so compare trends, here as the correlation of the logarithms. Recruitment of the fits is at age 1 in quarter 1 and that of the assessment at age 0, so the code shifts the assessment by one year. `ssb_at_age()` recomputes SSB with the maturity at age of the assessment (ages 6 and older in one group, years outside 1991-2021 taken from the nearest year), and `relative_catch()` returns the catch of the model divided by its mean.
+`x$ices$assessment` holds spawning stock biomass (SSB), recruitment, the mean fishing mortality rate (F) at ages 2 to 5 and catch from the ICES assessment of 2026 ([ICES 2026](https://doi.org/10.17895/ices.pub.32676345)). That assessment uses catch at age, survey indices for quarters 1 and 3 and a natural mortality rate by age and year, so it is an external comparison and not a true value. SSB and recruitment of a fit are in the unit of the survey index, so compare trends, here as the correlation of the logarithms. Recruitment of the fits is at age 1 in quarter 1 and that of the assessment at age 0, so the code shifts the assessment by one year. `ssb_at_age()` recomputes SSB with the maturity at age of the assessment (ages 6 and older in one group, years outside 1991-2021 taken from the nearest year), and `relative_catch()` returns the catch of the model divided by its mean.
 
 | Comparison with the assessment | ALSCL | ACL | ICES |
 |---|---|---|---|
@@ -143,7 +143,7 @@ cor(log(catch$catch_weight[keep]), log(at(ices$catch)[keep]))
 | Mean F at ages 2 to 5 (per year), 2000-2012 | 0.44 | 0.31 | 0.21 |
 | Mean F at ages 2 to 5 (per year), 2013-2025 | 0.36 | 0.12 | 0.18 |
 
-![Spawning biomass, recruitment and fishing mortality of North Sea whiting: ALSCL and the ICES assessment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/whiting-case/ices_comparison.png?raw=true)
+![Spawning stock biomass, recruitment and mean fishing mortality rate of North Sea whiting: ALSCL and the ICES assessment](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/whiting-case/ices_comparison.png?raw=true)
 
 The trends of SSB and recruitment agree in part with the assessment, with correlations of 0.67 to 0.74 for ALSCL. SSB is lowest in 2006 in the ALSCL fit and in 2009 in the assessment, and rises afterwards in both. The two differ in the recent level. Mean SSB of 2017-2026 divided by that of 1983-1992 is 0.87 for ALSCL and 1.22 for the assessment. The maturity at age of the assessment in place of maturity at length changes the correlation by less than 0.01.
 
@@ -178,7 +178,7 @@ The second fit replaces the logistic survey catchability by a curve that decline
 
 ![Survey catchability at length and natural mortality rate at age in the main fit and in the two sensitivity fits](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/whiting-case/sensitivity_inputs.png?raw=true)
 
-| Result | Main fit | M by age and year | Catchability declining with length |
+| Result | Main fit | Natural mortality rate by age and year | Catchability declining with length |
 |---|---|---|---|
 | Objective | 722.59 | 857.41 | 752.76 |
 | Starts at the lowest objective | 4 of 5 | 3 of 3 | 2 of 3 |
@@ -191,7 +191,7 @@ The second fit replaces the logistic survey catchability by a curve that decline
 | Mean recruitment divided by that of the main fit | 1 | 1.48 | 1.13 |
 | Mean length at age 7 (cm); age readings 33.8 | 38.5 | 38.3 | 38.6 |
 
-![Spawning biomass, recruitment and fishing mortality in the main fit and in the two sensitivity fits](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/whiting-case/sensitivity_results.png?raw=true)
+![Spawning stock biomass, recruitment and mean fishing mortality rate in the main fit and in the two sensitivity fits](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/whiting-case/sensitivity_results.png?raw=true)
 
 Both sensitivity fits passed the numerical checks. The trends of SSB and recruitment hardly change. Their correlations with the main fit are 0.97 or higher. The levels change. Recruitment is 1.48 times that of the main fit with M by age, in which more fish of age 1 die, and SSB is 1.66 times that of the main fit with the declining catchability, in which the survey catches a smaller share of the large fish. Mean F at ages 2 to 5 in 2013-2025 is 0.36, 0.28 and 0.08 per year in the three fits, against 0.18 in the assessment. Mean length at age 7 stays 4 to 5 cm above the age readings in all three fits, so neither input removes the difference at older ages.
 
@@ -212,7 +212,7 @@ save_assessment(b, "whiting_alscl.rds")
 | Output | Use | Basis on this page |
 |---|---|---|
 | Recruitment by year | Trend | Correlation of 0.77 with the index at age 1 of the age readings and of 0.67 with the assessment; correlation of 0.99 or higher among the three fits of step 7 |
-| Spawning biomass | Trend, as a relative series | Correlation of 0.74 with the assessment and of 0.97 or higher among the three fits |
+| SSB | Trend, as a relative series | Correlation of 0.74 with the assessment and of 0.97 or higher among the three fits |
 | Mean length at ages 1 to 4 | As the survey sees it | Within 1.3 cm of the age readings |
 | Apparent total mortality rate from the survey, ages 2 to 5 | As a rate of decline of the index, not as the total mortality rate of the stock | Within 0.17 per year of the age readings in each period |
 | Level of F and of catch | Do not use | F is total mortality minus the assumed M; 0.08 to 0.36 per year in 2013-2025 among the three fits |

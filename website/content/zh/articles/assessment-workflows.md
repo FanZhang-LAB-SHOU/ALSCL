@@ -15,7 +15,7 @@ summary(a)
 summary(b)
 ```
 
-ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合约二十秒；ALSCL 拟合 `b` 用于结果提取、残差和投影。`summary()` 打印模型、时间步、F 结构、一行数值检查（`numerical_ok` 应为 `TRUE`，`issues` 应为空）和自然尺度上的标量参数。适用时还会打印 `Fixed inputs` 一行，说明用了按年龄或按体长的自然死亡率，或以 `survey_q`、`survey_q_age` 给出的调查可捕性；以及来自数值检查的 `Advice` 和 `Plausibility note` 各行（[判断拟合是否可用](diagnostics.html#limits)）。先读数值检查：后面的每个函数都会记录它，`project_model()` 会拒绝未通过检查的拟合。若 `numerical_ok` 为 `FALSE`，按[判断拟合是否可用](diagnostics.html)改一项设置并重新拟合。
+ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合不到十秒；ALSCL 拟合 `b` 用于结果提取、残差和投影。`summary()` 打印模型、时间步、F 结构、一行数值检查（`numerical_ok` 应为 `TRUE`，`issues` 应为空）和自然尺度上的标量参数。适用时还会打印 `Fixed inputs` 一行，说明用了按年龄或按体长的自然死亡率，或以 `survey_q`、`survey_q_age` 给出的调查可捕性；以及来自数值检查的 `Advice` 和 `Plausibility note` 各行（[判断拟合是否可用](diagnostics.html#limits)）。先读数值检查，因为后面的每个函数都会记录它，`project_model()` 会拒绝未通过检查的拟合。若 `numerical_ok` 为 `FALSE`，按[判断拟合是否可用](diagnostics.html)改一项设置并重新拟合。
 
 <h2 id="section-4">2. 提取结果，保存拟合结果</h2>
 
@@ -33,7 +33,7 @@ plot_SSB(saved, se = TRUE)
 b_again <- refit_model(saved, silent = TRUE)
 ```
 
-`extract_parameters()` 每个标量参数返回一行：`status`（`estimated`、`fixed` 或 `inactive`）、自然尺度上的估计值、标准误和 95% 区间（固定参数为 `NA`）；`exp(mean_log_F)` 是 F 过程的基准水平，各年的 F 由它乘以指数化的偏差得到。`extract_estimates()` 返回种群量的长表，带 `year`、`age` 或 `length` 和每个值的区间；ALSCL 的 `F` 按体长组给出（`report_name` 为 `FL`），ACL 按年龄给出，不取平均。`extrapolated` 列在最后一个时间步的捕捞死亡率和渔获量上为 `TRUE`，没有观测为它们提供信息：它们是由 F 过程得到的预测，标准误反映的也是这一过程。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的各行也会被标记。其他量按名称请求：`extract_estimates(b, c("FA", "N_at_age"))` 返回 ALSCL 每个年龄和每个时间步的年龄别 F，以及年龄别尾数。拟合报告（`b$report$FA`）只包含末组（plus group）之前的年龄和最后一个时间步之前的各时间步的年龄别 F，并带有标准误；其余单元格由 `extract_estimates()` 从报告的体长—年龄别尾数算出，标准误为 `NA`。`N_at_age` 是 `NA` 的别名；标签为“NA”的表写入 CSV 文件后再用 `read.csv()` 的默认设置读回时，这个标签会丢失。`fitted(b)`、`logLik(b)`、`AIC(b)`、`BIC(b)` 和 `nobs(b)` 也可用于拟合结果；保存的协方差非有限或非正定时，`vcov(b)` 返回 `NULL`。
+`extract_parameters()` 每个标量参数返回一行：`status`（`estimated`、`fixed` 或 `inactive`）、自然尺度上的估计值、标准误和 95% 区间（固定参数为 `NA`）；`exp(mean_log_F)` 是 F 过程的基准水平，各年的 F 由它乘以指数化的偏差得到。`extract_estimates()` 返回种群量的长表，带 `year`、`age` 或 `length` 和每个值的区间（默认为对数正态区间，与图中的区间相同；`interval = "wald"` 给出对称区间 `estimate +/- 1.96 * SE`）；ALSCL 的 `F` 按体长组给出（`report_name` 为 `FL`），ACL 按年龄给出，不取平均。`extrapolated` 列在最后一个时间步的捕捞死亡率和渔获量上为 `TRUE`，没有观测为它们提供信息。它们是由 F 过程得到的预测，标准误反映的也是这一过程。最后几个时间步没有正的调查观测时，从最后一个有观测的时间步起的各行也会被标记。其他量按名称请求：`extract_estimates(b, c("FA", "N_at_age"))` 返回 ALSCL 每个年龄和每个时间步的年龄别 F，以及年龄别尾数。拟合报告（`b$report$FA`）只包含末组（plus group）之前的年龄和最后一个时间步之前的各时间步的年龄别 F，并带有标准误；其余单元格由 `extract_estimates()` 从报告的按体长和年龄的尾数算出，标准误为 `NA`。`N_at_age` 是 `NA` 的别名；标签为“NA”的表写入 CSV 文件后再用 `read.csv()` 的默认设置读回时，这个标签会丢失。`fitted(b)`、`logLik(b)`、`AIC(b)`、`BIC(b)` 和 `nobs(b)` 也可用于拟合结果；保存的协方差非有限或非正定时，`vcov(b)` 返回 `NULL`。
 
 `save_assessment()` 写出保存的拟合结果：`b` 中除 TMB 对象 `b$obj` 以外的全部内容，以及重新拟合所需的信息（三张表、设置、`map`、边界、初值、软件包版本和模型源码的哈希值）。`summary()`、提取函数和绘图函数都能直接用于 `read_assessment()` 读回的对象，同事无需重新拟合就能读你的结果；需要可执行模型时，`refit_model()` 使用保存的输入和设置重新拟合，例如用 `refit_model(saved, M = 0.25)` 改变一项假设，并在软件包、TMB 或模型源码与保存时不同时发出警告。文件已存在时 `save_assessment()` 会停止（传入 `overwrite = TRUE`），拟合结果缺少原始输入和设置时也会停止（把它的输入列表作为 `x` 传入）。
 
@@ -55,7 +55,7 @@ tail(catch, 3)
 
 有三个函数返回可以用模型之外的资料核对的量：各年龄平均体长对照年龄鉴定资料，按年龄型评估所用的成熟比例计算的产卵生物量，以及渔获量的趋势对照上报渔获量。它们可用于拟合结果，也可用于保存的拟合结果。
 
-`length_at_age()` 按两种口径返回每个年龄组和时间步的平均体长及其标准差：种群中的（`"population"`），以及调查所见的（`"survey"`），后者把体长别尾数乘以拟合所用的体长别调查可捕性。与同一调查所捕个体的年龄鉴定资料比较时，用调查口径。本例最后一年 1 龄的平均体长，种群口径为 10.7 cm，调查口径为 12.8 cm，因为调查很少捕到该年龄中最小的个体；5 龄时两种口径一致。ALSCL 拟合由按体长组、年龄组和时间步的尾数算出这些值。ACL 拟合由年龄-体长概率算出，各时间步相同。每个体长组以组中点代表。因此，某个年龄组有很大一部分落在第一个或最后一个体长组时，平均体长会被拉向该组的中点，标准差偏小：10 龄的 49.5 cm 就很接近最后一组的中点 50 cm。把 ALSCL 拟合的生长与年龄鉴定资料比较时，用这些平均体长，不要用 `Linf` 和 `k`，因为由生长增量估计的生长参数与由年龄-体长资料估计的生长参数含义不同（[Francis 1988](https://doi.org/10.1139/f88-115)；[模型原理与时间尺度](model-theory.html#difference-increment)）。
+`length_at_age()` 按两种口径返回每个年龄组和时间步的平均体长及其标准差：种群中的（`"population"`），以及调查所见的（`"survey"`），后者把体长别尾数乘以拟合所用的体长别调查可捕性。与同一调查所捕个体的年龄鉴定资料比较时，用调查口径。本例最后一年 1 龄的平均体长，种群口径为 10.7 cm，调查口径为 12.8 cm，因为调查很少捕到该年龄中最小的个体；5 龄时两种口径一致。ALSCL 拟合由按体长组、年龄组和时间步的尾数算出这些值。ACL 拟合由年龄-体长概率算出，各时间步相同。每个体长组以组中点代表。因此，某个年龄组有很大一部分落在第一个或最后一个体长组时，平均体长会被拉向该组的中点，标准差偏小。10 龄的 49.5 cm 就很接近最后一组的中点 50 cm。把 ALSCL 拟合的生长与年龄鉴定资料比较时，用这些平均体长，不要用 `Linf` 和 `k`，因为由生长增量估计的生长参数与由年龄-体长资料估计的生长参数含义不同（[Francis 1988](https://doi.org/10.1139/f88-115)；[模型原理与时间尺度](model-theory.html#difference-increment)）。
 
 `ssb_at_age()` 把各年龄组的生物量乘以年龄别成熟比例后求和，得到产卵生物量，并同时给出 `SSB_model`，即模型按拟合时给定的体长别成熟比例算出的产卵生物量。`maturity` 是每个年龄组一个值的向量，或按年龄组和时间步的矩阵；`weight` 可以给出各年龄的平均体重。要比较的评估按年龄别成熟比例定义产卵生物量时，用这个函数。两条序列都在模型生物量的尺度上，而这个尺度取决于给定的调查可捕性，所以比较趋势，不比较水平。本例两条对数序列的相关系数为 0.999。
 
@@ -81,13 +81,13 @@ checks$plots$lag
 checks$plots$qq
 ```
 
-![按体长组和时间步排列的标准化残差](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true)
+![按体长组和年份排列的调查指数标准化条件残差](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-heatmap.png?raw=true)
 
 ![同一体长组残差相隔一到四个时间步的相关系数](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-lag.png?raw=true)
 
-![合并标准化残差的 QQ 图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true)
+![合并标准化残差的正态分位数-分位数图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/residual-qq.png?raw=true)
 
-`check_fit()` 把对数残差标准化（观测减拟合的对数指数，再除以拟合的观测 SD），并画三种图。热图按体长组和时间步排列（被排除的零值和空白为灰色），同色成块表示相邻体长组或时间步的残差方向一致。滞后图对每个体长组画出相隔一到 `max_lag` 个时间步的残差相关系数；没有调查的时间步仍是空缺，`checks$lag_correlations` 给出每个点背后的配对数。QQ 图把合并后的残差与标准正态分布 N(0,1) 比较。即使模型设定正确，标准化条件残差的标准差也略小于 1（模拟检验中约为 0.91 到 0.96），所以两端的点略微落在参考线内侧属于预期。教学拟合中，16 cm 体长组几乎每年都是正残差，最大体长组从 2013 年起为正且滞后一步的相关系数接近 0.8，QQ 图正尾偏重：虽然数值检查通过，这些规律仍值得查看。残差以拟合的过程偏差为条件，所以把这些图当作提示而不是检验；[判断拟合是否可用](diagnostics.html)说明某种规律通常指向哪项设置。
+`check_fit()` 把对数残差标准化（观测减拟合的对数指数，再除以拟合的观测 SD），并画三种图。热图按体长组和时间步排列（被排除的零值和空白为灰色），同色成块表示相邻体长组或时间步的残差方向一致。滞后图对每个体长组画出相隔一到 `max_lag` 个时间步的残差相关系数；没有调查的时间步仍是空缺，`checks$lag_correlations` 给出每个点背后的配对数。正态分位数-分位数图（QQ 图）把合并后的残差与标准正态分布 N(0,1) 比较。即使模型设定正确，标准化条件残差的标准差也略小于 1（模拟检验中约为 0.91 到 0.96），所以两端的点略微落在参考线内侧属于预期。教学拟合中，16 cm 体长组几乎每年都是正残差，最大体长组从 2013 年起为正且滞后一步的相关系数为 0.75，QQ 图正尾偏重。虽然数值检查通过，这些规律仍值得查看。残差以拟合的过程偏差为条件，所以把这些图当作提示而不是检验；[判断拟合是否可用](diagnostics.html)说明某种规律通常指向哪项设置。
 
 <h2 id="section-6">4. 敏感性情景与参数剖面</h2>
 
@@ -109,13 +109,17 @@ scenarios$status
 head(scenarios$estimates)
 scenario_ssb <- subset(scenarios$estimates, quantity == "SSB")
 ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
-  geom_line() + labs(x = "Year", y = "SSB") +
-  theme_bw() + theme(panel.grid = element_blank())
+  geom_line() +
+  labs(x = "Year", y = "Spawning stock biomass (SSB)", color = "Scenario") +
+  scale_colour_manual(values = acl_palette(3), labels = c(reference = "Reference",
+    low_M = "Natural mortality rate 0.15 per year",
+    shared_F = "Fishing mortality by year only")) +
+  expand_limits(y = 0) + theme_acl(quantity = "stock")
 ```
 
-![三个 ACL 情景的产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true)
+![三种模型设置下 ACL 的产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/scenario-SSB.png?raw=true)
 
-每个情景是一个具名的参数列表，用来替换 `x` 中的设置；空列表就是参考情景，`map` 这类列表会整体替换保存的列表，三张表保持不变。情景也可以给出按年龄组或按体长组的 `M`，或者以 `survey_q` 给出调查可捕性，同时设 `sel_L50 = NULL` 和 `sel_L95 = NULL`（[判断拟合是否可用](diagnostics.html#sensitivity)）。先看 `scenarios$status` 再看曲线：它每个情景一行，记录耗时、错误、警告和数值检查。未通过检查的情景仍留在 `scenarios$estimates` 中且 `numerical_ok = FALSE`；因错误停止的情景没有估计值。估计值表按情景和年份给出产卵生物量、补充量和 F，其中 F 由 `F_summary = "mean"` 在每个时间步内对各年龄（或体长组）取平均，或由 `"apical"` 取最大值。`ncores` 把各情景放在不同的工作进程上运行，每个情景使用 `x` 中保存的初值个数，否则一个初值。这里三条曲线几乎重合：较低的 M 和共用的 F 使产卵生物量至多变动百分之几；换成自己的数据，曲线之间的差距就是要报告的敏感性。
+每个情景是一个具名的参数列表，用来替换 `x` 中的设置；空列表就是参考情景，`map` 这类列表会整体替换保存的列表，三张表保持不变。情景也可以给出按年龄组或按体长组的 `M`，或者以 `survey_q` 给出调查可捕性，同时设 `sel_L50 = NULL` 和 `sel_L95 = NULL`（[判断拟合是否可用](diagnostics.html#sensitivity)）。先看 `scenarios$status` 再看曲线：它每个情景一行，记录耗时、错误、警告和数值检查。未通过检查的情景仍留在 `scenarios$estimates` 中且 `numerical_ok = FALSE`；因错误停止的情景没有估计值。估计值表按情景和年份给出产卵生物量、补充量和 F，其中 F 由 `F_summary = "mean"` 在每个时间步内对各年龄（或体长组）取平均，或由 `"apical"` 取最大值。`ncores` 把各情景放在不同的工作进程上运行，每个情景使用 `x` 中保存的初值个数，否则一个初值。这里三条曲线几乎重合。较低的 M 和共用的 F 使产卵生物量至多变动百分之几；换成自己的数据，曲线之间的差距就是要报告的敏感性。`theme_acl()` 让图具有包内绘图的外观，`acl_palette()` 给出它们的颜色。
 
 <h3 id="section-7">对被估计的参数做剖面</h3>
 
@@ -125,14 +129,16 @@ profile_F <- profile_model(a, "mean_log_F", profile_values,
                            scale = "natural", ncores = 1)
 profile_F$grid
 ggplot(profile_F$grid, aes(value, delta_nll)) +
-  geom_line() + geom_point() +
-  labs(x = "F process baseline", y = "Change in negative log likelihood") +
-  theme_bw() + theme(panel.grid = element_blank())
+  geom_line(colour = acl_palette(role = "primary")) +
+  geom_point(colour = acl_palette(role = "primary")) +
+  labs(x = "Baseline fishing mortality rate (per year)",
+       y = "Change in negative log likelihood") +
+  theme_acl()
 ```
 
-![F 过程基准水平在三个网格值上的剖面](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true)
+![基准捕捞死亡率在三个网格值上的剖面](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/profile-F.png?raw=true)
 
-`profile_model()` 接受 `names(a$opt$par)` 中的一个名称，即拟合估计的标量参数；`YTF_example` 固定了 `log_Linf`，对它做剖面会以「parameter must name one free scalar」停止。`scale = "natural"` 时网格按自然尺度给出，且必须落在优化器边界内。`profile_F$grid` 列出每个值的目标函数值、`delta_nll`（相对原拟合的负对数似然增量）和该次重新拟合的数值检查。两侧陡升表示该参数在当前模型及固定参数设置下受到较强约束；这里基准 F 变动 10% 使负对数似然上升 0.8 到 0.9。`delta_nll` 小于 `-1e-6` 时会警告，表示某个网格拟合得到更低的目标函数值。解读剖面前，应检查该次拟合的数值状态，并用更多初值重新拟合原模型；很小的负差值可能来自舍入误差。用于报告的剖面需要更密的网格，并且每个点的拟合都通过检查。
+`profile_model()` 接受 `names(a$opt$par)` 中的一个名称，即拟合估计的标量参数；`YTF_example` 固定了 `log_Linf`，对它做剖面会以“parameter must name one free scalar”停止。`scale = "natural"` 时网格按自然尺度给出，且必须落在优化器边界内。`profile_F$grid` 列出每个值的目标函数值、`delta_nll`（相对原拟合的负对数似然增量）和该次重新拟合的数值检查。两侧陡升表示该参数在当前模型及固定参数设置下受到较强约束；这里基准 F 变动 10% 使负对数似然上升 0.35 到 0.43。`delta_nll` 小于 `-1e-6` 时会警告，表示某个网格拟合得到更低的目标函数值。解读剖面前，应检查该次拟合的数值状态，并用更多初值重新拟合原模型；很小的负差值可能来自舍入误差。用于报告的剖面需要更密的网格，并且每个点的拟合都通过检查。
 
 <h2 id="section-8">5. 投影未来情景</h2>
 
@@ -150,18 +156,21 @@ higher_F <- project_model(b, F = rep(0.25, h), recruitment = future_rec,
 low_F$summary
 low_F$assumptions
 projection_ssb <- rbind(
-  transform(low_F$summary, scenario = "F = 0.10"),
-  transform(higher_F$summary, scenario = "F = 0.25"))
+  transform(low_F$summary, scenario = "0.10"),
+  transform(higher_F$summary, scenario = "0.25"))
 ggplot(projection_ssb, aes(year, SSB, color = scenario)) +
-  geom_line() + geom_point() + labs(x = "Year", y = "Start-of-period SSB") +
-  theme_bw() + theme(panel.grid = element_blank())
+  geom_line() + geom_point() + labs(x = "Year",
+    y = "Spawning stock biomass (SSB)",
+    color = "Future fishing mortality rate (per year)") +
+  scale_colour_manual(values = acl_palette(2)) +
+  expand_limits(y = 0) + theme_acl(quantity = "stock")
 ```
 
-![两种未来 F 水平下的投影产卵生物量](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true)
+![两种未来捕捞死亡率下 ALSCL 产卵生物量的投影](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/workflows/projection-SSB.png?raw=true)
 
 `project_model()` 用你提供的值把最后一个拟合的种群向未来时间步推进：`F`（每步一个值、各组共用，或组乘时间步的矩阵）、`recruitment`（它的长度决定投影期数），以及完整的 `weight` 和 `maturity` 矩阵，每个未来时间步一列。函数不替你延续任何值；代码重复最后一列观测的体重和成熟比例以及最后一个拟合的补充量，这是需要在报告中说明的选择。`M` 保持拟合时的值，除非另外传入：一个数，每个未来时间步一个值，或者每个年龄组一行、每个未来时间步一列的矩阵（也可以只有一列并用于所有时间步）。拟合时按年龄给定且各时间步相同的 M，以及 ALSCL 中按体长给定的 M，都按原样使用。拟合时的 M 随时间变化时，函数不延续任何值，`project_model()` 会停止，直到你给出 `M`。`low_F$summary` 对每个未来时间步列出丰度、生物量、产卵生物量、补充量、尾数和重量计的渔获以及 F 的平均值和最大值；`low_F$assumptions` 记录每项选择。
 
-每一行描述一个时间步的期初：第一个未来状态是最后一个拟合种群经最后一个拟合的 F 和 M 存活后加上第一个提供的补充量，未来的 `F[t]` 决定第 `t` 步的渔获和进入第 `t + 1` 步的存活。因此第一个提供的 F 不会改变第一个未来产卵生物量；两条曲线从第二步起才分开。投影是确定性的，并以拟合为条件，没有区间、亲体补充关系或参考点。来源拟合未通过数值检查时 `project_model()` 会停止，除非 `allow_failed_fit = TRUE`，这时覆盖会记录在 `assumptions` 中；出现「weight must be a finite nonnegative 23-by-4 matrix」这类信息，说明某个矩阵的行数（体长组）或列数（未来时间步）不对。
+每一行描述一个时间步的期初：第一个未来状态是最后一个拟合种群经最后一个拟合的 F 和 M 存活后加上第一个提供的补充量，未来的 `F[t]` 决定第 `t` 步的渔获和进入第 `t + 1` 步的存活。因此第一个提供的 F 不会改变第一个未来产卵生物量；两条曲线从第二步起才分开。投影是确定性的，并以拟合为条件，没有区间、亲体补充关系或参考点。来源拟合未通过数值检查时 `project_model()` 会停止，除非 `allow_failed_fit = TRUE`，这时覆盖会记录在 `assumptions` 中；出现“weight must be a finite nonnegative 23-by-4 matrix”这类信息，说明某个矩阵的行数（体长组）或列数（未来时间步）不对。
 
 <h2 id="section-9">6. 拟合模拟重复，报告失败率</h2>
 
@@ -190,9 +199,9 @@ performance$replicates
 performance$summary
 ```
 
-这一步问的是模型能否找回一个已知的种群。`x$parameters` 保存生成 `YTF_example` 的模拟器设置；`sim_cal()` 由它推导生物学量，`sim_data()` 为每个重复写一个文件 `sim_rep<i>`，其中的列表 `sim.data` 含调查表以及逐年的真实 `SSB` 和 `Rec`。`sim_model()` 用所选模型及该模型的初值和 `map`（这里是 `x` 中保存的 ALSCL 配置）拟合每个文件，把每个结果保存为 `result_rep_<i>` 并以命名列表返回，因错误停止的重复连同错误信息一起保留。真值列表必须与拟合使用相同的名称和年份，所以代码逐个读取模拟文件；否则 `summarize_simulations()` 会以「identical unique replicate names」或「time coordinates differ」停止。
+这一步问的是模型能否找回一个已知的种群。`x$parameters` 保存生成 `YTF_example` 的模拟器设置；`sim_cal()` 由它推导生物学量，`sim_data()` 为每个重复写一个文件 `sim_rep<i>`，其中的列表 `sim.data` 含调查表以及逐年的真实 `SSB` 和 `Rec`。`sim_model()` 用所选模型及该模型的初值和 `map`（这里是 `x` 中保存的 ALSCL 配置）拟合每个文件，把每个结果保存为 `result_rep_<i>` 并以命名列表返回，因错误停止的重复连同错误信息一起保留。真值列表必须与拟合使用相同的名称和年份，所以代码逐个读取模拟文件；否则 `summarize_simulations()` 会以“identical unique replicate names”或“time coordinates differ”停止。
 
-读 `performance$summary` 的统计量时同时读它的分母：`n_replicates` 是尝试的拟合数，`n_valid_fits` 是通过数值检查的拟合数（`failure_rate` 是未通过的比例），`n_valid_pairs` 是 `bias`、`relative_bias` 和 `rmse` 所用的估计值与真值配对数，`n_intervals` 是 `coverage` 所用的、标准误有限的区间数，`coverage` 是其中包含真值的比例。缺少标准误的区间不计入覆盖率；`relative_bias` 跳过真值为零的年份。`performance$replicates` 列出每个重复的检查和耗时，`performance$estimates` 列出每个重复的每一年，包括失败的重复。两个重复只演示用法；正式研究需要足够多的重复，失败率和覆盖率才有意义。
+读 `performance$summary` 的统计量时同时读它的分母：`n_replicates` 是尝试的拟合数，`n_valid_fits` 是通过数值检查的拟合数（`failure_rate` 是未通过的比例），`n_valid_pairs` 是 `bias`、`relative_bias` 和 `rmse` 所用的估计值与真值配对数，`n_intervals` 是 `coverage` 所用的、标准误有限的区间数，`coverage` 是其中包含真值的比例；区间默认为对数正态区间，与图中相同，`interval = "wald"` 给出对称区间的覆盖率。缺少标准误的区间不计入覆盖率；`relative_bias` 跳过真值为零的年份。`performance$replicates` 列出每个重复的检查和耗时，`performance$estimates` 列出每个重复的每一年，包括失败的重复。两个重复只演示用法；正式研究需要足够多的重复，失败率和覆盖率才有意义。
 
 <h2 id="section-11">7. 模拟拟合模型并验证预测</h2>
 
@@ -204,7 +213,7 @@ validation$diagnostics
 validation$scores
 ```
 
-另外两项检查从拟合本身出发。`simulate_fit()` 从拟合模型生成新的调查观测。可以固定拟合的种群状态（`"conditional"`）或先抽取新的过程偏差（`"resample"`），并为每个重复返回一个 `run_alscl()` 可接受的输入列表 `x`，供你重新拟合并与保存的 `truth` 比较；该列表保留 `b` 的拟合配置，但不含 `output`、`ncores` 和 `silent`。`hindcast_model()` 是预测检验：它只用较早的时间步拟合，从最近的 `nfolds` 个预测起点各预测随后 `horizon` 个时间步的调查指数，并把预测与留出的观测对照评分，同时给出朴素预测的分数。按年龄和时间步的自然死亡率，或按体长和时间步的调查可捕性，要按完整的时间网格给出：每次训练拟合使用到预测起点为止的各列，预测使用留出时间步的各列。[模型能重现并预测调查观测吗？](case-model-validation.html)完整演示这两项检查。
+另外两项检查从拟合本身出发。`simulate_fit()` 从拟合模型生成新的调查观测。可以固定拟合的种群状态（`"conditional"`）或先抽取新的过程偏差（`"resample"`），并为每个重复返回一个 `run_alscl()` 可接受的输入列表 `x`，供你重新拟合并与保存的 `truth` 比较；该列表保留 `b` 的拟合配置，但不含 `output`、`ncores` 和 `silent`。`hindcast_model()` 是预测检验：它只用较早的时间步拟合，从最近的 `nfolds` 个预测起点各预测随后 `horizon` 个时间步的调查指数，并把预测与留出的观测对照评分，同时给出朴素预测的分数。按年龄和时间步的自然死亡率，或按体长和时间步的调查可捕性，要按完整的时间网格给出。每次训练拟合使用到预测起点为止的各列，预测使用留出时间步的各列。[模型能重现并预测调查观测吗？](case-model-validation.html)完整演示这两项检查。
 
 <h3 id="save-workflow">保存完成的工作流</h3>
 

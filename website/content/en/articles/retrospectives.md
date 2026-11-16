@@ -1,6 +1,6 @@
 # Run a retrospective analysis
 
-At the end of this page you have, for each model, Mohn's rho for biomass, spawning biomass, recruitment and abundance, a plot of the refitted series and the numerical checks of every refit. You need the input bundle `x` and the ALSCL fit `b` from [Understand your first fit](first-model.html).
+At the end of this page you have, for each model, Mohn's rho for biomass, spawning stock biomass, recruitment and abundance, a plot of the refitted series and the numerical checks of every refit. You need the input bundle `x` and the ALSCL fit `b` from [Understand your first fit](first-model.html).
 
 A retrospective analysis removes the last time step from the three tables, refits the model, removes one more, refits again, and so on; each refit is a peel. Comparing the peels with the full fit shows how much the recent estimates change when later observations are added; revisions in the same direction across peels indicate a retrospective pattern whose causes warrant investigation.
 
@@ -11,11 +11,11 @@ ra <- retro_acl(x, nyear = 3, silent = TRUE)
 rb <- retro_alscl(x, nyear = 3, silent = TRUE)
 ```
 
-`retro_acl()` uses the ACL model and `retro_alscl()` the ALSCL model. Each call fits the model to the full tables, then runs `nyear` peels: peel 1 drops the last time step and refits, peel 2 drops the last two, and so on. `nyear` is the number of peels. Each peel removes `peel_step` further time steps (default 1), so one peel of quarterly data removes one quarter; step 5 shows annual peels of a quarterly model.
+`retro_acl()` uses the ACL model and `retro_alscl()` the ALSCL model. Each call fits the model to the full tables, then runs `nyear` peels. Peel 1 drops the last time step and refits, peel 2 drops the last two, and so on. `nyear` is the number of peels. Each peel removes `peel_step` further time steps (default 1), so one peel of quarterly data removes one quarter; step 5 shows annual peels of a quarterly model.
 
 Every fit uses the settings stored in the bundle, as `run_acl(x)` does, with the bundle's explicit `nstarts` starts or one start when it stores none; arguments in the call override them for every fit. `ncores` runs the full fit and the peels on worker processes; a fitting `ncores` stored in the bundle is ignored, and the starts inside one fit run one after another. With `silent = FALSE` the console prints one line per fit.
 
-Two errors stop the call before any fit: the time columns of the survey index table must carry increasing numeric labels ([Prepare your survey data](data-preparation.html)), and every peel must keep at least two time steps, so `nyear * peel_step` is at most the number of time steps minus two. A peel that fails inside the optimizer is recorded in the next step's tables while the analysis continues.
+Two errors stop the call before any fit. The time columns of the survey index table must carry increasing numeric labels ([Prepare your survey data](data-preparation.html)), and every peel must keep at least two time steps, so `nyear * peel_step` is at most the number of time steps minus two. A peel that fails inside the optimizer is recorded in the next step's tables while the analysis continues.
 
 <h2 id="tables">2. Read the returned tables</h2>
 
@@ -37,21 +37,21 @@ The result is a list of tables, and `ra` has the same elements as `rb`:
 | `raw_rho_text` | quantity | the mean of `RawRho` without the checks, for diagnosis only; `NA` when any comparison is missing |
 | `errors` | failed fit | `Peel`, `RetrospectiveYear` and the message; zero rows when every fit ran |
 
-The quantities are total biomass `B`, recruitment `Rec`, spawning biomass `SSB` and abundance `N`; the full series are in `rb$results`. `rho_text$Rho` is `NA`, with a warning, when the full fit or any peel failed the numerical checks or a terminal comparison is missing, so the reported mean uses only comparisons for which both fits passed the numerical checks. Find the failed fit in `fit_diagnostics$issues` and `errors`, repair it as on [Judge whether a fit can be used](diagnostics.html) and rerun; `raw_rho_text` only shows the size of the available differences.
+The quantities are total biomass `B`, recruitment `Rec`, spawning stock biomass `SSB` and abundance `N`; the full series are in `rb$results`. `rho_text$Rho` is `NA`, with a warning, when the full fit or any peel failed the numerical checks or a terminal comparison is missing, so the reported mean uses only comparisons for which both fits passed the numerical checks. Find the failed fit in `fit_diagnostics$issues` and `errors`, repair it as on [Judge whether a fit can be used](diagnostics.html) and rerun; `raw_rho_text` only shows the size of the available differences.
 
 <h2 id="plot">3. Plot the refitted series</h2>
 
 ```r
-plot_retro(rb, facet_ncol = 2, rho_digits = 3)
+plot_retro(rb, rho_digits = 3)
 ```
 
 ![ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
-`plot_retro()` draws the stored series without refitting, one panel per quantity in the two columns set by `facet_ncol = 2`. Each line is one fit, colored by its last time step: the full fit ends in 2019, the peels in 2018, 2017 and 2016. The legend is titled "Terminal year" for annual time steps and "Terminal period" for shorter ones, where quarters are labelled as in "2019 Q4", also when `peel_step` is above 1. A fit that failed the numerical checks is drawn with a dashed line, and a fit without estimates stays in the legend marked "(no estimates)". The open point marks each fit's terminal estimate, the value rho compares with the full fit, and the panel label gives Mohn's rho with `rho_digits` decimals. The figures on this page add `rho_size = 3`, `point_size = 1` and `line_size = 0.6`.
+`plot_retro()` draws the stored series without refitting, one panel per quantity ("Total biomass", "Recruitment", "Spawning stock biomass (SSB)" and "Total abundance", on a y axis named "Estimate") in two columns, the default layout for four panels. Each line is one fit, colored by its last time step: the full fit ends in 2019, the peels in 2018, 2017 and 2016. Under the default style the full fit is orange and drawn on top, the peels are greys, darkest for the first peel, and each panel leaves room for the Mohn's rho label above the lines. The legend is titled "Terminal year" for annual time steps and "Terminal period" for shorter ones, where quarters are labelled as in "2019 Q4", also when `peel_step` is above 1. A fit that failed the numerical checks is drawn with a dashed line under a second legend, "Numerical checks", and a fit without estimates stays in the legend marked "(no estimates)". The open point marks each fit's terminal estimate, the value that Mohn's rho compares with the full fit, and the panel label reads "Mohn's rho = " followed by the value with `rho_digits` decimals. The figures on this page add `rho_size = 3`, `point_size = 1` and `line_size = 0.6`.
 
 ![ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
-In both figures, the largest visible differences between the peeled and full fits occur near the end of the series. Compare the stored estimates to quantify revisions at other time steps. When rho is `NA` the panel reads `rho unavailable: check diagnostics`; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](plot-customization.html); every argument is in the [plot_retro reference](../reference/plot_retro.html).
+In both figures, the largest visible differences between the peeled and full fits occur near the end of the series. Compare the stored estimates to quantify revisions at other time steps. When Mohn's rho is `NA` the panel reads, for example, "Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics"; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](plot-customization.html); every argument is in the [plot_retro reference](../reference/plot_retro.html).
 
 `plot` and `silent` must each be a single `TRUE` or `FALSE`; invalid values stop before any fitting. If no stored row has both a finite time and a finite estimate, `plot_retro()` stops with a diagnostic message. With some valid estimates, missing interior values stay as gaps rather than being joined across.
 
@@ -85,10 +85,10 @@ Run the analysis with the settings of the fit you report, so that differences be
 ```r
 save_assessment(b, "ytf_alscl.rds")
 saveRDS(rb, "ytf_alscl_retro.rds")
-plot_retro(readRDS("ytf_alscl_retro.rds"), facet_ncol = 2, rho_digits = 3)
+plot_retro(readRDS("ytf_alscl_retro.rds"), rho_digits = 3)
 ```
 
-The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits: it stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproducibility](reproducibility.html) shows how to record the package versions and the session.
+The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits. It stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproducibility](reproducibility.html) shows how to record the package versions and the session.
 
 <h2 id="next">What next</h2>
 

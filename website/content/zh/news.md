@@ -1,3 +1,33 @@
+## ALSCL 2.5.0
+
+### 图的默认外观
+
+- 默认绘图样式已改变，所以用默认设置画出的图与 2.4.5 不同。估计值、标准误和保存的拟合结果不变。产卵生物量、总生物量和丰度是带阴影 95% 区间带的青绿色线，捕捞死亡率是带区间带的橙色线，总补充量画成浅蓝色柱，总渔获量画成深蓝色柱，`se = TRUE` 时两者都带浅色描边的细深灰色误差线；按年龄或按体长分面板的图是该数量颜色的线。线条变细：`line_size` 默认为 1，`compare_line_size` 默认为 0.9，原来分别为 1.5 和 1.2。这些图以及 `plot_compare_ts()` 和 `plot_compare_F_ts()` 的纵轴从零开始。标题为黑色粗体、左对齐，分面标签是不带框的粗体文字，图例在图的下方；与以前一样，不画网格线。其他图用深蓝色画估计值、橙色画观测值，比较图中两个拟合分别为深蓝色和橙色，热图从白色过渡到深蓝色，`plot_retro()` 中完整拟合为橙色，较早的拟合为灰色。
+- `acl_theme_set(style = "classic")` 一次调用即恢复 2.4.5 的外观：npg 调色板、每个序列都画成线、线宽 1.5 和 1.2、居中的普通字体标题、灰框分面标签、纵轴随数据变化，以及各图原来的图例位置。它不恢复图中原来的文字、原来的分面列数和原来的刻度标签，因为下面关于文字、时间轴和版面的规则在两种样式下都适用。`acl_theme_set(style = "standard")` 或 `acl_theme_reset()` 回到新的默认样式。
+- 样式的每一项特征也是一个单独的设置，所以可以只改一项、保留其余：`acl_theme_set(bars = FALSE)` 把总补充量和总渔获量画成线，`acl_theme_set(y_zero = FALSE)` 让纵轴随数据变化，`acl_theme_set(palette = "npg")` 恢复线、观测值、比较图和热图的 npg 颜色，`acl_theme_set(title_color = "quantity")` 让种群大小、捕捞死亡率、补充量和渔获量图的标题取其数量的颜色，`acl_theme_set(grid = "y")` 加上水平网格线。新的设置有 `style`、`grid`、`title_face`、`title_color`、`show_title`、`stock_color`、`F_color`、`recruitment_color`、`catch_color`、`bars`、`y_zero`、`strip`、`legend_position`、`axis_color` 和 `x_angle`。`palette` 在五种 ggsci 调色板之外还接受默认样式的调色板 `"standard"`；样式还设定 `title_hjust`、`line_size`、`compare_line_size`、`se_alpha` 和 `compare_se_alpha`。函数参考列出了两种样式下每项设置的取值。
+
+### 标题、文字和时间轴
+
+- 每个绘图函数都有参数 `title`：`NULL` 画默认标题，`FALSE`（以及 `NA` 或 `""`）不画标题，字符串按原样画出。`plot_compare_ts()`、`plot_compare_F()`、`plot_compare_F_ts()`、`plot_compare_CatL()`、`plot_compare_growth()`、`plot_compare_selectivity()`、`plot_compare_residuals()` 和 `plot_compare_metrics()` 这八个比较图现在也有这个参数。`acl_theme_set(show_title = FALSE)` 去掉所有图的默认标题，保留调用中给出的标题，也保留多面板图中为各面板命名的标题。`check_fit()` 三个面板的标题现在是 `titles` 的键（`check_residuals`、`check_lag` 和 `check_qq`），可以修改或去掉。
+- 图中的默认文字已改变：标题、坐标轴标题、分面标签、图例和面板文字使用数量的全称，不用代码名，也不用图中未定义的缩写。例如 "Estimated spawning stock biomass (SSB) with 95% CI" 改为 "Spawning stock biomass with 95% confidence intervals"，纵轴 "Catch numbers" 改为 "Catch in numbers"，`plot_compare_ts()` 的标题 "{m1} vs {m2}" 改为 "Time series of {m1} and {m2}"。`plot_retro()` 的面板名为 "Total biomass"、"Recruitment"、"Spawning stock biomass (SSB)" 和 "Total abundance"，纵轴为 "Estimate"，面板文字为 "Mohn's rho = ..."；`plot_self_test()` 用文字给出参数名，例如 `log_Linf` 写作 "Asymptotic length (Linf)"；`plot_CatL()` 增加了观测序列和拟合序列的图例。用 `acl_theme_set(titles = , xlab = , ylab = )` 或绘图参数设定的文字原样使用。
+- 所有图的时间轴遵循同一规则。单面板图在 12 年以内每年标注，30 年以内每 2 年标注，60 年以内每 5 年标注，更长时每 10 年标注，其余年份或时间步画不带标签的次刻度。多面板图的标注间隔随面板宽度确定，会相互接触的标签倾斜 45 度显示，而不是被删去。新设置 `x_angle`（也是 `theme_acl()` 的参数）设定角度：`NULL` 自动选择，`0` 保持标签水平并减少标签数，其他数值固定该角度。调用或设置中的 `x_breaks` 仍然优先。
+
+### 版面与保存的图
+
+- 默认分面列数由面板数决定，例如 4 个面板排成 2 x 2，15 个排成 5 x 3，20 个排成 5 x 4，23 个排成 6 x 4；调用中的 `facet_ncol` 和 `facet_nrow` 优先。设置 `compare_facet_ncol` 和 `plot_compare_CatL(facet_ncol = )` 的默认值分别由 2 和 4 改为 `NULL`，按同样的方式选择列数；要保持原来的版面，请显式设定。
+- `plot_compare_ts()` 画五个数量时以及 `plot_compare_metrics()` 把图例放在网格的空格中。`plot_SSB_Rec()` 和 `check_fit()` 的分位数-分位数面板为正方形。零值和一值处的参考线以及 1:1 等值线画得较细，并画在数据之下。未给出 `line_size` 时，面板多的图线条较细：4 个面板以内为原宽度，5 到 12 个面板为三分之二，更多时为一半。刻度标签按面板行数减少，去掉末尾的零，互不重叠；图中文字不小于 8 pt，给出更小的 `plot_VB()` 的 `text_size` 或 `plot_compare_metrics()` 的 `label_size` 时也是如此；较长的图例会换行。`plot_compare_metrics()` 画横向的柱，把每根柱的数值写在柱旁，不再旋转，并为这些数值留出空间；`plot_retro()` 在每个面板中为 Mohn's rho 文字留出空间。画点的图在横轴上、以及较矮的分面面板在纵轴上，都在点与面板边框之间留出约一个点半径的距离，点不再被边框截断；设定了 `x_expand` 或图本身设定了扩展范围时除外。点或线上误差线的端帽宽度为横轴取值间隔的四分之一，只有一个时间步时保持较短；柱上误差线的端帽为柱宽的三分之一。因此 `plot_deviance()` 的 `se_width` 和 `plot_compare_residuals()` 的 `errorbar_width` 的默认值由 0.5 和 0.3 改为 `NULL`，即自动选择这一宽度；调用中给出的值照旧使用。`plot_VB()` 生长参数标注的默认大小 `text_size` 由 5 改为 3.5。
+- 新函数 `acl_figure_size()` 和 `acl_save_plot()`。`acl_figure_size(plot)` 根据图的版面返回保存该图时建议的宽和高（英寸）：单条时间序列约 8 x 4.5 英寸，带分面的图宽 10 英寸；给出 `width =` 时固定宽度并返回相应的高度。`acl_save_plot(plot, filename)` 按这个尺寸保存图，背景为白色，默认分辨率为 300 dpi。`output = TRUE` 写出的图用它保存，每张图取各自的建议尺寸，不再是 12 x 7 英寸；文档中的代码都以 300 dpi 保存图。
+
+### 主题辅助函数和新参数
+
+- 新函数 `theme_acl()` 和 `acl_palette()`，ALSCL 现在导出 81 个函数。`theme_acl()` 返回当前设置下包内绘图所用的主题图层（基础主题、文字大小、网格线、标题、分面标签和图例位置），所以 `ggplot(...) + theme_acl()` 可以让你自己的图具有包内绘图的外观。`acl_palette()` 返回当前调色板或指定调色板的颜色，给出 `n` 时返回 `n` 种颜色；给出 `role` 时返回绘图中种群大小、F、补充量、渔获量、线、观测值、平滑曲线和参考线所用的颜色。
+- `plot_recruitment()` 和 `plot_catch()` 新增参数 `geom`：取 `"bar"` 或 `"line"` 只作用于本次调用，默认 `NULL` 跟随设置 `bars`。按年龄和按体长的渔获量仍画成线。`plot_recruitment()` 中 `se_type` 的默认值改为 `NULL`，柱上画误差线，线的周围画区间带；2.4.5 画的是区间带。`plot_ridges()` 中 `palette` 的默认值改为 `NULL`：在 standard 调色板下为由浅蓝到深蓝的渐变，在其他调色板下与以前一样为 viridis；`palette = "viridis"` 在两种样式下都给出原来的渐变。
+
+### 区间和提示
+
+- `extract_estimates()` 和 `summarize_simulations()` 新增参数 `interval`，默认是对数正态区间 `exp(log(estimate) -/+ z * SE / estimate)`，也就是绘图和 `self_test()` 原本使用的区间。因此表格、覆盖率和图给出的是同一个区间，正值数量的区间不会低于零。默认情况下，`extract_estimates()` 的 `conf_low` 和 `conf_high` 列以及 `summarize_simulations()` 的覆盖率与 2.4.5 不同；`interval = "wald"` 给出原来的区间 `estimate -/+ z * SE`。估计值为零时保留 Wald 区间，但下限截在零；估计值为负时保留 Wald 区间。估计值和标准误不变。`self_test()` 现在用同一段代码计算区间；估计值为正时它的结果不变。
+- ALSCL 拟合中说明给出的 `log_t0` 对应哪个 t0（`t0 = t0_lower + exp(log_t0)`）的提示，现在只在 `t0_lower` 和 `log_t0` 来自不同地方时给出：一个来自调用的参数，另一个来自输入列表或保存的拟合结果中的 `recipe`。`run_alscl(YTF_example, t0_lower = -1)` 仍然给出这条提示，因为输入列表中保存的 `log_t0 = log(1/60)` 是按 `t0_lower = 0` 选定的，此时对应的 t0 为 -0.983 年。同时保存两者的输入列表（如 `whiting_example`）和同时给出两者的调用不再给出这条提示。正的 `t0_lower` 不低于默认 t0 时的提示不变。
+
 ## ALSCL 2.4.5
 
 - 条件模式下，`self_test()` 仍以源拟合的估计值作为 mean_log_F 和 mean_log_R 的真值（与 2.4.4 相同），帮助和模型验证文章现在说明了原因。在估计值处，AR(1) 过程的均值参数等于拟合过程的加权平均，其中第一个和最后一个时间步的权重较大，而不是算术平均；重新拟合若找回了这个过程，也就找回了这个加权平均。2.4.4 之后的一个开发版曾以源估计值加上拟合偏差的算术平均作为真值；这个真值比较的不是同一个量，并把偏差的符号弄反了。在 20 套数据的自检中（YTF_example，ALSCL），mean_log_F 的中位相对误差对那个真值为 -4.2%，对源估计值为 +12.7%，比较拟合与重新拟合的对数 F 算术平均时为 +7.1%。F 和补充量的水平由时间序列衡量。

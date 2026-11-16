@@ -16,23 +16,23 @@ ALSCL is an R package for stock assessment from fishery-independent survey data 
 
 Around the two models the package provides data preparation and checks, multistart fitting on parallel workers, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, portable assessment archives and 27 plotting functions.
 
-**Latest release: 2.4.5** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
+**Latest release: 2.5.0** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
 
 ## What you can do
 
 - **Prepare and check the data.** Read the three survey tables from Excel or CSV with `read_survey_excel()` or `read_survey_csv()`, combine them with the biological settings into one input bundle with `prepare_alscl_data()`, and confirm with `check_alscl_data()` and `inspect_parameters()` that the bundle can be fitted and which parameters will be estimated. Annual and quarterly time steps are supported.
 - **Fit two model structures to the same tables.** `run_acl()` tracks numbers at age and converts them to numbers at length with an age-length probability matrix. `run_alscl()` tracks numbers by length and age, with length-specific mortality and a growth transition matrix. Both can run independent optimizer starts on parallel workers (`nstarts`, `ncores`) and finish the best start with checked Newton steps (`polish`).
-- **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and QQ plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
+- **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and normal quantile-quantile plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
 - **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`), self-tests that refit the model to data simulated from it (`self_test()`) and hindcast validation on withheld time steps (`hindcast_model()`).
 - **Keep and share the results.** `save_assessment()` stores a fit with its complete recipe, `read_assessment()` and `refit_model()` bring it back and refit it, and `extract_estimates()` returns the estimates with their standard errors.
-- **Plot everything with one argument set.** The 27 plotting functions share their argument names and one theme, `acl_theme_set()`, with five colour palettes. The [gallery](docs/PLOT_GALLERY.md) shows all 48 figures with their code.
+- **Plot everything with one argument set.** The 27 plotting functions share their argument names and one theme, `acl_theme_set()`. The default style gives each quantity its own color and draws total recruitment and total catch as bars, `acl_theme_set(style = "classic")` brings back the colors and line forms of version 2.4.5, six color palettes are available, `theme_acl()` and `acl_palette()` give your own ggplots the same look, and `acl_save_plot()` saves a figure at a size computed from its layout. The [gallery](docs/PLOT_GALLERY.md) shows all 48 figures with their code.
 
 ## Installation
 
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # development version (main)
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.4.5")   # a specific release
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.5.0")   # a specific release
 ```
 
 ALSCL needs R 4.1 or later, TMB 1.9.21 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
@@ -47,21 +47,21 @@ a <- run_acl(x, silent = TRUE)    # age-structured model
 b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
 diagnose_model(x$data.CatL, a)    # numerical checks before reading any estimate
 extract_estimates(a)              # estimates with standard errors
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 save_assessment(a, "ytf_acl.rds")
 ```
 
-![ACL and ALSCL biomass, spawning biomass and recruitment](docs/figures/ytf/compare_ts.png)
+![Spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers estimated by ACL and ALSCL](docs/figures/ytf/compare_ts.png)
 
 `YTF_example` is a synthetic data set with known simulation truth, made for teaching; it is not the empirical data set of the paper. To fit your own survey, start with [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html).
 
 <p align="center">
-  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/CatL_length_TRUE.png" width="32%" alt="Fitted and observed survey indices by length bin"></a>
-  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/residuals_year.png" width="32%" alt="Log residuals by year"></a>
-  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/ridges.png" width="32%" alt="Observed and fitted length composition by year"></a>
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/CatL_length_TRUE.png" width="32%" alt="Observed and fitted survey indices over time, one panel per length bin"></a>
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/residuals_year.png" width="32%" alt="Log residuals of the survey index, one panel per time step"></a>
+  <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/ridges.png" width="32%" alt="Observed and fitted survey length compositions over time"></a>
 </p>
 
-Survey fit by length bin, residuals by year, and observed and fitted length composition by year: three of the figures in the [plot gallery](docs/PLOT_GALLERY.md).
+Three of the figures in the [plot gallery](docs/PLOT_GALLERY.md) show the observed and fitted survey indices of each length bin, the log residuals of each time step and the observed and fitted length compositions.
 
 ## Two models, one input format
 
@@ -86,7 +86,7 @@ Every page states its purpose, the code to run, what to expect and what to do wh
 
 | Entry | Contents |
 |---|---|
-| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, seven worked cases and the reference of all 77 functions |
+| **[Website](https://fanzhang-lab-shou.github.io/ALSCL/)** (English) · **[中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/)** | Installation, first fit, data preparation, fitting settings, diagnostics, plots, simulation, reproducibility, seven worked cases and the reference of all 81 functions |
 | [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Single-page book](docs/BOOK.md) | The same content with Chinese and English side by side, 18 chapters |
 | [User guide](docs/USER_GUIDE.md) | From installation to retrospectives |
 | [Assessment workflows](docs/ASSESSMENT_WORKFLOWS.md) · [Model validation](docs/MODEL_VALIDATION.md) · [Worked cases](docs/CASES.md) | Result extraction and archives, sensitivity, profiles, projections, simulation, hindcast validation |

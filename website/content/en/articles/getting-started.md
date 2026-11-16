@@ -43,7 +43,7 @@ str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 
 Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching dataset generated using the yellowtail flounder (*Limanda ferruginea*) biological settings in `YTF`. It contains a survey-index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length-bin rows and 20 year columns. The first column contains length-bin labels; the remaining columns contain years. [Species identity](https://www.fisheries.noaa.gov/species/yellowtail-flounder).
 
-You should see version 2.4.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.5.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
 
 If loading the package gives a warning that TMB was built with another Matrix ABI version, the TMB binary does not match the installed Matrix package, and every fit can then fail with `All optimization starts failed` and `NA/NaN`. Run `install.packages("TMB", type = "source")`, restart R and load the package again.
 
@@ -55,9 +55,9 @@ a <- run_acl(x, silent = TRUE)
 diagnose_model(x$data.CatL, a)
 ```
 
-`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about twenty seconds. `silent = TRUE` hides the progress messages.
+`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about ten seconds. `silent = TRUE` hides the progress messages.
 
-`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when this screen passes; [Understand your first fit](first-model.html) explains the checks and how to investigate a flagged result.
+`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when these checks pass; [Understand your first fit](first-model.html) explains the checks and how to investigate a flagged result.
 
 Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 

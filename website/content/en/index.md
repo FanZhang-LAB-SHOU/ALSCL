@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website describes ALSCL 2.4.5; see [News](news/index.html) for the changes in each release and for the changes that are not yet released.
+The website describes ALSCL 2.5.0; see [News](news/index.html) for the changes in each release.
 
 <h2 id="models">Two model structures</h2>
 
@@ -46,7 +46,7 @@ The website describes ALSCL 2.4.5; see [News](news/index.html) for the changes i
 | Fishing mortality | Estimated by age | Estimated by length; age-specific F is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 
-Both models use three aligned input tables: survey numbers-at-length, mean individual weight-at-length, and maturity-at-length. Natural mortality and survey catchability settings are supplied. Their assumptions affect the scale and interpretation of the estimates; see the [model framework](articles/model-theory.html).
+Both models use three aligned input tables: survey numbers-at-length, mean individual weight-at-length, and maturity-at-length. Natural mortality and survey catchability settings are supplied. Their assumptions affect the scale and interpretation of the estimates; see [Model principles](articles/model-theory.html).
 
 <h2 id="basic-use">Basic use</h2>
 
@@ -59,12 +59,12 @@ a <- run_acl(x, silent = TRUE)    # age-structured model
 b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
 diagnose_model(x$data.CatL, a)    # numerical checks, before reading any estimate
 diagnose_model(x$data.CatL, b)
-plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
+plot_compare_ts(a, b, se = TRUE)
 ```
 
 `run_acl(x)` and `run_alscl(x)` read the same input bundle `x` (three tables plus settings) and each selects its own stored configuration. [Understand your first fit](articles/first-model.html) explains the fitted object, the checks and the estimates step by step; [Choose the fitting settings](articles/fitting-controls.html) explains what you can change, and [Speed settings](articles/speed.html) how to use several cores.
 
-![ACL and ALSCL biomass, spawning biomass and recruitment estimates from the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
+![Spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers estimated by ACL and ALSCL for the synthetic YTF example](assets/manual/figures/ytf/compare_ts.png)
 
 The example fixes selected biological and process parameters. Its uncertainty intervals are conditional on those settings. The [worked example](articles/first-model.html) explains the inputs, fitted objects and data provenance.
 
@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-Read the numerical checks first (convergence code, gradient, Hessian, bounds, parameters at their limit), then the residual patterns, then the sensitivity to the fixed inputs such as natural mortality and survey catchability. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparison plots](articles/model-comparison.html) shows the comparison figures.
+Read the numerical checks first (convergence code, gradient, Hessian, bounds, parameters at their limit), then the residual patterns, then the sensitivity to the fixed inputs such as natural mortality and survey catchability. [Judge whether a fit can be used](articles/diagnostics.html) walks through these checks and [Model comparisons](articles/model-comparison.html) shows the comparison figures.
 
 <h2 id="learn-more">Basic functions</h2>
 

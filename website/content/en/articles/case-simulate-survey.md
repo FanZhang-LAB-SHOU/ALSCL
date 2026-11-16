@@ -32,7 +32,7 @@ saveRDS(list(parameters = pa, truth = sm, inputs = inputs),
 str(inputs)
 ```
 
-`initialize_params()` builds the flatfish preset (age-based dynamics, 20 annual time steps labelled 2000-2019 after an 80-year burn-in), `sim_cal()` derives the biological arrays and `sim_data()` runs the population: `iter_range` gives the replicate ids and seeds, each saved as `sim_rep<id>` with `save()` (read it back with `load()`), and `return_iter = 4` returns that replicate as `sm`, with the survey numbers `SN_at_len`, the retained `years` and the truth `SSB`, `Rec` and `TB` ([Simulate survey data](simulation.html#generate) lists every element). `simulation_to_tables(sm, pa)` returns the three tables with the length midpoints as rows and `sm$years` as columns; `str(inputs)` should show three 23-by-21 data frames. If the converter stops because `len_mid` differs from the replicate's recorded coordinates, pass the parameter list that generated the file.
+`initialize_params()` builds the flatfish preset (age-based dynamics, 20 annual time steps labelled 2000-2019 after an 80-year burn-in), `sim_cal()` derives the biological arrays and `sim_data()` runs the population. `iter_range` gives the replicate ids and seeds, each saved as `sim_rep<id>` with `save()` (read it back with `load()`), and `return_iter = 4` returns that replicate as `sm`, with the survey numbers `SN_at_len`, the retained `years` and the truth `SSB`, `Rec` and `TB` ([Simulate survey data](simulation.html#generate) lists every element). `simulation_to_tables(sm, pa)` returns the three tables with the length midpoints as rows and `sm$years` as columns; `str(inputs)` should show three 23-by-21 data frames. If the converter stops because `len_mid` differs from the replicate's recorded coordinates, pass the parameter list that generated the file.
 
 <h2 id="plot">3. Plot the simulated observations</h2>
 
@@ -44,22 +44,22 @@ observations <- data.frame(
   Length = rep(pa$len_mid, length(years)),
   Index = as.vector(as.matrix(inputs$data.CatL[-1])))
 p_data <- ggplot(observations, aes(Year, Length, fill = log10(Index))) +
-  geom_tile() + scale_fill_gradient(low = "white", high = "steelblue") +
-  labs(fill = "log10 index") + theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = acl_palette(role = "primary")) +
+  labs(x = "Year", y = "Length (cm)", fill = "Survey index (log10)") + theme_acl()
 p_data
-ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 160)
+ggsave("my_full_simulation/survey.png", p_data, width = 10, height = 4, dpi = 300)
 ```
 
 The heatmap shows the log10 survey index by year and length bin, with `pa$len_mid` as the 23 bin midpoints.
 
-![Full flatfish simulation: survey numbers by length and year](../assets/manual/figures/cases/flatfish_data.png)
+![Full flatfish simulation: simulated survey index by length and year](../assets/manual/figures/cases/flatfish_data.png)
 
 The figure shows how the survey index varies across lengths and years. Moving bands can reflect cohort growth, but several ages can contribute to one length bin; use the simulated age-specific states to track a cohort. The index is small below 10 cm, where catchability is under 0.1, and largest at 15-30 cm. Changing survey catchability changes the expected indices for a given population state.
 
 ![Generating growth curve, maturity and survey catchability](../assets/manual/figures/cases/flatfish_biology.png)
 
-The upper panel is the growth curve, 11 cm at age 1 to 57 cm at age 15. The lower curves are maturity (L50 35 cm, from `data.mat`) and survey catchability (L50 15 cm, from `sel_L50` and `sel_L95`); your stock needs its own values.
+The left panel is the growth curve, 11 cm at age 1 to 57 cm at age 15. The right panel shows the proportion mature (L50 35 cm, from `data.mat`) and survey catchability (L50 15 cm, from `sel_L50` and `sel_L95`); your stock needs its own values.
 
 <h2 id="fit">4. Fit both models to the replicate</h2>
 
@@ -99,8 +99,9 @@ The operating model combines a shared time series of F with selectivity. In this
 <h2 id="truth">5. Compare the estimates with the generating truth</h2>
 
 ```r
+panels <- c("Total biomass", "Spawning stock biomass (SSB)", "Recruitment")
 truth <- data.frame(Year = rep(years, 3),
-  Quantity = rep(c("B", "SSB", "Rec"), each = length(years)),
+  Quantity = factor(rep(panels, each = length(years)), levels = panels),
   Truth = c(sm$TB, sm$SSB, sm$Rec))
 estimates <- rbind(
   data.frame(Year = rep(years, 3), Quantity = truth$Quantity,
@@ -108,22 +109,25 @@ estimates <- rbind(
   data.frame(Year = rep(years, 3), Quantity = truth$Quantity,
     Value = c(b$report$B, b$report$SSB, b$report$Rec), Model = "ALSCL"))
 p_truth <- ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() +
-  geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
-  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) + theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  scale_color_manual(values = acl_palette(2)) +
+  geom_line(data = truth, aes(Year, Truth, linetype = "Simulated value"),
+            inherit.aes = FALSE) +
+  scale_linetype_manual(values = 2, name = NULL) +
+  facet_wrap(~ Quantity, scales = "free_y", ncol = 1) +
+  labs(y = "Estimate", color = NULL) + theme_acl()
 p_truth
 ggsave("my_full_simulation/truth_comparison.png", p_truth,
-       width = 10, height = 6, dpi = 160)
+       width = 10, height = 6, dpi = 300)
 saveRDS(list(parameters = pa, truth = sm, inputs = inputs, checks = checks,
              ACL_report = a$report, ALSCL_report = b$report),
         "my_full_simulation/assessment_summary.rds")
 ```
 
-The simulator calls total biomass `TB` and the fitted report calls it `B`; the code lines them up by year and quantity.
+The simulator calls total biomass `TB` and the fitted report calls it `B`; the code lines them up by year and quantity and labels the panels as in the figure below.
 
 ![Flatfish replicate 4: generating truth and conditional ACL/ALSCL estimates](../assets/manual/figures/cases/flatfish_truth.png)
 
-Dashed lines are the truth, solid lines the two conditional estimates; the y scales are free, so compare within each panel. For biomass and spawning biomass, both models follow the decline to 2010 and the rise after it, and ALSCL sits below the truth for biomass and spawning biomass after 2014. One replicate of an age-based generator is shown; ranking the models needs many replicates with the failed fits kept, which [Simulate survey data](simulation.html#fit) summarizes with `summarize_simulations()`.
+Dashed lines are the simulated values (the truth), solid lines the two conditional estimates; the y scales are free, so compare within each panel. For total biomass and spawning stock biomass (SSB), both models follow the decline to 2010 and the rise after it, and ALSCL sits below the truth for both after 2014. One replicate of an age-based generator is shown; ranking the models needs many replicates with the failed fits kept, which [Simulate survey data](simulation.html#fit) summarizes with `summarize_simulations()`.
 
 <h2 id="next">What next</h2>
 

@@ -14,7 +14,7 @@
 - [10 模型比较与真值 · Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons)
 - [11 回溯分析 · Retrospectives](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives)
 - [12 年度与季度案例 · Annual and quarterly cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)
-- [13 ggsci 配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export)
+- [13 配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export)
 - [14 全部函数与参数 · Complete function reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 - [15 复现与故障处理 · Reproducibility and troubleshooting](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/15-Reproducibility)
 - [16 评估工作流 · Assessment workflows](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/16-Assessment-Workflows)

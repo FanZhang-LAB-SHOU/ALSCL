@@ -4,7 +4,7 @@
 
 另附单点估计与缺测绘图示例。 / Additional examples show single estimates and missing observations.
 
-全部 48 张图使用当前绘图函数从内置教学拟合生成，默认不显示网格线；BL/SBL 图包含可用的近似 95% 区间。 / All 48 figures are drawn with the current plotting functions from the built-in teaching fits; the defaults show no gridlines, and the BL/SBL figures include the available approximate 95% intervals.
+全部 48 张图使用当前绘图函数以默认样式从内置教学拟合生成，`acl_theme_set(style = "classic")` 恢复 2.4.5 的颜色和线型；BL/SBL 图包含可用的近似 95% 区间。 / All 48 figures are drawn with the current plotting functions from the built-in teaching fits in the default style; `acl_theme_set(style = "classic")` brings back the colors and line forms of 2.4.5. The BL/SBL figures include the available approximate 95% intervals.
 
 [使用指南 / Guide](USER_GUIDE.md) · [完整参数 / API](FUNCTION_REFERENCE.md) · [可运行脚本 / R workflow](../scripts/ytf_workflow.R)
 
@@ -12,13 +12,12 @@
 
 Run [section 4 of the guide](USER_GUIDE.md#builtin) to create the input bundle `x` and the fits `a` and `b`. Then define `dat <- x$data.CatL` and load ggplot2 and patchwork. Retrospective plots use `ra` and `rb` from [section 8](USER_GUIDE.md#retrospective). Every fit uses the same synthetic YTF data and conditional fixed-biology settings.
 
-代码中的额外主题、刻度及组合布局仅调整显示。图像可点击放大；保存时建议宽 11 英寸、多分面高 8.5 英寸。 / Extra theme, scale and layout calls affect presentation only. Click figures to enlarge; use wide output for multi-panel figures.
+代码中的额外主题、刻度及组合布局仅调整显示。图像可点击放大；保存时用 `acl_save_plot(p, "figure.png")`，它按图的版面选择尺寸，分辨率为 300 dpi。 / Extra theme, scale and layout calls affect presentation only. Click figures to enlarge; save a figure with `acl_save_plot(p, "figure.png")`, which chooses the size from the layout of the figure and saves at 300 dpi.
 
 ```r
 # 全图共用主题 / Shared gallery theme
-acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
-  axis_title_size=10, axis_text_size=9, strip_text_size=9,
-  palette="npg")
+acl_theme_set(font_family="sans", title_size=12,
+  axis_title_size=10, axis_text_size=9, strip_text_size=9)
 ```
 
 ## 图目录 / Figure index
@@ -33,15 +32,15 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [8. 生物量 B / Biomass B](#plot_biomass_B)
 - [9. 生物量 BA / Biomass BA](#plot_biomass_BA)
 - [10. 生物量 BL / Biomass BL](#plot_biomass_BL)
-- [11. 产卵生物量 SSB / Spawning biomass SSB](#plot_SSB_SSB)
-- [12. 产卵生物量 SBA / Spawning biomass SBA](#plot_SSB_SBA)
-- [13. 产卵生物量 SBL / Spawning biomass SBL](#plot_SSB_SBL)
-- [14. 捕获尾数 CN / Catch numbers CN](#plot_catch_CN)
-- [15. 捕获尾数 CNA / Catch numbers CNA](#plot_catch_CNA)
-- [16. 捕获尾数 CNL / Catch numbers CNL](#plot_catch_CNL)
-- [17. 相对渔获量 / Relative catch](#relative_catch)
+- [11. 产卵生物量 SSB / Spawning stock biomass SSB](#plot_SSB_SSB)
+- [12. 产卵生物量 SBA / Spawning stock biomass SBA](#plot_SSB_SBA)
+- [13. 产卵生物量 SBL / Spawning stock biomass SBL](#plot_SSB_SBL)
+- [14. 渔获尾数 CN / Catch in numbers CN](#plot_catch_CN)
+- [15. 渔获尾数 CNA / Catch in numbers CNA](#plot_catch_CNA)
+- [16. 渔获尾数 CNL / Catch in numbers CNL](#plot_catch_CNL)
+- [17. 渔获量相对于其均值 / Catch relative to its mean](#relative_catch)
 - [18. 补充量 / Recruitment](#recruitment)
-- [19. 亲体与补充关系 / Spawning biomass and recruitment](#SSB_Rec)
+- [19. 亲体与补充关系 / Spawning stock biomass and recruitment](#SSB_Rec)
 - [20. 年龄别平均体长 / Mean length at age](#VB)
 - [21. 各时间步的年龄别平均体长 / Mean length at age by time step](#length_at_age)
 - [22. 年龄—体长概率矩阵 / Age-length probability matrix](#pla)
@@ -69,7 +68,7 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 - [44. 每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](#compare_F_mean)
 - [45. ACL 回溯分析 / ACL retrospective analysis](#retro_ACL)
 - [46. ALSCL 回溯分析 / ALSCL retrospective analysis](#retro_ALSCL)
-- [47. 模拟真值与条件估计 / Simulation truth and conditional estimates](#truth)
+- [47. 模拟真值与条件估计 / Simulated values and conditional estimates](#truth)
 - [48. 自检的相对误差 / Relative errors of a self-test](#self_test)
 
 <a id="plot_CatL"></a>
@@ -79,17 +78,16 @@ acl_theme_set(base_theme="bw", font_family="sans", title_size=12,
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, facet_by = "length", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = FALSE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Log survey index")
 ```
 
 [![各体长组的调查指数（对数尺度） / Survey index by length bin (log scale)](figures/ytf/CatL_length_FALSE.png)](figures/ytf/CatL_length_FALSE.png)
 
-每个体长组一个面板，横轴为时间，纵轴为对数调查指数：朱红色点为观测的对数指数，深蓝色曲线为拟合的 `Elog_index`。用它逐组检查拟合；点连续偏在曲线一侧（如本例的 16 组和 50 组）说明该组被系统低估或高估，对数尺度让大小体长组的偏离同样可读。
+每个体长组一个面板，横轴为时间，纵轴为对数调查指数：橙色点为观测的对数指数，深蓝色曲线为拟合的 `Elog_index`。用它逐组检查拟合；点连续偏在曲线一侧（如本例的 16 组和 50 组）说明该组被系统低估或高估，对数尺度让大小体长组的偏离同样可读。
 
-One panel per length bin, time on the horizontal axis and the log survey index on the vertical axis: vermilion points are the observed log index and the navy curve is the fitted `Elog_index`. Use it to judge the fit bin by bin; a run of points on one side of the curve, as in bins 16 and 50 here, marks a bin the model under- or over-predicts, and the log scale shows this equally well in small and large bins.
+One panel per length bin, time on the horizontal axis and the log survey index on the vertical axis: orange points are the observed log index and the dark blue curve is the fitted `Elog_index`. Use it to judge the fit bin by bin; a run of points on one side of the curve, as in bins 16 and 50 here, marks a bin the model under- or over-predicts, and the log scale shows this equally well in small and large bins.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -98,17 +96,16 @@ One panel per length bin, time on the horizontal axis and the log survey index o
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, facet_by = "length", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "length", exp_transform = TRUE,
   point_size = 1, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015),
   ylab = "Survey index")
 ```
 
 [![各体长组的调查指数（原尺度） / Survey index by length bin (original scale)](figures/ytf/CatL_length_TRUE.png)](figures/ytf/CatL_length_TRUE.png)
 
-同样的面板改为原尺度：深蓝色曲线为 `exp(Elog_index)`，即拟合对数正态分布的中位数，朱红色点为观测指数。用它按指数单位读取偏差；误差是乘性的，高值处看似很大的差距与低值处的小差距可能是相同的相对偏差。
+同样的面板改为原尺度：深蓝色曲线为 `exp(Elog_index)`，即拟合对数正态分布的中位数，橙色点为观测指数。用它按指数单位读取偏差；误差是乘性的，高值处看似很大的差距与低值处的小差距可能是相同的相对偏差。
 
-The same panels on the original scale: the navy curve is `exp(Elog_index)`, the median of the fitted lognormal distribution, and the vermilion points are the observed index. Use it to read the misfit in index units; the error is multiplicative, so a gap that looks large at high values can be the same relative misfit as a small gap at low values.
+The same panels on the original scale: the dark blue curve is `exp(Elog_index)`, the median of the fitted lognormal distribution, and the orange points are the observed index. Use it to read the misfit in index units; the error is multiplicative, so a gap that looks large at high values can be the same relative misfit as a small gap at low values.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -117,9 +114,8 @@ The same panels on the original scale: the navy curve is `exp(Elog_index)`, the 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = FALSE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Log survey index")
 ```
 
@@ -127,9 +123,9 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE, facet_ncol = 4,
 
 按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。 / In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
-每个时间步一个面板，横轴为体长，纵轴为对数调查指数：细朱红线为观测对数指数随体长的变化，粗深蓝线为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
+每个时间步一个面板，横轴为体长，纵轴为对数调查指数：细橙色线为观测对数指数随体长的变化，粗深蓝线为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
 
-One panel per time step, length on the horizontal axis and the log survey index on the vertical axis: the thin vermilion curve is the observed log index across lengths and the thick navy curve is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the navy curve misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
+One panel per time step, length on the horizontal axis and the log survey index on the vertical axis: the thin orange curve is the observed log index across lengths and the thick dark blue curve is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the dark blue curve misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -138,9 +134,8 @@ One panel per time step, length on the horizontal axis and the log survey index 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_CatL(b, facet_by = "year", exp_transform = TRUE, facet_ncol = 4,
+plot_CatL(b, facet_by = "year", exp_transform = TRUE,
   line_size1 = 0.6, line_size2 = 0.4,
-  x_breaks = c(10, 30, 50),
   ylab = "Survey index")
 ```
 
@@ -159,14 +154,13 @@ The curves show fitted survey-index medians on the original scale, `exp(Elog_ind
 <a id="plot_abundance_N"></a>
 ## 5. 丰度 N / Abundance N
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点继承 `line_color`，区间继承 `se_color`。所有面板仍不显示网格线。
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差棒显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差棒取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ```r
 # 绘制本图 / Draw this figure
-plot_abundance(b, type = "N", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_abundance(b, type = "N", se = TRUE, line_size = 0.6)
 ```
 
 [![丰度 N / Abundance N](figures/ytf/plot_abundance_N.png)](figures/ytf/plot_abundance_N.png)
@@ -182,8 +176,7 @@ Total abundance sums the estimated numbers across all groups in each time step. 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_abundance(b, type = "NA", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_abundance(b, type = "NA", se = TRUE, line_size = 0.6)
 ```
 
 [![丰度 NA / Abundance NA](figures/ytf/plot_abundance_NA.png)](figures/ytf/plot_abundance_NA.png)
@@ -199,8 +192,7 @@ Each panel shows numbers at one age with an approximate 95% interval. Panels are
 
 ```r
 # 绘制本图 / Draw this figure
-plot_abundance(b, type = "NL", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_abundance(b, type = "NL", se = TRUE, line_size = 0.6)
 ```
 
 [![丰度 NL / Abundance NL](figures/ytf/plot_abundance_NL.png)](figures/ytf/plot_abundance_NL.png)
@@ -262,8 +254,7 @@ plot_catch(a, type = "CNA", se = FALSE)
 
 ```r
 # 绘制本图 / Draw this figure
-plot_biomass(b, type = "B", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_biomass(b, type = "B", se = TRUE, line_size = 0.6)
 ```
 
 [![生物量 B / Biomass B](figures/ytf/plot_biomass_B.png)](figures/ytf/plot_biomass_B.png)
@@ -279,8 +270,7 @@ Total biomass by time step with an approximate 95% interval. Compare it with tot
 
 ```r
 # 绘制本图 / Draw this figure
-plot_biomass(b, type = "BA", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_biomass(b, type = "BA", se = TRUE, line_size = 0.6)
 ```
 
 [![生物量 BA / Biomass BA](figures/ytf/plot_biomass_BA.png)](figures/ytf/plot_biomass_BA.png)
@@ -296,8 +286,7 @@ Biomass at age, one panel per age class with free vertical scales and the 95% ba
 
 ```r
 # 绘制本图 / Draw this figure
-plot_biomass(b, type = "BL", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_biomass(b, type = "BL", se = TRUE, line_size = 0.6)
 ```
 
 [![生物量 BL / Biomass BL](figures/ytf/plot_biomass_BL.png)](figures/ytf/plot_biomass_BL.png)
@@ -311,19 +300,18 @@ Each panel shows biomass in one length bin and its approximate 95% interval. Com
 <a id="plot_SSB"></a>
 
 <a id="plot_SSB_SSB"></a>
-## 11. 产卵生物量 SSB / Spawning biomass SSB
+## 11. 产卵生物量 SSB / Spawning stock biomass SSB
 
 ```r
 # 绘制本图 / Draw this figure
-plot_SSB(b, type = "SSB", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_SSB(b, type = "SSB", se = TRUE, line_size = 0.6)
 ```
 
-[![产卵生物量 SSB / Spawning biomass SSB](figures/ytf/plot_SSB_SSB.png)](figures/ytf/plot_SSB_SSB.png)
+[![产卵生物量 SSB / Spawning stock biomass SSB](figures/ytf/plot_SSB_SSB.png)](figures/ytf/plot_SSB_SSB.png)
 
-产卵群体生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。SSB 的水平取决于拟合时给定的调查可捕性。要与使用年龄别成熟比例的评估比较趋势，请用 `ssb_at_age()` 按年龄别成熟比例计算产卵生物量。
+产卵生物量（SSB）由各组尾数乘以平均体重和成熟比例后求和得到，阴影为近似 95% 区间。本次拟合的 SSB 在 2010 年达到低点，随后回升。用 SSB 判断资源状态时，还需说明所采用的参考点。SSB 的水平取决于拟合时给定的调查可捕性。要与使用年龄别成熟比例的评估比较趋势，请用 `ssb_at_age()` 按年龄别成熟比例计算产卵生物量。
 
-Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute spawning biomass from a maturity ogive by age with `ssb_at_age()`.
+Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the proportion mature across groups. The shading gives an approximate 95% interval. In this fit, SSB reached a low in 2010 and subsequently increased. Assessing stock status also requires a stated reference point. The level of SSB depends on the survey catchability supplied to the fit. To compare the trend with an assessment that uses maturity at age, compute spawning stock biomass from a maturity ogive by age with `ssb_at_age()`.
 
 `plot_SSB(b, maturity_at_age = ogive)` 把按年龄别成熟比例算出的 SSB（`ssb_at_age()`）加画为虚线，与模型按体长别成熟比例算出的 SSB 并列；`ogive` 给出每个年龄组的成熟比例（[评估工作流](ASSESSMENT_WORKFLOWS.md#assessment-workflows-outputs)）。不给这个参数时图形不变。
 
@@ -334,9 +322,9 @@ Spawning stock biomass (SSB) sums numbers multiplied by mean weight and the prop
 
 ### 显示一个已保存的估计值 / Displaying a single saved estimate
 
-此列表仅用于显示 `b` 最后一期的产卵群体生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
+此列表仅用于显示 `b` 最后一期的产卵生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
 
-This display-only list contains the final spawning-biomass estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
+This display-only list contains the last estimate of spawning stock biomass from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
 
 ```r
 # Display one saved estimate without refitting.
@@ -354,68 +342,64 @@ plot_SSB(one_period, se = TRUE, x_breaks = one_period$year) +
 ![Displaying a single saved estimate](figures/sparse-panels/single-period-SSB.png)
 
 <a id="plot_SSB_SBA"></a>
-## 12. 产卵生物量 SBA / Spawning biomass SBA
+## 12. 产卵生物量 SBA / Spawning stock biomass SBA
 
 ```r
 # 绘制本图 / Draw this figure
-plot_SSB(b, type = "SBA", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_SSB(b, type = "SBA", se = TRUE, line_size = 0.6)
 ```
 
-[![产卵生物量 SBA / Spawning biomass SBA](figures/ytf/plot_SSB_SBA.png)](figures/ytf/plot_SSB_SBA.png)
+[![产卵生物量 SBA / Spawning stock biomass SBA](figures/ytf/plot_SSB_SBA.png)](figures/ytf/plot_SSB_SBA.png)
 
 年龄别产卵生物量，每个年龄组一个面板，带 95% 区间。用它看产卵来自哪些年龄；最小的几个年龄组接近零，因为成熟比例表几乎不给它们成熟个体，比较面板时看纵轴数值而不是曲线形状。
 
-Spawning biomass at age, one panel per age class with the 95% band. Use it to see which ages spawn; the youngest classes sit near zero because the maturity table gives them almost no mature fish, so compare panels by their axis values rather than by the shape of the curves.
+Spawning stock biomass at age, one panel per age class with the 95% band. Use it to see which ages spawn; the youngest classes sit near zero because the maturity table gives them almost no mature fish, so compare panels by their axis values rather than by the shape of the curves.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
 
 <a id="plot_SSB_SBL"></a>
-## 13. 产卵生物量 SBL / Spawning biomass SBL
+## 13. 产卵生物量 SBL / Spawning stock biomass SBL
 
 ```r
 # 绘制本图 / Draw this figure
-plot_SSB(b, type = "SBL", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_SSB(b, type = "SBL", se = TRUE, line_size = 0.6)
 ```
 
-[![产卵生物量 SBL / Spawning biomass SBL](figures/ytf/plot_SSB_SBL.png)](figures/ytf/plot_SSB_SBL.png)
+[![产卵生物量 SBL / Spawning stock biomass SBL](figures/ytf/plot_SSB_SBL.png)](figures/ytf/plot_SSB_SBL.png)
 
 体长别产卵生物量，每个体长组一个面板，带 95% 区间。用它看产卵来自哪些体长；小体长组同样接近零，30 以上的成熟组走势与总产卵生物量一致。
 
-Spawning biomass at length, one panel per length bin with the 95% band. Use it to see which lengths spawn; the small bins sit near zero for the same reason, and the mature bins above 30 follow the total spawning biomass.
+Spawning stock biomass at length, one panel per length bin with the 95% band. Use it to see which lengths spawn; the small bins sit near zero for the same reason, and the mature bins above 30 follow the total spawning stock biomass.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_SSB)
 
 <a id="plot_catch"></a>
 
 <a id="plot_catch_CN"></a>
-## 14. 捕获尾数 CN / Catch numbers CN
+## 14. 渔获尾数 CN / Catch in numbers CN
 
 ```r
 # 绘制本图 / Draw this figure
-plot_catch(b, type = "CN", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_catch(b, type = "CN", se = TRUE, line_size = 0.6)
 ```
 
-[![捕获尾数 CN / Catch numbers CN](figures/ytf/plot_catch_CN.png)](figures/ytf/plot_catch_CN.png)
+[![渔获尾数 CN / Catch in numbers CN](figures/ytf/plot_catch_CN.png)](figures/ytf/plot_catch_CN.png)
 
-模型推导的捕捞尾数（`CN`）随时间步变化，带近似 95% 区间。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。只拟合调查指数时渔获量的水平无法确定，它取决于给定的自然死亡率和调查可捕性。`relative_catch()` 返回渔获量除以其在各时间步上的均值，用于与上报渔获量比较趋势。
+模型推导的渔获尾数（`CN`）按时间步画成柱，误差线为近似 95% 区间；`geom = "line"` 改画带阴影区间带的线。它根据丰度和捕捞死亡率计算；YTF 教学数据不含实测渔获量。与独立渔获资料比较前，须统一数量定义、单位、丰度尺度、时期和区域。登陆量可能不包括弃捕，还需核对其涵盖的捕捞移除量（[FAO 定义](https://www.fao.org/4/x8923e/X8923E03.htm)）。区间较宽表示给定拟合假设下不确定性较大；仅凭宽度不能确定其原因。只拟合调查指数时渔获量的水平无法确定，它取决于给定的自然死亡率和调查可捕性。`relative_catch()` 返回渔获量除以其在各时间步上的均值，用于与上报渔获量比较趋势。
 
-Model-derived catch in numbers (`CN`) by time step with an approximate 95% interval. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause. A fit to a survey index alone does not determine the level of catch, which depends on the supplied natural mortality rate and survey catchability. `relative_catch()` returns catch divided by its mean over the time steps, for a comparison of trends with reported catch.
+Model-derived catch in numbers (`CN`) by time step, drawn as bars with approximate 95% error bars; `geom = "line"` draws a line with a shaded band. It is computed from abundance and fishing mortality; the YTF teaching data include no observed fishery catch. Compare it with independent catch data only after matching the quantity, units, abundance scale, period and area. Landings may omit discarded fish, so their coverage of fishing removals also needs checking ([FAO definitions](https://www.fao.org/4/x8923e/X8923E03.htm)). A wide interval indicates substantial uncertainty under the fitted assumptions; its width alone does not identify the cause. A fit to a survey index alone does not determine the level of catch, which depends on the supplied natural mortality rate and survey catchability. `relative_catch()` returns catch divided by its mean over the time steps, for a comparison of trends with reported catch.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
 <a id="plot_catch_CNA"></a>
-## 15. 捕获尾数 CNA / Catch numbers CNA
+## 15. 渔获尾数 CNA / Catch in numbers CNA
 
 ```r
 # 绘制本图 / Draw this figure
-plot_catch(b, type = "CNA", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_catch(b, type = "CNA", se = TRUE, line_size = 0.6)
 ```
 
-[![捕获尾数 CNA / Catch numbers CNA](figures/ytf/plot_catch_CNA.png)](figures/ytf/plot_catch_CNA.png)
+[![渔获尾数 CNA / Catch in numbers CNA](figures/ytf/plot_catch_CNA.png)](figures/ytf/plot_catch_CNA.png)
 
 每个面板显示一个年龄组的估计渔获尾数和近似 95% 区间。本例中，较年轻的年龄组渔获尾数较高。比较时请看各面板纵轴的数值。
 
@@ -424,15 +408,14 @@ Each panel shows estimated catch in numbers for one age class, with an approxima
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_catch)
 
 <a id="plot_catch_CNL"></a>
-## 16. 捕获尾数 CNL / Catch numbers CNL
+## 16. 渔获尾数 CNL / Catch in numbers CNL
 
 ```r
 # 绘制本图 / Draw this figure
-plot_catch(b, type = "CNL", se = TRUE, facet_ncol = 3,
-  line_size = 0.6)
+plot_catch(b, type = "CNL", se = TRUE, line_size = 0.6)
 ```
 
-[![捕获尾数 CNL / Catch numbers CNL](figures/ytf/plot_catch_CNL.png)](figures/ytf/plot_catch_CNL.png)
+[![渔获尾数 CNL / Catch in numbers CNL](figures/ytf/plot_catch_CNL.png)](figures/ytf/plot_catch_CNL.png)
 
 每个面板显示一个体长组的预期渔获尾数和近似 95% 区间。设组内期初尾数为 N，F 和 M 分别为每个时间步的瞬时捕捞死亡率和自然死亡率。按 Baranov 渔获方程，`C = N × (F/Z) × (1 − exp(−Z))`，其中 `Z = F + M`。ALSCL 将同一体长组各年龄的渔获尾数相加。[Baranov 渔获方程，式（15）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
@@ -443,7 +426,7 @@ Each panel shows the expected catch in numbers for one length bin, with an appro
 <a id="plot_relative_catch"></a>
 
 <a id="relative_catch"></a>
-## 17. 相对渔获量 / Relative catch
+## 17. 渔获量相对于其均值 / Catch relative to its mean
 
 ```r
 # 绘制本图 / Draw this figure
@@ -452,7 +435,7 @@ plot_relative_catch(b,
   type = "weight", observed_name = "Simulated catch")
 ```
 
-[![相对渔获量 / Relative catch](figures/ytf/relative_catch.png)](figures/ytf/relative_catch.png)
+[![渔获量相对于其均值 / Catch relative to its mean](figures/ytf/relative_catch.png)](figures/ytf/relative_catch.png)
 
 线是模型渔获重量除以它在各时间步上的均值，数值来自 `relative_catch()`。点是生成 `YTF_example` 的模拟中的渔获重量，除以它在同样时间步上的均值。用自己的数据时，把上报渔获量作为 `observed` 传入，它是含 `year` 和 `catch` 两列的数据框，单位不限。只拟合调查指数时，渔获量的绝对水平无法确定，它取决于假定的自然死亡率和调查可捕性，所以本图只比较趋势：纵轴标签写明数值是相对值，点线标出均值。上报序列只覆盖部分时间步时，均值取两条序列共有的时间步，`years` 可进一步限定。最后一个时间步的渔获量是预测值，因为该时间步的 F 没有观测提供信息。
 
@@ -472,16 +455,16 @@ plot_recruitment(b, se = TRUE)
 
 [![补充量 / Recruitment](figures/ytf/recruitment.png)](figures/ytf/recruitment.png)
 
-补充量表示每个时间步进入最小年龄组的估计尾数，阴影为近似 95% 区间。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
+补充量表示每个时间步进入最小年龄组的估计尾数。柱为估计值，误差线为近似 95% 区间；`geom = "line"` 改画带阴影区间带的线。本例估计补充量在 2012 年达到峰值。`rec.age` 指定个体进入模型的年龄。
 
-Recruitment is the estimated number entering the youngest age class per time step. The shaded band gives the approximate 95% interval. Estimated recruitment peaks in 2012 in this example. The age at entry is set by `rec.age`.
+Recruitment is the estimated number entering the youngest age class per time step. The bars show the estimates and the error bars the approximate 95% intervals; `geom = "line"` draws a line with a shaded band. Estimated recruitment peaks in 2012 in this example. The age at entry is set by `rec.age`.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_recruitment)
 
 <a id="plot_SSB_Rec"></a>
 
 <a id="SSB_Rec"></a>
-## 19. 亲体与补充关系 / Spawning biomass and recruitment
+## 19. 亲体与补充关系 / Spawning stock biomass and recruitment
 
 `age_at_recruitment` 的单位是年，默认 NULL 取最小拟合年龄（没有年龄元数据的结果用 1 年）。`plot_SSB_Rec()` 把给定的值除以拟合的 `growth_step`，要求在规则时间网格上对应整数个时间步。季度数据中，0.25 表示滞后一季度，1 表示四季度。允许零滞后；拒绝负值、非有限值及非整数步滞后。没有 `growth_step` 的结果使用规则年份间隔；两类时间元数据都没有时沿用年度步长。
 
@@ -492,9 +475,9 @@ Recruitment is the estimated number entering the youngest age class per time ste
 plot_SSB_Rec(b, age_at_recruitment = 1)
 ```
 
-[![亲体与补充关系 / Spawning biomass and recruitment](figures/ytf/SSB_Rec.png)](figures/ytf/SSB_Rec.png)
+[![亲体与补充关系 / Spawning stock biomass and recruitment](figures/ytf/SSB_Rec.png)](figures/ytf/SSB_Rec.png)
 
-每个点把某期的产卵群体生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
+每个点把某期的产卵生物量与 `age_at_recruitment` 年后的补充量配对，可用来查看两组估计值的关系。默认 `age_at_recruitment = NULL` 使用最小拟合年龄：本例的年度拟合为 1 年，`rec.age = 0.25` 的季度拟合为一个季度。评估模型用 AR(1) 过程描述补充量的对数偏差。绘图函数只绘制配对值。
 
 Each point pairs spawning stock biomass with recruitment `age_at_recruitment` years later. The default, `age_at_recruitment = NULL`, uses the youngest fitted age: 1 year for this annual fit and one quarter for a quarterly fit with `rec.age = 0.25`. The scatter shows the association in the fitted series. The assessment models log recruitment deviations as an AR(1) process, and the plotting function draws the pairs without fitting a stock-recruitment curve.
 
@@ -506,7 +489,7 @@ Each point pairs spawning stock biomass with recruitment `age_at_recruitment` ye
 ## 20. 年龄别平均体长 / Mean length at age
 
 ```r
-# 模拟的年龄鉴定资料，并非论文实测 / Synthetic age readings, not observations of the paper
+# 模拟的年龄鉴定资料，并非论文实测 / Simulated age readings, not observations of the paper
 set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
@@ -516,7 +499,7 @@ readings <- data.frame(age = 1:15,
   mean_length = as.numeric(tapply(ref$Mid, ref$Age, mean)),
   sd_length = as.numeric(tapply(ref$Mid, ref$Age, sd)))
 # 绘制本图 / Draw this figure
-plot_VB(b, observed = readings, parameter_curve = TRUE)
+plot_VB(b, observed = readings, parameter_curve = TRUE, text_size = 3.5)
 ```
 
 [![年龄别平均体长 / Mean length at age](figures/ytf/VB.png)](figures/ytf/VB.png)
@@ -542,8 +525,7 @@ Each length bin is represented by its midpoint. The last length bin of this exam
 
 ```r
 # 绘制本图 / Draw this figure
-plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2,
-  line_size = 0.6)
+plot_length_at_age(b, ages = c(2, 5, 8, 11), line_size = 0.6)
 ```
 
 [![各时间步的年龄别平均体长 / Mean length at age by time step](figures/ytf/length_at_age.png)](figures/ytf/length_at_age.png)
@@ -566,9 +548,9 @@ plot_pla(b)
 
 [![年龄—体长概率矩阵 / Age-length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
 
-静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 Age group。
+静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 "Age bin"。
 
-Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The colour shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads Age group.
+Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The color shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads "Age bin".
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_pla)
 
@@ -581,14 +563,14 @@ Each column of the static `pla` matrix gives length-bin probabilities for one ag
 
 A panel with one estimate uses a point and an error bar in place of a ribbon. Choosing `se_type = "errorbar"` does not add a duplicate interval.
 
-`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横轴显示拟合年龄，末组标为“15+”这样的形式；带区间（`se = TRUE`）的 ALSCL 图只显示末组之前的年龄。保存时没有年龄元数据的结果按年龄组的位置绘制，未设置 `xlab$age` 时默认标签为 Age group。默认的 `ylab$F` 标签注明捕捞死亡率的时间基准，例如“Fishing mortality rate (per year)”；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下都不显示网格线。
+`plot_fishing_mortality()` 从 `acl_theme_set()` 取标题、坐标轴标签、`x_breaks` 和 `x_expand`：标题键为 `F_year`、`F_age`、`F_length`，区间图加 `_se`；标签为 `xlab$year`、`xlab$age` 或 `xlab$length` 以及 `ylab$F`。年龄模式的横轴显示拟合年龄，末组标为“15+”这样的形式；带区间（`se = TRUE`）的 ALSCL 图只显示末组之前的年龄。保存时没有年龄元数据的结果按年龄组的位置绘制，未设置 `xlab$age` 时默认标签为 "Age bin"。默认的 `ylab$F` 标签注明捕捞死亡率的时间基准，例如“Fishing mortality rate (per year)”；调用中给出的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等主题名、ggplot2 主题对象或 `NULL`（全局设置），各种情况下网格线都由 `grid` 设置决定。
 
-`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal axis shows the fitted ages, and the plus group is marked as in "15+"; an ALSCL plot with intervals (`se = TRUE`) shows the ages before the plus group. A result saved without age metadata is plotted against the position of the age class, and its default label reads Age group unless you set `xlab$age`. The default `ylab$F` label states the time basis of the rate, for example "Fishing mortality rate (per year)"; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
+`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal axis shows the fitted ages, and the plus group is marked as in "15+"; an ALSCL plot with intervals (`se = TRUE`) shows the ages before the plus group. A result saved without age metadata is plotted against the position of the age class, and its default label reads "Age bin" unless you set `xlab$age`. The default `ylab$F` label states the time basis of the rate, for example "Fishing mortality rate (per year)"; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and the grid lines follow the `grid` setting in every case.
 
 ```r
 # 绘制本图 / Draw this figure
 plot_fishing_mortality(a, type = "year",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](figures/ytf/F_ACL_year.png)](figures/ytf/F_ACL_year.png)
@@ -605,7 +587,7 @@ Each panel shows the estimated instantaneous fishing mortality rate (`F`) for on
 ```r
 # 绘制本图 / Draw this figure
 plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
@@ -622,7 +604,7 @@ Each panel shows the same ACL estimates for one time step, with the fitted ages 
 ```r
 # 绘制本图 / Draw this figure
 plot_fishing_mortality(b, type = "year",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](figures/ytf/F_ALSCL_year.png)](figures/ytf/F_ALSCL_year.png)
@@ -639,7 +621,7 @@ Each panel shows how fishing mortality at length (`FL`) changes over time for on
 ```r
 # 绘制本图 / Draw this figure
 plot_fishing_mortality(b, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](figures/ytf/F_ALSCL_age.png)](figures/ytf/F_ALSCL_age.png)
@@ -656,7 +638,7 @@ For each age class, ALSCL sums the numbers surviving across length bins and divi
 ```r
 # 绘制本图 / Draw this figure
 plot_fishing_mortality(b, type = "length",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](figures/ytf/F_ALSCL_length.png)](figures/ytf/F_ALSCL_length.png)
@@ -676,10 +658,10 @@ Each panel shows fishing mortality at length for one time step, with an approxim
 
 ```r
 # 绘制本图 / Draw this figure
-(plot_natural_mortality(b, line_size = 0.8) +
-   labs(title = "Natural mortality rate (M)")) |
-  (plot_survey_catchability(b, line_size = 0.8, point_size = 1.5) +
-     labs(title = "Survey catchability at length"))
+(plot_natural_mortality(b, line_size = 0.8,
+    title = "Natural mortality rate") + expand_limits(y = 0)) |
+  plot_survey_catchability(b, line_size = 0.8, point_size = 1.5,
+    title = "Survey catchability at length")
 ```
 
 [![拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit](figures/ytf/inputs.png)](figures/ytf/inputs.png)
@@ -697,17 +679,16 @@ Both panels show inputs that you supplied, not estimates. `plot_natural_mortalit
 
 ```r
 # 绘制本图 / Draw this figure
-plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015))
+plot_residuals(b, facet_by = "length", line_size = 0.6)
 ```
 
 [![按体长组分面的对数残差 / Log residuals by length bin](figures/ytf/residuals_length.png)](figures/ytf/residuals_length.png)
 
 对数残差，即观测对数调查指数减拟合值，每个体长组一个面板，横轴为时间：深蓝线连接残差，灰线为零，青绿色虚线为平滑线。用它找模型拟合不好的体长组（零值和缺失观测没有残差）；多年同号的残差（如本例 16 组为正、20 组为负）说明系统性偏差，序列末端的趋势（如 50 组）提示模型没有跟上的变化。
 
-每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2–5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
+每个分面内，缺失或排除的观测会断开残差线和趋势线。单个有效观测画成点。连续 2 至 5 个观测用直线拟合趋势，连续至少 6 个观测用 loess。
 
-Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis: the navy line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
+Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis: the dark blue line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
 
 Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
@@ -718,8 +699,7 @@ Within each facet, a missing or excluded observation breaks the residual line an
 
 ```r
 # 绘制本图 / Draw this figure
-plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
-  x_breaks = c(10, 30, 50))
+plot_residuals(b, facet_by = "year", line_size = 0.6)
 ```
 
 [![按时间步分面的对数残差 / Log residuals by time step](figures/ytf/residuals_year.png)](figures/ytf/residuals_year.png)
@@ -738,8 +718,7 @@ The same residuals arranged by length: one panel per time step, with length on t
 ```r
 # 绘制本图 / Draw this figure
 plot_deviance(b, type = "R", log = TRUE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![补充量的对数偏差 / Log recruitment deviations](figures/ytf/deviation_R_TRUE.png)](figures/ytf/deviation_R_TRUE.png)
@@ -756,8 +735,7 @@ The points are estimated log recruitment deviations and the bars are approximate
 ```r
 # 绘制本图 / Draw this figure
 plot_deviance(b, type = "R", log = FALSE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![补充量相对于中位数的倍数 / Recruitment relative to the process median](figures/ytf/deviation_R_FALSE.png)](figures/ytf/deviation_R_FALSE.png)
@@ -774,8 +752,7 @@ With `log = FALSE`, each point is recruitment divided by the process median. A r
 ```r
 # 绘制本图 / Draw this figure
 plot_deviance(b, type = "F", log = TRUE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![捕捞死亡率的对数偏差 / Log fishing mortality deviations](figures/ytf/deviation_F_TRUE.png)](figures/ytf/deviation_F_TRUE.png)
@@ -792,8 +769,7 @@ Points and approximate 95% intervals show log fishing mortality deviations over 
 ```r
 # 绘制本图 / Draw this figure
 plot_deviance(b, type = "F", log = FALSE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![捕捞死亡率相对于中位数的倍数 / Fishing mortality relative to the process median](figures/ytf/deviation_F_FALSE.png)](figures/ytf/deviation_F_FALSE.png)
@@ -815,7 +791,7 @@ Both ridge panels retain the full model length range, even when the shortest or 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_ridges(b) # 默认 viridis 渐变 / Default viridis gradient
+plot_ridges(b) # 默认蓝色渐变 / Default blue gradient
 ```
 
 [![长度组成山脊图 / Length composition ridges](figures/ytf/ridges.png)](figures/ytf/ridges.png)
@@ -833,7 +809,7 @@ Missing or excluded length bins break the observed outline and fill. An isolated
 
 ### 边界体长组缺测 / Missing boundary length bins
 
-这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10–90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
+这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10 至 90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
 
 This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10-90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
 
@@ -864,14 +840,14 @@ Each model is handled separately: a single estimate uses a point and error bar, 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_ts(a, b, se = TRUE, facet_ncol = 2)
+plot_compare_ts(a, b, se = TRUE)
 ```
 
 [![种群时间序列比较 / Population time series comparison](figures/ytf/compare_ts.png)](figures/ytf/compare_ts.png)
 
-两组拟合的产卵生物量、补充量、总生物量、总丰度和捕获尾数时间序列，每个量一个面板，纵轴各自取值：ACL 为深蓝实线，ALSCL 为朱红虚线（`compare_colors`、`compare_linetypes`），`se = TRUE` 时加上各自的 95% 区间。用它看两个模型在哪里分歧；本例生物量和产卵生物量在 2014 年后分开，自由纵轴使振幅只能在面板内比较，不能跨面板比较。
+两组拟合的产卵生物量、补充量、总生物量、总丰度和渔获尾数时间序列，每个量一个面板，纵轴各自取值：ACL 为深蓝实线，ALSCL 为橙色虚线（`compare_colors`、`compare_linetypes`），`se = TRUE` 时加上各自的 95% 区间。用它看两个模型在哪里分歧；本例生物量和产卵生物量在 2014 年后分开，自由纵轴使振幅只能在面板内比较，不能跨面板比较。
 
-Time series of spawning biomass, recruitment, total biomass, total abundance and catch in numbers from two fits, one panel per quantity with its own vertical scale: ACL is the navy solid line and ALSCL the vermilion dashed line (`compare_colors`, `compare_linetypes`), and `se = TRUE` adds each fit's 95% band. Use it to see where the two models disagree; the ACL and ALSCL series separate after 2014 in biomass and spawning biomass here, and the free vertical scales make amplitudes comparable within a panel but not across panels.
+Time series of spawning stock biomass (SSB), recruitment, total biomass, total abundance and catch in numbers from two fits, one panel per quantity with its own vertical scale: ACL is the dark blue solid line and ALSCL the orange dashed line (`compare_colors`, `compare_linetypes`), and `se = TRUE` adds each fit's 95% band. Use it to see where the two models disagree; the ACL and ALSCL series separate after 2014 in biomass and SSB here, and the free vertical scales make amplitudes comparable within a panel but not across panels.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_ts)
 
@@ -882,14 +858,14 @@ Time series of spawning biomass, recruitment, total biomass, total abundance and
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))
+plot_compare_F(a, b)
 ```
 
 [![死亡率矩阵比较 / Fishing mortality matrices](figures/ytf/compare_F.png)](figures/ytf/compare_F.png)
 
-两组拟合各一张捕捞死亡率热图，横轴为时间，纵轴为各自的组（ACL 为年龄组，ALSCL 为体长组），共用一个 `F` 色标。用它看每个模型中捕捞在何时、哪些组最重；两图的行是不同维度，所以比较深色列的时间（本例 2007 至 2010 年）而不是逐格比较，F 汇总图可比较各模型的组间最大值或均值，解读时须区分年龄组和体长组的定义。 ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄；最大的年龄组是末组（plus group），用加号标出（“Age 15+”）。旧拟合缺少年龄坐标时，行标签会明确标为年龄组序号。要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
+两组拟合各一张捕捞死亡率热图，横轴为时间，纵轴为各自的组（ACL 为年龄组，ALSCL 为体长组），共用一个 `F` 色标。用它看每个模型中捕捞在何时、哪些组最重；两图的行是不同维度，所以比较深色列的时间（本例 2007 至 2010 年）而不是逐格比较，F 汇总图可比较各模型的组间最大值或均值，解读时须区分年龄组和体长组的定义。ACL 热图按拟合使用的年龄标示各行，季度数据可显示小数年龄；最大的年龄组是末组（plus group），用加号标出（“Age 15+”）。旧拟合缺少年龄坐标时，行标签为 "Age bin 1" 这样的年龄组序号。要在相同年龄上汇总两个拟合，使用 `plot_compare_F_ts(basis = "age")`。
 
-Heat maps of fishing mortality, one per fit, time on the horizontal axis and the fit's own groups on the vertical axis (age classes for ACL, length bins for ALSCL) with one colour scale for `F`. Use it to see when and in which groups fishing was heaviest in each model; the rows are different dimensions, so compare the timing of the dark columns (2007 to 2010 here) rather than single cells, and use the summary F figures to compare each model's group maximum or mean, keeping the age and length definitions explicit. The ACL rows show fitted ages, including fractional ages for seasonal data, and the oldest age class, a plus group, is marked with a plus sign ("Age 15+"). For an older fit without age coordinates, the rows are labelled as numbered age groups. For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = "age")`.
+Heat maps of fishing mortality, one per fit, time on the horizontal axis and the fit's own groups on the vertical axis (age classes for ACL, length bins for ALSCL) with one color scale for `F`. Use it to see when and in which groups fishing was heaviest in each model; the rows are different dimensions, so compare the timing of the dark columns (2007 to 2010 here) rather than single cells, and use the summary F figures to compare each model's group maximum or mean, keeping the age and length definitions explicit. The ACL rows show fitted ages, including fractional ages for seasonal data, and the oldest age class, a plus group, is marked with a plus sign ("Age 15+"). For an older fit without age coordinates, the rows are labelled with numbered age bins, such as "Age bin 1". For a summary of both fits over the same ages, use `plot_compare_F_ts(basis = "age")`.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F)
 
@@ -909,13 +885,13 @@ plot_compare_residuals(a, b, dat)
 
 [![残差联合诊断 / Combined residual diagnostics](figures/ytf/compare_residuals.png)](figures/ytf/compare_residuals.png)
 
-四个面板显示两组拟合的样本内对数残差：直方图、以正态分布为参照的 QQ 图、各时间步的平均残差及加减一个标准差的误差棒，以及各体长组绝对残差的箱线图。ACL 为深蓝，ALSCL 为朱红。直方图较宽表示离散程度较大；QQ 图中看点的弯曲和不对称，它们提示偏斜或重尾，不要看斜率：这些残差以拟合的过程偏差为条件，即使模型设定正确，标准化条件残差的标准差也只有约 0.91 到 0.96。绝对残差较大的体长组拟合较差，例如本例 ALSCL 的 16 组和 50 组。标准差误差棒表示残差的离散程度，不是均值的置信区间。
+四个面板显示两组拟合的样本内对数残差：直方图、正态分位数-分位数图、各时间步的平均对数残差及加减一个标准差的误差棒，以及各体长组绝对残差的箱线图。ACL 为深蓝，ALSCL 为橙色。直方图较宽表示离散程度较大；分位数-分位数图中看点的弯曲和不对称，它们提示偏斜或重尾，不要看斜率：这些残差以拟合的过程偏差为条件，即使模型设定正确，标准化条件残差的标准差也只有约 0.91 到 0.96。绝对残差较大的体长组拟合较差，例如本例 ALSCL 的 16 组和 50 组。标准差误差棒表示残差的离散程度，不是均值的置信区间。
 
-Four panels show the in-sample log residuals of both fits: a histogram, a QQ plot against a normal reference, the mean residual by time step with bars of plus or minus one standard deviation, and box plots of absolute residuals by length bin. ACL is navy and ALSCL vermilion. A wider histogram indicates greater dispersion; in the QQ plot, read curvature and asymmetry of the points as signs of skewness or heavy tails, not the slope: the residuals are conditional on the fitted process deviations, and even a correct model gives standardized conditional residuals with a standard deviation of about 0.91 to 0.96. Higher absolute residuals identify poorly fitted bins, including bins 16 and 50 for ALSCL here. The standard-deviation bars describe residual spread, not confidence intervals for the mean.
+Four panels show the in-sample log residuals of both fits: a histogram, a normal quantile-quantile plot, the mean log residual by time step with bars of plus or minus one standard deviation, and box plots of absolute residuals by length bin. ACL is dark blue and ALSCL orange. A wider histogram indicates greater dispersion; in the quantile-quantile plot, read curvature and asymmetry of the points as signs of skewness or heavy tails, not the slope: the residuals are conditional on the fitted process deviations, and even a correct model gives standardized conditional residuals with a standard deviation of about 0.91 to 0.96. Higher absolute residuals identify poorly fitted bins, including bins 16 and 50 for ALSCL here. The standard-deviation bars describe residual spread, not confidence intervals for the mean.
 
 整期缺测会断开平均残差线，孤立的有效时期仍显示为点。只有该期至少有两个观测体长组时才绘制标准差误差棒；仅有一个观测时仍保留残差点。
 
-A wholly unobserved period breaks the mean-residual line. Isolated observed periods remain visible as points. An SD bar is drawn only when the period contains at least two observed length bins; a single observation still contributes its residual point.
+A wholly unobserved period breaks the mean-residual line. Isolated observed periods remain visible as points. A standard deviation bar is drawn only when the period contains at least two observed length bins; a single observation still contributes its residual point.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_residuals)
 
@@ -927,12 +903,11 @@ A wholly unobserved period breaks the mean-residual line. Isolated observed peri
 参考数据与排版辅助函数 / Reference data and layout helper:
 
 ```r
-# 模拟参考生长点，并非论文实测 / Synthetic reference points, not paper observations
+# 模拟的年龄鉴定资料，并非论文实测 / Simulated age readings, not observations of the paper
 set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
 growth_display <- function(p) {
-  p[[1]] <- p[[1]] + theme(legend.text=element_text(size=7))
   p[[2]] <- p[[2]] + scale_x_continuous(breaks=c(1,5,10,15))
   p
 }
@@ -940,15 +915,15 @@ growth_display <- function(p) {
 
 ```r
 # 绘制本图 / Draw this figure
-growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = "Synthetic reference",
+growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = "Simulated age readings",
     nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))
 ```
 
 [![两模型的年龄别平均体长 / Mean length at age of both models](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
 
-左图：两次拟合按同一口径计算、并取各时间步均值的各年龄平均体长（ACL 深蓝实线，来自年龄体长概率矩阵；ALSCL 朱红虚线，来自拟合的体长组、年龄组尾数），另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点。副标题给出口径和时间步，以及参照曲线的 `Linf` 和 `k`。右图：两次拟合按同一口径的给定年龄的体长分布热图，横轴为拟合年龄，纵轴为体长组中点；ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例。左图不画由两次拟合的生长参数计算的曲线。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长曲线的参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两个模型的参数含义不同。`compare_models(a, b, dat)$length_at_age` 以表格给出同样的数值。两次拟合的线在 50 cm 附近持平，因为最后一个体长组包含 49 cm 以上的全部个体，并用其中点代表。参照数据的体长没有归入体长组，所以参照曲线继续上升。
+左图：两次拟合按同一口径计算、并取各时间步均值的各年龄平均体长（ACL 深蓝实线，来自年龄体长概率矩阵；ALSCL 橙色虚线，来自拟合的体长组、年龄组尾数），另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点。副标题给出口径和时间步，以及参照曲线的 `Linf` 和 `k`。右图：两次拟合按同一口径的给定年龄的体长分布热图，横轴为拟合年龄，纵轴为体长组中点；ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例。左图不画由两次拟合的生长参数计算的曲线。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长曲线的参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两个模型的参数含义不同。`compare_models(a, b, dat)$length_at_age` 以表格给出同样的数值。两次拟合的线在 50 cm 附近持平，因为最后一个体长组包含 49 cm 以上的全部个体，并用其中点代表。参照数据的体长没有归入体长组，所以参照曲线继续上升。
 
-Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL navy solid, from its age-length key; ALSCL vermilion dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
+Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL dark blue solid, from its age-length key; ALSCL orange dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
 
 `observed` 把年龄鉴定得到的各年龄平均体长加画为点，可带标准差或区间，例如 `plot_compare_growth(a, b, observed = readings, basis = "survey")`，其中 `readings` 见[生长、死亡与残差图](#plot_VB)。与调查中采集的鉴定资料比较时用 `basis = "survey"`。省略 `age_range` 时画两次拟合的全部年龄组；显式范围须为两个有限且递增的年龄，选取其中的年龄组。`years` 选择求均值的时间步。
 
@@ -967,14 +942,14 @@ The optional reference curve is drawn only at ages at or above its own fitted `t
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), facet_ncol = 2)
+plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015))
 ```
 
 [![两模型调查拟合 / Survey fits from both models](figures/ytf/compare_CatL.png)](figures/ytf/compare_CatL.png)
 
-所选时间步（`years`，省略则显示全部）的调查指数随体长变化，每个时间步一个面板：灰点为观测指数，深蓝实线为 ACL 拟合，朱红虚线为 ALSCL 拟合，均为 `exp(Elog_index)` 中位数，零值和缺失观测不画点。用它看哪个模型跟得上观测的体长组成；本例两者都跟上 20 附近的峰，ALSCL 曲线的局部起伏更多。可结合体长别 F 和其他设置检查这些起伏的原因。
+所选时间步（`years`，省略则显示全部）的调查指数随体长变化，每个时间步一个面板：灰点为观测指数，深蓝实线为 ACL 拟合，橙色虚线为 ALSCL 拟合，均为 `exp(Elog_index)` 中位数，零值和缺失观测不画点。用它看哪个模型跟得上观测的体长组成；本例两者都跟上 20 附近的峰，ALSCL 曲线的局部起伏更多。可结合体长别 F 和其他设置检查这些起伏的原因。
 
-Survey index against length for the selected time steps (`years`; omit it for all), one panel per time step: grey points are the observed index, the navy solid curve the ACL fit and the vermilion dashed curve the ALSCL fit, both as `exp(Elog_index)` medians, and zero and missing observations are left out of the points. Use it to see which model follows the observed length composition; both follow the mode near length 20 here, and the ALSCL curve has more local variation. Examine length-specific F and alternative settings to investigate that variation.
+Survey index against length for the selected time steps (`years`; omit it for all), one panel per time step: grey points are the observed index, the dark blue solid curve the ACL fit and the orange dashed curve the ALSCL fit, both as `exp(Elog_index)` medians, and zero and missing observations are left out of the points. Use it to see which model follows the observed length composition; both follow the mode near length 20 here, and the ALSCL curve has more local variation. Examine length-specific F and alternative settings to investigate that variation.
 
 纵轴标签来自 `ylab$survey`，默认为 Survey index；用 `acl_theme_set(ylab = list(survey = "Survey index (relative units)"))` 可一次改好所有调查拟合图的标签，单模型对数图会加上前缀 Log。`ylab$catch` 只用于捕获量图。
 
@@ -989,15 +964,14 @@ The vertical label comes from `ylab$survey` and reads Survey index by default; s
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_metrics(a, b, dat, facet_ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0,
-    0.3)))
+plot_compare_metrics(a, b, dat)
 ```
 
 [![拟合指标比较 / Fit metric comparison](figures/ytf/compare_metrics.png)](figures/ytf/compare_metrics.png)
 
-柱图汇总 `diagnostic_metrics()` 的样本内拟合指标：RMSE、MAE、R 平方、MAPE、AIC、BIC、负对数似然和标量参数个数。ACL 为深蓝，ALSCL 为朱红。按各指标的定义解读：误差指标较低、R 平方较高表示对这些观测的拟合较近；AIC 和 BIC 还惩罚参数数量。信息准则只应在同一观测、相容似然的拟合之间比较。本例 ACL 的指标值较好；一个模拟数据集不能证明普遍优势，也不能确定差异原因。
+柱图汇总 `diagnostic_metrics()` 的样本内拟合指标：均方根误差、平均绝对误差、R 平方、平均绝对百分比误差、Akaike 和 Bayesian 信息准则（AIC、BIC）、负对数似然和估计参数个数。ACL 为深蓝，ALSCL 为橙色。按各指标的定义解读：误差指标较低、R 平方较高表示对这些观测的拟合较近；AIC 和 BIC 还惩罚参数数量。信息准则只应在同一观测、相容似然的拟合之间比较。本例 ACL 的指标值较好；一个模拟数据集不能证明普遍优势，也不能确定差异原因。
 
-Bars summarize the in-sample fit metrics from `diagnostic_metrics()`: RMSE, MAE, R-squared, MAPE, AIC, BIC, negative log-likelihood and the number of scalar parameters. ACL is navy and ALSCL vermilion. Read each metric according to its definition: lower error metrics and higher R-squared describe closer fits to these observations, whereas AIC and BIC also penalize parameter count. Compare information criteria only for compatible likelihoods fitted to the same observations. ACL has better metric values in this example; one simulated dataset does not establish a general advantage or identify its cause.
+Bars summarize the in-sample fit metrics from `diagnostic_metrics()`: root mean squared error, mean absolute error, R-squared, mean absolute percentage error, the Akaike and Bayesian information criteria (AIC, BIC), negative log-likelihood and the number of estimated parameters. ACL is dark blue and ALSCL orange. Read each metric according to its definition: lower error metrics and higher R-squared describe closer fits to these observations, whereas AIC and BIC also penalize parameter count. Compare information criteria only for compatible likelihoods fitted to the same observations. ACL has better metric values in this example; one simulated dataset does not establish a general advantage or identify its cause.
 
 柱图与 `diagnostic_metrics()` 使用同一计算：只纳入有限的正观测，观测单元处的非有限预测或维度不一致会报错，常数观测的 R 平方等无定义指标显示为 `NA`。先运行 `compare_models()` 核对两组拟合是否可比。
 
@@ -1017,9 +991,9 @@ plot_compare_selectivity(a, b)
 
 [![固定调查可捕性 / Fixed survey catchability](figures/ytf/compare_selectivity.png)](figures/ytf/compare_selectivity.png)
 
-各拟合输入的体长别调查可捕性 `q`（`sel_L50` 和 `sel_L95`，或 `survey_q`），ACL 为深蓝实线加点，ALSCL 为朱红虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。`survey_q` 按体长和时间步给出时，每条不同的曲线各画一条线，并在图注中说明。按年龄的调查可捕性系数（`survey_q_age`）不显示。
+各拟合输入的体长别调查可捕性 `q`（`sel_L50` 和 `sel_L95`，或 `survey_q`），ACL 为深蓝实线加点，ALSCL 为橙色虚线加点。用它确认每组拟合用的可捕性曲线；本例两条曲线重合，因为输入相同；这些值是固定输入而不是估计的选择性，两组拟合若不同，只说明输入不同。`survey_q` 按体长和时间步给出时，每条不同的曲线各画一条线，并在图注中说明。按年龄的调查可捕性系数（`survey_q_age`）不显示。
 
-Survey catchability `q` at length from the input of each fit (`sel_L50` and `sel_L95`, or `survey_q`), as lines with points for ACL (navy solid) and ALSCL (vermilion dashed). Use it to confirm which catchability curve each fit used; the curves coincide here because both fits took the same input, and the values are fixed inputs, not an estimated selectivity, so a difference between two fits means different inputs. When `survey_q` was supplied by length and time step, one line is drawn for each distinct curve and a caption says so. A survey catchability multiplier by age (`survey_q_age`) is not shown.
+Survey catchability `q` at length from the input of each fit (`sel_L50` and `sel_L95`, or `survey_q`), as lines with points for ACL (dark blue solid) and ALSCL (orange dashed). Use it to confirm which catchability curve each fit used; the curves coincide here because both fits took the same input, and the values are fixed inputs, not an estimated selectivity, so a difference between two fits means different inputs. When `survey_q` was supplied by length and time step, one line is drawn for each distinct curve and a caption says so. A survey catchability multiplier by age (`survey_q_age`) is not shown.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_selectivity)
 
@@ -1030,8 +1004,8 @@ Survey catchability `q` at length from the input of each fit (`sel_L50` and `sel
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_F_ts(a, b, method = "apical") +
-  labs(title = "Apical fishing mortality")
+plot_compare_F_ts(a, b, method = "apical",
+  title = "Apical fishing mortality rate by time step")
 ```
 
 [![每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](figures/ytf/compare_F_apical.png)](figures/ytf/compare_F_apical.png)
@@ -1047,8 +1021,8 @@ Apical F is the maximum fishing mortality rate across age classes in ACL or acro
 
 ```r
 # 绘制本图 / Draw this figure
-plot_compare_F_ts(a, b, method = "mean") +
-  labs(title = "Mean fishing mortality")
+plot_compare_F_ts(a, b, method = "mean",
+  title = "Mean fishing mortality rate by time step")
 ```
 
 [![每个时间步的平均捕捞死亡率 / Mean fishing mortality by time step](figures/ytf/compare_F_mean.png)](figures/ytf/compare_F_mean.png)
@@ -1066,14 +1040,14 @@ Mean fishing mortality, the unweighted average of `F` over the groups at each ti
 
 ```r
 # 绘制本图 / Draw this figure
-plot_retro(ra, facet_ncol = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
+plot_retro(ra, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
 [![ACL 回溯分析 / ACL retrospective analysis](figures/ytf/retro_ACL.png)](figures/ytf/retro_ACL.png)
 
-ACL 拟合的回溯分析：每个量（`B`、`N`、`Rec`、`SSB`）一个面板，横轴为时间，每次拟合一条线，颜色按其最后时间步区分（图例“Terminal year”：完整拟合与各轮截短；未通过数值检查的拟合用虚线绘制），空心点为各拟合的末端估计，每个面板按 `rho_digits` 位小数标出 Mohn's rho。用它看去掉时间步后末端估计移动多少；各线贴合完整拟合、只在末尾几年分开，且 rho 很小（本例绝对值不超过 0.011），说明修正很小；若各量、各轮符号相同，则提示存在回溯模式。
+ACL 拟合的回溯分析：每个量一个面板（"Total biomass"、"Recruitment"、"Spawning stock biomass (SSB)" 和 "Total abundance"），横轴为时间，每次拟合一条线，颜色按其最后时间步区分（图例“Terminal year”：完整拟合为橙色，各轮截短为灰色；未通过数值检查的拟合用虚线绘制），空心点为各拟合的末端估计，每个面板按 `rho_digits` 位小数标出 "Mohn's rho = ..."。用它看去掉时间步后末端估计移动多少；各线贴合完整拟合、只在末尾几年分开，且 rho 很小（本例绝对值不超过 0.011），说明修正很小；若各量、各轮符号相同，则提示存在回溯模式。
 
-Retrospective analysis of the ACL fit: one panel per quantity (`B`, `N`, `Rec`, `SSB`), time on the horizontal axis, one line per fit coloured by its last time step (legend "Terminal year": the full fit and the peels; a fit that failed the numerical checks is drawn with a dashed line), an open point at each fit's terminal estimate, and Mohn's rho printed in each panel with `rho_digits` decimals. Use it to see how far the terminal estimates move when time steps are removed; lines that lie on the full fit and split only in the last years, with rho no larger than 0.011 in size as here, show small revisions, while the same sign across quantities and peels would point to a retrospective pattern.
+Retrospective analysis of the ACL fit: one panel per quantity ("Total biomass", "Recruitment", "Spawning stock biomass (SSB)" and "Total abundance"), time on the horizontal axis, one line per fit colored by its last time step (legend "Terminal year": the full fit in orange and the peels in greys; a fit that failed the numerical checks is drawn with a dashed line), an open point at each fit's terminal estimate, and "Mohn's rho = ..." printed in each panel with `rho_digits` decimals. Use it to see how far the terminal estimates move when time steps are removed; lines that lie on the full fit and split only in the last years, with rho no larger than 0.011 in size as here, show small revisions, while the same sign across quantities and peels would point to a retrospective pattern.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
@@ -1082,19 +1056,19 @@ Retrospective analysis of the ACL fit: one panel per quantity (`B`, `N`, `Rec`, 
 
 ```r
 # 绘制本图 / Draw this figure
-plot_retro(rb, facet_ncol = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
+plot_retro(rb, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)
 ```
 
 [![ALSCL 回溯分析 / ALSCL retrospective analysis](figures/ytf/retro_ALSCL.png)](figures/ytf/retro_ALSCL.png)
 
-ALSCL 拟合的同一回溯分析，布局与颜色相同。用它比较两个模型的稳定性；本例生物量（0.022）、丰度（0.016）和产卵生物量（0.010）的 rho 更大，且三者都为正，说明较短的 ALSCL 拟合对这些量的末端估计高于完整拟合；补充量的 rho 很小且为负（−0.005）。这种轻微的向上修正在正式评估中值得关注。
+ALSCL 拟合的同一回溯分析，布局与颜色相同。用它比较两个模型的稳定性；本例生物量（0.022）、丰度（0.016）和产卵生物量（0.010）的 rho 更大，且三者都为正，说明较短的 ALSCL 拟合对这些量的末端估计高于完整拟合；补充量的 rho 很小且为负（-0.005）。这种轻微的向上修正在正式评估中值得关注。
 
-The same retrospective analysis for the ALSCL fit, with the same layout and colours. Use it to compare the stability of the two models; the rho values are larger here for biomass (0.022), abundance (0.016) and spawning biomass (0.010), and all three are positive, so the shorter ALSCL fits end above the full fit for these quantities; rho for recruitment is small and negative (−0.005). A mild upward revision of this kind would deserve attention in a real assessment.
+The same retrospective analysis for the ALSCL fit, with the same layout and colors. Use it to compare the stability of the two models; the rho values are larger here for biomass (0.022), abundance (0.016) and spawning stock biomass (0.010), and all three are positive, so the shorter ALSCL fits end above the full fit for these quantities; rho for recruitment is small and negative (-0.005). A mild upward revision of this kind would deserve attention in a real assessment.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_retro)
 
 <a id="truth"></a>
-## 47. 模拟真值与条件估计 / Simulation truth and conditional estimates
+## 47. 模拟真值与条件估计 / Simulated values and conditional estimates
 
 ```r
 # 将生成真值与报告中的估计对齐 / Align truth and fitted reports
@@ -1111,16 +1085,28 @@ estimates <- rbind(
 
 ```r
 # 绘制本图 / Draw this figure
-ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_manual(values = setNames(acl_theme("compare_colors"),
-    c("ACL", "ALSCL"))) + geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) +
-    facet_wrap(~Quantity, scales = "free_y", ncol = 1) + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + labs(y = NULL)
+quantity_names <- c(B = "Total biomass", SSB = "Spawning stock biomass (SSB)",
+  Rec = "Recruitment")
+series <- rbind(estimates, data.frame(Year = truth$Year, Quantity = truth$Quantity,
+  Value = truth$Truth, Model = "Simulated value"))
+series$Quantity <- factor(quantity_names[series$Quantity], levels = quantity_names)
+series$Model <- factor(series$Model, levels = c("ACL", "ALSCL", "Simulated value"))
+ggplot(series, aes(Year, Value, colour = Model, linetype = Model)) + geom_line() +
+  expand_limits(y = 0) +
+  scale_colour_manual(values = c(setNames(acl_theme("compare_colors"), c("ACL", "ALSCL")),
+    "Simulated value" = "black")) +
+  scale_linetype_manual(values = c(ACL = "solid", ALSCL = "solid",
+    "Simulated value" = "dashed")) +
+  facet_wrap(~Quantity, scales = "free_y", ncol = 1) + theme_acl() +
+  labs(x = "Year", y = "Estimate", colour = NULL, linetype = NULL,
+    title = "Estimated and simulated population of YTF_example")
 ```
 
-[![模拟真值与条件估计 / Simulation truth and conditional estimates](figures/ytf/truth.png)](figures/ytf/truth.png)
+[![模拟真值与条件估计 / Simulated values and conditional estimates](figures/ytf/truth.png)](figures/ytf/truth.png)
 
-生成模拟的生物量、补充量和产卵生物量（黑色虚线）与 ACL（深蓝）、ALSCL（朱红）拟合的对照，每个量一个面板。上面的代码由 `x$truth` 和两份报告构造 `truth` 与 `estimates`。本例 ACL 紧贴模拟真值，ALSCL 的生物量和产卵生物量在 2013 年后低于真值。这是年龄结构操作模型的一次模拟及给定设置下的拟合。要评估表现如何随模型结构变化，需要在不同生成假设下开展重复模拟。
+生成模拟的总生物量、产卵生物量和补充量（黑色虚线，图例 "Simulated value"）与 ACL（深蓝）、ALSCL（橙色）拟合的对照，每个量一个面板。上面的代码由 `x$truth` 和两份报告构造 `truth` 与 `estimates`。本例 ACL 紧贴模拟真值，ALSCL 的生物量和产卵生物量在 2013 年后低于真值。这是年龄结构操作模型的一次模拟及给定设置下的拟合。要评估表现如何随模型结构变化，需要在不同生成假设下开展重复模拟。
 
-Biomass, recruitment and spawning biomass of the generating simulation (black dashed) and the ACL (navy) and ALSCL (vermilion) fits, one panel per quantity. The code above constructs `truth` and `estimates` from `x$truth` and the two reports. ACL follows the simulated truth closely here, while ALSCL biomass and spawning biomass fall below it after 2013. This is one realization from the age-based operating model under the stated fitting settings. Repeated simulations under alternative generating assumptions are needed to assess how performance depends on model structure.
+Total biomass, spawning stock biomass (SSB) and recruitment of the generating simulation (black dashed, legend "Simulated value") and the ACL (dark blue) and ALSCL (orange) fits, one panel per quantity. The code above constructs `truth` and `estimates` from `x$truth` and the two reports. ACL follows the simulated truth closely here, while ALSCL biomass and SSB fall below it after 2013. This is one realization from the age-based operating model under the stated fitting settings. Repeated simulations under alternative generating assumptions are needed to assess how performance depends on model structure.
 
 <a id="plot_self_test"></a>
 

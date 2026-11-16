@@ -5,13 +5,12 @@ First complete the [worked YTF example](first-model.html) to create the input bu
 ```r
 library(ggplot2)
 library(patchwork)
-acl_theme_set(palette="npg", base_theme="theme_bw")
 ```
 
 ## Mean length at age
 
 ```r
-# Synthetic age readings, not observations of the paper
+# Simulated age readings, not observations from the paper
 set.seed(42)
 ref <- data.frame(Age = rep(1:15, each = 5))
 ref$Length <- VB_func(60, .2, 1/60, ref$Age) + rnorm(nrow(ref), 0, 2)
@@ -21,16 +20,16 @@ readings <- data.frame(age = 1:15,
   mean_length = as.numeric(tapply(ref$Mid, ref$Age, mean)),
   sd_length = as.numeric(tapply(ref$Mid, ref$Age, sd)))
 # Draw this figure
-plot_VB(b, observed = readings, parameter_curve = TRUE)
+plot_VB(b, observed = readings, parameter_curve = TRUE, text_size = 3.5)
 ```
 
 [![Mean length at age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/VB.png?raw=true)
 
-For an ALSCL fit, `plot_VB()` shows mean length at age calculated from the fitted numbers by length bin and age class and averaged over the time steps (solid line; the values of `length_at_age()`). In ALSCL, `Linf` and `k` set the growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits, so they are not the parameters of a von Bertalanffy curve of mean length at age ([Model principles](model-theory.html#paper-differences)). The default figure, `plot_VB(b)`, shows the solid line only and has no annotation of `Linf` and `k`. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line: with the original structure it is the mean length at age in the first time step and the mean length of recruits in every time step. `observed` adds mean length at age from age readings as points, here with bars of one standard deviation. For an ACL fit, `plot_VB(a)` shows the von Bertalanffy curve, which is the mean length at age of that model, with the annotation of `Linf` and `k`.
+For an ALSCL fit, `plot_VB()` shows mean length at age calculated from the fitted numbers by length bin and age class and averaged over the time steps (solid line; the values of `length_at_age()`). In ALSCL, `Linf` and `k` set the growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits, so they are not the parameters of a von Bertalanffy curve of mean length at age ([Model principles](model-theory.html#paper-differences)). The default figure, `plot_VB(b)`, shows the solid line only and has no annotation of `Linf` and `k`. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed grey line, named "Curve from the growth parameters" in the legend and in the annotation that gives `Linf` and `k`; with the original structure this curve gives the mean length at age in the first time step and the mean length of recruits in every time step. `observed` adds mean length at age from age readings as points ("Age readings"), here with error bars of one standard deviation on each side. For an ACL fit, `plot_VB(a)` shows the von Bertalanffy curve, which is the mean length at age of that model, with the annotation of `Linf` and `k`.
 
-Each length bin is represented by its midpoint. The last length bin of this example holds all fish above 49 cm and has the midpoint 50 cm, so the mean length of the older age classes levels off at 50 cm, below the dashed curve. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model, as the code above does, so that both means are calculated in the same way. Use `basis = "survey"` to compare with age readings of fish caught in the survey: the numbers at length are then multiplied by the survey catchability at length. `years` selects the time steps of the mean.
+Each length bin is represented by its midpoint. The last length bin of this example holds all fish above 49 cm and has the midpoint 50 cm, so the mean length of the older age classes levels off at 50 cm, below the dashed curve. For a comparison with age readings, assign the lengths of the aged fish to the length bins of the model, as the code above does, so that both means are calculated in the same way. Use `basis = "survey"` to compare with age readings of fish caught in the survey; the numbers at length are then multiplied by the survey catchability at length. `years` selects the time steps of the mean.
 
-`se = TRUE` draws the 95% interval of the curve computed from `Linf`, `k` and `t0`: for an ACL fit the interval of the figure, and for an ALSCL fit the interval of the reference line. All three parameters are fixed in this example, so the interval has zero width. The model reports no standard error for mean length at age from the fitted numbers, and `se = TRUE` without the reference line gives a warning and the estimate only. If the parameter covariance is unavailable, the function warns and draws the estimate alone, keeping the labels, text sizes, breaks and theme you passed.
+`se = TRUE` draws the 95% interval of the curve computed from `Linf`, `k` and `t0`, which is the curve of the figure for an ACL fit and the dashed curve for an ALSCL fit. All three parameters are fixed in this example, so the interval has zero width. The model reports no standard error for mean length at age from the fitted numbers, and `se = TRUE` without the dashed curve gives a warning and the estimate only. If the parameter covariance is unavailable, the function warns and draws the estimate alone, keeping the labels, text sizes, breaks and theme you passed.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_VB)
 
@@ -38,8 +37,7 @@ Each length bin is represented by its midpoint. The last length bin of this exam
 
 ```r
 # Draw this figure
-plot_length_at_age(b, ages = c(2, 5, 8, 11), facet_ncol = 2,
-  line_size = 0.6)
+plot_length_at_age(b, ages = c(2, 5, 8, 11), line_size = 0.6)
 ```
 
 [![Mean length at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/length_at_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/length_at_age.png?raw=true)
@@ -57,20 +55,20 @@ plot_pla(b)
 
 [![Distribution of length at age](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/pla.png?raw=true)
 
-Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The colour shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads Age group.
+Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The color shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads Age bin.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_pla)
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; single-model points retain `line_color` and intervals retain `se_color`. Panels remain free of gridlines.
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 ## ACL fishing mortality over time by age class
 
-`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`: title keys `F_year`, `F_age` and `F_length`, with `_se` added for interval plots, and labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal axis shows the fitted ages, and the plus group is marked as in "15+"; an ALSCL plot with intervals (`se = TRUE`) shows the ages before the plus group. A result saved without age metadata is plotted against the position of the age class, and its default label reads Age group unless you set `xlab$age`. The default `ylab$F` label states the time basis of the rate, for example "Fishing mortality rate (per year)"; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and gridlines stay hidden in every case.
+`plot_fishing_mortality()` takes its title, axis labels, `x_breaks` and `x_expand` from `acl_theme_set()`, with the title keys `F_year`, `F_age` and `F_length` (`_se` added for interval plots) and the labels `xlab$year`, `xlab$age` or `xlab$length` and `ylab$F`. In age mode the horizontal axis shows the fitted ages, and the plus group is marked as in "15+"; an ALSCL plot with intervals (`se = TRUE`) shows the ages before the plus group. A result saved without age metadata is plotted against the position of the age class, and its default label reads Age bin unless you set `xlab$age`. The default `ylab$F` label states the time basis of the rate, for example "Fishing mortality rate (per year)"; labels and breaks given in the call take precedence. `base_theme` accepts a theme name such as `"theme_bw"` or `"bw"`, a ggplot2 theme object, or `NULL` for the global setting, and the grid lines follow the `grid` setting in every case.
 
 ```r
 # Draw this figure
 plot_fishing_mortality(a, type = "year",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ACL fishing mortality over time by age class](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_year.png?raw=true)
@@ -84,7 +82,7 @@ Each panel shows the estimated instantaneous fishing mortality rate (`F`) for on
 ```r
 # Draw this figure
 plot_fishing_mortality(a, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ACL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ACL_age.png?raw=true)
@@ -98,7 +96,7 @@ Each panel shows the same ACL estimates for one time step, with the fitted ages 
 ```r
 # Draw this figure
 plot_fishing_mortality(b, type = "year",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL fishing mortality over time by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_year.png?raw=true)
@@ -112,7 +110,7 @@ Each panel shows how fishing mortality at length (`FL`) changes over time for on
 ```r
 # Draw this figure
 plot_fishing_mortality(b, type = "age",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL fishing mortality at age by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_age.png?raw=true)
@@ -126,7 +124,7 @@ For each age class, ALSCL sums the numbers surviving across length bins and divi
 ```r
 # Draw this figure
 plot_fishing_mortality(b, type = "length",
-  se = TRUE, facet_ncol = 4, line_size = 0.6)
+  se = TRUE, line_size = 0.6)
 ```
 
 [![ALSCL fishing mortality at length by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/F_ALSCL_length.png?raw=true)
@@ -139,15 +137,15 @@ Each panel shows fishing mortality at length for one time step, with an approxim
 
 ```r
 # Draw this figure
-(plot_natural_mortality(b, line_size = 0.8) +
-   labs(title = "Natural mortality rate (M)")) |
-  (plot_survey_catchability(b, line_size = 0.8, point_size = 1.5) +
-     labs(title = "Survey catchability at length"))
+(plot_natural_mortality(b, line_size = 0.8, title = "Natural mortality rate") +
+   expand_limits(y = 0)) |
+  plot_survey_catchability(b, line_size = 0.8, point_size = 1.5,
+    title = "Survey catchability at length")
 ```
 
 [![Natural mortality rate and survey catchability used in the fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/inputs.png?raw=true)
 
-Both panels show inputs that you supplied, not estimates. `plot_natural_mortality()` follows the form of `M`: a single value is a horizontal line (as here), a rate by age class is drawn against age or, when it changes over time, against the time step with one panel per age class, and a rate by length (ALSCL) is drawn against length. `plot_survey_catchability()` shows the catchability at length from `sel_L50` and `sel_L95` or from `survey_q`. When `survey_q` differs among time steps, it draws one line for each distinct curve and names the time steps of each, and `type = "age"` shows the multiplier by age (`survey_q_age`). The survey index does not inform the split of total mortality into fishing and natural mortality or the level of catchability, so the level of F, catch and abundance depends on these inputs ([Choose the fitting settings](fitting-controls.html)). Show them next to the estimates in a report.
+Both panels show inputs that you supplied, not estimates. `plot_natural_mortality()` follows the form of `M`. A single value is a horizontal line (as here, with the subtitle "One value for all age classes and time steps"), a rate by age class is drawn against age or, when it changes over time, against the time step with one panel per age class, and a rate by length (ALSCL) is drawn against length. `plot_survey_catchability()` shows the catchability at length from `sel_L50` and `sel_L95` or from `survey_q`. When `survey_q` differs among time steps, it draws one line for each distinct curve and names the time steps of each, and `type = "age"` shows the multiplier by age (`survey_q_age`). The survey index does not inform the split of total mortality into fishing and natural mortality or the level of catchability, so the level of F, catch and abundance depends on these inputs ([Choose the fitting settings](fitting-controls.html)). Show them next to the estimates in a report.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_natural_mortality)
 
@@ -155,13 +153,12 @@ Both panels show inputs that you supplied, not estimates. `plot_natural_mortalit
 
 ```r
 # Draw this figure
-plot_residuals(b, facet_by = "length", facet_ncol = 4, line_size = 0.6,
-  x_breaks = c(2000, 2010, 2015))
+plot_residuals(b, facet_by = "length", line_size = 0.6)
 ```
 
 [![Log residuals by length bin](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_length.png?raw=true)
 
-Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis: the navy line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
+Log residuals, the observed minus the fitted log survey index, one panel per length bin with time on the horizontal axis. The dark blue line joins the residuals, the grey line is zero and the dashed teal curve is a smoother. Use it to find bins the model misfits (zero and missing observations have no residual); residuals of one sign over many years, as in bins 16 (positive) and 20 (negative) here, mean a systematic misfit, and a trend at the end of the series, as in bin 50, points to a change the model misses.
 
 Within each facet, a missing or excluded observation breaks the residual line and its trend. A single observed value is drawn as a point. Each consecutive run of 2-5 observations has a linear trend, and a run of 6 or more uses loess.
 
@@ -171,13 +168,12 @@ Within each facet, a missing or excluded observation breaks the residual line an
 
 ```r
 # Draw this figure
-plot_residuals(b, facet_by = "year", facet_ncol = 4, line_size = 0.6,
-  x_breaks = c(10, 30, 50))
+plot_residuals(b, facet_by = "year", line_size = 0.6)
 ```
 
 [![Log residuals by time step](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/residuals_year.png?raw=true)
 
-The same residuals arranged by length: one panel per time step, with length on the horizontal axis, a zero line and a smoother. Look for length ranges with residuals persistently above or below zero. The positive spikes in the largest bin from 2015 onward indicate observed indices above the fitted values in those years. Repeated changes in sign can suggest length-dependent misfit; the smoother crossing zero at a particular length is not itself evidence of bias at that length.
+The same residuals arranged by length, with one panel per time step, length on the horizontal axis, a zero line and a smoother. Look for length ranges with residuals persistently above or below zero. The positive spikes in the largest bin from 2015 onward indicate observed indices above the fitted values in those years. Repeated changes in sign can suggest length-dependent misfit; the smoother crossing zero at a particular length is not itself evidence of bias at that length.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_residuals)
 
@@ -186,8 +182,7 @@ The same residuals arranged by length: one panel per time step, with length on t
 ```r
 # Draw this figure
 plot_deviance(b, type = "R", log = TRUE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![Log recruitment deviations](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_TRUE.png?raw=true)
@@ -201,8 +196,7 @@ The points are estimated log recruitment deviations and the bars are approximate
 ```r
 # Draw this figure
 plot_deviance(b, type = "R", log = FALSE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![Recruitment relative to the process median](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_R_FALSE.png?raw=true)
@@ -216,13 +210,12 @@ With `log = FALSE`, each point is recruitment divided by the process median. A r
 ```r
 # Draw this figure
 plot_deviance(b, type = "F", log = TRUE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![Log fishing mortality deviations](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_TRUE.png?raw=true)
 
-Points and approximate 95% intervals show log fishing mortality deviations over time. Zero corresponds to the process median, `exp(mean_log_F)`, on the original scale. ALSCL shows one panel per length bin, ACL one per age class. A fit with shared F has one panel.
+Points and approximate 95% intervals show log fishing mortality deviations over time. Zero corresponds to the process median, `exp(mean_log_F)`, on the original scale. ALSCL shows one panel per length bin, ACL one per age class. A fit with shared F has one panel, labelled "All length bins" (ALSCL) or "All age classes" (ACL).
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_deviance)
 
@@ -231,8 +224,7 @@ Points and approximate 95% intervals show log fishing mortality deviations over 
 ```r
 # Draw this figure
 plot_deviance(b, type = "F", log = FALSE, se = TRUE,
-  facet_ncol = 3, point_size = 1.2, line_size = 0.5) +
-  scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))
+  point_size = 1.2, line_size = 0.5)
 ```
 
 [![Fishing mortality relative to the process median](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/deviation_F_FALSE.png?raw=true)
@@ -245,7 +237,7 @@ Each point is the fitted fishing mortality rate divided by the process median. A
 
 ```r
 # Draw this figure
-plot_ridges(b) # Default viridis gradient
+plot_ridges(b) # Default blue gradient
 ```
 
 [![Length composition ridges](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/ridges.png?raw=true)
