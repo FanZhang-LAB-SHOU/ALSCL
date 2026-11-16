@@ -140,7 +140,7 @@ When no finite estimates are available, return plot = NULL with a warning;
 fit_diagnostics and errors remain available.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 

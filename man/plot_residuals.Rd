@@ -48,7 +48,7 @@ observations use a linear trend; longer runs use loess with at least five neighb
 \item{hline_color}{Character or NULL. NULL inherits the global hline_color setting.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 

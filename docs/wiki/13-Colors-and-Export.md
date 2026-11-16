@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 
-**ALSCL 2.5.0 · 简体中文 / English**
+**ALSCL 2.5.1 · 简体中文 / English**
 
 [使用指南 / User guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [首页 / Home](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md)
 
@@ -22,7 +22,7 @@ On this page you choose the style of every ALSCL plot, change one setting or the
 # 先建立回溯结果，再调整绘图样式 / Create the retrospective result before styling it
 rb <- retro_alscl(x, nyear = 3, train_times = 2, ncores = 1, silent = TRUE)
 
-# 默认样式 "standard" / The default style, "standard"
+# 默认样式 "default" / The default style, "default"
 plot_retro(rb, facet_ncol = 2, rho_digits = 3)
 plot_recruitment(b, se = TRUE)                 # 柱和误差线 / bars with error bars
 plot_recruitment(b, se = TRUE, geom = "line")  # 线和区间带 / a line with a band
@@ -30,25 +30,25 @@ plot_recruitment(b, se = TRUE, geom = "line")  # 线和区间带 / a line with a
 # 一次调用恢复 ALSCL 2.4.5 的外观，再回到默认样式 / The look of ALSCL 2.4.5 in one call, then back to the default
 acl_theme_set(style = "classic")
 plot_compare_ts(a, b, se = TRUE)
-acl_theme_set(style = "standard")
+acl_theme_set(style = "default")
 
 # 只改一项设置，保留样式的其余部分 / Change one setting and keep the rest of the style
 acl_theme_set(font_family = "sans")
-acl_theme_set(palette = "jama") # standard, npg, aaas, nejm, lancet, jama
+acl_theme_set(palette = "jama") # default, npg, aaas, nejm, lancet, jama
 plot_abundance(b, type = "NL", facet_ncol = 3)
 ```
 
-默认样式 `"standard"` 让每个数量有自己的颜色。产卵生物量、生物量和丰度是带阴影 95% 区间带的青绿色线，捕捞死亡率是带区间带的橙色线，总补充量画成浅蓝色柱，总渔获量画成深蓝色柱，两者都带浅色描边的细深灰色误差线；按年龄或按体长分面板的图是该数量颜色的线。这些图的纵轴从零开始。标题为黑色粗体、左对齐，不画网格线，分面标签是不带框的粗体文字，图例在图的下方。其他图用深蓝色画估计值、橙色画观测值；比较图中第一个拟合为深蓝色、第二个为橙色；`plot_retro()` 中完整拟合为橙色，较早的拟合为灰色。
+默认样式 `style = "default"` 让每个数量有自己的颜色。产卵生物量、生物量和丰度是带阴影 95% 区间带的青绿色线，捕捞死亡率是带区间带的橙色线，总补充量画成浅蓝色柱，总渔获量画成深蓝色柱，两者都带浅色描边的细深灰色误差线；按年龄或按体长分面板的图是该数量颜色的线。这些图的纵轴从零开始。标题为黑色粗体、左对齐，不画网格线，分面标签是不带框的粗体文字，图例在图的下方。其他图用深蓝色画估计值、橙色画观测值；比较图中第一个拟合为深蓝色、第二个为橙色；`plot_retro()` 中完整拟合为橙色，较早的拟合为灰色。
 
-The default style, `"standard"`, gives each quantity its own color. Spawning stock biomass, biomass and abundance are teal lines with a shaded 95% band, fishing mortality is an orange line with a band, total recruitment is drawn as light-blue bars and total catch as dark-blue bars, both with thin dark-grey error bars that have a light outline, and panels at age or at length are lines in the color of their quantity. The y axis of these plots starts at zero. Titles are bold, left aligned and black, no grid lines are drawn, facet labels are bold text without a box, and legends are below the plot. The other plots draw estimates in dark blue and observations in orange; in comparisons the first fit is dark blue and the second orange, and in `plot_retro()` the full fit is orange and the earlier fits are grey.
+The default style, `style = "default"`, gives each quantity its own color. Spawning stock biomass, biomass and abundance are teal lines with a shaded 95% band, fishing mortality is an orange line with a band, total recruitment is drawn as light-blue bars and total catch as dark-blue bars, both with thin dark-grey error bars that have a light outline, and panels at age or at length are lines in the color of their quantity. The y axis of these plots starts at zero. Titles are bold, left aligned and black, no grid lines are drawn, facet labels are bold text without a box, and legends are below the plot. The other plots draw estimates in dark blue and observations in orange; in comparisons the first fit is dark blue and the second orange, and in `plot_retro()` the full fit is orange and the earlier fits are grey.
 
-`acl_theme_set(style = "classic")` 一次调用即恢复 ALSCL 2.4.5 的外观，即 npg 颜色、所有序列画成线、居中的常规字体标题、带框的灰色分面标签以及随数据变化的纵轴。它不恢复以前的图中文字（标题、坐标轴标题和面板名称）、以前的分面列数，也不恢复以前的年份标签和图形尺寸，因为这些规则在两种样式下相同。`acl_theme_set(style = "standard")` 或 `acl_theme_reset()` 回到默认样式。样式设定下表中的取值以及由其调色板派生的颜色；字体、标签、`interval`、`show_title`、`x_angle` 和其他设置保持不变，同一调用中的其他参数在样式之后生效。设置单项只改变该项，所以两种样式可以混合。`bars = FALSE` 把补充量和渔获量画成线，`y_zero = FALSE` 让纵轴随数据变化，`grid = "y"` 加上水平网格线，`title_color = "quantity"` 让每个标题取其数量的颜色，`palette = "npg"` 让线、观测值、比较图和热图使用 npg 颜色，而四个数量的颜色保持不变。`plot_recruitment()` 和 `plot_catch()` 中的 `geom = "bar"` 或 `geom = "line"` 只对一张图起作用；按年龄和按体长的渔获量始终画成线。`acl_theme_set()` 只影响之后创建的图；要改已有的图，就重新创建它。
+`acl_theme_set(style = "classic")` 一次调用即恢复 ALSCL 2.4.5 的外观，即 npg 颜色、所有序列画成线、居中的常规字体标题、带框的灰色分面标签以及随数据变化的纵轴。它不恢复以前的图中文字（标题、坐标轴标题和面板名称）、以前的分面列数，也不恢复以前的年份标签和图形尺寸，因为这些规则在两种样式下相同。`acl_theme_set(style = "default")` 或 `acl_theme_reset()` 回到默认样式。样式设定下表中的取值以及由其调色板派生的颜色；字体、标签、`interval`、`show_title`、`x_angle` 和其他设置保持不变，同一调用中的其他参数在样式之后生效。设置单项只改变该项，所以两种样式可以混合。`bars = FALSE` 把补充量和渔获量画成线，`y_zero = FALSE` 让纵轴随数据变化，`grid = "y"` 加上水平网格线，`title_color = "quantity"` 让每个标题取其数量的颜色，`palette = "npg"` 让线、观测值、比较图和热图使用 npg 颜色，而四个数量的颜色保持不变。`plot_recruitment()` 和 `plot_catch()` 中的 `geom = "bar"` 或 `geom = "line"` 只对一张图起作用；按年龄和按体长的渔获量始终画成线。`acl_theme_set()` 只影响之后创建的图；要改已有的图，就重新创建它。
 
-`acl_theme_set(style = "classic")` restores the look of ALSCL 2.4.5 in one call, with the npg colors, lines for every series, plain centered titles, grey boxed facet labels and y axes that follow the data. It does not restore the former figure texts (titles, axis titles and panel names), the former number of facet columns or the former year labels and figure sizes, because these rules apply under both styles. `acl_theme_set(style = "standard")` or `acl_theme_reset()` returns to the default. A style sets the values in the table below and the colors derived from its palette; fonts, labels, `interval`, `show_title`, `x_angle` and the other settings are kept, and arguments of the same call are applied after the style. Setting one key changes that key only, so the two styles can be mixed. `bars = FALSE` draws recruitment and catch as lines, `y_zero = FALSE` lets the y axes follow the data, `grid = "y"` adds horizontal grid lines, `title_color = "quantity"` gives each title the color of its quantity, and `palette = "npg"` uses the npg colors for lines, observations, comparisons and heat maps while the four quantity colors stay. `geom = "bar"` or `geom = "line"` in `plot_recruitment()` and `plot_catch()` chooses for one plot; catch at age and at length are always lines. `acl_theme_set()` changes the plots created afterwards; recreate an existing plot to restyle it.
+`acl_theme_set(style = "classic")` restores the look of ALSCL 2.4.5 in one call, with the npg colors, lines for every series, plain centered titles, grey boxed facet labels and y axes that follow the data. It does not restore the former figure texts (titles, axis titles and panel names), the former number of facet columns or the former year labels and figure sizes, because these rules apply under both styles. `acl_theme_set(style = "default")` or `acl_theme_reset()` returns to the default style. A style sets the values in the table below and the colors derived from its palette; fonts, labels, `interval`, `show_title`, `x_angle` and the other settings are kept, and arguments of the same call are applied after the style. Setting one key changes that key only, so the two styles can be mixed. `bars = FALSE` draws recruitment and catch as lines, `y_zero = FALSE` lets the y axes follow the data, `grid = "y"` adds horizontal grid lines, `title_color = "quantity"` gives each title the color of its quantity, and `palette = "npg"` uses the npg colors for lines, observations, comparisons and heat maps while the four quantity colors stay. `geom = "bar"` or `geom = "line"` in `plot_recruitment()` and `plot_catch()` chooses for one plot; catch at age and at length are always lines. `acl_theme_set()` changes the plots created afterwards; recreate an existing plot to restyle it.
 
-| 设置 / Setting | `style = "standard"`（默认） / `style = "standard"` (default) | `style = "classic"`（ALSCL 2.4.5） / `style = "classic"` (ALSCL 2.4.5) |
+| 设置 / Setting | `style = "default"` | `style = "classic"`（ALSCL 2.4.5） / `style = "classic"` (ALSCL 2.4.5) |
 |---|---|---|
-| `palette` | `"standard"` | `"npg"` |
+| `palette` | `"default"` | `"npg"` |
 | `grid` | `"none"`：无网格线（`"y"` 加上水平主网格线） / `"none"`: no grid lines (`"y"` adds horizontal major grid lines) | `"none"` |
 | `title_face`、`title_hjust` / `title_face`, `title_hjust` | `"bold"`、0（左对齐） / `"bold"`, 0 (left) | `"plain"`、0.5（居中） / `"plain"`, 0.5 (centered) |
 | `title_color` | `"black"`（`"quantity"` 取数量的颜色） / `"black"` (`"quantity"` gives the color of the quantity) | `"black"` |
@@ -61,17 +61,17 @@ The default style, `"standard"`, gives each quantity its own color. Spawning sto
 | `legend_position` | `"bottom"` | `NULL`：各图保持自己的位置 / `NULL`: each plot keeps its own |
 | `axis_color` | `"black"`：面板边框、坐标轴文字和刻度 / `"black"`: panel border, axis text and ticks | `NULL`：采用基础主题的设置 / `NULL`: those of the base theme |
 
-可选调色板为 `standard`（8 色）、`npg`（10）、`aaas`（10）、`nejm`（8）、`lancet`（9）和 `jama`（7）。standard 调色板的前两种颜色是用于估计值的深蓝色 `#002b5f` 和用于观测值及第二个模型的橙色 `#eb5c24`，它的热图从白色过渡到同一种深蓝色。
+可选调色板为 `default`（8 色）、`npg`（10）、`aaas`（10）、`nejm`（8）、`lancet`（9）和 `jama`（7）。默认调色板的前两种颜色是用于估计值的深蓝色 `#002b5f` 和用于观测值及第二个模型的橙色 `#eb5c24`，它的热图从白色过渡到同一种深蓝色。
 
-The palettes are `standard` (8 colors), `npg` (10), `aaas` (10), `nejm` (8), `lancet` (9) and `jama` (7). The standard palette starts with dark blue `#002b5f` for estimates and orange `#eb5c24` for observations and the second model, and its heat maps run from white to the same dark blue.
+The palettes are `default` (8 colors), `npg` (10), `aaas` (10), `nejm` (8), `lancet` (9) and `jama` (7). The default palette starts with dark blue `#002b5f` for estimates and orange `#eb5c24` for observations and the second model, and its heat maps run from white to the same dark blue.
 
-![六种调色板及各颜色的用途 / The six palettes with the roles of their colors](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/palettes.png?raw=true&v=b0f5b85720c9)
+![六种调色板及各颜色的用途 / The six palettes with the roles of their colors](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/palettes.png?raw=true&v=5ff19e5bac4a)
 
 图中是 `acl_theme_set()` 接受的六种调色板，以及默认样式下四个数量的颜色。每一行里，标注为“line, interval”的颜色用于单模型图的线、区间和点，标注为“observed”的颜色用于观测和比较图中的第二个模型，标注为“smoother”的颜色用于平滑线；其余颜色按顺序供需要更多分组的图使用，例如 ggsci 调色板下回溯图的各轮。下一张图把同一张比较图在每种调色板下画出来，便于按视觉效果挑选；仓库中的 `docs/figures/palettes/ssb_by_palette.png` 以同样方式展示单模型图。
 
 The figure shows the six palettes `acl_theme_set()` accepts and the four quantity colors of the default style. In each row the color labelled "line, interval" draws lines, intervals and points of single-model plots, the color labelled "observed" draws observations and the second model in comparisons, and the color labelled "smoother" draws smoothers; the remaining colors are used in order when a plot needs more groups, for example the peels of a retrospective under a ggsci palette. The next figure shows the same comparison plot under every palette, so you can pick one by eye; `docs/figures/palettes/ssb_by_palette.png` in the repository shows a single-model plot in the same way.
 
-![各调色板下 ACL 和 ALSCL 的产卵生物量及其 95% 置信区间 / Spawning stock biomass of ACL and ALSCL with 95% confidence intervals under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=bb553db5a36a)
+![各调色板下 ACL 和 ALSCL 的产卵生物量及其 95% 置信区间 / Spawning stock biomass of ACL and ALSCL with 95% confidence intervals under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=fe274cdbfa07)
 
 | 设置 / Setting | 范围与优先级 / Scope and precedence |
 |---|---|
@@ -128,9 +128,9 @@ acl_theme_reset()
 
 Set `acl_theme_set(point_size = 3)` to change points across single-model and comparison plots. A per-call `point_size` has highest priority. In `plot_compare_CatL()`, an explicit legacy `obs_size` comes next, followed by an explicit `compare_point_size` theme setting and then the global `point_size`. The other point-drawing comparison plots follow the same order without `obs_size`. Use `acl_theme_set(compare_point_size = NULL)` to remove a comparison-only override.
 
-调用中显式给出的颜色优先于主题，也优先于同时传入的 `palette`；`NULL` 继承主题。在默认样式下，种群大小、F、补充量或渔获量图的区间取其线的颜色，所以只给 `line_color` 就会同时改变两者；在 `"classic"` 样式下，`se_color` 要与 `line_color` 一起指定，否则它仍取主题值。柱上的误差线为带浅色描边的深灰色，除非调用中给出 `se_color`。回溯图的命名颜色必须覆盖每个末端时间步；无名称的颜色按同样的顺序对应。轮数超过调色板颜色数时，颜色由插值得到。山脊图使用按输入年份顺序取色的渐变，观测与拟合两侧共用。默认 `palette = NULL` 在 standard 调色板下为由浅蓝到深蓝的渐变，在其他调色板下为 viridis，可改为 `viridis`、`cividis`、`plasma`、`ocean` 或一组颜色。
+调用中显式给出的颜色优先于主题，也优先于同时传入的 `palette`；`NULL` 继承主题。在默认样式下，种群大小、F、补充量或渔获量图的区间取其线的颜色，所以只给 `line_color` 就会同时改变两者；在 `"classic"` 样式下，`se_color` 要与 `line_color` 一起指定，否则它仍取主题值。柱上的误差线为带浅色描边的深灰色，除非调用中给出 `se_color`。回溯图的命名颜色必须覆盖每个末端时间步；无名称的颜色按同样的顺序对应。轮数超过调色板颜色数时，颜色由插值得到。山脊图使用按输入年份顺序取色的渐变，观测与拟合两侧共用。默认 `palette = NULL` 在默认调色板下为由浅蓝到深蓝的渐变，在其他调色板下为 viridis，可改为 `viridis`、`cividis`、`plasma`、`ocean` 或一组颜色。
 
-Explicit colors in a call override the theme and a palette passed with them; `NULL` inherits the theme. Under the default style the interval of a stock size, F, recruitment or catch plot takes the color of its line, so `line_color` alone recolors both; under `"classic"`, set `se_color` together with `line_color`, because it stays at the theme value otherwise. Error bars on bars are dark grey with a light outline unless the call gives `se_color`. Named retrospective colors must cover every terminal time step; unnamed colors follow the same order. With more peels than palette colors, the colors are interpolated. Ridges use a sequential gradient in input-year order, shared by the observed and fitted panels. The default `palette = NULL` gives a ramp from light to dark blue under the standard palette and viridis under any other palette, and `viridis`, `cividis`, `plasma`, `ocean` or a vector of colors replace it.
+Explicit colors in a call override the theme and a palette passed with them; `NULL` inherits the theme. Under the default style the interval of a stock size, F, recruitment or catch plot takes the color of its line, so `line_color` alone recolors both; under `"classic"`, set `se_color` together with `line_color`, because it stays at the theme value otherwise. Error bars on bars are dark grey with a light outline unless the call gives `se_color`. Named retrospective colors must cover every terminal time step; unnamed colors follow the same order. With more peels than palette colors, the colors are interpolated. Ridges use a sequential gradient in input-year order, shared by the observed and fitted panels. The default `palette = NULL` gives a ramp from light to dark blue under the default palette and viridis under any other palette, and `viridis`, `cividis`, `plasma`, `ocean` or a vector of colors replace it.
 
 `theme_acl()` 返回当前设置下包内绘图所用的主题图层（基础主题、文字大小、网格线、标题、分面标签和图例位置），把它加到任何 ggplot 上，该图就具有包内绘图的外观；给出 `quantity = "stock"`、`"F"`、`"recruitment"` 或 `"catch"` 并设置 `title_color = "quantity"` 时，标题取该数量的颜色。`acl_palette()` 返回当前调色板的颜色，`acl_palette(n)` 返回其中 `n` 种，`acl_palette(palette = "npg")` 返回另一种调色板的颜色，`acl_palette(role = ...)` 返回绘图中 `"stock"`、`"F"`、`"recruitment"`、`"catch"`、`"primary"`（线和点）、`"accent"`（观测值）、`"smooth"` 和 `"reference"` 所用的颜色。两个函数再次调用时采用之后 `acl_theme_set()` 的设置。在默认样式下，包内绘图的纵轴还从零开始；要让自己的图包含零，加上 `ggplot2::expand_limits(y = 0)`。
 
@@ -157,9 +157,9 @@ do.call(acl_theme_set, old)
 acl_theme_reset()
 ```
 
-`acl_figure_size(p)` 返回根据图的布局计算的推荐尺寸 `c(width = , height = )`（英寸），单条时间序列约为 8 x 4.5 英寸，分面图约宽 10 英寸、每行面板高 1.5 到 1.9 英寸。`acl_save_plot()` 按该尺寸、白色背景、300 dpi 保存图形；只给 `width` 时取相应的高度，也可以加入 `ggplot2::ggsave()` 的其他参数。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复，包括自动坐标刻度和原来为 `NULL` 的标签；`acl_theme_reset()` 回到默认值。设置 `x_breaks = NULL` 可恢复自动刻度，`ylab = list(survey = NULL)` 可清除调查标签覆盖值。所选字体也应用于 `plot_retro()` 的 Mohn's rho 标注和 `plot_compare_metrics()` 的数值标注。`standard` 以外的五种调色板来自 [ggsci](https://nanx.me/ggsci/)。
+`acl_figure_size(p)` 返回根据图的布局计算的推荐尺寸 `c(width = , height = )`（英寸），单条时间序列约为 8 x 4.5 英寸，分面图约宽 10 英寸、每行面板高 1.5 到 1.9 英寸。`acl_save_plot()` 按该尺寸、白色背景、300 dpi 保存图形；只给 `width` 时取相应的高度，也可以加入 `ggplot2::ggsave()` 的其他参数。`acl_theme()` 返回当前设置，供 `do.call(acl_theme_set, old)` 恢复，包括自动坐标刻度和原来为 `NULL` 的标签；`acl_theme_reset()` 回到默认值。设置 `x_breaks = NULL` 可恢复自动刻度，`ylab = list(survey = NULL)` 可清除调查标签覆盖值。所选字体也应用于 `plot_retro()` 的 Mohn's rho 标注和 `plot_compare_metrics()` 的数值标注。`default` 以外的五种调色板来自 [ggsci](https://nanx.me/ggsci/)。
 
-`acl_figure_size(p)` returns the recommended `c(width = , height = )` in inches, computed from the layout of the plot, which is about 8 x 4.5 inches for a single time series and about 10 inches wide with 1.5 to 1.9 inches for each row of panels for faceted plots. `acl_save_plot()` saves the plot at that size on a white background at 300 dpi; a given `width` gets the matching height, and other arguments of `ggplot2::ggsave()` can be added. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore, including automatic axis breaks and labels previously set to `NULL`; `acl_theme_reset()` returns to the defaults. Set `x_breaks = NULL` to restore automatic breaks or `ylab = list(survey = NULL)` to clear a survey-label override. The chosen font also applies to the Mohn's rho labels of `plot_retro()` and the value labels of `plot_compare_metrics()`. The five palettes other than `standard` come from [ggsci](https://nanx.me/ggsci/).
+`acl_figure_size(p)` returns the recommended `c(width = , height = )` in inches, computed from the layout of the plot, which is about 8 x 4.5 inches for a single time series and about 10 inches wide with 1.5 to 1.9 inches for each row of panels for faceted plots. `acl_save_plot()` saves the plot at that size on a white background at 300 dpi; a given `width` gets the matching height, and other arguments of `ggplot2::ggsave()` can be added. `acl_theme()` returns the current settings for `do.call(acl_theme_set, old)` to restore, including automatic axis breaks and labels previously set to `NULL`; `acl_theme_reset()` returns to the defaults. Set `x_breaks = NULL` to restore automatic breaks or `ylab = list(survey = NULL)` to clear a survey-label override. The chosen font also applies to the Mohn's rho labels of `plot_retro()` and the value labels of `plot_compare_metrics()`. The five palettes other than `default` come from [ggsci](https://nanx.me/ggsci/).
 
 <a id="plot-customization-growth"></a>
 

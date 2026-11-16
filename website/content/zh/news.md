@@ -1,3 +1,7 @@
+## ALSCL 2.5.1
+
+- 默认绘图样式及其调色板现在名为 "default"：`acl_theme_set(style = "default")` 和 `acl_theme_set(palette = "default")`。ALSCL 2.5.0 中它们名为 "standard"，这个名称仍可使用，每个会话给出一次警告。图和其他所有设置都不变。
+
 ## ALSCL 2.5.0
 
 ### 图的默认外观

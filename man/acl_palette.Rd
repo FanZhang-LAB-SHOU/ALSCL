@@ -11,7 +11,7 @@ acl_palette(n = NULL, palette = NULL, role = NULL)
 colors of the palette; more colors than the palette holds are
 interpolated between its colors.}
 
-\item{palette}{Character or NULL. "standard", "npg", "aaas", "nejm",
+\item{palette}{Character or NULL. "default", "npg", "aaas", "nejm",
 "lancet" or "jama"; NULL uses the palette set with
 \code{\link{acl_theme_set}()}.}
 

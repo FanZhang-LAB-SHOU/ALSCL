@@ -46,7 +46,7 @@ test_that("the number of y breaks follows the number of panel rows", {
   y_breaks <- single$scales$get_scales("y")$breaks
   expect_identical(y_breaks(c(0, 9.9)), scales::breaks_extended()(c(0, 9.9)))
   expect_gte(sum(is.finite(readable_build(single)$layout$panel_params[[1L]]$y$breaks)), 4L)
-  for (style in c("standard", "classic")) {
+  for (style in c("default", "classic")) {
     old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
     acl_theme_set(style = style)
     p <- plot_catch(readable_fixture(), type = "CNA")
@@ -127,7 +127,7 @@ test_that("text drawn in plots is at least 8 points", {
     opt = list(par = c(a = 1, b = 2), objective = 10))
   data <- data.frame(LengthBin = fit$len_label, observations, check.names = FALSE)
   names(data)[-1L] <- as.character(fit$year)
-  for (style in c("standard", "classic")) {
+  for (style in c("default", "classic")) {
     acl_theme_set(style = style)
     metrics <- plot_compare_metrics(fit, fit, data, label_size = 1)
     plots <- c(list(plot_retro(retro)), metrics$patches$plots, list(metrics))

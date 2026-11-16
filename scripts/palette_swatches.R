@@ -1,5 +1,5 @@
 # Draw the six palettes that acl_theme_set(palette = ...) accepts (the
-# standard palette and five ggsci palettes), the roles each color takes in the plots,
+# default palette and five ggsci palettes), the roles each color takes in the plots,
 # the four quantity colors of the default style, and the same two figures
 # under every palette. Run from the repository root:
 #   Rscript scripts/palette_swatches.R [output_dir] [teaching_fits.rds]
@@ -16,7 +16,7 @@ source("scripts/plot_helpers.R")
 args <- commandArgs(trailingOnly = TRUE)
 out <- if (length(args)) args[[1L]] else file.path("docs", "figures", "palettes")
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
-palettes <- c("standard", "npg", "aaas", "nejm", "lancet", "jama")
+palettes <- c("default", "npg", "aaas", "nejm", "lancet", "jama")
 suppressMessages(acl_theme_reset())
 
 # Black text on light tiles, white text on dark tiles.

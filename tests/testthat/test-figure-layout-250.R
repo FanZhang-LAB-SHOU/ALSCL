@@ -137,7 +137,7 @@ test_that("dense facets draw thinner lines and reference lines are thin and unde
 
 test_that("titles are black by default and can be removed or replaced in every plot", {
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
-  for (style in c("standard", "classic")) {
+  for (style in c("default", "classic")) {
     acl_theme_set(style = style)
     expect_identical(acl_theme("title_color"), "black")
     expect_true(acl_theme("show_title"))

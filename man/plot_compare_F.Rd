@@ -22,7 +22,7 @@ plot_compare_F(
 
 \item{palette}{Character or NULL. Fill colors of the heat maps. NULL uses
 the global low_col and high_col settings (white to dark blue under the
-standard style). A palette name ("standard", "npg", "aaas", "nejm",
+default style). A palette name ("default", "npg", "aaas", "nejm",
 "lancet" or "jama") gives a gradient to the primary color of that
 palette, and any other name is taken as a viridis option, such as
 "magma".}

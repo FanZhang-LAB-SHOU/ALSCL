@@ -223,7 +223,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   When no finite estimates are available, return plot = NULL with a warning;
 #'   fit_diagnostics and errors remain available.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting
-#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   (1 under the default style, 1.5 under classic). While that setting keeps
 #'   the value of the style, facets of more than
 #'   four panels draw thinner lines.
 #' @param point_size Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).
@@ -599,15 +599,15 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 
 
 # Colors of the full fit and of n - 1 peels. With palette = NULL under the
-# "standard" global palette: orange for the full fit and greys for the peels,
+# default global palette: orange for the full fit and greys for the peels,
 # darkest first, interpolated for more than five peels. Otherwise the
 # colors of the palette.
 .acl_retro_colors <- function(n, palette = NULL) {
-  if (is.null(palette) && identical(acl_theme("palette"), "standard")) {
-    greys <- .acl_standard_colors$retro_peels
+  if (is.null(palette) && identical(acl_theme("palette"), "default")) {
+    greys <- .acl_default_colors$retro_peels
     peels <- n - 1L
     if (peels > length(greys)) greys <- grDevices::colorRampPalette(greys[c(1L, length(greys))])(peels)
-    return(c(.acl_standard_colors$F, greys[seq_len(peels)]))
+    return(c(.acl_default_colors$F, greys[seq_len(peels)]))
   }
   .acl_palette(palette %||% acl_theme("palette"), n)
 }
@@ -622,7 +622,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param rho_position Character. Position of rho text. Default is "top_right".
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting
-#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   (1 under the default style, 1.5 under classic). While that setting keeps
 #'   the value of the style, facets of more than
 #'   four panels draw thinner lines.
 #' @param point_size Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).
@@ -648,12 +648,11 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param base_theme Character or NULL. Base ggplot2 theme name.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment.
 #' @return A ggplot object.
-#' @param palette Character or NULL. Palette name ("standard", "npg", "aaas",
+#' @param palette Character or NULL. Palette name ("default", "npg", "aaas",
 #'   "nejm", "lancet", "jama"). NULL inherits the global palette. The colors
 #'   of the palette are interpolated when there are more fits than colors.
-#'   With NULL under the "standard" global palette (the default style), the
-#'   full fit is orange and the earlier fits are greys, darkest for the first
-#'   peel.
+#'   With NULL under the default global palette, the full fit is orange and
+#'   the earlier fits are greys, darkest for the first peel.
 #' @param colors Character vector or NULL. Explicit period colors, ordered by
 #'   descending terminal period or named by terminal period. Overrides palette.
 #'   Names are the numeric terminal periods, for example "2019" or "2019.75".
@@ -669,8 +668,8 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #'   each panel states how many requested peels are valid when Mohn's rho is
 #'   withheld.
 #'   Each panel leaves room for the rho text above the lines (below them for
-#'   the bottom positions). With the default colors of the "standard" palette
-#'   the full fit is drawn again on top of the earlier fits.
+#'   the bottom positions). With colors and palette NULL under the default
+#'   global palette, the full fit is drawn again on top of the earlier fits.
 #' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @export
 #' @examples
@@ -725,9 +724,9 @@ plot_retro <- function(retro_result,
   if (all(is.finite(numeric_periods))) periods <- periods[order(numeric_periods, decreasing = TRUE)]
   peel_of <- peel_of[periods]
   present <- periods %in% as_period(results$RetrospectiveYear[is.finite(results$Value)])
-  # With the colors of the standard palette the full fit is drawn again
+  # With the colors of the default palette the full fit is drawn again
   # on top of the grey peels.
-  full_on_top <- is.null(colors) && is.null(palette) && identical(acl_theme("palette"), "standard")
+  full_on_top <- is.null(colors) && is.null(palette) && identical(acl_theme("palette"), "default")
   if (is.null(colors)) {
     index <- if (anyNA(peel_of) || anyDuplicated(peel_of)) seq_along(periods) else peel_of + 1L
     requested_peels <- suppressWarnings(max(rho_text$RequestedPeels, na.rm = TRUE))

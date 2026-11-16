@@ -10,8 +10,8 @@ acl_theme_reset()
 \code{NULL}, invisibly.
 }
 \description{
-Restores every theme setting to the package default, the \code{"standard"}
-style, and reports this with a message, which \code{suppressMessages()}
+Restores every theme setting to the package default, the default style
+(\code{style = "default"}), and reports this with a message, which \code{suppressMessages()}
 silences. Use \code{acl_theme_set(style = "classic")} for the colors and
 forms of ALSCL 2.4.5.
 }

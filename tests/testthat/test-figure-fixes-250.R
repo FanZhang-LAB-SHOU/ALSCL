@@ -76,7 +76,7 @@ metrics_fixture <- function() {
 test_that("values of plot_compare_metrics() are horizontal and just beyond the end of their bars", {
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   m <- metrics_fixture()
-  for (style in c("standard", "classic")) {
+  for (style in c("default", "classic")) {
     acl_theme_set(style = style)
     p <- plot_compare_metrics(m$fit, m$other, m$data)
     for (panel in p$patches$plots) {
@@ -168,7 +168,7 @@ test_that("line widths follow the style and explicit values win", {
   expect_identical(width(plot_SSB(fit)), 1.5)
   # The classic width is still thinned in dense facets.
   expect_true(isTRUE(attr(ALSCL:::.acl_auto_size(), "acl_auto")))
-  acl_theme_set(style = "standard", line_size = 2)
+  acl_theme_set(style = "default", line_size = 2)
   expect_identical(acl_theme("line_size"), 2)
   expect_null(attributes(ALSCL:::.acl_auto_size()))
   expect_identical(width(plot_SSB(fit, line_size = 0.4)), 0.4)
@@ -231,11 +231,11 @@ test_that("acl_theme_set() and theme_acl() check x_angle the same way", {
 test_that("plot_ridges() matches every palette name without regard to case", {
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
   ridges <- ALSCL:::.acl_ridges_palette
-  expect_identical(ridges("Standard", 3L)$palette(3L), ridges("standard", 3L)$palette(3L))
+  expect_identical(ridges("Default", 3L)$palette(3L), ridges("default", 3L)$palette(3L))
   expect_identical(ridges("NPG", 3L)$palette(3L), ridges("npg", 3L)$palette(3L))
   expect_identical(ridges("RDBU", 3L)$palette(3L), ridges("RdBu", 3L)$palette(3L))
   expect_identical(ridges("prgn", 3L)$palette(3L), ridges("PRGn", 3L)$palette(3L))
-  expect_message(ridges("nonsense", 3L), "standard")
+  expect_message(ridges("nonsense", 3L), "default")
 })
 
 test_that("single-panel plots follow x_angle and x_breaks from the call or the theme", {

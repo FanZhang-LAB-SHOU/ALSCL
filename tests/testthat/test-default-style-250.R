@@ -1,4 +1,4 @@
-# The "standard" style is the default of 2.5.0 (colors by quantity, bars for
+# The default style of 2.5.0 and later (colors by quantity, bars for
 # total recruitment and catch, y axes from zero, bold left-aligned titles,
 # no grid lines), and acl_theme_set(style = "classic") restores the look of
 # 2.4.5. grid = "y" adds horizontal major grid lines.
@@ -85,22 +85,22 @@ style_retro_fixture <- function(times = 2000:2004, peels = 3L) {
        model_type = "acl", fit_diagnostics = diagnostics)
 }
 
-standard <- list(stock = "#047c6c", F = "#ed5f26", recruitment = "#28b3e8", catch = "#002b5f",
+default_colors <- list(stock = "#047c6c", F = "#ed5f26", recruitment = "#28b3e8", catch = "#002b5f",
              primary = "#002b5f", accent = "#eb5c24", smooth = "#00b29d")
-standard_palette <- c("#002b5f", "#eb5c24", "#00b29d", "#fda500", "#6eb5d2", "#6eb200", "#28b3e8", "#047c6c")
+default_palette <- c("#002b5f", "#eb5c24", "#00b29d", "#fda500", "#6eb5d2", "#6eb200", "#28b3e8", "#047c6c")
 style_keys <- c("style", "palette", "grid", "title_face", "title_hjust", "title_color",
                 "stock_color", "F_color", "recruitment_color", "catch_color", "bars", "y_zero",
                 "se_alpha", "compare_se_alpha", "strip", "legend_position", "axis_color",
                 "line_color", "se_color", "point_color", "observed_color", "smooth_color",
                 "hline_color", "low_col", "high_col", "compare_colors")
-standard_values <- list(style = "standard", palette = "standard", grid = "none", title_face = "bold", title_hjust = 0,
-  title_color = "black", stock_color = standard$stock, F_color = standard$F,
-  recruitment_color = standard$recruitment, catch_color = standard$catch, bars = TRUE, y_zero = TRUE,
+default_values <- list(style = "default", palette = "default", grid = "none", title_face = "bold", title_hjust = 0,
+  title_color = "black", stock_color = default_colors$stock, F_color = default_colors$F,
+  recruitment_color = default_colors$recruitment, catch_color = default_colors$catch, bars = TRUE, y_zero = TRUE,
   se_alpha = 0.3, compare_se_alpha = 0.25, strip = "plain", legend_position = "bottom",
-  axis_color = "black", line_color = standard$primary, se_color = standard$primary,
-  point_color = standard$primary, observed_color = standard$accent, smooth_color = standard$smooth,
-  hline_color = "grey55", low_col = "#ffffff", high_col = standard$primary,
-  compare_colors = c(standard$primary, standard$accent))
+  axis_color = "black", line_color = default_colors$primary, se_color = default_colors$primary,
+  point_color = default_colors$primary, observed_color = default_colors$accent, smooth_color = default_colors$smooth,
+  hline_color = "grey55", low_col = "#ffffff", high_col = default_colors$primary,
+  compare_colors = c(default_colors$primary, default_colors$accent))
 npg <- ggsci::pal_npg("nrc")(10)
 classic_values <- list(style = "classic", palette = "npg", grid = "none", title_face = "plain",
   title_hjust = 0.5, title_color = "black", stock_color = NULL, F_color = NULL,
@@ -111,17 +111,17 @@ classic_values <- list(style = "classic", palette = "npg", grid = "none", title_
   compare_colors = npg[c(4, 1)])
 theme_values <- function() stats::setNames(lapply(style_keys, acl_theme), style_keys)
 
-test_that("the standard style is the default and each style sets its keys", {
+test_that("the default style is active after a reset and each style sets its keys", {
   local_default_theme()
-  expect_identical(theme_values(), standard_values)
+  expect_identical(theme_values(), default_values)
   acl_theme_set(style = "classic")
   expect_identical(acl_theme("style"), "classic")
   expect_identical(theme_values(), classic_values)
-  acl_theme_set(style = "standard")
-  expect_identical(theme_values(), standard_values)
+  acl_theme_set(style = "default")
+  expect_identical(theme_values(), default_values)
   acl_theme_set(style = "classic")
   expect_message(acl_theme_reset(), "reset to defaults")
-  expect_identical(theme_values(), standard_values)
+  expect_identical(theme_values(), default_values)
   # Settings that a style does not own are kept.
   acl_theme_set(font_family = "serif", title_size = 18, point_size = 3)
   acl_theme_set(style = "classic")
@@ -129,9 +129,9 @@ test_that("the standard style is the default and each style sets its keys", {
   expect_identical(acl_theme("title_size"), 18)
   expect_identical(acl_theme("point_size"), 3)
   # Line widths belong to the style: 1.5 and 1.2 under classic, 1 and 0.9
-  # under standard.
+  # under the default style.
   expect_identical(c(acl_theme("line_size"), acl_theme("compare_line_size")), c(1.5, 1.2))
-  acl_theme_set(style = "standard")
+  acl_theme_set(style = "default")
   expect_identical(c(acl_theme("line_size"), acl_theme("compare_line_size")), c(1, 0.9))
 })
 
@@ -143,28 +143,28 @@ test_that("single keys change only themselves and win over a style in the same c
   expect_identical(after$grid, "y")
   after$grid <- before$grid
   expect_identical(after, before)
-  acl_theme_set(style = "standard", palette = "npg", title_hjust = 0.5)
-  expect_identical(acl_theme("style"), "standard")
+  acl_theme_set(style = "default", palette = "npg", title_hjust = 0.5)
+  expect_identical(acl_theme("style"), "default")
   expect_identical(acl_theme("palette"), "npg")
   expect_identical(acl_theme("line_color"), npg[4])
   expect_identical(acl_theme("grid"), "none")
   expect_identical(acl_theme("title_hjust"), 0.5)
   # The quantity colours belong to the style, not to the palette.
-  expect_identical(acl_theme("stock_color"), standard$stock)
+  expect_identical(acl_theme("stock_color"), default_colors$stock)
   acl_theme_set(style = "classic", grid = "y", bars = TRUE, stock_color = "darkgreen")
   expect_identical(acl_theme("grid"), "y")
   expect_true(acl_theme("bars"))
   expect_identical(acl_theme("stock_color"), "darkgreen")
   expect_identical(acl_theme("title_face"), "plain")
   # An explicit NULL clears a quantity colour or the legend position.
-  acl_theme_set(style = "standard", stock_color = NULL, legend_position = NULL)
+  acl_theme_set(style = "default", stock_color = NULL, legend_position = NULL)
   expect_null(acl_theme("stock_color"))
   expect_null(acl_theme("legend_position"))
-  expect_identical(acl_theme("F_color"), standard$F)
+  expect_identical(acl_theme("F_color"), default_colors$F)
   # Saved settings restore every key, including the cleared ones.
   acl_theme_set(style = "classic")
   saved <- acl_theme()
-  acl_theme_set(style = "standard")
+  acl_theme_set(style = "default")
   do.call(acl_theme_set, saved)
   expect_identical(acl_theme(), saved)
 })
@@ -172,7 +172,7 @@ test_that("single keys change only themselves and win over a style in the same c
 test_that("invalid style settings are errors that name the accepted values", {
   local_default_theme()
   before <- acl_theme()
-  expect_error(acl_theme_set(style = "modern"), "style must be one of \"standard\", \"classic\"")
+  expect_error(acl_theme_set(style = "modern"), "style must be one of \"default\", \"classic\"")
   expect_error(acl_theme_set(grid = "x"), "grid must be one of \"none\", \"y\"")
   expect_error(acl_theme_set(title_face = "heavy"), "title_face must be one of")
   expect_error(acl_theme_set(title_color = "notacolor"), "title_color must be one color")
@@ -187,7 +187,7 @@ test_that("invalid style settings are errors that name the accepted values", {
   # A rejected call stores nothing, not even its valid arguments.
   expect_error(acl_theme_set(style = "classic", grid = "x"), "grid")
   expect_identical(acl_theme(), before)
-  expect_silent(acl_theme_set(title_color = "quantity", palette = "standard"))
+  expect_silent(acl_theme_set(title_color = "quantity", palette = "default"))
 })
 
 test_that("the classic style gives the base theme layers of 2.4.5", {
@@ -226,7 +226,7 @@ test_that("theme_acl() gives the panel look of the current style to any ggplot",
   # with title_color = "quantity".
   expect_identical(style_look(p + theme_acl(quantity = "stock"))$title$colour, "black")
   acl_theme_set(title_color = "quantity")
-  expect_identical(style_look(p + theme_acl(quantity = "stock"))$title$colour, standard$stock)
+  expect_identical(style_look(p + theme_acl(quantity = "stock"))$title$colour, default_colors$stock)
   acl_theme_set(title_color = "black")
   expect_error(theme_acl(quantity = "SSB"), "quantity must be one of")
   # Typography arguments and other base themes pass through.
@@ -255,15 +255,15 @@ test_that("theme_acl() gives the panel look of the current style to any ggplot",
 
 test_that("acl_palette() gives the colours of a palette and of each role", {
   local_default_theme()
-  expect_identical(acl_palette(), standard_palette)
-  expect_identical(acl_palette(3), standard_palette[1:3])
+  expect_identical(acl_palette(), default_palette)
+  expect_identical(acl_palette(3), default_palette[1:3])
   twelve <- acl_palette(12)
   expect_length(twelve, 12L)
-  expect_identical(toupper(twelve[c(1L, 12L)]), toupper(standard_palette[c(1L, 8L)]))
+  expect_identical(toupper(twelve[c(1L, 12L)]), toupper(default_palette[c(1L, 8L)]))
   expect_identical(acl_palette(4, palette = "npg"), npg[1:4])
   expect_identical(acl_palette(role = c("stock", "F", "recruitment", "catch", "primary", "accent", "smooth")),
-    c(stock = standard$stock, F = standard$F, recruitment = standard$recruitment, catch = standard$catch,
-      primary = standard$primary, accent = standard$accent, smooth = standard$smooth))
+    c(stock = default_colors$stock, F = default_colors$F, recruitment = default_colors$recruitment, catch = default_colors$catch,
+      primary = default_colors$primary, accent = default_colors$accent, smooth = default_colors$smooth))
   expect_identical(acl_palette(role = "reference"), c(reference = "grey55"))
   # Under the classic style the quantities use the primary colour.
   acl_theme_set(style = "classic")
@@ -271,7 +271,7 @@ test_that("acl_palette() gives the colours of a palette and of each role", {
   expect_identical(acl_palette(role = c("stock", "primary", "accent")),
                    c(stock = npg[4], primary = npg[4], accent = npg[1]))
   # A palette name gives the defaults of that palette, whatever the settings.
-  expect_identical(acl_palette(role = c("F", "accent"), palette = "standard"), c(F = standard$F, accent = standard$accent))
+  expect_identical(acl_palette(role = c("F", "accent"), palette = "default"), c(F = default_colors$F, accent = default_colors$accent))
   acl_theme_set(line_color = "purple")
   expect_identical(acl_palette(role = "primary"), c(primary = "purple"))
   expect_error(acl_palette(role = "SSB"), "role must name color roles")
@@ -279,11 +279,11 @@ test_that("acl_palette() gives the colours of a palette and of each role", {
   expect_error(acl_palette(palette = "rainbow"), "arg")
 })
 
-test_that("the stock, recruitment, catch and F plots of an ACL fit have the forms and colours of the standard style", {
+test_that("the stock, recruitment, catch and F plots of an ACL fit have the forms and colours of the default style", {
   skip_on_cran()
   local_default_theme()
   fit <- style_fit("ACL")
-  standard_panel <- function(look, colour) {
+  default_panel <- function(look, colour) {
     expect_identical(unname(look$grid), rep("blank", 4))
     # The title is black by default.
     expect_identical(look$title, list(hjust = 0, face = "bold", colour = "black"))
@@ -295,18 +295,18 @@ test_that("the stock, recruitment, catch and F plots of an ACL fit have the form
   # Stock size: a line and a band of the same colour.
   for (p in list(plot_SSB(fit, se = TRUE), plot_biomass(fit, se = TRUE), plot_abundance(fit, se = TRUE))) {
     look <- style_look(p)
-    expect_identical(look$layers[1:2], list(layer("GeomLine", standard$stock), layer("GeomRibbon", character(0), standard$stock, 0.3)))
-    standard_panel(look, standard$stock)
+    expect_identical(look$layers[1:2], list(layer("GeomLine", default_colors$stock), layer("GeomRibbon", character(0), default_colors$stock, 0.3)))
+    default_panel(look, default_colors$stock)
   }
-  standard_panel(style_look(plot_abundance(fit, type = "NA")), standard$stock)
+  default_panel(style_look(plot_abundance(fit, type = "NA")), default_colors$stock)
   # Recruitment: bars 0.8 of the time step wide with thin dark error bars
   # over a wider white bar.
   p <- plot_recruitment(fit, se = TRUE)
   look <- style_look(p)
-  expect_identical(look$layers[1:3], list(layer("GeomCol", character(0), standard$recruitment, logical(0)),
+  expect_identical(look$layers[1:3], list(layer("GeomCol", character(0), default_colors$recruitment, logical(0)),
                                           layer("GeomErrorbar", "white", NULL, 1),
                                           layer("GeomErrorbar", "grey20", NULL, 1)))
-  standard_panel(look, standard$recruitment)
+  default_panel(look, default_colors$recruitment)
   bars <- style_build(p)$data[[1L]]
   expect_equal(bars$xmax - bars$xmin, rep(0.8, nrow(bars)))
   expect_identical(p$layers[[3L]]$aes_params$linewidth, 0.4)
@@ -314,33 +314,33 @@ test_that("the stock, recruitment, catch and F plots of an ACL fit have the form
   expect_identical(style_look(plot_recruitment(fit))$layers[[1L]]$geom, "GeomCol")
   # The geom argument and an explicit se_type choose per call.
   line <- style_look(plot_recruitment(fit, se = TRUE, geom = "line"))
-  expect_identical(line$layers[1:2], list(layer("GeomLine", standard$recruitment),
-                                          layer("GeomRibbon", character(0), standard$recruitment, 0.3)))
+  expect_identical(line$layers[1:2], list(layer("GeomLine", default_colors$recruitment),
+                                          layer("GeomRibbon", character(0), default_colors$recruitment, 0.3)))
   expect_identical(style_look(plot_recruitment(fit, se = TRUE, se_type = "ribbon"))$layers[[2L]]$geom, "GeomRibbon")
   expect_identical(style_look(plot_recruitment(fit, se = TRUE, se_color = "red"))$layers[[3L]]$colour, "red")
   expect_error(plot_recruitment(fit, geom = "area"), "geom must be one of \"bar\", \"line\"")
   # Catch: bars for the total, lines at age in the catch colour.
   look <- style_look(plot_catch(fit, se = TRUE))
-  expect_identical(look$layers[[1L]], layer("GeomCol", character(0), standard$catch, logical(0)))
+  expect_identical(look$layers[[1L]], layer("GeomCol", character(0), default_colors$catch, logical(0)))
   expect_identical(look$layers[[2L]]$geom, "GeomErrorbar")
-  standard_panel(look, standard$catch)
+  default_panel(look, default_colors$catch)
   look <- style_look(plot_catch(fit, type = "CNA"))
-  expect_identical(look$layers[[1L]], layer("GeomLine", standard$catch))
-  standard_panel(look, standard$catch)
+  expect_identical(look$layers[[1L]], layer("GeomLine", default_colors$catch))
+  default_panel(look, default_colors$catch)
   expect_identical(style_look(plot_catch(fit, geom = "line"))$layers[[1L]]$geom, "GeomLine")
   # Fishing pressure, with free y scales in every panel.
   for (p in list(plot_fishing_mortality(fit, se = TRUE), plot_fishing_mortality(fit, type = "age"))) {
     look <- style_look(p)
-    expect_identical(look$layers[[1L]], layer("GeomLine", standard$F))
-    standard_panel(look, standard$F)
+    expect_identical(look$layers[[1L]], layer("GeomLine", default_colors$F))
+    default_panel(look, default_colors$F)
   }
   expect_identical(style_look(plot_fishing_mortality(fit, se = TRUE))$layers[[2L]],
-                   layer("GeomRibbon", character(0), standard$F, 0.3))
+                   layer("GeomRibbon", character(0), default_colors$F, 0.3))
   # Deviations take the colour of their quantity; their axis is not forced to zero.
-  expect_identical(style_look(plot_deviance(fit))$layers[[1L]], layer("GeomLine", standard$recruitment))
+  expect_identical(style_look(plot_deviance(fit))$layers[[1L]], layer("GeomLine", default_colors$recruitment))
   dev_F <- style_look(plot_deviance(fit, type = "F", se = TRUE))
   expect_identical(dev_F$title$colour, "black")
-  expect_identical(dev_F$layers[[3L]]$colour, standard$F)
+  expect_identical(dev_F$layers[[3L]]$colour, default_colors$F)
   expect_true(all(vapply(dev_F$y_ranges, function(r) r[1L] < 0, logical(1))))
   # A per-call colour wins, and the band follows it.
   look <- style_look(plot_SSB(fit, se = TRUE, line_color = "purple"))
@@ -349,22 +349,22 @@ test_that("the stock, recruitment, catch and F plots of an ACL fit have the form
   # With title_color = "quantity" the title takes the colour of the quantity,
   # darkened where needed to read on white.
   acl_theme_set(title_color = "quantity")
-  for (case in list(list(plot_SSB(fit), standard$stock), list(plot_recruitment(fit), standard$recruitment),
-                    list(plot_catch(fit), standard$catch), list(plot_deviance(fit, type = "F"), standard$F)))
+  for (case in list(list(plot_SSB(fit), default_colors$stock), list(plot_recruitment(fit), default_colors$recruitment),
+                    list(plot_catch(fit), default_colors$catch), list(plot_deviance(fit, type = "F"), default_colors$F)))
     expect_identical(style_look(case[[1L]])$title$colour, ALSCL:::.acl_readable_color(case[[2L]]))
   acl_theme_set(title_color = "black")
   # Neutral plots use the primary colour and a black title.
   look <- style_look(plot_SSB_Rec(fit))
-  expect_identical(look$layers[[1L]]$colour, standard$primary)
+  expect_identical(look$layers[[1L]]$colour, default_colors$primary)
   expect_identical(look$title$colour, "black")
   look <- style_look(plot_CatL(fit))
-  expect_identical(look$layers[[1L]]$colour, standard$accent)
-  expect_identical(look$layers[[2L]]$colour, standard$primary)
+  expect_identical(look$layers[[1L]]$colour, default_colors$accent)
+  expect_identical(look$layers[[2L]]$colour, default_colors$primary)
   look <- style_look(plot_residuals(fit))
   # The zero line is drawn first, under the residuals and their trend.
   expect_identical(look$layers[[1L]]$geom, "GeomHline")
-  expect_identical(look$layers[[3L]]$colour, standard$smooth)
-  expect_identical(style_look(plot_relative_catch(fit))$layers[[2L]]$colour, standard$catch)
+  expect_identical(look$layers[[3L]]$colour, default_colors$smooth)
+  expect_identical(style_look(plot_relative_catch(fit))$layers[[2L]]$colour, default_colors$catch)
   # No y scale is added twice.
   for (p in list(plot_SSB(fit), plot_recruitment(fit), plot_catch(fit), plot_fishing_mortality(fit)))
     expect_no_message(style_build(p))
@@ -375,35 +375,35 @@ test_that("the stock, recruitment, catch and F plots of an ACL fit have the form
     expect_identical(unname(style_look(p)$grid), rep("blank", 4))
 })
 
-test_that("the stock, catch and F plots of an ALSCL fit and the comparison plots follow the standard style", {
+test_that("the stock, catch and F plots of an ALSCL fit and the comparison plots follow the default style", {
   skip_on_cran()
   local_default_theme()
   acl <- style_fit("ACL")
   alscl <- style_fit("ALSCL")
   zero <- function(look) for (range in look$y_ranges) expect_identical(range[1L], 0)
   look <- style_look(plot_SSB(alscl, type = "SBA", se = TRUE))
-  expect_identical(look$layers[[1L]], layer("GeomLine", standard$stock))
+  expect_identical(look$layers[[1L]], layer("GeomLine", default_colors$stock))
   zero(look)
   look <- style_look(plot_catch(alscl, type = "CNL"))
-  expect_identical(look$layers[[1L]], layer("GeomLine", standard$catch))
+  expect_identical(look$layers[[1L]], layer("GeomLine", default_colors$catch))
   zero(look)
   look <- style_look(plot_fishing_mortality(alscl))
-  expect_identical(look$layers[[1L]], layer("GeomLine", standard$F))
+  expect_identical(look$layers[[1L]], layer("GeomLine", default_colors$F))
   zero(look)
   look <- style_look(plot_catch(alscl, se = TRUE))
   expect_identical(look$layers[[1L]]$geom, "GeomCol")
   zero(look)
   # Comparisons: the two models in compare_colors, bands with compare_se_alpha.
   look <- style_look(plot_compare_ts(acl, alscl, se = TRUE))
-  expect_identical(look$layers[[1L]], layer("GeomLine", c(standard$primary, standard$accent)))
-  expect_identical(look$layers[[2L]], layer("GeomRibbon", character(0), c(standard$primary, standard$accent), 0.25))
+  expect_identical(look$layers[[1L]], layer("GeomLine", c(default_colors$primary, default_colors$accent)))
+  expect_identical(look$layers[[2L]], layer("GeomRibbon", character(0), c(default_colors$primary, default_colors$accent), 0.25))
   expect_identical(look$title, list(hjust = 0, face = "bold", colour = "black"))
   # Five quantities fill three columns; the legend sits in the empty cell.
   expect_identical(look$legend, "inside")
   expect_identical(style_look(plot_compare_ts(acl, alscl, quantities = c("SSB", "R")))$legend, "bottom")
   zero(look)
   look <- style_look(plot_compare_F_ts(acl, alscl))
-  expect_identical(look$layers[[1L]]$colour, c(standard$primary, standard$accent))
+  expect_identical(look$layers[[1L]]$colour, c(default_colors$primary, default_colors$accent))
   zero(look)
   acl_theme_set(grid = "y")
   expect_identical(unname(style_look(plot_compare_F(acl, alscl))$grid), rep("blank", 4))
@@ -414,7 +414,7 @@ test_that("the stock, catch and F plots of an ALSCL fit and the comparison plots
   expect_true(style_look(plot_SSB(alscl))$y_ranges[[1L]][1L] > 0)
 })
 
-test_that("retrospective fits are orange and grey under the standard palette", {
+test_that("retrospective fits are orange and grey under the default palette", {
   local_default_theme()
   r <- style_retro_fixture()
   p <- plot_retro(r)
@@ -446,11 +446,11 @@ test_that("retrospective fits are orange and grey under the standard palette", {
   expect_identical(style_build(plot_retro(r))$plot$scales$get_scales("colour")$map("2004"), npg[1])
 })
 
-test_that("ridgelines use a blue ramp under the standard palette and viridis under classic", {
+test_that("ridgelines use a blue ramp under the default palette and viridis under classic", {
   local_default_theme()
   expect_identical(ALSCL:::.acl_ridges_palette(NULL, 3L)$palette(3L),
                    grDevices::colorRampPalette(c("#d6ecf5", "#002b5f"))(3L))
-  expect_identical(ALSCL:::.acl_ridges_palette("standard", 2L)$palette(2L), toupper(c("#d6ecf5", "#002b5f")))
+  expect_identical(ALSCL:::.acl_ridges_palette("default", 2L)$palette(2L), toupper(c("#d6ecf5", "#002b5f")))
   expect_s3_class(ALSCL:::.acl_ridges_palette("viridis", 3L), "ScaleDiscrete")
   acl_theme_set(style = "classic")
   viridis <- ALSCL:::.acl_ridges_palette(NULL, 3L)
@@ -532,4 +532,36 @@ test_that("the classic style reproduces the look of 2.4.5", {
   ridges <- plot_ridges(acl)
   expect_identical(style_build(ridges[[1L]])$plot$scales$get_scales("fill")$palette(3L),
                    ggplot2::scale_fill_viridis_d()$palette(3L))
+})
+
+test_that("the former name \"standard\" of the default style and palette still works with one warning", {
+  local_default_theme()
+  ALSCL:::.acl_reset_deprecations(); on.exit(ALSCL:::.acl_reset_deprecations(), add = TRUE)
+  acl_theme_set(style = "classic")
+  expect_warning(acl_theme_set(style = "standard"),
+                 "style = \"standard\" is the name used in ALSCL 2.5.0; use style = \"default\".", fixed = TRUE)
+  expect_identical(acl_theme("style"), "default")
+  expect_identical(theme_values(), default_values)
+  # The warning is given once per session.
+  acl_theme_set(style = "classic")
+  expect_no_warning(acl_theme_set(style = "standard"))
+  expect_identical(theme_values(), default_values)
+
+  acl_theme_set(style = "classic")
+  expect_warning(acl_theme_set(palette = "Standard"),
+                 "palette = \"standard\" is the name used in ALSCL 2.5.0; use palette = \"default\".", fixed = TRUE)
+  expect_identical(acl_theme("palette"), "default")
+  expect_no_warning(acl_theme_set(style = "standard", palette = "standard"))
+  expect_identical(theme_values(), default_values)
+  expect_identical(acl_palette(palette = "standard"), default_palette)
+  expect_identical(acl_palette(role = "F", palette = "standard"), c(F = default_colors$F))
+  expect_identical(ALSCL:::.acl_ridges_palette("standard", 3L)$palette(3L),
+                   ALSCL:::.acl_ridges_palette("default", 3L)$palette(3L))
+  expect_identical(ALSCL:::.acl_retro_colors(3L, "standard"), ALSCL:::.acl_retro_colors(3L, "default"))
+  expect_identical(ALSCL:::.acl_fill_continuous("standard")$palette(c(0, 1)),
+                   ALSCL:::.acl_fill_continuous("default")$palette(c(0, 1)))
+
+  # Without the former name nothing warns.
+  ALSCL:::.acl_reset_deprecations()
+  expect_no_warning(acl_theme_set(style = "default", palette = "default"))
 })

@@ -47,7 +47,7 @@ test_that("every exported plot family and comparison panel defaults to no grid",
   # Former names are wrappers of the functions already in the list.
   expect_setequal(names(calls), setdiff(exported_plots, names(ALSCL:::.acl_deprecated_functions)))
   heat_maps <- c("plot_pla", "plot_compare_F")
-  for (setting in c("classic", "standard", "standard with grid = y")) {
+  for (setting in c("classic", "default", "default with grid = y")) {
     acl_theme_set(style = sub(" .*", "", setting))
     horizontal <- grepl("grid", setting)
     if (horizontal) acl_theme_set(grid = "y")

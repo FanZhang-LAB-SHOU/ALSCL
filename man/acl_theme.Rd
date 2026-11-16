@@ -17,7 +17,7 @@ is specified.
 \description{
 Global settings for all ALSCL plot functions, including model comparison plots.
 Change titles, axis labels, font family, colors, line sizes, and
-comparison plot styles in one place. The default style, \code{"standard"},
+comparison plot styles in one place. The default style, \code{style = "default"},
 draws stock size, fishing mortality, recruitment and catch each in its own
 color, draws total recruitment and total catch as bars, starts the y axis
 of these plots at zero, and uses bold left-aligned titles and facet labels
@@ -35,7 +35,7 @@ acl_theme()
 
 # The colors and forms of ALSCL 2.4.5, then back to the default style
 acl_theme_set(style = "classic")
-acl_theme_set(style = "standard")
+acl_theme_set(style = "default")
 
 # Change just one thing
 acl_theme_set(font_family = "Times New Roman")
