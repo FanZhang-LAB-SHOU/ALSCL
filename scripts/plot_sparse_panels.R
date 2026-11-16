@@ -3,17 +3,17 @@
 render_sparse_panels <- function(fits_file = NULL) {
   pkgload::load_all(quiet = TRUE)
   source("scripts/plot_helpers.R", local = environment())
+  # Draw in the default package style, whatever theme the session has set.
   old <- options(acl.theme = NULL)
   on.exit(options(old), add = TRUE)
-  acl_theme_set(palette = "npg", base_theme = "theme_bw")
   b <- if (is.null(fits_file)) run_alscl(YTF_example, silent = TRUE) else readRDS(fits_file)$alscl
   out <- "docs/figures/sparse-panels"
   dir.create(out, recursive = TRUE, showWarnings = FALSE)
   cases <- list(
     list(article = "population-plots", match = "one_period <- list(",
-         file = "single-period-SSB.png", width = 6, height = 4),
+         file = "single-period-SSB.png"),
     list(article = "growth-mortality", match = "ridge_example <- list(",
-         file = "ridges-missing-edges.png", width = 9, height = 5))
+         file = "ridges-missing-edges.png", height = 4.5))
   for (case in cases) {
     plots <- list()
     for (language in c("en", "zh")) {
@@ -31,8 +31,9 @@ render_sparse_panels <- function(fits_file = NULL) {
       plots[[language]] <- plot
       cat("PASS sparse-panel example:", path, "\n")
     }
-    save_grid_free_plot(file.path(out, case$file), plots$en,
-      width = case$width, height = case$height, dpi = 150, bg = "white")
+    # 300 dpi at the size of acl_figure_size(); the two ridge panels side by
+    # side need more height than it gives.
+    save_grid_free_plot(file.path(out, case$file), plots$en, height = case$height)
   }
   invisible(TRUE)
 }

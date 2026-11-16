@@ -7,7 +7,7 @@ check_reference_theme_examples <- function(b, assert_grid_free_plot) {
   lines <- readLines("docs/FUNCTION_REFERENCE.md", warn = FALSE, encoding = "UTF-8")
   acl_theme_reset()
   defaults <- acl_theme()
-  for (name in c("acl_theme", "acl_theme_set", "acl_theme_reset")) {
+  for (name in c("acl_theme", "acl_theme_set", "acl_theme_reset", "theme_acl", "acl_palette")) {
     start <- which(lines == paste0('<a id="', name, '"></a>'))
     if (length(start) != 1L) stop("Missing theme reference section: ", name)
     next_section <- which(seq_along(lines) > start & grepl('^<a id=', lines))
@@ -30,6 +30,15 @@ check_reference_theme_examples <- function(b, assert_grid_free_plot) {
     } else if (name == "acl_theme_set") {
       stopifnot(identical(values[[1L]], before), identical(acl_theme("line_color"), "navy"),
                 identical(acl_theme("base_theme"), "bw"))
+    } else if (name == "theme_acl") {
+      # A ggplot of the reader's own with the theme of the package plots.
+      stopifnot(length(values) == 2L, inherits(values[[2L]], "ggplot"), identical(acl_theme(), before))
+      assert_grid_free_plot(values[[2L]])
+    } else if (name == "acl_palette") {
+      roles <- c("stock", "F", "recruitment", "catch", "primary", "accent")
+      stopifnot(length(values) == 4L, all(vapply(values, is.character, logical(1))),
+                length(values[[2L]]) == 3L, length(values[[3L]]) == 12L,
+                identical(names(values[[4L]]), roles), identical(acl_theme(), before))
     } else stopifnot(identical(acl_theme(), defaults))
     assert_grid_free_plot(plot_SSB(b))
     cat("PASS executable theme reference and grid-free plot:", name, "\n")
@@ -270,22 +279,22 @@ check_plot_examples <- function(fits_file = NULL) {
     cat("PASS year-mode widths on both scales:", path, "\n")
   }
   for (path in style_files) {
-    codes <- Filter(function(code) grepl("Spawning biomass with 95% intervals", code, fixed = TRUE),
+    codes <- Filter(function(code) grepl("Spawning stock biomass with 95% intervals", code, fixed = TRUE),
                     r_blocks(path))
     check(length(codes) == 1L, paste(path, "must include the global-axis example"))
     e <- fresh_context()
     plots <- evaluate(codes[[1L]], e)
     check(length(plots) == 1L, paste(path, "global-axis example must create one plot"))
     p <- plots[[1L]]
-    check(identical(p$labels$title, "Spawning biomass with 95% intervals"), "Global title ignored")
-    check(identical(p$labels$x, "Survey year") && identical(p$labels$y, "Spawning biomass"),
+    check(identical(p$labels$title, "Spawning stock biomass with 95% intervals"), "Global title ignored")
+    check(identical(p$labels$x, "Survey year") && identical(p$labels$y, "Spawning stock biomass"),
           "Global axis labels ignored")
     built <- ggplot2::ggplot_build(p)$layout$panel_params[[1L]]
     check(identical(built$x$breaks, c(2000, 2009, 2019)), "Global breaks ignored")
     check(isTRUE(all.equal(built$x.range, range(e$b$year))), "Global expansion ignored")
     cat("PASS global labels and axes:", path, "\n")
   }
-  cat("PASS: three prerequisite/styling examples, six year-mode figures, three global-axis examples, three executable theme references.\n")
+  cat("PASS: three prerequisite/styling examples, six year-mode figures, three global-axis examples, five executable theme references.\n")
 }
 if (sys.nframe() == 0L) {
   args <- commandArgs(trailingOnly = TRUE)

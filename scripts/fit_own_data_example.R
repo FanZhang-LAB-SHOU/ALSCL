@@ -5,8 +5,8 @@
 # The supplied numbers describe the synthetic YTF example, not your stock.
 
 library(ALSCL)
-if (packageVersion("ALSCL") < "2.4.0")
-  stop("This example requires ALSCL >= 2.4.0. Update ALSCL before running it.", call. = FALSE)
+if (packageVersion("ALSCL") < "2.5.0")
+  stop("This example requires ALSCL >= 2.5.0. Update ALSCL before running it.", call. = FALSE)
 source('scripts/plot_helpers.R')
 
 # 1. 读取三表 / Read the three aligned tables -------------------------------
@@ -112,7 +112,7 @@ for (fit in list(a, b)) {
       !isTRUE(fit$diagnostics$numerical_ok))
     warning("Review fit diagnostics before interpreting this assessment.")
 }
-residual_plot <- plot_residuals(b, facet_by = "year", facet_ncol = 4,
+residual_plot <- plot_residuals(b, facet_by = "year",
                                 x_breaks = pretty(len_mid, n = 4))
 # Hessian 非正定时省略近似 95% 区间 / Omit approximate 95% intervals if Hessian is not positive definite.
 ssb_plot <- plot_SSB(b, se = isTRUE(b$pdHess))
@@ -130,10 +130,10 @@ portable <- function(fit) {
 }
 output_dir <- "output/own-data-example"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot,
-                width = 10, height = 8, dpi = 150)
-save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot,
-                width = 8, height = 5, dpi = 150)
+# 尺寸由 acl_figure_size() 按图形布局给出，分辨率 300 dpi。
+# The size comes from acl_figure_size() and the resolution is 300 dpi.
+save_grid_free_plot(file.path(output_dir, "residuals.png"), residual_plot)
+save_grid_free_plot(file.path(output_dir, "SSB.png"), ssb_plot)
 saveRDS(x, file.path(output_dir, "inputs_x.rds"))
 saveRDS(list(ACL = portable(a), ALSCL = portable(b), diagnostics = checks),
         file.path(output_dir, "assessment_summary.rds"))

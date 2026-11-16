@@ -42,7 +42,7 @@
   # Rejected installations must stop before sourcing helpers, reading inputs,
   # compiling or fitting. Accepted installations proceed to the helper load.
   version_gate <- function(expressions) {
-    for (version in c("2.3.0", "2.3.99", "2.4.0", "2.4.1")) {
+    for (version in c("2.4.0", "2.4.99", "2.5.0", "2.5.1")) {
       env <- new.env(parent = baseenv())
       env$library <- no_library
       env$packageVersion <- function(package) {
@@ -55,8 +55,8 @@
         NULL
       }, error = identity)
       stopifnot(inherits(error, "error"))
-      if (package_version(version) < "2.4.0")
-        stopifnot(grepl("requires ALSCL >= 2.4.0", conditionMessage(error), fixed = TRUE))
+      if (package_version(version) < "2.5.0")
+        stopifnot(grepl("requires ALSCL >= 2.5.0", conditionMessage(error), fixed = TRUE))
       else stopifnot(identical(conditionMessage(error), "reached helper load"))
     }
   }

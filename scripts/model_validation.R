@@ -14,8 +14,7 @@ run_self_test_guide <- function(out = "docs", fit = NULL) {
   st <- ALSCL::self_test(fit, nsim = 5, seed = 20261101, process = "conditional")
   print(st)
   p <- ALSCL::plot_self_test(st)
-  save_grid_free_plot(file.path(figures, "self-test.png"), p,
-    width = 10, height = 7, dpi = 160, bg = "white")
+  save_grid_free_plot(file.path(figures, "self-test.png"), p)
   summary_table <- rbind(
     data.frame(type = "series", name = st$series_summary$quantity, truth = NA_real_,
       st$series_summary[-1L]),
@@ -68,19 +67,22 @@ run_model_validation_guide <- function(out = "docs", fits = NULL, ncores = 2) {
   labels <- paste("Length", b$len_mid[lengths])
   simulated_series$length_label <- factor(simulated_series$length_label, levels = labels)
   reference$length_label <- factor(reference$length_label, levels = labels)
+  # Panel names: "Length 6" in the tables, "Length bin 6 cm" in the figures.
+  length_strip <- ggplot2::labeller(length_label = function(x) paste(sub("^Length", "Length bin", x), "cm"))
   p <- ggplot2::ggplot(simulated_series,
       ggplot2::aes(year, log_index, colour = replicate, group = replicate)) +
     ggplot2::geom_line(linewidth = .55, alpha = .8) +
     ggplot2::geom_line(data = reference, ggplot2::aes(year, log_index),
-      inherit.aes = FALSE, colour = "grey20", linewidth = .65, linetype = "dashed") +
-    ggplot2::facet_grid(mode ~ length_label, scales = "free_y") +
-    ggsci::scale_color_npg() + ggplot2::theme_classic(base_family = "sans") +
-    ggplot2::theme(legend.position = "bottom") +
+      inherit.aes = FALSE, colour = "black", linewidth = .65, linetype = "dashed") +
+    ggplot2::facet_grid(length_label ~ mode, scales = "free_y", labeller = length_strip) +
+    ggplot2::scale_colour_manual(values = ALSCL::acl_palette(3)) + ALSCL::theme_acl() +
     ggplot2::labs(x = "Year", y = "Log survey index", colour = NULL,
       title = "Survey observations simulated from a fitted ALSCL model",
-      caption = "Scalar parameters fixed. Dashed line: original fitted log median. Curves are draws, not uncertainty bands.")
-  save_grid_free_plot(file.path(figures, "fitted-simulation.png"), p,
-    width = 10.5, height = 6.4, dpi = 160, bg = "white")
+      caption = paste0("Scalar parameters are fixed at their estimates. The black dashed line is the fitted log median;\n",
+        "each solid line is one simulation, not an uncertainty band."))
+  # Two columns of simulation modes, one row per length bin.
+  p <- tidy_time_axis(p, b$year, outer_cols = 2L, expand = c(.03, .03))
+  save_grid_free_plot(file.path(figures, "fitted-simulation.png"), p, width = 10, height = 7)
   utils::write.csv(simulated_series, file.path(results, "simulation-series.csv"), row.names = FALSE)
   message("Refitting process replicates with two independent starts")
   refits <- lapply(resampled$simulations, function(s) {
@@ -106,23 +108,31 @@ run_model_validation_guide <- function(out = "docs", fits = NULL, ncores = 2) {
   utils::write.csv(diagnostics, file.path(results, "hindcast-diagnostics.csv"), row.names = FALSE)
   d <- predictions[predictions$length %in% b$len_mid[lengths], , drop = FALSE]
   d$length_label <- factor(paste("Length", d$length), levels = labels)
-  values <- c("Observed" = "observed_log", "Model" = "predicted_log", "Persistence" = "naive_log")
+  values <- c("Observed" = "observed_log", "Model prediction" = "predicted_log",
+              "Last observed value" = "naive_log")
   d <- do.call(rbind, lapply(names(values), function(name)
     data.frame(d[c("model", "year", "length_label")], series = name, log_index = d[[values[[name]]]])))
   # Diagnostics retain every failure; a missing prediction is not plotted as zero.
   d <- d[is.finite(d$log_index), , drop = FALSE]
+  d$series <- factor(d$series, levels = names(values))
   p <- ggplot2::ggplot(d, ggplot2::aes(year, log_index, colour = series,
       shape = series, linetype = series)) +
     ggplot2::geom_line(linewidth = .7) + ggplot2::geom_point(size = 2.5) +
-    ggplot2::facet_grid(model ~ length_label, scales = "free_y") +
-    ggplot2::scale_color_manual(values = c(Observed = "grey20", Model = "#3C5488", Persistence = "#E64B35")) +
-    ggplot2::scale_x_continuous(breaks = sort(unique(d$year))) +
-    ggplot2::theme_classic(base_family = "sans") + ggplot2::theme(legend.position = "bottom") +
+    ggplot2::facet_grid(length_label ~ model, scales = "free_y", labeller = length_strip) +
+    ggplot2::scale_color_manual(values = c(Observed = "black",
+      "Model prediction" = ALSCL::acl_palette(role = "primary")[[1]],
+      "Last observed value" = ALSCL::acl_palette(role = "accent")[[1]])) +
+    ggplot2::scale_x_continuous(breaks = sort(unique(d$year)), expand = ggplot2::expansion(mult = .15)) +
+    # Room for the point symbols at the top and bottom of each short panel.
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .1)) +
+    ALSCL::theme_acl() +
     ggplot2::labs(x = "Withheld year", y = "Log survey index", colour = NULL,
       shape = NULL, linetype = NULL, title = "One-step predictions of withheld survey observations",
-      caption = "Separate training fit at each origin; two final periods of synthetic YTF data. No prediction intervals.")
-  save_grid_free_plot(file.path(figures, "hindcast-predictions.png"), p,
-    width = 10.5, height = 6.2, dpi = 160, bg = "white")
+      caption = paste0("Each prediction comes from a separate fit to the years before it.\n",
+        "The last two years of the synthetic YTF data are withheld. No prediction intervals are shown."))
+  # One row per length bin, so each bin keeps its own y scale; three rows need more
+  # height than acl_figure_size() gives.
+  save_grid_free_plot(file.path(figures, "hindcast-predictions.png"), p, width = 10, height = 7)
   archive <- tempfile(fileext = ".rds")
   on.exit(unlink(archive), add = TRUE)
   ALSCL::save_assessment(b, archive)
