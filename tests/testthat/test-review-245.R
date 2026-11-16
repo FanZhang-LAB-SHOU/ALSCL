@@ -156,3 +156,111 @@ test_that("DESCRIPTION requires a TMB version that the checks have used", {
   expect_true(utils::packageVersion("TMB") >= "1.9.21")
   expect_true("1.9.21" %in% ALSCL:::.acl_tmb_checked)
 })
+
+test_that("a supplied or unconverted start of log_t0 under t0_lower is named", {
+  start <- ALSCL:::.acl_t0_lower_start
+  note <- ALSCL:::.acl_t0_lower_start_note
+  stored <- YTF_example$fit_config$alscl$parameters
+  supplied <- start(-1, stored, "alscl")
+  expect_equal(supplied, c(t0_lower = -1, log_t0 = log(1 / 60)))
+  message <- testthat::capture_messages(note(supplied, FALSE))
+  expect_length(message, 1L)
+  expect_match(message, "t0_lower = -1", fixed = TRUE)
+  expect_match(message, "log_t0 = -4.094", fixed = TRUE)
+  expect_match(message, "t0 = t0_lower + exp(log_t0) = -0.9833 years", fixed = TRUE)
+  expect_match(message, "With t0_lower = 0 it means t0 = 0.01667 years", fixed = TRUE)
+  expect_match(message, "log_t0 = log(t0 - t0_lower)", fixed = TRUE)
+  # The default start is converted when the default t0 is above t0_lower.
+  expect_null(start(-1, list(), "ALSCL"))
+  expect_null(start(-1, NULL, "ALSCL"))
+  unconverted <- start(0.5, list(), "ALSCL")
+  expect_identical(unname(unconverted[["log_t0"]]), NA_real_)
+  expect_message(note(unconverted, FALSE), "means t0 = t0_lower + 1/60 = 0.5167 years", fixed = TRUE)
+  expect_silent(note(supplied, TRUE))
+  expect_silent(note(unconverted, TRUE))
+  expect_null(start(0, stored, "alscl"))
+  expect_null(start(-1, stored, "acl"))
+  expect_silent(note(start(0, stored, "alscl"), FALSE))
+  expect_silent(note(start(-1, stored, "acl"), FALSE))
+})
+
+test_that("the note on log_t0 under t0_lower is given once per batch", {
+  note <- ALSCL:::.acl_t0_lower_start_note
+  supplied <- c(t0_lower = -1, log_t0 = log(1 / 60))
+  ALSCL:::.acl_notes_begin()
+  on.exit(ALSCL:::.acl_notes_end(), add = TRUE)
+  expect_message(note(supplied, FALSE), "t0_lower = -1")
+  expect_silent(note(supplied, FALSE))
+  ALSCL:::.acl_notes_end()
+  ALSCL:::.acl_notes_begin()
+  expect_message(note(supplied, FALSE), "t0_lower = -1")
+})
+
+test_that("a parameters list in the call names the stored values that it drops", {
+  x <- YTF_example
+  stored <- ALSCL:::.acl_stored_parameters(x, "alscl")
+  expect_identical(stored$label, "x$fit_config$alscl$parameters")
+  expect_identical(stored$parameters, x$fit_config$alscl$parameters)
+  overrides <- list(parameters = list(logit_log_R = qlogis(0.2)))
+  args <- ALSCL:::.acl_bundle_args(x, "alscl", overrides)
+  replaced <- ALSCL:::.acl_replaced_parameters(stored$parameters, overrides, args$map)
+  dropped <- setdiff(names(x$fit_config$alscl$parameters), "logit_log_R")
+  expect_identical(replaced$dropped, dropped)
+  expect_identical(replaced$fixed, dropped)
+  # A map of the call that releases log_Linf leaves it out of the fixed subset.
+  map <- x$fit_config$alscl$map
+  map["log_Linf"] <- list(NULL)
+  replaced_map <- ALSCL:::.acl_replaced_parameters(stored$parameters, c(overrides, list(map = map)), map)
+  expect_identical(replaced_map$fixed, setdiff(dropped, "log_Linf"))
+  # A complete list, no parameters argument or nothing stored give NULL.
+  complete <- utils::modifyList(stored$parameters, list(logit_log_R = qlogis(0.2)))
+  expect_null(ALSCL:::.acl_replaced_parameters(stored$parameters, list(parameters = complete), args$map))
+  expect_null(ALSCL:::.acl_replaced_parameters(stored$parameters, list(M = 0.2), args$map))
+  expect_null(ALSCL:::.acl_replaced_parameters(NULL, overrides, args$map))
+  bare <- x
+  bare$fit_config$alscl["parameters"] <- NULL
+  bare$fit_args["parameters"] <- NULL
+  expect_null(ALSCL:::.acl_stored_parameters(bare, "alscl"))
+
+  note <- ALSCL:::.acl_replaced_parameters_note
+  message <- testthat::capture_messages(note(replaced, FALSE, stored$label))
+  expect_length(message, 1L)
+  expect_match(message, "The parameters list of the call replaces the stored list", fixed = TRUE)
+  expect_match(message, "log_Linf, log_vbk", fixed = TRUE)
+  expect_match(message, "The map still fixes all of them, now at their default values.", fixed = TRUE)
+  expect_match(message, "utils::modifyList(x$fit_config$alscl$parameters, list(...))", fixed = TRUE)
+  expect_match(testthat::capture_messages(note(replaced_map, FALSE, stored$label)),
+               "The map still fixes log_vbk, ", fixed = TRUE)
+  expect_silent(note(replaced, TRUE, stored$label))
+  expect_silent(note(NULL, FALSE, stored$label))
+  ALSCL:::.acl_notes_begin()
+  on.exit(ALSCL:::.acl_notes_end(), add = TRUE)
+  expect_message(note(replaced, FALSE, stored$label), "replaces the stored list")
+  expect_silent(note(replaced, FALSE, stored$label))
+})
+
+test_that("the note on supplied correlation starts says where to set a value", {
+  message <- testthat::capture_messages(
+    ALSCL:::.acl_symmetric_start_note(c(logit_log_R = qlogis(0.1)), FALSE))
+  expect_match(message, "correlation of -0.8")
+  expect_match(message, "in the parameters list that the fit uses", fixed = TRUE)
+  expect_match(message, "replaces the stored list of a bundle", fixed = TRUE)
+})
+
+test_that("refit_model() names dropped stored values and a supplied log_t0 under t0_lower", {
+  skip_on_cran()
+  fit <- fit_fixture("ALSCL")$result
+  messages <- testthat::capture_messages(suppressWarnings(
+    refit_model(fit, parameters = list(mean_log_R = log(100)), silent = FALSE)))
+  replaced <- grep("replaces the stored list", messages, value = TRUE)
+  expect_length(replaced, 1L)
+  expect_match(replaced, "log_Linf", fixed = TRUE)
+  expect_match(replaced, "utils::modifyList(fit$recipe$args$parameters, list(...))", fixed = TRUE)
+  expect_false(any(grepl("t0_lower", messages)))
+  messages <- testthat::capture_messages(suppressWarnings(
+    refit_model(fit, t0_lower = -1, silent = FALSE)))
+  expect_equal(sum(grepl("means t0 = t0_lower + exp(log_t0) = -0.9833 years", messages, fixed = TRUE)), 1L)
+  expect_false(any(grepl("replaces the stored list", messages)))
+  expect_silent(suppressWarnings(refit_model(fit, t0_lower = -1, parameters = list(mean_log_R = log(100)),
+                                             silent = TRUE)))
+})

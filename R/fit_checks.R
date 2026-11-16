@@ -237,13 +237,19 @@
 # (.acl_partial_set_note()), and the default start of mean_log_R moved by
 # survey_q_age (.acl_q_age_start_note()). A fourth note names supplied
 # correlation starts under correlation_range = "symmetric"
-# (.acl_symmetric_start_note()).
+# (.acl_symmetric_start_note()). A fifth note gives the t0 that the start of
+# log_t0 means under t0_lower (.acl_t0_lower_start_note()). A sixth note names
+# the stored parameter values that a parameters list of the call replaces
+# (.acl_replaced_parameters_note()).
 .acl_notes <- new.env(parent = emptyenv())
+
+.acl_notes_reset <- function()
+  .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <-
+    .acl_notes$symmetric_start <- .acl_notes$t0_lower_start <- .acl_notes$replaced_parameters <- FALSE
 
 .acl_notes_begin <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
-  if (depth == 0L) .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <-
-    .acl_notes$symmetric_start <- FALSE
+  if (depth == 0L) .acl_notes_reset()
   .acl_notes$depth <- depth + 1L
   invisible(NULL)
 }
@@ -251,9 +257,7 @@
 .acl_notes_end <- function() {
   depth <- if (is.null(.acl_notes$depth)) 0L else .acl_notes$depth
   .acl_notes$depth <- max(0L, depth - 1L)
-  if (.acl_notes$depth == 0L)
-    .acl_notes$single_start <- .acl_notes$partial_set <- .acl_notes$q_age_start <-
-      .acl_notes$symmetric_start <- FALSE
+  if (.acl_notes$depth == 0L) .acl_notes_reset()
   invisible(NULL)
 }
 
@@ -324,7 +328,71 @@
            format(round(stats::plogis(values[[nm]]), 3)), " under the default range)"), character(1))
   message("With correlation_range = \"symmetric\" a supplied start x of a correlation parameter means the ",
           "correlation 2 * plogis(x) - 1: ", paste(read, collapse = "; "),
-          ". To keep a correlation rho, supply qlogis((rho + 1) / 2).")
+          ". To use a correlation rho, set the value to qlogis((rho + 1) / 2) in the parameters list that ",
+          "the fit uses. A parameters list in the call replaces the stored list of a bundle, so change the ",
+          "value in the stored list or pass the complete list.")
+  invisible(TRUE)
+}
+
+# The start of log_t0 of an ALSCL fit with t0_lower different from 0, where
+# t0 = t0_lower + exp(log_t0). A supplied start x is not converted, so it
+# means t0 = t0_lower + exp(x) (YTF_example fixes log_t0 = log(1/60), which
+# becomes t0 = -0.983 years with t0_lower = -1). The default start is
+# converted to keep the default t0 (1/60 year, the start of
+# create_parameters()) when that t0 is above t0_lower; otherwise it means
+# t0 = t0_lower + 1/60. Returns c(t0_lower, log_t0) with
+# log_t0 = NA for the default start that cannot be converted, or NULL when
+# there is nothing to report.
+.acl_t0_lower_start <- function(t0_lower, parameters, model) {
+  if (toupper(model) != "ALSCL" || !is.numeric(t0_lower) || length(t0_lower) != 1L ||
+      !is.finite(t0_lower) || t0_lower == 0) return(NULL)
+  x <- if (is.list(parameters)) parameters[["log_t0"]]
+  if (is.null(x)) {
+    if (1 / 60 > t0_lower) return(NULL)
+    return(c(t0_lower = t0_lower, log_t0 = NA_real_))
+  }
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x)) return(NULL)
+  c(t0_lower = t0_lower, log_t0 = as.numeric(x))
+}
+
+.acl_t0_lower_start_note <- function(start, silent) {
+  if (isTRUE(silent) || length(start) != 2L) return(invisible(FALSE))
+  in_batch <- isTRUE(.acl_notes$depth > 0L)
+  if (in_batch && isTRUE(.acl_notes$t0_lower_start)) return(invisible(FALSE))
+  if (in_batch) .acl_notes$t0_lower_start <- TRUE
+  number <- function(x) format(signif(x, 4))
+  lower <- start[["t0_lower"]]; x <- start[["log_t0"]]
+  if (is.na(x)) {
+    message("With t0_lower = ", number(lower), " the default start of log_t0 means t0 = t0_lower + 1/60 = ",
+            number(lower + 1 / 60), " years, because the default t0 of 1/60 year is not above t0_lower. ",
+            "To use another t0, supply parameters$log_t0 = log(t0 - t0_lower).")
+  } else {
+    message("With t0_lower = ", number(lower), " the supplied start log_t0 = ", number(x),
+            " means t0 = t0_lower + exp(log_t0) = ", number(lower + exp(x)), " years. With t0_lower = 0 ",
+            "it means t0 = ", number(exp(x)), " years. To keep a t0, supply log_t0 = log(t0 - t0_lower).")
+  }
+  invisible(TRUE)
+}
+
+# The note on stored parameter values that a parameters list of the call
+# replaces (see .acl_replaced_parameters()). `stored` is the expression of the
+# stored list for the advice, for example "x$fit_config$alscl$parameters",
+# or NULL; `source` names where the replacing list comes from.
+.acl_replaced_parameters_note <- function(replaced, silent, stored = NULL, source = "the call") {
+  if (isTRUE(silent) || !length(replaced$dropped)) return(invisible(FALSE))
+  in_batch <- isTRUE(.acl_notes$depth > 0L)
+  if (in_batch && isTRUE(.acl_notes$replaced_parameters)) return(invisible(FALSE))
+  if (in_batch) .acl_notes$replaced_parameters <- TRUE
+  fixed <- replaced$fixed
+  message("The parameters list of ", source, " replaces the stored list, so the stored values of ",
+          .acl_word_list(replaced$dropped), " are no longer used.",
+          if (length(fixed) > 1L && setequal(fixed, replaced$dropped))
+            " The map still fixes all of them, now at their default values." else if (length(fixed))
+            paste0(" The map still fixes ", .acl_word_list(fixed), ", now at ",
+                   if (length(fixed) == 1L) "its default value." else "their default values."),
+          if (is.null(stored)) " To change single values and keep the others, pass the complete list, for example built with utils::modifyList()." else
+            paste0(" To change single values and keep the others, supply parameters = utils::modifyList(",
+                   stored, ", list(...)) or edit the stored list."))
   invisible(TRUE)
 }
 

@@ -192,6 +192,9 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
   overrides[c("ncores", "output", "silent")] <- list(1L, FALSE, silent)
   if (!is.null(nstarts)) overrides$nstarts <- .acl_positive_integer(nstarts, "nstarts")
   args <- .acl_resolved_args(x, model, overrides)
+  stored <- .acl_stored_parameters(x, model)
+  .acl_replaced_parameters_note(.acl_replaced_parameters(stored$parameters, overrides, args$map),
+                                silent, stored$label)
   args$nstarts <- .acl_positive_integer(args$nstarts, "nstarts")
   prepared <- do.call(.acl_prepare_data,
     args[intersect(names(args), names(formals(.acl_prepare_data)))])

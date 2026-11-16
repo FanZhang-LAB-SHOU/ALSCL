@@ -30,7 +30,7 @@ remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 
 ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB 1.9.21 或更高版本、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](../news/index.html)列出每个版本的变化。
 
-如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。
+如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。在较旧的 R 版本上，CRAN 提供的 TMB 现成二进制包可能低于 1.9.21，安装或 `library(ALSCL)` 会停止，并提示需要 TMB 1.9.21 或更高版本。运行 `install.packages("TMB", type = "source")`（需要第 1 步的编译器），再重新安装 ALSCL。
 
 <h2 id="load">3. 加载软件包和示例数据</h2>
 

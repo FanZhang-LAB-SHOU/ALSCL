@@ -888,6 +888,8 @@ refit_model <- function(fit, ...) {
   if (!"output" %in% names(overrides)) overrides$output <- FALSE
   args <- .acl_bundle_args(.acl_recipe_map_compat(recipe$args, recipe$model),
                            recipe$model, overrides)
+  .acl_replaced_parameters_note(.acl_replaced_parameters(recipe$args$parameters, overrides, args$map),
+                                isTRUE(args$silent), "fit$recipe$args$parameters")
   previous <- options(recipe$settings); on.exit(options(previous), add = TRUE)
   do.call(if (recipe$model == "acl") run_acl else run_alscl, args)
 }

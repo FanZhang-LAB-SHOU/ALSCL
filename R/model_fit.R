@@ -336,6 +336,7 @@
   .acl_partial_set_note(prepared$structure, model, silent)
   .acl_q_age_start_note(setup$mean_log_R_shift, d$q_age, silent)
   .acl_symmetric_start_note(.acl_symmetric_supplied(prepared$structure, parameters, model), silent)
+  .acl_t0_lower_start_note(.acl_t0_lower_start(prepared$t0_lower, parameters, model), silent)
   if (!silent && length(setup$restricted_random))
     message("The map ties or fixes entries of ", paste(setup$restricted_random, collapse = ", "),
             ". The objective keeps the density of the complete array, so it (and AIC) cannot be compared ",

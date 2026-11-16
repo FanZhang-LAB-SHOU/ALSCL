@@ -241,7 +241,9 @@ contains data.CatL, data.wgt and data.mat, shared settings in fit_args, and
 optional model settings in fit_config$acl. Settings are resolved in this
 order: data tables, fit_args, selected fit_config, explicit call arguments
 (highest priority). Explicit parameters, map and control replace the entire
-corresponding list; NULL is preserved. Other top-level fields in a structured
+corresponding list; NULL is preserved. When an explicit parameters list
+leaves out stored parameter values, the fit gives a message that names
+them (unless \code{silent = TRUE}). Other top-level fields in a structured
 bundle, including simulation parameters and truth, are not fitting settings.
 The original separate-argument and do.call interfaces remain supported.
 Both interfaces use the same fitting and standard-error acceleration.

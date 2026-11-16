@@ -63,7 +63,9 @@
 #'   optional model settings in fit_config$alscl. Settings are resolved in this
 #'   order: data tables, fit_args, selected fit_config, explicit call arguments
 #'   (highest priority). Explicit parameters, map and control replace the entire
-#'   corresponding list; NULL is preserved. Other top-level fields in a structured
+#'   corresponding list; NULL is preserved. When an explicit parameters list
+#'   leaves out stored parameter values, the fit gives a message that names
+#'   them (unless `silent = TRUE`). Other top-level fields in a structured
 #'   bundle, including simulation parameters and truth, are not fitting settings.
 #'   The original separate-argument and do.call interfaces remain supported.
 #'   Both interfaces use the same fitting and standard-error acceleration.
@@ -194,8 +196,9 @@
 #'   example -1, to allow negative t0; a known t0 is then supplied as
 #'   `parameters = list(log_t0 = log(t0 - t0_lower))`. When log_t0 is not
 #'   supplied, its default start is converted so that t0 keeps its default
-#'   value (1/60 year, fixed by default). Reported t0 values are always on the
-#'   natural scale.
+#'   value (1/60 year, fixed by default). A supplied log_t0 is read with the
+#'   new limit, and the fit gives a message with the t0 that it means (unless
+#'   `silent = TRUE`). Reported t0 values are always on the natural scale.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by
