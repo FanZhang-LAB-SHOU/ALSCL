@@ -13,7 +13,7 @@ fixes_fit <- local({
 })
 fixes_layers <- function(p, geom) which(vapply(p$layers, function(z) inherits(z$geom, geom), logical(1)))
 fixes_theme <- function(p) ggplot2::ggplot_build(p)$plot$theme
-fixes_rd <- function(name) gsub("\\s+", " ", paste(as.character(tools::Rd_db("ALSCL")[[name]]), collapse = ""))
+fixes_rd <- function(name) gsub("\\s+", " ", paste(as.character(test_rd_database()[[name]]), collapse = ""))
 # The plots of a patchwork that draw tiles (heat maps).
 fixes_heat_maps <- function(p) Filter(function(q) inherits(q, "ggplot") && length(fixes_layers(q, "GeomTile")),
                                       ALSCL:::.acl_patches(p)$plots)

@@ -105,6 +105,7 @@ export(ssb_at_age)
 export(summarize_simulations)
 export(survey_catchability)
 export(theme_acl)
+import(RcppEigen)
 importFrom(RColorBrewer,brewer.pal)
 importFrom(TMB,
   MakeADFun,

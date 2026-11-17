@@ -7,6 +7,8 @@
 
 ### Compatibility and installation
 
+- Help-page tests read the source help files when the package is loaded from a checkout and the installed help database when it is loaded from a library. Both routes have regression tests, and CI also runs the affected tests from the source checkout.
+- Both R 4.1 checks now install readxl 1.4.5 and run the Excel import tests. The installation and data preparation pages show the compatible version. The RcppEigen namespace import is declared explicitly to avoid an unused-dependency NOTE on older R.
 - DESCRIPTION now states the minimum versions that the code needs: ggplot2 4.0.0, patchwork 1.3.2, scales 1.4.0, dplyr 1.1.4, tidyr 1.3.0, ggsci 2.7 and ggridges 0.5.5, and testthat 3.1.8 for the tests. The minimum TMB is 1.9.17 in place of 1.9.21, because no feature that the package uses needs a later version and 1.9.17 is the binary TMB that CRAN keeps for R 4.3 on Windows and macOS. R 4.1 remains the minimum R. The R-CMD-check workflow now also checks R 4.1 with the current versions of the dependencies and R 4.1.0 with their minimum versions.
 - The installation page says for each version of R what R installs and whether to answer yes when R offers to install packages from source, and how to install with R 4.1 to 4.2.2 on Windows, where TMB 1.9.22 and later cannot be built.
 - When all starts of a fit fail and TMB was built with another Matrix ABI version than that of the installed Matrix package, the error now advises to update both packages with `install.packages(c("Matrix", "TMB"))` first, and to reinstall TMB from source only if TMB still warns when it loads.

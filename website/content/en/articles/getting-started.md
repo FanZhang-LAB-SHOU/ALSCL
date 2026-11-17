@@ -51,6 +51,8 @@ If the installation stops on a dependency, install that package with `install.pa
 
 Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 
+To read Excel files on R 4.1, install readxl 1.4.5; the [data preparation example](data-preparation.html#import) selects that version automatically. CSV input needs no extra package.
+
 <h2 id="load">3. Load the package and the example data</h2>
 
 ```r

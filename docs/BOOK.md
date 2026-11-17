@@ -126,6 +126,10 @@ If the installation stops on a dependency, install that package with `install.pa
 
 Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 
+在 R 4.1 上读取 Excel 文件时，安装 readxl 1.4.5；[数据准备示例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-import)会自动选择该版本。读取 CSV 不需要额外的软件包。
+
+To read Excel files on R 4.1, install readxl 1.4.5; the [data preparation example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-import) selects that version automatically. CSV input needs no extra package.
+
 <a id="getting-started-load"></a>
 
 ### 3. 加载软件包和示例数据 / Load the package and the example data
@@ -773,10 +777,20 @@ Use one of the two readers. Both return a list with the three tables, convert nu
 
 ```r
 library(ALSCL)
-install.packages("readxl") # 只需一次；仅读取 Excel 文件时需要 / once; only needed for Excel files
+# 只需安装一次；仅读取 Excel 文件时需要。 / Once; only needed for Excel files.
+if (getRversion() < "4.2.0") {
+  install.packages("remotes")
+  remotes::install_version("readxl", version = "1.4.5", upgrade = "never")
+} else {
+  install.packages("readxl")
+}
 tables <- read_survey_excel("my_survey.xlsx")
 str(tables)
 ```
+
+在 R 4.1 上，使用支持该 R 版本的 [readxl 1.4.5](https://github.com/tidyverse/readxl/blob/v1.4.5/DESCRIPTION)。上面的代码会自动选择这个版本。读取 CSV 文件不需要 readxl。
+
+On R 4.1, use [readxl 1.4.5](https://github.com/tidyverse/readxl/blob/v1.4.5/DESCRIPTION), which supports that R version. The code above chooses it automatically. CSV files do not need readxl.
 
 ```r
 # 同一文件夹中的三个文件 data.CatL.csv、data.wgt.csv 和 data.mat.csv / Three files data.CatL.csv, data.wgt.csv and data.mat.csv in one folder

@@ -51,6 +51,8 @@ remotes::install_github("FanZhang-LAB-SHOU/ALSCL", upgrade = "never")
 
 本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
 
+在 R 4.1 上读取 Excel 文件时，安装 readxl 1.4.5；[数据准备示例](data-preparation.html#import)会自动选择该版本。读取 CSV 不需要额外的软件包。
+
 <h2 id="load">3. 加载软件包和示例数据</h2>
 
 ```r

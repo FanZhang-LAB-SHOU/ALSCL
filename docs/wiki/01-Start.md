@@ -79,6 +79,10 @@ If the installation stops on a dependency, install that package with `install.pa
 
 Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 
+在 R 4.1 上读取 Excel 文件时，安装 readxl 1.4.5；[数据准备示例](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-import)会自动选择该版本。读取 CSV 不需要额外的软件包。
+
+To read Excel files on R 4.1, install readxl 1.4.5; the [data preparation example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#data-preparation-import) selects that version automatically. CSV input needs no extra package.
+
 <a id="getting-started-load"></a>
 
 ### 3. 加载软件包和示例数据 / Load the package and the example data

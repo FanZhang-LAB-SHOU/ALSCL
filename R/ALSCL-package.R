@@ -42,6 +42,9 @@
 #' }
 "_PACKAGE"
 
+# RcppEigen supplies headers for templates compiled at runtime. Declare the
+# namespace import as well as the dependency so older R checks recognize it.
+#' @import RcppEigen
 #' @importFrom stats arima.sim nlminb pnorm rnorm var fitted logLik nobs
 #' @importFrom scales pretty_breaks
 #' @importFrom utils head modifyList tail write.csv

@@ -257,7 +257,7 @@ test_that("single-panel plots follow x_angle and x_breaks from the call or the t
 })
 
 test_that("help titles name the quantity as the figure does", {
-  db <- tools::Rd_db("ALSCL")
+  db <- test_rd_database()
   title <- function(name) {
     rd <- db[[paste0(name, ".Rd")]]
     tag <- vapply(rd, function(x) attr(x, "Rd_tag"), character(1))

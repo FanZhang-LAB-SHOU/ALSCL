@@ -43,17 +43,17 @@ jobs:
           # Matrix ABI version makes every fit fail. Only the hard dependencies
           # are resolved, with the packages the tests need listed here: with
           # all dependencies, pak also resolves suggested packages of the
-          # dependencies (Hmisc for ggplot2 4.0.0) and readxl, which need
-          # R 4.2. The tests that use readxl are skipped.
+          # dependencies (Hmisc for ggplot2 4.0.0), which need R 4.2.
+          # readxl 1.4.5 supports R >= 3.6 and keeps the Excel tests active.
           - os: ubuntu-latest
             r: '4.1'
             deptypes: '"hard"'
-            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, TMB=?source'
+            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, readxl@1.4.5, TMB=?source'
           - os: ubuntu-latest
             r: '4.1.0'
             deps: minimum
             deptypes: '"hard"'
-            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, TMB=?source'
+            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, readxl@1.4.5, TMB=?source'
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -88,6 +88,12 @@ jobs:
           # no vignettes, so the R 4.1 jobs skip that check.
           install-pandoc: ${{ matrix.deptypes && 'false' || '' }}
           needs: check
+      - name: Check Excel dependencies on R 4.1
+        if: matrix.deptypes
+        shell: Rscript {0}
+        run: |
+          stopifnot(requireNamespace("readxl", quietly = TRUE),
+                    packageVersion("readxl") == "1.4.5")
       - name: Check that the help pages match the roxygen comments
         if: matrix.docs
         shell: Rscript {0}
@@ -131,6 +137,12 @@ jobs:
         run: |
           callr::rcmd("INSTALL", ".", show = TRUE, fail_on_status = TRUE)
           testthat::test_local(filter = "parallel|core-225", stop_on_failure = TRUE)
+      - name: Check help tests from the source checkout
+        if: matrix.docs
+        shell: Rscript {0}
+        run: |
+          testthat::test_local(filter = "help-loading|review-fixes-252|figure-fixes-250",
+                              stop_on_failure = TRUE)
       - uses: r-lib/actions/check-r-package@v2
         with:
           # The examples that fit models are in \donttest blocks; run them in

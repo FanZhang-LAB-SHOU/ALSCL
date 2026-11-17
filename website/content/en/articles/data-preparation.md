@@ -62,10 +62,18 @@ Use one of the two readers. Both return a list with the three tables, convert nu
 
 ```r
 library(ALSCL)
-install.packages("readxl") # once; only needed for Excel files
+# Once; only needed for Excel files.
+if (getRversion() < "4.2.0") {
+  install.packages("remotes")
+  remotes::install_version("readxl", version = "1.4.5", upgrade = "never")
+} else {
+  install.packages("readxl")
+}
 tables <- read_survey_excel("my_survey.xlsx")
 str(tables)
 ```
+
+On R 4.1, use [readxl 1.4.5](https://github.com/tidyverse/readxl/blob/v1.4.5/DESCRIPTION), which supports that R version. The code above chooses it automatically. CSV files do not need readxl.
 
 ```r
 # Three files data.CatL.csv, data.wgt.csv and data.mat.csv in one folder
