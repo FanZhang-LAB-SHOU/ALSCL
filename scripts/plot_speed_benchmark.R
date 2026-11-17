@@ -92,10 +92,18 @@ if (file.exists(agreement)) {
   d <- d[is.finite(d$original) & d$original > 0, ]
   d$panel <- factor(d$panel, levels = panels)
   d$config <- factor(d$config, levels = c('cppad_par', 'tmbad_par'))
+  # A small number with a power of ten and a raised exponent, as on the log
+  # axes, rather than in E notation such as "1.4e-12".
+  power_of_ten <- function(v) {
+    parts <- strsplit(sprintf('%.1e', v), 'e', fixed = TRUE)[[1]]
+    exponent <- chartr('-0123456789', '\u207b\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079',
+                       as.character(as.integer(parts[2])))
+    paste0(parts[1], ' \u00d7 10', exponent)
+  }
   # The largest relative difference of each setting in each panel.
   describe <- function(z) {
     if (all(z$diff == 0)) return('identical (every difference 0)')
-    sprintf('largest relative difference %.1e', max(abs(z$diff) / abs(z$original)))
+    paste('largest relative difference', power_of_ten(max(abs(z$diff) / abs(z$original))))
   }
   # Panel names carry the largest difference of each setting.
   strips <- vapply(levels(d$panel), function(k) paste0(k, '\nDefault ',
@@ -109,7 +117,8 @@ if (file.exists(agreement)) {
     geom_abline(slope = 1, intercept = 0, colour = 'grey55', linewidth = .8) +
     geom_point(aes(colour = config, fill = config, shape = config), size = 1.1, stroke = .4, alpha = .7) +
     facet_wrap(~panel, scales = 'free') +
-    scale_x_log10() + scale_y_log10() +
+    # Tick labels as powers of ten (10 with a raised exponent), not "1e-04".
+    scale_x_log10(labels = scales::label_log()) + scale_y_log10(labels = scales::label_log()) +
     scale_colour_manual(values = note_cols, labels = settings[names(note_cols)], name = NULL) +
     scale_fill_manual(values = note_cols, labels = settings[names(note_cols)], name = NULL) +
     scale_shape_manual(values = shapes[names(note_cols)], labels = settings[names(note_cols)], name = NULL) +

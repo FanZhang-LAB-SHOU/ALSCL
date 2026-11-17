@@ -71,8 +71,8 @@ run_case_studies <- function(out='docs') {
       Value=c(a$report$B,a$report$SSB,a$report$Rec),Model='ACL'),
       data.frame(Year=rep(years,3),Quantity=truth$Quantity,
       Value=c(b$report$B,b$report$SSB,b$report$Rec),Model='ALSCL'))
-    write.csv(truth,file.path(folder,'truth_timeseries.csv'),row.names=FALSE)
-    write.csv(estimates,file.path(folder,'estimated_timeseries.csv'),row.names=FALSE)
+    write_decimal_csv(truth,file.path(folder,'truth_timeseries.csv'),row.names=FALSE)
+    write_decimal_csv(estimates,file.path(folder,'estimated_timeseries.csv'),row.names=FALSE)
     # The simulated values are a black dashed line in the same legend as the two fits.
     series <- rbind(estimates[c('Year','Quantity','Value','Model')],
       data.frame(Year=truth$Year,Quantity=truth$Quantity,Value=truth$Truth,Model='Simulated value'))
@@ -109,7 +109,7 @@ run_case_studies <- function(out='docs') {
   }
   checks <- do.call(rbind,statuses);print(checks)
   dir.create(file.path(out,'results'),recursive=TRUE,showWarnings=FALSE)
-  write.csv(checks,file.path(out,'results','case_convergence.csv'),row.names=FALSE)
+  write_decimal_csv(checks,file.path(out,'results','case_convergence.csv'),row.names=FALSE)
   stopifnot(all(checks$Code==0),all(checks$MaxGradient<.001),all(checks$pdHess),!any(checks$Boundary))
   invisible(checks)
 }

@@ -5,8 +5,8 @@
     {
       "model": "ACL",
       "fold": 1,
-      "elapsed": 4.287,
-      "pid": 98423,
+      "elapsed": 4.327,
+      "pid": 31159,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -25,8 +25,8 @@
     {
       "model": "ACL",
       "fold": 2,
-      "elapsed": 5.32,
-      "pid": 98424,
+      "elapsed": 5.247,
+      "pid": 31159,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -45,8 +45,8 @@
     {
       "model": "ALSCL",
       "fold": 1,
-      "elapsed": 70.548,
-      "pid": 98459,
+      "elapsed": 70.044,
+      "pid": 31159,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -65,8 +65,8 @@
     {
       "model": "ALSCL",
       "fold": 2,
-      "elapsed": 75.203,
-      "pid": 98458,
+      "elapsed": 75.938,
+      "pid": 31159,
       "error": "",
       "warnings": "",
       "convergence_code": 0,
@@ -128,7 +128,7 @@
       "relative_bias": -0.0053,
       "rmse": 3.2541,
       "coverage": 0.9833,
-      "mean_elapsed": 119.217
+      "mean_elapsed": 168.1997
     },
     {
       "quantity": "Rec",
@@ -143,7 +143,7 @@
       "relative_bias": 0.0042,
       "rmse": 20.5567,
       "coverage": 0.95,
-      "mean_elapsed": 119.217
+      "mean_elapsed": 168.1997
     }
   ],
   "archive_simulation_equal": true,

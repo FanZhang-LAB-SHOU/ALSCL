@@ -20,8 +20,8 @@ run_self_test_guide <- function(out = "docs", fit = NULL) {
       st$series_summary[-1L]),
     data.frame(type = "parameter", name = st$parameter_summary$parameter,
       st$parameter_summary[-1L]))
-  utils::write.csv(summary_table, file.path(results, "self-test-summary.csv"), row.names = FALSE)
-  utils::write.csv(st$replicates[c("replicate", "elapsed", "numerical_ok", "converged",
+  write_decimal_csv(summary_table, file.path(results, "self-test-summary.csv"), row.names = FALSE)
+  write_decimal_csv(st$replicates[c("replicate", "elapsed", "numerical_ok", "converged",
     "failure_reasons")], file.path(results, "self-test-replicates.csv"), row.names = FALSE)
   invisible(st)
 }
@@ -80,10 +80,11 @@ run_model_validation_guide <- function(out = "docs", fits = NULL, ncores = 2) {
       title = "Survey observations simulated from a fitted ALSCL model",
       caption = paste0("Scalar parameters are fixed at their estimates. The black dashed line is the fitted log median;\n",
         "each solid line is one simulation, not an uncertainty band."))
-  # Two columns of simulation modes, one row per length bin.
-  p <- tidy_time_axis(p, b$year, outer_cols = 2L, expand = c(.03, .03))
+  # Two columns of simulation modes, one row per length bin; the package
+  # counts the grid's columns when it chooses and spaces the year labels.
+  p <- tidy_time_axis(p, b$year, expand = c(.03, .03))
   save_grid_free_plot(file.path(figures, "fitted-simulation.png"), p, width = 10, height = 7)
-  utils::write.csv(simulated_series, file.path(results, "simulation-series.csv"), row.names = FALSE)
+  write_decimal_csv(simulated_series, file.path(results, "simulation-series.csv"), row.names = FALSE)
   message("Refitting process replicates with two independent starts")
   refits <- lapply(resampled$simulations, function(s) {
     tryCatch(ALSCL::run_alscl(s$x, nstarts = 2, ncores = 1, silent = TRUE),
@@ -91,7 +92,7 @@ run_model_validation_guide <- function(out = "docs", fits = NULL, ncores = 2) {
   })
   truth <- lapply(resampled$simulations, function(s) s$truth)
   performance <- ALSCL::summarize_simulations(refits, truth, quantities = c("SSB", "Rec"))
-  utils::write.csv(performance$summary, file.path(results, "simulation-performance.csv"), row.names = FALSE)
+  write_decimal_csv(performance$summary, file.path(results, "simulation-performance.csv"), row.names = FALSE)
   message("Fitting time-held-out validation folds")
   validations <- lapply(c("acl", "alscl"), function(model)
     ALSCL::hindcast_model(x, model = model, horizon = 1, nfolds = 2,
@@ -103,9 +104,9 @@ run_model_validation_guide <- function(out = "docs", fits = NULL, ncores = 2) {
     data.frame(model = toupper(model), validations[[model]]$scores)))
   diagnostics <- do.call(rbind, lapply(names(validations), function(model)
     data.frame(model = toupper(model), validations[[model]]$diagnostics)))
-  utils::write.csv(predictions, file.path(results, "hindcast-predictions.csv"), row.names = FALSE)
-  utils::write.csv(scores, file.path(results, "hindcast-scores.csv"), row.names = FALSE)
-  utils::write.csv(diagnostics, file.path(results, "hindcast-diagnostics.csv"), row.names = FALSE)
+  write_decimal_csv(predictions, file.path(results, "hindcast-predictions.csv"), row.names = FALSE)
+  write_decimal_csv(scores, file.path(results, "hindcast-scores.csv"), row.names = FALSE)
+  write_decimal_csv(diagnostics, file.path(results, "hindcast-diagnostics.csv"), row.names = FALSE)
   d <- predictions[predictions$length %in% b$len_mid[lengths], , drop = FALSE]
   d$length_label <- factor(paste("Length", d$length), levels = labels)
   values <- c("Observed" = "observed_log", "Model prediction" = "predicted_log",

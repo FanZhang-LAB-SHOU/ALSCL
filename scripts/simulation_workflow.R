@@ -10,6 +10,8 @@ run_simulation_examples <- function(out=file.path("output","simulation_examples"
     require_checkout_alscl()
   }
   dir.create(out,recursive=TRUE,showWarnings=FALSE)
+  # 表中数字写成小数，不用科学记数法 / The tables give numbers in decimals, not in scientific notation.
+  old <- options(scipen=100); on.exit(options(old),add=TRUE)
   # 简单年度模型：直接返回三张表 / Simple annual model returns fit-ready tables.
   quick <- simulate_example_data(years=2000:2019, seed=42,
     Linf=60, vbk=.2, t0=1/60, M=.2, nage=15,

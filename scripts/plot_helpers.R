@@ -37,3 +37,13 @@ tidy_time_axis <- function(p, times, outer_cols = 1L, expand = NULL) {
   p <- p + ALSCL:::.acl_scale_x(values = times, time = TRUE)
   ALSCL:::.acl_tidy_axes(p, outer_cols = outer_cols)
 }
+
+# write.csv() for the tables under docs/data and docs/results, which people open
+# in a spreadsheet: numbers in decimals, never in scientific notation, with the
+# same 15 significant digits. Only the writing changes the option, so the axis
+# labels of the figures keep the format of the package.
+write_decimal_csv <- function(x, file, ...) {
+  old <- options(scipen = 100)
+  on.exit(options(old), add = TRUE)
+  utils::write.csv(x, file, ...)
+}

@@ -6,6 +6,7 @@
 # and data equal this checkout, so that source_hashes.csv describes the timed code.
 source('scripts/checkout_guard.R')
 use_checkout_alscl(installed = TRUE)
+source('scripts/plot_helpers.R')  # write_decimal_csv()
 args <- commandArgs(trailingOnly = TRUE)
 out <- if (length(args)) args[1] else 'docs/results/parallel'
 repeats <- if (length(args) > 1) as.integer(args[2]) else 3L
@@ -23,7 +24,7 @@ train_times <- 2L
 sources <- c('R/model_fit.R','R/run_acl.R','R/run_alscl.R',
              'inst/extdata/ACL.cpp','inst/extdata/ALSCL.cpp','inst/extdata/model_math.hpp',
              'data/YTF_example.rda','scripts/benchmark_parallel.R')
-write.csv(data.frame(path = sources, md5 = unname(tools::md5sum(sources))),
+write_decimal_csv(data.frame(path = sources, md5 = unname(tools::md5sum(sources))),
           file.path(out, 'source_hashes.csv'), row.names = FALSE)
 metadata <- c(paste('UTC:', format(Sys.time(), tz = 'UTC', usetz = TRUE)),
  paste('R:', R.version.string), paste('Platform:', R.version$platform),
@@ -43,7 +44,7 @@ if (Sys.info()[['sysname']] == 'Darwin') metadata <- c(metadata,
 writeLines(metadata, file.path(out, 'environment.txt'))
 # Avoid personal library paths in published metadata.
 versions <- installed.packages()[, c('Package','Version')]
-write.csv(versions, file.path(out, 'package_versions.csv'), row.names = FALSE)
+write_decimal_csv(versions, file.path(out, 'package_versions.csv'), row.names = FALSE)
 
 peak_overlap <- function(d) {
   events <- rbind(data.frame(t = d$started_at, change = 1L),
@@ -53,9 +54,9 @@ peak_overlap <- function(d) {
 all_runs <- all_starts <- all_parameters <- list()
 references <- list()
 write_results <- function() {
-  write.csv(do.call(rbind, all_runs), file.path(out, 'runs.csv'), row.names = FALSE)
-  write.csv(do.call(rbind, all_starts), file.path(out, 'starts.csv'), row.names = FALSE)
-  write.csv(do.call(rbind, all_parameters), file.path(out, 'parameters.csv'), row.names = FALSE)
+  write_decimal_csv(do.call(rbind, all_runs), file.path(out, 'runs.csv'), row.names = FALSE)
+  write_decimal_csv(do.call(rbind, all_starts), file.path(out, 'starts.csv'), row.names = FALSE)
+  write_decimal_csv(do.call(rbind, all_parameters), file.path(out, 'parameters.csv'), row.names = FALSE)
 }
 fit_model <- function(model, workers, starts) do.call(
   get(paste0('run_', tolower(model))),
@@ -124,7 +125,7 @@ summary$speedup <- vapply(seq_len(nrow(summary)), function(i)
   summary$median_seconds[summary$model == summary$model[i] & summary$ncores == 1L] /
     summary$median_seconds[i], numeric(1))
 summary <- summary[order(summary$model, summary$ncores), ]
-write.csv(summary, file.path(out, 'summary.csv'), row.names = FALSE)
+write_decimal_csv(summary, file.path(out, 'summary.csv'), row.names = FALSE)
 print(summary)
 writeLines('PASS: all timed runs passed equality, convergence, PID and CPU checks.',
            file.path(out, 'validation.txt'))

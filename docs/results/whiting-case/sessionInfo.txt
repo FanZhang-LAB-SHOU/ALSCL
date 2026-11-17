@@ -16,7 +16,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] patchwork_1.3.2 ggplot2_4.0.4   ALSCL_2.5.0    
+[1] patchwork_1.3.2 ggplot2_4.0.4   ALSCL_2.5.2    
 
 loaded via a namespace (and not attached):
  [1] Matrix_1.7-5        gtable_0.3.6        dplyr_1.2.1        
