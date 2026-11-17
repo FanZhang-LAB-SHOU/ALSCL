@@ -54,7 +54,7 @@ k and t0 is then drawn from t0 or the start of the range, whichever is
 later.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 
@@ -73,7 +73,7 @@ fitted numbers; see Details.}
 \item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
 \item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
-inherits the global se_alpha setting (0.3 under the standard style, 0.2
+inherits the global se_alpha setting (0.3 under the default style, 0.2
 under classic). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. Type of interval display: "ribbon" (shaded area) or

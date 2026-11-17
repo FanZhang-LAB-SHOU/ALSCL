@@ -25,11 +25,11 @@ utils::globalVariables("survey_run")
 #' @param line_size Numeric or NULL. Line thickness for facet_by = "length"; NULL inherits global line_size.
 #' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type for facet_by = "length" plot. Default is "solid".
-#' @param line_size1 Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the standard style).
+#' @param line_size1 Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the default style).
 #' @param line_color1 Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type1 Character. Line type for estimated line. Default is "solid".
 #' @param line_alpha1 Numeric. Transparency for estimated line (0-1). Default is 1.
-#' @param line_size2 Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the standard style).
+#' @param line_size2 Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the default style).
 #' @param line_color2 Character or NULL. NULL inherits the global observed_color setting.
 #' @param line_type2 Character. Line type for observed line. Default is "solid".
 #' @param line_alpha2 Numeric. Transparency for observed line (0-1). Default is 0.6.

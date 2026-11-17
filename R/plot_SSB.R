@@ -7,7 +7,7 @@ utils::globalVariables(c("LengthGroup", "Count", "SSB_at_age"))
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting
-#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   (1 under the default style, 1.5 under classic). While that setting keeps
 #'   the value of the style, facets of more than
 #'   four panels draw thinner lines.
 #' @param line_color Character or NULL. NULL inherits the global stock_color
@@ -18,7 +18,7 @@ utils::globalVariables(c("LengthGroup", "Count", "SSB_at_age"))
 #'   color of the line, or the global se_color when that differs from the
 #'   global line_color or when stock_color is NULL.
 #' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
-#'   inherits the global se_alpha setting (0.3 under the standard style, 0.2
+#'   inherits the global se_alpha setting (0.3 under the default style, 0.2
 #'   under classic).
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and

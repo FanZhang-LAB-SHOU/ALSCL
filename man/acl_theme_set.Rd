@@ -67,7 +67,7 @@ without the "theme_" prefix. Any other value is an error.}
 \item{title_size}{Numeric. Plot title size in pt.}
 
 \item{title_hjust}{Numeric. Title alignment (0=left, 0.5=center, 1=right).
-Set by the style: 0 under "standard", 0.5 under "classic".}
+Set by the style: 0 under "default", 0.5 under "classic".}
 
 \item{axis_title_size}{Numeric. Axis title size.}
 
@@ -89,7 +89,7 @@ omitting the argument leaves the current setting unchanged.}
 \item{line_color}{Character. Default line color for single-model plots.}
 
 \item{line_size}{Numeric. Default line width for single-model plots: 1
-under the "standard" style, 1.5 under "classic".
+under the default style, 1.5 under "classic".
 Plot arguments set to NULL inherit this value; explicit widths take priority.
 While it keeps the value of the style, facets of 5 to 12 panels draw their
 lines at two thirds of it and facets of more panels at half of it; another
@@ -102,7 +102,7 @@ override is set. Explicit per-call sizes take priority.}
 \item{se_color}{Character. Default CI color.}
 
 \item{se_alpha}{Numeric. Default transparency of interval ribbons (0.3
-under the "standard" style, 0.2 under "classic").
+under the default style, 0.2 under "classic").
 Plot arguments set to NULL inherit this value; explicit alpha takes priority.
 Error bars are drawn opaque unless a plot call supplies se_alpha.}
 
@@ -115,7 +115,7 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 \item{compare_linetypes}{Character vector of 2 linetypes. Same rules as colors.}
 
 \item{compare_line_size}{Numeric. Line width for comparison plots: 0.9
-under the "standard" style, 1.2 under "classic".}
+under the default style, 1.2 under "classic".}
 
 \item{compare_point_size}{Numeric or NULL. Optional point-size override for
 comparison plots. The default NULL inherits point_size. Existing explicit
@@ -123,7 +123,7 @@ values remain supported; a plot's point_size argument takes priority.
 Pass NULL explicitly to clear a comparison-specific override.}
 
 \item{compare_se_alpha}{Numeric. CI ribbon alpha for comparison plots
-(0.25 under the "standard" style, 0.15 under "classic").}
+(0.25 under the default style, 0.15 under "classic").}
 
 \item{compare_legend_pos}{Character. Legend position for comparison plots.}
 
@@ -148,8 +148,8 @@ survey plots retain a legacy customized abundance label or use Survey index.
 Set a named label to NULL to restore its default, for example
 \code{ylab = list(survey = NULL)}.}
 
-\item{palette}{Character or NULL. Categorical palette: "standard" (default),
-the colors of the default style (dark blue, orange, teal, yellow, light
+\item{palette}{Character or NULL. Categorical palette: "default", the
+colors of the default style (dark blue, orange, teal, yellow, light
 blue, green, sky blue, dark green), or the ggsci palettes "npg",
 "aaas", "nejm", "lancet" and "jama". Changing it resets palette-derived colors
 (line, interval, point, observation, smoother, comparison and heat map colors);
@@ -163,9 +163,9 @@ Default point, observation, smoother and reference-line colors.}
 of heat maps.}
 
 \item{style}{Character or NULL. A preset of the colors and forms of all
-plots. \code{"standard"} (default) draws stock size, fishing mortality,
-recruitment and catch each in its own color, draws total recruitment and
-total catch as bars, starts the y axis of these plots at zero, puts the
+plots. \code{"default"}, used when no style is set, draws stock size,
+fishing mortality, recruitment and catch each in its own color, draws
+total recruitment and total catch as bars, starts the y axis of these plots at zero, puts the
 legend below the plot, and uses bold left-aligned titles, plain facet
 labels and a black panel border, without grid lines.
 \code{"classic"} restores the colors and forms of ALSCL 2.4.5 (the npg
@@ -180,13 +180,14 @@ axis_color, line_size, compare_line_size and the palette-derived colors
 with the values of the
 preset. Other arguments of the same call are applied after the preset
 and win. Setting a single key changes only that key, so styles can be
-mixed.}
+mixed. The name "standard", which ALSCL 2.5.0 used for the default style
+and its palette, is still accepted with a warning.}
 
 \item{grid}{Character or NULL. Grid lines: \code{"none"} (no grid lines,
 the default of both styles) or \code{"y"} (horizontal major lines only,
 in light grey). Heat maps never show grid lines.}
 
-\item{title_face}{Character or NULL. Face of plot titles: "bold" ("standard"),
+\item{title_face}{Character or NULL. Face of plot titles: "bold" ("default"),
 "plain" ("classic"), "italic" or "bold.italic".}
 
 \item{title_color}{Character or NULL. Color of plot titles: "black" in
@@ -202,33 +203,33 @@ Line or bar colors of stock size (plot_SSB(), plot_biomass(),
 plot_abundance()), fishing mortality (plot_fishing_mortality(), the F
 deviations of plot_deviance()), recruitment (plot_recruitment(), the
 recruitment deviations of plot_deviance()) and catch (plot_catch(), the
-fitted series of plot_relative_catch()). The "standard" style uses
+fitted series of plot_relative_catch()). The default style uses
 "#047c6c", "#ed5f26", "#28b3e8" and "#002b5f"; NULL ("classic") uses
 line_color. Interval bands of these plots take the color of their line
 unless se_color is set to a color different from line_color. Pass NULL
 explicitly to clear a color.}
 
 \item{bars}{Logical or NULL. Draw total recruitment and total catch as
-bars (TRUE, "standard") or lines (FALSE, "classic"). The geom argument of
+bars (TRUE, "default") or lines (FALSE, "classic"). The geom argument of
 plot_recruitment() and plot_catch() chooses per call.}
 
 \item{y_zero}{Logical or NULL. Start the y axis of stock size,
 recruitment, catch and fishing mortality plots, and of
 plot_compare_ts() and plot_compare_F_ts(), at zero with no gap below it
-(TRUE, "standard"), or let it follow the data (FALSE, "classic").}
+(TRUE, "default"), or let it follow the data (FALSE, "classic").}
 
 \item{strip}{Character or NULL. Facet strips: \code{"plain"} (bold, left
-aligned black text without a box, "standard") or \code{"box"} (the strips of
+aligned black text without a box, "default") or \code{"box"} (the strips of
 the base theme, "classic").}
 
 \item{legend_position}{Character or NULL. Position of the legend of
-plots that have one: "bottom" ("standard"), "top", "left", "right" or "none".
+plots that have one: "bottom" ("default"), "top", "left", "right" or "none".
 NULL ("classic") keeps the position of each plot. Comparison plots use
 compare_legend_pos.}
 
 \item{axis_color}{Character or NULL. With the default base theme
 ("theme_bw"), the color of the panel border, axis text and ticks, on a
-white panel ("black" under "standard"). NULL ("classic") keeps the base theme.}
+white panel ("black" under "default"). NULL ("classic") keeps the base theme.}
 
 \item{...}{The former argument name compare_linewidth, accepted with a warning.}
 
@@ -286,7 +287,7 @@ acl_theme_set(style = "classic")
 acl_theme("style")
 
 # --- The default style with another palette and horizontal grid lines ---
-acl_theme_set(style = "standard", palette = "npg")
+acl_theme_set(style = "default", palette = "npg")
 acl_theme_set(grid = "y")
 
 # --- No default titles; a title given in a plot call is still drawn ---

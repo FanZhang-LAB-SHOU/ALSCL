@@ -34,7 +34,7 @@ plot_recruitment(
 \item{model_result}{A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 
@@ -51,7 +51,7 @@ global line_color or when recruitment_color is NULL. Error bars on bars
 are dark grey unless se_color is given.}
 
 \item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
-inherits the global se_alpha setting (0.3 under the standard style, 0.2
+inherits the global se_alpha setting (0.3 under the default style, 0.2
 under classic). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character or NULL. Form of the interval: "ribbon" (shaded
@@ -99,7 +99,7 @@ fall below zero. NULL inherits the global \code{interval} setting (default
 \item{geom}{Character or NULL. Form of recruitment. "bar" draws bars 0.8
 of a time step wide, with error bars when \code{se = TRUE}. "line" draws
 a line, with a ribbon when \code{se = TRUE}. NULL (default) follows the
-global bars setting: bars under the "standard" style and a line under
+global bars setting: bars under the default style and a line under
 "classic". \code{se_type} changes the form of the interval.}
 }
 \value{

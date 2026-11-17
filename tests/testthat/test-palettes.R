@@ -1,6 +1,6 @@
 test_that("ggsci settings propagate and explicit overrides survive", {
   old <- options(acl.theme = NULL); on.exit(options(old))
-  expect_identical(acl_theme("palette"), "standard")
+  expect_identical(acl_theme("palette"), "default")
   expect_equal(acl_theme("line_color"), "#002b5f")
   f <- list(report=list(Rec=1:4), year=2000:2003)
   # Recruitment bars take the recruitment colour of the default style.
@@ -18,7 +18,7 @@ test_that("ggsci settings propagate and explicit overrides survive", {
   expect_identical(acl_theme_set()$palette, "jama")
   expect_error(acl_theme_set(palette="typo"), "arg")
   suppressMessages(acl_theme_reset())
-  expect_identical(acl_theme("palette"), "standard")
+  expect_identical(acl_theme("palette"), "default")
 })
 
 test_that("retrospective colors follow terminal periods and allow overrides", {
@@ -45,7 +45,7 @@ test_that("retrospective colors follow terminal periods and allow overrides", {
 
 test_that("continuous and ridge palettes retain legacy options", {
   old <- options(acl.theme = NULL); on.exit(options(old))
-  for (pal in c("standard","npg","aaas","nejm","lancet","jama")) {
+  for (pal in c("default","npg","aaas","nejm","lancet","jama")) {
     acl_theme_set(palette=pal)
     expect_no_error(ALSCL:::.acl_ridges_palette(NULL,20))
     expect_no_error(ALSCL:::.acl_fill_continuous(pal))
@@ -73,7 +73,7 @@ test_that("ridges keep ordered gradient colors independently of categorical them
     p <- plot_ridges(f)
     expect_no_warning(for (panel in list(p[[1L]], p[[2L]])) ggplot2::ggplot_build(panel))
   }
-  # NULL follows the global palette: viridis for every palette but "standard".
+  # NULL follows the global palette: viridis for every palette but "default".
   expect_null(formals(plot_ridges)$palette)
   expect_equal(ALSCL:::.acl_ridges_palette("cividis",3)$palette(3),
                ggplot2::scale_fill_viridis_d(option="E")$palette(3))

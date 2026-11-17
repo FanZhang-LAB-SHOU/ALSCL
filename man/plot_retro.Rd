@@ -42,7 +42,7 @@ plot_retro(
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 
@@ -85,12 +85,11 @@ described in \code{\link{acl_theme_set}()}.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
 
-\item{palette}{Character or NULL. Palette name ("standard", "npg", "aaas",
+\item{palette}{Character or NULL. Palette name ("default", "npg", "aaas",
 "nejm", "lancet", "jama"). NULL inherits the global palette. The colors
 of the palette are interpolated when there are more fits than colors.
-With NULL under the "standard" global palette (the default style), the
-full fit is orange and the earlier fits are greys, darkest for the first
-peel.}
+With NULL under the default global palette, the full fit is orange and
+the earlier fits are greys, darkest for the first peel.}
 
 \item{colors}{Character vector or NULL. Explicit period colors, ordered by
 descending terminal period or named by terminal period. Overrides palette.
@@ -118,8 +117,8 @@ and is marked "(no estimates)". The subtitle names both kinds of fit, and
 each panel states how many requested peels are valid when Mohn's rho is
 withheld.
 Each panel leaves room for the rho text above the lines (below them for
-the bottom positions). With the default colors of the "standard" palette
-the full fit is drawn again on top of the earlier fits.
+the bottom positions). With colors and palette NULL under the default
+global palette, the full fit is drawn again on top of the earlier fits.
 }
 \examples{
 \donttest{

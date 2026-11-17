@@ -56,7 +56,7 @@ and time/length metadata.}
 
 \item{line_type}{Character. Line type for facet_by = "length" plot. Default is "solid".}
 
-\item{line_size1}{Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the standard style).}
+\item{line_size1}{Numeric or NULL. Estimated-line thickness for facet_by = "year"; NULL uses 1.2 times global line_size (1.2 under the default style).}
 
 \item{line_color1}{Character or NULL. NULL inherits the global line_color setting.}
 
@@ -64,7 +64,7 @@ and time/length metadata.}
 
 \item{line_alpha1}{Numeric. Transparency for estimated line (0-1). Default is 1.}
 
-\item{line_size2}{Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the standard style).}
+\item{line_size2}{Numeric or NULL. Observed-line thickness for facet_by = "year"; NULL uses two-thirds of global line_size (0.67 under the default style).}
 
 \item{line_color2}{Character or NULL. NULL inherits the global observed_color setting.}
 

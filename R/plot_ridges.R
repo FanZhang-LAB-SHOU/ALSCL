@@ -33,8 +33,8 @@
 #'   small (e.g. tuna with 22 bins).
 #' @param palette Character, character vector or NULL. Fill colors of the
 #'   ridges, ordered by year. NULL (default) follows the global palette: a
-#'   gradient from light blue to dark blue under "standard" (the default
-#'   style), the same as \code{palette = "standard"}, and \code{"viridis"}, as
+#'   gradient from light blue to dark blue under the default palette, the
+#'   same as \code{palette = "default"}, and \code{"viridis"}, as
 #'   in earlier versions, under any other global palette, including that of
 #'   the "classic" style. The names "npg", "aaas", "nejm", "lancet" and
 #'   "jama" give the colors of these palettes. Gradient palette names: \code{"viridis"}, \code{"plasma"},
@@ -43,7 +43,7 @@
 #'   \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
 #'   \code{"PRGn"}, \code{"RdBu"}, \code{"BrBG"}, \code{"rainbow"},
 #'   \code{"terrain"}, \code{"heat"}, \code{"topo"}. All names are matched
-#'   without regard to case, so \code{"Standard"} and \code{"rdbu"} work too.
+#'   without regard to case, so \code{"Default"} and \code{"rdbu"} work too.
 #'   Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 #'   which will be interpolated to match the number of years.
 #'
@@ -230,11 +230,12 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 .acl_ridges_palette <- function(palette, n) {
 
   if (is.null(palette))
-    palette <- if (identical(acl_theme("palette"), "standard")) "standard" else "viridis"
+    palette <- if (identical(acl_theme("palette"), "default")) "default" else "viridis"
   # Palette names are matched without regard to case.
+  palette <- .acl_former_default(palette, "palette")
   named <- length(palette) == 1L && is.character(palette) && !is.na(palette)
-  if (named && tolower(palette) == "standard")
-    return(ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(.acl_standard_colors$ramp)(n),
+  if (named && tolower(palette) == "default")
+    return(ggplot2::scale_fill_manual(values = grDevices::colorRampPalette(.acl_default_colors$ramp)(n),
                                       guide = "none"))
   if (named && tolower(palette) %in% c("npg", "aaas", "nejm", "lancet", "jama")) {
     return(ggplot2::scale_fill_manual(values = .acl_palette(tolower(palette), n), guide = "none"))
@@ -300,7 +301,7 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 
     # Fallback: unrecognized name
     message("Unknown palette '", palette, "', using 'viridis'. Available: ",
-            paste(c("standard", "npg", "aaas", "nejm", "lancet", "jama",
+            paste(c("default", "npg", "aaas", "nejm", "lancet", "jama",
                     names(viridis_opts), unname(brewer_div),
                     "ocean", "sunset", "forest", "fire",
                     "rainbow", "terrain", "heat", "topo"), collapse = ", "))

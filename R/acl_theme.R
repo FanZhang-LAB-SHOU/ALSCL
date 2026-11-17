@@ -2,7 +2,7 @@
 #'
 #' Global settings for all ALSCL plot functions, including model comparison plots.
 #' Change titles, axis labels, font family, colors, line sizes, and
-#' comparison plot styles in one place. The default style, \code{"standard"},
+#' comparison plot styles in one place. The default style, \code{style = "default"},
 #' draws stock size, fishing mortality, recruitment and catch each in its own
 #' color, draws total recruitment and total catch as bars, starts the y axis
 #' of these plots at zero, and uses bold left-aligned titles and facet labels
@@ -17,7 +17,7 @@
 #'
 #' # The colors and forms of ALSCL 2.4.5, then back to the default style
 #' acl_theme_set(style = "classic")
-#' acl_theme_set(style = "standard")
+#' acl_theme_set(style = "default")
 #'
 #' # Change just one thing
 #' acl_theme_set(font_family = "Times New Roman")
@@ -57,23 +57,23 @@ NULL
 # ---------------------------------------------------------------------------
 # Default configuration (internal)
 # ---------------------------------------------------------------------------
-# Categorical palettes: "standard", the colors of the default style, and
+# Categorical palettes: "default", the colors of the default style, and
 # the ggsci palettes. Semantic roles follow from the palette.
-.acl_palette_names <- c("standard", "npg", "aaas", "nejm", "lancet", "jama")
+.acl_palette_names <- c("default", "npg", "aaas", "nejm", "lancet", "jama")
 
 # Colors of the default style: one per quantity family, a neutral primary
 # color, an accent for observations, and the categorical palette.
-.acl_standard_colors <- list(
+.acl_default_colors <- list(
   stock = "#047c6c", F = "#ed5f26", recruitment = "#28b3e8", catch = "#002b5f",
   palette = c("#002b5f", "#eb5c24", "#00b29d", "#fda500", "#6eb5d2", "#6eb200",
               "#28b3e8", "#047c6c"),
   retro_peels = c("#252525", "#525252", "#737373", "#969696", "#bdbbbb"),
   ramp = c("#d6ecf5", "#002b5f"))
 
-.acl_palette <- function(palette = "standard", n = NULL) {
+.acl_palette <- function(palette = "default", n = NULL) {
   palette <- .acl_palette_name(palette)
   cols <- switch(palette,
-    standard = .acl_standard_colors$palette,
+    default = .acl_default_colors$palette,
     npg = ggsci::pal_npg("nrc")(10),
     aaas = ggsci::pal_aaas("default")(10),
     nejm = ggsci::pal_nejm("default")(8),
@@ -84,8 +84,20 @@ NULL
   if (n <= length(cols)) cols[seq_len(n)] else grDevices::colorRampPalette(cols)(n)
 }
 
+# ALSCL 2.5.0 named the default style and its palette "standard". The former
+# name is mapped to "default" with the once-per-session warning of
+# deprecations.R; palette names are matched without regard to case.
+.acl_former_default <- function(value, arg) {
+  if (!is.character(value) || length(value) != 1L || is.na(value) || tolower(value) != "standard")
+    return(value)
+  .acl_deprecated_message(paste0("theme.", arg, "_standard"), sprintf(
+    "%s = \"standard\" is the name used in ALSCL 2.5.0; use %s = \"default\".", arg, arg))
+  "default"
+}
+
 # Name of a supported palette; partial names are accepted as before.
 .acl_palette_name <- function(palette) {
+  palette <- .acl_former_default(palette, "palette")
   if (!is.character(palette) || length(palette) != 1L || is.na(palette))
     stop("palette must be one of ", paste0("\"", .acl_palette_names, "\"", collapse = ", "),
          ".", call. = FALSE)
@@ -99,23 +111,23 @@ NULL
   list(palette = palette, line_color = primary, se_color = primary,
        compare_colors = c(primary, accent), point_color = primary,
        observed_color = accent, smooth_color = cols[3],
-       hline_color = "grey55", low_col = if (palette == "standard") "#ffffff" else "#F7F9FC",
+       hline_color = "grey55", low_col = if (palette == "default") "#ffffff" else "#F7F9FC",
        high_col = primary)
 }
 
-# Settings of the two styles. "standard" is the default look; "classic" is
-# the look of ALSCL 2.4.5. A style sets these keys and
+# Settings of the two styles: "default", and "classic", which is the look
+# of ALSCL 2.4.5. A style sets these keys and
 # the colors of its palette (.acl_palette_roles()).
 .acl_style_presets <- list(
-  standard = c(list(style = "standard", grid = "none", title_face = "bold", title_hjust = 0,
+  default = c(list(style = "default", grid = "none", title_face = "bold", title_hjust = 0,
                 title_color = "black",
-                stock_color = .acl_standard_colors$stock, F_color = .acl_standard_colors$F,
-                recruitment_color = .acl_standard_colors$recruitment,
-                catch_color = .acl_standard_colors$catch,
+                stock_color = .acl_default_colors$stock, F_color = .acl_default_colors$F,
+                recruitment_color = .acl_default_colors$recruitment,
+                catch_color = .acl_default_colors$catch,
                 bars = TRUE, y_zero = TRUE, se_alpha = 0.3, compare_se_alpha = 0.25,
                 strip = "plain", legend_position = "bottom", axis_color = "black",
                 line_size = 1, compare_line_size = 0.9),
-           .acl_palette_roles("standard")),
+           .acl_palette_roles("default")),
   classic = c(list(style = "classic", grid = "none", title_face = "plain", title_hjust = 0.5,
                    title_color = "black",
                    stock_color = NULL, F_color = NULL, recruitment_color = NULL,
@@ -129,6 +141,7 @@ NULL
 .acl_fill_continuous <- function(palette = NULL, name = ggplot2::waiver()) {
   if (is.null(palette)) return(ggplot2::scale_fill_gradient(
     low = acl_theme("low_col"), high = acl_theme("high_col"), name = name))
+  palette <- .acl_former_default(palette, "palette")
   if (length(palette) == 1 && tolower(palette) %in% .acl_palette_names) {
     roles <- .acl_palette_roles(tolower(palette))
     return(ggplot2::scale_fill_gradient(low = roles$low_col, high = roles$high_col, name = name))
@@ -138,15 +151,15 @@ NULL
 
 .acl_defaults <- list(
 
-  # --- Style: "standard" (default) or "classic"; see acl_theme_set() ----------
-  style = "standard",
-  palette = "standard",
-  point_color = .acl_palette_roles("standard")$point_color,
-  observed_color = .acl_palette_roles("standard")$observed_color,
-  smooth_color = .acl_palette_roles("standard")$smooth_color,
+  # --- Style: "default" or "classic"; see acl_theme_set() ---------------------
+  style = "default",
+  palette = "default",
+  point_color = .acl_palette_roles("default")$point_color,
+  observed_color = .acl_palette_roles("default")$observed_color,
+  smooth_color = .acl_palette_roles("default")$smooth_color,
   hline_color = "grey55",
-  low_col = .acl_palette_roles("standard")$low_col,
-  high_col = .acl_palette_roles("standard")$high_col,
+  low_col = .acl_palette_roles("default")$low_col,
+  high_col = .acl_palette_roles("default")$high_col,
 
   # --- Panel look set by the style ------------------------------------------
   grid = "none",
@@ -158,10 +171,10 @@ NULL
   axis_color = "black",
 
   # --- Colours and forms of the quantity families ---------------------------
-  stock_color = .acl_standard_colors$stock,
-  F_color = .acl_standard_colors$F,
-  recruitment_color = .acl_standard_colors$recruitment,
-  catch_color = .acl_standard_colors$catch,
+  stock_color = .acl_default_colors$stock,
+  F_color = .acl_default_colors$F,
+  recruitment_color = .acl_default_colors$recruitment,
+  catch_color = .acl_default_colors$catch,
   bars = TRUE,
   y_zero = TRUE,
 
@@ -187,10 +200,10 @@ NULL
   x_angle = NULL,
 
   # --- Default colors and line sizes (single-model plots) ------------------
-  line_color  = .acl_palette_roles("standard")$line_color,
+  line_color  = .acl_palette_roles("default")$line_color,
   line_size   = 1,
   point_size  = 2.5,
-  se_color    = .acl_palette_roles("standard")$se_color,
+  se_color    = .acl_palette_roles("default")$se_color,
   se_alpha    = 0.3,
 
   # --- Interval for positive quantities: "lognormal" or "wald" -------------
@@ -203,7 +216,7 @@ NULL
   #   c("#2166AC", "#B2182B")                       positional
   #   c(ACL = "#2166AC", ALSCL = "#B2182B")         named
   #   c("M=0" = "steelblue", "M=0.5" = "tomato")   custom names
-  compare_colors     = .acl_palette_roles("standard")$compare_colors,
+  compare_colors     = .acl_palette_roles("default")$compare_colors,
   compare_linetypes  = c("solid", "dashed"),
   compare_line_size  = 0.9,
   compare_point_size = NULL,
@@ -407,7 +420,7 @@ acl_theme <- function(what = NULL) {
 #' @param font_family Character. Font family for all text.
 #' @param title_size Numeric. Plot title size in pt.
 #' @param title_hjust Numeric. Title alignment (0=left, 0.5=center, 1=right).
-#'   Set by the style: 0 under "standard", 0.5 under "classic".
+#'   Set by the style: 0 under "default", 0.5 under "classic".
 #' @param axis_title_size Numeric. Axis title size.
 #' @param axis_text_size Numeric. Axis tick label size.
 #' @param strip_text_size Numeric. Facet label size.
@@ -421,7 +434,7 @@ acl_theme <- function(what = NULL) {
 #' @param x_expand Numeric vector of length 2. X-axis expansion.
 #' @param line_color Character. Default line color for single-model plots.
 #' @param line_size Numeric. Default line width for single-model plots: 1
-#'   under the "standard" style, 1.5 under "classic".
+#'   under the default style, 1.5 under "classic".
 #'   Plot arguments set to NULL inherit this value; explicit widths take priority.
 #'   While it keeps the value of the style, facets of 5 to 12 panels draw their
 #'   lines at two thirds of it and facets of more panels at half of it; another
@@ -431,7 +444,7 @@ acl_theme <- function(what = NULL) {
 #'   override is set. Explicit per-call sizes take priority.
 #' @param se_color Character. Default CI color.
 #' @param se_alpha Numeric. Default transparency of interval ribbons (0.3
-#'   under the "standard" style, 0.2 under "classic").
+#'   under the default style, 0.2 under "classic").
 #'   Plot arguments set to NULL inherit this value; explicit alpha takes priority.
 #'   Error bars are drawn opaque unless a plot call supplies se_alpha.
 #' @param interval Character. Default 95% interval for positive quantities
@@ -445,20 +458,20 @@ acl_theme <- function(what = NULL) {
 #'   \code{c("M=0" = "steelblue", "M=0.5" = "tomato")}.
 #' @param compare_linetypes Character vector of 2 linetypes. Same rules as colors.
 #' @param compare_line_size Numeric. Line width for comparison plots: 0.9
-#'   under the "standard" style, 1.2 under "classic".
+#'   under the default style, 1.2 under "classic".
 #' @param compare_point_size Numeric or NULL. Optional point-size override for
 #'   comparison plots. The default NULL inherits point_size. Existing explicit
 #'   values remain supported; a plot's point_size argument takes priority.
 #'   Pass NULL explicitly to clear a comparison-specific override.
 #' @param compare_se_alpha Numeric. CI ribbon alpha for comparison plots
-#'   (0.25 under the "standard" style, 0.15 under "classic").
+#'   (0.25 under the default style, 0.15 under "classic").
 #' @param compare_legend_pos Character. Legend position for comparison plots.
 #' @param compare_facet_ncol Integer or NULL. Facet columns of comparison
 #'   plots. NULL (default) chooses the columns from the number of panels, as
 #'   the single-model plots do; pass NULL explicitly to restore it.
 #' @param compare_facet_scales Character. Facet scales for comparison plots.
-#' @param palette Character or NULL. Categorical palette: "standard" (default),
-#'   the colors of the default style (dark blue, orange, teal, yellow, light
+#' @param palette Character or NULL. Categorical palette: "default", the
+#'   colors of the default style (dark blue, orange, teal, yellow, light
 #'   blue, green, sky blue, dark green), or the ggsci palettes "npg",
 #'   "aaas", "nejm", "lancet" and "jama". Changing it resets palette-derived colors
 #'   (line, interval, point, observation, smoother, comparison and heat map colors);
@@ -481,9 +494,9 @@ acl_theme <- function(what = NULL) {
 #'   Set a named label to NULL to restore its default, for example
 #'   \code{ylab = list(survey = NULL)}.
 #' @param style Character or NULL. A preset of the colors and forms of all
-#'   plots. \code{"standard"} (default) draws stock size, fishing mortality,
-#'   recruitment and catch each in its own color, draws total recruitment and
-#'   total catch as bars, starts the y axis of these plots at zero, puts the
+#'   plots. \code{"default"}, used when no style is set, draws stock size,
+#'   fishing mortality, recruitment and catch each in its own color, draws
+#'   total recruitment and total catch as bars, starts the y axis of these plots at zero, puts the
 #'   legend below the plot, and uses bold left-aligned titles, plain facet
 #'   labels and a black panel border, without grid lines.
 #'   \code{"classic"} restores the colors and forms of ALSCL 2.4.5 (the npg
@@ -498,11 +511,12 @@ acl_theme <- function(what = NULL) {
 #'   with the values of the
 #'   preset. Other arguments of the same call are applied after the preset
 #'   and win. Setting a single key changes only that key, so styles can be
-#'   mixed.
+#'   mixed. The name "standard", which ALSCL 2.5.0 used for the default style
+#'   and its palette, is still accepted with a warning.
 #' @param grid Character or NULL. Grid lines: \code{"none"} (no grid lines,
 #'   the default of both styles) or \code{"y"} (horizontal major lines only,
 #'   in light grey). Heat maps never show grid lines.
-#' @param title_face Character or NULL. Face of plot titles: "bold" ("standard"),
+#' @param title_face Character or NULL. Face of plot titles: "bold" ("default"),
 #'   "plain" ("classic"), "italic" or "bold.italic".
 #' @param title_color Character or NULL. Color of plot titles: "black" in
 #'   both styles. \code{"quantity"} gives the title the theme color of the
@@ -529,28 +543,28 @@ acl_theme <- function(what = NULL) {
 #'   plot_abundance()), fishing mortality (plot_fishing_mortality(), the F
 #'   deviations of plot_deviance()), recruitment (plot_recruitment(), the
 #'   recruitment deviations of plot_deviance()) and catch (plot_catch(), the
-#'   fitted series of plot_relative_catch()). The "standard" style uses
+#'   fitted series of plot_relative_catch()). The default style uses
 #'   "#047c6c", "#ed5f26", "#28b3e8" and "#002b5f"; NULL ("classic") uses
 #'   line_color. Interval bands of these plots take the color of their line
 #'   unless se_color is set to a color different from line_color. Pass NULL
 #'   explicitly to clear a color.
 #' @param bars Logical or NULL. Draw total recruitment and total catch as
-#'   bars (TRUE, "standard") or lines (FALSE, "classic"). The geom argument of
+#'   bars (TRUE, "default") or lines (FALSE, "classic"). The geom argument of
 #'   plot_recruitment() and plot_catch() chooses per call.
 #' @param y_zero Logical or NULL. Start the y axis of stock size,
 #'   recruitment, catch and fishing mortality plots, and of
 #'   plot_compare_ts() and plot_compare_F_ts(), at zero with no gap below it
-#'   (TRUE, "standard"), or let it follow the data (FALSE, "classic").
+#'   (TRUE, "default"), or let it follow the data (FALSE, "classic").
 #' @param strip Character or NULL. Facet strips: \code{"plain"} (bold, left
-#'   aligned black text without a box, "standard") or \code{"box"} (the strips of
+#'   aligned black text without a box, "default") or \code{"box"} (the strips of
 #'   the base theme, "classic").
 #' @param legend_position Character or NULL. Position of the legend of
-#'   plots that have one: "bottom" ("standard"), "top", "left", "right" or "none".
+#'   plots that have one: "bottom" ("default"), "top", "left", "right" or "none".
 #'   NULL ("classic") keeps the position of each plot. Comparison plots use
 #'   compare_legend_pos.
 #' @param axis_color Character or NULL. With the default base theme
 #'   ("theme_bw"), the color of the panel border, axis text and ticks, on a
-#'   white panel ("black" under "standard"). NULL ("classic") keeps the base theme.
+#'   white panel ("black" under "default"). NULL ("classic") keeps the base theme.
 #' @param ... The former argument name compare_linewidth, accepted with a warning.
 #' @return Invisible previous settings. Save these or the result of acl_theme(),
 #'   then restore them with \code{do.call(acl_theme_set, old)}.
@@ -578,7 +592,7 @@ acl_theme <- function(what = NULL) {
 #' acl_theme("style")
 #'
 #' # --- The default style with another palette and horizontal grid lines ---
-#' acl_theme_set(style = "standard", palette = "npg")
+#' acl_theme_set(style = "default", palette = "npg")
 #' acl_theme_set(grid = "y")
 #'
 #' # --- No default titles; a title given in a plot call is still drawn ---
@@ -636,7 +650,8 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!is.null(titles)) titles <- .acl_renamed_titles(titles)
 
   # Reject settings that no plot could use, before any of them is stored.
-  if (!is.null(style)) style <- .acl_choice(style, "style", names(.acl_style_presets))
+  if (!is.null(style))
+    style <- .acl_choice(.acl_former_default(style, "style"), "style", names(.acl_style_presets))
   if (!is.null(palette)) palette <- .acl_palette_name(palette)
   if (!is.null(grid)) grid <- .acl_choice(grid, "grid", c("none", "y"))
   if (!is.null(title_face))
@@ -719,8 +734,8 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
 
 #' Reset the ALSCL plot theme to its defaults
 #'
-#' Restores every theme setting to the package default, the \code{"standard"}
-#' style, and reports this with a message, which \code{suppressMessages()}
+#' Restores every theme setting to the package default, the default style
+#' (\code{style = "default"}), and reports this with a message, which \code{suppressMessages()}
 #' silences. Use \code{acl_theme_set(style = "classic")} for the colors and
 #' forms of ALSCL 2.4.5.
 #'
@@ -800,7 +815,7 @@ theme_acl <- function(font_family = NULL, title_size = NULL, axis_title_size = N
 #' @param n Integer or NULL. Number of colors. NULL returns the native
 #'   colors of the palette; more colors than the palette holds are
 #'   interpolated between its colors.
-#' @param palette Character or NULL. "standard", "npg", "aaas", "nejm",
+#' @param palette Character or NULL. "default", "npg", "aaas", "nejm",
 #'   "lancet" or "jama"; NULL uses the palette set with
 #'   \code{\link{acl_theme_set}()}.
 #' @param role Character vector or NULL. Names of color roles: "stock",
@@ -828,7 +843,7 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
            ".", call. = FALSE)
     settings <- if (is.null(palette)) acl_theme() else {
       roles <- .acl_palette_roles(palette)
-      quantities <- if (palette == "standard") .acl_standard_colors[c("stock", "F", "recruitment", "catch")] else
+      quantities <- if (palette == "default") .acl_default_colors[c("stock", "F", "recruitment", "catch")] else
         list(NULL, NULL, NULL, NULL)
       c(roles, stats::setNames(quantities, .acl_role_keys[1:4]))
     }
@@ -838,7 +853,7 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   }
   if (!is.null(n) && (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n < 1 || n != round(n)))
     stop("n must be a positive whole number or NULL.", call. = FALSE)
-  .acl_palette(palette %||% acl_theme("palette") %||% "standard", n)
+  .acl_palette(palette %||% acl_theme("palette") %||% "default", n)
 }
 
 
@@ -953,7 +968,7 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   out
 }
 
-#' Build the standard ALSCL ggplot theme layer
+#' Build the ALSCL ggplot theme layers
 #'
 #' `quantity` is the quantity of the plot ("stock", "F",
 #' "recruitment" or "catch"), which gives the title its color under
@@ -2033,12 +2048,12 @@ acl_get_theme <- function() {
 
 # Line width of the data lines of a plot when the call gives none: the theme
 # value, marked as automatic while it is the value of the active style (1 and
-# 0.9 under "standard", 1.5 and 1.2 under "classic"), so that
+# 0.9 under "default", 1.5 and 1.2 under "classic"), so that
 # .acl_line_weights() can thin it in dense facets. `key` is "line_size" or
 # "compare_line_size".
 .acl_auto_size <- function(key = "line_size", fallback = .acl_defaults[[key]]) {
   value <- acl_theme(key) %||% fallback
-  preset <- .acl_style_presets[[acl_theme("style") %||% "standard"]][[key]] %||% .acl_defaults[[key]]
+  preset <- .acl_style_presets[[acl_theme("style") %||% "default"]][[key]] %||% .acl_defaults[[key]]
   if (identical(value, preset)) structure(value, acl_auto = TRUE) else value
 }
 

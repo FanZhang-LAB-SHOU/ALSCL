@@ -37,8 +37,8 @@ small (e.g. tuna with 22 bins).}
 
 \item{palette}{Character, character vector or NULL. Fill colors of the
 ridges, ordered by year. NULL (default) follows the global palette: a
-gradient from light blue to dark blue under "standard" (the default
-style), the same as \code{palette = "standard"}, and \code{"viridis"}, as
+gradient from light blue to dark blue under the default palette, the
+same as \code{palette = "default"}, and \code{"viridis"}, as
 in earlier versions, under any other global palette, including that of
 the "classic" style. The names "npg", "aaas", "nejm", "lancet" and
 "jama" give the colors of these palettes. Gradient palette names: \code{"viridis"}, \code{"plasma"},
@@ -47,7 +47,7 @@ the "classic" style. The names "npg", "aaas", "nejm", "lancet" and
 \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
 \code{"PRGn"}, \code{"RdBu"}, \code{"BrBG"}, \code{"rainbow"},
 \code{"terrain"}, \code{"heat"}, \code{"topo"}. All names are matched
-without regard to case, so \code{"Standard"} and \code{"rdbu"} work too.
+without regard to case, so \code{"Default"} and \code{"rdbu"} work too.
 Or supply a character vector of colors (e.g. \code{c("#0D1B2A","#2E86AB","#72EFDD")})
 which will be interpolated to match the number of years.}
 

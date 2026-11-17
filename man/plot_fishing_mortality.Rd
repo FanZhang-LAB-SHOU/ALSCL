@@ -36,7 +36,7 @@ plot_fishing_mortality(
 \item{model_result}{A list obtained from \code{run_acl} or \code{run_alscl}.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting
-(1 under the standard style, 1.5 under classic). While that setting keeps
+(1 under the default style, 1.5 under classic). While that setting keeps
 the value of the style, facets of more than
 four panels draw thinner lines.}
 
@@ -58,7 +58,7 @@ color of the line, or the global se_color when that differs from the
 global line_color or when F_color is NULL.}
 
 \item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
-inherits the global se_alpha setting (0.3 under the standard style, 0.2
+inherits the global se_alpha setting (0.3 under the default style, 0.2
 under classic). Error bars are opaque unless se_alpha is given.}
 
 \item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}

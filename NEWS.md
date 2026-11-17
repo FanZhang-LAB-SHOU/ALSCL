@@ -1,3 +1,11 @@
+# ALSCL 2.5.1
+
+- The default plot style and its palette are now named "default": `acl_theme_set(style = "default")` and `acl_theme_set(palette = "default")`. ALSCL 2.5.0 named them "standard"; that name is still accepted and gives a warning once per session. Figures and all other settings are unchanged.
+
+### 2.5.1 · 简体中文
+
+- 默认绘图样式及其调色板现在名为 "default"：`acl_theme_set(style = "default")` 和 `acl_theme_set(palette = "default")`。ALSCL 2.5.0 中它们名为 "standard"，这个名称仍可使用，每个会话给出一次警告。图和其他所有设置都不变。
+
 # ALSCL 2.5.0
 
 ### Default look of the figures

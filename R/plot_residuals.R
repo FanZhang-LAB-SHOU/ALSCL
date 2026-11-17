@@ -19,7 +19,7 @@
 #' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
 #' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting
-#'   (1 under the standard style, 1.5 under classic). While that setting keeps
+#'   (1 under the default style, 1.5 under classic). While that setting keeps
 #'   the value of the style, facets of more than
 #'   four panels draw thinner lines.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
