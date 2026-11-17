@@ -44,6 +44,7 @@
 #'   NA survey columns, with weights and maturity supplied for every period.
 #' @param zero_action Exclude zero observations as missing (historical behavior),
 #'   or reject them with "error". NA is always missing; negative/infinite values fail.
+#'   Letter case does not matter.
 #' @param control A named list of nlminb control settings.
 #' @details M and F are per model time step; vbk is per year. The first and last
 #'   length bins absorb the distribution tails. Compilation uses a writable session
@@ -85,6 +86,7 @@
 #'   density; the unused group correlation is automatically fixed and omitted
 #'   from reports. Other default map rules still apply. Subannual data share F
 #'   per model step, not per calendar year.
+#'   Letter case does not matter.
 #' @param polish Logical. By default, apply up to five safeguarded Newton steps
 #'   to the selected fit, requiring a positive-definite Hessian, in-bounds
 #'   parameters, a smaller maximum gradient and objective increase at most
@@ -128,6 +130,7 @@
 #'   are stored in the `structure` element of the fit; `initial_deviations`
 #'   is stored only when it is `"independent"`, so that the stored structure
 #'   of a fit with the default form is the same as in earlier versions.
+#'   Letter case does not matter in the names of sets and the values of settings.
 #' @param start_spread Standard deviation of the normal deviates added to the
 #'   starting values (on the scale of the optimizer, mostly logarithms) of
 #'   the second and later starts. The default 0.15 keeps the starts used by
@@ -142,6 +145,7 @@
 #'   `parameters.L` and `parameters.U` replace these bounds. When an ACL fit
 #'   stops at one of the default upper bounds, `diagnostics$advice` and the
 #'   message of the fit name this argument.
+#'   Letter case does not matter.
 #' @details A single start can stop at a local optimum that passes every
 #'   numerical check, particularly for the growth parameters of ALSCL. The
 #'   checks in `diagnostics` are local: they do not show whether a better

@@ -94,22 +94,33 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 
 # One colour legend for series drawn in separate layers, some as lines and
 # some as points. `linetypes` is "blank" and `shapes` is NA where a series
-# has no line or no points.
-.acl_series_legend <- function(labels, colors, linetypes, shapes, linewidths = NULL, alphas = NULL) {
+# has no line or no points. `linewidths` is a list of the widths of the
+# lines; a width that comes from the theme default is thinned in a facet of
+# `panels` panels as the lines are (.acl_line_weights()).
+.acl_series_legend <- function(labels, colors, linetypes, shapes, linewidths = NULL, alphas = NULL,
+                               panels = 1L) {
   keys <- list(linetype = linetypes, shape = shapes)
-  if (!is.null(linewidths)) keys$linewidth <- as.numeric(linewidths)
+  if (!is.null(linewidths))
+    keys$linewidth <- vapply(as.list(linewidths), function(width)
+      as.numeric(width) * if (isTRUE(attr(width, "acl_auto"))) .acl_line_factor(panels) else 1, numeric(1))
   if (!is.null(alphas)) keys$alpha <- alphas
   list(ggplot2::scale_color_manual(name = NULL, values = stats::setNames(colors, labels), breaks = labels),
        ggplot2::guides(color = ggplot2::guide_legend(override.aes = keys)))
 }
 
 # Theme for a plot with a legend of series and a caption of full sentences:
-# the legend below the panel and the caption left-aligned. Add it after the
-# base theme, which is a complete theme and would replace it.
+# the legend where the theme key legend_position puts it (below the panel
+# when that key is NULL, as under the classic style) and the caption
+# left-aligned. Add it after the base theme, which is a complete theme and
+# would replace it.
 .acl_series_theme <- function(legend = TRUE) {
-  ggplot2::theme(legend.position = if (legend) "bottom" else "none",
+  ggplot2::theme(legend.position = if (legend) .acl_series_legend_position() else "none",
                  plot.caption = ggplot2::element_text(hjust = 0))
 }
+
+# Position of the legend of a plot that names its series: the theme key
+# legend_position, or `default` when that key is NULL.
+.acl_series_legend_position <- function(default = "bottom") acl_theme("legend_position") %||% default
 
 # Caption sentences, each wrapped to the width of a figure.
 .acl_caption <- function(sentences, width = 100) {
@@ -160,12 +171,14 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 #'   with numbers at length multiplied by the survey catchability at length
 #'   used in the fit. Use `"survey"` to compare with age readings of fish
 #'   caught in the survey.
+#'   Letter case does not matter.
 #' @param years NULL (all time steps) or the time steps to draw, as values of
 #'   `fit$year`.
 #' @param ages NULL (all age classes) or the age classes to draw, as values of
 #'   `fit$age`.
 #' @param facet_by `"age"` (default): one panel per age class. `"none"`: one
 #'   panel with one line per age class, colored by age class.
+#'   Letter case does not matter.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. Line color with `facet_by = "age"`;
 #'   NULL inherits the global line_color setting. With `facet_by = "none"` the
@@ -182,6 +195,7 @@ utils::globalVariables(c("age", "mean_length", "year", "AgeClass", "Series", "Pe
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
 #' @inheritParams plot_SSB
@@ -234,8 +248,8 @@ plot_length_at_age <- function(fit, observed = NULL, basis = c("population", "su
                                font_family = NULL, title_size = NULL, axis_title_size = NULL,
                                axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
                                x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  basis <- match.arg(basis)
-  facet_by <- match.arg(facet_by)
+  basis <- .acl_match_choice(basis, partial = TRUE)
+  facet_by <- .acl_match_choice(facet_by, partial = TRUE)
   .acl_check_flag(return_data, "return_data")
   if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -292,7 +306,7 @@ plot_length_at_age <- function(fit, observed = NULL, basis = c("population", "su
     } else {
       p <- p + ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type)
     }
-    p <- p + ggplot2::facet_wrap(~AgeClass, ncol = facet_ncol, scales = facet_scales)
+    p <- p + ggplot2::facet_wrap(~AgeClass, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
     n_breaks <- .acl_facet_n_breaks(length(shown), facet_ncol, 5)
     caption <- .acl_caption(bars_text)
   } else {

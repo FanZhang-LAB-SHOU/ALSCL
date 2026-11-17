@@ -121,7 +121,9 @@ test_that("diagnostic observations reject invalid numeric cells before scoring",
   f <- diagnostic_fixture_225()
   for (bad in list(-1, Inf, "not a number")) {
     changed <- f$data; changed[1, 2] <- bad
-    expect_error(diagnostic_metrics(changed, f$fit), "numeric, nonnegative and finite")
-    expect_error(compare_models(f$fit, f$fit, changed), "numeric, nonnegative and finite")
+    # Text that is not a number is named with its cell.
+    expected <- if (is.character(bad)) "data.CatL must hold numbers" else "numeric, nonnegative and finite"
+    expect_error(diagnostic_metrics(changed, f$fit), expected)
+    expect_error(compare_models(f$fit, f$fit, changed), expected)
   }
 })

@@ -9,7 +9,8 @@ inspect_parameters(x, model = c("acl", "alscl"))
 \arguments{
 \item{x}{Named input bundle accepted by run_acl() or run_alscl().}
 
-\item{model}{Model to inspect: "acl" or "alscl".}
+\item{model}{Model to inspect: "acl" or "alscl".
+Letter case does not matter.}
 }
 \value{
 A data frame with one row per parameter or random-effect block.

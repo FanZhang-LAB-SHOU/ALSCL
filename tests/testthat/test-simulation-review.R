@@ -79,7 +79,7 @@ test_that("quick simulations preserve valid boundaries and reject overflow befor
   expect_equal(sm$true_params$N_at_age[2L, 2L], sm$true_params$N_at_age[1L, 1L])
   expect_true(all(is.finite(as.matrix(sm$data.CatL[-1L]))))
   expect_true(all(as.matrix(sm$data.mat[-1L]) >= 0 & as.matrix(sm$data.mat[-1L]) <= 1))
-  files <- file.path(folder, c("sim_CatL.csv", "sim_wgt.csv", "sim_mat.csv"))
+  files <- file.path(folder, c("data.CatL.csv", "data.wgt.csv", "data.mat.csv"))
   before <- tools::md5sum(files)
   for (bad in list(list(rec_sigma = 1000), list(wgt_b = 1000), list(cv_catch = 1e300))) {
     expect_error(do.call(simulate_example_data, c(list(years = 2000:2004,

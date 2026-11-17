@@ -32,6 +32,7 @@
 #'   values are such positions; a global setting meant for another axis, for
 #'   example calendar years, is ignored. Otherwise every age class is labelled.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @details Columns are labelled with the fitted ages in \code{model_result$age}.
 #'   The oldest age class is a plus group and is marked with a plus sign, for

@@ -26,9 +26,11 @@
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
+#'   Letter case does not matter.
 #' @param facet_by Character. "length" (default) draws one panel per length bin
 #'   with time on the x axis; "year" draws one panel per time step with length
 #'   on the x axis. This changes the layout, not the residual definition.
+#'   Letter case does not matter.
 #' @param resid_cap Finite positive numeric scalar or NULL. Symmetrically cap
 #'   residuals at +/- this value; NULL disables capping.
 #'   This changes the display only. Report the threshold and which points
@@ -54,6 +56,7 @@
 #'   automatic number of breaks decreases as the number of facet columns
 #'   increases, and tick labels that would overprint are omitted.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the facet plot of residuals.
 #'
@@ -71,7 +74,7 @@
 plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = NULL, facet_scales = "free", facet_ncol = NULL, facet_by = c("length", "year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {
   renamed <- .acl_renamed(list(...), "plot_residuals")
   if (missing(facet_by) && !is.null(renamed$facet_by)) facet_by <- renamed$facet_by
-  facet_by <- match.arg(facet_by)
+  facet_by <- .acl_match_choice(facet_by, partial = TRUE)
   # NULL inherits the global palette.
   if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -114,15 +117,9 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     }
     colnames(plot_data) <- c("residual", "LengthGroup","year")
 
-    # Cap extreme residuals (common in tail bins with few observations)
-    if (!is.null(resid_cap)) {
-      n_capped <- sum(abs(plot_data$residual) > resid_cap, na.rm = TRUE)
-      if (n_capped > 0) {
-        message(sprintf("plot_residuals: %d residual(s) capped at +/-%.1f (tail bins with few observations)",
-                        n_capped, resid_cap))
-      }
-      plot_data$residual <- pmax(pmin(plot_data$residual, resid_cap), -resid_cap)
-    }
+    # Cap extreme residuals for display.
+    plot_data$residual <- .acl_cap_residuals(plot_data$residual, resid_cap,
+                                             rep(len_label, each = ncol(model_result[["report"]][["resid_index"]])))
 
     plot_data$LengthGroup <- factor(plot_data$LengthGroup,
                                     levels = fixed_len_labels)
@@ -132,7 +129,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
         mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
       trend_layers(runs) +
       ggplot2::geom_hline(yintercept = 0, color = hline_color, linewidth = .acl_reference_linewidth) +
-      ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
+      ggplot2::facet_wrap(~LengthGroup, scales = .acl_facet_scales(facet_scales), ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(num_indices, facet_ncol, 8),
                    values = plot_data$year, time = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
@@ -157,15 +154,9 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
     df_long <- tidyr::pivot_longer(df, -len_mid, names_to = "year", values_to = "residuals")
     colnames(df_long) <- c("length", "Year","residual")
 
-    # Cap extreme residuals (common in tail bins with few observations)
-    if (!is.null(resid_cap)) {
-      n_capped <- sum(abs(df_long$residual) > resid_cap, na.rm = TRUE)
-      if (n_capped > 0) {
-        message(sprintf("plot_residuals: %d residual(s) capped at +/-%.1f (tail bins with few observations)",
-                        n_capped, resid_cap))
-      }
-      df_long$residual <- pmax(pmin(df_long$residual, resid_cap), -resid_cap)
-    }
+    # Cap extreme residuals for display.
+    df_long$residual <- .acl_cap_residuals(df_long$residual, resid_cap,
+                                           len_label[match(df_long$length, len_mid)])
 
     year_levels <- .acl_time_labels(year, step = model_result$growth_step)
     df_long$Year <- factor(year_levels[match(as.numeric(df_long$Year), year)], levels = year_levels)
@@ -175,7 +166,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
         mapping = ggplot2::aes(group = survey_run), color = line_color, linewidth = line_size) +
       trend_layers(runs) +
       ggplot2::geom_hline(yintercept = 0, color = hline_color, linewidth = .acl_reference_linewidth) +
-      ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
+      ggplot2::facet_wrap(~Year, scales = .acl_facet_scales(facet_scales), ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, 8, budget = 20),
                    values = df_long$length, check_overlap = TRUE) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
@@ -196,4 +187,20 @@ plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_colo
   } else {
     return(p)
   }
+}
+
+# Residuals capped at +/- `cap` for display, with a message that gives the
+# cap and the length bins of the capped residuals. NULL leaves them as they are.
+.acl_cap_residuals <- function(values, cap, bins) {
+  if (is.null(cap)) return(values)
+  capped <- !is.na(values) & abs(values) > cap
+  if (any(capped)) {
+    where <- unique(as.character(bins[capped]))
+    where <- where[!is.na(where)]
+    in_bins <- if (length(where)) sprintf(", in length bin%s %s", if (length(where) == 1L) "" else "s",
+                                          .acl_word_list(where)) else ""
+    message(sprintf("plot_residuals: %d residual%s capped at +/-%s%s.", sum(capped),
+                    if (sum(capped) == 1L) "" else "s", format(cap), in_bins))
+  }
+  pmax(pmin(values, cap), -cap)
 }

@@ -29,8 +29,9 @@
 overprint in narrow facets.}
 
 \item{time}{Logical. The axis is a time axis in years: labels at whole
-years by the rule of \code{.acl_time_axis()} and unlabelled minor tick
-marks between them. \code{.acl_tidy_axes()} adapts both to the layout.}
+years by the rule of \code{.acl_time_axis()}, the first and the last
+year always among them, and unlabelled minor tick marks between them.
+\code{.acl_tidy_axes()} adapts both to the layout.}
 }
 \description{
 Explicit breaks from the plot call are always used. The global x_breaks

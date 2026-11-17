@@ -95,6 +95,7 @@ utils::globalVariables(c(
 #'   requested explicitly when both supplied results contain it.
 #'   For F, use \code{plot_compare_F_ts()} and explicitly choose the group
 #'   mean or apical summary; F is not a scalar time series in the model reports.
+#'   Letter case does not matter, so \code{"ssb"} gives the same as \code{"SSB"} and \code{"rec"} the same as \code{"Rec"}.
 #' @param se Logical. Show 95% confidence intervals. Default FALSE.
 #' @param interval Character or NULL. The interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
@@ -102,6 +103,7 @@ utils::globalVariables(c(
 #'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
+#'   Letter case does not matter.
 #' @param model1_name,model2_name Character. Labels. Auto-detected if NULL.
 #' @param colors Character vector of 2 colors, named by model or in model
 #'   order. NULL = use global theme. A vector with fewer than two colors gives
@@ -114,6 +116,7 @@ utils::globalVariables(c(
 #'   the number of panels. With five quantities the legend fills the empty
 #'   cell.
 #' @param facet_scales Character or NULL. Facet scales; NULL uses the global compare_facet_scales.
+#'   Letter case does not matter.
 #' @param return_data Logical. Return data alongside plot. Default FALSE.
 #' @param title Character, FALSE or NULL. NULL (default) draws the default
 #'   title, FALSE (or NA or "") draws no title, and a character string is
@@ -195,19 +198,17 @@ plot_compare_ts <- function(model1, model2,
     stop("F is a group-by-time quantity. Use plot_compare_F_ts() with method = 'mean' ",
          "or 'apical' to choose its time-series summary.", call. = FALSE)
 
-  # Aliases: user-friendly names -> report field names
-  qty_aliases <- c(R = "Rec", Rec = "Rec", rec = "Rec",
-                   SSB = "SSB", ssb = "SSB",
+  # Aliases: user-friendly names -> report field names, in any letter case.
+  qty_aliases <- c(SSB = "SSB", R = "Rec", Rec = "Rec",
                    B = "B", biomass = "B",
                    N = "N", abundance = "N",
                    CN = "CN", catch = "CN",
                    CB = "CB")
-
-  # Resolve aliases
+  quantities <- .acl_canonical(quantities, names(qty_aliases))
   unknown <- setdiff(quantities, names(qty_aliases))
   if (length(unknown))
     stop("Unknown quantities: ", paste(unknown, collapse = ", "),
-         ". Available: SSB, R, Rec, B, N, CN, CB.", call. = FALSE)
+         ". Available, in any letter case: SSB, R, Rec, B, N, CN, CB.", call. = FALSE)
   resolved <- unique(unname(qty_aliases[quantities]))
 
   df_list <- list()
@@ -292,6 +293,7 @@ plot_compare_ts <- function(model1, model2,
 #'   "lancet" or "jama") gives a gradient to the primary color of that
 #'   palette, and any other name is taken as a viridis option, such as
 #'   "magma".
+#'   Letter case does not matter.
 #' @details ACL rows use the ages stored in each fit. The oldest age class is a
 #'   plus group and is marked with a plus sign, for example "Age 15+". Older
 #'   fits without age metadata show age-group numbers. ALSCL rows follow the
@@ -318,6 +320,7 @@ plot_compare_F <- function(model1, model2,
 
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
+  cfg <- .acl_compare_defaults(m1 = model1_name, m2 = model2_name)
 
   extract_F <- function(model, mname) {
     is_alscl <- is.null(model$report[["F"]]) && !is.null(model$report$FL)
@@ -399,12 +402,12 @@ plot_compare_F <- function(model1, model2,
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Label, fill = F_value)) +
     ggplot2::geom_tile() + ggplot2::scale_y_discrete(labels = row_ticks) +
     .acl_fill_continuous(palette, name = fill_label) +
-    ggplot2::facet_wrap(~Model, scales = "free_y") +
+    ggplot2::facet_wrap(~Model, ncol = cfg$facet_ncol, scales = cfg$facet_scales) +
     ggplot2::labs(title = .acl_plot_title(title, "compare_F", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = row_label) +
     .acl_base_theme() + .acl_scale_x(values = df$Year, time = TRUE) + .acl_no_grid() +
     ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
-                   legend.position = acl_theme("compare_legend_pos"))
+                   legend.position = cfg$legend_pos)
 
   return(.acl_tidy_axes(p))
 }
@@ -428,6 +431,7 @@ plot_compare_F <- function(model1, model2,
 #' @param point_size Numeric or NULL. Size of QQ and mean-residual points.
 #'   NULL inherits the comparison point-size override, if set, or global point_size.
 #' @param legend_pos Character. Legend position. NULL = use global theme (default "bottom").
+#'   Letter case does not matter.
 #' @param qq_alpha Numeric. QQ point transparency. Default 0.6.
 #' @param errorbar_width Numeric or NULL. Error bar cap width in years. NULL
 #'   (default) uses a quarter of the time step.
@@ -642,6 +646,7 @@ plot_compare_residuals <- function(model1, model2, data.CatL,
 #'   that is, with numbers at length multiplied by the survey catchability at
 #'   length used in each fit. Use `"survey"` to compare with age readings of
 #'   fish caught in the survey.
+#'   Letter case does not matter.
 #' @param years NULL (all time steps of each fit) or the time steps over which
 #'   the values are averaged. They must be time steps of both fits.
 #' @param observed_name Character. Name of the points of `observed` in the
@@ -708,7 +713,7 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 
   renamed <- .acl_renamed(list(...), "plot_compare_growth")
   if (is.null(line_size)) line_size <- renamed$line_size
-  basis <- match.arg(basis)
+  basis <- .acl_match_choice(basis, partial = TRUE)
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   if (!is.null(ref_data)) {
@@ -735,6 +740,8 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
                  .acl_growth_series(model2, basis, years, "model2"))
   if (!is.null(age_range))
     .acl_check_age_range(age_range, "; it selects the age classes to draw.")
+  # age_range selects the age classes of both panels.
+  selected_ages <- !is.null(age_range)
   vb_df <- do.call(rbind, Map(function(x, name) {
     keep <- if (is.null(age_range)) seq_along(x$ages) else
       which(x$ages >= age_range[1L] & x$ages <= age_range[2L])
@@ -884,12 +891,14 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
     long$Model <- rep(name, nrow(long))
     long
   }, pla_parts, list(model1_name, model2_name)))
+  if (selected_ages)
+    pla_df <- pla_df[pla_df$Age >= age_range[1L] - 1e-8 & pla_df$Age <= age_range[2L] + 1e-8, , drop = FALSE]
   pla_df$Model <- factor(pla_df$Model, levels = c(model1_name, model2_name))
 
   p_pla <- ggplot2::ggplot(pla_df, ggplot2::aes(x = Age, y = Length, fill = Probability)) +
     ggplot2::geom_tile(ggplot2::aes(width = Width, height = Height)) + .acl_fill_continuous() +
     age_axis(pla_df$Age) +
-    ggplot2::facet_wrap(~Model) +
+    ggplot2::facet_wrap(~Model, ncol = cfg$facet_ncol, scales = cfg$facet_scales) +
     ggplot2::labs(title = "Probability of length given age",
                   x = .acl_lab("x", "age"), y = .acl_lab("y", "length")) +
     .acl_base_theme() + .acl_no_grid() +
@@ -934,8 +943,11 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 #' @param years Numeric vector of years to show. Default NULL = all years.
 #'   Use e.g. \code{years = seq(1991, 2011, by = 2)} to select specific years.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL
-#'   (default) chooses it from the number of panels.
-#' @param facet_scales Character. Facet scales. Default "free_y".
+#'   (default) uses the global compare_facet_ncol setting, which by default
+#'   chooses it from the number of panels.
+#' @param facet_scales Character or NULL. Facet scales. NULL (default) uses
+#'   the global compare_facet_scales setting ("free_y" unless changed).
+#'   Letter case does not matter.
 #' @param obs_color Character. Color for observed points. Default "grey40".
 #' @param point_size Numeric or NULL. Size of observed points. NULL uses an
 #'   explicit obs_size first, then the comparison point-size override, if set,
@@ -945,6 +957,7 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 #' @param obs_alpha Numeric. Transparency of observed points. Default 0.6.
 #' @param obs_shape Integer. Shape of observed points. Default 16.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
+#'   Letter case does not matter.
 #' @return A ggplot object.
 #' @details Positive observations and their missing-data mask must match both
 #'   fitted results whenever stored observations are available. Known length and
@@ -983,7 +996,7 @@ plot_compare_growth <- function(model1, model2, age_range = NULL,
 plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
                               model1_name = NULL, model2_name = NULL,
                               colors = NULL, linetypes = NULL, line_size = NULL,
-                              facet_ncol = NULL, facet_scales = "free_y",
+                              facet_ncol = NULL, facet_scales = NULL,
                               obs_color = "grey40", obs_size = NULL,
                               obs_alpha = 0.6, obs_shape = 16,
                               legend_pos = NULL, ..., point_size = NULL, title = NULL) {
@@ -996,7 +1009,8 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,
                                line_size = line_size, point_size = point_size %||% obs_size,
-                               legend_pos = legend_pos, m1 = model1_name, m2 = model2_name)
+                               legend_pos = legend_pos, facet_ncol = facet_ncol,
+                               facet_scales = facet_scales, m1 = model1_name, m2 = model2_name)
 
   grid <- .acl_plot_comparison_grid(list(model1, model2), data.CatL, midpoints = TRUE)
   year <- grid$year; len_mid <- model1$len_mid; observed <- grid$observed
@@ -1007,15 +1021,14 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
   if (is.null(years)) years <- year
   if (!is.numeric(years) || !length(years) || any(!is.finite(years)))
     stop("years must contain finite numeric values.", call. = FALSE)
-  years <- unique(years[years %in% year])
-  if (!length(years)) stop("No requested years occur in data.CatL.", call. = FALSE)
+  years <- .acl_select_available(years, year, "years", "data.CatL")
   pred1 <- exp(model1$report$Elog_index); pred2 <- exp(model2$report$Elog_index)
   if (!identical(dim(pred1), dim(observed)) || !identical(dim(pred2), dim(observed)))
     stop("Prediction dimensions do not match data.CatL.", call. = FALSE)
   selected <- match(years, year)
   if (any(!is.finite(pred1[, selected, drop = FALSE])) ||
       any(!is.finite(pred2[, selected, drop = FALSE])))
-    stop("Predictions must be finite at every plotted length and period.", call. = FALSE)
+    stop("Predictions must be finite at every plotted length and time step.", call. = FALSE)
 
   df_list <- list()
   for (y in years) {
@@ -1041,9 +1054,11 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(
       linetype = c(unname(cfg$linetypes), if (has_observed) "blank"),
       shape = c(NA, NA, if (has_observed) obs_shape)))) +
-    ggplot2::facet_wrap(~year_fct, ncol = facet_ncol, scales = facet_scales) +
+    ggplot2::facet_wrap(~year_fct, ncol = cfg$facet_ncol, scales = cfg$facet_scales) +
     ggplot2::labs(title = .acl_plot_title(title, "compare_CatL", model1_name, model2_name),
                   x = .acl_lab("x", "length"), y = .acl_survey_label(), color = NULL) +
+    .acl_scale_x(NULL, n_breaks = .acl_facet_n_breaks(length(years), cfg$facet_ncol, budget = 20),
+                 values = len_mid, check_overlap = TRUE) +
     .acl_base_theme() +
     ggplot2::theme(legend.position = cfg$legend_pos,
                    strip.text = ggplot2::element_text(face = "bold"))
@@ -1068,10 +1083,12 @@ plot_compare_CatL <- function(model1, model2, data.CatL, years = NULL,
 #'   AIC, Bayesian information criterion, BIC, and the negative
 #'   log-likelihood), \code{"npar"} (number of estimated parameters).
 #'   Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.
+#'   Letter case does not matter.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL
 #'   chooses it from the number of panels, and the legend fills an empty
 #'   cell.
 #' @param legend_pos Character. Legend position. NULL = use global theme.
+#'   Letter case does not matter.
 #' @param label_size Numeric. Size in mm of the values printed at the ends of
 #'   the bars, at least 8 pt. Default 3.2.
 #' @param bar_width Numeric. Height of the pair of bars of one statistic, as
@@ -1117,8 +1134,9 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
   if (is.null(facet_ncol)) facet_ncol <- renamed$facet_ncol
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
-  cfg <- .acl_compare_defaults(colors = colors, legend_pos = legend_pos,
+  cfg <- .acl_compare_defaults(colors = colors, legend_pos = legend_pos, facet_ncol = facet_ncol,
                                m1 = model1_name, m2 = model2_name)
+  facet_ncol <- cfg$facet_ncol
 
   calc_fit <- function(model, d) {
     measured <- diagnostic_metrics(d, model)
@@ -1150,7 +1168,7 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
     sub_df$Position <- row + ifelse(first, 1, -1) * bar_width / 4
     sub_df$Model <- factor(sub_df$Model, levels = c(model1_name, model2_name))
     # Values with three significant digits, such as "-660" and "12.3".
-    sub_df$Label <- .acl_number_labels(signif(sub_df$Metric_Value, 3), big.mark = "")
+    sub_df$Label <- .acl_decimal_labels(signif(sub_df$Metric_Value, 3), big.mark = "")
     values <- sub_df$Metric_Value
     known <- is.finite(values)
     negative <- known & values < 0
@@ -1208,19 +1226,15 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
     npar  = list(metrics = "npar",                   title = "Number of estimated parameters")
   )
 
-  # Select panels
-  if (is.null(metrics)) metrics <- names(all_panels)
+  # Select panels; names in any letter case.
+  metrics <- if (is.null(metrics)) names(all_panels) else
+    .acl_select_available(.acl_canonical(metrics, names(all_panels)), names(all_panels), "metrics",
+                          "the panels error, R2, MAPE, IC and npar")
   # Columns of the figure, for the room of the value labels.
   layout_cols <- if (!is.null(facet_ncol)) facet_ncol else
     .acl_facet_columns(max(1L, length(intersect(metrics, names(all_panels)))))
   panels <- list()
-  for (m in metrics) {
-    if (m %in% names(all_panels)) {
-      panels[[m]] <- make_bar(all_panels[[m]]$metrics, all_panels[[m]]$title)
-    }
-  }
-
-  if (length(panels) == 0) stop("No valid metrics selected. Choose from: error, R2, MAPE, IC, npar")
+  for (m in metrics) panels[[m]] <- make_bar(all_panels[[m]]$metrics, all_panels[[m]]$title)
 
   if (requireNamespace("patchwork", quietly = TRUE)) {
     n <- length(panels)
@@ -1359,6 +1373,7 @@ plot_compare_selectivity <- function(model1, model2,
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_plot_title(title, "compare_sel", model1_name, model2_name),
                   x = .acl_lab("x", "length"), y = .acl_lab("y", "survey_q")) +
+    .acl_scale_x(NULL, n_breaks = 10, values = df$Length) +
     .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
   if (varying) p <- p + ggplot2::labs(
     caption = "Survey catchability supplied by time step, with one line for each distinct curve of a fit.")
@@ -1383,6 +1398,7 @@ plot_compare_selectivity <- function(model1, model2,
 #'   time step.
 #'   \code{"apical"} (default): maximum F across groups.
 #'   \code{"mean"}: unweighted arithmetic mean across groups.
+#'   Letter case does not matter.
 #' @param basis Character. The groups over which F is summarized.
 #'   \code{"native"} (default) uses the F matrix that each model estimates: F at
 #'   age for ACL and F at length for ALSCL. An ACL summary and an ALSCL summary
@@ -1397,6 +1413,7 @@ plot_compare_selectivity <- function(model1, model2,
 #'   has no plus-group row and no value for the last time step, and the
 #'   comparison leaves out the ACL plus group and the last time step. The two
 #'   fits must have the same time step.
+#'   Letter case does not matter.
 #' @param point_size Numeric or NULL. Point size. NULL inherits the comparison
 #'   point-size override, if set, or the global point_size setting.
 #' @param ... The former argument name linewidth, accepted with a warning.
@@ -1429,8 +1446,8 @@ plot_compare_F_ts <- function(model1, model2,
 
   renamed <- .acl_renamed(list(...), "plot_compare_F_ts")
   if (is.null(line_size)) line_size <- renamed$line_size
-  method <- match.arg(method)
-  basis <- match.arg(basis)
+  method <- .acl_match_choice(method, partial = TRUE)
+  basis <- .acl_match_choice(basis, partial = TRUE)
   model_names <- .acl_plot_compare_names(model1, model2, model1_name, model2_name)
   model1_name <- model_names[1L]; model2_name <- model_names[2L]
   cfg <- .acl_compare_defaults(colors = colors, linetypes = linetypes,

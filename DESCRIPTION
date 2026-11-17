@@ -1,6 +1,6 @@
 Package: ALSCL
 Title: Age- and Length-Structured Statistical Catch-at-Length Models
-Version: 2.5.1
+Version: 2.5.2
 Authors@R: c(person("Hongyu", "Lin", role = c("aut", "cre"), email = "linbojun99@gmail.com",
            comment = c(ORCID = "0000-0001-6226-179X")),
              person("Fan", "Zhang", role = "aut", email = "f-zhang@shou.edu.cn",
@@ -32,23 +32,23 @@ Depends:
 Imports:
     stats,
     utils,
-    scales,
-    TMB (>= 1.9.21),
+    scales (>= 1.4.0),
+    TMB (>= 1.9.17),
     Matrix,
     RcppEigen,
-    dplyr,
-    tidyr,
-    ggplot2,
-    ggsci,
-    ggridges,
+    dplyr (>= 1.1.4),
+    tidyr (>= 1.3.0),
+    ggplot2 (>= 4.0.0),
+    ggsci (>= 2.7),
+    ggridges (>= 0.5.5),
     RColorBrewer,
-    patchwork,
+    patchwork (>= 1.3.2),
     parallel,
     tools
-URL: https://github.com/FanZhang-LAB-SHOU/ALSCL
+URL: https://github.com/FanZhang-LAB-SHOU/ALSCL, https://fanzhang-lab-shou.github.io/ALSCL/
 BugReports: https://github.com/FanZhang-LAB-SHOU/ALSCL/issues
 Suggests:
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.8),
     pkgload,
     withr,
     readxl,

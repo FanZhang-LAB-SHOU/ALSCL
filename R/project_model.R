@@ -94,7 +94,7 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
   }
   if (!is.numeric(recruitment) || !is.null(dim(recruitment)) || !length(recruitment) ||
       any(!is.finite(recruitment)) || any(recruitment < 0))
-    stop("recruitment must contain finite nonnegative numbers for every future period.", call. = FALSE)
+    stop("recruitment must contain finite nonnegative numbers for every future time step.", call. = FALSE)
   horizon <- length(recruitment)
   L <- length(fit$len_mid); A <- length(fit$age); Y <- length(fit$year)
   coordinates <- .acl_check_coordinates(fit, L, Y)
@@ -151,7 +151,7 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
     }
     if (!is.numeric(M) || !is.null(dim(M)) || !length(M) %in% c(1L, horizon) ||
         any(!is.finite(M)) || any(M < 0))
-      stop("M must be finite and nonnegative, with one value or one per future period.", call. = FALSE)
+      stop("M must be finite and nonnegative, with one value or one per future time step.", call. = FALSE)
     M <- rep(M, length.out = horizon)
     if (legacy_M) original_M <- M[1L]
   }
@@ -273,8 +273,8 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
          conditionMessage(e), call. = FALSE))
   if (!legacy && fitted$form == "length" && model == "ACL")
     stop("The fit recipe holds a natural mortality rate by length, which ACL does not use.", call. = FALSE)
-  describe <- paste0("a single number, one value per future period (", horizon, "), or a matrix with ", A,
-    " rows (one per age class) and ", horizon, " columns (one per future period) or one column")
+  describe <- paste0("a single number, one value per future time step (", horizon, "), or a matrix with ", A,
+    " rows (one per age class) and ", horizon, " columns (one per future time step) or one column")
   by_length <- FALSE
   if (is.null(M)) {
     if (legacy) stop("Original fitted M is unavailable; supply M explicitly for this legacy fit.", call. = FALSE)
@@ -282,7 +282,7 @@ project_model <- function(fit, F, recruitment, weight, maturity, M = NULL,
       by_length <- TRUE
     } else if (ncol(original_M) > 1L) {
       stop("The fitted natural mortality rate varies over time, and no value is carried forward. ",
-           "Supply M for the future periods: ", describe, ".", call. = FALSE)
+           "Supply M for the future time steps: ", describe, ".", call. = FALSE)
     } else future <- matrix(fitted$M[, 1L], A, horizon)
   } else {
     if (!is.numeric(M) || length(dim(M)) > 2L || any(!is.finite(M)) || any(M < 0))

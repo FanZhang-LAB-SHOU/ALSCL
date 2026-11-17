@@ -129,7 +129,7 @@ test_that("length_at_age reads catchability from a saved assessment and through 
 
 test_that("length_at_age rejects unusable input", {
   z <- ns_output_fits(); fit <- z$alscl
-  expect_error(length_at_age(fit, basis = "catch"), "should be")
+  expect_error(length_at_age(fit, basis = "catch"), "basis must be one or more of")
   expect_error(length_at_age(fit, basis = c("survey", "survey")), "must not repeat")
   failed <- list(converge = "FAILED", error = "t0 must be below the recruitment age.")
   expect_error(length_at_age(failed), "failed fit without estimates.*t0 must be below")

@@ -21,14 +21,16 @@ overrides the common settings, including complete parameters/map lists.
 A named NULL is preserved. An empty list defines the reference scenario.
 Data tables cannot be changed: compare scenarios on the same observations.}
 
-\item{model}{Model to fit, "acl" (default) or "alscl".}
+\item{model}{Model to fit, "acl" (default) or "alscl".
+Letter case does not matter.}
 
 \item{ncores}{Maximum number of independent socket workers.}
 
 \item{F_summary}{Group summary for F at each model time step: "mean" is the
 unweighted mean over ages (ACL) or lengths (ALSCL); "apical" is the maximum.
 These are descriptive summaries, not abundance-weighted mortality, and
-subannual F remains per model step rather than being annualized.}
+subannual F remains per model step rather than being annualized.
+Letter case does not matter.}
 
 \item{...}{Common overrides of the fitting arguments, applied before scenarios.}
 }

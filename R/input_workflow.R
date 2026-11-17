@@ -1,7 +1,7 @@
 # Fully evaluate the original run_* formals without fitting. In particular,
 # nstarts = ncores follows the final override, and named NULL entries survive.
 .acl_resolved_args <- function(x, model, overrides = list()) {
-  model <- match.arg(model, c("acl", "alscl"))
+  model <- .acl_match_choice(model, c("acl", "alscl"), "model", partial = TRUE)
   fun <- if (model == "acl") run_acl else run_alscl
   args <- .acl_bundle_args(x, model, overrides)
   frame <- list2env(args, parent = environment(fun))
@@ -233,6 +233,7 @@ read_survey_excel <- function(file) {
 #' @param data.mat Maturity-at-length table.
 #' @param file CSV directory or Excel workbook when format is not "tables".
 #' @param format Input format: "tables", "csv" or "excel".
+#'   Letter case does not matter.
 #' @param fit_args Named list of shared fitting arguments, including rec.age,
 #'   nage, M, and either sel_L50 and sel_L95 or survey_q. M can be a single
 #'   number, a matrix by age and time step or, for ALSCL, a vector by length;
@@ -267,7 +268,7 @@ read_survey_excel <- function(file) {
 prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NULL,
                                file = NULL, format = c("tables", "csv", "excel"),
                                fit_args = list(), fit_config = NULL) {
-  format <- match.arg(format)
+  format <- .acl_match_choice(format, partial = TRUE)
   table_names <- c("data.CatL", "data.wgt", "data.mat")
   allowed <- setdiff(union(names(formals(run_acl)), names(formals(run_alscl))), table_names)
   .acl_input_list(fit_args, "fit_args", allowed)
@@ -302,7 +303,7 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
   args <- .acl_resolved_args(x, model)
   data_names <- intersect(names(formals(.acl_prepare_data)), names(args))
   prepared <- do.call(.acl_prepare_data, args[data_names])
-  structure <- match.arg(args$F_structure, c("group_year", "year"))
+  structure <- .acl_match_choice(args$F_structure, c("group_year", "year"), "F_structure", partial = TRUE)
   setup <- .acl_model_setup(toupper(model), prepared, args$parameters,
     args$parameters.L, args$parameters.U, args$map, structure)
   .acl_check_fit_flags(args$polish, args$silent, args$output)
@@ -381,6 +382,7 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
 #' from create_parameters() cannot show.
 #' @param x Named input bundle accepted by run_acl() or run_alscl().
 #' @param model Model to inspect: "acl" or "alscl".
+#'   Letter case does not matter.
 #' @return A data frame with one row per parameter or random-effect block.
 #'   Columns include parameter, kind, start, natural_start, lower, upper,
 #'   transform, status, map_source, size, dimensions, n_free, n_fixed and n_tied.
@@ -400,7 +402,7 @@ prepare_alscl_data <- function(data.CatL = NULL, data.wgt = NULL, data.mat = NUL
 #' starts[, c("parameter", "natural_start", "lower", "upper", "status")]
 #' @export
 inspect_parameters <- function(x, model = c("acl", "alscl")) {
-  model <- match.arg(model)
+  model <- .acl_match_choice(model, partial = TRUE)
   .acl_parameter_table(.acl_preflight(x, model), model)
 }
 
@@ -411,6 +413,7 @@ inspect_parameters <- function(x, model = c("acl", "alscl")) {
 #' input consistency; it does not establish identifiability or convergence.
 #' @param x Named input bundle accepted by run_acl() or run_alscl().
 #' @param model Model to check: "acl" or "alscl".
+#'   Letter case does not matter.
 #' @return A list with valid, errors, warnings, summary, time and length_bins.
 #'   Invalid configurations return valid = FALSE and an error message instead
 #'   of fitting. summary records positive, zero and missing observations, fully
@@ -429,7 +432,7 @@ inspect_parameters <- function(x, model = c("acl", "alscl")) {
 #' check_alscl_data(x, "acl")$errors
 #' @export
 check_alscl_data <- function(x, model = c("acl", "alscl")) {
-  model <- match.arg(model)
+  model <- .acl_match_choice(model, partial = TRUE)
   preflight <- tryCatch(.acl_preflight(x, model), error = function(e) e)
   if (inherits(preflight, "error"))
     return(list(valid = FALSE, model = model, errors = conditionMessage(preflight),
@@ -445,7 +448,7 @@ check_alscl_data <- function(x, model = c("acl", "alscl")) {
   messages <- character()
   if (zeros) messages <- c(messages, paste(zeros, "zero observations will be excluded by zero_action = 'missing'."))
   if (length(empty_periods)) messages <- c(messages,
-    paste("No positive observations in periods:", paste(preflight$prepared$year[empty_periods], collapse = ", ")))
+    paste("No positive observations in time steps:", paste(preflight$prepared$year[empty_periods], collapse = ", ")))
   if (length(empty_bins)) messages <- c(messages,
     paste("No positive observations in length bins:", paste(preflight$prepared$bins$labels[empty_bins], collapse = ", ")))
   if (sum(mask) <= fixed) messages <- c(messages,

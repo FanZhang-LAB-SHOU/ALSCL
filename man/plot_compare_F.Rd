@@ -25,7 +25,8 @@ the global low_col and high_col settings (white to dark blue under the
 default style). A palette name ("default", "npg", "aaas", "nejm",
 "lancet" or "jama") gives a gradient to the primary color of that
 palette, and any other name is taken as a viridis option, such as
-"magma".}
+"magma".
+Letter case does not matter.}
 
 \item{title}{Character, FALSE or NULL. NULL (default) draws the default
 title, FALSE (or NA or "") draws no title, and a character string is

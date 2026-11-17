@@ -60,7 +60,8 @@ acl_theme_set(
 \arguments{
 \item{base_theme}{Character. Base ggplot2 theme name: "bw", "minimal",
 "classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or
-without the "theme_" prefix. Any other value is an error.}
+without the "theme_" prefix. Any other value is an error.
+Letter case does not matter.}
 
 \item{font_family}{Character. Font family for all text.}
 
@@ -125,13 +126,15 @@ Pass NULL explicitly to clear a comparison-specific override.}
 \item{compare_se_alpha}{Numeric. CI ribbon alpha for comparison plots
 (0.25 under the default style, 0.15 under "classic").}
 
-\item{compare_legend_pos}{Character. Legend position for comparison plots.}
+\item{compare_legend_pos}{Character. Legend position for comparison plots.
+Letter case does not matter.}
 
 \item{compare_facet_ncol}{Integer or NULL. Facet columns of comparison
 plots. NULL (default) chooses the columns from the number of panels, as
 the single-model plots do; pass NULL explicitly to restore it.}
 
-\item{compare_facet_scales}{Character. Facet scales for comparison plots.}
+\item{compare_facet_scales}{Character. Facet scales for comparison plots.
+Letter case does not matter.}
 
 \item{titles}{Named list. Override specific titles. The keys are listed in
 \code{acl_theme("titles")}; the former keys CatL_year, CatL_year_dist and
@@ -154,7 +157,8 @@ blue, green, sky blue, dark green), or the ggsci palettes "npg",
 "aaas", "nejm", "lancet" and "jama". Changing it resets palette-derived colors
 (line, interval, point, observation, smoother, comparison and heat map colors);
 explicit color arguments in the same call take precedence. No arguments
-leaves settings unchanged; use acl_theme_reset() to reset.}
+leaves settings unchanged; use acl_theme_reset() to reset.
+Letter case does not matter.}
 
 \item{point_color, observed_color, smooth_color, hline_color}{Character or NULL.
 Default point, observation, smoother and reference-line colors.}
@@ -181,14 +185,17 @@ with the values of the
 preset. Other arguments of the same call are applied after the preset
 and win. Setting a single key changes only that key, so styles can be
 mixed. The name "standard", which ALSCL 2.5.0 used for the default style
-and its palette, is still accepted with a warning.}
+and its palette, is still accepted with a warning.
+Letter case does not matter.}
 
 \item{grid}{Character or NULL. Grid lines: \code{"none"} (no grid lines,
 the default of both styles) or \code{"y"} (horizontal major lines only,
-in light grey). Heat maps never show grid lines.}
+in light grey). Heat maps never show grid lines.
+Letter case does not matter.}
 
 \item{title_face}{Character or NULL. Face of plot titles: "bold" ("default"),
-"plain" ("classic"), "italic" or "bold.italic".}
+"plain" ("classic"), "italic" or "bold.italic".
+Letter case does not matter.}
 
 \item{title_color}{Character or NULL. Color of plot titles: "black" in
 both styles. \code{"quantity"} gives the title the theme color of the
@@ -196,7 +203,8 @@ quantity that the plot shows (stock size, fishing mortality, recruitment or
 catch) and black for other plots, darkened where needed for a contrast
 ratio of at least 4.5 to 1 with white so that the title reads well (lines
 and bars keep the exact color); any other color name or code is used as
-given.}
+given.
+Letter case does not matter.}
 
 \item{stock_color, F_color, recruitment_color, catch_color}{Character or NULL.
 Line or bar colors of stock size (plot_SSB(), plot_biomass(),
@@ -206,8 +214,8 @@ recruitment deviations of plot_deviance()) and catch (plot_catch(), the
 fitted series of plot_relative_catch()). The default style uses
 "#047c6c", "#ed5f26", "#28b3e8" and "#002b5f"; NULL ("classic") uses
 line_color. Interval bands of these plots take the color of their line
-unless se_color is set to a color different from line_color. Pass NULL
-explicitly to clear a color.}
+unless se_color is set to a color other than the band color of the
+palette. Pass NULL explicitly to clear a color.}
 
 \item{bars}{Logical or NULL. Draw total recruitment and total catch as
 bars (TRUE, "default") or lines (FALSE, "classic"). The geom argument of
@@ -220,12 +228,14 @@ plot_compare_ts() and plot_compare_F_ts(), at zero with no gap below it
 
 \item{strip}{Character or NULL. Facet strips: \code{"plain"} (bold, left
 aligned black text without a box, "default") or \code{"box"} (the strips of
-the base theme, "classic").}
+the base theme, "classic").
+Letter case does not matter.}
 
 \item{legend_position}{Character or NULL. Position of the legend of
 plots that have one: "bottom" ("default"), "top", "left", "right" or "none".
 NULL ("classic") keeps the position of each plot. Comparison plots use
-compare_legend_pos.}
+compare_legend_pos.
+Letter case does not matter.}
 
 \item{axis_color}{Character or NULL. With the default base theme
 ("theme_bw"), the color of the panel border, axis text and ticks, on a
@@ -236,7 +246,8 @@ white panel ("black" under "default"). NULL ("classic") keeps the base theme.}
 \item{interval}{Character. Default 95\% interval for positive quantities
 (abundance, biomass, spawning stock biomass, recruitment, catch and
 fishing mortality): \code{"lognormal"} (default) or \code{"wald"}. See
-\code{\link{plot_abundance}} for the formulas.}
+\code{\link{plot_abundance}} for the formulas.
+Letter case does not matter.}
 
 \item{show_title}{Logical or NULL. Draw the default titles of the plots
 (TRUE, the default of both styles). FALSE removes them from every plot;
@@ -270,9 +281,9 @@ you place it next to other plots, for example in a patchwork of three
 columns, where the labels may touch. Before making the plots, set
 \code{acl_theme_set(x_angle = 45)} to slant the labels, or set fewer
 labels with \code{x_breaks}, for example
-\code{acl_theme_set(x_breaks = seq(2000, 2020, by = 5))}; both
-settings also work as arguments of the plot functions and of
-\code{theme_acl()}.
+\code{acl_theme_set(x_breaks = seq(2000, 2020, by = 5))}.
+\code{x_breaks} is also an argument of the plot functions, and
+\code{x_angle} an argument of \code{theme_acl()}.
 }
 
 \examples{

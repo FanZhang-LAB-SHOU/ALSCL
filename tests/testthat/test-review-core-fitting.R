@@ -143,7 +143,9 @@ test_that("input checks name the problem", {
   expect_error(create_parameters("acl", parameters = list(log_vbk = c(1, 2))), "check log_vbk")
   f <- fixture_frames()
   f$data.mat[[2]] <- rep(TRUE, nrow(f$data.mat))
-  expect_error(do.call(ALSCL:::.acl_prepare_data, f), "data.mat contains nonnumeric")
+  expect_error(do.call(ALSCL:::.acl_prepare_data, f),
+               "data.mat must hold numbers (NA marks a missing value). Not a number in length bin 0-20, time step 2000: \"TRUE\"",
+               fixed = TRUE)
   expect_warning(ALSCL:::.acl_length_bins(c("5", "15", "30", "60")), "unequal spacing")
   expect_silent(ALSCL:::.acl_length_bins(c("5", "15", "30", "60"), len_border = c(10, 20, 40)))
   expect_silent(ALSCL:::.acl_length_bins(c("5", "15", "25", "35")))

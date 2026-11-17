@@ -117,7 +117,7 @@ test_that("catch comparison rejects nonfinite predictions at drawn missing cells
   for (value in c(Inf, NA_real_, 1000)) {
     bad <- m; bad$report$Elog_index[1L, 1L] <- value
     expect_error(plot_compare_CatL(m, bad, data),
-                 "Predictions must be finite at every plotted length and period")
+                 "Predictions must be finite at every plotted length and time step")
     # An omitted period is not drawn; the remaining positive cells are valid.
     expect_silent(ggplot2::ggplot_build(
       plot_compare_CatL(m, bad, data, years = 2001:2003)))

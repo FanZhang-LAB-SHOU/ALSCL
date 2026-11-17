@@ -33,7 +33,8 @@ with \code{\link[=read_assessment]{read_assessment()}}.}
 \item{type}{\code{"length"} (default): survey catchability at length, against
 the midpoints of the length bins. \code{"age"}: the survey catchability
 multiplier by age class (\code{survey_q_age}), against age; an error for a
-fit without this input.}
+fit without this input.
+Letter case does not matter.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
 
@@ -74,7 +75,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

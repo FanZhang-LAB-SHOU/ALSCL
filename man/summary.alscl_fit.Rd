@@ -19,12 +19,18 @@
 
 \item{x}{A fitted object or its summary.}
 
-\item{digits}{Number of significant digits to print; NULL uses
-getOption("digits").}
+\item{digits}{Number of significant digits of the printed values; NULL
+prints 4.}
 }
 \value{
 summary returns a summary.alscl_fit list with numerical diagnostics and
 a natural-scale parameter table. print returns its input invisibly.
+Printing a fit gives a short overview: the model, the time steps, the
+F structure, the verdict of the numerical checks with the checks that
+failed, the objective and the number of estimated parameters. Printing
+its summary gives the numerical checks and the estimated and the fixed
+parameters in two blocks, named in words with the name used in code
+beside them. The returned objects are not changed by printing.
 }
 \description{
 Summarize an assessment fit

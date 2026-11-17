@@ -20,7 +20,8 @@ midpoints of the length bins of the model, in the unit of \code{L50}.}
 
 \item{shape}{\code{"logistic"}: catchability increases with length to 1.
 \code{"dome"}: catchability increases with length, reaches 1 and decreases
-for larger fish.}
+for larger fish.
+Letter case does not matter.}
 
 \item{L50, L95}{Lengths at which the ascending logistic curve is 0.5 and
 0.95, with \code{L50} below \code{L95}. They have the meaning of \code{sel_L50} and

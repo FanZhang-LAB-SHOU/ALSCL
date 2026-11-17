@@ -10,7 +10,8 @@
 \item{object}{A fitted ACL or ALSCL result, including a portable saved result.}
 
 \item{type}{\code{"log"} returns observed minus fitted log index; \code{"standardized"}
-divides this difference by the fitted observation standard deviation.}
+divides this difference by the fitted observation standard deviation.
+Letter case does not matter.}
 
 \item{...}{Reserved for future extensions; unused arguments are rejected.}
 }

@@ -6,12 +6,58 @@
 \alias{ALSCL-package}
 \title{ALSCL: Age- and Length-Structured Statistical Catch-at-Length Models}
 \description{
-Fits two stock assessment models to fishery-independent survey abundance indices at length using Template Model Builder (TMB). The age-structured catch-at-length (ACL) model tracks abundance at age and converts it to abundance at length using the probability of length given age. The age- and length-structured statistical catch-at-length (ALSCL) model tracks abundance by length, age and model time step. Length-specific mortality determines survival, and a separate growth transition matrix moves survivors between length groups (Zhang and Cadigan (2022) \doi{10.1111/faf.12673}). The package provides multistart optimization with optional parallel computation, data preparation and checks, sensitivity scenarios, likelihood profiles, deterministic projections, fitted-model simulation, self-tests that refit a model to data simulated from its fit, hindcast validation, retrospective analysis with Mohn's rho, optional model structures such as a von Bertalanffy growth increment, portable assessment archives, diagnostic plots and comparisons of model configurations.
+ALSCL fits two stock assessment models to survey abundance indices at
+length with Template Model Builder (TMB): the age-structured
+catch-at-length model (ACL) and the age- and length-structured
+statistical catch-at-length model (ALSCL) of Zhang and Cadigan (2022). It
+estimates recruitment, fishing mortality and stock size over time, and
+checks, plots, compares, projects and simulates the fits.
+}
+\section{Functions to start with}{
+
+\describe{
+\item{\code{\link[=run_acl]{run_acl()}} and \code{\link[=run_alscl]{run_alscl()}}}{Fit the ACL or the ALSCL model to
+an input bundle such as \link{YTF_example}.}
+\item{\code{\link[=diagnose_model]{diagnose_model()}}}{Fit statistics and numerical checks of a fit.}
+\item{\code{\link[=plot_SSB]{plot_SSB()}}}{Spawning stock biomass over time; the other
+\code{plot_} functions draw the other estimates and the diagnostics.}
+\item{\code{\link[=extract_estimates]{extract_estimates()}}}{Estimates, standard errors and confidence
+intervals of the time series as a table.}
+}
+}
+
+\section{Tutorials}{
+
+The website \url{https://fanzhang-lab-shou.github.io/ALSCL/} has the
+tutorials, for example
+\href{https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html}{Install ALSCL and run a first fit},
+\href{https://fanzhang-lab-shou.github.io/ALSCL/articles/first-model.html}{Understand your first fit},
+\href{https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html}{Prepare your survey data}
+and
+\href{https://fanzhang-lab-shou.github.io/ALSCL/articles/diagnostics.html}{Judge whether a fit can be used}.
+}
+
+\examples{
+\donttest{
+# Fit the ACL model to the bundled example, check it and plot one estimate
+fit <- run_acl(YTF_example, silent = TRUE)
+fit
+diagnose_model(YTF_example$data.CatL, fit)
+plot_SSB(fit, se = TRUE)
+head(extract_estimates(fit, "SSB"))
+}
+}
+\references{
+Zhang, F. and Cadigan, N. G. (2022). An age- and
+length-structured statistical catch-at-length model for hard-to-age
+fisheries stocks. Fish and Fisheries, 23(5), 1121-1135.
+\doi{10.1111/faf.12673}
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/FanZhang-LAB-SHOU/ALSCL}
+  \item \url{https://fanzhang-lab-shou.github.io/ALSCL/}
   \item Report bugs at \url{https://github.com/FanZhang-LAB-SHOU/ALSCL/issues}
 }
 
@@ -27,4 +73,3 @@ Authors:
 }
 
 }
-\keyword{internal}

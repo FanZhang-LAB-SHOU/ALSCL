@@ -41,13 +41,15 @@ MAE), \code{"R2"} (coefficient of determination), \code{"MAPE"} (mean
 absolute percentage error), \code{"IC"} (Akaike information criterion,
 AIC, Bayesian information criterion, BIC, and the negative
 log-likelihood), \code{"npar"} (number of estimated parameters).
-Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.}
+Default NULL = all five panels. E.g. \code{metrics = c("error", "R2", "IC")}.
+Letter case does not matter.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL
 chooses it from the number of panels, and the legend fills an empty
 cell.}
 
-\item{legend_pos}{Character. Legend position. NULL = use global theme.}
+\item{legend_pos}{Character. Legend position. NULL = use global theme.
+Letter case does not matter.}
 
 \item{label_size}{Numeric. Size in mm of the values printed at the ends of
 the bars, at least 8 pt. Default 3.2.}

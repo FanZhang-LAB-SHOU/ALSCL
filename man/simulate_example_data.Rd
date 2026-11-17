@@ -75,9 +75,13 @@ on the survey abundance index. Default 0.3.}
 \item{seed}{Integer or NULL. Random seed for reproducibility. Default NULL
 (different result each run). Set e.g. \code{seed = 42} for reproducible output.}
 
-\item{save_csv}{Logical. Save CSV files to working directory. Default FALSE.}
+\item{save_csv}{Logical. Save the three tables as the CSV files
+data.CatL.csv, data.wgt.csv and data.mat.csv in output_dir, the names
+that \code{\link{read_survey_csv}(output_dir)} reads. Numbers are
+written in decimal form, without scientific notation. Default FALSE.}
 
-\item{output_dir}{Character. Directory for CSV output. Default ".".}
+\item{output_dir}{Character. Directory of the CSV files, created when it
+does not exist. Default ".", the working directory.}
 }
 \value{
 A list with components:
@@ -123,10 +127,12 @@ sim2 <- simulate_example_data(bin_breaks = seq(10, 60, by = 5))
 # Custom unequal bins
 sim3 <- simulate_example_data(bin_breaks = c(0, 15, 25, 35, 45, 60))
 
-# Save CSVs for sharing
+# Save CSVs for sharing, and read them back
 folder <- tempfile("example_data")
 sim <- simulate_example_data(seed = 42, save_csv = TRUE, output_dir = folder)
 list.files(folder)
+tables <- read_survey_csv(folder)
+names(tables)
 unlink(folder, recursive = TRUE)
 
 \donttest{

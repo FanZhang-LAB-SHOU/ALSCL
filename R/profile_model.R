@@ -6,10 +6,12 @@
 #' @param fit A fitted model retaining its recipe and final opt$par.
 #' @param parameter One internal parameter name in names(fit$opt$par), for example
 #'   "log_Linf". Fixed parameters and random-effect vectors are not supported.
+#'   Letter case does not matter.
 #' @param values A nonempty vector of distinct finite grid values.
 #' @param scale Scale of values. "natural" uses exp for log_* and mean_log_*,
 #'   plogis for logit_* parameters and identity for t0. Parameter names always
 #'   remain the internal names. "internal" uses optimizer coordinates directly.
+#'   Letter case does not matter.
 #' @param ncores Maximum independent socket workers. Inner fitting and standard
 #'   errors use one worker, retaining the original number of starts.
 #' @return A list with parameter, scale, grid (including objective, delta_nll,
@@ -34,7 +36,7 @@
 #' @export
 profile_model <- function(fit, parameter, values, scale = c("natural", "internal"),
                           ncores = 1) {
-  scale <- match.arg(scale)
+  scale <- .acl_match_choice(scale, partial = TRUE)
   ncores <- .acl_positive_integer(ncores, "ncores")
   recipe <- fit$recipe
   if (!is.list(recipe) || !identical(recipe$schema_version, 1L) ||
@@ -42,6 +44,9 @@ profile_model <- function(fit, parameter, values, scale = c("natural", "internal
       is.na(recipe$model) || !recipe$model %in% c("acl", "alscl"))
     stop("fit must retain a supported fitting recipe; refit with the current package.", call. = FALSE)
   free <- fit$opt$par
+  # The name of the parameter in any letter case.
+  if (length(parameter) == 1L && is.character(names(free)))
+    parameter <- .acl_canonical(parameter, unique(names(free)[!is.na(names(free))]))
   if (!is.character(parameter) || length(parameter) != 1L || is.na(parameter) ||
       !is.numeric(free) || any(!is.finite(free)) ||
       anyNA(names(free)) || sum(names(free) == parameter) != 1L)

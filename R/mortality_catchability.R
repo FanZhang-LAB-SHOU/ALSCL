@@ -253,6 +253,7 @@ utils::globalVariables("Curve")
 #' @param shape `"logistic"`: catchability increases with length to 1.
 #'   `"dome"`: catchability increases with length, reaches 1 and decreases
 #'   for larger fish.
+#'   Letter case does not matter.
 #' @param L50,L95 Lengths at which the ascending logistic curve is 0.5 and
 #'   0.95, with `L50` below `L95`. They have the meaning of `sel_L50` and
 #'   `sel_L95` in [run_alscl()].
@@ -327,7 +328,7 @@ utils::globalVariables("Curve")
 #' @export
 survey_catchability <- function(length, shape = c("logistic", "dome"), L50, L95,
                                 L50_desc = NULL, L95_desc = NULL, minimum = 0) {
-  shape <- match.arg(shape)
+  shape <- .acl_match_choice(shape, partial = TRUE)
   if (!is.numeric(length) || !base::length(length) || any(!is.finite(length)))
     stop("length must contain finite lengths.", call. = FALSE)
   one <- function(x, name) {

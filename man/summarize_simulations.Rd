@@ -21,7 +21,8 @@ Coordinates must match the fitted periods; values are never recycled.
 Time coordinates and quantity values must be numeric vectors, not matrices
 or arrays; grouped quantities must be aggregated explicitly before calling.}
 
-\item{quantities}{Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.}
+\item{quantities}{Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.
+Letter case does not matter, so \code{"rec"} gives the same as \code{"Rec"}.}
 
 \item{conf_level}{Nominal confidence level of the intervals based on
 reported standard errors, strictly between zero and one. The returned
@@ -31,7 +32,8 @@ coverage is the observed fraction of usable intervals containing truth.}
 \code{"lognormal"} (default) is \verb{exp(log(estimate) +/- z * SE / estimate)}, as
 in \code{\link[=extract_estimates]{extract_estimates()}}, the plots of the package and \code{\link[=self_test]{self_test()}}.
 \code{"wald"} is \verb{estimate +/- z * SE}, the default before version 2.5.0, and
-gives the former bounds and coverage.}
+gives the former bounds and coverage.
+Letter case does not matter.}
 }
 \value{
 A list with summary (pooled over replicates and time by quantity),

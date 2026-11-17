@@ -18,9 +18,9 @@
 #' @param point_color Character. The color of the point. Default is "white".
 #' @param point_size Numeric or NULL. NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. The shape of the point. Default is 21.
-#' @param se_color Character or NULL. Color of the error bars. NULL takes
-#'   the color of the line, or the global se_color when that differs from the
-#'   global line_color or when the quantity has no color of its own.
+#' @param se_color Character or NULL. Color of the error bars. NULL takes the
+#'   color of the line, or the global se_color when it was set to a color
+#'   other than the band color of the palette.
 #' @param se_width Numeric or NULL. Width of the error-bar caps in years;
 #'   does not change the standard errors or interval lengths. NULL (default)
 #'   uses a quarter of the time step.
@@ -30,7 +30,9 @@
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Scales for facet wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param type Character. "R" for recruitment deviation, "F" for fishing mortality deviation.
+#'   Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.
 #' @param title Character, FALSE or NULL. NULL (default) draws the default
 #'   title, FALSE (or NA or "") draws no title, and a character string is
 #'   drawn as the title. The default titles and the show_title setting are
@@ -47,6 +49,7 @@
 #'   NULL inherits the global x_breaks setting when at least one of its values
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #'
 #' @details With se = FALSE, estimates come from report$dev_log_R or
@@ -86,7 +89,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
   .acl_stop_if_failed(model_result, "model_result")
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- .acl_auto_size()
-  type <- match.arg(type)
+  type <- .acl_match_choice(type, partial = TRUE)
   family <- if (type == "R") "recruitment" else "F"
   colors <- .acl_quantity_colors(family, line_color, se_color)
   line_color <- colors$line
@@ -160,7 +163,7 @@ plot_deviance <- function(model_result, se = FALSE, point_size = NULL, point_col
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust,
                     quantity = family)
-  if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = facet_scales)
+  if (type == "F") plot <- plot + ggplot2::facet_wrap(~Group, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
   if (se) plot <- plot +
     ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color,
                            width = se_width %||% .acl_cap_width(years)) +

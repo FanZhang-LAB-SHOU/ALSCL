@@ -57,10 +57,12 @@
 #'   [simulate_fit()]. The refits are deterministic, so a seed makes the whole
 #'   self-test repeatable.
 #' @param process `"conditional"` (default) or `"resample"`; see Details.
+#'   Letter case does not matter.
 #' @param start `"original"` (default) starts each refit from the starting
 #'   values of the source fit, with the same number of starts. `"estimates"`
 #'   starts it from the estimates of the source fit, the values used to
 #'   simulate. See Details.
+#'   Letter case does not matter.
 #' @param nstarts NULL (default) uses the number of starts of the source fit.
 #'   A positive integer sets the number of starts of every refit.
 #' @param ncores Maximum number of socket workers. Each worker fits one
@@ -68,15 +70,18 @@
 #' @param quantities Time series to compare, from `"SSB"` (spawning stock
 #'   biomass), `"Rec"` (recruitment), `"F"` (fishing mortality rate), `"B"`
 #'   (total biomass) and `"N"` (total abundance). Default `c("SSB", "Rec", "F")`.
+#'   Letter case does not matter, so `"rec"` gives the same as `"Rec"`.
 #' @param F_summary Summary of F over ages (ACL) or length bins (ALSCL) at each
 #'   time step: `"mean"` (default), the unweighted mean, or `"apical"`, the
 #'   maximum, as in [fit_scenarios()].
+#'   Letter case does not matter.
 #' @param conf_level Nominal confidence level of the intervals whose coverage
 #'   is reported, strictly between zero and one. Default 0.95.
 #' @param interval Form of the interval of a time series. `"lognormal"`
 #'   (default) is `exp(log(estimate) +/- z * SE / estimate)`, as in the plots
 #'   of the package and in [extract_estimates()]. `"wald"` is
 #'   `estimate +/- z * SE`.
+#'   Letter case does not matter.
 #' @param preserve_missing Logical; passed to [simulate_fit()]. Default TRUE
 #'   keeps missing and zero survey cells as they are in the observations.
 #' @param silent Suppress fitting progress messages; default TRUE.
@@ -140,7 +145,7 @@
 #'   and their arithmetic mean need not be zero. The truth of mean_log_F (log
 #'   fishing mortality rate) and mean_log_R (log recruitment) is still the
 #'   source estimate: at the estimate, the mean parameter of an AR(1) process
-#'   equals the weighted mean of the fitted process that the AR(1) density
+#'   is close to the weighted mean of the fitted process that the AR(1) density
 #'   implies, in which the first and last time steps (and groups) weigh more,
 #'   not its arithmetic mean, and a refit that recovers the process recovers
 #'   this weighted mean. The level of F and recruitment is measured by the
@@ -216,19 +221,20 @@ self_test <- function(fit, nsim = 20, seed = NULL, process = c("conditional", "r
                       quantities = c("SSB", "Rec", "F"), F_summary = c("mean", "apical"),
                       conf_level = .95, interval = c("lognormal", "wald"),
                       preserve_missing = TRUE, silent = TRUE, save_fits = FALSE) {
-  process <- match.arg(process)
-  start <- match.arg(start)
-  F_summary <- match.arg(F_summary)
-  interval <- match.arg(interval)
+  process <- .acl_match_choice(process, partial = TRUE)
+  start <- .acl_match_choice(start, partial = TRUE)
+  F_summary <- .acl_match_choice(F_summary, partial = TRUE)
+  interval <- .acl_match_choice(interval, partial = TRUE)
   nsim <- .acl_positive_integer(nsim, "nsim")
   ncores <- .acl_positive_integer(ncores, "ncores")
   if (!is.null(nstarts)) nstarts <- .acl_positive_integer(nstarts, "nstarts")
   z <- .acl_conf_level(conf_level)
   for (nm in c("preserve_missing", "silent", "save_fits")) .acl_check_flag(get(nm), nm)
   allowed <- c("SSB", "Rec", "F", "B", "N")
+  quantities <- .acl_canonical(quantities, allowed)
   if (!is.character(quantities) || !length(quantities) || anyNA(quantities) ||
       anyDuplicated(quantities) || any(!quantities %in% allowed))
-    stop("quantities must contain distinct names from SSB, Rec, F, B and N.", call. = FALSE)
+    stop("quantities must contain distinct names from SSB, Rec, F, B and N, in any letter case.", call. = FALSE)
   if (is.list(fit) && (inherits(fit, "alscl_fit_error") || !is.null(fit$error)))
     stop("fit is a failed fit (", .acl_error_text(fit), "); a self-test needs a fitted model.",
          call. = FALSE)

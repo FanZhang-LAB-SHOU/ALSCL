@@ -23,7 +23,8 @@ prepare_alscl_data(
 
 \item{file}{CSV directory or Excel workbook when format is not "tables".}
 
-\item{format}{Input format: "tables", "csv" or "excel".}
+\item{format}{Input format: "tables", "csv" or "excel".
+Letter case does not matter.}
 
 \item{fit_args}{Named list of shared fitting arguments, including rec.age,
 nage, M, and either sel_L50 and sel_L95 or survey_q. M can be a single

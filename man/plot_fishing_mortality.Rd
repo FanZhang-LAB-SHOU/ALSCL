@@ -49,26 +49,29 @@ setting, or line_color when that is NULL.}
 it from the number of panels, for example 5 columns for 15 panels and 6
 for 23.}
 
-\item{facet_scales}{Character. Scales for facet_wrap. Default is "free".}
+\item{facet_scales}{Character. Scales for facet_wrap. Default is "free".
+Letter case does not matter.}
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
 \item{se_color}{Character or NULL. Color of the interval. NULL takes the
-color of the line, or the global se_color when that differs from the
-global line_color or when F_color is NULL.}
+color of the line, or the global se_color when it was set to a color
+other than the band color of the palette.}
 
 \item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
 inherits the global se_alpha setting (0.3 under the default style, 0.2
 under classic). Error bars are opaque unless se_alpha is given.}
 
-\item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".}
+\item{se_type}{Character. "ribbon" or "errorbar". Default is "ribbon".
+Letter case does not matter.}
 
 \item{type}{Character. Which dimension of F runs along the x axis: "year"
 (one panel per age or length group), "age" (one panel per time step) or
 "length" (ALSCL only: one panel per time step with the numeric length-bin
 midpoints in \code{model_result$len_mid} on the x axis; for ACL a legacy
 alias for "age", with a warning). Default is "year". Time-step panels are
-labelled "Year 2000", or "2000 Q2" for quarterly fits.}
+labelled "Year 2000", or "2000 Q2" for quarterly fits.
+Letter case does not matter.}
 
 \item{return_data}{Logical. Whether to return data alongside the plot. Default is FALSE.}
 
@@ -98,7 +101,8 @@ The default label gains the time basis of the fit, for example
 "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 settings in theme objects are retained; typography follows the global
 settings and the explicit typography arguments. Grid lines follow the
-global grid setting for every base theme.}
+global grid setting for every base theme. Letter case does not matter in
+theme names.}
 
 \item{axis_title_size}{Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).}
 
@@ -117,7 +121,8 @@ with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} an
 fall below zero. NULL inherits the global \code{interval} setting (default
 "lognormal"). Point estimates are the same for both. An estimate that is
 not positive, which can occur for ALSCL F at age because it is derived as
-total mortality minus natural mortality, keeps the Wald bounds.}
+total mortality minus natural mortality, keeps the Wald bounds.
+Letter case does not matter.}
 }
 \value{
 A ggplot object, or a list with plot and data if return_data = TRUE.

@@ -46,6 +46,7 @@
 #'   model_result$age that lie within age_range. Results saved without age
 #'   metadata, and ranges that contain no fitted age, use every plotted age.
 #'   Default is "ribbon".
+#'   Letter case does not matter.
 #' @param se Logical. Whether to draw the 95% confidence interval of the curve
 #'   computed from Linf, k and t0 (delta method with the covariance of the
 #'   growth parameters). Default is FALSE. The interval belongs to that
@@ -77,6 +78,7 @@
 #'   NULL inherits the global x_breaks setting when at least one of its values
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @param observed NULL or a data frame of observed mean length at age from
 #'   age readings, drawn as points. Required columns: `age` (years) and
@@ -93,6 +95,7 @@
 #'   caught in the survey. For an ACL fit, `"survey"` draws mean length at age
 #'   from the age-length key in place of the von Bertalanffy curve, which
 #'   describes the population.
+#'   Letter case does not matter.
 #' @param years NULL (all time steps) or the time steps over which mean length
 #'   at age from the fitted numbers is averaged, as values of
 #'   `model_result$year`. It does not change the von Bertalanffy curve of an
@@ -138,8 +141,9 @@
 #'   explicit `age_range` that starts before t0 is no longer an error for
 #'   these fits, because the fitted numbers are not extrapolated.
 #'
-#'   If the growth covariance is unavailable or unusable, a request for
-#'   confidence intervals warns and draws the estimate only, preserving all
+#'   If the growth covariance is unavailable or unusable, or Linf, k and t0
+#'   are all fixed, a request for confidence intervals warns and draws the
+#'   estimate only, preserving all
 #'   supplied labels, axis settings, text styles and theme options. The parameter
 #'   annotation is retained with and without intervals and inherits font_family.
 #'   The y-axis inherits the global growth label unless ylab is supplied.
@@ -185,8 +189,8 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
 
   .acl_check_flag(se, "se")
   .acl_check_flag(parameter_curve, "parameter_curve")
-  se_type <- match.arg(se_type)
-  basis <- match.arg(basis)
+  se_type <- .acl_match_choice(se_type, partial = TRUE)
+  basis <- .acl_match_choice(basis, partial = TRUE)
   obs <- .acl_observed_length(observed)
   if (!is.null(obs)) .acl_check_series_name(observed_name, "observed_name")
 
@@ -233,7 +237,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   # fallback uses the same supplied styling arguments as a direct plain plot.
   interval <- if (se) .acl_growth_interval(model_result, data$age) else NULL
   if (se && is.null(interval)) {
-    warning("Growth confidence interval requires a finite full parameter covariance matrix; drawing the estimate only.")
+    .acl_growth_interval_warning()
     se <- FALSE
   }
 
@@ -404,7 +408,7 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   if (se) {
     interval <- .acl_growth_interval(model_result, curve$age)
     if (is.null(interval)) {
-      warning("Growth confidence interval requires a finite full parameter covariance matrix; drawing the estimate only.")
+      .acl_growth_interval_warning()
       se <- FALSE
     } else { curve$lower <- interval$lower; curve$upper <- interval$upper }
   }
@@ -465,7 +469,15 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
   .acl_show_singletons(p, point_size = point_size)
 }
 
+# Warning when the growth curve has no interval.
+.acl_growth_interval_warning <- function()
+  warning("A growth confidence interval needs at least one estimated growth parameter (Linf, k or t0) ",
+          "and a finite full parameter covariance matrix; drawing the estimate only.", call. = FALSE)
+
 # Delta method using the full covariance, including correlations and t0.
+# NULL without a usable covariance, or when Linf, k and t0 are all fixed:
+# the curve then has no uncertainty from the fit, and a band of zero width
+# would suggest otherwise.
 .acl_growth_interval <- function(model_result, ages) {
   cov <- model_result$vcov
   if (is.null(cov) || is.null(rownames(cov)) || any(!is.finite(cov)) || identical(model_result$pdHess, FALSE)) return(NULL)
@@ -475,12 +487,10 @@ plot_VB <- function(model_result, age_range = NULL, line_size = NULL, line_color
                     t0 = -r$Linf*r$vbk*decay,
                     log_t0 = -r$Linf*r$vbk*decay*(r$t0 - .acl_scale_settings(model_result)$t0_lower))
   keys <- intersect(colnames(jacobian), rownames(cov))
-  se <- rep(0, length(ages))
-  if (length(keys)) {
-    g <- jacobian[,keys,drop=FALSE]
-    variance <- rowSums((g %*% cov[keys,keys,drop=FALSE])*g)
-    if (any(variance < -1e-8)) return(NULL)
-    se <- sqrt(pmax(0,variance))
-  }
+  if (!length(keys)) return(NULL)
+  g <- jacobian[,keys,drop=FALSE]
+  variance <- rowSums((g %*% cov[keys,keys,drop=FALSE])*g)
+  if (any(variance < -1e-8)) return(NULL)
+  se <- sqrt(pmax(0,variance))
   data.frame(estimate=mu, se=se, lower=pmax(0,mu-1.96*se), upper=mu+1.96*se)
 }

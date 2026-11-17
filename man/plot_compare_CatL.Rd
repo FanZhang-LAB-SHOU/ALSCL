@@ -15,7 +15,7 @@ plot_compare_CatL(
   linetypes = NULL,
   line_size = NULL,
   facet_ncol = NULL,
-  facet_scales = "free_y",
+  facet_scales = NULL,
   obs_color = "grey40",
   obs_size = NULL,
   obs_alpha = 0.6,
@@ -49,9 +49,12 @@ a warning and the global setting is used.}
 \item{line_size}{Numeric or NULL. Line width; NULL uses the global compare_line_size.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL
-(default) chooses it from the number of panels.}
+(default) uses the global compare_facet_ncol setting, which by default
+chooses it from the number of panels.}
 
-\item{facet_scales}{Character. Facet scales. Default "free_y".}
+\item{facet_scales}{Character or NULL. Facet scales. NULL (default) uses
+the global compare_facet_scales setting ("free_y" unless changed).
+Letter case does not matter.}
 
 \item{obs_color}{Character. Color for observed points. Default "grey40".}
 
@@ -62,7 +65,8 @@ size. An explicit point_size takes priority when both are supplied.}
 
 \item{obs_shape}{Integer. Shape of observed points. Default 16.}
 
-\item{legend_pos}{Character. Legend position. NULL = use global theme.}
+\item{legend_pos}{Character. Legend position. NULL = use global theme.
+Letter case does not matter.}
 
 \item{...}{Former argument names, accepted with a warning: linewidth for
 line_size, ncol for facet_ncol and scales for facet_scales.}

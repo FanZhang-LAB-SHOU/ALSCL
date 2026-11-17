@@ -12,7 +12,8 @@ with \code{\link[=read_assessment]{read_assessment()}}.}
 
 \item{basis}{One or both of \code{"survey"} (numbers at length multiplied by
 survey catchability at length) and \code{"population"} (numbers at length in
-the population). The default returns both.}
+the population). The default returns both.
+Letter case does not matter.}
 }
 \value{
 A data frame with one row per basis, time step and age class:

@@ -32,7 +32,7 @@ test_that("extract_estimates() gives lognormal intervals by default and Wald int
   z90 <- qnorm(.95)
   narrow <- extract_estimates(fit, "SSB", conf_level = .9)
   expect_equal(narrow$conf_high[usable], ssb$estimate[usable] * exp(z90 * ssb$std_error[usable] / ssb$estimate[usable]))
-  expect_error(extract_estimates(fit, "SSB", interval = "normal"), "should be one of")
+  expect_error(extract_estimates(fit, "SSB", interval = "normal"), "interval must be one of")
   # Rows without a standard error keep NA bounds.
   fit$est_std <- NULL
   none <- extract_estimates(fit, "SSB")
@@ -66,7 +66,7 @@ test_that("summarize_simulations() reports the coverage of the chosen interval f
   expect_identical(lognormal$estimates$conf_low, bounds$lower)
   expect_identical(lognormal$estimates$conf_high, bounds$upper)
   expect_error(summarize_simulations(list(one = fit), list(one = target), quantities = "SSB",
-                                     interval = "normal"), "should be one of")
+                                     interval = "normal"), "interval must be one of")
 })
 
 # A small ALSCL bundle in the form of YTF_example: tables and settings in

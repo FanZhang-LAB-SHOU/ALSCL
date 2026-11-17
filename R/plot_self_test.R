@@ -36,6 +36,7 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #' @param x An `alscl_self_test` object from [self_test()].
 #' @param what `"both"` (default) draws the time series above the
 #'   parameters; `"series"` or `"parameters"` draws one part.
+#'   Letter case does not matter.
 #' @param probs Two probabilities, the lower and upper percentiles of the
 #'   band. Default `c(0.1, 0.9)`, the 10th and 90th percentiles across
 #'   replicates.
@@ -52,6 +53,7 @@ utils::globalVariables(c("median_re", "low_re", "high_re", "Quantity", "Paramete
 #'   panels. NULL chooses it from the number of panels.
 #' @param facet_scales Character. Scales of the time-series panels: "fixed",
 #'   "free", "free_x" or "free_y". Default is "free_y".
+#'   Letter case does not matter.
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
 #' @inheritParams plot_SSB
@@ -88,7 +90,7 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
                            base_theme = NULL, title_hjust = NULL) {
   if (!inherits(x, "alscl_self_test"))
     stop("x must be the result of self_test().", call. = FALSE)
-  what <- match.arg(what)
+  what <- .acl_match_choice(what, partial = TRUE)
   .acl_check_flag(return_data, "return_data")
   if (!is.numeric(probs) || length(probs) != 2L || any(!is.finite(probs)) ||
       any(probs < 0 | probs > 1) || probs[1L] >= probs[2L])
@@ -126,7 +128,7 @@ plot_self_test <- function(x, what = c("both", "series", "parameters"), probs = 
       ggplot2::geom_ribbon(ggplot2::aes(ymin = low_re, ymax = high_re), fill = se_color,
                            alpha = se_alpha) +
       ggplot2::geom_line(linewidth = line_size, color = line_color) +
-      ggplot2::facet_wrap(~Quantity, ncol = ncol, scales = facet_scales) +
+      ggplot2::facet_wrap(~Quantity, ncol = ncol, scales = .acl_facet_scales(facet_scales)) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = y_label) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(unique(series$quantity)), ncol),
                    values = series$year, time = TRUE) +

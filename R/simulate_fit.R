@@ -88,6 +88,7 @@
 #' @param process "conditional" retains the fitted population and adds only
 #'   observation error. "resample" draws new recruitment, fishing-mortality and
 #'   initial-population deviations at the fitted scalar parameter values.
+#'   Letter case does not matter.
 #' @param preserve_missing Logical. If TRUE, original NA observations remain NA
 #'   and excluded zeros remain zero. If FALSE, all cells receive positive draws.
 #' @param allow_failed_fit Logical; default FALSE. Reject a fit known to have
@@ -151,7 +152,7 @@ simulate_fit <- function(fit, nsim = 1, seed = NULL,
   .acl_stop_if_failed(fit)
   nsim <- .acl_positive_integer(nsim, "nsim")
   if (!is.null(seed)) seed <- .acl_positive_integer(seed, "seed", minimum = 0L)
-  process <- match.arg(process)
+  process <- .acl_match_choice(process, partial = TRUE)
   for (name in c("preserve_missing", "allow_failed_fit")) {
     value <- get(name)
     if (!is.logical(value) || length(value) != 1L || is.na(value))

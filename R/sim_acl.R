@@ -67,6 +67,7 @@
 #' @param train_times Number of optimization passes per independent start.
 #' @param control Named nlminb control settings.
 #' @param model Model fitted to each simulation, "acl" (default) or "alscl".
+#'   Letter case does not matter.
 #' @param nstarts Positive integer; number of independent optimization starts
 #'   per simulated dataset. Defaults to 1, independently of ncores. Starts run
 #'   sequentially within each replicate; ncores controls parallel replicates.
@@ -94,12 +95,12 @@ sim_model <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     F_structure = c("group_year", "year"), polish = TRUE,
                     model = c("acl", "alscl"), nstarts = 1, allow_M_mismatch = FALSE,
                     structure = list(), t0_lower = NULL) {
-  model <- match.arg(model)
+  model <- .acl_match_choice(model, partial = TRUE)
   if (!is.null(t0_lower) && model == "acl")
     stop("t0_lower applies to ALSCL only; the ACL parameter t0 is on the natural scale and can be negative.",
          call. = FALSE)
   .acl_structure(structure, toupper(model))
-  F_structure <- match.arg(F_structure)
+  F_structure <- .acl_match_choice(F_structure, partial = TRUE)
   ncores <- .acl_positive_integer(ncores, "ncores")
   nstarts <- .acl_positive_integer(nstarts, "nstarts")
   if (!is.numeric(iter_range) || !length(iter_range) || any(!is.finite(iter_range)) ||

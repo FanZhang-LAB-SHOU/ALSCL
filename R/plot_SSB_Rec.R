@@ -38,6 +38,7 @@
 #'   NULL inherits the global x_breaks setting when at least one of its values
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the scatter plot of SSB versus recruitment.
 #'
@@ -77,7 +78,7 @@ plot_SSB_Rec <- function(model_result, age_at_recruitment = NULL,
   years <- model_result$year
   if (!is.null(years) && (!is.numeric(years) || length(years) != length(SSB_data) ||
                         any(!is.finite(years)) || any(diff(years) <= 0)))
-    stop("Time metadata must contain one increasing, finite year per model period.", call. = FALSE)
+    stop("Time metadata must contain one increasing, finite year per model time step.", call. = FALSE)
   growth_step <- model_result$growth_step
   if (is.null(growth_step))
     growth_step <- if (length(years) > 1L) diff(years)[1L] else 1

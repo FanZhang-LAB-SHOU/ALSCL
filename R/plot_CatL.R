@@ -40,9 +40,11 @@ utils::globalVariables("survey_run")
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Character. Specifies scales for facet_wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param facet_by Character. "length" (default) draws one panel per length bin
 #'   with time on the x axis; "year" draws one panel per time step with length
 #'   on the x axis.
+#'   Letter case does not matter.
 #' @param exp_transform Logical. TRUE exponentiates the logged observations and
 #'   fitted values to the original survey-index scale; fitted curves represent
 #'   conditional medians. FALSE keeps the log scale.
@@ -71,6 +73,7 @@ utils::globalVariables("survey_run")
 #'   automatic number of breaks decreases as the number of facet columns
 #'   increases, and tick labels that would overprint are omitted.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @return A ggplot object representing the plot.
 #' @details Predicted and observed matrices are aligned by position with fitted
@@ -105,7 +108,7 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
                       strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, ...) {
   renamed <- .acl_renamed(list(...), "plot_CatL")
   if (missing(facet_by) && !is.null(renamed$facet_by)) facet_by <- renamed$facet_by
-  facet_by <- match.arg(facet_by)
+  facet_by <- .acl_match_choice(facet_by, partial = TRUE)
   # NULL inherits the global palette.
   if (is.null(point_size)) point_size <- acl_theme("point_size")
   if (is.null(line_size)) line_size <- .acl_auto_size()
@@ -158,7 +161,7 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
       ggplot2::geom_line(Elog_index_long, mapping = ggplot2::aes(x = Year, y = Count, color = series[2L]),
                          linewidth = line_size, linetype = line_type) +
       .acl_series_legend(series, c(point_color, line_color), c("blank", line_type), c(point_shape, NA)) +
-      ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales) +
+      ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales)) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"), y = ylab, title = .acl_plot_title(title, "CatL_by_length")) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(nrow(Elog_index), facet_ncol),
                    values = Year, time = TRUE) +
@@ -211,8 +214,9 @@ plot_CatL <- function(model_result, point_size = NULL, point_color = NULL, point
       ggplot2::geom_line(data = df_long1, mapping = ggplot2::aes(x = len_mid, y = Abundance, color = series[2L]),
                          linewidth = line_size1, linetype = line_type1, alpha = line_alpha1) +
       .acl_series_legend(series, c(line_color2, line_color1), c(line_type2, line_type1), c(NA, NA),
-                         linewidths = c(line_size2, line_size1), alphas = c(line_alpha2, line_alpha1)) +
-      ggplot2::facet_wrap(~year, scales = facet_scales,ncol=facet_ncol) +
+                         linewidths = list(line_size2, line_size1), alphas = c(line_alpha2, line_alpha1),
+                         panels = length(year)) +
+      ggplot2::facet_wrap(~year, scales = .acl_facet_scales(facet_scales), ncol = facet_ncol) +
       ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = ylab, title = .acl_plot_title(title, "CatL_by_year")) +
       .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(year), facet_ncol, budget = 20),
                    values = len_mid, check_overlap = TRUE) +

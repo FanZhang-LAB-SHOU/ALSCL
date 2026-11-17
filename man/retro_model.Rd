@@ -94,7 +94,8 @@ survey_q is supplied.}
 \item{sel_L95}{Length at 95 percent survey catchability. NULL when
 survey_q is supplied.}
 
-\item{model_type}{Character. Model to use: \code{"acl"} (default) or \code{"alscl"}.}
+\item{model_type}{Character. Model to use: \code{"acl"} (default) or \code{"alscl"}.
+Letter case does not matter.}
 
 \item{growth_step}{Time step in years. NULL uses recruitment age when below 1, otherwise 1.}
 
@@ -148,7 +149,8 @@ four panels draw thinner lines.}
 
 \item{point_shape}{Numeric. Point shape for endpoints. Default is 21.}
 
-\item{facet_scales}{Character. Facet scales argument. Default is "free".}
+\item{facet_scales}{Character. Facet scales argument. Default is "free".
+Letter case does not matter.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
 it from the number of panels, for example 5 columns for 15 panels and 6
@@ -179,13 +181,15 @@ described in \code{\link{acl_theme_set}()}.}
 
 \item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
 
 \item{rho_digits}{Integer. Decimal places for Mohn's rho display. Default is 4.}
 
-\item{rho_position}{Character. Position of rho text. Default is "top_right".}
+\item{rho_position}{Character. Position of rho text. Default is "top_right".
+Letter case does not matter.}
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
@@ -194,7 +198,8 @@ retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
 \code{"year"} uses one shared F per time step with a one-dimensional AR(1)
 density; the unused group correlation is automatically fixed and omitted
 from reports. Other default map rules still apply. Subannual data share F
-per model step, not per calendar year.}
+per model step, not per calendar year.
+Letter case does not matter.}
 
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
@@ -210,7 +215,8 @@ when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
 
 \item{zero_action}{Exclude zero observations as missing (historical behavior),
-or reject them with "error". NA is always missing; negative/infinite values fail.}
+or reject them with "error". NA is always missing; negative/infinite values fail.
+Letter case does not matter.}
 
 \item{control}{A named list of nlminb control settings.}
 

@@ -2,24 +2,50 @@
 % Please edit documentation in R/diagnose_model.R
 \name{diagnose_model}
 \alias{diagnose_model}
+\alias{print.alscl_diagnosis}
 \title{Diagnose a fitted assessment model}
 \usage{
 diagnose_model(data.CatL, model_result)
+
+\method{print}{alscl_diagnosis}(x, digits = 4L, ...)
 }
 \arguments{
 \item{data.CatL}{Length labels followed by time columns.}
 
 \item{model_result}{A fitted model result.}
+
+\item{x}{A table returned by \code{diagnose_model()}.}
+
+\item{digits}{Number of significant digits of the printed values.}
+
+\item{...}{Not used.}
 }
 \value{
-A data frame of fit metrics and convergence diagnostics.
+A data frame with the columns Metric and Value: the fit statistics
+of \code{\link[=diagnostic_metrics]{diagnostic_metrics()}} followed by the numerical checks. Value is
+numeric; a check that is TRUE or FALSE has the value 1 or 0 and is
+printed as TRUE or FALSE. The table prints with values to 4 significant
+digits and a legend of the fit statistics.
 }
 \description{
 Diagnose a fitted assessment model
 }
 \details{
-Reports the optimizer convergence code, maximum absolute gradient,
-boundary status and Hessian positive definiteness separately. A successful
+The fit statistics compare the observed and the fitted survey
+index at length over the positive observations: MSE and RMSE, the mean
+squared error and its square root; MAE, the mean absolute error; MAD, the
+mean absolute deviation of the observations from their mean; MASE, the
+MAE divided by the mean absolute change of the observations between
+adjacent time steps; Rsquared, the coefficient of determination; MAPE and
+SMAPE, the mean absolute percentage error and its symmetric form;
+Explained Variance Score, one minus the variance of the errors divided by
+the variance of the observations; Max Error, the largest absolute error;
+AIC and BIC, the Akaike and Bayesian information criteria.
+
+The numerical checks are the optimizer convergence code ("Optimizer
+converged" is TRUE for code 0), the maximum absolute gradient, whether a
+parameter is at a bound of the optimizer and whether the Hessian is
+positive definite, reported separately. A successful
 optimizer code alone does not establish reliable statistical inference.
 For fits that store them, the numbers of parameters at their limit in
 practice and of plausibility notes are added; see the Details of

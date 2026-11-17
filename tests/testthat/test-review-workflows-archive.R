@@ -8,7 +8,7 @@ test_that("print and summary work when the stored inputs fail the current input 
   old <- fit
   old$recipe$args$map["t0"] <- list(NULL)
   expect_error(inspect_parameters(old$recipe$args, "alscl"), "Unknown map parameter")
-  expect_output(print(old), "ALSCL assessment")
+  expect_output(print(old), "ALSCL fit")
   expect_identical(summary(old)$parameters, reference$parameters)
   expect_identical(extract_parameters(old), extract_parameters(fit))
   # A named NULL release of a parameter that the model has still changes the status.
@@ -36,7 +36,7 @@ test_that("print and summary work when the stored inputs fail the current input 
   expect_match(attr(table, "inspection_error"), "rec.age")
   summary_broken <- expect_no_warning(summary(broken))
   expect_match(summary_broken$notes, "rec.age")
-  expect_output(print(broken), "Fixed parameters are not listed")
+  expect_output(print(summary(broken)), "Fixed parameters are not listed")
   expect_null(reference$notes)
 })
 

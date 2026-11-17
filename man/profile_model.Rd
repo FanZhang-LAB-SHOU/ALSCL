@@ -16,13 +16,15 @@ profile_model(
 \item{fit}{A fitted model retaining its recipe and final opt$par.}
 
 \item{parameter}{One internal parameter name in names(fit$opt$par), for example
-"log_Linf". Fixed parameters and random-effect vectors are not supported.}
+"log_Linf". Fixed parameters and random-effect vectors are not supported.
+Letter case does not matter.}
 
 \item{values}{A nonempty vector of distinct finite grid values.}
 
 \item{scale}{Scale of values. "natural" uses exp for log_* and mean_log_\emph{,
 plogis for logit_} parameters and identity for t0. Parameter names always
-remain the internal names. "internal" uses optimizer coordinates directly.}
+remain the internal names. "internal" uses optimizer coordinates directly.
+Letter case does not matter.}
 
 \item{ncores}{Maximum independent socket workers. Inner fitting and standard
 errors use one worker, retaining the original number of starts.}

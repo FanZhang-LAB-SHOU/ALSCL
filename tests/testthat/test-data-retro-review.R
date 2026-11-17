@@ -48,7 +48,8 @@ test_that("survey conversion preserves missing cells without decoding factor lev
   }
   data[[2L]] <- factor(c("invalid", "7"))
   expect_error(ALSCL:::.acl_survey_data(dplyr::as_tibble(data)),
-    "numeric, nonnegative and finite")
+    "data.CatL must hold numbers (NA marks a missing value). Not a number in length bin 10, time step 2000: \"invalid\".",
+    fixed = TRUE)
 })
 
 test_that("retrospective maps retain time order, equality groups and named releases", {

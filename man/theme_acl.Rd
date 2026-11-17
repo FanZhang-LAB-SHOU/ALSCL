@@ -22,14 +22,16 @@ theme_acl(
 functions.}
 
 \item{base_theme}{Character or NULL. Base ggplot2 theme name; NULL uses
-the global setting.}
+the global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title alignment; NULL uses the global
 setting.}
 
 \item{quantity}{Character or NULL. With \code{title_color = "quantity"}, the
 title takes the color of this quantity: "stock" (stock size), "F"
-(fishing mortality), "recruitment" or "catch". NULL gives a black title.}
+(fishing mortality), "recruitment" or "catch". NULL gives a black title.
+Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.}
 
 \item{x_angle}{Numeric or NULL. Angle in degrees of the x tick labels,
 from -90 to 90; slanted labels end at their tick mark. NULL uses the

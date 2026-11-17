@@ -39,6 +39,7 @@
 #'   you run fits in your own parallel loop.
 #'   Parallel standard errors are enabled for checked TMB versions 1.9.21 and
 #'   1.9.25; other versions use sequential standard errors until validated.
+#'   Letter case does not matter.
 #' @param framework Automatic-differentiation library that TMB compiles the
 #'   model with. \code{"CppAD"} (default) is TMB's default library, used by
 #'   ALSCL 2.0.0 and earlier. Since 2.2.2, optimizer refinement can change
@@ -50,6 +51,7 @@
 #'   5 fixed effects were estimated and by up to 3e-8 when 10 were estimated.
 #'   A change takes effect at the next fit, which compiles the model once for
 #'   each library.
+#'   Letter case does not matter.
 #' @return The previous settings, invisibly, so that \code{options(old)}
 #'   restores them.
 #' @seealso \code{\link{alscl_speed_info}}; the user guide
@@ -61,8 +63,9 @@
 #' @export
 alscl_speed <- function(sd_cores = getOption("ALSCL.sd_cores", "auto"),
                         framework = getOption("ALSCL.framework", "CppAD")) {
+  sd_cores <- .acl_canonical(sd_cores, "auto")
   .acl_check_cores(sd_cores, "sd_cores")
-  framework <- match.arg(framework, c("CppAD", "TMBad"))
+  framework <- .acl_match_choice(framework, c("CppAD", "TMBad"), "framework", partial = TRUE)
   invisible(options(ALSCL.sd_cores = sd_cores, ALSCL.framework = framework))
 }
 
@@ -115,10 +118,10 @@ print.alscl_speed_info <- function(x, ...) {
 
 .acl_framework <- function() {
   choice <- getOption("ALSCL.framework", "CppAD")
-  if (!is.character(choice) || length(choice) != 1L || is.na(choice) ||
-      is.na(pmatch(choice, c("CppAD", "TMBad"))))
+  position <- .acl_choice_position(choice, c("CppAD", "TMBad"), partial = TRUE)
+  if (!is.character(choice) || length(choice) != 1L || is.na(choice) || position == 0L)
     stop("options(ALSCL.framework = ) must be \"CppAD\" or \"TMBad\".", call. = FALSE)
-  match.arg(choice, c("CppAD", "TMBad"))
+  c("CppAD", "TMBad")[position]
 }
 
 # Settings for socket workers that fit models themselves: the same AD
@@ -276,7 +279,7 @@ print.alscl_speed_info <- function(x, ...) {
 # is never used on Windows.
 .acl_sd_backend <- function(fork_safe = .acl_fork_safe(),
                             choice = getOption("ALSCL.sd_backend", "auto")) {
-  choice <- match.arg(choice, c("auto", "fork", "socket"))
+  choice <- .acl_match_choice(choice, c("auto", "fork", "socket"), "options(ALSCL.sd_backend = )", partial = TRUE)
   if (choice == "fork" && .Platform$OS.type != "unix") choice <- "socket"
   if (choice != "auto") return(choice)
   if (fork_safe) "fork" else "socket"

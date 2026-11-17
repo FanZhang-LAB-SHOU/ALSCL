@@ -44,7 +44,8 @@ a warning and the global setting is used.}
 \item{point_size}{Numeric or NULL. Size of QQ and mean-residual points.
 NULL inherits the comparison point-size override, if set, or global point_size.}
 
-\item{legend_pos}{Character. Legend position. NULL = use global theme (default "bottom").}
+\item{legend_pos}{Character. Legend position. NULL = use global theme (default "bottom").
+Letter case does not matter.}
 
 \item{bins}{Integer. Histogram bins. Default 35.}
 

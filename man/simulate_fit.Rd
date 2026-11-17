@@ -25,7 +25,8 @@ caller's RNG kind and random-number state. NULL consumes the current stream.}
 
 \item{process}{"conditional" retains the fitted population and adds only
 observation error. "resample" draws new recruitment, fishing-mortality and
-initial-population deviations at the fitted scalar parameter values.}
+initial-population deviations at the fitted scalar parameter values.
+Letter case does not matter.}
 
 \item{preserve_missing}{Logical. If TRUE, original NA observations remain NA
 and excluded zeros remain zero. If FALSE, all cells receive positive draws.}

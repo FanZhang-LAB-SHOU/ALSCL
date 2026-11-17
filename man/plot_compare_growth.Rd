@@ -92,7 +92,8 @@ those time steps are drawn; rows without a time step are always drawn.}
 distribution at age in the population. \code{"survey"}: in the survey catch,
 that is, with numbers at length multiplied by the survey catchability at
 length used in each fit. Use \code{"survey"} to compare with age readings of
-fish caught in the survey.}
+fish caught in the survey.
+Letter case does not matter.}
 
 \item{years}{NULL (all time steps of each fit) or the time steps over which
 the values are averaged. They must be time steps of both fits.}
