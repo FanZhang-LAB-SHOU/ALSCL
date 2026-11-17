@@ -83,6 +83,10 @@ jobs:
         with:
           extra-packages: ${{ format('{0} {1}', matrix.extra || 'any::rcmdcheck', steps.minimum.outputs.refs) }}
           dependencies: ${{ matrix.deptypes || '"all"' }}
+          # The action's own check for pandoc resolves all dependency types
+          # again, which fails on R 4.1 (readxl needs R 4.2). The package has
+          # no vignettes, so the R 4.1 jobs skip that check.
+          install-pandoc: ${{ matrix.deptypes && 'false' || '' }}
           needs: check
       - name: Check that the help pages match the roxygen comments
         if: matrix.docs
