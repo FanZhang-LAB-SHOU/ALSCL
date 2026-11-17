@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   check:
-    name: check (${{ matrix.os }}${{ matrix.r != 'release' && format(', R {0}', matrix.r) || '' }})
+    name: check (${{ matrix.os }}${{ matrix.r != 'release' && format(', R {0}', matrix.r) || '' }}${{ matrix.deps == 'minimum' && ', minimum dependency versions' || '' }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,8 +20,35 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         r: [release]
         include:
+          # The checks of the documentation (help pages, plot export guards
+          # and the examples in \donttest blocks) run in this job only.
+          - os: ubuntu-latest
+            r: release
+            docs: true
+            extra: 'any::rcmdcheck, any::roxygen2'
+          # macOS knitr and xfun binaries failed archive detection in CI.
+          # Use pak's dependency override; keep the complete package checks.
+          # https://pak.r-lib.org/reference/faq.html
+          - os: macos-latest
+            r: release
+            extra: 'any::rcmdcheck, knitr=?source, xfun=?source'
           - os: windows-latest
             r: oldrel-1
+          # R 4.1 is the oldest R that DESCRIPTION allows. Two jobs check it:
+          # one with the current versions of the dependencies, and one with
+          # R 4.1.0 and the oldest dependency versions that DESCRIPTION allows
+          # (see the step "List the minimum versions in DESCRIPTION"). Both
+          # build TMB from source, so that TMB is built against the Matrix
+          # package that comes with R 4.1: a TMB binary built against another
+          # Matrix ABI version makes every fit fail. readxl needs R 4.2, so it
+          # is not installed and the tests that use it are skipped.
+          - os: ubuntu-latest
+            r: '4.1'
+            extra: 'any::rcmdcheck, TMB=?source, readxl=?ignore-before-r=4.2.0'
+          - os: ubuntu-latest
+            r: '4.1.0'
+            deps: minimum
+            extra: 'any::rcmdcheck, TMB=?source, readxl=?ignore-before-r=4.2.0'
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -31,15 +58,28 @@ jobs:
         with:
           r-version: ${{ matrix.r }}
           use-public-rspm: true
+      # For each package in Depends and Imports with a version requirement
+      # (pkg (>= x.y)), pak installs exactly that version (reference pkg@x.y),
+      # so the job checks the versions that DESCRIPTION states.
+      - name: List the minimum versions in DESCRIPTION
+        id: minimum
+        if: matrix.deps == 'minimum'
+        shell: Rscript {0}
+        run: |
+          fields <- read.dcf("DESCRIPTION", fields = c("Depends", "Imports"))
+          entries <- trimws(unlist(strsplit(fields[!is.na(fields)], ",")))
+          pattern <- "^([[:alnum:].]+)[[:space:]]*\\(>=[[:space:]]*([^)[:space:]]+)[[:space:]]*\\)$"
+          refs <- sub(pattern, "\\1@\\2", grep(pattern, entries, value = TRUE))
+          refs <- refs[!startsWith(refs, "R@")]
+          cat("Minimum versions installed:", refs, sep = "\n")
+          cat("refs=", paste(refs, collapse = " "), "\n", file = Sys.getenv("GITHUB_OUTPUT"),
+              sep = "", append = TRUE)
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # macOS knitr and xfun binaries failed archive detection in CI.
-          # Use pak's dependency override; keep the complete package checks.
-          # https://pak.r-lib.org/reference/faq.html
-          extra-packages: ${{ runner.os == 'macOS' && 'any::rcmdcheck, knitr=?source, xfun=?source' || (runner.os == 'Linux' && 'any::rcmdcheck, any::roxygen2' || 'any::rcmdcheck') }}
+          extra-packages: ${{ format('{0} {1}', matrix.extra || 'any::rcmdcheck', steps.minimum.outputs.refs) }}
           needs: check
       - name: Check that the help pages match the roxygen comments
-        if: runner.os == 'Linux'
+        if: matrix.docs
         shell: Rscript {0}
         run: |
           roxygen2::roxygenise()
@@ -72,9 +112,9 @@ jobs:
           key: alscl-tmb-${{ runner.os }}-${{ runner.arch }}-${{ steps.tmb-cache.outputs.versions }}-${{ hashFiles('inst/extdata/**') }}
       # The plot export guards and the documented plotting examples refit the
       # teaching models and one ALSCL retrospective. They test the documentation
-      # scripts, not the platform, so one operating system is enough.
+      # scripts, not the platform or the R version, so one job is enough.
       - name: Check manual plot export guards
-        if: runner.os == 'Linux'
+        if: matrix.docs
         run: Rscript scripts/test_plot_exports.R
       - name: Check source checkout socket workers
         shell: Rscript {0}
@@ -83,7 +123,7 @@ jobs:
           testthat::test_local(filter = "parallel|core-225", stop_on_failure = TRUE)
       - uses: r-lib/actions/check-r-package@v2
         with:
-          # The examples that fit models are in \donttest blocks; run them on
-          # one operating system so that documented calls are tested.
-          args: ${{ runner.os == 'Linux' && 'c("--no-manual", "--run-donttest")' || 'c("--no-manual")' }}
+          # The examples that fit models are in \donttest blocks; run them in
+          # one job so that documented calls are tested.
+          args: ${{ matrix.docs && 'c("--no-manual", "--run-donttest")' || 'c("--no-manual")' }}
           error-on: '"warning"'
