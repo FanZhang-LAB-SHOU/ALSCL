@@ -40,15 +40,20 @@ jobs:
           # (see the step "List the minimum versions in DESCRIPTION"). Both
           # build TMB from source, so that TMB is built against the Matrix
           # package that comes with R 4.1: a TMB binary built against another
-          # Matrix ABI version makes every fit fail. readxl needs R 4.2, so it
-          # is not installed and the tests that use it are skipped.
+          # Matrix ABI version makes every fit fail. Only the hard dependencies
+          # are resolved, with the packages the tests need listed here: with
+          # all dependencies, pak also resolves suggested packages of the
+          # dependencies (Hmisc for ggplot2 4.0.0) and readxl, which need
+          # R 4.2. The tests that use readxl are skipped.
           - os: ubuntu-latest
             r: '4.1'
-            extra: 'any::rcmdcheck, TMB=?source, readxl=?ignore-before-r=4.2.0'
+            deptypes: '"hard"'
+            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, TMB=?source'
           - os: ubuntu-latest
             r: '4.1.0'
             deps: minimum
-            extra: 'any::rcmdcheck, TMB=?source, readxl=?ignore-before-r=4.2.0'
+            deptypes: '"hard"'
+            extra: 'any::rcmdcheck, any::testthat, any::withr, any::pkgload, any::jsonlite, TMB=?source'
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -77,6 +82,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: ${{ format('{0} {1}', matrix.extra || 'any::rcmdcheck', steps.minimum.outputs.refs) }}
+          dependencies: ${{ matrix.deptypes || '"all"' }}
           needs: check
       - name: Check that the help pages match the roxygen comments
         if: matrix.docs
