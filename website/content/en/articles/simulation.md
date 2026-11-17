@@ -23,7 +23,7 @@ The full operating model, for experiments against a known population, takes thre
 
 | Setting | flatfish | tuna |
 |---|---|---|
-| Operating model | Age-based | Joint age-length |
+| Operating model | Age-based | Length-based (by length and age) |
 | `growth_step` | 1 year | 0.25 year |
 | `nyear`, `burn_in` | 100, 80 years | 100, 95 years |
 | Retained observations | 20 annual steps | 20 quarterly steps |
@@ -74,7 +74,7 @@ short$years
 short$nyear
 ```
 
-In the quick simulator `mean_F` is the arithmetic mean of the generated annual F. In the full simulator `F_mean` is the baseline of `F[t] = F_mean * exp(d[t])`, where `d[t]` is a zero-mean AR(1) process with coefficient `F_ar` and innovation SD `F_sd`, so the mean of the generated F differs from `F_mean`; compare the marginal SD `F_sd / sqrt(1 - F_ar^2)`, not `F_sd`, with a fitted log-F SD. `std_logR` and `R_ar` do the same for recruitment, `std_SN` is the SD of the log survey error, and `M` and `F_mean` are rates per time step, so the tuna values are per quarter.
+In the quick simulator `mean_F` is the arithmetic mean of the generated annual F. In the full simulator `F[t] = F_mean * exp(d[t])`, where `d[t]` is a zero-mean AR(1) process with coefficient `F_ar` and innovation SD `F_sd`, so `F_mean` is the median of the generated F and their mean differs from `F_mean`; compare the marginal SD `F_sd / sqrt(1 - F_ar^2)`, not `F_sd`, with a fitted log-F SD. `std_logR` and `R_ar` do the same for recruitment, `std_SN` is the SD of the log survey error, and `M` and `F_mean` are rates per time step, so the tuna values are per quarter.
 
 `nyear` and `burn_in` are durations in years; `growth_step` must divide one year, `burn_in` must be an exact multiple of `growth_step` and smaller than `nyear`, and at least two time steps must be retained for fitting. `first.year` labels the first retained step, and `sm$nyear` counts retained steps. If the call stops because `burn_in` is not an exact multiple of `growth_step`, use whole years for annual steps and quarter years for quarterly steps.
 
@@ -109,7 +109,7 @@ Each replicate is fitted on one worker with its `nstarts` starts run one after t
 
 `summarize_simulations()` needs the truth as a list with the same names as the fits, each with `year` and one vector per quantity, read here from the replicate files so that the time coordinates match. `performance$replicates` gives the numerical checks and error of each replicate; `performance$summary` gives, per quantity, failure rate, bias, relative bias, RMSE and the coverage of the 95% intervals with their counts; the intervals are lognormal by default, as in the plots, and `interval = "wald"` gives the coverage of the symmetric interval. Bias and RMSE use fits that passed the numerical checks and coverage also needs finite standard errors, so report `failure_rate` with the statistics. `performance$summary_converged` repeats the statistics for all converged fits, whether or not they passed the numerical checks, and `performance$failures` counts the failed replicates by reason. Compare the two summaries to see whether the fits excluded by the numerical checks change bias, RMSE or coverage. If the call stops with "identical unique replicate names" or "time coordinates differ", the truth was not read from the same files as the fits.
 
-Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of periods. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
+Both the time coordinates and each quantity must be one-dimensional real numeric vectors. Matrices and arrays are rejected even when their total length matches the number of time steps. Aggregate age- or length-specific quantities to the intended time series before calling; do not flatten grouped values into time.
 
 <h2 id="fitted">5. Simulate from a fitted model</h2>
 

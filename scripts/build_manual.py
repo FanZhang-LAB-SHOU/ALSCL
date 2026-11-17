@@ -6,13 +6,24 @@ Use --check to compare the generated text without writing files.
 
 Each tutorial is written twice, in website/content/en/articles/<slug>.md and
 website/content/zh/articles/<slug>.md, with the same sequence of blocks
-(headings, paragraphs, lists, tables, code, figures). This script checks that
-alignment and interleaves the two files block by block into the bilingual
-Markdown that README.md, the single-page book and the Wiki link to. Python
-standard library only.
+(headings, paragraphs, lists, tables, code, figures, data tables). This script
+checks that alignment and interleaves the two files block by block into the
+bilingual Markdown that README.md, the single-page book and the Wiki link to.
+Python standard library only.
+
+A data table is a line of its own, identical in both languages:
+
+    <!-- data-table: docs/data/data.CatL.csv digits=3 -->
+
+It names a CSV file (path from the repository root) and the number of decimals
+shown. The manuals get a Markdown table and website/build.py a scrollable HTML
+table, both made from the file when they are built. Values are rounded for
+display only, and always written as decimals, never in E notation.
 """
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP, localcontext
 from pathlib import Path
 import argparse
+import csv
 import re
 import sys
 
@@ -69,6 +80,116 @@ ARTICLE_TARGET.update({'population-plots': 'PLOT_GALLERY.md', 'growth-mortality'
 
 CJK = re.compile(r'[㐀-鿿]')
 
+# Data tables (see the module docstring). A line that starts like a data-table
+# line but does not match the full syntax stops the build, so that a typing
+# error cannot leave an invisible HTML comment where a table should be.
+DATA_TABLE_LINE = re.compile(r'<!--\s*data-table\b')
+DATA_TABLE = re.compile(r'<!-- data-table: (\S+\.csv) digits=(\d+) -->')
+# What each input table holds, for the caption under it: (English, Chinese).
+DATA_TABLE_CONTENT = {
+    'data.CatL': ('Survey index table `data.CatL` of the example data: numbers of fish caught '
+                  'in each length bin and time step',
+                  '示例数据的调查指数表 `data.CatL`：每个体长组、每个时间步调查捕到的尾数'),
+    'data.wgt': ('Weight table `data.wgt` of the example data: mean weight of one fish, in kg',
+                 '示例数据的体重表 `data.wgt`：一尾鱼的平均体重，单位 kg'),
+    'data.mat': ('Maturity table `data.mat` of the example data: proportion mature, from 0 to 1',
+                 '示例数据的成熟比例表 `data.mat`：成熟个体的比例，取值 0 到 1'),
+}
+
+
+def replace_data_tables(text, render):
+    """Replace each data-table line outside code blocks by render(line)."""
+    lines, fence = text.split('\n'), False
+    for i, line in enumerate(lines):
+        if line.startswith('```'):
+            fence = not fence
+        elif not fence and DATA_TABLE_LINE.match(line):
+            lines[i] = render(line)
+    return '\n'.join(lines)
+
+
+def data_table_lines(text):
+    """The data-table lines of a Markdown text, outside code blocks."""
+    found = []
+    replace_data_tables(text, lambda line: found.append(line) or line)
+    return found
+
+
+def data_table(line):
+    """Read the CSV file that a data-table line names, with its values rounded for display.
+
+    Each value is rounded half up to the given number of decimals and written
+    in fixed notation. Blank cells and NA stay as they are. 'small' records
+    whether a nonzero value is shown as zero, which the caption then explains.
+    """
+    match = DATA_TABLE.fullmatch(line.strip())
+    if not match:
+        raise SystemExit('Malformed data-table line; expected '
+                         '"<!-- data-table: docs/data/<file>.csv digits=<n> -->": ' + line.strip())
+    path, digits = match[1], int(match[2])
+    file = ROOT / path
+    if not file.is_file():
+        raise SystemExit(f'Data table file not found: {path}')
+    with file.open(encoding='utf-8', newline='') as handle:
+        records = list(csv.reader(handle))
+    if len(records) < 2 or len(records[0]) < 2 or any(len(row) != len(records[0]) for row in records):
+        raise SystemExit(f'{path}: the file needs a header and rows with as many cells as the header.')
+    header, rows = records[0], records[1:]
+    unit = Decimal(1).scaleb(-digits)
+    shown, small = [], False
+    with localcontext() as context:
+        context.prec = 100
+        for row in rows:
+            cells = [row[0]]
+            for text in row[1:]:
+                if text.strip() in ('', 'NA'):
+                    cells.append(text.strip())
+                    continue
+                try:
+                    value = Decimal(text)
+                except InvalidOperation:
+                    raise SystemExit(f'{path}: {text!r} in row {row[0]} is not a number.') from None
+                if not value.is_finite():
+                    raise SystemExit(f'{path}: {text!r} in row {row[0]} is not a finite number.')
+                rounded = value.quantize(unit, rounding=ROUND_HALF_UP)
+                if rounded == 0:
+                    small = small or value != 0
+                    rounded = abs(rounded)
+                cells.append(f'{rounded:f}')
+            shown.append(cells)
+    return dict(path=path, name=Path(path).stem, digits=digits, header=header, rows=shown, small=small)
+
+
+def data_table_caption(table, lang):
+    """The caption under a data table, in Markdown; the site and the manuals use the same words."""
+    if table['name'] not in DATA_TABLE_CONTENT:
+        raise SystemExit(f'{table["path"]}: describe the table {table["name"]} in DATA_TABLE_CONTENT '
+                         'of scripts/build_manual.py.')
+    content = DATA_TABLE_CONTENT[table['name']][0 if lang == 'en' else 1]
+    rows, steps = len(table['rows']), len(table['header']) - 1
+    first, last, digits = table['header'][1], table['header'][-1], table['digits']
+    unit = Decimal(1).scaleb(-digits)
+    zero, below = f'{Decimal(0).quantize(unit):f}', f'{Decimal(5).scaleb(-digits - 1):f}'
+    link = f'[{Path(table["path"]).name}]({REPO}/blob/main/{table["path"]})'
+    if lang == 'en':
+        note = f', so values below {below} show as {zero}' if table['small'] else ''
+        return (f'{content}. The table has {rows} rows (length bins) and {steps} columns of time steps '
+                f'({first}-{last}). Values are rounded to {digits} decimal{"" if digits == 1 else "s"} for '
+                f'display{note}; the file holds the unrounded values. Download {link}.')
+    note = f'，小于 {below} 的值显示为 {zero}；' if table['small'] else '，'
+    return (f'{content}。表中有 {rows} 行（体长组）和 {steps} 列时间步（{first}-{last}）。'
+            f'显示时保留 {digits} 位小数{note}文件中保存未经四舍五入的数值。下载 {link}。')
+
+
+def data_table_markdown(line):
+    """A data-table line as a Markdown table with its caption in both languages, for the manuals."""
+    table = data_table(line)
+    def row(cells):
+        return '| ' + ' | '.join(cell.replace('|', r'\|') for cell in cells) + ' |'
+    lines = [row(table['header']), '|' + '---:|' * len(table['header'])]
+    lines += [row(cells) for cells in table['rows']]
+    return '\n\n'.join(['\n'.join(lines), data_table_caption(table, 'zh'), data_table_caption(table, 'en')])
+
 
 def blocks(text):
     """Split Markdown into typed blocks: (kind, lines)."""
@@ -89,6 +210,10 @@ def blocks(text):
             continue
         if re.match(r'<h[1-6]\b', line):
             out.append(('heading', [line]))
+            i += 1
+            continue
+        if DATA_TABLE_LINE.match(line):
+            out.append(('datatable', [line]))
             i += 1
             continue
         if line.startswith('<div'):
@@ -209,6 +334,9 @@ def check_alignment(slug, en, zh):
                              f'  en: {el[1][:80] if len(el) > 1 else el}\n  zh: {zl[1][:80] if len(zl) > 1 else zl}')
         if ek == 'table' and (len(el) != len(zl) or el[0].count('|') != zl[0].count('|')):
             raise SystemExit(f'{slug}: table {n} has different dimensions in the two languages.')
+        if ek == 'datatable' and el[0].strip() != zl[0].strip():
+            raise SystemExit(f'{slug}: data table {n} must name the same file and digits in both languages:\n'
+                             f'  en: {el[0]}\n  zh: {zl[0]}')
         if ek == 'list' and len(el) != len(zl):
             raise SystemExit(f'{slug}: list {n} has {len(el)} lines in English and {len(zl)} in Chinese.')
 
@@ -361,6 +489,8 @@ def render_pair(slug, level_shift=0):
             out.append('\n'.join(merge_table(el, zl)))
         elif kind == 'code':
             out.append('\n'.join(merge_code(el, zl)))
+        elif kind == 'datatable':
+            out.append(map_links(data_table_markdown(el[0]), slug))
         elif kind == 'image':
             e = re.match(r'!\[([^\]]*)\]\((.*)\)', el[0])
             z = re.match(r'!\[([^\]]*)\]\((.*)\)', zl[0])

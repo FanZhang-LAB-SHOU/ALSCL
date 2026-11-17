@@ -23,7 +23,7 @@ initialize_params(species = "?")
 
 | 设置 | flatfish | tuna |
 |---|---|---|
-| 操作模型 | 年龄结构 | 年龄与体长联合 |
+| 操作模型 | 年龄结构 | 体长结构（按体长和年龄） |
 | `growth_step` | 1 年 | 0.25 年 |
 | `nyear`、`burn_in` | 100、80 年 | 100、95 年 |
 | 保留的观测 | 20 个年度时间步 | 20 个季度时间步 |
@@ -74,7 +74,7 @@ short$years
 short$nyear
 ```
 
-快速模拟器的 `mean_F` 是生成的年度 F 的算术平均值。完整模拟器的 `F_mean` 是 `F[t] = F_mean * exp(d[t])` 中的基准水平，其中 `d[t]` 是均值为零的 AR(1) 过程，系数为 `F_ar`，创新标准差为 `F_sd`，所以生成的 F 的平均值与 `F_mean` 不同；与拟合所得对数 F 标准差比较时，应使用边际标准差 `F_sd / sqrt(1 - F_ar^2)`，而不是 `F_sd`。`std_logR` 和 `R_ar` 对补充量起同样作用，`std_SN` 是对数调查误差的标准差，`M` 和 `F_mean` 是每个时间步的速率，因此 tuna 的取值按季度计。
+快速模拟器的 `mean_F` 是生成的年度 F 的算术平均值。完整模拟器按 `F[t] = F_mean * exp(d[t])` 生成 F，其中 `d[t]` 是均值为零的 AR(1) 过程，系数为 `F_ar`，创新标准差为 `F_sd`，所以 `F_mean` 是生成的 F 的中位数，它们的平均值与 `F_mean` 不同；与拟合所得对数 F 标准差比较时，应使用边际标准差 `F_sd / sqrt(1 - F_ar^2)`，而不是 `F_sd`。`std_logR` 和 `R_ar` 对补充量起同样作用，`std_SN` 是对数调查误差的标准差，`M` 和 `F_mean` 是每个时间步的速率，因此 tuna 的取值按季度计。
 
 `nyear` 和 `burn_in` 都是以年为单位的时长；`growth_step` 必须能整除一年，`burn_in` 必须是 `growth_step` 的整数倍且小于 `nyear`，并且至少要保留两个时间步才能拟合。`first.year` 标记第一个保留的时间步，`sm$nyear` 是保留的时间步数。如果调用因 `burn_in` 不是 `growth_step` 的整数倍而停止，年度时间步请用整年，季度时间步请用整季度。
 

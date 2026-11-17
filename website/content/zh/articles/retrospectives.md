@@ -1,6 +1,6 @@
 # 运行回溯分析
 
-读完本页，你会得到每个模型的 Mohn rho（生物量、产卵生物量、补充量和丰度）、重拟合序列的图和每次重拟合的数值检查。你需要[理解第一次拟合](first-model.html)中的输入列表 `x` 和 ALSCL 拟合结果 `b`。
+读完本页，你会得到每个模型的 Mohn's rho（生物量、产卵生物量、补充量和丰度）、重拟合序列的图和每次重拟合的数值检查。你需要[理解第一次拟合](first-model.html)中的输入列表 `x` 和 ALSCL 拟合结果 `b`。
 
 回溯分析从三张表中去掉最后一个时间步并重拟合模型，再去掉一个，再拟合，依此类推；每次截短重拟合称为一轮。把各轮与完整拟合比较，就能看出加入后来的观测后近期估计改变了多少；各轮修订方向一致时，应进一步调查这种系统性变化的原因。
 
@@ -33,7 +33,7 @@ rb$errors
 |---|---|---|
 | `fit_diagnostics` | 一次拟合 | `Peel`（0 是完整拟合）、`RetrospectiveYear`（保留的最后一个时间步）、`elapsed`、数值检查及其汇总 `numerical_ok` 和未通过的项目 `issues`，拟合中止时的错误信息 `error`，以及该次拟合产生的警告 `warnings` |
 | `rho_by_peel` | 一轮和一个量 | `RawRho`，该轮末端估计与完整拟合在该时间步估计的相对差；`Rho`，两次拟合都通过数值检查且参考值有限、非零时等于 `RawRho`，否则为 `NA`；`Valid` |
-| `rho_text` | 一个量 | Mohn rho，即各轮 `Rho` 的平均值，附 `Valid`、`ValidPeels` 和 `RequestedPeels`；`Year` 只是标签位置 |
+| `rho_text` | 一个量 | Mohn's rho，即各轮 `Rho` 的平均值，附 `Valid`、`ValidPeels` 和 `RequestedPeels`；`Year` 只是标签位置 |
 | `raw_rho_text` | 一个量 | 不经检查的 `RawRho` 平均值，仅供诊断；任一比较缺失时为 `NA` |
 | `errors` | 一次失败的拟合 | `Peel`、`RetrospectiveYear` 和错误信息；所有拟合都运行完成时为零行 |
 
@@ -47,23 +47,23 @@ plot_retro(rb, rho_digits = 3)
 
 ![示例的 ALSCL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
 
-`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板（“Total biomass”、“Recruitment”、“Spawning stock biomass (SSB)”和“Total abundance”，纵轴名为“Estimate”），默认排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。在默认样式下，完整拟合为橙色并画在最上层，各轮为灰色，第一轮最深，每个面板在线的上方为 Mohn rho 标注留出空间。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式，`peel_step` 大于 1 时也是如此。未通过数值检查的拟合用虚线绘制，并另加图例“Numerical checks”，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 Mohn rho 与完整拟合比较的那个值；面板标签为“Mohn's rho = ”加上保留 `rho_digits` 位小数的数值。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
+`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板（“Total biomass”、“Recruitment”、“Spawning stock biomass (SSB)”和“Total abundance”，纵轴名为“Estimate”），默认排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。在默认样式下，完整拟合为橙色并画在最上层，各轮为灰色，第一轮最深，每个面板在线的上方为 Mohn's rho 标注留出空间。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式，`peel_step` 大于 1 时也是如此。未通过数值检查的拟合用虚线绘制，并另加图例“Numerical checks”，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 Mohn's rho 与完整拟合比较的那个值；面板标签为“Mohn's rho = ”加上保留 `rho_digits` 位小数的数值。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
 ![示例的 ACL 回溯分析](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true)
 
-两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。Mohn rho 为 `NA` 时，面板显示的文字形如“Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics”；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见[配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
+两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。Mohn's rho 为 `NA` 时，面板显示的文字形如“Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics”；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见[配色与导出](plot-customization.html)；全部参数见 [plot_retro 参考](../reference/plot_retro.html)。
 
 `plot` 和 `silent` 都必须是单个 `TRUE` 或 `FALSE`，无效值会在任何拟合开始前报错。如果没有一行同时包含有限时间和有限估计值，`plot_retro()` 会停止并提示检查诊断；存在有效估计时，序列内部的缺失值继续保留为断点，不跨缺失处连接。
 
-<h2 id="rho">4. 解释 Mohn rho</h2>
+<h2 id="rho">4. 解释 Mohn's rho</h2>
 
-Mohn rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：
+Mohn's rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：
 
 ```math
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；默认 `peel_step = 1` 时第 `k` 轮止于 `T-k`，否则止于 `T` 减去 `k` 乘 `peel_step`。ρ 为 +0.03 表示截短拟合的末期估计平均比完整拟合对同一期的估计高 3%。ρ 为负表示平均偏低。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](case-model-validation.html)来回答。按评估量分别报告修订的方向和幅度。
+`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；默认 `peel_step = 1` 时第 `k` 轮止于 `T-k`，否则止于 `T` 减去 `k` 乘 `peel_step`。ρ 为 +0.03 表示截短拟合的末期估计平均比完整拟合对同一期的估计高 3%。ρ 为负表示平均偏低。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn's rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](case-model-validation.html)来回答。按评估量分别报告修订的方向和幅度。
 
 <h2 id="adapt">5. 用于自己的评估</h2>
 
@@ -78,7 +78,7 @@ rb2$fit_diagnostics
 - 按年龄和时间步的自然死亡率，以及按体长和时间步的调查可捕性，按完整数据表的时间步每步一列。每一轮使用它所保留的时间步对应的各列。
 - 使用与主拟合相同的 F 结构：保存的 `F_structure` 会被使用，调用中显式给出的则作用于每次拟合。
 - 最短的一轮至少保留两个观测时间步，序列较短时要保留更多，因为较短的一轮要用更少的观测估计同样多的参数。
-- 用 `peel_step` 选择每轮的长度：季度数据默认每轮去掉一个季度，`retro_alscl(x, nyear = 3, peel_step = 4)` 每轮去掉一年，第 `k` 轮止于最后一个时间步之前 `k` 年，Mohn rho 是各个按年截短的轮次的均值。`RetrospectiveYear` 显示保留的最后一个时间步。
+- 用 `peel_step` 选择每轮的长度：季度数据默认每轮去掉一个季度，`retro_alscl(x, nyear = 3, peel_step = 4)` 每轮去掉一年，第 `k` 轮止于最后一个时间步之前 `k` 年，Mohn's rho 是各个按年截短的轮次的均值。`RetrospectiveYear` 显示保留的最后一个时间步。
 
 <h2 id="record">6. 记录结果</h2>
 
@@ -88,7 +88,7 @@ saveRDS(rb, "ytf_alscl_retro.rds")
 plot_retro(readRDS("ytf_alscl_retro.rds"), rho_digits = 3)
 ```
 
-回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果，它将 `b` 连同重新拟合所需的输入和设置一起保存，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](reproducibility.html)说明如何记录软件包版本和会话。
+回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果，它将 `b` 连同重新拟合所需的输入和设置一起保存，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[复现结果与排除故障](reproducibility.html)说明如何记录软件包版本和会话。
 
 <h2 id="next">下一步</h2>
 
@@ -99,5 +99,5 @@ plot_retro(readRDS("ytf_alscl_retro.rds"), rho_digits = 3)
 | 更改 map、F 结构或初值 | [选择拟合设置](fitting-controls.html) |
 | 检验对后来时间步的预测 | [模型验证](case-model-validation.html) |
 | 用更多核心运行各轮 | [速度设置](speed.html) |
-| 更改颜色和标签 | [ggsci 配色与导出](plot-customization.html) |
+| 更改颜色和标签 | [配色与导出](plot-customization.html) |
 | 查阅全部参数 | [retro_model](../reference/retro_model.html)、[retro_acl](../reference/retro_acl.html)、[retro_alscl](../reference/retro_alscl.html)、[plot_retro](../reference/plot_retro.html) |

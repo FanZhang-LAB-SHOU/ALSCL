@@ -52,7 +52,7 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 `prepare_alscl_data()` builds the input bundle `x` from the three tables and the shared biology in `fit_args`; the length bins come from the row labels (midpoints 6 to 50 in steps of 2, borders halfway between). `fit_config` holds each model's starting values and `map`. The mean growth parameters and CV of length at age are fixed to the preset values with `factor(NA)`. ALSCL's growth-increment CV is also fixed to its preset value; this parameter is used by the length-based generator, but not by the age-based flatfish generator. The F SD is converted from the operating model's innovation SD to the marginal SD used by the fitted models: `0.2 / sqrt(1 - 0.75^2)`, or 0.3023716. The initial-abundance SD, recruitment correlation and F correlations are also fixed as specified fitting assumptions, leaving five free scalar parameters in each model.
 
-The operating model generates F by multiplying a shared time series by selectivity. The assessment models estimate F across groups and time, with both correlations fixed at 0.75 in these fits. At initialization, both the operating and assessment models calculate numbers at age recursively, with an independent log-scale deviation at each age increment. The simulation starts before the burn-in period. The assessment starts at the first retained survey time step. See the [script for these cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R).
+The operating model generates F by multiplying a shared time series by selectivity. The assessment models estimate F across groups and time, with both correlations fixed at 0.75 in these fits. At initialization, both the operating and assessment models calculate numbers at age recursively, with an independent log-scale deviation at each age increment. The simulation starts at the beginning of the burn-in period, which is discarded. The assessment starts at the first retained survey time step. See the [script for these cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R).
 
 The first fit also compiles the model; later fitting times depend on the machine and optimization path. Expect `TRUE TRUE` from the numerical checks, as in the script's [convergence record](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv). If a check fails, run `diagnose_model(x$data.CatL, a)` as on [Understand your first fit](first-model.html#checks) and add starts with `nstarts`.
 
@@ -103,7 +103,7 @@ Growth runs from 13 cm at age 0.25 to 129 cm at age 5 (`vbk` 0.38 per year); mat
 
 ![Tuna generating truth and conditional estimates](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-Recruitment is per quarter. ALSCL follows the truth for total biomass and SSB, with estimates within about 11% of the truth. ACL lies below the truth for total biomass and SSB in every quarter. Its SSB is lowest relative to the truth at the start of 2000 and again in 2002-2003 (about 0.68 to 0.77 of the truth) and comes close to the truth only from late 2003. Both models overestimate recruitment in 19 of the 20 quarters, on average by 9% for ALSCL and by 31% for ACL. The case uses length-based growth transitions; the fitted process assumptions still differ from the operating model, so one replicate cannot rank the two models.
+Recruitment is per quarter. ALSCL follows the truth for total biomass and SSB, with estimates within about 11% of the truth. ACL lies below the truth for total biomass and SSB in every quarter. Its SSB is lowest relative to the truth at the start of 2000 and again in 2002-2003 (about 0.68 to 0.77 of the truth) and comes close to the truth only from late 2003. Both models overestimate recruitment in 19 of the 20 quarters, on average by 9% for ALSCL and by 31% for ACL. The operating model of this case grows fish by length transitions, as ALSCL does, but its recruitment and F processes differ from those of both fits, so one replicate cannot rank the two models.
 
 <h2 id="simulation">4. Extend to a simulation study</h2>
 
@@ -125,6 +125,6 @@ Increase `iter_range` for a simulation study and vary one setting at a time, suc
 | Lay out your own tables and choose the time step | [Prepare your survey data](data-preparation.html) |
 | Read the numerical checks, estimates and residuals of a fit | [Understand your first fit](first-model.html) |
 | Decide which parameters to fix or estimate | [Fitting controls](fitting-controls.html) |
-| Generate survey data and fit replicates in batch | [Simulation](simulation.html) |
+| Generate survey data and fit replicates in batch | [Simulate survey data](simulation.html) |
 | Simulate from a fitted model or predict withheld years | [Model validation](case-model-validation.html) |
 | Fit a real survey index and compare the fit with age readings and an assessment | [What can a fit to a real survey be used for?](case-north-sea-whiting.html) |

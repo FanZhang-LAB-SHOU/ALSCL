@@ -6,11 +6,11 @@
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
-**ALSCL 2.5.1 · 简体中文与英文 · 18 章 / chapters**
+**ALSCL 2.5.2 · 简体中文与英文 · 18 章 / chapters**
 
-本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.5.1。
+本手册按主题整理模型原理、数据、拟合、诊断、绘图、模拟与预测验证。第一次使用可按下面的路线完成操作，再查阅需要的技术细节。本手册对应 ALSCL 2.5.2。
 
-This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.5.1.
+This manual groups model principles, data, fitting, diagnostics, plotting, simulation and prediction checks by task. Follow a reading path below, then consult the technical sections you need. The manual describes ALSCL 2.5.2.
 
 [开始使用 · Getting started](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) · [仓库主页 · Repository](https://github.com/FanZhang-LAB-SHOU/ALSCL/tree/main) · [单页书稿 · Single-page book](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/BOOK.md) · [Excel 示例 · Workbook](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/ALSCL_Data_Entry_Example.xlsx)
 
@@ -33,7 +33,7 @@ Use these task-based entry points without reading every chapter in numerical ord
 | 章 / Chapter | 内容 / Contents |
 |---|---|
 | 01 | [安装与第一次拟合 · Install and run a first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/01-Start) |
-| 02 | [模型原理与时间尺度 · Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory) |
+| 02 | [模型原理 · Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory) |
 | 03 | [准备调查数据 · Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/03-Data-and-Excel) |
 | 04 | [理解第一次拟合 · Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF) |
 | 05 | [模拟与批量实验 · Simulation](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/05-Simulation) |
@@ -41,7 +41,7 @@ Use these task-based entry points without reading every chapter in numerical ord
 | 07 | [判断拟合是否可用 · Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/07-Diagnostics) |
 | 08 | [调查与种群图 · Survey and population plots](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/08-Population-Plots) |
 | 09 | [生长、死亡与残差图 · Growth, mortality and residuals](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/09-Growth-and-Mortality) |
-| 10 | [模型比较与真值 · Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) |
+| 10 | [模型比较 · Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) |
 | 11 | [回溯分析 · Retrospectives](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/11-Retrospectives) |
 | 12 | [年度与季度案例 · Annual and quarterly cases](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) |
 | 13 | [配色与导出 · Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/13-Colors-and-Export) |

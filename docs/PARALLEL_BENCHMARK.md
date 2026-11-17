@@ -43,7 +43,7 @@ These are the first four-worker trials. Worker intervals overlap, PIDs differ, a
 
 ![Actual worker execution intervals](figures/parallel/worker-timeline.png)
 
-Across 18 timed fits and 72 starts: all starts returned finite objectives and optimizer code 0. All selected fits had a positive-definite Hessian, no boundary hit, and maximum absolute gradient below 0.001 (observed maximum: 6.44e-05). Initial vectors were identical across worker counts; maximum per-start objective difference was 0, and maximum relative biomass difference was 0. Hessian and gradient checks apply to the selected result; other starts retain objective and optimizer-code diagnostics.
+Across 18 timed fits and 72 starts: all starts returned finite objectives and optimizer code 0. All selected fits had a positive-definite Hessian, no boundary hit, and maximum absolute gradient below 0.001 (observed maximum: 0.0000644). Initial vectors were identical across worker counts; maximum per-start objective difference was 0, and maximum relative biomass difference was 0. Hessian and gradient checks apply to the selected result; other starts retain objective and optimizer-code diagnostics.
 
 全部 18 次计时拟合、72 个起点均得到有限目标函数及优化码 0。选中的模型均通过 Hessian、梯度与边界检查；不同并行数的初值一致，逐起点目标函数最大差为 0，最终生物量最大相对差为 0。Hessian 和梯度是最终选中模型的诊断，其他起点保留目标函数及优化码。
 

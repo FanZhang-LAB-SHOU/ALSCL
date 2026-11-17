@@ -48,6 +48,8 @@
     });
   });
   document.querySelectorAll('main table').forEach(table => {
+    // Data tables come with their own scroll box (build.py).
+    if (table.closest('.data-table-scroll')) return;
     const wrapper = document.createElement('div');
     wrapper.className = 'table-scroll';
     wrapper.tabIndex = 0;

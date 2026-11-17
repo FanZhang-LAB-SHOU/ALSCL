@@ -181,7 +181,7 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 # b <- run_alscl(x)
 ```
 
-脚本运行时会打印两个模型的 `check$summary`；教学数据显示 23 个体长组、20 个时间步、460 个正观测、没有零值和空白，以及 10 个（ACL）或 13 个（ALSCL）自由标量参数。随后 `diagnose_model()` 打印每个拟合的数值检查，第 5 步会解释。在记录运行（[own-data-example-checks.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)）中，两个拟合的收敛码都是 0，Hessian 正定，没有参数落在边界上，最大梯度约为 3e-9。脚本保存的两张图如下：
+脚本运行时会打印两个模型的 `check$summary`；教学数据显示 23 个体长组、20 个时间步、460 个正观测、没有零值和空白，以及 10 个（ACL）或 13 个（ALSCL）自由标量参数。随后 `diagnose_model()` 打印每个拟合的数值检查，第 5 步会解释。在记录运行（[own-data-example-checks.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-example-checks.csv)）中，两个拟合的收敛码都是 0，Hessian 正定，没有参数落在边界上，最大梯度分别为 3.3 × 10⁻⁹（ACL）和 2.3 × 10⁻⁹（ALSCL）。脚本保存的两张图如下：
 
 ![完整示例的 ALSCL 逐年残差](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/own-data-example/residuals.png?raw=true)
 
@@ -221,7 +221,7 @@ for (model in c("acl", "alscl")) {
 | `zero_action = "error"` | `"missing"`，把零值当作缺失而不是终止 | 零值随后不进入似然 |
 | `output_dir` | 本次评估的文件夹 | 脚本会覆盖其中的文件 |
 
-修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似“No positive observations in periods: 2004”的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
+修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似“No positive observations in time steps: 2004”的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
 
 <h2 id="fit">5. 直接拟合并读结果</h2>
 
@@ -278,9 +278,7 @@ plot_fishing_mortality(b, type = "length", se = TRUE)
 
 回溯分析依次去掉最后 1、2、3 个时间步后重新拟合模型（`nyear` 是回溯的轮数，每一轮多去掉一个时间步，所以季度数据四轮等于一年；`peel_step = 4` 则每轮去掉一年）。它读取输入列表，因此保存的设置对每一轮都生效；在回溯调用中设置 `ncores` 可以并行运行各轮。`rb$fit_diagnostics` 列出完整拟合（`Peel = 0`）和每一轮的数值检查，`rb$rho_by_peel` 给出每个量、每一轮的 Mohn's rho，`rb$rho_text$Rho` 只在完整拟合和所有轮次都通过检查时报告均值，否则为 `NA` 并警告。`plot_retro(rb)` 画出各轮的序列（[运行回溯分析](retrospectives.html)）；`plot_fishing_mortality(b, type = "length")` 画出 ALSCL 估计的体长别捕捞死亡率。
 
-在[2.4.3 的记录运行](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，所有拟合均通过数值检查，但截至 2018 年和 2016 年的两轮 ALSCL 回溯拟合保留了优化器码 1。这两轮的第一次优化都返回了 0；第二次优化将目标函数降低了不到 `8e-10`，却报告 `false convergence (8)`。由于参数向量存在微小差异，原来的选择规则保留了第二次优化。现行的选择规则在目标函数和每个参数均数值等价时保留成功的那次优化，再进行通常的收尾和独立数值检查。重新拟合后，这两轮都返回码 0，最大梯度低于 `2e-8`；SSB 和 F 相对原结果的变化小于 `1.2e-11`。
-
-查看 `fit_diagnostics$optimizer_message`、`selected_pass`、`optimizer_codes` 和 `optimizer_messages`，区分所选结果与其他各次优化。失败的重启仍保留在历史中，选中的那次优化的非零码不会被改写。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关。解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
+在教学数据回溯分析的[运行记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/own-data-retrospective.csv)中，查看完整拟合和每一轮的优化器码、最大梯度和数值检查。两个模型各自的完整拟合和三轮回溯拟合共八次拟合，都返回优化器码 0 并通过数值检查，最大梯度在 1.6 × 10⁻⁹ 到 3.6 × 10⁻⁸ 之间。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关。解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
 
 <h2 id="next">下一步</h2>
 

@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/04-Built-in-YTF)
 
-**ALSCL 2.5.1 · 简体中文 / English**
+**ALSCL 2.5.2 · 简体中文 / English**
 
 本页把你的调查观测整理成 `run_acl(x)` 和 `run_alscl(x)` 可以接受的输入列表 `x`，并在第一次拟合前检查它。你需要已安装的软件包（[安装 ALSCL](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#start)）、按年或按季度的体长别调查尾数、体长别平均体重和成熟比例，以及第 4 步列出的本种群生物学数值。
 
@@ -35,6 +35,10 @@ Both models read three tables with the same layout: the survey index table `data
 | 其他单元格 / Other cells | 每个体长组和时间步一个数字；表格内不放其他内容 / One number per bin and time step; nothing else inside the grid |
 | 三张表 / All three tables | 体长组、时间标签和顺序完全相同 / Identical bins, time labels and order |
 
+下面三个小节完整列出示例中的三张表，示例工作簿与 `docs/data` 中的 CSV 文件保存的是相同的数值。在表内滑动即可查看全部时间步，表头行和 `LengthBin` 列始终可见。每张表下方的说明给出单位和 CSV 文件的下载链接。
+
+Under the three headings below, each table of the example is shown in full; the workbook and the CSV files in `docs/data` hold the same values. Scroll inside a table to see every time step: the header row and the `LengthBin` column stay in view. The line under each table gives the unit and a link to the CSV file.
+
 <a id="data-preparation-survey-table"></a>
 
 #### 调查指数表 data.CatL / Survey index table data.CatL
@@ -43,7 +47,35 @@ Both models read three tables with the same layout: the survey index table `data
 
 Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. The model outputs are on the scale of this index. With the default logistic curve, survey catchability rises to a fixed maximum of 1 for large fish, and no catchability scale is estimated. Abundance, biomass, spawning stock biomass (SSB), recruitment and catch are therefore absolute estimates only when the index is an absolute abundance estimate at length, such as swept-area numbers expanded to the stock area. With a relative index such as numbers per tow, read them as relative values in the units of the index and label the axes accordingly. Fishing mortality rates do not depend on the scale of the index. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
 
-![调查指数工作表 / Survey index worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true&v=86653ca443d4)
+| LengthBin | 2000 | 2001 | 2002 | 2003 | 2004 | 2005 | 2006 | 2007 | 2008 | 2009 | 2010 | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 6 | 0.051 | 0.052 | 0.050 | 0.045 | 0.074 | 0.070 | 0.042 | 0.047 | 0.068 | 0.091 | 0.091 | 0.073 | 0.141 | 0.057 | 0.089 | 0.077 | 0.091 | 0.070 | 0.058 | 0.068 |
+| 8 | 0.628 | 0.546 | 0.718 | 0.661 | 0.970 | 0.817 | 0.616 | 0.563 | 0.927 | 1.156 | 1.224 | 1.169 | 1.413 | 0.709 | 1.527 | 0.924 | 1.293 | 1.003 | 0.787 | 0.965 |
+| 10 | 4.359 | 3.447 | 4.688 | 4.512 | 5.941 | 5.588 | 4.061 | 4.375 | 5.528 | 7.326 | 6.686 | 5.727 | 12.068 | 4.124 | 8.322 | 6.158 | 7.568 | 7.239 | 5.300 | 5.667 |
+| 12 | 10.810 | 11.685 | 12.823 | 11.288 | 18.656 | 14.587 | 10.084 | 9.356 | 15.742 | 19.106 | 17.483 | 15.486 | 29.684 | 13.166 | 22.869 | 17.813 | 19.451 | 17.465 | 15.544 | 17.330 |
+| 14 | 15.885 | 15.698 | 16.082 | 14.556 | 19.057 | 15.950 | 15.415 | 17.418 | 18.464 | 27.282 | 21.486 | 19.372 | 34.749 | 21.800 | 25.067 | 20.443 | 21.395 | 20.644 | 23.098 | 21.883 |
+| 16 | 14.562 | 16.691 | 18.503 | 20.989 | 16.001 | 22.719 | 19.682 | 18.077 | 17.938 | 19.474 | 27.338 | 21.179 | 29.914 | 37.583 | 26.263 | 35.977 | 25.125 | 29.548 | 29.125 | 21.258 |
+| 18 | 23.906 | 25.402 | 25.911 | 23.532 | 25.197 | 37.362 | 34.123 | 23.611 | 23.248 | 24.242 | 41.306 | 34.931 | 40.509 | 67.792 | 37.920 | 56.559 | 32.026 | 55.458 | 40.007 | 28.944 |
+| 20 | 28.233 | 34.756 | 27.398 | 38.750 | 33.124 | 45.841 | 41.000 | 32.108 | 28.891 | 36.974 | 45.557 | 47.177 | 53.760 | 73.083 | 52.489 | 71.402 | 39.277 | 60.945 | 46.603 | 50.352 |
+| 22 | 28.348 | 39.232 | 36.386 | 38.339 | 31.586 | 50.190 | 41.964 | 35.212 | 37.523 | 36.300 | 50.689 | 44.032 | 47.411 | 91.149 | 49.491 | 66.939 | 55.077 | 64.979 | 52.063 | 45.473 |
+| 24 | 28.082 | 37.957 | 31.028 | 34.271 | 31.798 | 34.658 | 46.587 | 36.214 | 27.230 | 28.641 | 39.798 | 41.808 | 44.396 | 57.939 | 50.331 | 49.151 | 43.936 | 45.674 | 51.172 | 40.304 |
+| 26 | 28.245 | 26.872 | 29.590 | 25.295 | 27.235 | 34.068 | 33.868 | 28.013 | 21.883 | 25.064 | 27.792 | 32.642 | 39.713 | 37.368 | 61.690 | 42.334 | 44.729 | 41.408 | 37.639 | 31.083 |
+| 28 | 28.718 | 22.331 | 20.814 | 28.357 | 19.118 | 25.332 | 35.072 | 28.766 | 17.997 | 16.660 | 22.959 | 27.493 | 32.652 | 38.015 | 48.165 | 37.582 | 50.442 | 35.735 | 39.543 | 30.399 |
+| 30 | 28.097 | 23.433 | 21.526 | 18.842 | 22.410 | 21.959 | 21.563 | 25.002 | 22.270 | 18.878 | 18.689 | 27.499 | 30.936 | 37.641 | 48.203 | 38.818 | 40.672 | 35.313 | 38.424 | 34.942 |
+| 32 | 26.733 | 23.884 | 23.505 | 21.477 | 21.958 | 19.223 | 19.130 | 29.268 | 22.446 | 14.788 | 18.170 | 23.732 | 19.519 | 24.964 | 46.787 | 43.646 | 34.964 | 29.821 | 27.729 | 27.486 |
+| 34 | 22.475 | 21.356 | 19.002 | 17.755 | 16.067 | 15.904 | 20.218 | 21.983 | 16.415 | 13.222 | 14.963 | 14.837 | 23.862 | 22.789 | 28.379 | 28.943 | 31.350 | 25.622 | 28.890 | 25.261 |
+| 36 | 19.101 | 18.578 | 18.859 | 15.417 | 16.048 | 12.772 | 15.859 | 14.823 | 16.722 | 10.636 | 10.696 | 10.941 | 23.943 | 21.762 | 28.357 | 27.810 | 31.847 | 28.107 | 24.176 | 23.356 |
+| 38 | 23.274 | 17.941 | 16.710 | 12.625 | 11.754 | 12.125 | 12.811 | 14.679 | 16.843 | 10.048 | 9.812 | 9.704 | 16.257 | 19.597 | 23.907 | 27.812 | 24.685 | 24.799 | 21.766 | 23.948 |
+| 40 | 14.010 | 12.787 | 13.319 | 11.726 | 12.046 | 10.131 | 10.835 | 11.939 | 10.688 | 10.602 | 7.098 | 7.951 | 12.513 | 14.684 | 16.169 | 24.329 | 21.661 | 17.339 | 19.226 | 18.752 |
+| 42 | 14.261 | 14.228 | 13.469 | 10.695 | 9.149 | 9.341 | 8.486 | 11.255 | 10.221 | 8.993 | 6.664 | 6.442 | 9.824 | 11.708 | 14.519 | 20.444 | 17.261 | 22.943 | 19.086 | 14.987 |
+| 44 | 10.647 | 12.967 | 12.128 | 10.601 | 9.573 | 9.102 | 8.436 | 9.006 | 8.848 | 6.846 | 5.480 | 5.551 | 7.644 | 8.557 | 13.029 | 14.712 | 15.745 | 13.252 | 12.943 | 12.937 |
+| 46 | 10.830 | 7.708 | 8.576 | 8.971 | 8.434 | 6.487 | 7.685 | 6.780 | 6.909 | 5.001 | 4.624 | 4.997 | 5.970 | 6.932 | 8.845 | 9.627 | 13.024 | 13.551 | 11.041 | 12.069 |
+| 48 | 8.175 | 8.333 | 7.671 | 6.838 | 5.876 | 5.500 | 5.845 | 5.947 | 5.677 | 4.534 | 5.199 | 4.041 | 4.439 | 6.243 | 7.136 | 10.215 | 12.761 | 11.368 | 10.809 | 9.265 |
+| 50 | 23.574 | 34.476 | 30.263 | 27.598 | 21.905 | 22.323 | 23.716 | 20.083 | 19.631 | 17.765 | 12.645 | 15.074 | 13.959 | 17.829 | 23.602 | 33.391 | 35.615 | 31.310 | 41.726 | 34.306 |
+
+示例数据的调查指数表 `data.CatL`：每个体长组、每个时间步调查捕到的尾数。表中有 23 行（体长组）和 20 列时间步（2000-2019）。显示时保留 3 位小数，文件中保存未经四舍五入的数值。下载 [data.CatL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.CatL.csv)。
+
+Survey index table `data.CatL` of the example data: numbers of fish caught in each length bin and time step. The table has 23 rows (length bins) and 20 columns of time steps (2000-2019). Values are rounded to 3 decimals for display; the file holds the unrounded values. Download [data.CatL.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.CatL.csv).
 
 <a id="data-preparation-weight-table"></a>
 
@@ -53,7 +85,35 @@ Enter the survey numbers at length, or a consistently standardized index of them
 
 Enter the mean weight of one fish in each bin and time step, in one unit throughout (the example uses kg). Every cell needs a value, because the model multiplies numbers by weight to obtain biomass. If you have a length-weight relationship instead of yearly measurements, fill all time steps with its values and say so when you report the assessment.
 
-![体重工作表 / Weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true&v=d9137372f011)
+| LengthBin | 2000 | 2001 | 2002 | 2003 | 2004 | 2005 | 2006 | 2007 | 2008 | 2009 | 2010 | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 6 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 | 0.00133 |
+| 8 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 | 0.00315 |
+| 10 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 | 0.00614 |
+| 12 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 | 0.01062 |
+| 14 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 | 0.01686 |
+| 16 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 | 0.02517 |
+| 18 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 | 0.03583 |
+| 20 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 | 0.04915 |
+| 22 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 | 0.06542 |
+| 24 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 | 0.08494 |
+| 26 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 | 0.10799 |
+| 28 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 | 0.13488 |
+| 30 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 | 0.16589 |
+| 32 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 | 0.20133 |
+| 34 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 | 0.24149 |
+| 36 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 | 0.28666 |
+| 38 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 | 0.33715 |
+| 40 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 | 0.39323 |
+| 42 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 | 0.45521 |
+| 44 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 | 0.52339 |
+| 46 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 | 0.59805 |
+| 48 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 | 0.67950 |
+| 50 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 | 0.76803 |
+
+示例数据的体重表 `data.wgt`：一尾鱼的平均体重，单位 kg。表中有 23 行（体长组）和 20 列时间步（2000-2019）。显示时保留 5 位小数，文件中保存未经四舍五入的数值。下载 [data.wgt.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.wgt.csv)。
+
+Weight table `data.wgt` of the example data: mean weight of one fish, in kg. The table has 23 rows (length bins) and 20 columns of time steps (2000-2019). Values are rounded to 5 decimals for display; the file holds the unrounded values. Download [data.wgt.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.wgt.csv).
 
 <a id="data-preparation-maturity-table"></a>
 
@@ -63,7 +123,35 @@ Enter the mean weight of one fish in each bin and time step, in one unit through
 
 Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cell needs a value; 0 and 1 are valid. Spawning stock biomass is numbers times weight times maturity, so this table decides which bins count as spawners.
 
-![成熟比例工作表 / Maturity worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true&v=8d3c34642af1)
+| LengthBin | 2000 | 2001 | 2002 | 2003 | 2004 | 2005 | 2006 | 2007 | 2008 | 2009 | 2010 | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 | 2017 | 2018 | 2019 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 6 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 8 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 10 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 12 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 14 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 16 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 18 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| 20 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 | 0.0001 |
+| 22 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 | 0.0005 |
+| 24 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 | 0.0015 |
+| 26 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 | 0.0050 |
+| 28 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 | 0.0160 |
+| 30 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 | 0.0500 |
+| 32 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 | 0.1460 |
+| 34 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 | 0.3569 |
+| 36 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 | 0.6431 |
+| 38 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 | 0.8540 |
+| 40 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 | 0.9500 |
+| 42 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 | 0.9840 |
+| 44 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 | 0.9950 |
+| 46 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 | 0.9985 |
+| 48 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 | 0.9995 |
+| 50 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 | 0.9999 |
+
+示例数据的成熟比例表 `data.mat`：成熟个体的比例，取值 0 到 1。表中有 23 行（体长组）和 20 列时间步（2000-2019）。显示时保留 4 位小数，小于 0.00005 的值显示为 0.0000；文件中保存未经四舍五入的数值。下载 [data.mat.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.mat.csv)。
+
+Maturity table `data.mat` of the example data: proportion mature, from 0 to 1. The table has 23 rows (length bins) and 20 columns of time steps (2000-2019). Values are rounded to 4 decimals for display, so values below 0.00005 show as 0.0000; the file holds the unrounded values. Download [data.mat.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/data/data.mat.csv).
 
 <a id="data-preparation-time-and-bins"></a>
 
@@ -80,9 +168,9 @@ The models advance the population one time step at a time, and `growth_step` is 
 | 某个体长组在某个时间步没有观测 / One bin not observed in one time step | 该调查单元格留空 / Leave that survey cell blank |
 | 记录到的零值 / A recorded zero | 保留 0；在第 4 步决定零值按缺失处理（默认 `zero_action = "missing"`）还是终止拟合（`"error"`） / Keep the 0; decide in step 4 whether zeros are treated as missing (`zero_action = "missing"`, the default) or stop the fit (`"error"`) |
 
-提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。计算年龄-体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界。行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
+提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界。行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
 
-Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length. For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design. When the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
+Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design. When the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
 
 <a id="data-preparation-import"></a>
 
@@ -91,10 +179,6 @@ Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`l
 两个读取函数任选其一。两者都返回包含三张表的列表，把数字文本转换为数值，并在表格不一致时停止并给出提示。
 
 Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables differ.
-
-其他时间列含数字文本或因子时，原有数值列仍保留精度。直接向 `run_acl()` 或 `run_alscl()` 传入表格也遵循此规则，诊断使用相同数值。单元格不能包含复数。
-
-Native numeric columns retain their precision when other time columns contain numeric text or factors. This also applies when you pass tables directly to `run_acl()` or `run_alscl()`; diagnostics read the same values. Complex-valued cells are invalid.
 
 ```r
 library(ALSCL)
@@ -112,6 +196,18 @@ str(tables)
 `str(tables)` 应显示三张行列数相同的数据框，每张表第一列是体长标签。提示“nonnumeric cell in time column 2003”说明表格里有文本；“must match data.CatL length labels and time columns”说明某张表的行或列与其他表不同。单元格含 `#DIV/0!` 或 `#N/A` 这样的 Excel 错误值时，`read_survey_excel()` 也会停止，并指出工作表和单元格；只有空单元格和 `NA` 表示缺失。修改文件后重新读取。
 
 `str(tables)` should show three data frames with the same number of rows and columns, the first column of each being the length labels. A message such as "nonnumeric cell in time column 2003" points to a text entry in the grid; "must match data.CatL length labels and time columns" means the rows or columns of one table differ from the others. `read_survey_excel()` also stops when a cell holds an Excel error value such as `#DIV/0!` or `#N/A`, and names the sheet and the cells; only blank cells and `NA` denote missing values. Fix the file and read it again.
+
+<a id="data-preparation-import-details"></a>
+
+#### 单元格数值和首末体长组的细节 / Details on cell values and the outer bins
+
+其他时间列含数字文本或因子时，原有数值列仍保留精度。直接向 `run_acl()` 或 `run_alscl()` 传入表格也遵循此规则，诊断使用相同数值。单元格不能包含复数。
+
+Native numeric columns retain their precision when other time columns contain numeric text or factors. This also applies when you pass tables directly to `run_acl()` or `run_alscl()`; diagnostics read the same values. Complex-valued cells are invalid.
+
+计算年龄-体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。
+
+In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length.
 
 <a id="data-preparation-bundle"></a>
 
@@ -176,7 +272,7 @@ check_alscl_data(x_dome, "acl")$valid
 
 `survey_q` replaces `sel_L50` and `sel_L95`. It is a vector with one positive value per length bin, or a matrix with one row per length bin and one column per time step when catchability changed over time, for example after a change of survey gear. `survey_catchability()` computes a logistic curve or a dome-shaped curve with a maximum of 1. For the dome, `L50_desc` and `L95_desc` are the lengths at which the descending part is at 0.5 and 0.95, and `minimum` is the value that it approaches for the largest fish. `survey_q_age` is a multiplier by age class, with one positive value per age class, for example the relative catchability at age that an age-based assessment estimated for the same survey. Supplying `survey_q` together with `sel_L50` or `sel_L95` is an error. `check_alscl_data()` should return `TRUE` for the new bundle.
 
-这些输入都是假定，拟合本身无法检验它们。调查指数提供的是总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率；可捕性随体长或年龄下降而输入中没有给出时，拟合会把它当作更高的死亡率（[模型原理与时间尺度](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-survey)）。按年龄和时间步的 M 应来自独立的估计（例如多鱼种模型），可捕性的形状应来自对调查网具的研究或年龄资料。不要按拟合的目标函数来选择它们。记录每项输入的来源，并报告结果随它们的变化（[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity)）。
+这些输入都是假定，拟合本身无法检验它们。调查指数提供的是总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率；可捕性随体长或年龄下降而输入中没有给出时，拟合会把它当作更高的死亡率（[模型原理](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-survey)）。按年龄和时间步的 M 应来自独立的估计（例如多鱼种模型），可捕性的形状应来自对调查网具的研究或年龄资料。不要按拟合的目标函数来选择它们。记录每项输入的来源，并报告结果随它们的变化（[判断拟合是否可用](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity)）。
 
 These inputs are assumptions, and the fit cannot check them. The survey index informs the total mortality rate and not its split into fishing and natural mortality, and a catchability that declines with length or age is fitted as higher mortality when it is not supplied ([Model principles](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#model-theory-survey)). Take M by age and time step from independent estimates, for example a multispecies model, and the shape of catchability from studies of the survey gear or from age data. Do not choose them by the objective of the fit. Record the source of each input and report how the results change with it ([Judge whether a fit can be used](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#diagnostics-sensitivity)).
 

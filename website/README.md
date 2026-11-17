@@ -17,7 +17,7 @@ python3 -m http.server 8765 --directory _site
 
 Committed figures and tables must come from the code of this checkout. The figure scripts `scripts/ytf_workflow.R` and `scripts/refresh_manual_figures.R` source `scripts/checkout_guard.R`, which loads the checkout with `pkgload::load_all()`, so no installation is needed. Without pkgload, or when an ALSCL namespace is already loaded, the guard compares the loaded package with the checkout (every function, the TMB templates, the bundled data and the version number) and stops when they differ. A version comparison cannot do this, because an installation built from an earlier commit keeps the same version number. `Rscript scripts/test_checkout_guard.R` checks the guard without fitting models, and `scripts/test_plot_exports.R` runs it. `scripts/case_studies.R` and `scripts/simulation_workflow.R` apply the same check when they write into `docs/`, and `scripts/benchmark_parallel.R` applies it to the installed package that it times. To install the checkout, build it in a clean folder and install that one file, for example `R CMD build . && R CMD INSTALL ALSCL_$(sed -n 's/^Version: //p' DESCRIPTION).tar.gz`; a pattern such as `ALSCL_*.tar.gz` would also install older tarballs left in the folder.
 
-`ytf_workflow.R` saves its fits to `output/ytf-guide/fits.rds`. `refresh_manual_figures.R` reads that file and `output/own-data-example/assessment_summary.rds` (written by `scripts/fit_own_data_example.R`) by default; `output/` is not under version control, so run those two scripts first on a fresh clone. `fit_own_data_example.R` is a tutorial script and attaches whichever ALSCL is installed. Before its output is used for committed figures, load the checkout first (`pkgload::load_all()`, then `source("scripts/fit_own_data_example.R", encoding = "UTF-8")`) or install the checkout.
+`ytf_workflow.R` saves its fits to `output/ytf-guide/fits.rds`. `refresh_manual_figures.R` reads only `output/own-data-example`, the folder that `scripts/fit_own_data_example.R` writes, and draws the two figures in `docs/figures/own-data-example` and the record `docs/results/own-data-example-checks.csv`; `Rscript scripts/refresh_manual_figures.R retrospective` also refits the retrospective analyses of the own-data example and writes `docs/results/own-data-retrospective.csv`. `output/` is not under version control, so run `fit_own_data_example.R` first on a fresh clone. `fit_own_data_example.R` is a tutorial script and attaches whichever ALSCL is installed. Before its output is used for committed figures, load the checkout first (`pkgload::load_all()`, then `source("scripts/fit_own_data_example.R", encoding = "UTF-8")`) or install the checkout.
 
 `main` carries a development version: the fourth component of `Version` in `DESCRIPTION` is 9000 (for example 2.4.3.9000 after release 2.4.3). The site, the manuals and the Wiki print this version, while `README.md` keeps "Latest release" at the released version. `check.py` derives the release from the first three components and checks both. For a release, set `Version` to the new number, give the changes in `NEWS.md` and in `content/{en,zh}/news.md` a heading for that version, update the version strings that `check.py` reports, and set the version back to a `.9000` development version in the first commit after the tag.
 
@@ -42,9 +42,8 @@ The export check executes the maintained plotting tutorials, creates their teach
 - `docs/FUNCTION_REFERENCE.md`: bilingual argument descriptions and function examples.
 - `R/` and `NAMESPACE`: authoritative exported-function signatures and default expressions. `export_reference.R` parses function definitions without running package code.
 - `man/`: R help details for English references.
-- `docs/figures/` and `docs/data/`: existing figures and downloadable input data; the original directories are preserved.
-- `man/figures/`: figures under former file names, kept in the repository for old links. No help page uses them, and `.Rbuildignore` leaves them out of the built package.
-- `assets/site.css`, `assets/site.js`: layout, responsive navigation, search, copy buttons, formula rendering and language switching.
+- `docs/figures/` and `docs/data/`: existing figures and downloadable input data; the original directories are preserved. The CSV files in `docs/data/` also feed the data tables described below.
+- `assets/site.css`, `assets/site.js`: layout, responsive navigation, search, copy buttons, formula rendering, data tables and language switching.
 
 When changing a public API, update its descriptions in the reference Markdown and editorial notes. The build fails if documented argument names and actual formals disagree. For a new or removed exported function, update these sources: its section and index line in `docs/FUNCTION_REFERENCE.md` (anchor, usage block, argument table, return value and example), its entry in `reference-notes.json`, the `GROUPS` table in `build.py` (and `example_setup()` there when the example needs no fitted model), and the function counts in the first lines of `docs/FUNCTION_REFERENCE.md`, in `README.md` and in `README.zh-CN.md`; a new plotting function also changes the count in the first line of `docs/PLOT_GALLERY.md`. `check.py` prints the count it expects. Then rebuild the manuals, the Wiki and the site; `docs/BOOK.md` and `docs/wiki/` are generated and must not be edited by hand. Keep English and Chinese article structure aligned so same-section language switching remains meaningful. Existing figures illustrate synthetic datasets and conditional fits; do not relabel them as new or empirical results.
 
@@ -56,6 +55,18 @@ Worked cases remain under Articles. When reorganizing a page, retain its existin
 section IDs and use matching explicit IDs for new English and Chinese sections.
 Small screens have a collapsible table of contents; reference examples display
 their preparation code by default.
+
+## Data tables
+
+A tutorial shows an input table from a CSV file with a line of its own, outside code blocks and identical in the English and Chinese articles:
+
+```
+<!-- data-table: docs/data/data.CatL.csv digits=3 -->
+```
+
+The path is relative to the repository root and `digits` is the number of decimals shown. `website/build.py` replaces the line with a table read from the file when it builds the site: a box that scrolls in both directions, in which the header row and the first column stay in view, and a caption with the content and unit of the table, its numbers of rows and columns, the rounding and a link that downloads the file. `scripts/build_manual.py` writes the same values as a Markdown table into the manuals, and the book and the Wiki take it from there. Values are rounded half up to `digits` decimals and always written as decimals; when a nonzero value rounds to zero, the caption says so. The content and unit in the caption come from `DATA_TABLE_CONTENT` in `scripts/build_manual.py`, so a table from a new file needs an entry there. A line that starts like a data-table line but does not match this form stops both builders, so a typing error cannot leave an invisible comment where a table should be.
+
+`check.py` verifies that every data-table line names an existing CSV file and that the built page shows one table for each line, with the file's header row, first column and numbers of rows and columns, and each value written with `digits` decimals and within half a unit of the last decimal of the value in the file. It also fails when a data-table line is left unrendered in a Markdown manual, the book, the Wiki or a README.
 
 ## Writing rules for tutorials
 
@@ -76,6 +87,7 @@ Sentences:
 - Define a term where it first appears, then use the same term everywhere. Use the glossary below; do not invent new terms.
 - Use plain verbs (run, read, compare, save). Avoid notably, crucially, robust, comprehensive, leverage, underscore.
 - No em dashes or en dashes as punctuation; write a range as 2000-2019. Give numbers with two or three significant digits unless the exact value matters.
+- Write the numbers that people read, in prose and in tables, as decimals when that needs at most four zeros after the decimal point (0.00005). Write smaller numbers, and numbers too large to read as decimals, as 3 × 10⁻⁹ with Unicode superscripts, in both languages; never as `3e-9`. Numbers inside code, and values in code font that the reader types as an argument (`tol = 1e-6`), stay as they are.
 - Chinese pages use Chinese punctuation; English pages use English punctuation and contain no Chinese characters, including in code comments.
 
 Glossary (one term per concept):
@@ -100,7 +112,7 @@ Glossary (one term per concept):
 
 ## Validation
 
-`check.py` verifies every generated local link, asset, anchor and translation counterpart; public-function and argument coverage; English-language separation; and syntax of all displayed R blocks. It also checks explicitly named arguments to direct public-function calls, on the site and in the R blocks of the Markdown manuals, the book and the Wiki, and it reports a deprecated function name mentioned outside its own reference section. The documentation workflow also verifies that generated manuals and Wiki files are current, and runs `scripts/test_tutorial_workflows.R` to check the early package-version gate and the hindcast-only route with recording stubs. This is documentation validation, not a rerun of expensive model fits or a statistical validation of the models. The repository's R-CMD-check workflow remains the package check.
+`check.py` verifies every generated local link, asset, anchor and translation counterpart; public-function and argument coverage; English-language separation; the data tables against their CSV files; and syntax of all displayed R blocks. It also checks explicitly named arguments to direct public-function calls, on the site and in the R blocks of the Markdown manuals, the book and the Wiki, and it reports a deprecated function name mentioned outside its own reference section. The documentation workflow also verifies that generated manuals and Wiki files are current, and runs `scripts/test_tutorial_workflows.R` to check the early package-version gate and the hindcast-only route with recording stubs. This is documentation validation, not a rerun of expensive model fits or a statistical validation of the models. The repository's R-CMD-check workflow remains the package check.
 
 ## GitHub Pages
 

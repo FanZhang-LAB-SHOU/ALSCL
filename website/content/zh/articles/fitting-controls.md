@@ -39,7 +39,7 @@ inspect_parameters(x, "alscl")[, c("parameter", "status", "natural_start")]
 |---|---|---|
 | 生长（von Bertalanffy） | `log_Linf`、`log_vbk`、`t0` | `log_Linf`、`log_vbk`、`log_t0` |
 | 年龄别体长的离散程度；生长增量 CV | `log_cv_len` | `log_cv_len`、`log_cv_grow` |
-| 平均补充量和平均 F（对数尺度） | `mean_log_R`、`mean_log_F` | `mean_log_R`、`mean_log_F` |
+| 对数补充量和对数 F 的均值 | `mean_log_R`、`mean_log_F` | `mean_log_R`、`mean_log_F` |
 | 过程偏差的标准差 | `log_std_log_R`、`log_std_log_F`、`log_std_log_N0` | `log_sigma_log_R`、`log_sigma_log_F`、`log_sigma_log_N0` |
 | F 在时间上的相关；在年龄或体长上的相关 | `logit_log_F_y`、`logit_log_F_a` | `logit_log_F_y`、`logit_log_F_l` |
 | 补充量在时间上的相关 | `logit_log_R` | `logit_log_R` |
@@ -76,7 +76,7 @@ c(fixed = a_fixed$opt$objective, estimated = a_free$opt$objective)
 range(a_free$report$SSB / a_fixed$report$SSB)
 ```
 
-两个模型默认都把 F 过程的标准差固定在初值上（ACL 中是 `log_std_log_F`，ALSCL 中是 `log_sigma_log_F`）。提出 ALSCL 的论文是估计这个参数的（[模型原理与时间尺度](model-theory.html#difference-sd-fixed)），所以每次评估都应把标准差放开重新拟合一次作为检查。`map` 中的具名 `NULL` 解除默认固定。请像代码块那样用单方括号赋值，因为 `cfg$map$log_std_log_F <- NULL` 会删除这一项，默认固定随即重新生效。这个值是边际标准差（[模型原理与时间尺度](model-theory.html#difference-sd)）。
+两个模型默认都把 F 过程的标准差固定在初值上（ACL 中是 `log_std_log_F`，ALSCL 中是 `log_sigma_log_F`）。提出 ALSCL 的论文是估计这个参数的（[模型原理](model-theory.html#difference-sd-fixed)），所以每次评估都应把标准差放开重新拟合一次作为检查。`map` 中的具名 `NULL` 解除默认固定。请像代码块那样用单方括号赋值，因为 `cfg$map$log_std_log_F <- NULL` 会删除这一项，默认固定随即重新生效。这个值是边际标准差（[模型原理](model-theory.html#difference-sd)）。
 
 本例的估计值为 0.24，标准误 0.04，而固定值是 0.302。目标函数下降 1.0，各年的产卵生物量变化都不到 1%。两次拟合的差别比这更大时，两者都要报告。放开后的拟合通不过数值检查时（例如标准差被估计为零），保留固定值，并说明数据不足以确定它。
 
@@ -95,9 +95,13 @@ exp(unlist(wide$parameters.U[c("log_init_Z", "mean_log_F", "log_std_log_N0",
                                "log_std_log_R", "log_vbk")]))
 ```
 
-初值和边界在优化器尺度上填写，例如渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`（相关系数取默认范围时；取值在 -1 和 1 之间时的写法见第 6 步）。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6，有 20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此默认 `t0_lower = 0` 时 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间；允许 `t0` 为负的做法见第 6 步。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界。初值是这样一个体长的 1.1 倍：调查指数合计值的 99% 位于该体长以下。上界为最大体长组中点的 2 倍。下界取默认值（10）与该 99% 体长的一半两者中较小的一个，因此体长组延伸到最大个体以上时，真实的 `Linf` 不会被排除在外。`run_alscl()` 对你没有给定的值总是按数据设置。初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍，所以体长组远超最大个体时请给出 `parameters.L$log_Linf`。[估计参数列表](estimation-parameters.html)给出完整列表和变换方式。
+初值和边界在优化器尺度上填写，例如渐近体长 65 cm 写 `log_Linf = log(65)`，相关系数 0.5 写 `logit_log_R = qlogis(0.5)`（相关系数取默认范围时；取值在 -1 和 1 之间时的写法见第 6 步）。`create_parameters()` 按物种预设（`"flatfish"`、`"tuna"`、`"krill"` 或不指定）返回完整的初值（`parameters`）、下界（`parameters.L`）和上界（`parameters.U`）列表；有信息的项目改掉即可，完整列表和变换方式见[估计参数列表](estimation-parameters.html)。这些预设是取自模拟操作模型的初始配置，不是针对某个种群验证过的设置。例如 `"tuna"` 预设对应模拟研究中的类金枪鱼操作模型 M6，有 20 个季度年龄组，末组从 5 龄起，渐近体长 152 cm，自然死亡率恒定。
 
-不选物种预设时，ACL 有五个参数的默认上界低于 ALSCL：初始总死亡率（每个时间步 1，ALSCL 为 10）、平均捕捞死亡率（每个时间步 1，ALSCL 为 2）、初始年龄别尾数和补充量在对数尺度上的标准差（1，ALSCL 为 10），以及生长率 `k`（每年 0.1 到 1，ALSCL 为 0.05 到 2）。ACL 的这些取值适合黄尾鲽示例，用 ACL 拟合其他种群时常常停在这些边界上。`run_acl(x, bounds = "wide")` 让 ACL 的这五个参数采用 ALSCL 的边界；代码块最后几行打印放宽后的上界：10、2、10、10 和 2。默认边界不变，所以以前的拟合可以重现。停在边界上的拟合通不过数值检查；如果边界属于这五个参数，`diagnostics$advice` 和拟合的提示信息会指出这个参数。`parameters.L` 和 `parameters.U` 中给出的项会替换两种选择下的边界。使用物种预设时，ACL 和 ALSCL 对这些参数的边界相同，`bounds` 不起作用。`run_alscl()` 没有这个参数。
+ACL 直接使用 `t0`，ALSCL 使用 `log_t0`，`t0 = t0_lower + exp(log_t0)`，因此默认 `t0_lower = 0` 时 ALSCL 的 `t0` 必须在 0 和 `rec.age` 之间；允许 `t0` 为负的做法见第 6 步。超出边界的初值会在拟合前移到最近的边界：你给定的初值给出警告，默认初值给出提示，拟合结果在 `clamped_starts` 中列出这些初值。
+
+ACL 中 `Linf` 的默认值（初值 60，边界 10 到 100）采用黄尾鲽示例的体长单位。默认值不适合你的体长组时（例如以 cm 计的金枪鱼体长），`run_acl()` 按数据设置你没有给定的初值和边界。初值是这样一个体长的 1.1 倍：调查指数合计值的 99% 位于该体长以下。上界为最大体长组中点的 2 倍。下界取默认值（10）与该 99% 体长的一半两者中较小的一个，因此体长组延伸到最大个体以上时，真实的 `Linf` 不会被排除在外。`run_alscl()` 对你没有给定的值总是按数据设置。初值为最大体长组中点的 1.1 倍，边界为该中点的 0.7 倍和 2 倍，所以体长组远超最大个体时请给出 `parameters.L$log_Linf`。
+
+不选物种预设时，ACL 有五个参数的默认上界低于 ALSCL：初始总死亡率（每个时间步 1，ALSCL 为 10）、捕捞死亡率中位数（每个时间步 1，ALSCL 为 2）、初始年龄别尾数和补充量在对数尺度上的标准差（1，ALSCL 为 10），以及生长率 `k`（每年 0.1 到 1，ALSCL 为 0.05 到 2）。ACL 的这些取值适合黄尾鲽示例，用 ACL 拟合其他种群时常常停在这些边界上。`run_acl(x, bounds = "wide")` 让 ACL 的这五个参数采用 ALSCL 的边界；代码块最后几行打印放宽后的上界：10、2、10、10 和 2。默认边界不变，所以以前的拟合可以重现。停在边界上的拟合通不过数值检查；如果边界属于这五个参数，`diagnostics$advice` 和拟合的提示信息会指出这个参数。`parameters.L` 和 `parameters.U` 中给出的项会替换两种选择下的边界。使用物种预设时，ACL 和 ALSCL 对这些参数的边界相同，`bounds` 不起作用。`run_alscl()` 没有这个参数。
 
 <h2 id="f-structure">5. 选择 F 结构</h2>
 
@@ -192,7 +196,7 @@ a5$start_summary
 
 单个初值可能停在通过全部数值检查的局部最优，ALSCL 的生长参数尤其如此。数值检查只针对所得到的解，不能说明是否存在更好的解。因此，只用一个初值（默认）的拟合会给出提示，除非设了 `silent = TRUE`；`retro_model()`、`fit_scenarios()` 这类一次运行多个拟合的函数，每次调用只提示一次。用于报告的结果请至少使用三个初值和更大的 `start_spread`（例如 0.5），并比较 `start_diagnostics` 中的目标函数值；代码块最后两行用了五个初值。彼此靠得很近的初值可能都到达同一个局部最优，所以在增加个数的同时也要加大离散程度。多个初值并不能保证找到最优解（[Subbey 2018](https://doi.org/10.1093/icesjms/fsy044)）。
 
-如果目标函数值之差不超过 `1e-8`，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始收敛码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器收敛码。
+如果目标函数值之差不超过 10⁻⁸，且每个参数之差不超过 `1e-6 * max(1, abs(p1), abs(p2))`，失败重启不会覆盖实际返回成功的轮次。这些容差只用于识别数值上等价的重复轮次；目标函数有实质改善或参数向量相距较远时，仍选择较低的目标函数值。全部原始收敛码和消息保留在 `optimizer_history`，`raw_opt$selected_pass` 指出所保留轮次。最终梯度、Hessian 和边界检查仍独立于优化器收敛码。
 
 `nlminb()` 的每个控制项只按名称提供一次，例如 `control = list(iter.max = 3000L)`。预检和拟合都会在优化前校验名称和值。
 

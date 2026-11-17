@@ -4,18 +4,18 @@
 
 [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/02-Theory)
 
-**ALSCL 2.5.1 · 简体中文 / English**
+**ALSCL 2.5.2 · 简体中文 / English**
 
-本页带你安装软件包、确认它能加载，并用内置示例拟合一个模型。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，其中大部分是第 4 步只需一次的模型编译。
+本页带你安装软件包、确认它能加载，用内置示例拟合一个模型，检查拟合并画出一个估计值。你需要 R 4.1 或更高版本和网络连接；示例数据随包附带。整个过程约十五分钟，包括第 4 步只需一次的模型编译。
 
-On this page you install the package, confirm that it loads, and fit one model to the bundled example. You need R 4.1 or later and an internet connection; the example data are included. Allow about fifteen minutes, most of it for the one-time compilation in step 4.
+On this page you install the package, confirm that it loads, fit one model to the bundled example, check the fit and plot one estimate. You need R 4.1 or later and an internet connection; the example data are included. Allow about fifteen minutes, including the one-time compilation in step 4.
 
 | 步骤 / Step | 完成后得到什么 / What you will have afterwards |
 |---|---|
 | 1. 安装编译器 / 1. Install the compiler | 在本机构建两个模型所需的工具 / The tools that build the two models on your computer |
 | 2. 安装软件包 / 2. Install the package | 从 GitHub 安装的 ALSCL 及其依赖包 / ALSCL and its dependencies installed from GitHub |
 | 3. 加载并检查 / 3. Load and check | 已加载的软件包和示例数据 / The package and the example data loaded in your session |
-| 4. 拟合示例 / 4. Fit the example | 一个拟合好的 ACL 模型及其数值检查 / A fitted ACL model and its numerical checks |
+| 4. 拟合示例 / 4. Fit the example | 一个拟合好的 ACL 模型、它的数值检查和产卵生物量图 / A fitted ACL model, its numerical checks and a plot of spawning stock biomass |
 
 <a id="getting-started-compiler"></a>
 
@@ -44,13 +44,40 @@ install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")
 ```
 
-ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包（TMB 1.9.21 或更高版本、ggplot2 等）。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
+ALSCL 发布在 GitHub 而不是 CRAN，因此用 `remotes` 安装，它会一并安装依赖包，其中包括 TMB 1.9.17 或更高版本和 ggplot2 4.0.0 或更高版本。有新版本时重新运行这两行即可；[更新日志](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md)列出每个版本的变化。
 
-ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on (TMB 1.9.21 or later, ggplot2 and others). Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
+ALSCL is published on GitHub, not on CRAN, so `remotes` installs it together with the packages it depends on, among them TMB 1.9.17 or later and ggplot2 4.0.0 or later. Run the same two lines again when a new release appears; the [changelog](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/NEWS.md) lists what changed.
 
-如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行第二行。如果错误信息提到编译器，回到第 1 步。在较旧的 R 版本上，CRAN 提供的 TMB 现成二进制包可能低于 1.9.21，安装或 `library(ALSCL)` 会停止，并提示需要 TMB 1.9.21 或更高版本。运行 `install.packages("TMB", type = "source")`（需要第 1 步的编译器），再重新安装 ALSCL。
+在 Windows 和 macOS 上，R 尽量安装现成的二进制包。如果它询问是否从源码安装软件包（`Do you want to install from sources the packages which need compilation?`），按下表中你的 R 版本回答：
 
-If the installation stops on a dependency, install that package with `install.packages()` and run the second line again. If it stops with a compiler message, go back to step 1. On an older R version, the TMB that CRAN offers as a ready-made package can be older than 1.9.21, and the installation or `library(ALSCL)` then stops with a message that TMB 1.9.21 or later is required. Run `install.packages("TMB", type = "source")`, which needs the compiler from step 1, and install ALSCL again.
+On Windows and macOS, R installs ready-made binary packages where it can. If it asks whether to install packages from sources (`Do you want to install from sources the packages which need compilation?`), answer as the table says for your version of R:
+
+| R 版本 / R version | R 安装的内容 / What R installs | 回答 / Answer |
+|---|---|---|
+| 4.4 或更高 / 4.4 or later | 全部软件包都是二进制包 / Every package as a binary | `no` |
+| 4.3 | TMB 是二进制包；ggplot2、patchwork 等几个不含编译代码的包从源码安装，不需要编译器 / TMB as a binary; a few packages without compiled code, such as ggplot2 and patchwork, from source, which needs no compiler | `no` |
+| 4.1 和 4.2 / 4.1 and 4.2 | TMB 和其他一些包用第 1 步的编译器从源码编译；在 macOS 上，TMB 还需要 [CRAN macOS 工具页](https://mac.r-project.org/tools/)上的 GNU Fortran 编译器 / TMB and other packages compiled from source with the compiler of step 1; on macOS, TMB also needs the GNU Fortran compiler from [CRAN's macOS tools page](https://mac.r-project.org/tools/) | `yes` |
+
+在 Windows 上使用 R 4.1 至 4.2.2 时，编译器无法构建 TMB 1.9.22 或更高版本。先安装 TMB 1.9.21，再安装 ALSCL，并且不升级 TMB：
+
+On Windows with R 4.1 to 4.2.2, the compiler cannot build TMB 1.9.22 or later. Install TMB 1.9.21 first, then ALSCL without upgrading TMB:
+
+```r
+remotes::install_version("TMB", "1.9.21")
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL", upgrade = "never")
+```
+
+在 Linux 上，R 从源码编译所有软件包；[Posit Package Manager](https://packagemanager.posit.co/) 为 R 4.1 及更高版本提供二进制包。
+
+On Linux, R compiles every package from source; [Posit Package Manager](https://packagemanager.posit.co/) offers binary packages for R 4.1 and later.
+
+如果安装在某个依赖包上停止，用 `install.packages()` 安装该包，再运行 `remotes::install_github()`。如果错误信息提到编译器，回到第 1 步。
+
+If the installation stops on a dependency, install that package with `install.packages()` and run `remotes::install_github()` again. If it stops with a compiler message, go back to step 1.
+
+本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
+
+Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
 
 <a id="getting-started-load"></a>
 
@@ -63,17 +90,17 @@ data("YTF_example")
 str(YTF_example[c("data.CatL", "data.wgt", "data.mat")])
 ```
 
-每个会话都从 `library(ALSCL)` 开始。`YTF_example` 是采用 `YTF` 中 yellowtail flounder（*Limanda ferruginea*）生物学设置生成的模拟教学数据。它包含调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，每张表有 23 个体长组为行、20 个年份为列。第一列是体长组标签，其余各列是年份。[物种资料](https://www.fisheries.noaa.gov/species/yellowtail-flounder)。
+每个会话都从 `library(ALSCL)` 开始。`YTF_example` 是用 `YTF` 中保存的 yellowtail flounder（*Limanda ferruginea*，[物种资料](https://www.fisheries.noaa.gov/species/yellowtail-flounder)）生物学设置生成的模拟教学数据。它包含调查指数表 `data.CatL`、体重表 `data.wgt` 和成熟比例表 `data.mat`，每个体长组一行。
 
-Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching dataset generated using the yellowtail flounder (*Limanda ferruginea*) biological settings in `YTF`. It contains a survey-index table `data.CatL`, a weight table `data.wgt` and a maturity table `data.mat`, each with 23 length-bin rows and 20 year columns. The first column contains length-bin labels; the remaining columns contain years. [Species identity](https://www.fisheries.noaa.gov/species/yellowtail-flounder).
+Start every session with `library(ALSCL)`. `YTF_example` is a simulated teaching dataset generated with the biological settings of yellowtail flounder (*Limanda ferruginea*, [species page](https://www.fisheries.noaa.gov/species/yellowtail-flounder)) stored in `YTF`. It contains the survey index table `data.CatL`, the weight table `data.wgt` and the maturity table `data.mat`, with one row per length bin.
 
-你应看到 2.5.0 或更高的版本号，以及三张大小相同的数据框。这一步不编译任何东西，只确认安装可用。
+你应看到 2.5.2 或更高的版本号，每张表显示 `23 obs. of 21 variables`，即 23 个体长组和 21 列，第一列是体长组标签，其余各列依次是 2000 至 2019 年。这一步不编译任何东西，只确认安装可用。
 
-You should see version 2.5.0 or later and three data frames of the same size. Nothing is compiled yet; this step only confirms that the installation works.
+You should see version 2.5.2 or later, and `23 obs. of 21 variables` for each table, that is 23 length bins and 21 columns, the first for the length-bin labels and one for each year from 2000 to 2019. Nothing is compiled yet; this step only confirms that the installation works.
 
-如果加载时出现警告，说 TMB 构建时用的是另一个 Matrix ABI 版本，说明 TMB 的二进制包与已安装的 Matrix 不匹配，之后每次拟合都可能以 `All optimization starts failed` 和 `NA/NaN` 失败。运行 `install.packages("TMB", type = "source")`，重启 R 后重新加载软件包。
+如果加载时出现警告，说 TMB 构建时用的是另一个 Matrix ABI 版本，说明 TMB 的二进制包与已安装的 Matrix 不匹配，之后每次拟合都可能以 `All optimization starts failed` 和 `NA/NaN` 失败。运行 `install.packages(c("Matrix", "TMB"))` 并重启 R。如果警告仍在，用 `install.packages("TMB", type = "source")` 编译 TMB（在 macOS 上需要第 2 步提到的 GNU Fortran 编译器），重启 R 后重新加载软件包。
 
-If loading the package gives a warning that TMB was built with another Matrix ABI version, the TMB binary does not match the installed Matrix package, and every fit can then fail with `All optimization starts failed` and `NA/NaN`. Run `install.packages("TMB", type = "source")`, restart R and load the package again.
+If loading the package gives a warning that TMB was built with another Matrix ABI version, the TMB binary does not match the installed Matrix package, and every fit can then fail with `All optimization starts failed` and `NA/NaN`. Run `install.packages(c("Matrix", "TMB"))` and restart R. If the warning remains, compile TMB with `install.packages("TMB", type = "source")` (on macOS this needs the GNU Fortran compiler named in step 2), restart R and load the package again.
 
 <a id="getting-started-first-fit"></a>
 
@@ -83,19 +110,20 @@ If loading the package gives a warning that TMB was built with another Matrix AB
 x <- YTF_example
 a <- run_acl(x, silent = TRUE)
 diagnose_model(x$data.CatL, a)
+plot_SSB(a, se = TRUE)
 ```
 
-`run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟；拟合本身约十秒。`silent = TRUE` 不显示进度信息。
+`x` 是输入列表，其中有三张表和各项设置。`run_acl()` 用 `x` 中保存的生物学设置和初值，把年龄结构模型 ACL 拟合到三张表。第一次调用会编译模型，需要一到三分钟，并打印编译器的命令；拟合本身约十秒。`silent = TRUE` 不显示拟合的进度信息。
 
-`run_acl()` fits the age-structured model, ACL, to the three tables using the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes; the fit itself takes about ten seconds. `silent = TRUE` hides the progress messages.
+`x` is the input bundle, a list that holds the three tables and the settings. `run_acl()` fits the age-structured model, ACL, to the three tables with the biological settings and starting values stored in `x`. The first call compiles the model, which takes one to three minutes and prints the commands of the compiler; the fit itself takes about ten seconds. `silent = TRUE` hides the progress messages of the fit.
 
-`diagnose_model()` 打印优化器原始收敛码、最大绝对梯度、Hessian 状态及参数边界检查。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过，并且没有实际上已到极限的参数。优化器原始收敛码和强参数相关须另行检查。即使这些检查通过，也要阅读 `a$diagnostics$issues`；[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)解释各项检查及提示问题的处理方法。
+`diagnose_model()` 先打印数值检查，再打印一张拟合统计量和检查结果的表，表下简要说明各统计量。本例的检查中有 `Optimizer convergence code: 0`、`Numerical checks: TRUE`、`Parameters at their limit in practice: 0` 和 `Plausibility notes: 0`。`Numerical checks: TRUE` 保存在 `a$diagnostics$numerical_ok` 中，表示梯度、Hessian、协方差和边界准则通过，并且没有实际上已到极限的参数。优化器收敛码和强参数相关另行报告，见 `a$diagnostics$issues`。拟合统计量（拟合调查指数的误差、AIC 和 BIC）留待以后比较不同拟合时使用。检查未通过时，[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks)说明可以尝试的办法。
 
-`diagnose_model()` prints the raw optimizer code, maximum absolute gradient, Hessian status and parameter-boundary checks. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means the gradient, Hessian, covariance and boundary criteria passed and no parameter is at its limit in practice. The raw optimizer code and strong parameter correlations require separate review. Read `a$diagnostics$issues` even when these checks pass; [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin) explains the checks and how to investigate a flagged result.
+`diagnose_model()` prints the numerical checks and then a table of the fit statistics and the checks, with a short explanation of the statistics under it. For this fit the checks include `Optimizer convergence code: 0`, `Numerical checks: TRUE`, `Parameters at their limit in practice: 0` and `Plausibility notes: 0`. `Numerical checks: TRUE`, stored as `a$diagnostics$numerical_ok`, means that the gradient, Hessian, covariance and boundary criteria passed and that no parameter is at its limit in practice. The optimizer code and strong parameter correlations are reported separately, in `a$diagnostics$issues`. The fit statistics (errors of the fitted survey index, AIC and BIC) serve later to compare fits. When a check fails, [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#first-model-checks) says what to try.
 
-本网站的内容都可以在安装好的软件包中直接运行。只有调用 `source("scripts/...")` 或读取 `docs/data/...` 路径的示例，才需要下载[仓库](https://github.com/FanZhang-LAB-SHOU/ALSCL)，并把仓库根目录设为 R 工作目录。
+`plot_SSB()` 画出产卵生物量及其 95% 区间。本次拟合的产卵生物量在 2010 年降到最低，随后上升到 2016 年。
 
-Everything on this website works from an installed package. Only examples that call `source("scripts/...")` or read a `docs/data/...` path need a downloaded copy of the [repository](https://github.com/FanZhang-LAB-SHOU/ALSCL), opened as the R working directory.
+`plot_SSB()` draws spawning stock biomass with its 95% interval. In this fit it falls to a low in 2010 and then rises until 2016.
 
 <a id="getting-started-next"></a>
 
@@ -105,7 +133,7 @@ Everything on this website works from an installed package. Only examples that c
 |---|---|
 | 了解拟合结果包含什么、如何判断它可用 / See what the fitted object contains and how to judge it | [理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin) / [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin) |
 | 拟合自己的调查数据 / Fit your own survey tables | [准备调查数据](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel) / [Prepare your survey data](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#excel) |
-| 解决安装或编译问题 / Fix an installation or compilation problem | [复现与故障处理](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) / [Reproducibility and troubleshooting](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) |
+| 解决安装或编译问题 / Fix an installation or compilation problem | [复现结果与排除故障](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) / [Reproduce results and fix problems](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) |
 
 ---
 

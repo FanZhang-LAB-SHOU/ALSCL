@@ -63,7 +63,7 @@ library(patchwork)
 '''
 chapters=[
 ('01-Start','安装与第一次拟合 · Install and run a first fit',no_title(sections['start'])),
-('02-Theory','模型原理与时间尺度 · Model principles',no_title(sections['theory'])),
+('02-Theory','模型原理 · Model principles',no_title(sections['theory'])),
 ('03-Data-and-Excel','准备调查数据 · Prepare your survey data',no_title(sections['excel'])),
 ('04-Built-in-YTF','理解第一次拟合 · Understand your first fit',no_title(sections['builtin'])),
 ('05-Simulation','模拟与批量实验 · Simulation',no_title(sections['simulation'])),
@@ -71,7 +71,7 @@ chapters=[
 ('07-Diagnostics','判断拟合是否可用 · Judge whether a fit can be used',no_title(sections['diagnostics'])),
 ('08-Population-Plots','调查与种群图 · Survey and population plots',gallery_chapter('08-Population-Plots')),
 ('09-Growth-and-Mortality','生长、死亡与残差图 · Growth, mortality and residuals',gallery_chapter('09-Growth-and-Mortality')),
-('10-Model-Comparisons','模型比较与真值 · Model comparisons',gallery_chapter('10-Model-Comparisons')),
+('10-Model-Comparisons','模型比较 · Model comparisons',gallery_chapter('10-Model-Comparisons')),
 ('11-Retrospectives','回溯分析 · Retrospectives',no_title(sections['retrospective'])),
 ('12-Case-Studies','年度与季度案例 · Annual and quarterly cases',no_title(read('CASE_STUDIES.md'))),
 ('13-Colors-and-Export','配色与导出 · Colors and export',no_title(read('PLOT_STYLE.md'))),

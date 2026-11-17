@@ -1,3 +1,54 @@
+## ALSCL 2.5.2
+
+### Time axes and letter case
+
+- Time axes always label the first and the last year of the series, in every panel. A regular label that would collide with one of them is left out, and in figures with several panels the labels may be slanted so that a label can stay. On quarterly and other sub-annual axes the labels stay at year starts, and the first and the last year start within the series are labelled. `x_breaks` given in a call or with `acl_theme_set()` is used as given.
+- Letter case does not matter in choice arguments and quantity names: `plot_SSB(fit, type = "sbl")`, `plot_compare_ts(a, b, quantities = c("ssb", "rec"))` and `acl_theme_set(style = "Classic")` give the same results as the usual spellings, which the functions still return and store. An unknown value stops with a message that lists the accepted values, for example `type must be one of "SSB", "SBL", "SBA" in any letter case, not "xyz".`
+
+### Compatibility and installation
+
+- DESCRIPTION now states the minimum versions that the code needs: ggplot2 4.0.0, patchwork 1.3.2, scales 1.4.0, dplyr 1.1.4, tidyr 1.3.0, ggsci 2.7 and ggridges 0.5.5, and testthat 3.1.8 for the tests. The minimum TMB is 1.9.17 in place of 1.9.21, because no feature that the package uses needs a later version and 1.9.17 is the binary TMB that CRAN keeps for R 4.3 on Windows and macOS. R 4.1 remains the minimum R. The R-CMD-check workflow now also checks R 4.1 with the current versions of the dependencies and R 4.1.0 with their minimum versions.
+- The installation page says for each version of R what R installs and whether to answer yes when R offers to install packages from source, and how to install with R 4.1 to 4.2.2 on Windows, where TMB 1.9.22 and later cannot be built.
+- When all starts of a fit fail and TMB was built with another Matrix ABI version than that of the installed Matrix package, the error now advises to update both packages with `install.packages(c("Matrix", "TMB"))` first, and to reinstall TMB from source only if TMB still warns when it loads.
+
+### Printed output
+
+- `print(fit)` is a short overview: the model, the time steps, the F structure, the verdict of the numerical checks with the failed checks named, the objective and the number of estimated parameters. `summary(fit)` is the detailed view: a table of the checks, then the estimated and the fixed parameters in two tables, named in words, such as "Median recruitment", with the name used in code beside them. The objects that `summary()` and the print methods return are unchanged.
+- `diagnose_model()` prints its table with the checks as TRUE or FALSE, values to 4 significant digits and a short legend of the fit statistics, and it names the gradient as in its printed lines. Row names of the returned table changed: "Boundary Hit" is now "Parameter boundary hit", "Model Converged" is "Optimizer converged", "Final Outer mgc" is "Maximum absolute gradient", "Positive Definite Hessian" is "Positive-definite Hessian", "Numerical Screen Passed" is "Numerical checks passed", "Natural Scale Boundary" is "Natural-scale boundary", "Covariance Condition" is "Covariance condition number", "Highly Correlated Pairs" is "Highly correlated parameter pairs", "Parameters At Limit In Practice" is "Parameters at their limit in practice" and "Plausibility Notes" is "Plausibility notes". Scripts that read rows by the old names must be updated, and `output/tables/diagnostics.csv`, written by `run_acl()` and `run_alscl()` with `output = TRUE`, changes the same way. The Value column stays numeric.
+- `compare_models()` prints the optimizer code and its message in one cell, such as "code 0, relative convergence", keeps its tables within the width of the console and ends with a section "Numerical checks" that gives the verdict for each fit.
+- `check_alscl_data()` names the first cells that are not numbers, as in `Not a number in length bin 10, time step 2002: "abc"`. Messages and printed text say "time step" where they said "period", as in "No positive observations in time steps: 2004".
+- `?ALSCL` is a short start page: what the package does, the functions to start with, an example with `YTF_example` and links to the tutorials.
+
+### Fixes
+
+- `acl_theme_set()` checks every value before it stores any and rejects invalid values, such as a negative text size or `compare_legend_pos = "middle"`, with a message that names the setting.
+- `extract_estimates()` marks every quantity after the last time step with a survey observation as extrapolated, not only F and catch.
+- `plot_VB(se = TRUE)` gives a warning and draws no band when Linf, k and t0 are all fixed.
+- The theme setting `legend_position`, and `"none"` to hide the legend, reaches every plot with a legend, among them `plot_CatL()`, `plot_VB()`, `plot_retro()` and `plot_survey_catchability()`.
+- `plot_survey_catchability()` names the runs of time steps of each curve from the time steps of the fit.
+- A global `line_color` no longer recolours the interval bands of the SSB, F, recruitment and catch plots; a global `se_color` does when it differs from the band color of the palette.
+- `compare_facet_ncol` and `compare_facet_scales` reach every comparison plot with panels. The heat map of `plot_compare_growth()` now follows `compare_facet_scales` ("free_y" by default), where 2.5.1 drew fixed scales, and `plot_compare_CatL(facet_scales = )` defaults to NULL, which takes the setting.
+- `plot_compare_growth(age_range = )` restricts the heat map as well as the left panel.
+- `x_angle` applies when `x_breaks` is given, and a global `x_breaks` reaches the length axes of `plot_compare_CatL()` and `plot_compare_selectivity()`.
+- `plot_residuals(resid_cap = )` reports the cap it applies and the length bins it caps.
+- The legend keys of `plot_CatL(facet_by = "year")` have the widths of the thinned lines in the panels.
+- An unknown entry of a selection such as `years` or `metrics` is named in a warning and left out; when nothing valid is left, it is an error.
+- `acl_save_plot()` has the new argument `units` ("in", "cm", "mm" or "px"), as in `acl_save_plot(p, "SSB.png", width = 16, units = "cm")`.
+- `run_acl()` and `run_alscl()` with `output = TRUE, silent = TRUE` save their figures and tables without printing the numerical checks.
+- `simulate_example_data(save_csv = TRUE)` writes `data.CatL.csv`, `data.wgt.csv` and `data.mat.csv` to `output_dir`, the files that `read_survey_csv(output_dir)` reads, with numbers in decimal form.
+- A transformed scale, such as a log scale, keeps the breaks and labels of its transformation when the package arranges the axes.
+- Axis tick labels are plain decimals with thousands separators. An axis with values below 0.0001 or of 1,000,000,000 or more is labelled in powers of ten, such as 1 × 10⁻⁹. No label uses E notation.
+- `exp(mean_log_R)` and `exp(mean_log_F)` are named "Median recruitment" and "Median fishing mortality rate" in `summary()` and `plot_self_test()`, because the exponential of the mean of a log process is its median.
+- The plausibility note on an initial total mortality rate below M now names recruitment that decreased, not increased, before the first time step: numbers at age that decline more slowly than M alone would give mean that the older cohorts were relatively large.
+- The help of `self_test()` says that the mean parameter of an AR(1) process is close to, not equal to, the weighted mean of the fitted process.
+
+### Documentation and repository
+
+- The data preparation page shows the three example tables as scrollable tables read from the CSV files, with decimals, in place of screenshots of a spreadsheet. The example CSV files hold no numbers in E notation, and the example workbook shows its values as decimals; the values are unchanged.
+- Numbers that people read are written as decimals or in the form 3 × 10⁻⁹, not in E notation, on the website, in the manuals and in the function reference.
+- The worked cases were reviewed against the code and their sources. Among the corrections: `exp(mean_log_F)` and the `F_mean` of the full simulator are medians of the F process, not means; in a fit to survey data the fixed M sets the level of F, not the scale of biomass; and the catchability at length that the whiting case takes from Fraser et al. (2007) is for the third quarter.
+- Removed: figures that no page used (`man/figures`), a stray MIT license file (`inst/COPYRIGHTS`) that contradicted the GPL-3 license of the package, and the investigation records and tools of 2.2.2 and 2.4.3.
+
 ## ALSCL 2.5.1
 
 - The default plot style and its palette are now named "default": `acl_theme_set(style = "default")` and `acl_theme_set(palette = "default")`. ALSCL 2.5.0 named them "standard"; that name is still accepted and gives a warning once per session. Figures and all other settings are unchanged.
@@ -188,7 +239,7 @@
 
 - After standard-error calculation, the returned live TMB objective is restored to the final fitted parameters. In the fitting R session, `fit$obj$report()` therefore describes the same fitted state as `fit$report`, including sequential standard errors and a fallback from parallel calculation. This does not change the saved estimates or standard errors. Serialized fits still require refitting before using a live TMB objective.
 - `plot_compare_residuals()` and `plot_compare_CatL()` verify known observations and their positive-observation mask as well as time and length metadata. Pass the original fitting table; changing its values or turning a missing cell into an observation is an error. Older fits without stored observations remain usable, but their observation alignment cannot be fully verified. Zero and NA observations are omitted from the comparison points, consistently with fitting; prediction curves remain available at those positions.
-- Full simulations retain genuine zero and very small positive survey observations; they no longer replace values below `1e-6` with `1e-6`. Survey biomass equals survey abundance times weight, including extinction scenarios. This changes only newly generated data that previously hit that floor; saved datasets are not rewritten. The fitting convention is unchanged: zero observations are missing with `zero_action = "missing"` and rejected with `"error"`; an entirely zero survey contains no positive observations and cannot be fitted by the current lognormal model.
+- Full simulations retain genuine zero and very small positive survey observations; they no longer replace values below 10⁻⁶ with 10⁻⁶. Survey biomass equals survey abundance times weight, including extinction scenarios. This changes only newly generated data that previously hit that floor; saved datasets are not rewritten. The fitting convention is unchanged: zero observations are missing with `zero_action = "missing"` and rejected with `"error"`; an entirely zero survey contains no positive observations and cannot be fitted by the current lognormal model.
 - Simulation length midpoints must lie within their corresponding bins, using the same containment rules as fitting. The first and last bins absorb the tails. Invalid bin geometry is rejected during parameter preparation and rechecked before biological calculations or simulation, including manually modified inputs, before random draws or output files.
 - The checked TMB versions are 1.9.21 and 1.9.25. TMB 1.9.25 passed the strict, no-fallback parallel-equivalence tests for both models and both AD frameworks in the existing Windows, macOS and Linux checks; Windows uses socket workers and skips Unix-fork tests. Other TMB versions retain the sequential safety fallback. This extends eligibility for acceleration, without promising a speed-up for small fits; inspect `fit$sd_info` for the actual method.
 

@@ -1,13 +1,14 @@
 # Survey and population plots
 
-First complete the [worked YTF example](first-model.html) to create the input bundle `x` and the fits `a` and `b`. Define `dat <- x$data.CatL` and load ggplot2 and patchwork. The [retrospective guide](retrospectives.html) creates `ra` and `rb`.
+On this page you draw the fit to the survey and the estimated population of one fit. Each section shows one figure of the survey index, abundance, biomass, spawning stock biomass, catch or recruitment, in total, by age or by length. The code uses the input bundle `x` and the ALSCL fit `b` of [Understand your first fit](first-model.html); the first block creates them when they are not in your session. Each section says what to look at in the figure and links to all arguments of the function.
 
 ```r
-library(ggplot2)
-library(patchwork)
+library(ALSCL)
+x <- YTF_example
+b <- run_alscl(x, silent = TRUE)  # about two minutes; skip it when b is in your session
 ```
 
-A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
+Letter case does not matter in `type` and the other choice arguments, so `plot_SSB(b, type = "sbl")` draws the same figure as `type = "SBL"`. Time axes always label the first and the last year.
 
 ## Survey index by length bin (log scale)
 
@@ -50,9 +51,9 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE,
 
 [![Survey index by time step (log scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
 
-In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
-
 One panel per time step, with length on the horizontal axis and the log survey index on the vertical axis. The thin orange line ("Observed") is the observed log index across lengths and the thick dark blue line ("Fitted") is the fitted `Elog_index`. Use it to check the shape of the fit within a time step; a bump the dark blue line misses, as at the largest bin in the later years here, is length structure the fit leaves unexplained.
+
+In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
 [Arguments and defaults](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -66,8 +67,6 @@ plot_CatL(b, facet_by = "year", exp_transform = TRUE,
 ```
 
 [![Survey index by time step (original scale)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
-
-In year facets, `line_size1` sets the fitted line width and `line_size2` the observed line width. Gaps split the observed line. An isolated observation appears as a point sized by `point_size`.
 
 The curves show fitted survey-index medians on the original scale, `exp(Elog_index)`, with the observed index in each length bin. Compare the lengths at which the observed and fitted indices peak, then examine the residuals for those bins.
 
@@ -296,6 +295,8 @@ stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
 
 ## Displaying a single saved estimate
+
+A panel or model group containing only one estimate is shown as a point. With `se = TRUE`, an error bar shows the 95% interval (lognormal by default; see the `interval` argument) because a one-point ribbon has no visible width. This applies to population and fishing-mortality plots and to each model separately in `plot_compare_ts()`. Point size follows `point_size`; a single-model point takes the color of the line of its plot and its error bar the color of the interval. Grid lines follow the `grid` setting of `acl_theme_set()`.
 
 This display-only list contains the final SSB estimate from `b` and its standard error. It is not a model fitted to one observation and is not an input for simulation or forecasting. The point and approximate 95% interval remain visible without changing the estimate.
 

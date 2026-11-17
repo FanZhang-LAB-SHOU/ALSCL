@@ -7,9 +7,9 @@ The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111
 <div class="reading-paths">
 <p>Where would you like to start?</p>
 <ol>
-<li><a href="articles/getting-started.html">Try ALSCL for the first time</a><br>Install the package, fit the bundled example, and check the result.</li>
+<li><a href="articles/getting-started.html">Try ALSCL for the first time</a><br>Install the package, fit the bundled example, check the fit and plot the estimates.</li>
 <li><a href="articles/data-preparation.html">Fit your own survey data</a><br>Prepare three aligned tables, choose biological inputs and inspect which parameters will be estimated.</li>
-<li><a href="articles/case-model-validation.html">Check a model with simulation or future observations</a><br>Generate repeat datasets, or assess predictions for periods left out of fitting.</li>
+<li><a href="articles/case-model-validation.html">Check a model with simulation or future observations</a><br>Generate repeat datasets, or assess predictions for time steps left out of fitting.</li>
 </ol>
 </div>
 
@@ -35,7 +35,7 @@ library(ALSCL)
 
 Fitting compiles the bundled TMB models, so an R-compatible C++ toolchain is required. See [installation and compilation](articles/getting-started.html) for platform-specific guidance.
 
-The website describes ALSCL 2.5.1; see [News](news/index.html) for the changes in each release.
+The website describes ALSCL 2.5.2; see [News](news/index.html) for the changes in each release.
 
 <h2 id="models">Two model structures</h2>
 
@@ -55,9 +55,9 @@ The bundled `YTF_example` contains survey data simulated using the biological pa
 ```r
 data("YTF_example")
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)    # age-structured model
-b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
-diagnose_model(x$data.CatL, a)    # numerical checks, before reading any estimate
+a <- run_acl(x, silent = TRUE)    # age-structured model; the first call compiles it
+b <- run_alscl(x, silent = TRUE)  # age- and length-structured model; about two minutes
+diagnose_model(x$data.CatL, a)    # check first; expect Numerical checks: TRUE
 diagnose_model(x$data.CatL, b)
 plot_compare_ts(a, b, se = TRUE)
 ```

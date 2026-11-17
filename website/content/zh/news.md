@@ -1,3 +1,54 @@
+## ALSCL 2.5.2
+
+### 时间轴和大小写
+
+- 时间轴在每个面板中都标出序列的第一年和最后一年。会与它们重叠的常规标签不画；多面板图中标签可以倾斜，以便保留标签。季度等短于一年的时间轴仍在年初处标注，并标出序列内的第一个和最后一个年初。调用中或用 `acl_theme_set()` 给出的 `x_breaks` 按原样使用。
+- 选项参数和数量名称不区分大小写：`plot_SSB(fit, type = "sbl")`、`plot_compare_ts(a, b, quantities = c("ssb", "rec"))` 和 `acl_theme_set(style = "Classic")` 与通常的写法结果相同，函数返回和保存的仍是通常的写法。未知的值会报错，并列出可接受的值，例如 `type must be one of "SSB", "SBL", "SBA" in any letter case, not "xyz".`
+
+### 兼容性与安装
+
+- DESCRIPTION 现在写明代码所需的最低版本：ggplot2 4.0.0、patchwork 1.3.2、scales 1.4.0、dplyr 1.1.4、tidyr 1.3.0、ggsci 2.7 和 ggridges 0.5.5，测试需要 testthat 3.1.8。TMB 的最低版本由 1.9.21 改为 1.9.17，因为包用到的功能都不需要更高的版本，而 1.9.17 是 CRAN 为 Windows 和 macOS 上的 R 4.3 保留的 TMB 二进制包。R 的最低版本仍为 4.1。R-CMD-check 工作流现在还用依赖包的当前版本检查 R 4.1，并用依赖包的最低版本检查 R 4.1.0。
+- 安装页按 R 版本说明 R 会安装什么、R 询问是否从源码安装软件包时是否回答 yes，以及在 Windows 上用 R 4.1 至 4.2.2 时如何安装（这些版本无法构建 TMB 1.9.22 及更高版本）。
+- 一次拟合的所有初值都失败、且 TMB 构建时用的 Matrix ABI 版本与已安装的 Matrix 不同时，报错信息现在建议先用 `install.packages(c("Matrix", "TMB"))` 更新这两个包；只有 TMB 加载时仍给出警告，才从源码重新安装 TMB。
+
+### 打印输出
+
+- `print(fit)` 给出简短概览：模型、时间步、F 结构、数值检查的结论及未通过的检查、目标函数值和被估计参数的个数。`summary(fit)` 给出详细内容：各项检查的表，然后用两张表分别列出被估计的和被固定的参数，参数名用文字写出（例如 "Median recruitment"），旁边是代码中的名称。`summary()` 和打印方法返回的对象不变。
+- `diagnose_model()` 打印的表中，检查结果显示为 TRUE 或 FALSE，数值保留 4 位有效数字，表下简要说明各拟合统计量；梯度在打印行和表中用同一个名称。返回的表中有几行改了名："Boundary Hit" 改为 "Parameter boundary hit"，"Model Converged" 改为 "Optimizer converged"，"Final Outer mgc" 改为 "Maximum absolute gradient"，"Positive Definite Hessian" 改为 "Positive-definite Hessian"，"Numerical Screen Passed" 改为 "Numerical checks passed"，"Natural Scale Boundary" 改为 "Natural-scale boundary"，"Covariance Condition" 改为 "Covariance condition number"，"Highly Correlated Pairs" 改为 "Highly correlated parameter pairs"，"Parameters At Limit In Practice" 改为 "Parameters at their limit in practice"，"Plausibility Notes" 改为 "Plausibility notes"。按旧行名读取的脚本需要更新；`run_acl()` 和 `run_alscl()` 在 `output = TRUE` 时写出的 `output/tables/diagnostics.csv` 也同样改变。Value 列仍为数值。
+- `compare_models()` 把优化器代码和信息打印在同一格中，例如 "code 0, relative convergence"，各表不超出控制台的宽度，最后一节 "Numerical checks" 给出每次拟合的检查结论。
+- `check_alscl_data()` 指出最先出现的非数字单元格，例如 `Not a number in length bin 10, time step 2002: "abc"`。提示和打印文字中原来写 "period" 的地方改写为 "time step"，例如 "No positive observations in time steps: 2004"。
+- `?ALSCL` 是一个简短的入门页：软件包的用途、入门函数、`YTF_example` 的示例和教程的链接。
+
+### 修复
+
+- `acl_theme_set()` 在保存任何值之前检查所有的值，拒绝无效的值（例如负的文字大小或 `compare_legend_pos = "middle"`），并在信息中指出是哪一项设置。
+- `extract_estimates()` 把最后一个有调查观测的时间步之后的所有量都标为外推，而不只是 F 和渔获量。
+- Linf、k 和 t0 都被固定时，`plot_VB(se = TRUE)` 给出警告，不画区间带。
+- 主题设置 `legend_position`（以及用 `"none"` 隐藏图例）作用于所有带图例的图，包括 `plot_CatL()`、`plot_VB()`、`plot_retro()` 和 `plot_survey_catchability()`。
+- `plot_survey_catchability()` 按拟合的时间步给出每条曲线适用的连续时间步。
+- 全局 `line_color` 不再改变 SSB、F、补充量和渔获量图中区间带的颜色；全局 `se_color` 与调色板的区间颜色不同时才改变它。
+- `compare_facet_ncol` 和 `compare_facet_scales` 作用于所有带分面的比较图。`plot_compare_growth()` 的热图现在采用 `compare_facet_scales`（默认 "free_y"），2.5.1 中为固定尺度；`plot_compare_CatL(facet_scales = )` 的默认值改为 NULL，即采用该设置。
+- `plot_compare_growth(age_range = )` 同时限定热图和左图的年龄。
+- 给出 `x_breaks` 时 `x_angle` 同样生效；全局 `x_breaks` 也作用于 `plot_compare_CatL()` 和 `plot_compare_selectivity()` 的体长轴。
+- `plot_residuals(resid_cap = )` 报告实际的截断阈值和被截断的体长组。
+- `plot_CatL(facet_by = "year")` 图例中的线宽与面板中变细的线一致。
+- `years`、`metrics` 等选择中的未知项会在警告中列出并被忽略；没有剩下有效项时报错。
+- `acl_save_plot()` 新增参数 `units`（"in"、"cm"、"mm" 或 "px"），例如 `acl_save_plot(p, "SSB.png", width = 16, units = "cm")`。
+- `run_acl()` 和 `run_alscl()` 在 `output = TRUE, silent = TRUE` 时保存图和表，不再打印数值检查。
+- `simulate_example_data(save_csv = TRUE)` 在 `output_dir` 中写出 `data.CatL.csv`、`data.wgt.csv` 和 `data.mat.csv`，即 `read_survey_csv(output_dir)` 读取的文件，数字以小数形式写出。
+- 对数等变换尺度在软件包整理坐标轴时保留该变换的刻度和标签。
+- 坐标轴刻度标签为普通小数，并带千位分隔符；轴上有小于 0.0001 或不小于 1,000,000,000 的值时，整条轴用 10 的幂标注，例如 1 × 10⁻⁹。标签中不再出现 E 记数法。
+- `exp(mean_log_R)` 和 `exp(mean_log_F)` 在 `summary()` 和 `plot_self_test()` 中称为 "Median recruitment" 和 "Median fishing mortality rate"，因为对数过程均值的指数是该过程的中位数。
+- 关于初始总死亡率低于 M 的合理性提示，原来说第一个时间步之前补充量在增加，现在改为在下降：各龄数量随年龄下降得比只有 M 时还慢，说明较老的世代相对较多。
+- `self_test()` 的帮助现在说，AR(1) 过程的均值参数接近（而不是等于）拟合过程的加权平均。
+
+### 文档与仓库
+
+- 准备调查数据一页用可滑动的表格展示三张示例表，数值从 CSV 文件读取、以小数显示，取代原来的电子表格截图。示例 CSV 文件中不再有 E 记数法的数字，示例工作簿以小数显示数值；数值本身不变。
+- 人要读的数字都写成小数或 3 × 10⁻⁹ 的形式，网站、手册和函数参考中不再用 E 记数法。
+- 应用案例已对照代码和文献复核。主要更正包括：`exp(mean_log_F)` 和完整模拟器的 `F_mean` 是 F 过程的中位数，不是均值；只拟合调查数据时，固定的 M 决定 F 的水平，而不是生物量的尺度；牙鳕案例取自 Fraser et al. (2007) 的体长别可捕性针对第三季度。
+- 删除了没有页面使用的图（`man/figures`）、与软件包 GPL-3 许可冲突的一个多余的 MIT 许可文件（`inst/COPYRIGHTS`），以及 2.2.2 和 2.4.3 的排查记录和工具。
+
 ## ALSCL 2.5.1
 
 - 默认绘图样式及其调色板现在名为 "default"：`acl_theme_set(style = "default")` 和 `acl_theme_set(palette = "default")`。ALSCL 2.5.0 中它们名为 "standard"，这个名称仍可使用，每个会话给出一次警告。图和其他所有设置都不变。
@@ -188,7 +239,7 @@
 
 - 标准误计算结束后，返回的可执行 TMB 对象会恢复到最终拟合参数。在拟合所在的 R 会话中，`fit$obj$report()` 与 `fit$report` 因此描述同一个拟合状态，包括顺序计算及并行失败后的回退。已保存的估计值和标准误不因此改变。序列化保存的结果仍需重新拟合后才能使用可执行 TMB 对象。
 - `plot_compare_residuals()` 和 `plot_compare_CatL()` 除时间及体长元数据外，也核对已知观测值及正观测掩码。请传原始拟合表；修改数值或将缺失单元改为观测会报错。没有保存观测的旧结果仍可使用，但无法完整核验观测匹配。比较图的观测点排除零值和 NA，与拟合约定一致；这些位置仍可显示预测曲线。
-- 完整模拟保留真实零值和极小正调查观测，不再把小于 `1e-6` 的值替换为 `1e-6`。调查生物量等于调查尾数乘以重量，零资源情形也保持一致。只有原先触发下限的新模拟数据会变化，旧保存数据不改写。拟合规则不变：`zero_action = "missing"` 将零视为缺失，`"error"` 拒绝零值；全零调查没有正观测，不能使用当前对数正态模型拟合。
+- 完整模拟保留真实零值和极小正调查观测，不再把小于 10⁻⁶ 的值替换为 10⁻⁶。调查生物量等于调查尾数乘以重量，零资源情形也保持一致。只有原先触发下限的新模拟数据会变化，旧保存数据不改写。拟合规则不变：`zero_action = "missing"` 将零视为缺失，`"error"` 拒绝零值；全零调查没有正观测，不能使用当前对数正态模型拟合。
 - 模拟体长中点必须落在对应组内，检查规则与拟合一致；首尾组仍吸收分布尾部。参数准备阶段会拒绝无效分组，生物量计算和模拟前还会再次检查，包括用户手动修改的输入；错误发生在随机抽样和写文件前。
 - 已验证的 TMB 版本为 1.9.21 和 1.9.25。现有 Windows、macOS、Linux 检查已在 1.9.25 上通过两模型、两种 AD 框架的严格并行一致性测试，不允许用单核回退代替通过；Windows 使用 socket，并跳过 Unix fork 测试。其他 TMB 版本继续使用顺序计算保护。这扩大了可启用加速的版本范围，不保证小模型也会提速；实际方法请看 `fit$sd_info`。
 

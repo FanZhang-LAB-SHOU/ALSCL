@@ -18,7 +18,7 @@ summary(a)
 summary(b)
 ```
 
-The ACL fit `a` serves the scenarios and the profile, because an ACL refit takes less than ten seconds; the ALSCL fit `b` serves the projections. `summary()` prints the time steps, the F structure, the numerical checks (`numerical_ok` should be `TRUE`) and the scalar parameters on the natural scale. `YTF_example` fixes growth, the length CVs, two process standard deviations and the recruitment correlation at teaching values, with `M` = 0.20 per annual time step and the default `F_structure = "group_year"`; your own bundle needs supported biology ([Choose the fitting settings](fitting-controls.html)). If a check fails, repair the fit before any scenario ([Judge whether a fit can be used](diagnostics.html)).
+The ACL fit `a` serves the scenarios and the profile, because an ACL refit takes less than ten seconds; the ALSCL fit `b` serves the projections. `summary()` prints the time steps, the F structure, the numerical checks (they should read `Numerical checks: passed`) and the estimated and the fixed scalar parameters on the natural scale. `YTF_example` fixes growth, the length CVs, two process standard deviations and the recruitment correlation at teaching values, with `M` = 0.20 per annual time step and the default `F_structure = "group_year"`; your own bundle needs supported biology ([Choose the fitting settings](fitting-controls.html)). If a check fails, repair the fit before any scenario ([Judge whether a fit can be used](diagnostics.html)).
 
 <h2 id="scenarios">2. Fit the sensitivity scenarios</h2>
 
@@ -54,7 +54,7 @@ In the recorded run all three fits passed ([scenario-status.csv](https://github.
 | `low_M` | 75.4 | 0.371 |
 | `shared_F` | 74.1 | 0.335 |
 
-The lower M raises the estimated F while terminal SSB hardly moves, and the three curves nearly coincide; with your own data the spread between the curves is the sensitivity to report.
+Lowering M by 0.05 raises mean F in 2019 by 0.051, so the total mortality rate F + M stays at 0.52. A fit to survey data alone estimates total mortality, and the fixed M decides how much of it is F ([Model principles](model-theory.html#survey)). Terminal SSB hardly moves and the three curves nearly coincide, because the survey index and the fixed survey catchability set the abundance scale; with your own data the spread between the curves is the sensitivity to report.
 
 <h2 id="profile">3. Profile an estimated parameter</h2>
 
@@ -66,16 +66,16 @@ profile_F$grid
 ggplot(profile_F$grid, aes(value, delta_nll)) +
   geom_line(colour = acl_palette(role = "primary")) +
   geom_point(colour = acl_palette(role = "primary")) +
-  labs(x = "Baseline fishing mortality rate (per year)",
+  labs(x = "Median fishing mortality rate (per year)",
        y = "Change in negative log likelihood") +
   theme_acl()
 ```
 
-`profile_model()` fixes one estimated scalar parameter at each grid value and refits the other scalar parameters and the process deviations; the name must be in `names(a$opt$par)`, so `log_Linf`, fixed in `YTF_example`, stops with an error, while `mean_log_F` is estimated. With `scale = "natural"` the grid is on the natural scale, here 0.9, 1 and 1.1 times the fitted baseline, and must lie within the optimizer bounds. `profile_F$grid` gives each value with its objective, `delta_nll` (the rise in negative log likelihood relative to the original fit) and the numerical checks of that refit; failed points stay visible. Negative `delta_nll` values are retained; a value below `-1e-6` triggers a warning about a lower objective. Check that grid fit's numerical status and rerun the original with more starts. Tiny negative differences can reflect roundoff. Fixed inputs such as `M` and survey catchability belong in step 2.
+`profile_model()` fixes one estimated scalar parameter at each grid value and refits the other scalar parameters and the process deviations; the name must be in `names(a$opt$par)`, so `log_Linf`, fixed in `YTF_example`, stops with an error, while `mean_log_F` is estimated. With `scale = "natural"` the grid is on the natural scale, here 0.9, 1 and 1.1 times the fitted median fishing mortality rate `exp(mean_log_F)`, and must lie within the optimizer bounds. `profile_F$grid` gives each value with its objective, `delta_nll` (the rise in negative log likelihood relative to the original fit) and the numerical checks of that refit; failed points stay visible. Negative `delta_nll` values are retained; a value below -10⁻⁶ triggers a warning about a lower objective. Check that grid fit's numerical status and rerun the original with more starts. Tiny negative differences can reflect roundoff. Fixed inputs such as `M` and survey catchability belong in step 2.
 
-![Profile of the baseline fishing mortality rate at three grid values](../assets/manual/figures/workflows/profile-F.png)
+![Profile of the median fishing mortality rate at three grid values](../assets/manual/figures/workflows/profile-F.png)
 
-In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-5e-12, rounding) and 0.35, all passing the checks. A 10% change of the baseline F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
+In the recorded run ([profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-5 × 10⁻¹², rounding) and 0.35, all passing the checks. A 10% change of the median F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
 
 <h2 id="project">4. Project future F scenarios</h2>
 
