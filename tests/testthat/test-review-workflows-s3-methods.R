@@ -49,11 +49,11 @@ test_that("fitted, logLik and nobs agree with residuals and the diagnostic metri
   expect_error(ALSCL:::logLik.alscl_fit(bare), "finite objective")
 })
 
-test_that("print passes digits to the tables (GS9)", {
+test_that("print of a summary passes digits to the tables (GS9)", {
   skip_on_cran()
   fit <- fit_fixture("ACL")$result
-  full <- capture.output(print(fit))
-  short <- capture.output(print(fit, digits = 3))
+  full <- capture.output(print(summary(fit), digits = 7))
+  short <- capture.output(print(summary(fit), digits = 3))
   expect_false(identical(full, short))
   expect_true(any(grepl("97.42387", full, fixed = TRUE)))
   expect_false(any(grepl("97.42387", short, fixed = TRUE)))

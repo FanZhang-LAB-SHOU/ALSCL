@@ -7,9 +7,9 @@
 <div class="reading-paths">
 <p>你想从哪里开始？</p>
 <ol>
-<li><a href="articles/getting-started.html">第一次使用 ALSCL</a><br>安装软件包，拟合内置示例，再检查结果。</li>
+<li><a href="articles/getting-started.html">第一次使用 ALSCL</a><br>安装软件包，拟合内置示例，检查拟合并画出估计值。</li>
 <li><a href="articles/data-preparation.html">拟合自己的调查数据</a><br>准备三张对齐的表，选择生物学输入，并检查哪些参数会被估计。</li>
-<li><a href="articles/case-model-validation.html">用模拟或未来观测检查模型</a><br>生成重复数据，或评估未参与拟合时期的预测表现。</li>
+<li><a href="articles/case-model-validation.html">用模拟或未来观测检查模型</a><br>生成重复数据，或评估对未参与拟合的时间步的预测表现。</li>
 </ol>
 </div>
 
@@ -35,7 +35,7 @@ library(ALSCL)
 
 拟合时会编译包内的 TMB 模型，因此需要与 R 匹配的 C++ 工具链。各操作系统的说明见 [安装与编译](articles/getting-started.html)。
 
-网站对应 ALSCL 2.5.1；各版本变化见[更新记录](news/index.html)。
+网站对应 ALSCL 2.5.2；各版本变化见[更新记录](news/index.html)。
 
 <h2 id="models">两种模型结构</h2>
 
@@ -55,9 +55,9 @@ library(ALSCL)
 ```r
 data("YTF_example")
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)    # 年龄结构模型
-b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型
-diagnose_model(x$data.CatL, a)    # 读任何估计值前先看数值检查
+a <- run_acl(x, silent = TRUE)    # 年龄结构模型；第一次调用时编译
+b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型；约需两分钟
+diagnose_model(x$data.CatL, a)    # 先看数值检查，应为 Numerical checks: TRUE
 diagnose_model(x$data.CatL, b)
 plot_compare_ts(a, b, se = TRUE)
 ```
@@ -77,7 +77,7 @@ comparison <- compare_models(a, b, x$data.CatL)
 comparison$summary
 ```
 
-先读数值检查（收敛码、梯度、Hessian、边界、已到极限的参数），再看残差规律，然后看对自然死亡率、调查可捕性等固定输入的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较与真值](articles/model-comparison.html)展示比较图形。
+先读数值检查（收敛码、梯度、Hessian、边界、已到极限的参数），再看残差规律，然后看对自然死亡率、调查可捕性等固定输入的敏感性。[判断拟合是否可用](articles/diagnostics.html)逐项说明这些检查，[模型比较](articles/model-comparison.html)展示比较图形。
 
 <h2 id="learn-more">基本功能</h2>
 

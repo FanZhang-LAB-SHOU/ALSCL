@@ -368,7 +368,7 @@ test_that("bounds = \"wide\" gives ACL the ALSCL bounds of five parameters and n
                      create_parameters("acl", species = species))
   # The earlier positional form still works.
   expect_identical(create_parameters("acl", list(log_vbk = log(.3)))$parameters$log_vbk, log(.3))
-  expect_error(create_parameters("acl", bounds = "narrow"), "should be one of")
+  expect_error(create_parameters("acl", bounds = "narrow"), "bounds must be one of")
 })
 
 test_that("run_acl passes bounds to the fit and keeps the default bounds otherwise", {
@@ -382,7 +382,7 @@ test_that("run_acl passes bounds to the fit and keeps the default bounds otherwi
   expect_equal(exp(unlist(wide$config$parameters.U[five])),
                c(log_init_Z = 10, mean_log_F = 2, log_std_log_N0 = 10, log_std_log_R = 10, log_vbk = 2))
   expect_identical(wide$parameters, default$parameters)
-  expect_error(do.call(ALSCL:::.acl_prepare_data, c(f, list(bounds = "narrow"))), "should be one of")
+  expect_error(do.call(ALSCL:::.acl_prepare_data, c(f, list(bounds = "narrow"))), "bounds must be one of")
   # The argument exists for ACL only; inspection and bundles accept it there.
   expect_true("bounds" %in% names(formals(run_acl)))
   expect_false("bounds" %in% names(formals(run_alscl)))
@@ -402,7 +402,7 @@ test_that("an ACL fit that stops at a default upper bound leaves it with bounds 
   expect_identical(unname(stopped$par_low_up["log_init_Z", c("estimate", "upper")]), c(0, 0))
   expect_false(stopped$diagnostics$numerical_ok)
   expect_match(stopped$diagnostics$advice, "run_acl(bounds = \"wide\")", fixed = TRUE)
-  expect_output(print(summary(stopped)), "Advice: log_init_Z (1 on the natural scale) stopped at an upper bound of ACL", fixed = TRUE)
+  expect_output(print(summary(stopped)), "- log_init_Z (1 on the natural scale) stopped at an upper bound of ACL", fixed = TRUE)
   expect_identical(summary(stopped)$advice, stopped$diagnostics$advice)
   # Default bounds are what they were.
   expect_equal(stopped$par_low_up["log_init_Z", "lower"], log(.01))
@@ -443,10 +443,13 @@ test_that("fits report a standard deviation and a t0 that ran to their limits", 
     expect_identical(fit$diagnostics$limit_parameters$parameter, nm)
     expect_false(summary(fit)$diagnostics$numerical_ok)
     expect_match(summary(fit)$diagnostics$issues, paste0("parameter at its limit in practice: ", nm), fixed = TRUE)
-    expect_output(print(fit), paste0("Advice: ", nm, " is estimated at "), fixed = TRUE)
+    expect_output(print(summary(fit)), paste0("- ", nm, " is estimated at "), fixed = TRUE)
+    shown <- gsub("\\s+", " ", paste(utils::capture.output(print(fit)), collapse = " "))
+    expect_match(shown, "Numerical checks: failed (", fixed = TRUE)
+    expect_match(shown, paste0("parameter at its limit in practice: ", nm), fixed = TRUE)
     metrics <- suppressMessages(utils::capture.output(table <- diagnose_model(x$args$data.CatL, fit)))
-    expect_equal(as.numeric(table$Value[table$Metric == "Parameters At Limit In Practice"]), 1)
-    expect_equal(as.numeric(table$Value[table$Metric == "Plausibility Notes"]), 0)
+    expect_equal(as.numeric(table$Value[table$Metric == "Parameters at their limit in practice"]), 1)
+    expect_equal(as.numeric(table$Value[table$Metric == "Plausibility notes"]), 0)
     # The same fit with that standard deviation fixed has no finding.
     clean <- ns_small_fit(model)$fit
     expect_true(clean$diagnostics$numerical_ok)
@@ -481,7 +484,7 @@ test_that("fits give plausibility notes in messages and summaries without failin
   expect_equal(fit$diagnostics$plausibility$threshold, .2)
   expect_identical(summary(fit)$plausibility, fit$diagnostics$plausibility$note)
   expect_true(summary(fit)$diagnostics$numerical_ok)
-  expect_output(print(fit), "Plausibility note: The initial total mortality rate is estimated at", fixed = TRUE)
+  expect_output(print(summary(fit)), "- The initial total mortality rate is estimated at", fixed = TRUE)
   args <- low$args; args$silent <- FALSE
   messages <- testthat::capture_messages(do.call(run_acl, args))
   expect_identical(ns_count(messages, "Plausibility notes: The initial total mortality rate"), 1L)
@@ -508,11 +511,11 @@ test_that("objects of earlier versions without the new elements print and summar
   expect_null(s$advice)
   expect_null(s$plausibility)
   expect_identical(s$diagnostics$issues, "natural-scale boundary")
-  expect_output(print(legacy), "ACL assessment")
+  expect_output(print(legacy), "ACL fit")
   expect_identical(s$parameters, current$parameters)
   quiet <- utils::capture.output(table <- diagnose_model(fit$recipe$args$data.CatL, legacy))
-  expect_false("Parameters At Limit In Practice" %in% table$Metric)
-  expect_true("Natural Scale Boundary" %in% table$Metric)
+  expect_false("Parameters at their limit in practice" %in% table$Metric)
+  expect_true("Natural-scale boundary" %in% table$Metric)
   # A stored verdict that passed is not changed by the new checks.
   passed <- legacy
   passed$diagnostics$numerical_ok <- TRUE; passed$diagnostics$natural_boundary <- FALSE
@@ -523,10 +526,10 @@ test_that("objects of earlier versions without the new elements print and summar
   status <- ALSCL:::.acl_fit_status(bare)
   expect_false(status$numerical_ok)
   expect_match(status$issues, "parameter at its limit in practice: log_std_log_N0", fixed = TRUE)
-  expect_output(print(summary(bare)), "ACL assessment")
+  expect_output(print(summary(bare)), "ACL fit")
   # A diagnostics list of a much earlier version.
   minimal <- fit; minimal$diagnostics <- list(numerical_ok = TRUE, natural_boundary = FALSE, issues = character())
-  expect_output(print(summary(minimal)), "ACL assessment")
+  expect_output(print(summary(minimal)), "ACL fit")
   expect_null(summary(minimal)$advice)
 })
 

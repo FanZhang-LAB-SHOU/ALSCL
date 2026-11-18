@@ -48,3 +48,22 @@ main>p,main>ul,main>ol{line-height:1.7}
 @media print{.mobile-toc,.reference-jumps{display:none!important}.reading-paths{background:none}.guide-entry{break-inside:avoid}}
 
 .example-figure{margin:18px 0 26px}.example-figure img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px}.example-figure figcaption{font-size:14px;color:#59636d;margin-top:6px}
+
+/* Data tables read from a CSV file (build.py). The box scrolls both ways and
+   shows about 22 rows; the header row and the first column stay in view.
+   Rows are 29px high (20px line, 8px padding, 1px border), the header 30px. */
+.data-table{margin:18px 0 26px}
+.data-table-scroll{max-height:min(670px,75vh);overflow:auto;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:4px;background:#fff;font-size:14px}
+.data-table-scroll:focus-visible{outline:3px solid #639eee;outline-offset:3px}
+.data-table table{width:max-content;min-width:100%;margin:0;border-collapse:separate;border-spacing:0;font-size:inherit;line-height:20px;font-variant-numeric:tabular-nums lining-nums}
+.data-table th,.data-table td{padding:4px 12px;text-align:right;white-space:nowrap;vertical-align:baseline;border-bottom:1px solid #eceff2}
+.data-table thead th{position:sticky;top:0;z-index:2;background:var(--soft);border-bottom:2px solid #cbd1d8;font-weight:600}
+.data-table tbody th{position:sticky;left:0;z-index:1;background:#fff;font-weight:600}
+.data-table thead th:first-child{left:0;z-index:3}
+.data-table tr>:first-child{border-right:1px solid var(--line)}
+.data-table tbody tr:nth-child(even)>*{background:#fafbfc}
+.data-table tbody tr:last-child>*{border-bottom:0}
+.data-table figcaption{font-size:14px;line-height:1.55;color:#59636d;margin-top:8px}
+@media(hover:hover){.data-table tbody tr:hover>*{background:#eef4fb}}
+@media(max-width:780px){.data-table-scroll{max-height:min(560px,62vh);font-size:13px}.data-table th,.data-table td{padding:4px 9px}}
+@media print{.data-table-scroll{max-height:none;overflow:visible;border:0}.data-table th{position:static}}

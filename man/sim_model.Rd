@@ -63,7 +63,8 @@ retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
 \code{"year"} uses one shared F per time step with a one-dimensional AR(1)
 density; the unused group correlation is automatically fixed and omitted
 from reports. Other default map rules still apply. Subannual data share F
-per model step, not per calendar year.}
+per model step, not per calendar year.
+Letter case does not matter.}
 
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
@@ -78,7 +79,8 @@ On checked TMB versions, the refinement Hessian shares the sd_cores limit
 when forked processes are selected; other sessions compute it sequentially.
 refinement$hessian_calculations records methods, cores and fallback notes.}
 
-\item{model}{Model fitted to each simulation, "acl" (default) or "alscl".}
+\item{model}{Model fitted to each simulation, "acl" (default) or "alscl".
+Letter case does not matter.}
 
 \item{nstarts}{Positive integer; number of independent optimization starts
 per simulated dataset. Defaults to 1, independently of ncores. Starts run

@@ -6,6 +6,7 @@
 #'
 #' @param model_type Character. Either \code{"acl"} or \code{"alscl"}.
 #'   Determines which TMB model parameter names and defaults to use.
+#'   Letter case does not matter.
 #' @param species Character or NULL. Optional species preset:
 #'   \code{"flatfish"} (M7 yellowtail flounder-like, annual, Linf=60),
 #'   \code{"tuna"} (M6 tuna-like, quarterly, Linf=152), or
@@ -13,6 +14,7 @@
 #'   When NULL (default), generic wide-range defaults are used.
 #'   Each preset supplies initial values and bounds; inspect these before
 #'   fitting a different stock. See Details.
+#'   Letter case does not matter.
 #' @param parameters A list of custom initial values (default NULL = use all defaults).
 #'   Only the parameters you specify will be overridden; all others keep their
 #'   default (or species-preset) values.
@@ -23,6 +25,7 @@
 #'   parameters; see Details. It has no effect for \code{model_type = "alscl"}.
 #'   Entries of \code{parameters.L} and \code{parameters.U} replace the bounds
 #'   of either choice.
+#'   Letter case does not matter.
 #'
 #' @return A list with three elements: \code{parameters}, \code{parameters.L},
 #'   and \code{parameters.U}. Each is a named list of parameter values with
@@ -117,8 +120,8 @@ create_parameters <- function(model_type = c("acl", "alscl"),
     model_type <- "acl"; species <- NULL
     parameters <- legacy$parameters; parameters.L <- legacy$lower; parameters.U <- legacy$upper
   }
-  model_type <- match.arg(model_type)
-  bounds <- match.arg(bounds)
+  model_type <- .acl_match_choice(model_type, partial = TRUE)
+  bounds <- .acl_match_choice(bounds, partial = TRUE)
 
   # =========================================================================
   # Backward compatibility: run_acl()/run_alscl() may call
@@ -160,7 +163,7 @@ create_parameters <- function(model_type = c("acl", "alscl"),
       return(invisible(NULL))
     }
 
-    species <- match.arg(species, c("flatfish", "tuna", "krill"))
+    species <- .acl_match_choice(species, c("flatfish", "tuna", "krill"), "species", partial = TRUE)
 
     # -----------------------------------------------------------------------
     # FLATFISH (M7) -- annual, age-based, Linf=60, vbk=0.2

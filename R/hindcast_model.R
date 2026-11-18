@@ -36,13 +36,13 @@
   Y <- length(fit$year)
   if (!is.numeric(r$dev_log_R) || length(r$dev_log_R) != Y ||
       any(!is.finite(r$dev_log_R)))
-    stop("Fitted recruitment deviations do not match training periods.", call. = FALSE)
+    stop("Fitted recruitment deviations do not match the training time steps.", call. = FALSE)
   groups <- if (fit$model_type == "ACL") length(fit$age) else length(fit$len_mid)
   deviations <- r$dev_log_F
   if (!is.matrix(deviations) || !is.numeric(deviations) ||
       ncol(deviations) != Y || !nrow(deviations) %in% c(1L, groups) ||
       any(!is.finite(deviations)))
-    stop("Fitted F deviations do not match training groups and periods.", call. = FALSE)
+    stop("Fitted F deviations do not match the training groups and time steps.", call. = FALSE)
   powers <- seq_len(horizon)
   recruitment <- exp(mean_R + tail(r$dev_log_R, 1L) * phi_R^powers)
   F <- exp(mean_F + outer(deviations[, Y], phi_F^powers))
@@ -114,6 +114,7 @@
 #' of log survey indices, separately from retrospective stability.
 #' @param x An input bundle accepted by run_acl() or run_alscl().
 #' @param model Model to fit, "acl" (default) or "alscl".
+#'   Letter case does not matter.
 #' @param horizon Positive integer; number of future model periods predicted
 #'   from each forecast origin (the last training time step). A period is a
 #'   quarter for quarterly inputs.
@@ -178,7 +179,7 @@
 hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
                            nfolds = 3, min_train = 3, ncores = 1,
                            nstarts = NULL, silent = TRUE, save_fits = FALSE, ...) {
-  model <- match.arg(model)
+  model <- .acl_match_choice(model, partial = TRUE)
   horizon <- .acl_positive_integer(horizon, "horizon")
   nfolds <- .acl_positive_integer(nfolds, "nfolds")
   min_train <- .acl_positive_integer(min_train, "min_train", 2L)
@@ -202,7 +203,7 @@ hindcast_model <- function(x, model = c("acl", "alscl"), horizon = 1,
   available <- as.double(Y) - horizon - min_train + 1L
   if (available < nfolds)
     stop("Requested ", nfolds, " folds, but only ", max(0L, available),
-      " origins retain min_train periods and the complete horizon.", call. = FALSE)
+      " origins retain min_train time steps and the complete horizon.", call. = FALSE)
   # Validate full-grid maps before clipping, then reject constraints whose
   # extension beyond each forecast origin has not been specified.
   mapping <- .acl_retro_map(args, 0L, model)

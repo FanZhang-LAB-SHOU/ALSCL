@@ -118,7 +118,8 @@ Their stationary marginal SD is F_sd / sqrt(1 - F_ar^2).}
 
 \item{species}{Character or NULL. Species preset name, one of
 \code{"flatfish"}, \code{"tuna"}, \code{"krill"}, or \code{"?"} to list
-presets. NULL (default) uses generic defaults equivalent to flatfish.}
+presets. NULL (default) uses generic defaults equivalent to flatfish.
+Letter case does not matter.}
 
 \item{growth_step}{Time step in years; defaults to the species preset.}
 
@@ -126,7 +127,8 @@ presets. NULL (default) uses generic defaults equivalent to flatfish.}
 must be an exact multiple of \code{growth_step} and smaller than \code{nyear}.}
 
 \item{observation_error}{Independent lognormal errors per length and time cell,
-or shared_time for an explicitly misspecified, perfectly correlated scenario.}
+or shared_time for an explicitly misspecified, perfectly correlated scenario.
+Letter case does not matter.}
 
 \item{random_numbers}{How \code{sim_data()} draws the random numbers of a
 replicate. \code{"sequential"} (default) draws all processes from one
@@ -136,7 +138,8 @@ the initial numbers and the survey errors. \code{"by_process"} gives
 recruitment, F, initial numbers and survey errors separate streams with
 a fixed number of draws each, so that scenarios which differ in one
 process share the random numbers of the others. The two settings give
-different data for the same replicate ID.}
+different data for the same replicate ID.
+Letter case does not matter.}
 }
 \value{
 A list containing all initialized parameters and derived variables

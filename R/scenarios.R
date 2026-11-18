@@ -113,11 +113,13 @@
 #'   A named NULL is preserved. An empty list defines the reference scenario.
 #'   Data tables cannot be changed: compare scenarios on the same observations.
 #' @param model Model to fit, "acl" (default) or "alscl".
+#'   Letter case does not matter.
 #' @param ncores Maximum number of independent socket workers.
 #' @param F_summary Group summary for F at each model time step: "mean" is the
 #'   unweighted mean over ages (ACL) or lengths (ALSCL); "apical" is the maximum.
 #'   These are descriptive summaries, not abundance-weighted mortality, and
 #'   subannual F remains per model step rather than being annualized.
+#'   Letter case does not matter.
 #' @param ... Common overrides of the fitting arguments, applied before scenarios.
 #' @return A list with named portable fits (including error records of class
 #'   "alscl_fit_error"), resolved
@@ -143,8 +145,8 @@
 #' @export
 fit_scenarios <- function(x, scenarios, model = c("acl", "alscl"), ncores = 1,
                           F_summary = c("mean", "apical"), ...) {
-  model <- match.arg(model)
-  F_summary <- match.arg(F_summary)
+  model <- .acl_match_choice(model, partial = TRUE)
+  F_summary <- .acl_match_choice(F_summary, partial = TRUE)
   ncores <- .acl_positive_integer(ncores, "ncores")
   if (!is.list(scenarios) || is.data.frame(scenarios) || !length(scenarios) ||
       is.null(names(scenarios)) || anyNA(names(scenarios)) ||

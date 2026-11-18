@@ -197,7 +197,10 @@ test_that("extrapolated F starts at the last period with a positive observation"
   expect_equal(flagged(trailing), utils::tail(fit$year, 2L))
   no_observations <- fit; no_observations$observations <- NULL
   expect_equal(flagged(no_observations), max(fit$year))
-  expect_false(any(extract_estimates(trailing, "SSB")$extrapolated))
+  # Every quantity after the last observed time step is a prediction.
+  ssb <- extract_estimates(trailing, "SSB")
+  expect_identical(ssb$extrapolated, ssb$year > fit$year[length(fit$year) - 1L])
+  expect_false(any(extract_estimates(fit, "SSB")$extrapolated))
 })
 
 test_that("plot_retro labels quarterly terminal periods when peels remove whole years", {

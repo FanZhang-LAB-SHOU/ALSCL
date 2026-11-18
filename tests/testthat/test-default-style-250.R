@@ -183,7 +183,7 @@ test_that("invalid style settings are errors that name the accepted values", {
   expect_error(acl_theme_set(y_zero = "yes"), "y_zero must be TRUE or FALSE")
   expect_error(acl_theme_set(strip = "grey"), "strip must be one of \"plain\", \"box\"")
   expect_error(acl_theme_set(legend_position = "middle"), "legend_position must be one of")
-  expect_error(acl_theme_set(palette = "typo"), "arg")
+  expect_error(acl_theme_set(palette = "typo"), "palette must be one of")
   # A rejected call stores nothing, not even its valid arguments.
   expect_error(acl_theme_set(style = "classic", grid = "x"), "grid")
   expect_identical(acl_theme(), before)
@@ -276,7 +276,7 @@ test_that("acl_palette() gives the colours of a palette and of each role", {
   expect_identical(acl_palette(role = "primary"), c(primary = "purple"))
   expect_error(acl_palette(role = "SSB"), "role must name color roles")
   expect_error(acl_palette(0), "positive whole number")
-  expect_error(acl_palette(palette = "rainbow"), "arg")
+  expect_error(acl_palette(palette = "rainbow"), "palette must be one of")
 })
 
 test_that("the stock, recruitment, catch and F plots of an ACL fit have the forms and colours of the default style", {

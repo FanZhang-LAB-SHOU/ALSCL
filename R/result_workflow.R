@@ -230,6 +230,7 @@
 #' Extract fixed-effect parameter estimates on a specified scale
 #' @param fit A fitted ACL or ALSCL result. Older lists remain supported.
 #' @param scale Natural scale (default), or the internal optimizer scale.
+#'   Letter case does not matter.
 #' @param conf_level Nominal confidence level of approximate Wald intervals,
 #'   strictly between zero and one.
 #' @return A data frame with parameter, scale, status, estimate, std_error,
@@ -261,7 +262,7 @@
 #' }
 #' @export
 extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level = .95) {
-  scale <- match.arg(scale); z <- .acl_conf_level(conf_level)
+  scale <- .acl_match_choice(scale, partial = TRUE); z <- .acl_conf_level(conf_level)
   .acl_stop_if_failed(fit)
   out <- .acl_extract_parameters(fit, scale, z)
   problem <- attr(out, "inspection_error")
@@ -334,18 +335,23 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   missing value (use N_at_age, or \code{na.strings = ""} when reading).
 #'   In the fitted report the matrix is \code{fit$report[["NA"]]}; the
 #'   double brackets are needed because NA is a reserved word in R.
+#'   Letter case does not matter, so \code{"ssb"} gives the same as \code{"SSB"} and \code{"n_at_age"} the same as \code{"N_at_age"}.
 #' @param conf_level Nominal confidence level of the approximate intervals
 #'   on the reported scale, strictly between zero and one.
 #' @param interval Form of the interval. `"lognormal"` (default) is
 #'   `exp(log(estimate) +/- z * SE / estimate)`, as in the plots of the
 #'   package and in [self_test()]. `"wald"` is `estimate +/- z * SE`, the
 #'   default before version 2.5.0, and gives the former bounds.
+#'   Letter case does not matter.
 #' @return A long data frame with quantity, report_name, year, age, length,
 #'   length_label, estimate, std_error, conf_low, conf_high, numerical_ok and
 #'   extrapolated. Unavailable SEs remain NA. No averaging of F or annualization
 #'   is performed. numerical_ok is the numerical screen of the fit, the same
-#'   verdict that summary() reports. extrapolated is TRUE for rows that depend
-#'   on the fishing mortality rate (F) of the terminal period (see Details).
+#'   verdict that summary() reports. extrapolated is TRUE for rows that are
+#'   predictions of the model rather than estimates that the survey informs:
+#'   rows that depend on the fishing mortality rate (F) of the terminal
+#'   period, and every row after the last period with a survey observation
+#'   (see Details).
 #' @details Estimates come from report. Complete finite nonnegative standard errors
 #'   come from exact matching rows of est_std. Incomplete uncertainty for a quantity
 #'   remains NA, and so do its interval bounds. Lognormal intervals of a
@@ -364,9 +370,11 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 #'   CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
 #'   an abundance that the data inform and this predicted F. These rows have
 #'   extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
-#'   (FA). When the last periods have no positive survey observation, F is
-#'   a prediction from the last period with an observation onwards, and those
-#'   periods are marked as well.
+#'   (FA). When the last periods have no positive survey observation, F and
+#'   catch are predictions from the last period with an observation onwards,
+#'   and every other quantity (SSB, B, N, Rec and the quantities at age and at
+#'   length) is a prediction in the periods after it; all these rows have
+#'   extrapolated = TRUE.
 #'
 #'   For ALSCL, FA covers every age, including the plus group, and every
 #'   period. The fitted report (\code{fit$report$FA}) holds the ages before
@@ -387,15 +395,17 @@ extract_parameters <- function(fit, scale = c("natural", "internal"), conf_level
 extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", "F"), conf_level = .95,
                               interval = c("lognormal", "wald")) {
   z <- .acl_conf_level(conf_level)
-  interval <- match.arg(interval)
-  if (!is.character(quantities) || !length(quantities) || anyNA(quantities) || anyDuplicated(quantities))
-    stop("quantities must be distinct, nonmissing quantity names.", call. = FALSE)
-  .acl_stop_if_failed(fit)
-  years <- .acl_plot_year(fit)
+  interval <- .acl_match_choice(interval, partial = TRUE)
   time_only <- c("SSB", "Rec", "B", "N", "CN", "CB")
   age_time <- c("NA", "BA", "SBA", "CNA", "CBA", "F", "FA")
   length_time <- c("NL", "BL", "SBL", "CNL", "CBL", "FL")
   joint <- c("NLA", "BLA", "SBLA", "CNLA", "CBLA")
+  # Quantity names in any letter case: "ssb" gives "SSB" and "n_at_age" "N_at_age".
+  quantities <- .acl_canonical(quantities, c(time_only, age_time, length_time, joint, "N_at_age"))
+  if (!is.character(quantities) || !length(quantities) || anyNA(quantities) || anyDuplicated(quantities))
+    stop("quantities must be distinct, nonmissing quantity names.", call. = FALSE)
+  .acl_stop_if_failed(fit)
+  years <- .acl_plot_year(fit)
   numerical_ok <- .acl_numerical_ok(fit)
   # Terminal-period F enters no likelihood term; catch depends on it.
   terminal_F <- c("F", "FL", "FA", "CN", "CNA", "CNL", "CNLA", "CB", "CBA", "CBL", "CBLA")
@@ -456,18 +466,27 @@ extract_estimates <- function(fit, quantities = c("SSB", "Rec", "B", "N", "CN", 
       coords, estimate = as.numeric(value),
       std_error = se, conf_low = bounds$lower,
       conf_high = bounds$upper, numerical_ok = numerical_ok,
-      extrapolated = nm %in% terminal_F & coords$year >= last_informed, row.names = NULL)
+      # Every quantity after the last time step with a survey observation is
+      # a prediction; F and catch are predictions from that time step on.
+      extrapolated = coords$year > last_informed | (nm %in% terminal_F & coords$year >= last_informed),
+      row.names = NULL)
   })
   do.call(rbind, rows)
 }
 
 #' Summarize an assessment fit
 #' @param object A fitted alscl_fit object.
-#' @param digits Number of significant digits to print; NULL uses
-#'   getOption("digits").
+#' @param digits Number of significant digits of the printed values; NULL
+#'   prints 4.
 #' @param ... Reserved for future methods.
 #' @return summary returns a summary.alscl_fit list with numerical diagnostics and
 #'   a natural-scale parameter table. print returns its input invisibly.
+#'   Printing a fit gives a short overview: the model, the time steps, the
+#'   F structure, the verdict of the numerical checks with the checks that
+#'   failed, the objective and the number of estimated parameters. Printing
+#'   its summary gives the numerical checks and the estimated and the fixed
+#'   parameters in two blocks, named in words with the name used in code
+#'   beside them. The returned objects are not changed by printing.
 #' @details The numerical screen is computed once and is the same in the
 #'   diagnostics row and in the parameter table. A fit without stored
 #'   diagnostics is screened from its stored optimizer code, gradient, Hessian
@@ -509,6 +528,9 @@ summary.alscl_fit <- function(object, ...) {
   out <- list(model = object$model_type, periods = periods,
     F_structure = object$F_structure, elapsed = object$elapsed,
     diagnostics = diagnostics, parameters = parameters)
+  # The time step, for printing; kept as an attribute so that the elements
+  # of the summary stay those of earlier versions.
+  attr(out, "time_step") <- object$growth_step
   if (!is.null(problem))
     out$notes <- paste0("Fixed parameters are not listed: the stored inputs do not pass the current input checks (",
                         problem, ").")
@@ -528,26 +550,166 @@ summary.alscl_fit <- function(object, ...) {
 #' @param x A fitted object or its summary.
 #' @export
 print.summary.alscl_fit <- function(x, digits = NULL, ...) {
-  structure_label <- if (length(x$F_structure) == 1L && !is.na(x$F_structure))
-    x$F_structure else "not recorded"
-  cat(x$model, "assessment; periods", paste(x$periods, collapse = " to "),
-      "; F structure:", structure_label, "\n")
-  print(x$diagnostics, row.names = FALSE, digits = digits)
-  if (length(x$inputs)) cat("\nFixed inputs: ", paste(x$inputs, collapse = "; "), "\n", sep = "")
-  cat("\nFixed-effect parameters (natural scale):\n")
-  print(x$parameters, row.names = FALSE, digits = digits)
-  if (length(x$notes)) cat("\nNote: ", paste(x$notes, collapse = " "), "\n", sep = "")
-  if (length(x$growth_check)) cat("\nGrowth check: ", x$growth_check, "\n", sep = "")
-  if (length(x$advice)) cat("\n", paste0("Advice: ", x$advice, "\n"), sep = "")
-  if (length(x$plausibility)) cat("\n", paste0("Plausibility note: ", x$plausibility, "\n"), sep = "")
+  digits <- digits %||% 4L
+  step <- attr(x, "time_step")
+  count <- if (is.numeric(step) && length(step) == 1L && is.finite(step) && step > 0 && all(is.finite(x$periods)))
+    round(diff(range(x$periods)) / step) + 1L
+  cat(x$model %||% "Assessment", " fit\n", .acl_time_steps_text(x$periods, step, count), "\n", sep = "")
+  cat("F structure: ", .acl_F_structure_text(x$F_structure, x$model), "\n", sep = "")
+  status <- x$diagnostics
+  .acl_cat_wrapped(paste0("Numerical checks: ", .acl_checks_text(status, issues = FALSE)))
+  .acl_cat_table(data.frame(Check = c("Optimizer convergence code", "Maximum absolute gradient",
+                                      "Positive-definite Hessian", "Parameter at an optimizer bound",
+                                      "Parameter at a natural-scale boundary"),
+    Value = c(format(status$convergence_code), .acl_signif_text(status$max_abs_gradient, digits),
+              format(status$pdHess), format(status$bound_hit), format(status$natural_boundary))))
+  issues <- if (length(status$issues) && nzchar(status$issues)) strsplit(status$issues, "; ", fixed = TRUE)[[1L]]
+  if (length(issues)) .acl_cat_list("Issues", issues)
+  if (length(x$inputs)) .acl_cat_wrapped(paste0("Fixed inputs: ", paste(x$inputs, collapse = "; ")), before = "\n")
+  parameters <- x$parameters
+  estimated <- parameters[parameters$status != "fixed", , drop = FALSE]
+  fixed <- parameters[parameters$status == "fixed", , drop = FALSE]
+  if (nrow(estimated)) {
+    cat("\nEstimated parameters (natural scale, 95% confidence interval):\n")
+    .acl_cat_table(data.frame(Parameter = .acl_parameter_name(estimated$parameter),
+      Estimate = .acl_signif_text(estimated$estimate, digits), `Std. error` = .acl_signif_text(estimated$std_error, digits),
+      Lower = .acl_signif_text(estimated$conf_low, digits), Upper = .acl_signif_text(estimated$conf_high, digits),
+      `Name in code` = estimated$parameter, check.names = FALSE), wrap = 1L, right = 2:5)
+  }
+  if (nrow(fixed)) {
+    cat("\nFixed parameters (natural scale):\n")
+    .acl_cat_table(data.frame(Parameter = .acl_parameter_name(fixed$parameter),
+      Value = .acl_signif_text(fixed$estimate, digits), `Name in code` = fixed$parameter, check.names = FALSE),
+      wrap = 1L, right = 2L)
+  }
+  if (length(x$notes)) .acl_cat_wrapped(paste0("Note: ", paste(x$notes, collapse = " ")), before = "\n")
+  if (length(x$growth_check)) .acl_cat_wrapped(paste0("Growth check: ", x$growth_check), before = "\n")
+  if (length(x$advice)) .acl_cat_list("Advice", x$advice, before = "\n")
+  if (length(x$plausibility)) .acl_cat_list("Plausibility notes", x$plausibility, before = "\n")
   invisible(x)
 }
 
 #' @rdname summary.alscl_fit
 #' @export
 print.alscl_fit <- function(x, ...) {
-  print(summary(x), ...)
+  status <- .acl_fit_status(x)
+  cat(x$model_type %||% "Assessment", " fit\n", sep = "")
+  times <- suppressWarnings(as.numeric(x$year))
+  cat(.acl_time_steps_text(times, x$growth_step, sum(is.finite(times))), "\n", sep = "")
+  cat("F structure: ", .acl_F_structure_text(x$F_structure, x$model_type), "\n", sep = "")
+  .acl_cat_wrapped(paste0("Numerical checks: ", .acl_checks_text(status)))
+  objective <- x$opt$objective
+  if (is.numeric(objective) && length(objective) == 1L)
+    cat("Objective (negative log-likelihood): ", format(objective, digits = 7), "\n", sep = "")
+  cat("Estimated parameters: ", .acl_npar(x), "\n", sep = "")
+  cat("Details: summary(fit); time series: extract_estimates(fit)\n")
   invisible(x)
+}
+
+# Printed text of fits, summaries and comparisons
+# ---------------------------------------------------------------------------
+
+# Values at `digits` significant digits in decimal form, in scientific form
+# only below 0.0001; "" for NA.
+.acl_signif_text <- function(x, digits = 4L) {
+  x <- suppressWarnings(as.numeric(x))
+  out <- rep("", length(x))
+  ok <- is.finite(x)
+  tiny <- ok & x != 0 & abs(x) < 1e-4
+  plain <- ok & !tiny
+  out[plain] <- formatC(signif(x[plain], digits), format = "fg", digits = digits, big.mark = ",")
+  out[tiny] <- formatC(x[tiny], format = "e", digits = max(0L, digits - 1L))
+  out[!ok & !is.na(x)] <- format(x[!ok & !is.na(x)])
+  trimws(out)
+}
+
+# "Time steps 2000 to 2019 (annual), 20 time steps" from the time steps of a
+# fit (or their first and last value), the time step in years and the number
+# of time steps (left out when NULL).
+.acl_time_steps_text <- function(times, step = NULL, count = NULL) {
+  times <- suppressWarnings(as.numeric(times))
+  times <- times[is.finite(times)]
+  if (!length(times)) return("Time steps not recorded")
+  if (!is.numeric(step) || length(step) != 1L || !is.finite(step) || step <= 0)
+    step <- if (length(times) > 1L) min(diff(sort(unique(times)))) else NA_real_
+  ends <- .acl_time_labels(range(times), step = step, prefix = FALSE)
+  kind <- if (!is.finite(step)) NULL else if (abs(step - 1) < 1e-8) "annual" else
+    if (abs(step - 0.5) < 1e-8) "half-yearly" else if (abs(step - 0.25) < 1e-8) "quarterly" else
+      if (abs(step - 1 / 12) < 1e-6) "monthly" else paste("every", format(step), "years")
+  count <- if (length(count) == 1L && is.finite(count))
+    paste0(", ", count, " time step", if (count == 1L) "" else "s")
+  paste0("Time steps ", ends[1L], " to ", ends[2L], if (!is.null(kind)) paste0(" (", kind, ")"), count)
+}
+
+# The F structure of a fit in words.
+.acl_F_structure_text <- function(structure, model = NULL) {
+  if (length(structure) != 1L || is.na(structure)) return("not recorded")
+  groups <- if (identical(toupper(model %||% ""), "ALSCL")) "length bin" else "age class"
+  switch(structure,
+    group_year = paste0("group_year (one F deviation per ", groups, " and time step)"),
+    year = "year (one F deviation per time step, shared by all groups)",
+    structure)
+}
+
+# The verdict of the numerical checks of a fit (a row of .acl_fit_status()),
+# with the checks that failed unless `issues` is FALSE.
+.acl_checks_text <- function(status, issues = TRUE) {
+  if (isTRUE(status$numerical_ok)) return("passed")
+  failed <- if (issues && length(status$issues) && !is.na(status$issues) && nzchar(status$issues)) status$issues
+  paste0("failed", if (!is.null(failed)) paste0(" (", failed, ")"))
+}
+
+# Text wrapped at the width of the console, later lines indented by
+# `exdent` spaces.
+.acl_cat_wrapped <- function(text, before = "", exdent = 2L) {
+  cat(before, paste(strwrap(text, width = getOption("width", 80L), exdent = exdent), collapse = "\n"), "\n",
+      sep = "")
+}
+
+# A heading and a list of entries, each wrapped at the width of the console.
+.acl_cat_list <- function(heading, entries, before = "") {
+  cat(before, heading, ":\n", sep = "")
+  for (entry in entries) {
+    lines <- strwrap(entry, width = getOption("width", 80L) - 4L)
+    cat("  - ", paste(lines, collapse = "\n    "), "\n", sep = "")
+  }
+}
+
+# A table of text printed within the width of the console, with a header
+# line. The column `wrap` (a name or a description) is wrapped to the width
+# that the other columns leave, at least 20 characters, with its later lines
+# indented; the columns `right` (numbers) are right-aligned so that their
+# digits line up. NA prints as an empty cell.
+.acl_cat_table <- function(table, wrap = NULL, right = integer()) {
+  cells <- lapply(table, function(x) {
+    x <- as.character(x)
+    x[is.na(x)] <- ""
+    x
+  })
+  heads <- names(table)
+  widths <- vapply(seq_along(cells), function(j) max(nchar(c(heads[j], cells[[j]]))), numeric(1))
+  if (!is.null(wrap)) {
+    room <- getOption("width", 80L) - 1L - sum(widths[-wrap]) - 2L * (length(widths) - 1L)
+    widths[wrap] <- min(widths[wrap], max(room, 20L, nchar(heads[wrap])))
+  }
+  line <- function(values) {
+    text <- vapply(seq_along(values), function(j)
+      formatC(values[j], width = if (j %in% right) widths[j] else -widths[j]), character(1))
+    cat(sub("\\s+$", "", paste0(" ", paste(text, collapse = "  "))), "\n", sep = "")
+  }
+  line(heads)
+  for (i in seq_len(nrow(table))) {
+    row <- vapply(cells, function(x) x[i], character(1))
+    pieces <- if (!is.null(wrap) && nzchar(row[wrap])) strwrap(row[wrap], width = widths[wrap] + 1L, exdent = 2L)
+    if (length(pieces)) row[wrap] <- pieces[1L]
+    line(row)
+    for (piece in pieces[-1L]) {
+      more <- rep("", length(row))
+      more[wrap] <- piece
+      line(more)
+    }
+  }
+  invisible(table)
 }
 
 # A stored covariance is usable only when it is finite, has the dimension of
@@ -748,7 +910,8 @@ logLik.alscl_fit_error <- function(object, ...)
     len_label = prepared$bins$labels, len_border = prepared$bins$border,
     len_lower = prepared$bins$lower, len_upper = prepared$bins$upper,
     growth_step = prepared$growth_step, age = prepared$data$age,
-    F_structure = match.arg(args$F_structure %||% "group_year", c("group_year", "year")))
+    F_structure = .acl_match_choice(args$F_structure %||% "group_year", c("group_year", "year"), "F_structure",
+                                    partial = TRUE))
   absent <- names(fill)[vapply(names(fill), function(nm) is.null(fit[[nm]]), logical(1))]
   if (length(absent)) {
     fit[absent] <- fill[absent]

@@ -36,8 +36,11 @@ test_that("the sets are named original and von_bertalanffy", {
   expect_error(ALSCL:::.acl_structure("best", "ALSCL"),
     paste0("A character structure must be \"original\" or \"von_bertalanffy\" (the name of a set); use a named list ",
            "for single settings, for example list(correlation_range = \"symmetric\")."), fixed = TRUE)
-  expect_error(ALSCL:::.acl_structure(list(set = "Original"), "ALSCL"),
+  expect_error(ALSCL:::.acl_structure(list(set = "Originals"), "ALSCL"),
                "structure$set must be \"original\" or \"von_bertalanffy\"", fixed = TRUE)
+  # Letter case does not matter.
+  expect_identical(vapply(c("Original", "VON_BERTALANFFY", "Published"), N, character(1), USE.NAMES = FALSE),
+                   c("original", "von_bertalanffy", "original"))
   expect_error(ALSCL:::.acl_structure(list("original"), "ALSCL"),
     "structure must be \"original\", \"von_bertalanffy\" or a named list", fixed = TRUE)
   # The growth check names the set by its current name.

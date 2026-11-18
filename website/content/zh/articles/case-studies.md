@@ -52,7 +52,7 @@ plot_compare_ts(a, b, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 `prepare_alscl_data()` 用三张表和 `fit_args` 中两个模型共用的生物学设置构建输入列表 `x`；体长组来自行标签（中点为 6 至 50、间隔 2，边界取相邻中点的中间值）。`fit_config` 存放各模型的初值和 `map`。平均生长参数和同龄体长 CV 用 `factor(NA)` 固定在预设值上。ALSCL 的生长增量 CV 也固定在预设值上；体长型生成器会使用它，年龄型的鲽鱼生成器则不使用。F 的标准差先从操作模型的创新 SD 换算为拟合模型使用的边际 SD：`0.2 / sqrt(1 - 0.75^2)`，即 0.3023716。初始数量 SD、补充量相关系数和 F 相关系数也按指定的拟合假设固定，每个模型留下五个自由标量参数。
 
-操作模型用一个共用的 F 时间序列乘以选择性，生成各组捕捞死亡率。评估模型则估计各组和各期的 F，本例将组间和时间相关系数均固定为 0.75。初始化时，两类模型都逐龄递推尾数，每一步在对数尺度上加入独立扰动。模拟从预热期开始，评估从保留的第一个调查时间步开始。设置和作图代码见[案例脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R)。
+操作模型用一个共用的 F 时间序列乘以选择性，生成各组捕捞死亡率。评估模型则估计各组和各期的 F，本例将组间和时间相关系数均固定为 0.75。初始化时，两类模型都逐龄递推尾数，每一步在对数尺度上加入独立扰动。模拟从预热期开始，预热期的结果随后丢弃，评估则从保留的第一个调查时间步开始。设置和作图代码见[案例脚本](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/scripts/case_studies.R)。
 
 第一次拟合还需编译模型；之后的耗时取决于机器和优化路径。数值检查应打印 `TRUE TRUE`，与脚本的[收敛记录](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/case_convergence.csv)一致。若某项检查未通过，按[理解第一次拟合](first-model.html#checks)运行 `diagnose_model(x$data.CatL, a)`，并用 `nstarts` 增加初值。
 
@@ -103,7 +103,7 @@ plot_compare_ts(aq, bq, quantities = c("B", "SSB", "Rec"), se = TRUE)
 
 ![金枪鱼的生成真值与条件估计](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/cases/tuna_truth.png?raw=true)
 
-补充量按季度计。ALSCL 的总生物量和产卵生物量跟随真值，估计值与真值相差约 11% 以内。ACL 的总生物量和产卵生物量在每个季度都低于真值。它的产卵生物量相对真值在 2000 年初以及 2002-2003 年最低（约为真值的 0.68 到 0.77），到 2003 年末才接近真值。两个模型都在 20 个季度中的 19 个高估了补充量，ALSCL 平均高估 9%，ACL 平均高估 31%。该案例使用体长生长转移；拟合过程的假设仍与操作模型不同，因此单个重复不能给两个模型排名。
+补充量按季度计。ALSCL 的总生物量和产卵生物量跟随真值，估计值与真值相差约 11% 以内。ACL 的总生物量和产卵生物量在每个季度都低于真值。它的产卵生物量相对真值在 2000 年初以及 2002-2003 年最低（约为真值的 0.68 到 0.77），到 2003 年末才接近真值。两个模型都在 20 个季度中的 19 个高估了补充量，ALSCL 平均高估 9%，ACL 平均高估 31%。该案例的操作模型与 ALSCL 一样按体长转移描述生长，但其补充量和 F 过程与两个拟合都不同，因此单个重复不能给两个模型排名。
 
 <h2 id="simulation">4. 扩展为模拟实验</h2>
 
@@ -125,6 +125,6 @@ case_status <- run_case_studies(out = "my_cases")
 | 整理自己的数据表并选择时间步 | [准备调查数据](data-preparation.html) |
 | 读拟合结果的数值检查、估计值和残差 | [理解第一次拟合](first-model.html) |
 | 决定哪些参数固定、哪些估计 | [拟合设置](fitting-controls.html) |
-| 生成调查数据并批量拟合重复 | [模拟与批量实验](simulation.html) |
+| 生成调查数据并批量拟合重复 | [模拟调查数据](simulation.html) |
 | 从拟合模型模拟调查数据，或预测留出的年份 | [模型验证](case-model-validation.html) |
 | 拟合真实的调查指数，并与年龄鉴定资料和资源评估对比 | [真实调查数据的拟合结果，哪些可以用？](case-north-sea-whiting.html) |

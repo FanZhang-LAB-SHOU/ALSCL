@@ -103,7 +103,8 @@ independent starts. Uses at most nstarts workers; not threads within one start.}
 \item{silent}{Suppress fitting progress messages when TRUE.}
 
 \item{zero_action}{Exclude zero observations as missing (historical behavior),
-or reject them with "error". NA is always missing; negative/infinite values fail.}
+or reject them with "error". NA is always missing; negative/infinite values fail.
+Letter case does not matter.}
 
 \item{control}{A named list of nlminb control settings.}
 
@@ -117,7 +118,8 @@ retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
 \code{"year"} uses one shared F per time step with a one-dimensional AR(1)
 density; the unused group correlation is automatically fixed and omitted
 from reports. Other default map rules still apply. Subannual data share F
-per model step, not per calendar year.}
+per model step, not per calendar year.
+Letter case does not matter.}
 
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
@@ -225,7 +227,8 @@ stays constant over time; with the original structure it does not.
 The settings used are stored in the \code{structure} element of the fit;
 \code{initial_deviations} is stored only when it is \code{"independent"}, so that
 the stored structure of a fit with the default form is the same as in
-earlier versions.}
+earlier versions.
+Letter case does not matter in the names of sets and the values of settings.}
 
 \item{start_spread}{Standard deviation of the normal deviates added to the
 starting values (on the scale of the optimizer, mostly logarithms) of

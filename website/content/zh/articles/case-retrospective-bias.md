@@ -49,7 +49,7 @@ saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,
 writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ```
 
-结果是没有活动 TMB 对象的表，所以 `saveRDS()` 能完整保存，`plot_retro()` 在新会话中可以重画。`acl_save_plot()` 以 300 dpi 保存包内绘图，尺寸取 `acl_figure_size()` 按图形布局给出的推荐值。文件夹记录每次拟合的序列、每个量和每一轮的 rho、数值检查、图、`x` 的设置和会话信息。对自己的评估，用你报告的那次拟合的设置运行分析，使各轮与完整拟合只差去掉的观测；季度数据用 `nyear = 4` 去掉一年。
+结果是没有活动 TMB 对象的表，所以 `saveRDS()` 能完整保存，`plot_retro()` 在新会话中可以重画。`acl_save_plot()` 以 300 dpi 保存包内绘图，尺寸取 `acl_figure_size()` 按图形布局给出的推荐值。文件夹记录每次拟合的序列、每个量和每一轮的 rho、数值检查、图、`x` 的设置和会话信息。对自己的评估，用你报告的那次拟合的设置运行分析，使各轮与完整拟合只差去掉的观测；季度数据用 `nyear = 4` 时，四轮依次去掉一到四个季度。
 
 <h2 id="next">下一步</h2>
 

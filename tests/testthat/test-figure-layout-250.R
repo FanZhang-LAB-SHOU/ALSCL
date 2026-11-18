@@ -31,8 +31,13 @@ test_that("one rule labels the years of a time axis that spans the figure", {
   step <- ALSCL:::.acl_time_label_step
   expect_identical(vapply(c(5, 12, 13, 30, 31, 60, 61, 120), step, numeric(1)), c(1, 1, 2, 2, 5, 5, 10, 10))
   old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
-  for (case in list(list(2008:2019, as.character(2008:2019)), list(2000:2019, as.character(seq(2000, 2018, 2))),
-                    list(1971:2019, as.character(seq(1975, 2015, 5))), list(1930:2019, as.character(seq(1930, 2010, 10))))) {
+  # The first and the last year always carry a label; a multiple of the step
+  # that would touch the last label at the saved width (2018 next to 2019)
+  # is left out.
+  for (case in list(list(2008:2019, as.character(2008:2019)),
+                    list(2000:2019, as.character(c(seq(2000, 2016, 2), 2019))),
+                    list(1971:2019, as.character(c(1971, seq(1975, 2015, 5), 2019))),
+                    list(1930:2019, as.character(c(seq(1930, 2010, 10), 2019))))) {
     fit <- layout_fixture(case[[1L]])
     for (p in list(plot_recruitment(fit), plot_recruitment(fit, geom = "line"), plot_SSB(fit))) {
       expect_identical(x_labels(p), case[[2L]])
@@ -59,19 +64,20 @@ test_that("faceted time axes keep their density and slant labels that would touc
   # 15 age classes: five columns of narrow panels, every fifth year slanted.
   p <- plot_catch(fit, type = "CNA")
   expect_identical(p$facet$params$ncol, 5L)
-  expect_identical(x_labels(p), c("2000", "2005", "2010", "2015"))
+  expect_identical(x_labels(p), c("2000", "2005", "2010", "2015", "2019"))
   expect_identical(p$theme$axis.text.x$angle, 45)
   expect_identical(c(p$theme$axis.text.x$hjust, p$theme$axis.text.x$vjust), c(1, 1))
-  # Two columns: every second year, horizontal.
+  # Two columns: every second year, horizontal; 2018 would touch 2019 even
+  # when slanted and is left out.
   two <- plot_catch(fit, type = "CNA", facet_ncol = 2)
-  expect_identical(x_labels(two), as.character(seq(2000, 2018, 2)))
+  expect_identical(x_labels(two), as.character(c(seq(2000, 2016, 2), 2019)))
   expect_null(two$theme$axis.text.x$angle)
   # The theme key x_angle fixes the angle: 0 keeps the labels horizontal and
   # thins them, a number slants them.
   acl_theme_set(x_angle = 0)
   flat <- plot_catch(fit, type = "CNA")
   expect_null(flat$theme$axis.text.x$angle)
-  expect_identical(x_labels(flat), c("2000", "2010"))
+  expect_identical(x_labels(flat), c("2000", "2010", "2019"))
   acl_theme_set(x_angle = 90)
   expect_identical(plot_catch(fit, type = "CNA")$theme$axis.text.x$angle, 90)
   expect_identical(plot_recruitment(fit)$theme$axis.text.x$angle, 90)
@@ -87,6 +93,128 @@ test_that("faceted time axes keep their density and slant labels that would touc
   expect_identical(x_labels(plot_catch(fit, type = "CNA", x_breaks = c(2003, 2011))), c("2003", "2011"))
   acl_theme_set(x_breaks = c(2001, 2009, 2017))
   expect_identical(x_labels(plot_recruitment(fit)), c("2001", "2009", "2017"))
+})
+
+test_that("the first and the last year carry a label and a regular label next to them gives way", {
+  old <- options(acl.theme = NULL); on.exit(options(old), add = TRUE)
+  positions <- ALSCL:::.acl_time_positions
+  # A step of five years: the multiple of the step next to the first or the
+  # last label is left out when it is closer than the gap, never the first
+  # or the last label itself.
+  expect_identical(positions(c(2000, 2019), 5, gap = 3), c(2000, 2005, 2010, 2015, 2019))
+  expect_identical(positions(c(2000, 2016), 5, gap = 3), c(2000, 2005, 2010, 2016))
+  expect_identical(positions(c(2003, 2019), 5, gap = 3), c(2003, 2010, 2015, 2019))
+  expect_identical(positions(c(2003, 2019), 5, gap = 1.5), c(2003, 2005, 2010, 2015, 2019))
+  # Without a width the gap is half a step.
+  expect_identical(positions(c(2000, 2016), 5), c(2000, 2005, 2010, 2016))
+  expect_identical(positions(c(2003, 2019), 5), c(2003, 2010, 2015, 2019))
+  expect_identical(positions(c(2001, 2019), 5), c(2001, 2005, 2010, 2015, 2019))
+  # Several time steps per year: the start of the first and of the last year
+  # that hold a time step within the range.
+  expect_identical(positions(c(2000, 2004.75), 1), as.numeric(2000:2004))
+  expect_identical(positions(c(2000.25, 2004.75), 1), as.numeric(2001:2004))
+  # One year.
+  expect_identical(positions(c(2000, 2000), 1), 2000)
+  expect_identical(positions(c(2000, 2000.75), 1), 2000)
+  expect_identical(positions(c(2000.25, 2000.75), 1), 2000.25)
+  # Labels at the chosen angle do not touch: neighbouring labels are at least
+  # the gap of .acl_time_axis() apart, except a first and a last label that
+  # are the only labels.
+  for (start in c(1990, 1993, 2000, 2003)) for (n in c(2, 5, 9, 13, 17, 20, 26, 31, 45, 61, 90)) for (cols in 1:6) {
+    range <- c(start, start + n - 1)
+    axis <- ALSCL:::.acl_time_axis(range, 1, cols = cols)
+    at <- positions(range, axis$step, axis$gap)
+    info <- paste(range[1L], range[2L], cols)
+    expect_true(all(range %in% at), info = info)
+    if (length(at) > 2L) expect_true(all(diff(at) >= axis$gap - 1e-8), info = info)
+  }
+
+  minor <- function(p, panel = 1L) round(layout_build(p)$layout$panel_params[[panel]]$x$get_breaks_minor(), 8)
+  angle <- function(p) p$theme$axis.text.x$angle
+  # Annual series of 20 and 17 years and a series that does not start on a
+  # multiple of the step: one panel, and facets in three and four columns.
+  cases <- list(
+    list(years = 2000:2019, single = c(seq(2000, 2016, 2), 2019), three = c(2000, 2005, 2010, 2015, 2019),
+         four = c(2000, 2005, 2010, 2015, 2019)),
+    list(years = 2000:2016, single = seq(2000, 2016, 2), three = c(2000, 2005, 2010, 2016),
+         four = c(2000, 2005, 2010, 2016)),
+    list(years = 2003:2019, single = c(2003, seq(2004, 2018, 2), 2019), three = c(2003, 2005, 2010, 2015, 2019),
+         four = c(2003, 2010, 2015, 2019)))
+  for (case in cases) {
+    fit <- layout_fixture(case$years)
+    single <- plot_SSB(fit)
+    expect_identical(x_labels(single), as.character(case$single))
+    expect_null(angle(single))
+    # Unlabelled years keep their minor tick marks.
+    expect_true(all(setdiff(case$years, case$single) %in% minor(single)))
+    three <- plot_catch(fit, type = "CNA", facet_ncol = 3)
+    four <- plot_catch(fit, type = "CNA", facet_ncol = 4)
+    for (panel in c(1L, 7L, 15L)) {
+      expect_identical(x_labels(three, panel), as.character(case$three))
+      expect_identical(x_labels(four, panel), as.character(case$four))
+    }
+  }
+  # The added labels take part in the decision to slant: in three columns,
+  # 2005 is kept next to 2003 by slanting the labels; in four columns it
+  # would touch 2003 even when slanted, so it is left out and the labels
+  # stay horizontal. 2015 is kept next to 2019 by slanting in four columns.
+  expect_identical(angle(plot_catch(layout_fixture(2003:2019), type = "CNA", facet_ncol = 3)), 45)
+  expect_null(angle(plot_catch(layout_fixture(2003:2019), type = "CNA", facet_ncol = 4)))
+  expect_null(angle(plot_catch(layout_fixture(2000:2019), type = "CNA", facet_ncol = 3)))
+  expect_identical(angle(plot_catch(layout_fixture(2000:2019), type = "CNA", facet_ncol = 4)), 45)
+  # Quarterly series of 5 and 20 years: labels at the start of the years,
+  # the first and the last year among them, in one panel and in facets.
+  for (n in c(5L, 20L)) {
+    quarterly <- layout_fixture(2000 + (seq_len(4L * n) - 1L) / 4)
+    expected <- if (n == 5L) 2000:2004 else c(seq(2000, 2016, 2), 2019)
+    expect_identical(x_labels(plot_recruitment(quarterly)), as.character(expected))
+    faceted <- plot_catch(quarterly, type = "CNA")
+    labels <- as.numeric(x_labels(faceted))
+    expect_identical(range(labels), c(2000, 1999 + n))
+    expect_true(all(labels == round(labels)))
+    # Minor tick marks at the quarters where they leave room, otherwise at
+    # the unlabelled years.
+    expected_minor <- if (n == 5L) c(2000.25, 2000.5, 2000.75) else setdiff(2000:2019, labels)
+    expect_true(all(expected_minor %in% minor(faceted)))
+  }
+  expect_identical(x_labels(plot_catch(layout_fixture(2000 + (0:19) / 4), type = "CNA")),
+                   c("2000", "2002", "2004"))
+  # A single year, annual or quarterly.
+  expect_identical(x_labels(plot_recruitment(list(year = 2000, report = list(Rec = 100)))), "2000")
+  expect_identical(x_labels(plot_recruitment(list(year = 2000 + (0:3) / 4, growth_step = 0.25,
+                                                  report = list(Rec = c(1, 3, 2, 4))))), "2000")
+  # Facets with free x scales: each panel labels the first and the last year
+  # of its own data.
+  d <- rbind(data.frame(year = 2000:2019, y = 1, g = "a"), data.frame(year = 2005:2019, y = 1, g = "b"),
+             data.frame(year = 1990:2012, y = 1, g = "c"))
+  free <- ALSCL:::.acl_tidy_axes(ggplot2::ggplot(d, ggplot2::aes(year, y)) + ggplot2::geom_line() +
+    ggplot2::facet_wrap(~g, scales = "free") + ALSCL:::.acl_scale_x(values = d$year, time = TRUE))
+  for (panel in 1:3) {
+    labels <- as.numeric(x_labels(free, panel))
+    shown <- range(d$year[d$g == letters[panel]])
+    expect_identical(range(labels), as.numeric(shown), info = panel)
+  }
+  # Room for the labels at the ends of the panels: a horizontal last label
+  # reaches half a label beyond the last panel, so the right margin holds
+  # it; without y axes between the panels, the last label of one column and
+  # the first label of the next are spaced like two neighbouring labels.
+  fit <- layout_fixture()
+  margin <- function(p) as.numeric(ggplot2::calc_element("plot.margin", ggplot2::complete_theme(p$theme)))
+  spacing <- function(p) as.numeric(ggplot2::calc_element("panel.spacing.x", ggplot2::complete_theme(p$theme)))
+  expect_equal(margin(plot_SSB(fit)), c(5.5, 13, 5.5, 5.5))
+  expect_equal(margin(plot_catch(fit, type = "CNA")), rep(5.5, 4L))
+  expect_equal(spacing(plot_catch(fit, type = "CNA")), 5.5)
+  expect_equal(spacing(plot_catch(fit, type = "CNA", facet_ncol = 3)), 12.5)
+  expect_equal(spacing(plot_catch(fit, type = "CNA", facet_scales = "fixed")), 1.2 * 10 / sin(pi / 4))
+  expect_equal(spacing(plot_catch(fit, type = "CNA", facet_ncol = 3, facet_scales = "fixed")), 30)
+  # A multi-panel comparison figure labels the first and the last year in
+  # each panel.
+  compared <- plot_compare_ts(fit, fit, quantities = c("SSB", "R"))
+  for (panel in 1:2) expect_identical(range(as.numeric(x_labels(compared, panel))), c(2000, 2019))
+  # Breaks given in the call or in the theme are used as given.
+  expect_identical(x_labels(plot_SSB(fit, x_breaks = c(2003, 2011))), c("2003", "2011"))
+  acl_theme_set(x_breaks = c(2001, 2009))
+  expect_identical(x_labels(plot_SSB(fit)), c("2001", "2009"))
 })
 
 test_that("default columns give balanced grids and the call wins", {

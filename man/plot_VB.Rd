@@ -80,7 +80,8 @@ under classic). Error bars are opaque unless se_alpha is given.}
 "errorbar" (error bars). Error bars are drawn at the fitted ages in
 model_result$age that lie within age_range. Results saved without age
 metadata, and ranges that contain no fitted age, use every plotted age.
-Default is "ribbon".}
+Default is "ribbon".
+Letter case does not matter.}
 
 \item{text_color}{Character. Color of the growth-parameter annotation in all
 display modes. Default is "black".}
@@ -117,7 +118,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 
@@ -136,7 +138,8 @@ with numbers at length multiplied by the survey catchability at length
 used in the fit. Use \code{"survey"} to compare with age readings of fish
 caught in the survey. For an ACL fit, \code{"survey"} draws mean length at age
 from the age-length key in place of the von Bertalanffy curve, which
-describes the population.}
+describes the population.
+Letter case does not matter.}
 
 \item{years}{NULL (all time steps) or the time steps over which mean length
 at age from the fitted numbers is averaged, as values of
@@ -212,8 +215,9 @@ that used the interval of the earlier figure must add
 explicit \code{age_range} that starts before t0 is no longer an error for
 these fits, because the fitted numbers are not extrapolated.
 
-If the growth covariance is unavailable or unusable, a request for
-confidence intervals warns and draws the estimate only, preserving all
+If the growth covariance is unavailable or unusable, or Linf, k and t0
+are all fixed, a request for confidence intervals warns and draws the
+estimate only, preserving all
 supplied labels, axis settings, text styles and theme options. The parameter
 annotation is retained with and without intervals and inherits font_family.
 The y-axis inherits the global growth label unless ylab is supplied.

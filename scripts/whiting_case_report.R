@@ -88,15 +88,17 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
       objective_range = s$objective_range, elapsed_seconds = round(f$case_elapsed),
       at_bound = at_bound(f), issues = paste(d$issues, collapse = "; "),
       advice = paste(d$advice, collapse = " | "),
-      notes = paste(d$plausibility$note, collapse = " | "))
+      # The plausibility notes in the text of this checkout: a saved fit keeps
+      # the notes of the version that fitted it.
+      notes = paste(ALSCL:::.acl_plausibility(f)$note, collapse = " | "))
   }))
-  utils::write.csv(checks, file.path(res, "checks.csv"), row.names = FALSE)
+  write_decimal_csv(checks, file.path(res, "checks.csv"), row.names = FALSE)
   starts <- do.call(rbind, lapply(names_fit, function(n) {
     s <- fit[[n]]$start_diagnostics
     data.frame(fit = n, start = s$start_id, objective = s$objective, convergence = s$convergence,
                elapsed_seconds = round(s$elapsed))
   }))
-  utils::write.csv(starts, file.path(res, "starts.csv"), row.names = FALSE)
+  write_decimal_csv(starts, file.path(res, "starts.csv"), row.names = FALSE)
   for (n in names_fit) {
     f <- fit[[n]]
     num(paste0(n, "_objective"), f$opt$objective, paste("Objective (negative log-likelihood),", label[[n]]))
@@ -129,7 +131,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
       sd_index = if (is.null(r$sigma_index)) r$std_index else r$sigma_index,
       init_Z = exp(fit[[n]]$par_low_up["log_init_Z", "estimate"]))
   }))
-  utils::write.csv(estimates, file.path(res, "estimates.csv"), row.names = FALSE)
+  write_decimal_csv(estimates, file.path(res, "estimates.csv"), row.names = FALSE)
   for (n in names_fit) for (v in c("Linf", "k", "t0", "cv_grow", "sd_index", "init_Z"))
     if (is.finite(estimates[estimates$fit == n, v]))
       num(paste0(n, "_", v), estimates[estimates$fit == n, v], paste("Estimate of", v, "-", label[[n]]))
@@ -144,7 +146,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   }
   lengths <- data.frame(age = 1:9, age_readings = read_all$mean_length, age_readings_sd = read_all$sd_length,
                         sapply(stats::setNames(full, full), model_length))
-  utils::write.csv(lengths, file.path(res, "length_at_age.csv"), row.names = FALSE)
+  write_decimal_csv(lengths, file.path(res, "length_at_age.csv"), row.names = FALSE)
   for (a in 1:9) {
     num(paste0("length_readings_age", a), lengths$age_readings[a], paste("Mean length at age", a, "from age readings, 1983-2026 (cm)"))
     for (n in full)
@@ -197,7 +199,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
       Z_ices = mean(x$ices$assessment$f_ages_2_5[x$ices$assessment$year %in% yrs]) +
         mean(x$ices$M[2:5, colnames(x$ices$M) %in% yrs]))
   }))
-  utils::write.csv(z_rows, file.path(res, "apparent_Z.csv"), row.names = FALSE)
+  write_decimal_csv(z_rows, file.path(res, "apparent_Z.csv"), row.names = FALSE)
   for (i in seq_len(nrow(z_rows))) {
     p <- gsub("-", "_", z_rows$period[i])
     num(paste0("Z_readings_", p), z_rows$age_readings[i], paste("Decline of the log index of a cohort per year, ages 2 to 5, age readings,", z_rows$period[i]))
@@ -235,7 +237,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   series <- rbind(series, data.frame(fit = "ices", year = years, SSB = ices_ssb, SSB_maturity_at_age = NA,
     recruitment = ices_rec, F_ages_2_5 = ices_f, Z_ages_2_5 = NA,
     relative_catch_weight = ices_catch / mean(ices_catch, na.rm = TRUE), catch_extrapolated = FALSE))
-  utils::write.csv(series, file.path(res, "series.csv"), row.names = FALSE)
+  write_decimal_csv(series, file.path(res, "series.csv"), row.names = FALSE)
   compare <- do.call(rbind, lapply(full, function(n) {
     s <- series[series$fit == n, ]
     f_period <- by_period(replace(s$F_ages_2_5, s$year == max(years), NA))
@@ -250,7 +252,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
   compare <- rbind(compare, data.frame(fit = "ices", cor_log_SSB = NA, cor_log_SSB_maturity_at_age = NA,
     cor_log_recruitment = NA, cor_log_catch = NA, rank_cor_F = NA, F_1983_1999 = ices_f_period[[1]],
     F_2000_2012 = ices_f_period[[2]], F_2013_2025 = ices_f_period[[3]]))
-  utils::write.csv(compare, file.path(res, "comparison_ices.csv"), row.names = FALSE)
+  write_decimal_csv(compare, file.path(res, "comparison_ices.csv"), row.names = FALSE)
   for (n in c(full, "ices")) {
     row <- compare[compare$fit == n, ]
     who <- if (n == "ices") "ICES assessment" else label[[n]]
@@ -317,7 +319,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
       SSB_ratio_to_main = mean(s$SSB) / mean(base$SSB), recruitment_ratio_to_main = mean(s$recruitment) / mean(base$recruitment),
       F_ratio_to_main = mean(s$F_ages_2_5[-length(years)]) / mean(base$F_ages_2_5[-length(years)]))
   }))
-  utils::write.csv(sens, file.path(res, "sensitivity.csv"), row.names = FALSE)
+  write_decimal_csv(sens, file.path(res, "sensitivity.csv"), row.names = FALSE)
   for (i in seq_len(nrow(sens))) for (v in setdiff(names(sens), "fit"))
     num(paste0(v, "_", sens$fit[i]), sens[[v]][i], paste0(gsub("_", " ", v), ", ", label[[sens$fit[i]]]))
   relative <- function(v) v / mean(v)
@@ -344,7 +346,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
     labs(x = "Year", y = "Residual of the log survey index"))
   r <- fit$alscl$report$resid_index
   mean_resid <- rowMeans(r)
-  utils::write.csv(data.frame(length_bin = mid, mean_residual = mean_resid,
+  write_decimal_csv(data.frame(length_bin = mid, mean_residual = mean_resid,
                               years_positive = rowSums(r > 0)), file.path(res, "residuals_by_length.csv"), row.names = FALSE)
   num("residual_mean_bin_9", mean_resid[mid == 9], "Mean residual of the log index in the bin labelled 9 cm, ALSCL")
   num("residual_mean_bins_13_17", mean(mean_resid[mid %in% 13:17]), "Mean residual of the log index in the bins labelled 13 to 17 cm, ALSCL")
@@ -353,7 +355,7 @@ report_whiting_case <- function(dir = whiting_case_dir(), out = "docs") {
       "Mean correlation between residuals of neighbouring length bins within a year, ALSCL")
 
   numbers <- do.call(rbind, numbers)
-  utils::write.csv(numbers, file.path(res, "numbers.csv"), row.names = FALSE)
+  write_decimal_csv(numbers, file.path(res, "numbers.csv"), row.names = FALSE)
   writeLines(utils::capture.output(utils::sessionInfo()), file.path(res, "sessionInfo.txt"))
   invisible(list(numbers = numbers, checks = checks, starts = starts, lengths = lengths,
                  compare = compare, apparent_Z = z_rows, sensitivity = sens))

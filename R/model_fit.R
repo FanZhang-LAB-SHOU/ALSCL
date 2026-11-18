@@ -173,7 +173,7 @@
 .acl_model_setup <- function(model, prepared, parameters = NULL,
                              parameters.L = NULL, parameters.U = NULL, map = NULL,
                              F_structure = c("group_year", "year")) {
-  F_structure <- match.arg(F_structure)
+  F_structure <- .acl_match_choice(F_structure, partial = TRUE)
   # The default call is that of earlier versions; bounds is passed only when it is used.
   config <- if (identical(prepared$bounds, "wide"))
     create_parameters(model_type = tolower(model), parameters = parameters,
@@ -318,7 +318,7 @@
 .acl_fit <- function(model, prepared, parameters, parameters.L, parameters.U, map,
                      train_times, ncores, silent, output, control, nstarts = ncores,
                      F_structure = c("group_year", "year"), polish = TRUE) {
-  F_structure <- match.arg(F_structure)
+  F_structure <- .acl_match_choice(F_structure, partial = TRUE)
   start_spread <- .acl_start_spread(if (is.null(prepared$start_spread)) .15 else prepared$start_spread)
   .acl_check_fit_flags(polish, silent, output)
   .acl_check_speed_options()
@@ -442,7 +442,7 @@
   result$growth_check <- .acl_growth_check(result)
   if (!silent && isTRUE(result$growth_check$stalled)) message(result$growth_check$message)
   .acl_single_start_note(nstarts, silent)
-  if (output) .acl_save_output(result, prepared$data.CatL)
+  if (output) .acl_save_output(result, prepared$data.CatL, silent)
   result
 }
 # With growth_transition = "midpoint" every fish of a length bin grows from the
@@ -475,7 +475,9 @@
     format(mid[j]), format(mid[j]), stay[j], format(signif(Linf, 4)))
   out
 }
-.acl_save_output <- function(result, data.CatL) {
+# The figures and the diagnostics table of output = TRUE. With silent = TRUE
+# the lines that diagnose_model() prints are not shown.
+.acl_save_output <- function(result, data.CatL, silent = FALSE) {
   dir.create("output/figures/result", recursive = TRUE, showWarnings = FALSE)
   dir.create("output/tables", recursive = TRUE, showWarnings = FALSE)
   plots <- list(recruitment = function() plot_recruitment(result), SSB = function() plot_SSB(result),
@@ -486,6 +488,8 @@
   for (nm in names(plots)) tryCatch({
     acl_save_plot(plots[[nm]](), file.path("output/figures/result", paste0("plot_", nm, ".png")))
   }, error = function(e) warning("Could not save ", nm, ": ", conditionMessage(e)))
-  utils::write.csv(diagnose_model(data.CatL, result), "output/tables/diagnostics.csv", row.names = FALSE)
+  printed <- utils::capture.output(table <- diagnose_model(data.CatL, result))
+  if (!isTRUE(silent) && length(printed)) cat(printed, sep = "\n")
+  utils::write.csv(table, "output/tables/diagnostics.csv", row.names = FALSE)
   invisible(NULL)
 }

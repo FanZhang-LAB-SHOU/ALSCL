@@ -29,7 +29,8 @@ plot_compare_F_ts(
 \item{method}{Character. How to summarize F across groups in each model
 time step.
 \code{"apical"} (default): maximum F across groups.
-\code{"mean"}: unweighted arithmetic mean across groups.}
+\code{"mean"}: unweighted arithmetic mean across groups.
+Letter case does not matter.}
 
 \item{colors}{Character vector of 2 colors, named by model or in model
 order. NULL = use global theme. A vector with fewer than two colors gives
@@ -58,7 +59,8 @@ steps present in both fits are summarized. ALSCL F at age covers every age
 and time step when the fit holds numbers at length and age; otherwise it
 has no plus-group row and no value for the last time step, and the
 comparison leaves out the ACL plus group and the last time step. The two
-fits must have the same time step.}
+fits must have the same time step.
+Letter case does not matter.}
 
 \item{title}{Character, FALSE or NULL. NULL (default) draws the default
 title, FALSE (or NA or "") draws no title, and a character string is

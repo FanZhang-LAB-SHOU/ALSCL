@@ -3,6 +3,7 @@
 #' @param object A fitted ACL or ALSCL result, including a portable saved result.
 #' @param type `"log"` returns observed minus fitted log index; `"standardized"`
 #'   divides this difference by the fitted observation standard deviation.
+#'   Letter case does not matter.
 #' @param ... Reserved for future extensions; unused arguments are rejected.
 #' @return A data frame with year, length, length_label, observed, fitted_log,
 #'   sd_log, included and residual. Zero and missing observations are excluded
@@ -29,7 +30,7 @@
 #' @export
 residuals.alscl_fit <- function(object, type = c("log", "standardized"), ...) {
   if (length(list(...))) stop("Unused residual arguments.", call. = FALSE)
-  type <- match.arg(type)
+  type <- .acl_match_choice(type, partial = TRUE)
   if (!is.list(object)) stop("object must be an assessment fit.", call. = FALSE)
   obs_log <- .acl_observed_log(object)
   expected <- object$report$Elog_index

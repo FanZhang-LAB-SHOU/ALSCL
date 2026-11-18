@@ -39,7 +39,7 @@
     "slug": "model-theory",
     "title": {
       "en": "Model principles",
-      "zh": "模型原理与时间尺度"
+      "zh": "模型原理"
     },
     "source": "docs/wiki/02-Theory.md",
     "description": {
@@ -99,7 +99,7 @@
     "slug": "model-comparison",
     "title": {
       "en": "Model comparisons",
-      "zh": "模型比较与真值"
+      "zh": "模型比较"
     },
     "source": "docs/wiki/10-Model-Comparisons.md",
     "description": {
@@ -116,7 +116,7 @@
     "source": "docs/wiki/11-Retrospectives.md",
     "description": {
       "en": "Refit shortened series with retro_acl() or retro_alscl(), then visualize revisions with plot_retro() and interpret Mohn's rho.",
-      "zh": "用 retro_acl() 或 retro_alscl() 拟合截短序列，以 plot_retro() 展示估计修订，并解释 Mohn rho。"
+      "zh": "用 retro_acl() 或 retro_alscl() 拟合截短序列，以 plot_retro() 展示估计修订，并解释 Mohn's rho。"
     }
   },
   {

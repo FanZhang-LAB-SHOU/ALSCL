@@ -13,7 +13,8 @@ interpolated between its colors.}
 
 \item{palette}{Character or NULL. "default", "npg", "aaas", "nejm",
 "lancet" or "jama"; NULL uses the palette set with
-\code{\link{acl_theme_set}()}.}
+\code{\link{acl_theme_set}()}.
+Letter case does not matter.}
 
 \item{role}{Character vector or NULL. Names of color roles: "stock",
 "F", "recruitment", "catch" (stock size, fishing mortality,
@@ -22,7 +23,8 @@ and points), "accent" (observations), "smooth" (smoothers) and
 "reference" (reference lines). With \code{palette = NULL} the colors
 are those of the current settings; a quantity without its own color
 uses the primary color. With a palette name they are the defaults of
-that palette. \code{n} is ignored.}
+that palette. \code{n} is ignored.
+Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.}
 }
 \value{
 A character vector of colors, named by role when \code{role} is

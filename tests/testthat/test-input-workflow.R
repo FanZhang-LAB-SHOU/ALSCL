@@ -183,7 +183,7 @@ test_that("preflight reports missing periods, invalid bounds and maps before fit
   expect_true(check$valid)
   expect_equal(check$summary$unobserved_periods, 1)
   expect_equal(check$summary$unobserved_bins, 1)
-  expect_true(any(grepl("periods: 2001", check$warnings)))
+  expect_true(any(grepl("time steps: 2001", check$warnings)))
   expect_true(any(grepl("length bins: 0-20", check$warnings)))
   bad <- x
   for (nm in c("data.CatL", "data.wgt", "data.mat")) bad[[nm]] <- bad[[nm]][, -3]

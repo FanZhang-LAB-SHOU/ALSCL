@@ -198,7 +198,7 @@ test_that("plot_VB shows mean length at age from the fitted numbers of an ALSCL 
 test_that("plot_VB rejects unusable input", {
   z <- ns_plot_fits(); fit <- z$alscl
   obs <- ns_readings(fit)
-  expect_error(plot_VB(fit, basis = "catch"), "should be")
+  expect_error(plot_VB(fit, basis = "catch"), "basis must be one of")
   expect_error(plot_VB(fit, years = 1990), "years must be time steps of fit")
   expect_error(plot_VB(fit, years = "2001"), "finite numeric time steps")
   expect_error(plot_VB(fit, age_range = c(10, 12)), "contains no age class")
@@ -279,7 +279,7 @@ test_that("plot_compare_growth compares mean length at age on one basis", {
   expect_error(plot_compare_growth(acl, alscl, observed = obs, observed_name = "ACL"), "observed_name must be distinct")
   expect_error(plot_compare_growth(acl, alscl, observed = obs["age"]), "numeric columns age and mean_length")
   expect_error(plot_compare_growth(acl, alscl, years = 1990), "years must be time steps of fit")
-  expect_error(plot_compare_growth(acl, alscl, basis = "catch"), "should be")
+  expect_error(plot_compare_growth(acl, alscl, basis = "catch"), "basis must be one of")
   # Saved assessments compare in the same way.
   saved <- plot_compare_growth(ns_saved(acl), ns_saved(alscl), basis = "survey")[[1L]]
   expect_equal(saved$data, plot_compare_growth(acl, alscl, basis = "survey")[[1L]]$data, tolerance = 1e-12)
@@ -345,7 +345,7 @@ test_that("plot_length_at_age draws mean length at age by time step", {
   expect_error(plot_length_at_age(fit, ages = 9), "ages must be age classes of fit")
   expect_error(plot_length_at_age(fit, ages = "2"), "finite numeric age classes")
   expect_error(plot_length_at_age(fit, years = 1990), "years must be time steps of fit")
-  expect_error(plot_length_at_age(fit, facet_by = "year"), "should be")
+  expect_error(plot_length_at_age(fit, facet_by = "year"), "facet_by must be one of")
   expect_error(plot_length_at_age(fit, observed = obs, observed_name = "Model"), "must differ from")
   expect_error(plot_length_at_age(list(converge = "FAILED", error = "no data")), "fit is a failed fit without estimates")
   legacy <- fit; legacy$age <- NULL
@@ -409,7 +409,7 @@ test_that("plot_relative_catch draws catch divided by its mean and scales report
   expect_error(plot_relative_catch(fit, observed = rbind(reported, reported)), "one reported catch per time step")
   expect_error(plot_relative_catch(fit, observed = transform(reported, catch = 0)), "must be positive")
   expect_error(plot_relative_catch(fit, observed = reported, observed_name = "Model"), "must differ from")
-  expect_error(plot_relative_catch(fit, type = "biomass"), "should be")
+  expect_error(plot_relative_catch(fit, type = "biomass"), "type must be one of")
   expect_error(plot_relative_catch(fit, years = 1990), "years must be time steps of fit")
   expect_error(plot_relative_catch(list(converge = "FAILED", error = "no data")), "failed fit without estimates")
   # A saved assessment keeps both types; a bare ACL result has no weights.
@@ -513,7 +513,7 @@ test_that("plot_survey_catchability draws the catchability used in the fit", {
   bare <- z$alscl; bare$obj <- NULL; bare$recipe <- NULL
   expect_error(plot_survey_catchability(bare), "complete saved recipe or fitted log_q")
   expect_error(plot_survey_catchability(1), "fitted ACL or ALSCL result")
-  expect_error(plot_survey_catchability(z$acl, type = "time"), "should be")
+  expect_error(plot_survey_catchability(z$acl, type = "time"), "type must be one of")
 })
 
 test_that("plot_SSB adds the SSB from maturity at age only on request", {

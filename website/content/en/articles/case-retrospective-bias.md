@@ -49,7 +49,7 @@ saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,
 writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ```
 
-The results are tables without a live TMB object, so `saveRDS()` keeps them whole and `plot_retro()` redraws them in a new session. `acl_save_plot()` saves a package plot at 300 dpi in the size that `acl_figure_size()` recommends for its layout. The folder records every fit's series, rho per quantity and peel, the numerical checks, the figure, the settings of `x` and the session information. For your own assessment, run the analysis with the settings of the fit you report, so that the peels differ from the full fit only in the removed observations; with quarterly data `nyear = 4` removes one year.
+The results are tables without a live TMB object, so `saveRDS()` keeps them whole and `plot_retro()` redraws them in a new session. `acl_save_plot()` saves a package plot at 300 dpi in the size that `acl_figure_size()` recommends for its layout. The folder records every fit's series, rho per quantity and peel, the numerical checks, the figure, the settings of `x` and the session information. For your own assessment, run the analysis with the settings of the fit you report, so that the peels differ from the full fit only in the removed observations; with quarterly data the four peels of `nyear = 4` remove one to four quarters.
 
 <h2 id="next">What next</h2>
 

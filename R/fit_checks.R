@@ -219,9 +219,9 @@
     if (init_Z < lowest)
       add("initial_Z", "log_init_Z", init_Z, lowest, sprintf(paste0(
         "The initial total mortality rate is estimated at %s per time step (log_init_Z), below the %snatural ",
-        "mortality rate M = %s. The numbers at age in the first period then decline with age more slowly than ",
-        "natural mortality alone would give. Check M, the survey catchability and whether recruitment ",
-        "increased before the first period."),
+        "mortality rate M = %s. The numbers at age in the first time step then decline with age more slowly ",
+        "than natural mortality alone would give, as they do when the older cohorts were large. Check M, the ",
+        "survey catchability and whether recruitment decreased before the first time step."),
         number(init_Z), if (length(M) > 1L) "smallest " else "", number(lowest)))
   }
   rownames(out) <- NULL

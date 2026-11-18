@@ -369,7 +369,7 @@ test_that("fits with constant inputs in the new forms reproduce the scalar fit",
       # Stored inputs and summary name the form that was used.
       expect_identical(fit$recipe$args[names(forms[[name]])], forms[[name]])
       expect_length(summary(fit)$inputs, 1L)
-      expect_output(print(fit), "Fixed inputs: ")
+      expect_output(print(summary(fit)), "Fixed inputs: ")
     }
     expect_null(summary(base)$inputs)
     expect_false(any(grepl("Fixed inputs", utils::capture.output(print(base)))))
@@ -676,7 +676,7 @@ test_that("survey_catchability gives the logistic curve of sel_L50 and sel_L95 a
   expect_error(survey_catchability(mid, "dome", 20, 30, 50, 40, minimum = -.1), "minimum")
   expect_error(survey_catchability(c(mid, NA), "logistic", 20, 30), "finite lengths")
   expect_error(survey_catchability(mid, "logistic", c(20, 21), 30), "L50 must be one finite number")
-  expect_error(survey_catchability(mid, "bell", 20, 30), "should be one of")
+  expect_error(survey_catchability(mid, "bell", 20, 30), "shape must be one of")
 })
 
 test_that("survey_q by length and time step is validated and passed to the templates", {

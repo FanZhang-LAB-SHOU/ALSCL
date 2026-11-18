@@ -41,12 +41,14 @@ checks (\code{fit$diagnostics$numerical_ok}).}
 \code{\link[=simulate_fit]{simulate_fit()}}. The refits are deterministic, so a seed makes the whole
 self-test repeatable.}
 
-\item{process}{\code{"conditional"} (default) or \code{"resample"}; see Details.}
+\item{process}{\code{"conditional"} (default) or \code{"resample"}; see Details.
+Letter case does not matter.}
 
 \item{start}{\code{"original"} (default) starts each refit from the starting
 values of the source fit, with the same number of starts. \code{"estimates"}
 starts it from the estimates of the source fit, the values used to
-simulate. See Details.}
+simulate. See Details.
+Letter case does not matter.}
 
 \item{nstarts}{NULL (default) uses the number of starts of the source fit.
 A positive integer sets the number of starts of every refit.}
@@ -56,11 +58,13 @@ simulated data set at a time; the starts of a refit run one after another.}
 
 \item{quantities}{Time series to compare, from \code{"SSB"} (spawning stock
 biomass), \code{"Rec"} (recruitment), \code{"F"} (fishing mortality rate), \code{"B"}
-(total biomass) and \code{"N"} (total abundance). Default \code{c("SSB", "Rec", "F")}.}
+(total biomass) and \code{"N"} (total abundance). Default \code{c("SSB", "Rec", "F")}.
+Letter case does not matter, so \code{"rec"} gives the same as \code{"Rec"}.}
 
 \item{F_summary}{Summary of F over ages (ACL) or length bins (ALSCL) at each
 time step: \code{"mean"} (default), the unweighted mean, or \code{"apical"}, the
-maximum, as in \code{\link[=fit_scenarios]{fit_scenarios()}}.}
+maximum, as in \code{\link[=fit_scenarios]{fit_scenarios()}}.
+Letter case does not matter.}
 
 \item{conf_level}{Nominal confidence level of the intervals whose coverage
 is reported, strictly between zero and one. Default 0.95.}
@@ -68,7 +72,8 @@ is reported, strictly between zero and one. Default 0.95.}
 \item{interval}{Form of the interval of a time series. \code{"lognormal"}
 (default) is \verb{exp(log(estimate) +/- z * SE / estimate)}, as in the plots
 of the package and in \code{\link[=extract_estimates]{extract_estimates()}}. \code{"wald"} is
-\verb{estimate +/- z * SE}.}
+\verb{estimate +/- z * SE}.
+Letter case does not matter.}
 
 \item{preserve_missing}{Logical; passed to \code{\link[=simulate_fit]{simulate_fit()}}. Default TRUE
 keeps missing and zero survey cells as they are in the observations.}
@@ -152,7 +157,7 @@ deviations are the fitted values, not a draw from their distribution,
 and their arithmetic mean need not be zero. The truth of mean_log_F (log
 fishing mortality rate) and mean_log_R (log recruitment) is still the
 source estimate: at the estimate, the mean parameter of an AR(1) process
-equals the weighted mean of the fitted process that the AR(1) density
+is close to the weighted mean of the fitted process that the AR(1) density
 implies, in which the first and last time steps (and groups) weigh more,
 not its arithmetic mean, and a refit that recovers the process recovers
 this weighted mean. The level of F and recruitment is measured by the

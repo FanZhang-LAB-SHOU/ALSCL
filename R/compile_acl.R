@@ -42,7 +42,9 @@
   if (is.list(abi) && isFALSE(abi$ok))
     msg <- paste0(msg, "\nTMB was built with Matrix ABI version ", abi$built,
                   ", but the installed Matrix package has ABI version ", abi$current,
-                  ". This mismatch can make every start fail. Reinstall TMB from source with ",
+                  ". This mismatch can make every start fail. Update both packages with ",
+                  "install.packages(c(\"Matrix\", \"TMB\")) and restart R. If TMB still warns about the ",
+                  "Matrix ABI version when it loads, reinstall TMB from source with ",
                   "install.packages(\"TMB\", type = \"source\"), restart R and fit again.")
   msg
 }

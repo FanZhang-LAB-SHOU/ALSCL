@@ -16,6 +16,7 @@ utils::globalVariables(c("relative", "Series"))
 #'   are not drawn.
 #' @param type `"number"` (default): catch in numbers. `"weight"`: catch in
 #'   weight.
+#'   Letter case does not matter.
 #' @param years NULL or the time steps over which the mean is calculated, as
 #'   values of `fit$year`. NULL uses all time steps of the fit, or, with
 #'   `observed`, the time steps of the fit that have a reported catch. With
@@ -77,7 +78,7 @@ plot_relative_catch <- function(fit, observed = NULL, type = c("number", "weight
                                 font_family = NULL, title_size = NULL, axis_title_size = NULL,
                                 axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
                                 x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  type <- match.arg(type)
+  type <- .acl_match_choice(type, partial = TRUE)
   .acl_check_flag(return_data, "return_data")
   if (is.null(line_size)) line_size <- .acl_auto_size()
   line_color <- .acl_quantity_colors("catch", line_color)$line

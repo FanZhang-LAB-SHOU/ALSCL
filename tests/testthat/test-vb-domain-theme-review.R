@@ -16,19 +16,22 @@ test_that("default growth ages follow the fit without invalid negative-length in
   for (fixed in c(FALSE, TRUE)) {
     fit <- vb_domain_fixture("ACL", fixed)
     for (se in c(FALSE, TRUE)) {
-      p <- plot_VB(fit, se = se)
+      # With Linf, k and t0 all fixed the curve has no interval: a band of
+      # zero width would suggest one.
+      if (se && fixed) expect_warning(p <- plot_VB(fit, se = se), "at least one estimated growth parameter") else
+        p <- plot_VB(fit, se = se)
       expect_equal(range(p$data$age), range(fit$age))
       expected <- fit$report$Linf * (1 - exp(-fit$report$vbk * (p$data$age - fit$report$t0)))
       expect_equal(p$data$length, expected)
       expect_true(all(p$data$length >= 0))
-      if (se) {
+      if (se && !fixed) {
         expect_true(all(p$data$lower <= p$data$length))
         expect_true(all(p$data$upper >= p$data$length))
         expect_true(all(p$data$lower <= p$data$upper))
-        if (fixed) {
-          expect_equal(p$data$lower, expected)
-          expect_equal(p$data$upper, expected)
-        }
+      }
+      if (se && fixed) {
+        expect_null(p$data$lower)
+        expect_null(p$data$upper)
       }
       expect_s3_class(ggplot2::ggplot_build(p), "ggplot_built")
     }
@@ -52,16 +55,23 @@ test_that("an ALSCL fit shows mean length at age from its numbers, with the para
     expect_equal(q$data, p$data)
     # The curve computed from Linf, k and t0 as a reference line with its interval.
     for (kind in c("ribbon", "errorbar")) {
-      expect_no_warning(r <- plot_VB(fit, parameter_curve = TRUE, se = TRUE, se_type = kind))
+      # With Linf, k and t0 all fixed the curve has no interval.
+      if (fixed) expect_warning(r <- plot_VB(fit, parameter_curve = TRUE, se = TRUE, se_type = kind),
+                                "at least one estimated growth parameter") else
+        expect_no_warning(r <- plot_VB(fit, parameter_curve = TRUE, se = TRUE, se_type = kind))
       lines <- layer_of(r, "GeomLine")
       expect_length(lines, 2L)
       curve <- r$layers[[lines[2L]]]$data
       expect_equal(range(curve$age), range(fit$age))
       expect_equal(curve$length,
                    fit$report$Linf * (1 - exp(-fit$report$vbk * (curve$age - fit$report$t0))))
-      expect_true(all(curve$lower <= curve$length & curve$upper >= curve$length))
-      if (fixed) expect_equal(curve$lower, curve$upper)
-      expect_length(layer_of(r, if (kind == "ribbon") "GeomRibbon" else "GeomErrorbar"), 1L)
+      if (fixed) {
+        expect_null(curve$lower)
+        expect_length(c(layer_of(r, "GeomRibbon"), layer_of(r, "GeomErrorbar")), 0L)
+      } else {
+        expect_true(all(curve$lower <= curve$length & curve$upper >= curve$length))
+        expect_length(layer_of(r, if (kind == "ribbon") "GeomRibbon" else "GeomErrorbar"), 1L)
+      }
       expect_match(ggplot2::ggplot_build(r)$data[[layer_of(r, "GeomText")]]$label, "Curve from the growth parameters")
       expect_match(r$labels$caption, "mean length at age in the first time step")
       expect_equal(r$data, p$data)
@@ -72,7 +82,7 @@ test_that("an ALSCL fit shows mean length at age from its numbers, with the para
 })
 
 test_that("growth ranges retain valid explicit endpoints and reject pre-t0 extrapolation", {
-  fit <- vb_domain_fixture(fixed = TRUE)
+  fit <- vb_domain_fixture()
   for (se in c(FALSE, TRUE)) {
     expect_error(plot_VB(fit, age_range = c(1, 25), se = se), "start at or after t0")
     for (bounds in list(c(fit$report$t0, 3), c(3.01, 3.04), c(3.13, 8.37), c(20, 25))) {
@@ -87,16 +97,16 @@ test_that("growth ranges retain valid explicit endpoints and reject pre-t0 extra
   p <- plot_VB(fit, age_range = c(fit$report$t0, 3), se = TRUE)
   expect_equal(p$data$length[1], 0)
   expect_equal(p$data$lower[1], 0)
-  expect_equal(p$data$upper[1], 0)
+  expect_gte(p$data$upper[1], 0)
   for (bad in list(c(3, 3), c(4, 3), numeric(), 3, c(3, 4, 5), c(NA, 5), c(3, Inf), "3"))
     expect_error(plot_VB(fit, age_range = bad), "finite increasing pair")
   for (bad in list(NA, 1, c(TRUE, FALSE), "TRUE"))
     expect_error(plot_VB(fit, se = bad), "se must be TRUE or FALSE")
-  expect_error(plot_VB(fit, se_type = "band"), "arg")
+  expect_error(plot_VB(fit, se_type = "band"), "se_type must be one of")
 })
 
 test_that("automatic ranges have a safe documented fallback and validate age metadata", {
-  fit <- vb_domain_fixture(fixed = TRUE)
+  fit <- vb_domain_fixture()
   fit$report$t0 <- -.1
   fit$age <- NULL
   expect_equal(range(plot_VB(fit)$data$age), c(1, 25))

@@ -25,12 +25,13 @@
 #' @param line_type Character. The type of the line. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. Color of the interval. NULL takes the
-#'   color of the line, or the global se_color when that differs from the
-#'   global line_color or when F_color is NULL.
+#'   color of the line, or the global se_color when it was set to a color
+#'   other than the band color of the palette.
 #' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
 #'   inherits the global se_alpha setting (0.3 under the default style, 0.2
 #'   under classic). Error bars are opaque unless se_alpha is given.
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
+#'   Letter case does not matter.
 #' @param interval Character or NULL. The 95% interval drawn when \code{se = TRUE}.
 #'   \code{"lognormal"} is \code{exp(log(estimate) +/- 1.96 * SE / estimate)} and
 #'   stays above zero (an estimate of exactly zero keeps the Wald upper bound
@@ -39,16 +40,19 @@
 #'   "lognormal"). Point estimates are the same for both. An estimate that is
 #'   not positive, which can occur for ALSCL F at age because it is derived as
 #'   total mortality minus natural mortality, keeps the Wald bounds.
+#'   Letter case does not matter.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Character. Scales for facet_wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param type Character. Which dimension of F runs along the x axis: "year"
 #'   (one panel per age or length group), "age" (one panel per time step) or
 #'   "length" (ALSCL only: one panel per time step with the numeric length-bin
 #'   midpoints in \code{model_result$len_mid} on the x axis; for ACL a legacy
 #'   alias for "age", with a warning). Default is "year". Time-step panels are
 #'   labelled "Year 2000", or "2000 Q2" for quarterly fits.
+#'   Letter case does not matter.
 #' @param return_data Logical. Whether to return data alongside the plot. Default is FALSE.
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks. NULL inherits
 #'   the global x_breaks setting when at least one of its values lies on this
@@ -75,7 +79,8 @@
 #'   "bw" or "theme_bw", or NULL to use the global theme. Non-grid layout
 #'   settings in theme objects are retained; typography follows the global
 #'   settings and the explicit typography arguments. Grid lines follow the
-#'   global grid setting for every base theme.
+#'   global grid setting for every base theme. Letter case does not matter in
+#'   theme names.
 #'
 #' @details A group or panel with only one estimate is drawn as a point.
 #'   When intervals are requested, its ribbon is replaced by an error bar.
@@ -128,8 +133,8 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
-  type <- match.arg(type)
-  se_type <- match.arg(se_type, c("ribbon", "errorbar"))
+  type <- .acl_match_choice(type, partial = TRUE)
+  se_type <- .acl_match_choice(se_type, c("ribbon", "errorbar"), "se_type", partial = TRUE)
   .acl_check_flag(se, "se")
   interval <- .acl_interval_type(interval)
   time_step <- model_result$growth_step
@@ -207,7 +212,7 @@ plot_fishing_mortality <- function(model_result, line_size = NULL, line_color = 
       ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) else
       ggplot2::geom_errorbar(ggplot2::aes(ymin = lower, ymax = upper), color = se_color,
                              alpha = errorbar_alpha, width = .acl_cap_width(plot_data[[x]]))
-    p + ggplot2::facet_wrap(facet, ncol = facet_ncol, scales = facet_scales)
+    p + ggplot2::facet_wrap(facet, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
   }
   interval_table <- function(name, n) {
     ss <- .acl_plot_estimates(model_result, name, n)

@@ -16,7 +16,7 @@ ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估�
 
 围绕这两个模型，软件包提供数据准备与检查、多初值并行拟合、诊断、模型比较、回溯分析、敏感性情景、似然剖面、投影、从拟合模型模拟调查数据、预测检验、可移植的评估存档和 27 个绘图函数。
 
-**最新版本：2.5.1** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
+**最新版本：2.5.2** · [更新记录](NEWS.md) · [中文网站](https://fanzhang-lab-shou.github.io/ALSCL/zh/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [函数参考](docs/FUNCTION_REFERENCE.md) · [图谱](docs/PLOT_GALLERY.md)
 
 ## 能做什么
 
@@ -32,10 +32,10 @@ ALSCL 是一个 R 包，利用渔业独立调查的体长数据做资源评估�
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # 开发版（main 分支）
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.5.1")   # 指定版本
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.5.2")   # 指定版本
 ```
 
-ALSCL 需要 R 4.1 或更高版本、TMB 1.9.21 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。详见[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)。
+ALSCL 需要 R 4.1 或更高版本、TMB 1.9.17 或更高版本，以及与 R 匹配的 C++ 编译器：Windows 装 Rtools，macOS 装 Xcode Command Line Tools，Linux 装 C++ 编译器和 make。每个 R 会话第一次拟合某个模型时会编译它；设置 `options(ALSCL.tmb.cache = "~/ALSCL-cache")` 可以在会话之间保留编译结果。[安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)逐步说明安装过程，包括在 R 4.3 及更早版本上 R 提示从源码安装软件包时如何回答。
 
 ## 快速开始
 
@@ -43,17 +43,17 @@ ALSCL 需要 R 4.1 或更高版本、TMB 1.9.21 或更高版本，以及与 R �
 library(ALSCL)
 data("YTF_example")               # 内置模拟数据：三张表加设置
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)    # 年龄结构模型
-b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型
-diagnose_model(x$data.CatL, a)    # 读估计值之前先看数值检查
-extract_estimates(a)              # 带标准误的估计值
+a <- run_acl(x, silent = TRUE)    # 年龄结构模型；第一次调用时编译
+b <- run_alscl(x, silent = TRUE)  # 年龄与体长联合结构模型；约需两分钟
+diagnose_model(x$data.CatL, a)    # 应打印 Numerical checks: TRUE
+head(extract_estimates(a))        # 带标准误的估计值
 plot_compare_ts(a, b, se = TRUE)
 save_assessment(a, "ytf_acl.rds")
 ```
 
 ![ACL 与 ALSCL 估计的产卵生物量、补充量、总生物量、总丰度和渔获尾数](docs/figures/ytf/compare_ts.png)
 
-`YTF_example` 是带有已知模拟真值的模拟数据集，用于教学，不是论文中的实测数据。要拟合自己的调查数据，先读[准备调查数据](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/data-preparation.html)。
+[理解第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/first-model.html)逐行解释这些代码及其输出。`YTF_example` 是带有已知模拟真值的模拟数据集，用于教学，不是论文中的实测数据。要拟合自己的调查数据，先读[准备调查数据](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/data-preparation.html)。
 
 <p align="center">
   <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/CatL_length_TRUE.png" width="32%" alt="调查指数的观测值与拟合值随时间的变化，每个体长组一个面板"></a>
@@ -72,13 +72,13 @@ save_assessment(a, "ytf_acl.rds")
 | 捕捞死亡率 | 按年龄估计 | 按体长估计，年龄别 F 由模型推导 |
 | 拟合函数 | `run_acl()` | `run_alscl()` |
 
-两个模型读取相同的三张表，按年或按季度：体长别调查尾数、体长别平均体重和体长别成熟比例。自然死亡率和调查可捕性作为设置给出。调查可捕性的最大值固定为 1，因此丰度、生物量和补充量的尺度就是调查指数的尺度：只有当指数是绝对丰度估计时，它们才是绝对量。[Excel 填表示例](docs/data/ALSCL_Data_Entry_Example.xlsx)展示了表格格式。
+两个模型读取相同的三张表，按年或按季度：体长别调查尾数、体长别平均体重和体长别成熟比例。自然死亡率和调查可捕性作为设置给出。调查可捕性的最大值固定为 1，因此丰度、生物量和补充量的尺度就是调查指数的尺度，只有当指数是绝对丰度估计时，它们才是绝对量。[Excel 填表示例](docs/data/ALSCL_Data_Entry_Example.xlsx)展示了表格格式。
 
 ## 文档
 
 从哪里开始：
 
-1. [安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)：安装软件包，拟合内置示例并检查结果。
+1. [安装 ALSCL 并完成第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/getting-started.html)，再读[理解第一次拟合](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/first-model.html)：安装软件包，拟合内置示例，检查拟合并画出估计值。
 2. [准备调查数据](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/data-preparation.html)：排好三张表，选择生物学设置，查看将被估计的参数。
 3. [模型能重现观测并预测留出时间步吗？](https://fanzhang-lab-shou.github.io/ALSCL/zh/articles/case-model-validation.html)：模拟与预测检验。
 

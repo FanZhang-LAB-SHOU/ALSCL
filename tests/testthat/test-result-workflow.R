@@ -19,7 +19,7 @@ test_that("parameter extraction distinguishes estimates, fixed values and scales
     expect_true(all(is.na(natural$conf_low[fixed])))
     expect_equal(nrow(natural), length(create_parameters(tolower(model))$parameters))
     expect_s3_class(summary(fit), "summary.alscl_fit")
-    expect_output(print(fit), "assessment")
+    expect_output(print(fit), paste(model, "fit"))
     fit$recipe <- NULL
     expect_equal(nrow(extract_parameters(fit)), length(fit$opt$par))
     fit$vcov <- NULL

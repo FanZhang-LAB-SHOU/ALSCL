@@ -35,8 +35,12 @@
 #' @param rec_sigma Numeric. SD of log-recruitment variation. Default 0.5.
 #' @param seed Integer or NULL. Random seed for reproducibility. Default NULL
 #'   (different result each run). Set e.g. \code{seed = 42} for reproducible output.
-#' @param save_csv Logical. Save CSV files to working directory. Default FALSE.
-#' @param output_dir Character. Directory for CSV output. Default ".".
+#' @param save_csv Logical. Save the three tables as the CSV files
+#'   data.CatL.csv, data.wgt.csv and data.mat.csv in output_dir, the names
+#'   that \code{\link{read_survey_csv}(output_dir)} reads. Numbers are
+#'   written in decimal form, without scientific notation. Default FALSE.
+#' @param output_dir Character. Directory of the CSV files, created when it
+#'   does not exist. Default ".", the working directory.
 #'
 #' @return A list with components:
 #'   \describe{
@@ -76,10 +80,12 @@
 #' # Custom unequal bins
 #' sim3 <- simulate_example_data(bin_breaks = c(0, 15, 25, 35, 45, 60))
 #'
-#' # Save CSVs for sharing
+#' # Save CSVs for sharing, and read them back
 #' folder <- tempfile("example_data")
 #' sim <- simulate_example_data(seed = 42, save_csv = TRUE, output_dir = folder)
 #' list.files(folder)
+#' tables <- read_survey_csv(folder)
+#' names(tables)
 #' unlink(folder, recursive = TRUE)
 #'
 #' \donttest{
@@ -271,10 +277,14 @@ simulate_example_data <- function(years      = 2000:2025,
   # --- Save CSV if requested ---
   if (save_csv) {
     if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
-    utils::write.csv(data.CatL, file.path(output_dir, "sim_CatL.csv"), row.names = FALSE)
-    utils::write.csv(data.wgt,  file.path(output_dir, "sim_wgt.csv"),  row.names = FALSE)
-    utils::write.csv(data.mat,  file.path(output_dir, "sim_mat.csv"),  row.names = FALSE)
-    message("Saved to: ", output_dir, "\n  sim_CatL.csv\n  sim_wgt.csv\n  sim_mat.csv")
+    # The file names that read_survey_csv() reads; numbers in decimal form.
+    old <- options(scipen = 100)
+    on.exit(options(old), add = TRUE)
+    files <- c("data.CatL.csv", "data.wgt.csv", "data.mat.csv")
+    utils::write.csv(data.CatL, file.path(output_dir, files[1L]), row.names = FALSE)
+    utils::write.csv(data.wgt,  file.path(output_dir, files[2L]), row.names = FALSE)
+    utils::write.csv(data.mat,  file.path(output_dir, files[3L]), row.names = FALSE)
+    message("Saved to: ", output_dir, paste0("\n  ", files, collapse = ""))
   }
 
   # --- Return ---

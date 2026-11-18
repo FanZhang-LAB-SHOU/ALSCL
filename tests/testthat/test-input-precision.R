@@ -57,8 +57,8 @@ test_that("complex cells are rejected before fitting or diagnostic conversion", 
     input <- fixture_frames()
     input[[field]][[2L]] <- input[[field]][[2L]] + 5i
     for (fun in list(run_acl, run_alscl))
-      expect_error(fun(input), "real values are required")
+      expect_error(fun(input), paste(field, "must hold numbers"))
     if (field == "data.CatL")
-      expect_error(.acl_survey_data(input$data.CatL), "real values are required")
+      expect_error(.acl_survey_data(input$data.CatL), "data.CatL must hold numbers")
   }
 })

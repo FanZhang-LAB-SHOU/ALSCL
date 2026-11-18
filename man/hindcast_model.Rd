@@ -20,7 +20,8 @@ hindcast_model(
 \arguments{
 \item{x}{An input bundle accepted by run_acl() or run_alscl().}
 
-\item{model}{Model to fit, "acl" (default) or "alscl".}
+\item{model}{Model to fit, "acl" (default) or "alscl".
+Letter case does not matter.}
 
 \item{horizon}{Positive integer; number of future model periods predicted
 from each forecast origin (the last training time step). A period is a

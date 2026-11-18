@@ -139,10 +139,7 @@
 # Interval type requested in a plot call, or the global setting when NULL.
 .acl_interval_type <- function(interval = NULL) {
   if (is.null(interval)) interval <- acl_theme("interval") %||% "lognormal"
-  if (!is.character(interval) || length(interval) != 1L || is.na(interval) ||
-      !interval %in% c("lognormal", "wald"))
-    stop("interval must be \"lognormal\" or \"wald\".", call. = FALSE)
-  interval
+  .acl_match_choice(interval, c("lognormal", "wald"), "interval")
 }
 
 # 95% interval from an estimate and its standard error on the reported scale.

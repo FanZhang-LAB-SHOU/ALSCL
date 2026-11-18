@@ -32,7 +32,8 @@ plot_compare_ts(
 quantities reported with uncertainty by both ACL and ALSCL. CB can be
 requested explicitly when both supplied results contain it.
 For F, use \code{plot_compare_F_ts()} and explicitly choose the group
-mean or apical summary; F is not a scalar time series in the model reports.}
+mean or apical summary; F is not a scalar time series in the model reports.
+Letter case does not matter, so \code{"ssb"} gives the same as \code{"SSB"} and \code{"rec"} the same as \code{"Rec"}.}
 
 \item{se}{Logical. Show 95\% confidence intervals. Default FALSE.}
 
@@ -52,7 +53,8 @@ the global compare_facet_ncol setting, which by default chooses it from
 the number of panels. With five quantities the legend fills the empty
 cell.}
 
-\item{facet_scales}{Character or NULL. Facet scales; NULL uses the global compare_facet_scales.}
+\item{facet_scales}{Character or NULL. Facet scales; NULL uses the global compare_facet_scales.
+Letter case does not matter.}
 
 \item{return_data}{Logical. Return data alongside plot. Default FALSE.}
 
@@ -64,7 +66,8 @@ line_size, ncol for facet_ncol and scales for facet_scales.}
 stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
-"lognormal"). Point estimates are the same for both.}
+"lognormal"). Point estimates are the same for both.
+Letter case does not matter.}
 
 \item{title}{Character, FALSE or NULL. NULL (default) draws the default
 title, FALSE (or NA or "") draws no title, and a character string is

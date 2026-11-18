@@ -42,7 +42,8 @@ than 1) use one core each. The same functions with \code{ncores = 1} fit
 in the main process and use this setting. Set \code{sd_cores = 1} when
 you run fits in your own parallel loop.
 Parallel standard errors are enabled for checked TMB versions 1.9.21 and
-1.9.25; other versions use sequential standard errors until validated.}
+1.9.25; other versions use sequential standard errors until validated.
+Letter case does not matter.}
 
 \item{framework}{Automatic-differentiation library that TMB compiles the
 model with. \code{"CppAD"} (default) is TMB's default library, used by
@@ -54,7 +55,8 @@ several times faster, but results are not identical: in the tests in
 \url{https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED.md}, estimates differed by up to 2e-11 (relative) when
 5 fixed effects were estimated and by up to 3e-8 when 10 were estimated.
 A change takes effect at the next fit, which compiles the model once for
-each library.}
+each library.
+Letter case does not matter.}
 }
 \value{
 The previous settings, invisibly, so that \code{options(old)}

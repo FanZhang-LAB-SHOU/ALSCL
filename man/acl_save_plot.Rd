@@ -4,7 +4,15 @@
 \alias{acl_save_plot}
 \title{Save a plot at its recommended size}
 \usage{
-acl_save_plot(plot, filename, width = NULL, height = NULL, dpi = 300, ...)
+acl_save_plot(
+  plot,
+  filename,
+  width = NULL,
+  height = NULL,
+  dpi = 300,
+  units = "in",
+  ...
+)
 }
 \arguments{
 \item{plot}{A ggplot or patchwork object.}
@@ -12,11 +20,15 @@ acl_save_plot(plot, filename, width = NULL, height = NULL, dpi = 300, ...)
 \item{filename}{Character. File to write; the extension chooses the
 format, as in \code{ggplot2::ggsave()}.}
 
-\item{width, height}{Numeric or NULL. Size in inches. NULL takes the value
-of \code{acl_figure_size()}.}
+\item{width, height}{Numeric or NULL. Size in \code{units}. NULL takes the
+value of \code{acl_figure_size()}.}
 
 \item{dpi}{Numeric. Resolution of raster formats in dots per inch, 300 by
 default.}
+
+\item{units}{Unit of width and height: \code{"in"} (inches, the default),
+\code{"cm"}, \code{"mm"} or \code{"px"} (pixels at \code{dpi}).
+Letter case does not matter.}
 
 \item{...}{Further arguments of \code{ggplot2::ggsave()}, such as
 \code{device} or \code{bg} (default \code{"white"}).}
@@ -35,6 +47,9 @@ fit <- list(year = 2001:2020, report = list(Rec = 100 + 30 * sin(1:20)))
 file <- tempfile(fileext = ".png")
 acl_save_plot(plot_recruitment(fit), file)
 file.exists(file)
+
+# A width in centimetres, with the matching height
+acl_save_plot(plot_recruitment(fit), file, width = 16, units = "cm")
 }
 \seealso{
 Other acl_theme:

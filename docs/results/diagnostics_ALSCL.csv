@@ -11,13 +11,13 @@
 "Max Error",23.5293739412874
 "AIC",-47.1859772722867
 "BIC",-26.529844824871
-"Boundary Hit",0
-"Model Converged",1
-"Final Outer mgc",4.59163818078423e-11
-"Positive Definite Hessian",1
-"Numerical Screen Passed",1
-"Natural Scale Boundary",0
-"Covariance Condition",19.2757181147844
-"Highly Correlated Pairs",0
-"Parameters At Limit In Practice",0
-"Plausibility Notes",0
+"Parameter boundary hit",0
+"Optimizer converged",1
+"Maximum absolute gradient",0.0000000000459163818078423
+"Positive-definite Hessian",1
+"Numerical checks passed",1
+"Natural-scale boundary",0
+"Covariance condition number",19.2757181147844
+"Highly correlated parameter pairs",0
+"Parameters at their limit in practice",0
+"Plausibility notes",0

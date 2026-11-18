@@ -23,23 +23,25 @@ Both models read three tables with the same layout: the survey index table `data
 | Other cells | One number per bin and time step; nothing else inside the grid |
 | All three tables | Identical bins, time labels and order |
 
+Under the three headings below, each table of the example is shown in full; the workbook and the CSV files in `docs/data` hold the same values. Scroll inside a table to see every time step: the header row and the `LengthBin` column stay in view. The line under each table gives the unit and a link to the CSV file.
+
 <h3 id="survey-table">Survey index table data.CatL</h3>
 
 Enter the survey numbers at length, or a consistently standardized index of them (for example numbers per tow). Decimals are fine. The model outputs are on the scale of this index. With the default logistic curve, survey catchability rises to a fixed maximum of 1 for large fish, and no catchability scale is estimated. Abundance, biomass, spawning stock biomass (SSB), recruitment and catch are therefore absolute estimates only when the index is an absolute abundance estimate at length, such as swept-area numbers expanded to the stock area. With a relative index such as numbers per tow, read them as relative values in the units of the index and label the axes accordingly. Fishing mortality rates do not depend on the scale of the index. Leave a cell blank, or write `NA`, when that bin was not observed in that time step; do not write 0, a dash or `<1` for an unknown value. A 0 means the survey observed nothing in that bin.
 
-![Survey index worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
+<!-- data-table: docs/data/data.CatL.csv digits=3 -->
 
 <h3 id="weight-table">Weight table data.wgt</h3>
 
 Enter the mean weight of one fish in each bin and time step, in one unit throughout (the example uses kg). Every cell needs a value, because the model multiplies numbers by weight to obtain biomass. If you have a length-weight relationship instead of yearly measurements, fill all time steps with its values and say so when you report the assessment.
 
-![Weight worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
+<!-- data-table: docs/data/data.wgt.csv digits=5 -->
 
 <h3 id="maturity-table">Maturity table data.mat</h3>
 
 Enter the proportion mature as a number between 0 and 1 (0.6 for 60%). Every cell needs a value; 0 and 1 are valid. Spawning stock biomass is numbers times weight times maturity, so this table decides which bins count as spawners.
 
-![Maturity worksheet](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true)
+<!-- data-table: docs/data/data.mat.csv digits=4 -->
 
 <h2 id="time-and-bins">2. Choose the time step and handle gaps</h2>
 
@@ -52,20 +54,26 @@ The models advance the population one time step at a time, and `growth_step` is 
 | One bin not observed in one time step | Leave that survey cell blank |
 | A recorded zero | Keep the 0; decide in step 4 whether zeros are treated as missing (`zero_action = "missing"`, the default) or stop the fit (`"error"`) |
 
-Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length. For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design. When the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
+Supply length-bin midpoints (`len_mid`, one per row) and internal boundaries (`len_border`, one fewer than the rows). For equal-width bins, midpoints are the row labels and internal boundaries are halfway between them. Otherwise supply the boundaries used in your survey design. When the labels are single numbers with unequal spacing and `len_border` is missing, the fit sets the boundaries halfway between adjacent labels and gives a warning.
 
 <h2 id="import">3. Read the files into R</h2>
 
 Use one of the two readers. Both return a list with the three tables, convert numeric text to numbers, and stop with a message when the tables differ.
 
-Native numeric columns retain their precision when other time columns contain numeric text or factors. This also applies when you pass tables directly to `run_acl()` or `run_alscl()`; diagnostics read the same values. Complex-valued cells are invalid.
-
 ```r
 library(ALSCL)
-install.packages("readxl") # once; only needed for Excel files
+# Once; only needed for Excel files.
+if (getRversion() < "4.2.0") {
+  install.packages("remotes")
+  remotes::install_version("readxl", version = "1.4.5", upgrade = "never")
+} else {
+  install.packages("readxl")
+}
 tables <- read_survey_excel("my_survey.xlsx")
 str(tables)
 ```
+
+On R 4.1, use [readxl 1.4.5](https://github.com/tidyverse/readxl/blob/v1.4.5/DESCRIPTION), which supports that R version. The code above chooses it automatically. CSV files do not need readxl.
 
 ```r
 # Three files data.CatL.csv, data.wgt.csv and data.mat.csv in one folder
@@ -74,6 +82,12 @@ str(tables)
 ```
 
 `str(tables)` should show three data frames with the same number of rows and columns, the first column of each being the length labels. A message such as "nonnumeric cell in time column 2003" points to a text entry in the grid; "must match data.CatL length labels and time columns" means the rows or columns of one table differ from the others. `read_survey_excel()` also stops when a cell holds an Excel error value such as `#DIV/0!` or `#N/A`, and names the sheet and the cells; only blank cells and `NA` denote missing values. Fix the file and read it again.
+
+<h3 id="import-details">Details on cell values and the outer bins</h3>
+
+Native numeric columns retain their precision when other time columns contain numeric text or factors. This also applies when you pass tables directly to `run_acl()` or `run_alscl()`; diagnostics read the same values. Complex-valued cells are invalid.
+
+In the age-length probability calculation, the first and last bins absorb the normal distribution's lower and upper tails, with mathematical bounds of negative and positive infinity. The distribution is not truncated at zero; this is a probability-allocation convention, not a negative observed length.
 
 <h2 id="bundle">4. Add the biology and build the input bundle</h2>
 

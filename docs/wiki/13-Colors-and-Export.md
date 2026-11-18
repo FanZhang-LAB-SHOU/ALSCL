@@ -4,7 +4,7 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/14-Function-Reference)
 
-**ALSCL 2.5.1 · 简体中文 / English**
+**ALSCL 2.5.2 · 简体中文 / English**
 
 [使用指南 / User guide](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md) · [首页 / Home](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/README.md)
 
@@ -71,7 +71,7 @@ The palettes are `default` (8 colors), `npg` (10), `aaas` (10), `nejm` (8), `lan
 
 The figure shows the six palettes `acl_theme_set()` accepts and the four quantity colors of the default style. In each row the color labelled "line, interval" draws lines, intervals and points of single-model plots, the color labelled "observed" draws observations and the second model in comparisons, and the color labelled "smoother" draws smoothers; the remaining colors are used in order when a plot needs more groups, for example the peels of a retrospective under a ggsci palette. The next figure shows the same comparison plot under every palette, so you can pick one by eye; `docs/figures/palettes/ssb_by_palette.png` in the repository shows a single-model plot in the same way.
 
-![各调色板下 ACL 和 ALSCL 的产卵生物量及其 95% 置信区间 / Spawning stock biomass of ACL and ALSCL with 95% confidence intervals under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=fe274cdbfa07)
+![各调色板下 ACL 和 ALSCL 的产卵生物量及其 95% 置信区间 / Spawning stock biomass of ACL and ALSCL with 95% confidence intervals under each palette](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/palettes/compare_by_palette.png?raw=true&v=ef2f919f79fe)
 
 | 设置 / Setting | 范围与优先级 / Scope and precedence |
 |---|---|
@@ -202,9 +202,9 @@ acl_theme_reset()
 
 The total, age and length modes of `plot_SSB()`, `plot_biomass()`, `plot_abundance()` and `plot_catch()` inherit the global `titles`, `xlab`, `ylab`, `x_breaks` and `x_expand`, with or without intervals. For SSB, use `ylab$ssb`; titles use the quantity key, with `_se` for interval variants. These settings change labels and display ranges only; the grid lines follow `grid`. `acl_theme_set(interval = "wald")` changes the 95% interval of the abundance, biomass, spawning stock biomass, recruitment, catch and fishing mortality plots from the default lognormal interval to the symmetric interval `estimate +/- 1.96 * SE`; the `interval` argument does the same for one call. Error bars are opaque unless the call gives `se_alpha`. A `title`, `xlab` or `ylab` given in the call replaces the theme label, `title = FALSE` (also `NA` or `""`) draws no title, and `acl_theme_set(show_title = FALSE)` removes the default titles of all plots while keeping titles given in a call. The typography arguments (`font_family`, `title_size`, `axis_title_size`, `axis_text_size`, `strip_text_size`, `legend_text_size`, `base_theme`, `title_hjust`) replace the corresponding settings, as in every other single-model plot; `plot_deviance()` takes the same arguments.
 
-所有图的时间轴遵循同一规则。单个面板在 12 年以内标出每一年，30 年以内每 2 年标一次，60 年以内每 5 年标一次，更长时每 10 年标一次，其余年份只画不带标签的刻度，所以示例的 20 年标为 2000、2002、……、2018。多面板图中标签间隔随面板宽度确定，会相互接触的标签倾斜 45 度，而不是被删去。`x_angle = 0` 让标签保持水平并减少标出的年份，其他数值固定倾斜角度。调用或主题中的 `x_breaks` 设定标出的数值；全局设置同时用于时间、年龄和体长坐标轴，只有至少一个刻度落在某张图的横轴范围内时，该图才使用它，所以按年份设置的刻度不会清空年龄轴或体长轴。
+所有图的时间轴遵循同一规则。单个面板在 12 年以内标出每一年，30 年以内每 2 年标一次，60 年以内每 5 年标一次，更长时每 10 年标一次，其余年份只画不带标签的刻度。第一年和最后一年总会标出。多面板图中标签间隔随面板宽度确定，会相互接触的标签倾斜 45 度，而不是被删去。`x_angle = 0` 让标签保持水平并减少标出的年份，其他数值固定倾斜角度。调用或主题中的 `x_breaks` 设定标出的数值；全局设置同时用于时间、年龄和体长坐标轴，只有至少一个刻度落在某张图的横轴范围内时，该图才使用它，所以按年份设置的刻度不会清空年龄轴或体长轴。
 
-Time axes follow one rule in every plot. A single panel labels every year up to 12 years, every second year up to 30, every fifth up to 60 and every tenth beyond, with unlabelled ticks at the other years, so the 20 years of the example are labelled 2000, 2002, ..., 2018. In figures with several panels the step follows the width of the panels, and labels that would touch are slanted by 45 degrees instead of being dropped. `x_angle = 0` keeps them horizontal and labels fewer years, and another number fixes the angle. `x_breaks`, in a call or in the theme, sets the labelled values; one global value serves time, age and length axes, and a plot uses it only when at least one break lies within its horizontal axis, so calendar-year breaks do not blank an age or length axis.
+Time axes follow one rule in every plot. A single panel labels every year up to 12 years, every second year up to 30, every fifth up to 60 and every tenth beyond, with unlabelled ticks at the other years. The first and the last year always carry a label. In figures with several panels the step follows the width of the panels, and labels that would touch are slanted by 45 degrees instead of being dropped. `x_angle = 0` keeps them horizontal and labels fewer years, and another number fixes the angle. `x_breaks`, in a call or in the theme, sets the labelled values; one global value serves time, age and length axes, and a plot uses it only when at least one break lies within its horizontal axis, so calendar-year breaks do not blank an age or length axis.
 
 `plot_fishing_mortality()` 继承同样的设置，标题键为 `F_year`、`F_age` 和 `F_length`（区间版本加 `_se`），横轴使用 `xlab$year`、`xlab$age` 或 `xlab$length`，纵轴使用 `ylab$F`。年龄模式按拟合年龄绘制。保存时没有年龄元数据的结果按编号的年龄组绘制，在你设置 `xlab$age` 之前默认标签是“Age bin”；ACL 的 `type = "length"` 别名使用年龄模式的设置。单次调用中指定的标签和刻度优先。`base_theme` 接受 `"theme_bw"`、`"bw"` 等名称、`ggplot2::theme_bw()` 等主题对象，或 `NULL` 表示全局设置。
 
@@ -221,7 +221,7 @@ Survey-fit plots, single-model and comparison, use `ylab$survey`; when it is uns
 | 想做什么 / What you want to do | 阅读 / Read |
 |---|---|
 | 选择要画的种群图 / Choose which population plot to draw | [调查与种群图](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) / [Survey and population plots](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) |
-| 在一张图中比较两次拟合 / Compare two fits in one figure | [模型比较与真值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) / [Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) |
+| 在一张图中比较两次拟合 / Compare two fits in one figure | [模型比较](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) / [Model comparisons](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_GALLERY.md) |
 
 ---
 

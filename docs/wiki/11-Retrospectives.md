@@ -4,9 +4,9 @@
 
 [← 上一章 · Previous](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/10-Model-Comparisons) · [目录 · Contents](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [下一章 · Next →](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki/12-Case-Studies)
 
-**ALSCL 2.5.1 · 简体中文 / English**
+**ALSCL 2.5.2 · 简体中文 / English**
 
-读完本页，你会得到每个模型的 Mohn rho（生物量、产卵生物量、补充量和丰度）、重拟合序列的图和每次重拟合的数值检查。你需要[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)中的输入列表 `x` 和 ALSCL 拟合结果 `b`。
+读完本页，你会得到每个模型的 Mohn's rho（生物量、产卵生物量、补充量和丰度）、重拟合序列的图和每次重拟合的数值检查。你需要[理解第一次拟合](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin)中的输入列表 `x` 和 ALSCL 拟合结果 `b`。
 
 At the end of this page you have, for each model, Mohn's rho for biomass, spawning stock biomass, recruitment and abundance, a plot of the refitted series and the numerical checks of every refit. You need the input bundle `x` and the ALSCL fit `b` from [Understand your first fit](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#builtin).
 
@@ -55,7 +55,7 @@ The result is a list of tables, and `ra` has the same elements as `rb`:
 |---|---|---|
 | `fit_diagnostics` | 一次拟合 / fit | `Peel`（0 是完整拟合）、`RetrospectiveYear`（保留的最后一个时间步）、`elapsed`、数值检查及其汇总 `numerical_ok` 和未通过的项目 `issues`，拟合中止时的错误信息 `error`，以及该次拟合产生的警告 `warnings` / `Peel` (0 is the full fit), `RetrospectiveYear` (last time step kept), `elapsed`, the numerical checks with their summary `numerical_ok` and failed items `issues`, the message of a fit that stopped in `error`, and the warnings raised by the fit in `warnings` |
 | `rho_by_peel` | 一轮和一个量 / peel and quantity | `RawRho`，该轮末端估计与完整拟合在该时间步估计的相对差；`Rho`，两次拟合都通过数值检查且参考值有限、非零时等于 `RawRho`，否则为 `NA`；`Valid` / `RawRho`, the relative difference between the peel's terminal estimate and the full fit's estimate for that time step; `Rho`, the same when both fits passed the numerical checks and the reference is finite and nonzero, otherwise `NA`; `Valid` |
-| `rho_text` | 一个量 / quantity | Mohn rho，即各轮 `Rho` 的平均值，附 `Valid`、`ValidPeels` 和 `RequestedPeels`；`Year` 只是标签位置 / Mohn's rho, the mean of `Rho` over the peels, with `Valid`, `ValidPeels` and `RequestedPeels`; `Year` is only a label position |
+| `rho_text` | 一个量 / quantity | Mohn's rho，即各轮 `Rho` 的平均值，附 `Valid`、`ValidPeels` 和 `RequestedPeels`；`Year` 只是标签位置 / Mohn's rho, the mean of `Rho` over the peels, with `Valid`, `ValidPeels` and `RequestedPeels`; `Year` is only a label position |
 | `raw_rho_text` | 一个量 / quantity | 不经检查的 `RawRho` 平均值，仅供诊断；任一比较缺失时为 `NA` / the mean of `RawRho` without the checks, for diagnosis only; `NA` when any comparison is missing |
 | `errors` | 一次失败的拟合 / failed fit | `Peel`、`RetrospectiveYear` 和错误信息；所有拟合都运行完成时为零行 / `Peel`, `RetrospectiveYear` and the message; zero rows when every fit ran |
 
@@ -71,15 +71,15 @@ The quantities are total biomass `B`, recruitment `Rec`, spawning stock biomass 
 plot_retro(rb, rho_digits = 3)
 ```
 
-![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=ce3eb63d646d)
+![示例的 ALSCL 回溯分析 / ALSCL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true&v=906aa591e6f8)
 
-`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板（“Total biomass”、“Recruitment”、“Spawning stock biomass (SSB)”和“Total abundance”，纵轴名为“Estimate”），默认排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。在默认样式下，完整拟合为橙色并画在最上层，各轮为灰色，第一轮最深，每个面板在线的上方为 Mohn rho 标注留出空间。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式，`peel_step` 大于 1 时也是如此。未通过数值检查的拟合用虚线绘制，并另加图例“Numerical checks”，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 Mohn rho 与完整拟合比较的那个值；面板标签为“Mohn's rho = ”加上保留 `rho_digits` 位小数的数值。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
+`plot_retro()` 直接绘制保存的序列，无需重拟合，每个量一个面板（“Total biomass”、“Recruitment”、“Spawning stock biomass (SSB)”和“Total abundance”，纵轴名为“Estimate”），默认排成两列。每条线是一次拟合，颜色按它的最后一个时间步区分：完整拟合止于 2019 年，各轮止于 2018、2017 和 2016 年。在默认样式下，完整拟合为橙色并画在最上层，各轮为灰色，第一轮最深，每个面板在线的上方为 Mohn's rho 标注留出空间。年度时间步的图例标题为“Terminal year”，更短的时间步为“Terminal period”，季度标为“2019 Q4”这样的形式，`peel_step` 大于 1 时也是如此。未通过数值检查的拟合用虚线绘制，并另加图例“Numerical checks”，没有估计值的拟合仍留在图例中，标为“(no estimates)”。空心点标出每次拟合的末端估计，也就是 Mohn's rho 与完整拟合比较的那个值；面板标签为“Mohn's rho = ”加上保留 `rho_digits` 位小数的数值。本页的图另加了 `rho_size = 3`、`point_size = 1` 和 `line_size = 0.6`。
 
 `plot_retro()` draws the stored series without refitting, one panel per quantity ("Total biomass", "Recruitment", "Spawning stock biomass (SSB)" and "Total abundance", on a y axis named "Estimate") in two columns, the default layout for four panels. Each line is one fit, colored by its last time step: the full fit ends in 2019, the peels in 2018, 2017 and 2016. Under the default style the full fit is orange and drawn on top, the peels are greys, darkest for the first peel, and each panel leaves room for the Mohn's rho label above the lines. The legend is titled "Terminal year" for annual time steps and "Terminal period" for shorter ones, where quarters are labelled as in "2019 Q4", also when `peel_step` is above 1. A fit that failed the numerical checks is drawn with a dashed line under a second legend, "Numerical checks", and a fit without estimates stays in the legend marked "(no estimates)". The open point marks each fit's terminal estimate, the value that Mohn's rho compares with the full fit, and the panel label reads "Mohn's rho = " followed by the value with `rho_digits` decimals. The figures on this page add `rho_size = 3`, `point_size = 1` and `line_size = 0.6`.
 
-![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=ee8e2bfa7820)
+![示例的 ACL 回溯分析 / ACL retrospective analysis of the example](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/retro_ACL.png?raw=true&v=1fc67d9ba6c6)
 
-两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。Mohn rho 为 `NA` 时，面板显示的文字形如“Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics”；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见[配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md)；全部参数见 [plot_retro 参考](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)。
+两张图中，截短拟合与完整拟合之间较明显的差异集中在序列末期。其他时间步的修订幅度可通过保存的估计值计算。Mohn's rho 为 `NA` 时，面板显示的文字形如“Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics”；若没有任何拟合给出估计值，`plot_retro()` 会停止并提示读 `fit_diagnostics` 和 `errors`。标题、标签、字号和各次拟合的颜色（`palette`、`colors`）见[配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md)；全部参数见 [plot_retro 参考](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro)。
 
 In both figures, the largest visible differences between the peeled and full fits occur near the end of the series. Compare the stored estimates to quantify revisions at other time steps. When Mohn's rho is `NA` the panel reads, for example, "Mohn's rho not available (2 of 3 peels valid); see the fit diagnostics"; if no fit produced estimates, `plot_retro()` stops and asks you to read `fit_diagnostics` and `errors`. Titles, labels, font sizes and the colors of the fits (`palette`, `colors`) follow [Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md); every argument is in the [plot_retro reference](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro).
 
@@ -89,9 +89,9 @@ In both figures, the largest visible differences between the peeled and full fit
 
 <a id="retrospectives-rho"></a>
 
-### 4. 解释 Mohn rho / Interpret Mohn's rho
+### 4. 解释 Mohn's rho / Interpret Mohn's rho
 
-Mohn rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：
+Mohn's rho 把每一轮的末端估计与完整拟合在同一时间步的估计之间的相对差，对各轮取平均：
 
 Mohn's rho averages, over the peels, the relative difference between the terminal estimate of each peel and the full fit's estimate for the same time step:
 
@@ -99,7 +99,7 @@ Mohn's rho averages, over the peels, the relative difference between the termina
 \rho=\frac{1}{K}\sum_{k=1}^{K}\frac{\hat\theta^{(-k)}_{T-k}-\hat\theta^{(0)}_{T-k}}{\hat\theta^{(0)}_{T-k}}.
 ```
 
-`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；默认 `peel_step = 1` 时第 `k` 轮止于 `T-k`，否则止于 `T` 减去 `k` 乘 `peel_step`。ρ 为 +0.03 表示截短拟合的末期估计平均比完整拟合对同一期的估计高 3%。ρ 为负表示平均偏低。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md)来回答。按评估量分别报告修订的方向和幅度。
+`K` 是 `nyear`，`T` 是完整拟合的最后一个时间步；默认 `peel_step = 1` 时第 `k` 轮止于 `T-k`，否则止于 `T` 减去 `k` 乘 `peel_step`。ρ 为 +0.03 表示截短拟合的末期估计平均比完整拟合对同一期的估计高 3%。ρ 为负表示平均偏低。符号相反的项会抵消，所以也要读 `rho_by_peel`；完整拟合的估计为零时该项没有定义。Mohn's rho 衡量的是加入后来的观测后末端估计被修订的程度；预测准确度由[预测检验](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md)来回答。按评估量分别报告修订的方向和幅度。
 
 `K` is `nyear` and `T` the last time step of the full fit; peel `k` ends at `T-k` with the default `peel_step = 1`, and at `T` minus `k` times `peel_step` otherwise. A rho of +0.03 means that the terminal estimates from shorter fits were on average 3% above the corresponding full-fit estimates. A negative rho means they were lower on average. Terms of opposite sign cancel, so read `rho_by_peel` as well; a full-fit estimate of zero leaves its term undefined. Mohn's rho measures the revision of terminal estimates when later observations are added; forecast accuracy is the question of [hindcast validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md). Report the direction and magnitude of the revisions for each quantity.
 
@@ -120,7 +120,7 @@ Run the analysis with the settings of the fit you report, so that differences be
 - 按年龄和时间步的自然死亡率，以及按体长和时间步的调查可捕性，按完整数据表的时间步每步一列。每一轮使用它所保留的时间步对应的各列。
 - 使用与主拟合相同的 F 结构：保存的 `F_structure` 会被使用，调用中显式给出的则作用于每次拟合。
 - 最短的一轮至少保留两个观测时间步，序列较短时要保留更多，因为较短的一轮要用更少的观测估计同样多的参数。
-- 用 `peel_step` 选择每轮的长度：季度数据默认每轮去掉一个季度，`retro_alscl(x, nyear = 3, peel_step = 4)` 每轮去掉一年，第 `k` 轮止于最后一个时间步之前 `k` 年，Mohn rho 是各个按年截短的轮次的均值。`RetrospectiveYear` 显示保留的最后一个时间步。
+- 用 `peel_step` 选择每轮的长度：季度数据默认每轮去掉一个季度，`retro_alscl(x, nyear = 3, peel_step = 4)` 每轮去掉一年，第 `k` 轮止于最后一个时间步之前 `k` 年，Mohn's rho 是各个按年截短的轮次的均值。`RetrospectiveYear` 显示保留的最后一个时间步。
 
 - Maps for `dev_log_R` and `dev_log_F`, the process deviations of recruitment and fishing mortality, must cover the complete time grid of the full tables, all groups of one time step before the next (one group when `F_structure = "year"`); each peel keeps the map entries of its retained time steps, and a map of another length stops the analysis. The restriction on fixed or repeated entries in [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting-controls-map) applies to every peel.
 - A natural mortality rate by age and time step, and a survey catchability by length and time step, have one column per time step of the complete tables. Each peel uses the columns of the time steps that it keeps.
@@ -138,9 +138,9 @@ saveRDS(rb, "ytf_alscl_retro.rds")
 plot_retro(readRDS("ytf_alscl_retro.rds"), rho_digits = 3)
 ```
 
-回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果，它将 `b` 连同重新拟合所需的输入和设置一起保存，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[进阶、复现与故障处理](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md)说明如何记录软件包版本和会话。
+回溯结果只包含表，没有只在当前会话有效的 TMB 对象，所以 `saveRDS()` 能完整保存它，`plot_retro()` 能在新会话中绘制重新读入的对象。`save_assessment()` 用于拟合结果，它将 `b` 连同重新拟合所需的输入和设置一起保存，供 `refit_model()` 使用；传入回溯结果时以 `A complete fit recipe is required` 停止。把这两个文件放在一起；[复现结果与排除故障](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md)说明如何记录软件包版本和会话。
 
-The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits. It stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproducibility](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) shows how to record the package versions and the session.
+The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits. It stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproduce results and fix problems](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/ADVANCED_WORKFLOWS.md) shows how to record the package versions and the session.
 
 <a id="retrospectives-next"></a>
 
@@ -153,7 +153,7 @@ The retrospective result holds tables only, with no live TMB object, so `saveRDS
 | 更改 map、F 结构或初值 / Change the map, F structure or starts | [选择拟合设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) / [Choose the fitting settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/USER_GUIDE.md#fitting) |
 | 检验对后来时间步的预测 / Test predictions of later time steps | [模型验证](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) / [Model validation](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/MODEL_VALIDATION.md) |
 | 用更多核心运行各轮 / Run the peels on more cores | [速度设置](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) / [Speed settings](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/SPEED_GUIDE.md) |
-| 更改颜色和标签 / Change colors and labels | [ggsci 配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md) / [Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md) |
+| 更改颜色和标签 / Change colors and labels | [配色与导出](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md) / [Colors and export](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/PLOT_STYLE.md) |
 | 查阅全部参数 / Read every argument | [retro_model](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_model)、[retro_acl](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_acl)、[retro_alscl](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_alscl)、[plot_retro](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro) / [retro_model](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_model), [retro_acl](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_acl), [retro_alscl](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#retro_alscl), [plot_retro](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_retro) |
 
 ---

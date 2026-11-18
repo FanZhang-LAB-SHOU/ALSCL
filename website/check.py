@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check generated links, bilingual coverage, argument coverage and R syntax."""
+from decimal import Decimal
 from pathlib import Path
 from urllib.parse import urlsplit, unquote, parse_qs
 import hashlib
@@ -47,11 +48,11 @@ for language,readme in [('en','README.md'),('zh','README.zh-CN.md')]:
             errors.append(f'{name}: minimum R version must match DESCRIPTION ({minimum_r})')
 pages={p:BeautifulSoup(p.read_text(encoding='utf-8'),'html.parser') for p in SITE.rglob('*.html')}
 functions=json.loads((ROOT/'website/.build/api/functions.json').read_text(encoding='utf-8'))
-# Cover legacy package-help images as well as the website's bundled figures.
+# The inventory covers every figure under docs/figures, the folder the website copies.
 with (ROOT/'docs/results/manual-figure-inventory.csv').open(encoding='utf-8',newline='') as handle:
     inventory=list(csv.DictReader(handle))
-actual={p.relative_to(ROOT).as_posix() for directory in ['docs/figures','man/figures']
-        for p in (ROOT/directory).rglob('*') if p.suffix.lower() in ('.png','.svg')}
+actual={p.relative_to(ROOT).as_posix() for p in (ROOT/'docs/figures').rglob('*')
+        if p.suffix.lower() in ('.png','.svg')}
 if actual != {row['path'] for row in inventory}:
     errors.append('Manual figure inventory does not cover all image assets')
 for row in inventory:
@@ -103,6 +104,45 @@ for path,soup in pages.items():
         if re.search('[\u3400-\u9fff]',main.get_text()):errors.append(f'{name}: untranslated Chinese in English content')
         if re.search('[\u3000-\u303f\uff00-\uffef]',main.get_text()):errors.append(f'{name}: full-width punctuation in English content')
         if re.search('[\u2013\u2014]',main.get_text()):errors.append(f'{name}: en or em dash in English content; use a hyphen for ranges and compounds')
+# Data tables: each data-table line of an article names an existing CSV file, and
+# the built page shows one table per line with the file's rows, columns and labels.
+# Each value must be written in decimals with the stated number of decimals and lie
+# within half a unit of the last decimal of the value in the file.
+sys.path.insert(0,str(ROOT/'scripts'))
+from build_manual import DATA_TABLE,data_table_lines
+n_tables=0
+for language in ['en','zh']:
+    for source in sorted((ROOT/'website/content'/language/'articles').glob('*.md')):
+        name=source.relative_to(ROOT).as_posix()
+        lines=data_table_lines(source.read_text(encoding='utf-8'))
+        page=SITE/(('zh/' if language=='zh' else '')+'articles/'+source.stem+'.html')
+        figures=pages[page].select('main figure.data-table') if page in pages else []
+        if len(figures)!=len(lines):
+            errors.append(f'{name}: {len(lines)} data-table line(s), but {len(figures)} data table(s) on the built page');continue
+        for line,figure in zip(lines,figures):
+            match=DATA_TABLE.fullmatch(line.strip())
+            if not match:errors.append(f'{name}: malformed data-table line: {line.strip()}');continue
+            path,digits=match[1],int(match[2])
+            if not (ROOT/path).is_file():errors.append(f'{name}: the data table names a missing file {path}');continue
+            with (ROOT/path).open(encoding='utf-8',newline='') as handle:records=list(csv.reader(handle))
+            shown=[[cell.get_text() for cell in row.find_all(['th','td'])] for row in figure.select('table tr')]
+            n_tables+=1
+            if figure.get('data-source')!=path or [len(row) for row in shown]!=[len(row) for row in records]:
+                errors.append(f'{name}: the table for {path} has {len(shown)} rows and {max(map(len,shown),default=0)} columns '
+                              f'with the header; the file has {len(records)} and {len(records[0]) if records else 0}');continue
+            if shown[0]!=records[0] or [row[0] for row in shown]!=[row[0] for row in records]:
+                errors.append(f'{name}: the header row or the first column of the table differs from {path}');continue
+            number=re.compile(r'-?\d+'+(rf'\.\d{{{digits}}}' if digits else ''))
+            half=Decimal(5).scaleb(-digits-1)
+            for row_shown,row_file in zip(shown[1:],records[1:]):
+                bad=[(s,f) for s,f in zip(row_shown[1:],row_file[1:])
+                     if (s!=f.strip() if f.strip() in ('','NA') else not number.fullmatch(s) or abs(Decimal(s)-Decimal(f))>half)]
+                if bad:
+                    errors.append(f'{name}: {path}, row {row_file[0]}: {bad[0][0]!r} shown for {bad[0][1]!r} ({digits} decimals expected)');break
+# A data-table line left in a Markdown manual, the book, the Wiki or a README would be an invisible comment.
+for path in sorted((ROOT/'docs').rglob('*.md'))+[ROOT/'README.md',ROOT/'README.zh-CN.md']:
+    if data_table_lines(path.read_text(encoding='utf-8')):
+        errors.append(f'{path.relative_to(ROOT).as_posix()}: unrendered data-table line; data tables belong in the article pairs under website/content')
 for language in ['','zh/']:
     for f in functions:
         path=SITE/(language+'reference/'+f['name']+'.html')
@@ -271,4 +311,4 @@ for md in markdown:
             errors.append(f'{md.relative_to(ROOT)}: missing anchor {target}')
 if errors:
     print('\n'.join(errors));raise SystemExit(f'{len(errors)} documentation check(s) failed')
-print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed (site and Markdown manuals) and {len(inline)} calls quoted in text screened, direct named calls and former names checked; {link_count} Markdown manual links resolved; reference index, quoted counts and version strings verified.')
+print(f'PASS: {len(pages)} pages; bilingual counterparts; local links/assets/anchors; {n_tables} data tables match their CSV files; {len(functions)} functions and all arguments per language; {len(blocks)} R code blocks parsed (site and Markdown manuals) and {len(inline)} calls quoted in text screened, direct named calls and former names checked; {link_count} Markdown manual links resolved; reference index, quoted counts and version strings verified.')

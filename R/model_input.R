@@ -33,20 +33,38 @@
 # Convert each time column separately. Converting a mixed-type data frame to a
 # character matrix first formats its numeric columns using getOption("digits")
 # and can silently alter observations, weights and maturity before fitting.
-.acl_numeric_matrix <- function(x, invalid_message) {
-  columns <- lapply(x, function(value) {
-    if (!is.atomic(value) || !is.null(dim(value)) || is.complex(value))
-      stop(invalid_message, call. = FALSE)
-    original <- value
+# A cell that is neither a number nor missing is an error that names the
+# table (`name`) and the first such cells by length bin (`labels`, the
+# length labels of the rows) and time step (the column name).
+.acl_numeric_matrix <- function(x, name, labels = NULL) {
+  bad <- list()
+  columns <- lapply(seq_along(x), function(j) {
+    value <- x[[j]]
+    if (!is.atomic(value) || !is.null(dim(value))) {
+      bad[[length(bad) + 1L]] <<- list(row = 1L, col = j, value = paste("a", class(value)[1L], "column"))
+      return(rep(NA_real_, nrow(x)))
+    }
     if (is.factor(value)) value <- as.character(value)
-    # TRUE/FALSE are not observations; only an all-missing logical column is accepted.
-    if (is.logical(value) && any(!is.na(value))) stop(invalid_message, call. = FALSE)
-    if (!is.numeric(value) && !is.logical(value)) value <- as.character(value)
-    value <- suppressWarnings(as.numeric(value))
-    if (any(is.na(value) & !is.na(original)))
-      stop(invalid_message, call. = FALSE)
-    value
+    # TRUE/FALSE and complex numbers are not observations; only an
+    # all-missing logical column is accepted.
+    number <- if (is.complex(value) || is.logical(value)) rep(NA_real_, length(value)) else
+      suppressWarnings(as.numeric(if (is.numeric(value)) value else as.character(value)))
+    wrong <- which(is.na(number) & !is.na(value))
+    for (i in wrong) bad[[length(bad) + 1L]] <<- list(row = i, col = j, value = format(value[i]))
+    number
   })
+  if (length(bad)) {
+    cell <- function(b) {
+      time <- sub("^X", "", names(x)[b$col])
+      paste0(if (!is.null(labels)) paste0("length bin ", trimws(as.character(labels[b$row])), ", "),
+             "time step ", time, ": \"", b$value, "\"")
+    }
+    shown <- vapply(utils::head(bad, 3L), cell, character(1))
+    more <- length(bad) - length(shown)
+    stop(name, " must hold numbers (NA marks a missing value). Not a number in ",
+         paste(shown, collapse = "; "), if (more > 0L) paste0("; and ", more, " more cell", if (more > 1L) "s"),
+         ".", call. = FALSE)
+  }
   matrix(unlist(columns, use.names = FALSE), nrow = nrow(x), ncol = ncol(x),
          dimnames = list(NULL, names(x)))
 }
@@ -120,8 +138,8 @@
                               structure = list(), start_spread = 0.15, t0_lower = 0,
                               survey_q = NULL, survey_q_age = NULL,
                               bounds = c("default", "wide")) {
-  zero_action <- match.arg(zero_action)
-  bounds <- match.arg(bounds)
+  zero_action <- .acl_match_choice(zero_action, partial = TRUE)
+  bounds <- .acl_match_choice(bounds, partial = TRUE)
   nage <- .acl_positive_integer(nage, "nage", 2L)
   rec.age <- .acl_scalar(rec.age, "rec.age", 0, TRUE)
   # A single number is the constant natural mortality rate. The other forms
@@ -149,9 +167,7 @@
     x <- frames[[nm]]
     if (!identical(dim(x), dim(catl)) || !identical(as.character(x[[1L]]), as.character(catl[[1L]])) || !identical(names(x)[-1L], names(catl)[-1L])) stop(nm, " must match data.CatL length labels and time columns, including order.", call. = FALSE)
   }
-  numeric_matrix <- function(x, name) {
-    .acl_numeric_matrix(x[-1L], paste0(name, " contains nonnumeric observations; real values are required."))
-  }
+  numeric_matrix <- function(x, name) .acl_numeric_matrix(x[-1L], name, x[[1L]])
   obs <- numeric_matrix(catl, "data.CatL"); weight <- numeric_matrix(frames$data.wgt, "data.wgt"); mat <- numeric_matrix(frames$data.mat, "data.mat")
   if (any(is.infinite(obs)) || any(obs < 0, na.rm = TRUE)) stop("Survey indices must be nonnegative and finite, or NA for missing observations.", call. = FALSE)
   if (zero_action == "error" && any(obs == 0, na.rm = TRUE)) stop("Zero observations are incompatible with the lognormal observation model.", call. = FALSE)
@@ -165,7 +181,7 @@
   if (any(!is.finite(years)) || any(diff(years) <= 0)) stop("Time columns must have increasing numeric labels (decimal years are supported).", call. = FALSE)
   if (any(abs(diff(years) - growth_step) > 1e-8 * max(1, growth_step)))
     stop("Time column spacing must equal growth_step (", growth_step,
-         " years). Include every model period; use NA survey observations for missing periods,",
+         " years). Include every model time step; use NA survey observations for missing time steps,",
          " and provide weights and maturity for the complete time grid.", call. = FALSE)
   supplied_q <- if (is.null(survey_q)) NULL else .acl_survey_q(survey_q, nrow(obs), ncol(obs), years)
   # With survey catchability by length and time step the templates read
@@ -234,11 +250,26 @@
 # without a message, so that existing scripts keep working.
 .acl_structure_set_aliases <- c(published = "original", consistent = "von_bertalanffy")
 
-# The current name of a set, or NA when `name` is not the name of a set.
+# The current name of a set, in any letter case, or NA when `name` is not
+# the name of a set.
 .acl_structure_set_name <- function(name) {
   if (!is.character(name) || length(name) != 1L || is.na(name)) return(NA_character_)
+  name <- .acl_canonical(name, c(names(.acl_structure_sets), names(.acl_structure_set_aliases)))
   if (name %in% names(.acl_structure_set_aliases)) name <- .acl_structure_set_aliases[[name]]
   if (name %in% names(.acl_structure_sets)) name else NA_character_
+}
+
+# The values of the settings of a structure list, in any letter case, as
+# the package names them. Values that match no choice are left for
+# .acl_structure() to report.
+.acl_structure_values <- function(structure) {
+  if (!is.list(structure) || is.data.frame(structure) || is.null(names(structure))) return(structure)
+  for (i in seq_along(structure)) {
+    allowed <- .acl_structure_choices[[names(structure)[i]]]
+    if (!is.null(allowed) && length(structure[[i]]) == 1L)
+      structure[[i]] <- .acl_canonical(structure[[i]], allowed)
+  }
+  structure
 }
 
 # Expand a set name, or a list with a `set` element, to a plain list of
@@ -259,10 +290,10 @@
   if (is.list(structure) && !is.data.frame(structure) && "set" %in% names(structure)) {
     if (sum(names(structure) == "set") > 1L) stop("structure has more than one `set` element.", call. = FALSE)
     set <- pick(structure$set, "structure$set")
-    extra <- structure[names(structure) != "set"]
+    extra <- .acl_structure_values(structure[names(structure) != "set"])
     return(c(set[setdiff(names(set), names(extra))], extra))
   }
-  structure
+  .acl_structure_values(structure)
 }
 
 # Settings that decide how optimizer-scale values map to natural values:

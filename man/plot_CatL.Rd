@@ -76,11 +76,13 @@ and time/length metadata.}
 it from the number of panels, for example 5 columns for 15 panels and 6
 for 23.}
 
-\item{facet_scales}{Character. Specifies scales for facet_wrap. Default is "free".}
+\item{facet_scales}{Character. Specifies scales for facet_wrap. Default is "free".
+Letter case does not matter.}
 
 \item{facet_by}{Character. "length" (default) draws one panel per length bin
 with time on the x axis; "year" draws one panel per time step with length
-on the x axis.}
+on the x axis.
+Letter case does not matter.}
 
 \item{exp_transform}{Logical. TRUE exponentiates the logged observations and
 fitted values to the original survey-index scale; fitted curves represent
@@ -119,7 +121,8 @@ lies on this axis; otherwise the breaks are chosen automatically. The
 automatic number of breaks decreases as the number of facet columns
 increases, and tick labels that would overprint are omitted.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 

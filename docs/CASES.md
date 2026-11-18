@@ -205,9 +205,9 @@ writeLines(capture.output(sessionInfo()), file.path(output_dir, "sessionInfo.txt
 # b <- run_alscl(x)
 ```
 
-脚本运行时会打印两个模型的 `check$summary`；教学数据显示 23 个体长组、20 个时间步、460 个正观测、没有零值和空白，以及 10 个（ACL）或 13 个（ALSCL）自由标量参数。随后 `diagnose_model()` 打印每个拟合的数值检查，第 5 步会解释。在记录运行（[own-data-example-checks.csv](results/own-data-example-checks.csv)）中，两个拟合的收敛码都是 0，Hessian 正定，没有参数落在边界上，最大梯度约为 3e-9。脚本保存的两张图如下：
+脚本运行时会打印两个模型的 `check$summary`；教学数据显示 23 个体长组、20 个时间步、460 个正观测、没有零值和空白，以及 10 个（ACL）或 13 个（ALSCL）自由标量参数。随后 `diagnose_model()` 打印每个拟合的数值检查，第 5 步会解释。在记录运行（[own-data-example-checks.csv](results/own-data-example-checks.csv)）中，两个拟合的收敛码都是 0，Hessian 正定，没有参数落在边界上，最大梯度分别为 3.3 × 10⁻⁹（ACL）和 2.3 × 10⁻⁹（ALSCL）。脚本保存的两张图如下：
 
-While the script runs, `check$summary` is printed for both models; with the teaching data it shows 23 length bins, 20 time steps, 460 positive observations, no zeros or blanks, and 10 (ACL) or 13 (ALSCL) free scalar parameters. `diagnose_model()` then prints the numerical checks of each fit, which step 5 explains. In the recorded run ([own-data-example-checks.csv](results/own-data-example-checks.csv)) both fits ended with convergence code 0, a positive definite Hessian, no parameter on a bound and a maximum gradient near 3e-9. The script saved these two figures:
+While the script runs, `check$summary` is printed for both models; with the teaching data it shows 23 length bins, 20 time steps, 460 positive observations, no zeros or blanks, and 10 (ACL) or 13 (ALSCL) free scalar parameters. `diagnose_model()` then prints the numerical checks of each fit, which step 5 explains. In the recorded run ([own-data-example-checks.csv](results/own-data-example-checks.csv)) both fits ended with convergence code 0, a positive definite Hessian, no parameter on a bound and maximum gradients of 3.3 × 10⁻⁹ (ACL) and 2.3 × 10⁻⁹ (ALSCL). The script saved these two figures:
 
 ![完整示例的 ALSCL 逐年残差 / ALSCL residuals by year from the complete example](figures/own-data-example/residuals.png)
 
@@ -253,9 +253,9 @@ The values above only show the shape of each entry; replace every one with the v
 | `zero_action = "error"` | `"missing"`，把零值当作缺失而不是终止 / `"missing"` to treat zeros as missing values instead of stopping | 零值随后不进入似然 / Zeros then drop out of the likelihood |
 | `output_dir` | 本次评估的文件夹 / A folder for this assessment | 脚本会覆盖其中的文件 / The script overwrites the files in it |
 
-修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似“No positive observations in periods: 2004”的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
+修改后，把脚本运行到检查循环。两个模型的 `check$valid` 都必须为 `TRUE`，`check$summary` 必须显示你的体长组数和时间步数，`inspect_parameters()` 中状态为 `fixed` 且 `map_source` 为 `explicit` 的参数必须恰好是你固定的那些。类似“No positive observations in time steps: 2004”的警告表示某个时间步没有调查值，按未观测处理；`zero_action = "missing"` 且调查表含零值时，会出现零值被排除的警告。拟合之前，先想清楚每条警告对你的调查意味着什么。
 
-After editing, run the script down to the check loop. `check$valid` must be `TRUE` for both models, `check$summary` must show your numbers of bins and time steps, and `inspect_parameters()` must show `fixed` with `map_source` equal to `explicit` for exactly the parameters you fixed. A warning such as "No positive observations in periods: 2004" means that a time step has no survey values and is treated as unobserved; the warning about excluded zeros appears when `zero_action = "missing"` and the survey table contains zeros. Decide what each warning means for your survey before you fit.
+After editing, run the script down to the check loop. `check$valid` must be `TRUE` for both models, `check$summary` must show your numbers of bins and time steps, and `inspect_parameters()` must show `fixed` with `map_source` equal to `explicit` for exactly the parameters you fixed. A warning such as "No positive observations in time steps: 2004" means that a time step has no survey values and is treated as unobserved; the warning about excluded zeros appears when `zero_action = "missing"` and the survey table contains zeros. Decide what each warning means for your survey before you fit.
 
 <a id="case-fit-survey-fit"></a>
 
@@ -328,13 +328,9 @@ plot_fishing_mortality(b, type = "length", se = TRUE)
 
 The retrospective analysis refits a model after removing the last one, two and three time steps (`nyear` is the number of peels and each peel removes one more time step, so four peels equal one year of quarterly data; `peel_step = 4` removes one year per peel). It reads the bundle, so the stored settings apply to every peel; set `ncores` on the retrospective call to run peels in parallel. `rb$fit_diagnostics` lists the full fit (`Peel = 0`) and every peel with its numerical checks, `rb$rho_by_peel` gives Mohn's rho per quantity and peel, and `rb$rho_text$Rho` reports the mean only when the full fit and all peels pass the checks, otherwise `NA` with a warning. `plot_retro(rb)` draws the peeled series ([Run a retrospective analysis](USER_GUIDE.md#retrospective)); `plot_fishing_mortality(b, type = "length")` draws the fishing mortality at length estimated by ALSCL.
 
-在[2.4.3 的记录运行](results/own-data-retrospective.csv)中，所有拟合均通过数值检查，但截至 2018 年和 2016 年的两轮 ALSCL 回溯拟合保留了优化器码 1。这两轮的第一次优化都返回了 0；第二次优化将目标函数降低了不到 `8e-10`，却报告 `false convergence (8)`。由于参数向量存在微小差异，原来的选择规则保留了第二次优化。现行的选择规则在目标函数和每个参数均数值等价时保留成功的那次优化，再进行通常的收尾和独立数值检查。重新拟合后，这两轮都返回码 0，最大梯度低于 `2e-8`；SSB 和 F 相对原结果的变化小于 `1.2e-11`。
+在教学数据回溯分析的[运行记录](results/own-data-retrospective.csv)中，查看完整拟合和每一轮的优化器码、最大梯度和数值检查。两个模型各自的完整拟合和三轮回溯拟合共八次拟合，都返回优化器码 0 并通过数值检查，最大梯度在 1.6 × 10⁻⁹ 到 3.6 × 10⁻⁸ 之间。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关。解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
 
-In the [recorded 2.4.3 run](results/own-data-retrospective.csv), all fits passed the numerical checks, but the ALSCL peels ending in 2018 and 2016 retained optimizer code 1. Each first pass had returned code 0; a second pass improved the objective by less than `8e-10` and reported `false convergence (8)`. The earlier selection rule kept that second pass because the parameter vectors differed slightly. The current selection rule retains the successful pass when both objectives and all parameters are numerically equivalent, then applies the usual refinement and independent numerical checks. Fresh fits return code 0 for both peels, with maximum gradients below `2e-8`; SSB and F differ from the earlier results by less than `1.2e-11` in relative terms.
-
-查看 `fit_diagnostics$optimizer_message`、`selected_pass`、`optimizer_codes` 和 `optimizer_messages`，区分所选结果与其他各次优化。失败的重启仍保留在历史中，选中的那次优化的非零码不会被改写。仅凭 `numerical_ok = TRUE` 不能断定优化器返回了 0。这份教学数据中的生长参数仍高度相关。解释评估结果前，应结合梯度、Hessian、边界、残差和不同初值的敏感性进行判断。
-
-Read `fit_diagnostics$optimizer_message`, `selected_pass`, `optimizer_codes` and `optimizer_messages` to distinguish the selected result from the other passes. The failed restart remains in the history, and a nonzero code of the selected pass is never relabelled. `numerical_ok = TRUE` alone does not mean that the optimizer returned code 0. Strong growth-parameter correlation also remains in this teaching dataset. Examine the gradient, Hessian, boundaries, residuals and sensitivity to alternative starts before interpreting an assessment.
+In the [record of this retrospective analysis on the teaching data](results/own-data-retrospective.csv), read the optimizer code, the maximum gradient and the numerical checks of the full fit and of each peel. All eight fits, the full fit and three peels of each model, returned optimizer code 0 and passed the numerical checks, with maximum gradients between 1.6 × 10⁻⁹ and 3.6 × 10⁻⁸. `numerical_ok = TRUE` alone does not mean that the optimizer returned code 0. Strong growth-parameter correlation remains in this teaching dataset. Examine the gradient, Hessian, boundaries, residuals and sensitivity to alternative starts before interpreting an assessment.
 
 <a id="case-fit-survey-next"></a>
 
@@ -409,7 +405,7 @@ Both models use the inputs in the following table as given. With survey data alo
 | 体长组 / Length bins | 2 cm，标签 9 至 43 / 2 cm, labelled 9 to 43 | 在 1、2、5 cm 中取最小的宽度，使指数中间 98% 的范围不超过 24 组；第一组和最后一组分别包含所有更小和更大的鱼 / The smallest of 1, 2 and 5 cm with which the central 98% of the index spans at most 24 bins; the first and the last bin hold all smaller and all larger fish |
 | `rec.age`、`nage` / `rec.age`, `nage` | 1、10 / 1, 10 | 1 龄是第一季度指数中最小的年龄；取 10 个年龄组时，最后一组（末组）在只有 M 的情况下约含一个世代的 1% / Age 1 is the youngest age in the quarter 1 index; with 10 age classes the last one, a plus group, holds about 1% of a cohort under M alone |
 | `M` | 每年 0.50 / 0.50 per year | 4.899 × tmax^-0.916（[Then et al. 2015](https://doi.org/10.1093/icesjms/fsu136)），年龄鉴定资料中的最大年龄 tmax 为 12 龄 / 4.899 × tmax^-0.916 ([Then et al. 2015](https://doi.org/10.1093/icesjms/fsu136)), with a maximum age tmax of 12 years in the age readings |
-| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 10 cm、14 cm / 10 cm, 14 cm | 假设值：没有研究给出第一季度牙鳕的调查可捕性随体长上升的部分 / An assumption. No study gives the increase of survey catchability with length for whiting in quarter 1 |
+| `sel_L50`、`sel_L95` / `sel_L50`, `sel_L95` | 10 cm、14 cm / 10 cm, 14 cm | 假设值：第 7 步取自 Fraser et al. (2007) 的按体长可捕性针对第三季度，不含小体长处的信息 / An assumption. The catchability at length that step 7 takes from Fraser et al. (2007) is for quarter 3 and has no information on small lengths |
 | `cv_len`（各龄体长的变异系数） / `cv_len`, the coefficient of variation of length at age | 固定为 0.15 / fixed at 0.15 | 年龄鉴定资料中 1 至 3 龄体长的变异系数为 0.148 / The coefficient of variation of length at ages 1 to 3 in the age readings is 0.148 |
 | 生长参数 Linf（渐近体长）、k（生长率系数）和 t0（体长为零时的年龄） / Growth parameters Linf (asymptotic length), k (growth rate coefficient) and t0 (age at zero length) | 估计 / estimated | 初值来自年龄鉴定资料；`t0_lower = -2` 使 ALSCL 的 t0 可以为负 / Starting values from the age readings; `t0_lower = -2` lets the t0 of ALSCL be negative |
 
@@ -436,9 +432,9 @@ plot_residuals(b, facet_by = "length", facet_ncol = 6)
 
 `nstarts = 5` runs five starts from different starting values, and `ncores = 5` runs them in parallel. `start_spread = 0.5` is the standard deviation of the normal deviates that are added to the starting values of the second and later starts, on the scale of the optimizer; the default is 0.15. The fit keeps the start with the lowest objective.
 
-五个初值中有四个得到 722.59。另一个停在 755.72，此时生长增量的变异系数 cv_grow 位于下界 0.01。如果只用这一个初值，拟合返回的就是这个解，而单次拟合中没有任何信息提示还有更好的解。`b$diagnostics$issues` 报告“starts converged to different optima”（各初值收敛到不同的解），被保留的初值 `numerical_ok` 为 `TRUE`。`advice` 给出检查未通过时的处理建议，`plausibility` 列出取值不合理但不会使检查失败的估计值，这里两者都为空。这次拟合在五个核上用了 17 分钟。
+五个初值中有四个得到 722.59。另一个停在 755.72，此时生长增量的变异系数 cv_grow 位于下界 0.01。如果只用这一个初值，拟合返回的就是这个解，并因参数落在边界上而不能通过数值检查，但单次拟合中没有任何信息提示还有目标函数值更低的解。`b$diagnostics$issues` 报告“starts converged to different optima”（各初值收敛到不同的解），被保留的初值 `numerical_ok` 为 `TRUE`。`advice` 给出检查未通过时的处理建议，`plausibility` 列出取值不合理但不会使检查失败的估计值，这里两者都为空。这次拟合在五个核上用了 17 分钟。
 
-Four of the five starts ended at 722.59. One start stopped at 755.72, with the coefficient of variation of the growth increment, cv_grow, at its lower bound of 0.01. A fit with that start alone would have returned this solution, and nothing in a single fit shows that a better one exists. `b$diagnostics$issues` reports "starts converged to different optima", and `numerical_ok` is `TRUE` for the start that was kept. `advice`, which says what to do when a check fails, and `plausibility`, which lists estimates with implausible values that do not fail the checks, are both empty. The fit took 17 minutes on five cores.
+Four of the five starts ended at 722.59. One start stopped at 755.72, with the coefficient of variation of the growth increment, cv_grow, at its lower bound of 0.01. A fit with that start alone would have returned this solution and failed the numerical checks for the parameter on its bound, but nothing in a single fit shows that a solution with a lower objective exists. `b$diagnostics$issues` reports "starts converged to different optima", and `numerical_ok` is `TRUE` for the start that was kept. `advice`, which says what to do when a check fails, and `plausibility`, which lists estimates with implausible values that do not fail the checks, are both empty. The fit took 17 minutes on five cores.
 
 各初值的结果不一致时，拟合保留目标函数值最低的解。请查看 `b$start_summary$agree_with_best`，确认不止一个初值到达该解；如果只有一个，就增加初值。`advice` 不为空时，按其中的建议修改并重新拟合，第 4 步对 ACL 就是这样做的。
 
@@ -446,9 +442,9 @@ When the starts disagree, the fit keeps the lowest objective. Check in `b$start_
 
 ![ALSCL 各体长组调查指数的对数残差 / Residuals of the log survey index by length bin, ALSCL](figures/whiting-case/residuals.png)
 
-每个小图是一个体长组各年的对数指数残差。有几个体长组的残差多年保持同一符号：标签为 9 cm 的组为正（均值 0.53），23 至 29 cm 为正（均值 0.27），13 至 17 cm 为负（均值 -0.40）。同一年相邻体长组残差的平均相关系数为 0.54，而模型假定观测误差相互独立。数值检查不检验这两种情形。它们都说明模型没有反映指数的某些特征，这次拟合的标准误偏小。
+每个小图是一个体长组各年的对数指数残差。有几个体长组的残差多年保持同一符号：标签为 9 cm 的组为正（均值 0.53），23 至 29 cm 为正（均值 0.27），13 至 17 cm 为负（均值 -0.40）。同一年相邻体长组残差的平均相关系数为 0.54，而模型假定观测误差相互独立。数值检查不检验这两种情形。它们都说明模型没有反映指数的某些特征，这次拟合的标准误很可能偏小。
 
-Each panel shows the residuals of the log index of one length bin over the years. In several bins they keep the same sign for many years. They are positive in the bin labelled 9 cm (mean 0.53) and from 23 to 29 cm (mean 0.27), and negative from 13 to 17 cm (mean -0.40). Residuals of neighbouring length bins in the same year have a mean correlation of 0.54, whereas the model assumes independent observation errors. The numerical checks test neither pattern. Both mean that the model misses features of the index and that the standard errors of this fit are too small.
+Each panel shows the residuals of the log index of one length bin over the years. In several bins they keep the same sign for many years. They are positive in the bin labelled 9 cm (mean 0.53) and from 23 to 29 cm (mean 0.27), and negative from 13 to 17 cm (mean -0.40). Residuals of neighbouring length bins in the same year have a mean correlation of 0.54, whereas the model assumes independent observation errors. The numerical checks test neither pattern. Both mean that the model misses features of the index, and the standard errors of this fit are probably too small.
 
 <a id="case-north-sea-whiting-acl"></a>
 
@@ -465,17 +461,17 @@ a2 <- run_acl(x,
 a2$diagnostics[c("numerical_ok", "issues")]
 ```
 
-ACL 的五个初值都得到相同的目标函数值 736.88，Hessian 矩阵正定，但拟合仍然没有通过数值检查。初始各龄数量偏差的标准差估计为 2e-05，实际上等于零。这样的参数没有碰到优化器的边界，但数据无法确定它。`a$diagnostics$advice` 建议用 `map` 把 `log_std_log_N0` 固定在选定的值上，然后重新拟合。
+ACL 的五个初值都得到相同的目标函数值 736.88，Hessian 矩阵正定，但拟合仍然没有通过数值检查。初始各龄数量偏差的标准差估计为 0.00002，实际上等于零。这样的参数没有碰到优化器的边界，但数据无法确定它。`a$diagnostics$advice` 建议用 `map` 把 `log_std_log_N0` 固定在选定的值上，然后重新拟合。
 
-All five starts of ACL ended at the same objective, 736.88, with a positive definite Hessian, and the fit still failed the numerical checks. The standard deviation of the deviations of the initial numbers at age was estimated at 2e-05, which is zero in practice. Such a parameter has not reached a bound of the optimizer, but the data do not determine it. `a$diagnostics$advice` says to fix `log_std_log_N0` with `map` at a chosen value and to refit.
+All five starts of ACL ended at the same objective, 736.88, with a positive definite Hessian, and the fit still failed the numerical checks. The standard deviation of the deviations of the initial numbers at age was estimated at 0.00002, which is zero in practice. Such a parameter has not reached a bound of the optimizer, but the data do not determine it. `a$diagnostics$advice` says to fix `log_std_log_N0` with `map` at a chosen value and to refit.
 
-第二次调用按这一建议把标准差固定为 exp(-3) = 0.05。显式给出的 `map` 或 `parameters` 参数会替换输入列表中存储的内容，所以两处都重复了已存储的条目。目标函数值变化了 0.08，Linf、k 和 t0 的估计值前三位数字不变，`numerical_ok` 为 `TRUE`。`issues` 中还剩三项，它们不会使检查失败：k 与 t0 估计值的相关系数为 0.96，优化器的精修停在最大梯度 1e-05 处，高于其容许值，以及有一个初值停在目标函数值 1308 处。
+第二次调用按这一建议把标准差固定为 exp(-3) = 0.05。显式给出的 `map` 或 `parameters` 参数会替换输入列表中存储的内容，所以两处都重复了已存储的条目。目标函数值变化了 0.08，Linf、k 和 t0 的估计值前三位数字不变，`numerical_ok` 为 `TRUE`。`issues` 中还剩三项，它们不会使检查失败：k 与 t0 估计值的相关系数为 0.96，优化器的精修停在最大梯度 0.00001 处，高于其容许值，以及有一个初值停在目标函数值 1308 处。
 
-The second call follows the advice with a standard deviation of exp(-3) = 0.05. An explicit `map` or `parameters` argument replaces the one stored in the bundle, so both calls repeat the stored entries. The objective changed by 0.08, the estimates of Linf, k and t0 stayed the same to three digits, and `numerical_ok` was `TRUE`. Three entries remained in `issues` that do not fail the checks: a correlation of 0.96 between the estimates of k and t0, a refinement of the optimizer that stopped at a largest gradient of 1e-05, above its tolerance, and one start that stopped at an objective of 1308.
+The second call follows the advice with a standard deviation of exp(-3) = 0.05. An explicit `map` or `parameters` argument replaces the one stored in the bundle, so both calls repeat the stored entries. The objective changed by 0.08, the estimates of Linf, k and t0 stayed the same to three digits, and `numerical_ok` was `TRUE`. Three entries remained in `issues` that do not fail the checks: a correlation of 0.96 between the estimates of k and t0, a refinement of the optimizer that stopped at a largest gradient of 0.00001, above its tolerance, and one start that stopped at an objective of 1308.
 
-两次 ACL 拟合都留有一条合理性提示：初始总死亡率估计为每年 0.34，低于假定的 M（0.5）。这意味着 1983 年各龄数量随年龄下降的速度比只有自然死亡时还慢，原因可能在假定的 M、假定的调查可捕性，或者 1983 年以前补充量在上升。这条提示不改变数值检查的结论，报告拟合结果时应一并说明。ALSCL 的估计值为每年 0.88。
+两次 ACL 拟合都留有一条合理性提示：初始总死亡率估计为每年 0.34，低于假定的 M（0.5）。这意味着 1983 年各龄数量随年龄下降的速度比只有自然死亡时还慢，原因可能在假定的 M、假定的调查可捕性，或者 1983 年以前的补充量在下降。这条提示不改变数值检查的结论，报告拟合结果时应一并说明。ALSCL 的估计值为每年 0.88。
 
-One plausibility note stayed in both ACL fits. The initial total mortality rate was estimated at 0.34 per year, below the assumed M of 0.5. The numbers at age of 1983 then decline with age more slowly than natural mortality alone would give, which can come from the assumed M, from the assumed survey catchability, or from recruitment that increased before 1983. The note does not change the verdict of the checks; report it with the fit. ALSCL estimated 0.88 per year.
+One plausibility note stayed in both ACL fits. The initial total mortality rate was estimated at 0.34 per year, below the assumed M of 0.5. The numbers at age of 1983 then decline with age more slowly than natural mortality alone would give, which can come from the assumed M, from the assumed survey catchability, or from recruitment that decreased in the years before 1983. The note does not change the verdict of the checks; report it with the fit. ALSCL estimated 0.88 per year.
 
 ALSCL 的目标函数值较低，为 722.59，ACL 为 736.96；估计的标量参数分别为 13 个和 9 个。目标函数值不能说明哪个模型对种群的描述更好。第 5、6 步用没有进入拟合的数据来对比这两次拟合。
 
@@ -494,9 +490,9 @@ readings <- subset(x$age_readings$length_at_age, period == "1983-2026")
 round(cbind(readings = readings$mean_length, ALSCL = by_age(b), ACL = by_age(a2)), 1)
 ```
 
-`x$age_readings$length_at_age` 是由同一调查的年龄鉴定资料得到的各龄平均体长，这些资料没有进入拟合。耳石是按体长组采集的，所以读过年龄的鱼不是渔获的随机样本，直接对它们的体长按年龄求平均会偏向大鱼。因此这张表是用年龄体长键算出的：对每一年，把每个 1 cm 体长组中读过年龄的鱼的各龄比例乘以该体长组的调查指数。结果是调查所见的各龄平均体长，与之对应的模型输出是 `length_at_age(fit, "survey")`，其中各体长的数量乘以了调查可捕性。代码对各年取平均，并输出 1 至 10 龄的结果；模型的 10 龄是末组，下表没有列出。
+`x$age_readings$length_at_age` 是由同一调查的年龄鉴定资料得到的各龄平均体长，这些资料没有进入拟合。耳石是按体长组采集的，所以读过年龄的鱼不是渔获的随机样本，直接对它们的体长按年龄求平均会有偏差。因此这张表是用年龄体长键算出的：对每一年，把每个 1 cm 体长组中读过年龄的鱼的各龄比例乘以该体长组的调查指数。结果是调查所见的各龄平均体长，与之对应的模型输出是 `length_at_age(fit, "survey")`，其中各体长的数量乘以了调查可捕性。代码对各年取平均，并输出 1 至 10 龄的结果；模型的 10 龄是末组，下表没有列出。
 
-`x$age_readings$length_at_age` holds the mean length at age from the age readings of the same survey, which do not enter the fit. Otoliths are collected by length class, so the aged fish are not a random sample of the catch, and a plain mean of their lengths at age is biased towards large fish. The table was therefore computed with an age-length key. For each year, the proportion at age among the fish aged in each 1-cm class was multiplied by the survey index of that class. The result is the mean length at age as the survey sees it, and the matching model output is `length_at_age(fit, "survey")`, in which numbers at length are multiplied by survey catchability. The code averages it over the years and prints ages 1 to 10; age 10 is a plus group in the model and is left out of the table below.
+`x$age_readings$length_at_age` holds the mean length at age from the age readings of the same survey, which do not enter the fit. Otoliths are collected by length class, so the aged fish are not a random sample of the catch, and a plain mean of their lengths at age is biased. The table was therefore computed with an age-length key. For each year, the proportion at age among the fish aged in each 1-cm class was multiplied by the survey index of that class. The result is the mean length at age as the survey sees it, and the matching model output is `length_at_age(fit, "survey")`, in which numbers at length are multiplied by survey catchability. The code averages it over the years and prints ages 1 to 10; age 10 is a plus group in the model and is left out of the table below.
 
 比较生长时要用各龄平均体长，不要用生长参数。在 ACL 中，Linf、k 和 t0 描述的是各龄平均体长的 von Bertalanffy 曲线。在 ALSCL 中，Linf 和 k 决定各体长的生长增量，并与 t0 一起决定补充群体的平均体长。ALSCL 估计的 Linf 为 53.1 cm、k 为每年 0.17，ACL 为 33.9 cm 和每年 0.43。
 
@@ -514,9 +510,9 @@ Compare growth through mean length at age and not through the growth parameters.
 
 ALSCL lies within 1.3 cm of the age readings at ages 1 to 4. From age 5 it lies above them, by 1.5 cm at age 5 and by 7.7 cm at age 9. ACL lies 0.9 to 2.0 cm below the age readings at every age and follows their shape. Both models lie more than 1 cm below the age readings at ages 1 and 2.
 
-体长指数中只有最小的几个年龄形成分开的峰。较大年龄的体长相互重叠，指数中大鱼少，既可能是因为鱼长得慢，也可能是因为大鱼死得快。只有体长数据时，无法把大龄鱼的生长和按体长的死亡率分开。在这两次拟合中，ALSCL 让大龄鱼长到更大的体长并给它们更高的捕捞死亡率（第 6 步），ACL 则给它们较低的渐近体长；从 6 龄起，年龄鉴定资料与 ACL 更接近。年龄鉴定资料本身也随时间变化，而两个模型都不允许这种变化：5 龄的平均体长在各个年代之间为 30.2 至 33.5 cm。ALSCL 的 1 至 4 龄平均体长可以使用，不要把它的 Linf 或更大年龄的体长当作生长的估计值。
+体长指数中只有最小的几个年龄形成分开的峰。较大年龄的体长相互重叠，指数中大鱼少，既可能是因为鱼长得慢，也可能是因为大鱼死得快。只有体长数据时，无法把大龄鱼的生长和按体长的死亡率分开。在这两次拟合中，ALSCL 让大龄鱼长到更大的体长，并估计出更高的 2 至 5 龄捕捞死亡率（第 6 步），ACL 则估计出较低的渐近体长；从 6 龄起，年龄鉴定资料与 ACL 更接近。年龄鉴定资料本身也随时间变化，而两个模型都不允许这种变化：5 龄的平均体长在各个年代之间为 30.2 至 33.5 cm。ALSCL 的 1 至 4 龄平均体长可以使用，不要把它的 Linf 或更大年龄的体长当作生长的估计值。
 
-In a length index only the youngest ages form separate peaks. The lengths of older ages overlap, and few large fish in the index can mean that fish grow slowly or that large fish die fast. Length data alone do not separate the growth of older fish from mortality at length. In these fits ALSCL lets old fish grow to larger lengths and gives them a higher fishing mortality (step 6), and ACL gives them a lower asymptotic length; the age readings agree better with ACL from age 6. The age readings also change over time, which neither model allows. Mean length at age 5 ranges from 30.2 to 33.5 cm among the decades. Use the mean lengths of ALSCL at ages 1 to 4, and do not read its Linf or its lengths at older ages as estimates of growth.
+In a length index only the youngest ages form separate peaks. The lengths of older ages overlap, and few large fish in the index can mean that fish grow slowly or that large fish die fast. Length data alone do not separate the growth of older fish from mortality at length. In these fits ALSCL lets old fish grow to larger lengths and estimates a higher fishing mortality at ages 2 to 5 (step 6), whereas ACL estimates a lower asymptotic length; the age readings agree better with ACL from age 6. The age readings also change over time, which neither model allows. Mean length at age 5 ranges from 30.2 to 33.5 cm among the decades. Use the mean lengths of ALSCL at ages 1 to 4, and do not read its Linf or its lengths at older ages as estimates of growth.
 
 <a id="case-north-sea-whiting-assessment"></a>
 
@@ -534,9 +530,9 @@ keep <- !catch$extrapolated
 cor(log(catch$catch_weight[keep]), log(at(ices$catch)[keep]))
 ```
 
-`x$ices$assessment` 是 ICES 2026 年评估（[ICES 2026](https://doi.org/10.17895/ices.pub.32676345)）给出的产卵生物量（SSB）、补充量、2 至 5 龄平均捕捞死亡率（F）和渔获量。该评估使用各龄渔获量、第一和第三季度的调查指数以及按年龄和年份变化的自然死亡率，所以它是外部的对照，不是真值。拟合得到的 SSB 和补充量以调查指数为单位，所以只比较趋势，这里用对数值的相关系数。拟合的补充量是第一季度的 1 龄鱼，评估的补充量是 0 龄鱼，所以代码把评估序列错开一年。`ssb_at_age()` 用评估的各龄成熟比例重新计算 SSB（6 龄及以上合为一组，1991-2021 以外的年份取最近的年份），`relative_catch()` 返回模型渔获量除以其均值后的序列。
+`x$ices$assessment` 是 ICES 2026 年对第 4 亚区和 7.d 区（北海和英吉利海峡东部）牙鳕的评估（[ICES 2026](https://doi.org/10.17895/ices.pub.32676345)）给出的产卵生物量（SSB）、补充量、2 至 5 龄平均捕捞死亡率（F）和渔获量。该评估使用各龄渔获量、第一和第三季度的调查指数以及按年龄和年份变化的自然死亡率，所以它是外部的对照，不是真值。拟合得到的 SSB 和补充量以调查指数为单位，所以只比较趋势，这里用对数值的相关系数。拟合的补充量是第一季度的 1 龄鱼，评估的补充量是 0 龄鱼，所以代码把评估序列错开一年。`ssb_at_age()` 用评估的各龄成熟比例重新计算 SSB（6 龄及以上合为一组，1991-2021 以外的年份取最近的年份），`relative_catch()` 返回模型渔获量除以其均值后的序列。
 
-`x$ices$assessment` holds spawning stock biomass (SSB), recruitment, the mean fishing mortality rate (F) at ages 2 to 5 and catch from the ICES assessment of 2026 ([ICES 2026](https://doi.org/10.17895/ices.pub.32676345)). That assessment uses catch at age, survey indices for quarters 1 and 3 and a natural mortality rate by age and year, so it is an external comparison and not a true value. SSB and recruitment of a fit are in the unit of the survey index, so compare trends, here as the correlation of the logarithms. Recruitment of the fits is at age 1 in quarter 1 and that of the assessment at age 0, so the code shifts the assessment by one year. `ssb_at_age()` recomputes SSB with the maturity at age of the assessment (ages 6 and older in one group, years outside 1991-2021 taken from the nearest year), and `relative_catch()` returns the catch of the model divided by its mean.
+`x$ices$assessment` holds spawning stock biomass (SSB), recruitment, the mean fishing mortality rate (F) at ages 2 to 5 and catch from the ICES assessment of 2026 of whiting in Subarea 4 and Division 7.d, the North Sea and the eastern English Channel ([ICES 2026](https://doi.org/10.17895/ices.pub.32676345)). That assessment uses catch at age, survey indices for quarters 1 and 3 and a natural mortality rate by age and year, so it is an external comparison and not a true value. SSB and recruitment of a fit are in the unit of the survey index, so compare trends, here as the correlation of the logarithms. Recruitment of the fits is at age 1 in quarter 1 and that of the assessment at age 0, so the code shifts the assessment by one year. `ssb_at_age()` recomputes SSB with the maturity at age of the assessment (ages 6 and older in one group, years outside 1991-2021 taken from the nearest year), and `relative_catch()` returns the catch of the model divided by its mean.
 
 | 与评估的对比 / Comparison with the assessment | ALSCL | ACL | ICES |
 |---|---|---|---|
@@ -558,9 +554,9 @@ F 的水平不能比较。ALSCL 的 F 在三个时期都高于评估，2000 年�
 
 The level of F cannot be compared. F of ALSCL is above that of the assessment in all three periods and about twice as high after 2000, and the rank correlation between the two series is 0.31. F of ACL lies closer to that of the assessment in the first two periods and below it in the last. In a fit to survey data alone, total mortality is estimated from the decline of cohorts in the index under the assumed survey catchability, and F is total mortality minus the assumed M. The level of F, and with it the level of catch, therefore follows from the fixed inputs; step 7 shows by how much.
 
-调查数据能够提供的，是一个世代的指数从一年到下一年的下降率，即调查所见的总死亡率。下表给出它在 2 至 5 龄上的均值：由年龄鉴定资料的各龄指数（`x$age_readings$index_at_age`）计算的值，由每次拟合对应的各龄指数计算的值，以及评估的 F 与 M 之和。
+调查数据能够提供的，是一个世代的指数从一年到下一年的下降率，即调查所见的总死亡率。下表给出它在 2 至 5 龄上的均值：由年龄鉴定资料的各龄指数（`x$age_readings$index_at_age`）计算的值，由每次拟合对应的各龄指数计算的值，以及评估的 F 与 M 之和。年龄鉴定资料的各龄指数是用年龄体长键把调查指数分到各龄得到的，与拟合使用同一份调查数据，所以这一对比检验的是每次拟合怎样把指数分到各龄。
 
-What the survey does inform is the rate at which the index of a cohort declines from one year to the next, the apparent total mortality rate from the survey. The table gives its mean over ages 2 to 5, calculated from the index at age of the age readings (`x$age_readings$index_at_age`) and from the index at age that each fit implies, next to the sum of F and M of the assessment.
+What the survey does inform is the rate at which the index of a cohort declines from one year to the next, the apparent total mortality rate from the survey. The table gives its mean over ages 2 to 5, calculated from the index at age of the age readings (`x$age_readings$index_at_age`) and from the index at age that each fit implies, next to the sum of F and M of the assessment. The index at age of the age readings is the survey index divided among ages with the age-length key, so it shares the survey data with the fits, and the comparison tests how each fit divides the index among ages.
 
 | 时期 / Period | 年龄鉴定资料 / Age readings | ALSCL | ACL | 评估的 F + M / Assessment, F + M |
 |---|---|---|---|---|
@@ -568,9 +564,9 @@ What the survey does inform is the rate at which the index of a cohort declines 
 | 2000-2012 | 0.78 | 0.94 | 0.81 | 0.76 |
 | 2013-2025 | 0.95 | 0.86 | 0.62 | 0.73 |
 
-ALSCL 在每个时期与年龄鉴定资料的差别都在每年 0.17 以内。ACL 在前两个时期的差别在每年 0.04 以内，在最后一个时期降到 0.62，而年龄鉴定资料给出 0.95。只有当调查可捕性不随年龄变化时，调查所见的下降率才等于种群的总死亡率；评估对这个调查指数的每个年龄分别估计可捕性。
+ALSCL 在每个时期与年龄鉴定资料的差别都在每年 0.17 以内。ACL 在前两个时期的差别在每年 0.04 以内，在最后一个时期降到 0.62，而年龄鉴定资料给出 0.95。只有当调查可捕性不随年龄变化时，调查所见的下降率才等于种群的总死亡率；评估对其第一季度指数的每个年龄分别估计可捕性。
 
-ALSCL stays within 0.17 per year of the age readings in every period. ACL lies within 0.04 per year in the first two periods and falls to 0.62 in the last, where the age readings give 0.95. The apparent rate equals the total mortality rate of the stock only where survey catchability does not change with age; the assessment estimates a separate catchability of this survey index for each age.
+ALSCL stays within 0.17 per year of the age readings in every period. ACL lies within 0.04 per year in the first two periods and falls to 0.62 in the last, where the age readings give 0.95. The apparent rate equals the total mortality rate of the stock only where survey catchability does not change with age; the assessment estimates a separate catchability at each age for its quarter 1 index.
 
 <a id="case-north-sea-whiting-sensitivity"></a>
 
@@ -591,9 +587,9 @@ b_q <- run_alscl(x, survey_q = q_dome, sel_L50 = NULL, sel_L95 = NULL,
 
 The first fit replaces the constant M by the natural mortality rate by age and year that the assessment takes from a multispecies model (`x$ices$M`, the input table of [ICES 2026](https://doi.org/10.17895/ices.pub.32676345)). `M` is then a matrix with one row per age class and one column per time step. Ages 6 to 10 take the value of the oldest group of the table and 2023-2026 take the values of 2022. The mean over the years is 1.18 per year at age 1, 0.66 at age 2 and 0.40 for ages 6 and older.
 
-第二次拟合把 logistic 形式的调查可捕性换成对大鱼下降的曲线。[Fraser et al. (2007)](https://doi.org/10.1093/icesjms/fsm145) 估计了 GOV 拖网对牙鳕按体长的可捕性：21 cm 及以下为常数，22 至 37 cm 线性下降，38 cm 起约为该常数水平的 0.22。他们的曲线针对第三季度的调查，并且以当时的评估结果为基准，所以只能提供形状；它也不含小体长处上升段的信息，这里上升段仍取 10 和 14 cm。`survey_catchability()` 取 `"dome"` 时构造这样的曲线：下降从 `L95_desc` 附近开始，在 `L50_desc` 处降到一半，最后停在 `minimum`。`survey_q` 取代 `sel_L50` 和 `sel_L95`，这两个参数必须设为 `NULL`。
+第二次拟合把 logistic 形式的调查可捕性换成对大鱼下降的曲线。[Fraser et al. (2007)](https://doi.org/10.1093/icesjms/fsm145) 估计了 GOV 拖网对牙鳕按体长的可捕性：21 cm 及以下为常数，22 至 37 cm 线性下降，38 cm 起约为该常数水平的 0.22。他们的曲线针对第三季度的调查，并且以当时的评估结果为基准，所以只能提供形状。该文给 21 cm 及以下的鱼统一赋了一个值，所以曲线不含小体长处上升段的信息，这里上升段仍取 10 和 14 cm。`survey_catchability()` 取 `"dome"` 时构造这样的曲线：下降从 `L95_desc` 附近开始，在 `L50_desc` 处降到一半，最后停在 `minimum`。`survey_q` 取代 `sel_L50` 和 `sel_L95`，这两个参数必须设为 `NULL`。
 
-The second fit replaces the logistic survey catchability by a curve that declines for large fish. [Fraser et al. (2007)](https://doi.org/10.1093/icesjms/fsm145) estimated the catchability of the GOV trawl at length for whiting: constant up to 21 cm, a linear decline from 22 to 37 cm, and about 0.22 of the constant level from 38 cm. Their curve is for the quarter 3 survey and is scaled to the assessment of that time, so it gives the shape only, and it has no information on the increase at small lengths, which stays at 10 and 14 cm here. `survey_catchability()` with `"dome"` builds such a curve, in which the decline starts near `L95_desc`, is halfway at `L50_desc` and ends at `minimum`. `survey_q` takes the place of `sel_L50` and `sel_L95`, which must be `NULL`.
+The second fit replaces the logistic survey catchability by a curve that declines for large fish. [Fraser et al. (2007)](https://doi.org/10.1093/icesjms/fsm145) estimated the catchability of the GOV trawl at length for whiting: constant up to 21 cm, a linear decline from 22 to 37 cm, and about 0.22 of the constant level from 38 cm. Their curve is for the quarter 3 survey and is scaled to the assessment of that time, so it gives the shape only. The paper assigned one value to all fish up to 21 cm, so the curve has no information on the increase at small lengths, which stays at 10 and 14 cm here. `survey_catchability()` with `"dome"` builds such a curve, in which the decline starts near `L95_desc`, is halfway at `L50_desc` and ends at `minimum`. `survey_q` takes the place of `sel_L50` and `sel_L95`, which must be `NULL`.
 
 ![主拟合与两次敏感性拟合中按体长的调查可捕性和各龄自然死亡率 / Survey catchability at length and natural mortality rate at age in the main fit and in the two sensitivity fits](figures/whiting-case/sensitivity_inputs.png)
 
@@ -657,7 +653,7 @@ save_assessment(b, "whiting_alscl.rds")
 | 读数值检查、建议和合理性提示 / Read the numerical checks, the advice and the plausibility notes | [判断拟合是否可用](USER_GUIDE.md#diagnostics) / [Judge whether a fit can be used](USER_GUIDE.md#diagnostics) |
 | 选择初值、边界和要固定的参数 / Choose starts, bounds and the parameters to fix | [选择拟合设置](USER_GUIDE.md#fitting) / [Choose the fitting settings](USER_GUIDE.md#fitting) |
 | 在真值已知的数据上比较 ACL 和 ALSCL / Compare ACL and ALSCL on data with known truth | [ACL 与 ALSCL 的评估结果有什么不同？](CASES.md#case-compare-assessments) / [Do ACL and ALSCL give different answers?](CASES.md#case-compare-assessments) |
-| 把其他 M 取值作为情景来拟合 / Run fits with other values of M as scenarios | [评估对假设有多敏感，未来 F 会怎样改变结果？](CASES.md#case-sensitivity-projection) / [How sensitive is the assessment, and what happens under future F?](CASES.md#case-sensitivity-projection) |
+| 把其他 M 取值作为情景来拟合 / Run fits with other values of M as scenarios | [评估对假设有多敏感，未来 F 情景会怎样改变结果？](CASES.md#case-sensitivity-projection) / [How sensitive is an assessment, and what happens under future F scenarios?](CASES.md#case-sensitivity-projection) |
 | 去掉最后几年后重新拟合 / Refit after removing the last years | [运行回溯分析](USER_GUIDE.md#retrospective) / [Run a retrospective analysis](USER_GUIDE.md#retrospective) |
 
 <a id="case-compare-assessments"></a>
@@ -680,9 +676,9 @@ a <- run_acl(x, train_times = 2, silent = TRUE)
 b <- run_alscl(x, train_times = 2, silent = TRUE)
 ```
 
-两次拟合都读取输入列表 `x`，因此共用数据表、`M`、调查可捕性和时间网格，每个模型从 `x$fit_config` 取自己的初值和 `map`；固定的生长和过程参数值对区间没有贡献不确定性。给两个模型相同的数据表和生物学输入，并记录各自的 map、固定值、边界和数值检查结果。评估模型结构的影响时，应结合这些拟合配置解释差异。
+两次拟合都读取输入列表 `x`，因此共用数据表、`M`、调查可捕性和时间网格，每个模型从 `x$fit_config` 取自己的初值和 `map`；固定的生长和过程参数值对区间没有贡献不确定性。给两个模型相同的数据表和生物学输入，并记录各自的 map、固定值、边界和数值检查结果。`YTF_example` 由年龄型的 flatfish 操作模型生成。该操作模型像 ACL 一样，用 von Bertalanffy 曲线和同龄体长的变异系数把体长分配给各年龄，取值就是两个拟合所固定的值。ALSCL 则按体长增量描述生长，所以在这组数据上，ACL 的生长结构与操作模型一致，ALSCL 的不一致。
 
-Both fits read the input bundle `x`, so they share the tables, `M`, survey catchability and time grid, and each model takes its starting values and `map` from `x$fit_config`; the fixed growth and process values contribute no uncertainty to the intervals. Use the same tables and biological inputs, and document each model's map, fixed values, bounds and numerical checks. Interpret the differences under these fitting configurations when assessing the effect of model structure.
+Both fits read the input bundle `x`, so they share the tables, `M`, survey catchability and time grid, and each model takes its starting values and `map` from `x$fit_config`; the fixed growth and process values contribute no uncertainty to the intervals. Use the same tables and biological inputs, and document each model's map, fixed values, bounds and numerical checks. `YTF_example` was generated by the age-based flatfish operating model, which assigns lengths to ages with a von Bertalanffy curve and a CV of length at age, as ACL does, at the values that both fits fix. ALSCL grows fish by length increments instead, so on these data the growth structure of ACL matches that of the operating model and that of ALSCL does not.
 
 <a id="case-compare-assessments-checks"></a>
 
@@ -698,9 +694,9 @@ comparison$comparison
 plot_compare_residuals(a, b, x$data.CatL)
 ```
 
-先读每次拟合的数值检查（[理解第一次拟合](USER_GUIDE.md#first-model-checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。在记录运行（[comparison_summary.csv](results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，调查指数 RMSE 也更小，为 2.5 对 4.4。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
+先读每次拟合的数值检查（[理解第一次拟合](USER_GUIDE.md#first-model-checks)）。`compare_models()` 核对两次拟合使用了同一张调查表，再比较目标函数、AIC、BIC 和 `fit_metrics` 中的拟合统计量。`comparison$comparison` 记录 `data_verified`、`eligible`（两次拟合都通过检查）、`preferred`（AIC 较低的模型，仅在两者都合格且 AIC 相差至少 2 时给出）和 `issues`。在记录运行（[comparison_summary.csv](results/comparison_summary.csv)）中，两次拟合都通过检查；ACL 的 AIC 更低，拟合统计量（[comparison_fit_metrics.csv](results/comparison_fit_metrics.csv)）中的调查指数 RMSE 也更小，为 2.5 对 4.4。AIC 较低只是这些数据上的统计支持；结构是否适合这个种群，要用生物学知识判断。
 
-Read the numerical checks first ([Understand your first fit](USER_GUIDE.md#first-model-checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and the smaller survey-index RMSE, 2.5 against 4.4. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
+Read the numerical checks first ([Understand your first fit](USER_GUIDE.md#first-model-checks)). `compare_models()` verifies that both fits used the same survey table, then compares the objective, AIC, BIC and the fit statistics in `fit_metrics`. `comparison$comparison` records `data_verified`, `eligible` (both fits passed the checks), `preferred` (the model with the lower AIC, given only when both are eligible and the AIC values differ by at least 2) and `issues`. In the recorded run ([comparison_summary.csv](results/comparison_summary.csv)) both fits passed; ACL had the lower AIC and, in the fit statistics ([comparison_fit_metrics.csv](results/comparison_fit_metrics.csv)), the smaller survey-index RMSE, 2.5 against 4.4. A lower AIC is statistical support on these data; whether the structure suits the stock is a biological decision.
 
 ![模拟 YTF：ACL 与 ALSCL 的残差 / Synthetic YTF: residuals of ACL and ALSCL](figures/ytf/compare_residuals.png)
 
@@ -739,9 +735,9 @@ comparison$growth
 
 Compare the timing, trends and magnitudes of the point estimates, then inspect their uncertainty; `se = TRUE` adds each fit's approximate intervals. Overlap alone does not show that point estimates are close, because wide intervals can overlap despite large differences. For a quantitative comparison, report differences or ratios at matching times. Inference about those differences requires their joint uncertainty because the fits use the same data. This example describes one dataset.
 
-`comparison$correlation` 对产卵生物量、补充量、生物量和丰度给出两次拟合之间的相关系数和均值之比。渔获量按相对渔获量比较（`CN (relative)` 和 `CB (relative)` 两行，不给比值），因为只拟合调查指数时渔获量的水平无法确定。生长的比较看 `comparison$length_at_age`，即两次拟合各年龄的平均体长。`comparison$growth` 把 `Linf`、`k` 和 `t0` 按模型分开列出，因为它们在 ACL 中是各年龄平均体长的 von Bertalanffy 曲线参数，在 ALSCL 中决定体长别生长增量（[判断拟合是否可用](USER_GUIDE.md#diagnostics-compare)）。
+`comparison$correlation`（记录运行见 [comparison_correlation.csv](results/comparison_correlation.csv)）对产卵生物量、补充量、生物量和丰度给出两次拟合之间的相关系数和均值之比。渔获量按相对渔获量比较（`CN (relative)` 和 `CB (relative)` 两行，不给比值），因为只拟合调查指数时渔获量的水平无法确定。生长的比较看 `comparison$length_at_age`，即两次拟合各年龄的平均体长。`comparison$growth`（记录运行见 [comparison_growth.csv](results/comparison_growth.csv)）把 `Linf`、`k` 和 `t0` 按模型分开列出，因为它们在 ACL 中是各年龄平均体长的 von Bertalanffy 曲线参数，在 ALSCL 中决定体长别生长增量（[判断拟合是否可用](USER_GUIDE.md#diagnostics-compare)）。
 
-`comparison$correlation` gives the correlation between the two fits and the ratio of their means for spawning stock biomass (SSB), recruitment, biomass and abundance. Catch is compared as relative catch (rows `CN (relative)` and `CB (relative)`, without a ratio), because a fit to a survey index does not determine the level of catch. Compare growth through `comparison$length_at_age`, the mean length at age of both fits. `comparison$growth` lists `Linf`, `k` and `t0` in a separate block for each model, because they are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length in ALSCL ([Judge whether a fit can be used](USER_GUIDE.md#diagnostics-compare)).
+`comparison$correlation` (recorded run: [comparison_correlation.csv](results/comparison_correlation.csv)) gives the correlation between the two fits and the ratio of their means for spawning stock biomass (SSB), recruitment, biomass and abundance. Catch is compared as relative catch (rows `CN (relative)` and `CB (relative)`, without a ratio), because a fit to a survey index does not determine the level of catch. Compare growth through `comparison$length_at_age`, the mean length at age of both fits. `comparison$growth` (recorded run: [comparison_growth.csv](results/comparison_growth.csv)) lists `Linf`, `k` and `t0` in a separate block for each model, because they are the parameters of a von Bertalanffy curve of mean length at age in ACL and set the growth increment at length in ALSCL ([Judge whether a fit can be used](USER_GUIDE.md#diagnostics-compare)).
 
 <a id="case-compare-assessments-mortality"></a>
 
@@ -784,10 +780,10 @@ writeLines(capture.output(sessionInfo()), "my_model_comparison/session.txt")
 
 | 想做什么 / What you want to do | 阅读 / Read |
 |---|---|
-| 绘制其他比较图 / Draw the other comparison figures | [模型比较与真值](PLOT_GALLERY.md) / [Model comparisons](PLOT_GALLERY.md) |
+| 绘制其他比较图 / Draw the other comparison figures | [模型比较](PLOT_GALLERY.md) / [Model comparisons](PLOT_GALLERY.md) |
 | 检查单个拟合的残差规律 / Examine the residual patterns of one fit | [判断拟合是否可用](USER_GUIDE.md#diagnostics) / [Judge whether a fit can be used](USER_GUIDE.md#diagnostics) |
 | 去掉近期时间步后重新拟合 / Remove recent time steps and refit | [移除近期数据后，估计结果会怎样变化？](CASES.md#case-retrospective-bias) / [Do estimates change when recent data are removed?](CASES.md#case-retrospective-bias) |
-| 检验对 M 和 F 结构的敏感性 / Test the sensitivity to M and the F structure | [评估对假设有多敏感，未来 F 情景会怎样改变结果？](CASES.md#case-sensitivity-projection) / [How sensitive is the assessment, and what happens under future F?](CASES.md#case-sensitivity-projection) |
+| 检验对 M 和 F 结构的敏感性 / Test the sensitivity to M and the F structure | [评估对假设有多敏感，未来 F 情景会怎样改变结果？](CASES.md#case-sensitivity-projection) / [How sensitive is an assessment, and what happens under future F scenarios?](CASES.md#case-sensitivity-projection) |
 | 对自己的数据表拟合两个模型 / Fit both models to your own tables | [如何拟合自己的调查数据？](CASES.md) / [How do I fit my own survey data?](CASES.md) |
 
 <a id="case-retrospective-bias"></a>
@@ -856,9 +852,9 @@ saveRDS(list(ACL = ra, ALSCL = rb, fit_args = x$fit_args,
 writeLines(capture.output(sessionInfo()), "my_retrospective/session.txt")
 ```
 
-结果是没有活动 TMB 对象的表，所以 `saveRDS()` 能完整保存，`plot_retro()` 在新会话中可以重画。`acl_save_plot()` 以 300 dpi 保存包内绘图，尺寸取 `acl_figure_size()` 按图形布局给出的推荐值。文件夹记录每次拟合的序列、每个量和每一轮的 rho、数值检查、图、`x` 的设置和会话信息。对自己的评估，用你报告的那次拟合的设置运行分析，使各轮与完整拟合只差去掉的观测；季度数据用 `nyear = 4` 去掉一年。
+结果是没有活动 TMB 对象的表，所以 `saveRDS()` 能完整保存，`plot_retro()` 在新会话中可以重画。`acl_save_plot()` 以 300 dpi 保存包内绘图，尺寸取 `acl_figure_size()` 按图形布局给出的推荐值。文件夹记录每次拟合的序列、每个量和每一轮的 rho、数值检查、图、`x` 的设置和会话信息。对自己的评估，用你报告的那次拟合的设置运行分析，使各轮与完整拟合只差去掉的观测；季度数据用 `nyear = 4` 时，四轮依次去掉一到四个季度。
 
-The results are tables without a live TMB object, so `saveRDS()` keeps them whole and `plot_retro()` redraws them in a new session. `acl_save_plot()` saves a package plot at 300 dpi in the size that `acl_figure_size()` recommends for its layout. The folder records every fit's series, rho per quantity and peel, the numerical checks, the figure, the settings of `x` and the session information. For your own assessment, run the analysis with the settings of the fit you report, so that the peels differ from the full fit only in the removed observations; with quarterly data `nyear = 4` removes one year.
+The results are tables without a live TMB object, so `saveRDS()` keeps them whole and `plot_retro()` redraws them in a new session. `acl_save_plot()` saves a package plot at 300 dpi in the size that `acl_figure_size()` recommends for its layout. The folder records every fit's series, rho per quantity and peel, the numerical checks, the figure, the settings of `x` and the session information. For your own assessment, run the analysis with the settings of the fit you report, so that the peels differ from the full fit only in the removed observations; with quarterly data the four peels of `nyear = 4` remove one to four quarters.
 
 <a id="case-retrospective-bias-next"></a>
 
@@ -896,9 +892,9 @@ summary(a)
 summary(b)
 ```
 
-ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合不到十秒；ALSCL 拟合 `b` 用于投影。`summary()` 打印时间步、F 结构、数值检查（`numerical_ok` 应为 `TRUE`）和自然尺度上的标量参数。`YTF_example` 把生长、体长 CV、两个过程标准差和补充量相关系数固定在教学值上，`M` 为每个年度时间步 0.20，F 结构为默认的 `F_structure = "group_year"`；你自己的输入列表需要有依据的生物学设置（[选择拟合设置](USER_GUIDE.md#fitting)）。若检查未通过，先修好拟合再做任何情景（[判断拟合是否可用](USER_GUIDE.md#diagnostics)）。
+ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合不到十秒；ALSCL 拟合 `b` 用于投影。`summary()` 打印时间步、F 结构、数值检查（应为 `Numerical checks: passed`）以及自然尺度上被估计的和被固定的标量参数。`YTF_example` 把生长、体长 CV、两个过程标准差和补充量相关系数固定在教学值上，`M` 为每个年度时间步 0.20，F 结构为默认的 `F_structure = "group_year"`；你自己的输入列表需要有依据的生物学设置（[选择拟合设置](USER_GUIDE.md#fitting)）。若检查未通过，先修好拟合再做任何情景（[判断拟合是否可用](USER_GUIDE.md#diagnostics)）。
 
-The ACL fit `a` serves the scenarios and the profile, because an ACL refit takes less than ten seconds; the ALSCL fit `b` serves the projections. `summary()` prints the time steps, the F structure, the numerical checks (`numerical_ok` should be `TRUE`) and the scalar parameters on the natural scale. `YTF_example` fixes growth, the length CVs, two process standard deviations and the recruitment correlation at teaching values, with `M` = 0.20 per annual time step and the default `F_structure = "group_year"`; your own bundle needs supported biology ([Choose the fitting settings](USER_GUIDE.md#fitting)). If a check fails, repair the fit before any scenario ([Judge whether a fit can be used](USER_GUIDE.md#diagnostics)).
+The ACL fit `a` serves the scenarios and the profile, because an ACL refit takes less than ten seconds; the ALSCL fit `b` serves the projections. `summary()` prints the time steps, the F structure, the numerical checks (they should read `Numerical checks: passed`) and the estimated and the fixed scalar parameters on the natural scale. `YTF_example` fixes growth, the length CVs, two process standard deviations and the recruitment correlation at teaching values, with `M` = 0.20 per annual time step and the default `F_structure = "group_year"`; your own bundle needs supported biology ([Choose the fitting settings](USER_GUIDE.md#fitting)). If a check fails, repair the fit before any scenario ([Judge whether a fit can be used](USER_GUIDE.md#diagnostics)).
 
 <a id="case-sensitivity-projection-scenarios"></a>
 
@@ -940,9 +936,9 @@ In the recorded run all three fits passed ([scenario-status.csv](results/workflo
 | `low_M` | 75.4 | 0.371 |
 | `shared_F` | 74.1 | 0.335 |
 
-较低的 M 抬高了估计的 F，而末期产卵生物量几乎没变，三条曲线几乎重合；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
+M 降低 0.05 后，2019 年的平均 F 上升 0.051，总死亡率 F + M 仍为 0.52。只拟合调查数据时，模型估计的是总死亡率，固定的 M 决定其中多少归为 F（[模型原理](USER_GUIDE.md#model-theory-survey)）。末期产卵生物量几乎没变，三条曲线几乎重合，因为调查指数和固定的调查可捕性决定了丰度的尺度；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
 
-The lower M raises the estimated F while terminal SSB hardly moves, and the three curves nearly coincide; with your own data the spread between the curves is the sensitivity to report.
+Lowering M by 0.05 raises mean F in 2019 by 0.051, so the total mortality rate F + M stays at 0.52. A fit to survey data alone estimates total mortality, and the fixed M decides how much of it is F ([Model principles](USER_GUIDE.md#model-theory-survey)). Terminal SSB hardly moves and the three curves nearly coincide, because the survey index and the fixed survey catchability set the abundance scale; with your own data the spread between the curves is the sensitivity to report.
 
 <a id="case-sensitivity-projection-profile"></a>
 
@@ -956,20 +952,20 @@ profile_F$grid
 ggplot(profile_F$grid, aes(value, delta_nll)) +
   geom_line(colour = acl_palette(role = "primary")) +
   geom_point(colour = acl_palette(role = "primary")) +
-  labs(x = "Baseline fishing mortality rate (per year)",
+  labs(x = "Median fishing mortality rate (per year)",
        y = "Change in negative log likelihood") +
   theme_acl()
 ```
 
-`profile_model()` 把一个被估计的标量参数依次固定在网格值上，重新拟合其余标量参数和过程偏差；参数名必须在 `names(a$opt$par)` 中，所以 `YTF_example` 中固定的 `log_Linf` 会报错终止，而 `mean_log_F` 是被估计的。`scale = "natural"` 时网格在自然尺度上，这里是拟合基准值的 0.9、1 和 1.1 倍，并且必须在优化器边界之内。`profile_F$grid` 给出每个值及其目标函数、`delta_nll`（相对于原始拟合的负对数似然增量）和该次重新拟合的数值检查；失败的点保留可见。负的 `delta_nll` 会保留；小于 `-1e-6` 时才会因目标函数值更低而警告。应检查该网格拟合的数值状态，并用更多初值重新拟合原模型。很小的负差值可能来自舍入误差。`M` 和调查可捕性这类固定输入属于第 2 步。
+`profile_model()` 把一个被估计的标量参数依次固定在网格值上，重新拟合其余标量参数和过程偏差；参数名必须在 `names(a$opt$par)` 中，所以 `YTF_example` 中固定的 `log_Linf` 会报错终止，而 `mean_log_F` 是被估计的。`scale = "natural"` 时网格在自然尺度上，这里是拟合的捕捞死亡率中位数 `exp(mean_log_F)` 的 0.9、1 和 1.1 倍，并且必须在优化器边界之内。`profile_F$grid` 给出每个值及其目标函数、`delta_nll`（相对于原始拟合的负对数似然增量）和该次重新拟合的数值检查；失败的点保留可见。负的 `delta_nll` 会保留；小于 -10⁻⁶ 时才会因目标函数值更低而警告。应检查该网格拟合的数值状态，并用更多初值重新拟合原模型。很小的负差值可能来自舍入误差。`M` 和调查可捕性这类固定输入属于第 2 步。
 
-`profile_model()` fixes one estimated scalar parameter at each grid value and refits the other scalar parameters and the process deviations; the name must be in `names(a$opt$par)`, so `log_Linf`, fixed in `YTF_example`, stops with an error, while `mean_log_F` is estimated. With `scale = "natural"` the grid is on the natural scale, here 0.9, 1 and 1.1 times the fitted baseline, and must lie within the optimizer bounds. `profile_F$grid` gives each value with its objective, `delta_nll` (the rise in negative log likelihood relative to the original fit) and the numerical checks of that refit; failed points stay visible. Negative `delta_nll` values are retained; a value below `-1e-6` triggers a warning about a lower objective. Check that grid fit's numerical status and rerun the original with more starts. Tiny negative differences can reflect roundoff. Fixed inputs such as `M` and survey catchability belong in step 2.
+`profile_model()` fixes one estimated scalar parameter at each grid value and refits the other scalar parameters and the process deviations; the name must be in `names(a$opt$par)`, so `log_Linf`, fixed in `YTF_example`, stops with an error, while `mean_log_F` is estimated. With `scale = "natural"` the grid is on the natural scale, here 0.9, 1 and 1.1 times the fitted median fishing mortality rate `exp(mean_log_F)`, and must lie within the optimizer bounds. `profile_F$grid` gives each value with its objective, `delta_nll` (the rise in negative log likelihood relative to the original fit) and the numerical checks of that refit; failed points stay visible. Negative `delta_nll` values are retained; a value below -10⁻⁶ triggers a warning about a lower objective. Check that grid fit's numerical status and rerun the original with more starts. Tiny negative differences can reflect roundoff. Fixed inputs such as `M` and survey catchability belong in step 2.
 
-![基准捕捞死亡率在三个网格值上的剖面 / Profile of the baseline fishing mortality rate at three grid values](figures/workflows/profile-F.png)
+![捕捞死亡率中位数在三个网格值上的剖面 / Profile of the median fishing mortality rate at three grid values](figures/workflows/profile-F.png)
 
-在记录运行（[profile-F.csv](results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-5e-12，舍入误差）和 0.35，全部通过检查。基准 F 改变 10% 使负对数似然上升约 0.4。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
+在记录运行（[profile-F.csv](results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-5 × 10⁻¹²，舍入误差）和 0.35，全部通过检查。F 的中位数改变 10% 使负对数似然上升约 0.4。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
 
-In the recorded run ([profile-F.csv](results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-5e-12, rounding) and 0.35, all passing the checks. A 10% change of the baseline F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
+In the recorded run ([profile-F.csv](results/workflows/profile-F.csv)) the three points 0.278, 0.309 and 0.340 gave changes of 0.43, about 0 (-5 × 10⁻¹², rounding) and 0.35, all passing the checks. A 10% change of the median F costs about 0.4 units. Three points show the method; a profile for a report needs a denser grid, and the function infers no confidence interval from it.
 
 <a id="case-sensitivity-projection-project"></a>
 
@@ -1141,7 +1137,7 @@ The input bundle `x` carries the generating biology in `fit_args` and each model
 
 操作模型用共用的 F 时间序列乘以选择性。本例的评估模型允许 F 随组别和时间变化。操作模型和评估模型都在对数尺度上加入独立扰动，逐龄递推初始尾数。操作模型在预热期开始时初始化，评估模型在保留序列的第一期初始化。见[年度与季度时间步](CASE_STUDIES.md#case-studies-annual)。
 
-The operating model combines a shared time series of F with selectivity. In this example the assessment models allow F to vary by group and time. Both the operating model and the assessments initialize numbers at age recursively with independent log-scale increments. The operating model is initialized before burn-in and the assessment at the start of the retained series. See [Annual and quarterly time steps](CASE_STUDIES.md#case-studies-annual).
+The operating model combines a shared time series of F with selectivity. In this example the assessment models allow F to vary by group and time. Both the operating model and the assessments initialize numbers at age recursively with independent log-scale increments. The operating model is initialized at the start of its burn-in period and the assessment at the start of the retained series. See [Annual and quarterly time steps](CASE_STUDIES.md#case-studies-annual).
 
 `pa$len_border` 从 `-Inf` 到 `Inf`，去掉首尾剩下 22 个内部边界。两个模型的 `check_alscl_data()` 都应报告 23 个体长组、20 个时间步、460 个正观测和 `free_fixed` 为 5；最后一行应打印 `TRUE TRUE`。拟合耗时取决于机器和优化路径，`a$elapsed` 和 `b$elapsed` 会分别记录。若检查未通过，按[理解第一次拟合](USER_GUIDE.md#first-model-checks)运行 `diagnose_model()`，并用 `nstarts` 增加初值。
 

@@ -16,7 +16,7 @@ ALSCL is an R package for stock assessment from fishery-independent survey data 
 
 Around the two models the package provides data preparation and checks, multistart fitting on parallel workers, diagnostics, model comparison, retrospective analysis, sensitivity scenarios, likelihood profiles, projections, fitted-model simulation, hindcast validation, portable assessment archives and 27 plotting functions.
 
-**Latest release: 2.5.1** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
+**Latest release: 2.5.2** · [What changed](NEWS.md) · [Website](https://fanzhang-lab-shou.github.io/ALSCL/) · [Wiki](https://github.com/FanZhang-LAB-SHOU/ALSCL/wiki) · [Function reference](docs/FUNCTION_REFERENCE.md) · [Plot gallery](docs/PLOT_GALLERY.md)
 
 ## What you can do
 
@@ -25,17 +25,17 @@ Around the two models the package provides data preparation and checks, multista
 - **Judge the fit.** `diagnose_model()` reports the convergence code, the gradient, the Hessian and parameters at their bounds. `check_fit()` adds residual heat maps, lag correlations and normal quantile-quantile plots. `compare_models()` compares two fits of the same data by AIC, BIC and fit statistics.
 - **Test the assessment.** Retrospective peels with Mohn's rho (`retro_model()`), sensitivity scenarios (`fit_scenarios()`), likelihood profiles (`profile_model()`), deterministic projections (`project_model()`), simulation from the fitted model (`simulate_fit()`), self-tests that refit the model to data simulated from it (`self_test()`) and hindcast validation on withheld time steps (`hindcast_model()`).
 - **Keep and share the results.** `save_assessment()` stores a fit with its complete recipe, `read_assessment()` and `refit_model()` bring it back and refit it, and `extract_estimates()` returns the estimates with their standard errors.
-- **Plot everything with one argument set.** The 27 plotting functions share their argument names and one theme, `acl_theme_set()`. The default style gives each quantity its own color and draws total recruitment and total catch as bars, `acl_theme_set(style = "classic")` brings back the colors and line forms of version 2.4.5, six color palettes are available, `theme_acl()` and `acl_palette()` give your own ggplots the same look, and `acl_save_plot()` saves a figure at a size computed from its layout. The [gallery](docs/PLOT_GALLERY.md) shows all 48 figures with their code.
+- **Plot everything with one argument set.** The 27 plotting functions share their argument names and one theme, `acl_theme_set()`. The default style gives each quantity its own color and draws total recruitment and total catch as bars. `acl_theme_set(style = "classic")` brings back the colors and line forms of version 2.4.5, and six color palettes are available. `theme_acl()` and `acl_palette()` give your own ggplots the same look, and `acl_save_plot()` saves a figure at a size computed from its layout. The [gallery](docs/PLOT_GALLERY.md) shows all 48 figures with their code.
 
 ## Installation
 
 ```r
 install.packages("remotes")
 remotes::install_github("FanZhang-LAB-SHOU/ALSCL")          # development version (main)
-remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.5.1")   # a specific release
+remotes::install_github("FanZhang-LAB-SHOU/ALSCL@v2.5.2")   # a specific release
 ```
 
-ALSCL needs R 4.1 or later, TMB 1.9.21 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. See [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html).
+ALSCL needs R 4.1 or later, TMB 1.9.17 or later and a C++ compiler that matches R: Rtools on Windows, the Xcode Command Line Tools on macOS, and a C++ compiler and make on Linux. The first fit of each model in an R session compiles it; `options(ALSCL.tmb.cache = "~/ALSCL-cache")` keeps the compiled code between sessions. [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html) explains each step, including what to answer when R offers to install packages from source on R 4.3 and older.
 
 ## Quick start
 
@@ -43,17 +43,17 @@ ALSCL needs R 4.1 or later, TMB 1.9.21 or later and a C++ compiler that matches 
 library(ALSCL)
 data("YTF_example")               # bundled synthetic example: three tables plus settings
 x <- YTF_example
-a <- run_acl(x, silent = TRUE)    # age-structured model
-b <- run_alscl(x, silent = TRUE)  # age- and length-structured model
-diagnose_model(x$data.CatL, a)    # numerical checks before reading any estimate
-extract_estimates(a)              # estimates with standard errors
+a <- run_acl(x, silent = TRUE)    # age-structured model; the first call compiles it
+b <- run_alscl(x, silent = TRUE)  # age- and length-structured model; about two minutes
+diagnose_model(x$data.CatL, a)    # should print Numerical checks: TRUE
+head(extract_estimates(a))        # estimates with standard errors
 plot_compare_ts(a, b, se = TRUE)
 save_assessment(a, "ytf_acl.rds")
 ```
 
 ![Spawning stock biomass, recruitment, total biomass, total abundance and catch in numbers estimated by ACL and ALSCL](docs/figures/ytf/compare_ts.png)
 
-`YTF_example` is a synthetic data set with known simulation truth, made for teaching; it is not the empirical data set of the paper. To fit your own survey, start with [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html).
+[Understand your first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/first-model.html) explains each line and what it prints. `YTF_example` is a synthetic data set with known simulation truth, made for teaching; it is not the empirical data set of the paper. To fit your own survey, start with [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html).
 
 <p align="center">
   <a href="docs/PLOT_GALLERY.md"><img src="docs/figures/ytf/CatL_length_TRUE.png" width="32%" alt="Observed and fitted survey indices over time, one panel per length bin"></a>
@@ -72,13 +72,13 @@ Three of the figures in the [plot gallery](docs/PLOT_GALLERY.md) show the observ
 | Fishing mortality | Estimated by age | Estimated by length; F at age is derived |
 | Fitting function | `run_acl()` | `run_alscl()` |
 
-Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. Survey catchability has a fixed maximum of 1, so abundance, biomass and recruitment are on the scale of the survey index: they are absolute only when the index is an absolute abundance estimate. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
+Both models read the same three tables, by year or by quarter: survey numbers at length, mean weight at length and maturity at length. Natural mortality and survey catchability are supplied as settings. Survey catchability has a fixed maximum of 1, so abundance, biomass and recruitment are on the scale of the survey index and are absolute only when the index is an absolute abundance estimate. The [example workbook](docs/data/ALSCL_Data_Entry_Example.xlsx) shows the layout.
 
 ## Documentation
 
 Where to start:
 
-1. [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html): install the package, fit the bundled example and check the result.
+1. [Install ALSCL and run a first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/getting-started.html), then [Understand your first fit](https://fanzhang-lab-shou.github.io/ALSCL/articles/first-model.html): install the package, fit the bundled example, check the fit and plot the estimates.
 2. [Prepare your survey data](https://fanzhang-lab-shou.github.io/ALSCL/articles/data-preparation.html): lay out the three tables, choose the biological settings and see which parameters will be estimated.
 3. [Can the fitted model reproduce observations and predict withheld time steps?](https://fanzhang-lab-shou.github.io/ALSCL/articles/case-model-validation.html): simulation and hindcast validation.
 

@@ -94,7 +94,8 @@ Numeric time-column labels must have this spacing. Keep missing periods as
 NA survey columns, with weights and maturity supplied for every period.}
 
 \item{zero_action}{Exclude zero observations as missing (historical behavior),
-or reject them with "error". NA is always missing; negative/infinite values fail.}
+or reject them with "error". NA is always missing; negative/infinite values fail.
+Letter case does not matter.}
 
 \item{control}{A named list of nlminb control settings.}
 
@@ -108,7 +109,8 @@ retains the age-by-year (ACL) or length-by-year (ALSCL) AR(1) field.
 \code{"year"} uses one shared F per time step with a one-dimensional AR(1)
 density; the unused group correlation is automatically fixed and omitted
 from reports. Other default map rules still apply. Subannual data share F
-per model step, not per calendar year.}
+per model step, not per calendar year.
+Letter case does not matter.}
 
 \item{polish}{Logical. By default, apply up to five safeguarded Newton steps
 to the selected fit, requiring a positive-definite Hessian, in-bounds
@@ -153,7 +155,8 @@ that period, e(1) included; with an equilibrium plus group, the deviation of the
 plus group multiplies the sum of the older cohorts). The settings used
 are stored in the \code{structure} element of the fit; \code{initial_deviations}
 is stored only when it is \code{"independent"}, so that the stored structure
-of a fit with the default form is the same as in earlier versions.}
+of a fit with the default form is the same as in earlier versions.
+Letter case does not matter in the names of sets and the values of settings.}
 
 \item{start_spread}{Standard deviation of the normal deviates added to the
 starting values (on the scale of the optimizer, mostly logarithms) of
@@ -194,7 +197,8 @@ scale (10 instead of 1) and the von Bertalanffy growth rate k (0.05 to 2
 instead of 0.1 to 1 per year); see \code{\link[=create_parameters]{create_parameters()}}. Entries of
 \code{parameters.L} and \code{parameters.U} replace these bounds. When an ACL fit
 stops at one of the default upper bounds, \code{diagnostics$advice} and the
-message of the fit name this argument.}
+message of the fit name this argument.
+Letter case does not matter.}
 }
 \value{
 An alscl_fit list (legacy dollar access is unchanged) with report,

@@ -88,7 +88,7 @@ saveRDS(rb, "ytf_alscl_retro.rds")
 plot_retro(readRDS("ytf_alscl_retro.rds"), rho_digits = 3)
 ```
 
-The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits. It stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproducibility](reproducibility.html) shows how to record the package versions and the session.
+The retrospective result holds tables only, with no live TMB object, so `saveRDS()` keeps all of it and `plot_retro()` draws the reloaded object in a new session. `save_assessment()` is for fits. It stores `b` as a saved fit with its recipe for `refit_model()` and stops with `A complete fit recipe is required` when given the retrospective result. Keep the two files together; [Reproduce results and fix problems](reproducibility.html) shows how to record the package versions and the session.
 
 <h2 id="next">What next</h2>
 

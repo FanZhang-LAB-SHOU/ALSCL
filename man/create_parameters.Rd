@@ -18,7 +18,8 @@ create_parameters_alscl(species, parameters, parameters.L, parameters.U)
 }
 \arguments{
 \item{model_type}{Character. Either \code{"acl"} or \code{"alscl"}.
-Determines which TMB model parameter names and defaults to use.}
+Determines which TMB model parameter names and defaults to use.
+Letter case does not matter.}
 
 \item{species}{Character or NULL. Optional species preset:
 \code{"flatfish"} (M7 yellowtail flounder-like, annual, Linf=60),
@@ -26,7 +27,8 @@ Determines which TMB model parameter names and defaults to use.}
 \code{"krill"} (Antarctic krill-like, Linf=60-90).
 When NULL (default), generic wide-range defaults are used.
 Each preset supplies initial values and bounds; inspect these before
-fitting a different stock. See Details.}
+fitting a different stock. See Details.
+Letter case does not matter.}
 
 \item{parameters}{A list of custom initial values (default NULL = use all defaults).
 Only the parameters you specify will be overridden; all others keep their
@@ -40,7 +42,8 @@ default (or species-preset) values.}
 versions. \code{"wide"} gives ACL the bounds that ALSCL has for five
 parameters; see Details. It has no effect for \code{model_type = "alscl"}.
 Entries of \code{parameters.L} and \code{parameters.U} replace the bounds
-of either choice.}
+of either choice.
+Letter case does not matter.}
 }
 \value{
 A list with three elements: \code{parameters}, \code{parameters.L},

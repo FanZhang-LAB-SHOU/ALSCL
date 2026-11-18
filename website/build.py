@@ -18,9 +18,10 @@ from pygments.formatters import HtmlFormatter
 from vendor import prepare_katex
 
 ROOT = Path(__file__).resolve().parents[1]
-# The manual builder owns the splitter that keeps hashes inside R strings as code.
+# The manual builder owns the splitter that keeps hashes inside R strings as code,
+# and the reader of data tables, so that the site and the manuals show the same values.
 sys.path.insert(0, str(ROOT / 'scripts'))
-from build_manual import code_lines
+from build_manual import code_lines, data_table, data_table_caption, data_table_lines, replace_data_tables
 WEB = ROOT / 'website'
 REPO = 'https://github.com/FanZhang-LAB-SHOU/ALSCL'
 BASE = 'https://fanzhang-lab-shou.github.io/ALSCL/'
@@ -73,6 +74,34 @@ def md(text):
     for token, opening, formula, display in equations:
         node = opening + html.escape(formula.strip()) + ('</div>' if display else '</span>')
         result = result.replace('<p>' + token + '</p>', node).replace(token, node)
+    return result
+
+def data_table_html(line, lang):
+    """A data-table line as a table read from its CSV file, in a box that scrolls both ways."""
+    table = data_table(line)
+    caption = md(data_table_caption(table, lang)).strip().removeprefix('<p>').removesuffix('</p>')
+    label = table['name'] + (', scrollable table' if lang == 'en' else '，可滑动的表格')
+    head = ''.join(f'<th scope="col">{html.escape(cell)}</th>' for cell in table['header'])
+    rows = ''.join('<tr><th scope="row">' + html.escape(cells[0]) + '</th>'
+                   + ''.join(f'<td>{html.escape(cell)}</td>' for cell in cells[1:]) + '</tr>'
+                   for cells in table['rows'])
+    return (f'<figure class="data-table" data-source="{html.escape(table["path"], quote=True)}">'
+            f'<div class="data-table-scroll" tabindex="0" role="region" aria-label="{html.escape(label, quote=True)}">'
+            f'<table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>'
+            f'<figcaption>{caption.replace("<a href=", "<a download href=")}</figcaption></figure>')
+
+def article_html(text, lang):
+    """Markdown of an article, with each data-table line replaced by its table."""
+    tables = []
+    def token(line):
+        tables.append(data_table_html(line, lang))
+        return f'\n\nALSCLDATATABLE{len(tables) - 1}END\n\n'
+    result = md(replace_data_tables(text, token))
+    for i, node in enumerate(tables):
+        marker = f'<p>ALSCLDATATABLE{i}END</p>'
+        if marker not in result:
+            raise SystemExit('A data-table line must be a paragraph of its own: ' + data_table_lines(text)[i])
+        result = result.replace(marker, node)
     return result
 
 def choose(label, lang):
@@ -198,7 +227,12 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
         button = soup.new_tag('button', attrs={'type':'button','class':'copy','aria-label':ui['copy']+' R code'})
         button.string = ui['copy']
         pre.insert_before(button)
-    plain = soup.get_text(' ', strip=True)
+    searchable = soup
+    if soup.select_one('.data-table-scroll'):
+        # The search index and the page description leave out the numbers of data tables.
+        searchable = BeautifulSoup(str(soup), 'html.parser')
+        for node in searchable.select('.data-table-scroll'): node.decompose()
+    plain = searchable.get_text(' ', strip=True)
     SEARCH[lang].append({'title':title, 'url':route_base, 'type':ui['reference'] if kind=='reference' else (ui['articles'] if kind=='case' else ('Basic functions' if lang=='en' else '基本功能')), 'text':plain})
     nav = ''.join(link(route, lang_route(lang, p), ui[k], **({'aria_current':'page'} if route_base==p else {})) for k,p in
                   [('start','articles/getting-started.html'),('reference','reference/index.html')])
@@ -395,7 +429,7 @@ def build(out):
         for i,article in enumerate(ARTICLES):
             text=(WEB/'content'/lang/'articles'/(article['slug']+'.md')).read_text(encoding='utf-8')
             text=re.sub(r'^# [^\n]+\n','',text)
-            body=md(text)
+            body=article_html(text,lang)
             previous=ARTICLES[i-1] if i else None; following=ARTICLES[i+1] if i+1<len(ARTICLES) else None
             body+='<nav class="article-pagination" aria-label="'+('Article navigation' if lang=='en' else '文章导航')+'">'
             if previous: body+=f'<a href="{previous["slug"]}.html">← {previous["title"][lang]}</a>'
@@ -411,7 +445,7 @@ def build(out):
             for case in cases:
                 case_index += f'<h3><a href="{case["slug"]}.html">{html.escape(case["title"][lang])}</a></h3><p>{html.escape(case["description"][lang])}</p>'
                 text = (WEB/'content'/lang/'articles'/(case['slug']+'.md')).read_text(encoding='utf-8')
-                body = md(re.sub(r'^# [^\n]+\n','',text))
+                body = article_html(re.sub(r'^# [^\n]+\n','',text),lang)
                 render_page(out,'articles/'+case['slug']+'.html',lang,case['title'][lang],body,
                             'website/content/'+lang+'/articles/'+case['slug']+'.md','case')
         render_page(out,'articles/index.html',lang,UI[lang]['articles'],case_index,kind='case')

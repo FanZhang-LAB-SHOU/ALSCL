@@ -16,9 +16,9 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. Color of the interval. NULL takes the
-#'   color of the line, or the global se_color when that differs from the
-#'   global line_color or when catch_color is NULL. Error bars on bars are
-#'   dark grey unless se_color is given.
+#'   color of the line, or the global se_color when it was set to a color
+#'   other than the band color of the palette. Error bars on bars are dark
+#'   grey unless se_color is given.
 #' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
 #'   inherits the global se_alpha setting (0.3 under the default style, 0.2
 #'   under classic). Error bars are opaque unless se_alpha is given.
@@ -28,11 +28,14 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
+#'   Letter case does not matter.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param type Character. "CN" (total), "CNA" (at age), or "CNL" (at length). Default is "CN".
+#'   Letter case does not matter, so \code{"cnl"} gives the same as \code{"CNL"}.
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
 #' @param title Character, FALSE or NULL. NULL (default) draws the default
 #'   title, FALSE (or NA or "") draws no title, and a character string is
@@ -50,6 +53,7 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #'   NULL inherits the global x_breaks setting when at least one of its values
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @param geom Character or NULL. Form of total catch (\code{type = "CN"}).
 #'   "bar" draws bars 0.8 of a time step wide, with error bars when
@@ -57,6 +61,7 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "CNL", "CNA"))
 #'   \code{se = TRUE}. NULL (default) follows the global bars setting: bars
 #'   under the default style and a line under "classic". Catch at age and
 #'   at length are always lines.
+#'   Letter case does not matter.
 #'
 #' @details ALSCL reports CN, CNA and CNL with standard errors. ACL reports CN
 #'   with standard errors and CNA estimates only; CNL is unavailable. A missing
@@ -120,7 +125,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
   if (is.null(se_alpha)) se_alpha <- acl_theme("se_alpha")
 
 
-  type <- match.arg(type)
+  type <- .acl_match_choice(type, partial = TRUE)
   interval <- .acl_interval_type(interval)
   form <- .acl_geom_form(geom)
   quantity <- .acl_plot_population_data(model_result, type, c("CN", "CNA", "CNL"), se)
@@ -179,7 +184,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
     if (!se) {
       p <- ggplot2::ggplot(CNA_long, ggplot2::aes(x = Year, y = CNA)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
       data_out <- CNA_long
     } else {
       ss_cna <- quantity$se
@@ -194,7 +199,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = facet_scales)
+        ggplot2::facet_wrap(~AgeGroup, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
       data_out <- ci
     }
   }
@@ -216,7 +221,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
     if (!se) {
       p <- ggplot2::ggplot(CNL_long, ggplot2::aes(x = Year, y = CNL)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
       data_out <- CNL_long
     } else {
       ss_cnl <- quantity$se
@@ -231,7 +236,7 @@ plot_catch <- function(model_result, line_size = NULL, line_color = NULL, line_t
       p <- ggplot2::ggplot(ci, ggplot2::aes(x = Year, y = estimate)) +
         ggplot2::geom_line(linewidth = line_size, color = line_color, linetype = line_type) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = se_color, alpha = se_alpha) +
-        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = facet_scales)
+        ggplot2::facet_wrap(~LengthGroup, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
       data_out <- ci
     }
   }

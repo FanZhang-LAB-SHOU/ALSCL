@@ -12,8 +12,8 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
     if (is.null(value)) next
     groups <- 1L
     if (name == "dev_log_F") {
-      structure <- match.arg(fit_args$F_structure %||% "group_year",
-                             c("group_year", "year"))
+      structure <- .acl_match_choice(fit_args$F_structure %||% "group_year",
+                                     c("group_year", "year"), "F_structure", partial = TRUE)
       if (structure == "group_year")
         groups <- if (model_type == "acl")
           .acl_positive_integer(fit_args$nage, "nage", 2L) else nrow(fit_args$data.CatL)
@@ -177,6 +177,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #'   [run_alscl()]. A bundle's own settings are used unless these are
 #'   supplied explicitly.
 #' @param model_type Character. Model to use: `"acl"` (default) or `"alscl"`.
+#'   Letter case does not matter.
 #' @param model Same as model_type, accepted for consistency with the other
 #'   workflow functions. Supply one of the two.
 #' @param growth_step Time step in years. NULL uses recruitment age when below 1, otherwise 1.
@@ -229,6 +230,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param point_size Numeric or NULL. Point size for endpoints; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape for endpoints. Default is 21.
 #' @param facet_scales Character. Facet scales argument. Default is "free".
+#'   Letter case does not matter.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
@@ -247,9 +249,11 @@ utils::globalVariables(c("Variable", "RetrospectiveYear", "Screen", "Label"))
 #' @param legend_text_size Numeric or NULL. Legend text size in pt.
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks.
 #' @param base_theme Character or NULL. Base ggplot2 theme name.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment.
 #' @param rho_digits Integer. Decimal places for Mohn's rho display. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
+#'   Letter case does not matter.
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
 #' @param ... The former argument names facet_col and facet_row, accepted with a warning.
 #' @inheritParams run_acl
@@ -334,7 +338,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
       stop("Supply either model or model_type, not both.", call. = FALSE)
     model_type <- model
   }
-  model_type <- match.arg(model_type)
+  model_type <- .acl_match_choice(model_type, partial = TRUE)
   supplied <- names(as.list(match.call())[-1L])
   if (is.list(nyear) && !is.data.frame(nyear)) {
     # A bundle in the first position. A number that follows it positionally
@@ -620,6 +624,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param retro_result A list returned by `retro_model()`, `retro_acl()`, or `retro_alscl()`.
 #' @param rho_digits Integer. Decimal places for Mohn's rho. Default is 4.
 #' @param rho_position Character. Position of rho text. Default is "top_right".
+#'   Letter case does not matter.
 #' @param rho_size Numeric. Font size of rho text. Default is 3.5.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting
 #'   (1 under the default style, 1.5 under classic). While that setting keeps
@@ -628,6 +633,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param point_size Numeric or NULL. Point size; NULL inherits the global point_size setting (default 2.5).
 #' @param point_shape Numeric. Point shape. Default is 21.
 #' @param facet_scales Character. Facet scales. Default is "free".
+#'   Letter case does not matter.
 #' @param facet_ncol Integer or NULL. Number of columns of panels. NULL chooses
 #'   it from the number of panels, for example 5 columns for 15 panels and 6
 #'   for 23.
@@ -646,6 +652,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param legend_text_size Numeric or NULL. Legend text size in pt.
 #' @param x_breaks Numeric vector or NULL. Custom x-axis breaks.
 #' @param base_theme Character or NULL. Base ggplot2 theme name.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment.
 #' @return A ggplot object.
 #' @param palette Character or NULL. Palette name ("default", "npg", "aaas",
@@ -653,6 +660,7 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #'   of the palette are interpolated when there are more fits than colors.
 #'   With NULL under the default global palette, the full fit is orange and
 #'   the earlier fits are greys, darkest for the first peel.
+#'   Letter case does not matter.
 #' @param colors Character vector or NULL. Explicit period colors, ordered by
 #'   descending terminal period or named by terminal period. Overrides palette.
 #'   Names are the numeric terminal periods, for example "2019" or "2019.75".
@@ -733,9 +741,9 @@ plot_retro <- function(retro_result,
     n_colors <- max(index, if (is.finite(requested_peels)) requested_peels + 1L else 1L)
     colors <- stats::setNames(.acl_retro_colors(n_colors, palette)[index], periods)
   } else {
-    if (length(colors) < length(periods)) stop("colors must cover every retrospective period.")
+    if (length(colors) < length(periods)) stop("colors must give one color for each fit of the retrospective analysis.", call. = FALSE)
     if (!is.null(names(colors))) {
-      if (!all(periods %in% names(colors))) stop("Named colors must include every retrospective period.")
+      if (!all(periods %in% names(colors))) stop("Named colors must name each fit of the retrospective analysis by its terminal time step.", call. = FALSE)
       colors <- colors[periods]
     } else colors <- stats::setNames(colors[seq_along(periods)], periods)
     if (anyNA(colors)) stop("colors must not contain missing values.")
@@ -775,7 +783,8 @@ plot_retro <- function(retro_result,
   x_max <- max(results$Year, na.rm = TRUE)
   x_range <- x_max - x_min
 
-  pos <- match.arg(rho_position, c("top_right", "top_left", "bottom_right", "bottom_left"))
+  pos <- .acl_match_choice(rho_position, c("top_right", "top_left", "bottom_right", "bottom_left"),
+                           "rho_position", partial = TRUE)
   if (pos %in% c("top_right", "bottom_right")) {
     rho_text$Year <- x_max - x_range * 0.02
     rho_hjust <- 1
@@ -813,13 +822,13 @@ plot_retro <- function(retro_result,
                                 labels = period_labels, drop = FALSE,
                                 guide = .acl_legend_rows(length(periods), 6L)) +
     ggplot2::geom_point(data = last_points, size = point_size, shape = point_shape) +
-    ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_ncol, nrow = facet_nrow) +
+    ggplot2::facet_wrap(~Variable, scales = .acl_facet_scales(facet_scales), ncol = facet_ncol, nrow = facet_nrow) +
     .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(unique(results$Variable)), facet_ncol, 10),
                  values = results$Year, time = TRUE) + rho_room +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size,
                     strip_text_size, legend_text_size,
                     base_theme = base_theme, title_hjust = title_hjust) +
-    ggplot2::theme(legend.position = "bottom") +
+    ggplot2::theme(legend.position = .acl_series_legend_position()) +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
                   y = if (!is.null(ylab)) ylab else "Estimate", color = legend_title,
                   title = .acl_plot_title(title, default = auto_title %||% NA))

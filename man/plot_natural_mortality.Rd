@@ -43,7 +43,8 @@ length bins; NULL inherits the global point_size setting.}
 \item{facet_ncol}{Integer or NULL. Number of columns of panels of M by age
 class and time step. NULL chooses it from the number of panels.}
 
-\item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
+\item{facet_scales}{Character. Scales for facet wrap. Default is "free".
+Letter case does not matter.}
 
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
@@ -73,7 +74,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

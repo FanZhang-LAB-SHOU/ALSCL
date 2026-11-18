@@ -41,7 +41,8 @@ Rows of time steps that are not in the fit and rows with a missing catch
 are not drawn.}
 
 \item{type}{\code{"number"} (default): catch in numbers. \code{"weight"}: catch in
-weight.}
+weight.
+Letter case does not matter.}
 
 \item{years}{NULL or the time steps over which the mean is calculated, as
 values of \code{fit$year}. NULL uses all time steps of the fit, or, with
@@ -92,7 +93,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

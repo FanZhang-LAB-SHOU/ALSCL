@@ -45,10 +45,10 @@ acl_theme_set(font_family="sans", title_size=12,
 - [21. 各时间步的年龄别平均体长 / Mean length at age by time step](#length_at_age)
 - [22. 年龄—体长概率矩阵 / Age-length probability matrix](#pla)
 - [23. ACL 各年龄组捕捞死亡率随时间的变化 / ACL fishing mortality over time by age class](#F_ACL_year)
-- [24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
+- [24. ACL 各时间步的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](#F_ACL_age)
 - [25. ALSCL 各体长组捕捞死亡率随时间的变化 / ALSCL fishing mortality over time by length bin](#F_ALSCL_year)
-- [26. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](#F_ALSCL_age)
-- [27. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](#F_ALSCL_length)
+- [26. ALSCL 各时间步的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](#F_ALSCL_age)
+- [27. ALSCL 各时间步的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](#F_ALSCL_length)
 - [28. 拟合所用的自然死亡率和调查可捕性 / Natural mortality rate and survey catchability used in the fit](#inputs)
 - [29. 按体长组分面的对数残差 / Log residuals by length bin](#residuals_length)
 - [30. 按时间步分面的对数残差 / Log residuals by time step](#residuals_year)
@@ -504,7 +504,7 @@ plot_VB(b, observed = readings, parameter_curve = TRUE, text_size = 3.5)
 
 [![年龄别平均体长 / Mean length at age](figures/ytf/VB.png)](figures/ytf/VB.png)
 
-对 ALSCL 拟合，`plot_VB()` 画由拟合的体长组、年龄组尾数算出的各年龄平均体长，并取各时间步的均值（实线，数值与 `length_at_age()` 相同）。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，`Linf`、`k` 和 `t0` 决定补充个体的平均体长，所以它们不是各年龄平均体长的 von Bertalanffy 曲线的参数（[模型原理与时间尺度](USER_GUIDE.md#model-theory-paper-differences)）。默认图 `plot_VB(b)` 只画实线，不标注 `Linf` 和 `k`。`parameter_curve = TRUE` 把由 `Linf`、`k` 和 `t0` 计算的曲线加画为虚线参考线：原始结构下，它是第一个时间步各年龄的平均体长，也是各时间步补充个体的平均体长。`observed` 把年龄鉴定得到的各年龄平均体长加画为点，本例带一个标准差的线段。对 ACL 拟合，`plot_VB(a)` 画 von Bertalanffy 曲线，它就是该模型的各年龄平均体长，并标注 `Linf` 和 `k`。
+对 ALSCL 拟合，`plot_VB()` 画由拟合的体长组、年龄组尾数算出的各年龄平均体长，并取各时间步的均值（实线，数值与 `length_at_age()` 相同）。在 ALSCL 中，`Linf` 和 `k` 决定体长别生长增量，`Linf`、`k` 和 `t0` 决定补充个体的平均体长，所以它们不是各年龄平均体长的 von Bertalanffy 曲线的参数（[模型原理](USER_GUIDE.md#model-theory-paper-differences)）。默认图 `plot_VB(b)` 只画实线，不标注 `Linf` 和 `k`。`parameter_curve = TRUE` 把由 `Linf`、`k` 和 `t0` 计算的曲线加画为虚线参考线：原始结构下，它是第一个时间步各年龄的平均体长，也是各时间步补充个体的平均体长。`observed` 把年龄鉴定得到的各年龄平均体长加画为点，本例带一个标准差的线段。对 ACL 拟合，`plot_VB(a)` 画 von Bertalanffy 曲线，它就是该模型的各年龄平均体长，并标注 `Linf` 和 `k`。
 
 For an ALSCL fit, `plot_VB()` shows mean length at age calculated from the fitted numbers by length bin and age class and averaged over the time steps (solid line; the values of `length_at_age()`). In ALSCL, `Linf` and `k` set the growth increment at length, and `Linf`, `k` and `t0` set the mean length of recruits, so they are not the parameters of a von Bertalanffy curve of mean length at age ([Model principles](USER_GUIDE.md#model-theory-paper-differences)). The default figure, `plot_VB(b)`, shows the solid line only and has no annotation of `Linf` and `k`. `parameter_curve = TRUE` adds the curve computed from `Linf`, `k` and `t0` as a dashed reference line: with the original structure it is the mean length at age in the first time step and the mean length of recruits in every time step. `observed` adds mean length at age from age readings as points, here with bars of one standard deviation. For an ACL fit, `plot_VB(a)` shows the von Bertalanffy curve, which is the mean length at age of that model, with the annotation of `Linf` and `k`.
 
@@ -548,7 +548,7 @@ plot_pla(b)
 
 [![年龄—体长概率矩阵 / Age-length probability matrix](figures/ytf/pla.png)](figures/ytf/pla.png)
 
-静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时期的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 "Age bin"。
+静态矩阵 `pla` 的每一列给出一个年龄组的体长组概率，列内概率之和为 1。ACL 在每个时间步用它将年龄别尾数转换为体长别尾数。ALSCL 用它初始化种群并分配补充个体的体长，后续体长分布由生长和存活过程决定。要得到 ALSCL 某年龄、某时间步的实际体长分布，应将 `NLA` 中对应的体长向量归一化。颜色表示各组概率，最高体长组包含右尾。横轴显示拟合年龄，最大的年龄是末组（plus group），标为“15+”。保存时没有年龄元数据的结果按年龄组的位置绘制，横轴标签为 "Age bin"。
 
 Each column of the static `pla` matrix gives length-bin probabilities for one age class and sums to one. ACL uses this matrix to convert numbers at age to numbers at length in every time step. ALSCL uses it to initialize the population and assign lengths to recruits; subsequent length distributions follow growth and survival. To obtain the realized distribution at a given age and time in ALSCL, normalize the corresponding length vector in `NLA`. The color shows the probability in each bin, and the last bin includes the upper tail. The horizontal axis shows the fitted ages, and the oldest age, a plus group, is marked "15+". A result saved without age metadata is plotted against the position of the age class, and its axis label reads "Age bin".
 
@@ -582,7 +582,7 @@ Each panel shows the estimated instantaneous fishing mortality rate (`F`) for on
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ACL_age"></a>
-## 24. ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
+## 24. ACL 各时间步的年龄别捕捞死亡率 / ACL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -590,7 +590,7 @@ plot_fishing_mortality(a, type = "age",
   se = TRUE, line_size = 0.6)
 ```
 
-[![ACL 各期的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
+[![ACL 各时间步的年龄别捕捞死亡率 / ACL fishing mortality at age by time step](figures/ytf/F_ACL_age.png)](figures/ytf/F_ACL_age.png)
 
 每个面板显示 ACL 在一个时间步的估计值及其近似 95% 区间，横轴为拟合年龄（末组标为“15+”）。本例中多数年份的曲线较平，表示各年龄组的估计捕捞死亡率相近；2007 至 2010 年低龄组的估计值较高。
 
@@ -616,7 +616,7 @@ Each panel shows how fishing mortality at length (`FL`) changes over time for on
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_age"></a>
-## 26. ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
+## 26. ALSCL 各时间步的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -624,7 +624,7 @@ plot_fishing_mortality(b, type = "age",
   se = TRUE, line_size = 0.6)
 ```
 
-[![ALSCL 各期的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](figures/ytf/F_ALSCL_age.png)](figures/ytf/F_ALSCL_age.png)
+[![ALSCL 各时间步的年龄别捕捞死亡率 / ALSCL fishing mortality at age by time step](figures/ytf/F_ALSCL_age.png)](figures/ytf/F_ALSCL_age.png)
 
 ALSCL 先把同一年龄组各体长组的存活尾数相加，再除以该年龄组的期初尾数，得到存活比例。年龄别捕捞死亡率为 `FA = -log(存活比例) - M`。每个面板显示一个时间步的估计值和近似 95% 区间。本图用 `se = TRUE` 绘制，因此只显示带有标准误的单元格：末组之前的年龄（1 到 14 龄）和最后一个时间步之前的各时间步（2000 到 2018 年）。这些就是 `report$FA` 中的单元格，`report$ZA` 保存对应的年龄别总死亡率。不带区间（`se = FALSE`）时，函数还绘制末组（“15+”）和最后一个时间步，这些值按同一公式由报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出。最后一个时间步的 F 由 F 过程预测，没有观测为它提供信息。`extract_estimates(b, "FA")` 返回每个年龄和每个时间步的年龄别 F，末组和最后一个时间步的标准误为 `NA`。
 
@@ -633,7 +633,7 @@ For each age class, ALSCL sums the numbers surviving across length bins and divi
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_fishing_mortality)
 
 <a id="F_ALSCL_length"></a>
-## 27. ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
+## 27. ALSCL 各时间步的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step
 
 ```r
 # 绘制本图 / Draw this figure
@@ -641,7 +641,7 @@ plot_fishing_mortality(b, type = "length",
   se = TRUE, line_size = 0.6)
 ```
 
-[![ALSCL 各期的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](figures/ytf/F_ALSCL_length.png)](figures/ytf/F_ALSCL_length.png)
+[![ALSCL 各时间步的体长别捕捞死亡率 / ALSCL fishing mortality at length by time step](figures/ytf/F_ALSCL_length.png)](figures/ytf/F_ALSCL_length.png)
 
 每个面板显示一个时间步各体长组的捕捞死亡率及其近似 95% 区间。横轴按体长组中点（`len_mid`）的实际间距绘制。本例中，体长约 20 至 35 的组估计捕捞死亡率较高。
 
@@ -796,22 +796,22 @@ plot_ridges(b) # 默认蓝色渐变 / Default blue gradient
 
 [![长度组成山脊图 / Length composition ridges](figures/ytf/ridges.png)](figures/ytf/ridges.png)
 
-每条曲线表示一个时间步各体长组调查指数的相对组成，左图为观测值，右图为拟合值。`plot_ridges()` 返回 patchwork 对象，整张图有一个总标题，两个面板各有标题；`p[[1]]` 和 `p[[2]]` 分别取出观测面板和拟合面板。时间轴在年度拟合中显示年份，在季度拟合中显示季度（如“2000 Q2”）。2012 年之后，峰值向较大的体长组移动。可比较两图的峰值位置和分布宽度。某期全部缺测时不绘制该期的观测曲线，部分缺测时仅用有观测的体长组计算观测比例。
+每条曲线表示一个时间步各体长组调查指数的相对组成，左图为观测值，右图为拟合值。`plot_ridges()` 返回 patchwork 对象，整张图有一个总标题，两个面板各有标题；`p[[1]]` 和 `p[[2]]` 分别取出观测面板和拟合面板。时间轴在年度拟合中显示年份，在季度拟合中显示季度（如“2000 Q2”）。2013 年之后，体长组成中较大体长的个体比 2010-2012 年多，但多数年份的峰值仍在 20 到 22 附近。可比较两图的峰值位置和分布宽度。某期全部缺测时不绘制该期的观测曲线，部分缺测时仅用有观测的体长组计算观测比例。
 
-Each ridge shows the relative survey index across lengths in one time step, with observations on the left and the fit on the right. `plot_ridges()` returns a patchwork object with one figure title and a title on each panel; `p[[1]]` and `p[[2]]` extract the observed and the fitted panel. The time axis shows years for annual fits and quarters, as in "2000 Q2", for quarterly fits. The peak shifts toward larger lengths after 2012. Compare the position and spread of the distributions. A step with no observations has no observed ridge, and a partially observed step is normalized over the observed bins only.
+Each ridge shows the relative survey index across lengths in one time step, with observations on the left and the fit on the right. `plot_ridges()` returns a patchwork object with one figure title and a title on each panel; `p[[1]]` and `p[[2]]` extract the observed and the fitted panel. The time axis shows years for annual fits and quarters, as in "2000 Q2", for quarterly fits. After 2013 the compositions hold more fish at larger lengths than in 2010-2012, although the peak stays near 20 to 22 in most years. Compare the position and spread of the distributions. A step with no observations has no observed ridge, and a partially observed step is normalized over the observed bins only.
 
-缺失或被排除的体长组会断开观测轮廓和填色。孤立的观测体长组在缩放后的组成高度处画为点；归一化仍使用该期全部正观测。左右面板使用相同的时间位置、纵轴范围和时间配色，包括完全缺测的时期。`spectral` 等 Brewer 配色也支持只有两个时期的结果。
+缺失或被排除的体长组会断开观测轮廓和填色。孤立的观测体长组在缩放后的组成高度处画为点；归一化仍使用该时间步的全部正观测。左右面板使用相同的时间位置、纵轴范围和时间配色，包括完全缺测的时间步。`spectral` 等 Brewer 配色也支持只有两个时间步的结果。
 
-Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that period. Both panels keep the same time positions, vertical range and time colors, including periods without observations. Brewer palettes such as `spectral` also support two-period results.
+Missing or excluded length bins break the observed outline and fill. An isolated observed bin is drawn as a point at its scaled composition height; normalization still uses all positive observations in that time step. Both panels keep the same time positions, vertical range and time colors, including time steps without observations. Brewer palettes such as `spectral` also support results with two time steps.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_ridges)
 
 
 ### 边界体长组缺测 / Missing boundary length bins
 
-这个合成绘图示例的最小两个和最大两个体长组均缺测，第一期也全部缺测。两栏仍显示 10 至 90 个长度单位的范围，并保留四个时期的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
+这个合成绘图示例的最小两个和最大两个体长组均缺测，第一个时间步也全部缺测。两栏仍显示 10 至 90 个长度单位的范围，并保留四个时间步的位置。观测组成用剩余体长组归一化，拟合组成用全部体长组归一化，两者的归一化总量不同。空白区域不代表零观测。
 
-This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first period. Both panels still span 10-90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
+This synthetic illustration has no observations in the two smallest or two largest length bins, and no observations in the first time step. Both panels still span 10-90 length units and keep all four time positions. The observed composition uses the remaining bins; the fitted composition uses all bins, so their normalizing totals differ. Blank areas are not zero observations.
 
 ```r
 # Synthetic display example with missing boundary length bins.
@@ -834,9 +834,9 @@ plot_ridges(ridge_example, ridges_scale = 1,
 <a id="compare_ts"></a>
 ## 36. 种群时间序列比较 / Population time series comparison
 
-每个模型分别判断是否只有一个估计值；单点用点与误差棒，多期结果仍用曲线与带状区间。
+每个模型分别判断是否只有一个估计值；单点用点与误差棒，有多个时间步的结果仍用曲线与带状区间。
 
-Each model is handled separately: a single estimate uses a point and error bar, while a multi-period series retains its line and ribbon.
+Each model is handled separately: a single estimate uses a point and error bar, while a series of several time steps retains its line and ribbon.
 
 ```r
 # 绘制本图 / Draw this figure
@@ -874,9 +874,9 @@ Heat maps of fishing mortality, one per fit, time on the horizontal axis and the
 <a id="compare_residuals"></a>
 ## 38. 残差联合诊断 / Combined residual diagnostics
 
-平均残差面板保留完整拟合时间范围，包括首期或末期全部缺测的情况。这些时期保留横轴位置，但不会补造残差或误差棒。
+平均残差面板保留完整拟合时间范围，包括第一个或最后一个时间步全部缺测的情况。这些时间步保留横轴位置，但不会补造残差或误差棒。
 
-The mean-residual panel retains the full fitted time range, including unobserved first or last periods. These periods occupy space on the axis but do not acquire fabricated residuals or error bars.
+The mean-residual panel retains the full fitted time range, including unobserved first or last time steps. These time steps occupy space on the axis but do not acquire fabricated residuals or error bars.
 
 ```r
 # 绘制本图 / Draw this figure
@@ -889,9 +889,9 @@ plot_compare_residuals(a, b, dat)
 
 Four panels show the in-sample log residuals of both fits: a histogram, a normal quantile-quantile plot, the mean log residual by time step with bars of plus or minus one standard deviation, and box plots of absolute residuals by length bin. ACL is dark blue and ALSCL orange. A wider histogram indicates greater dispersion; in the quantile-quantile plot, read curvature and asymmetry of the points as signs of skewness or heavy tails, not the slope: the residuals are conditional on the fitted process deviations, and even a correct model gives standardized conditional residuals with a standard deviation of about 0.91 to 0.96. Higher absolute residuals identify poorly fitted bins, including bins 16 and 50 for ALSCL here. The standard-deviation bars describe residual spread, not confidence intervals for the mean.
 
-整期缺测会断开平均残差线，孤立的有效时期仍显示为点。只有该期至少有两个观测体长组时才绘制标准差误差棒；仅有一个观测时仍保留残差点。
+某个时间步全部缺测会断开平均残差线，孤立的有观测时间步仍显示为点。只有该时间步至少有两个观测体长组时才绘制标准差误差棒；仅有一个观测时仍保留残差点。
 
-A wholly unobserved period breaks the mean-residual line. Isolated observed periods remain visible as points. A standard deviation bar is drawn only when the period contains at least two observed length bins; a single observation still contributes its residual point.
+A wholly unobserved time step breaks the mean-residual line. Isolated observed time steps remain visible as points. A standard deviation bar is drawn only when the time step contains at least two observed length bins; a single observation still contributes its residual point.
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_residuals)
 
@@ -921,9 +921,9 @@ growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, r
 
 [![两模型的年龄别平均体长 / Mean length at age of both models](figures/ytf/compare_growth.png)](figures/ytf/compare_growth.png)
 
-左图：两次拟合按同一口径计算、并取各时间步均值的各年龄平均体长（ACL 深蓝实线，来自年龄体长概率矩阵；ALSCL 橙色虚线，来自拟合的体长组、年龄组尾数），另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点。副标题给出口径和时间步，以及参照曲线的 `Linf` 和 `k`。右图：两次拟合按同一口径的给定年龄的体长分布热图，横轴为拟合年龄，纵轴为体长组中点；ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例。左图不画由两次拟合的生长参数计算的曲线。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长曲线的参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两个模型的参数含义不同。`compare_models(a, b, dat)$length_at_age` 以表格给出同样的数值。两次拟合的线在 50 cm 附近持平，因为最后一个体长组包含 49 cm 以上的全部个体，并用其中点代表。参照数据的体长没有归入体长组，所以参照曲线继续上升。
+左图：两次拟合按同一口径计算、并取各时间步均值的各年龄平均体长（ACL 深蓝实线，来自年龄体长概率矩阵；ALSCL 橙色虚线，来自拟合的体长组、年龄组尾数），另有 `nls()` 对 `ref_data` 拟合的灰色参照曲线及该数据的灰点。副标题给出口径和时间步，以及参照曲线的 `Linf` 和 `k`。右图：两次拟合按同一口径的给定年龄的体长分布热图，横轴为拟合年龄，纵轴为体长组中点；两图都把最大的年龄组（末组）标为 15+；ALSCL 的热图是拟合尾数中各年龄组在各体长组的比例。左图不画由两次拟合的生长参数计算的曲线。在 ACL 中，`Linf`、`k` 和 `t0` 是各年龄平均体长曲线的参数；在 ALSCL 中，它们决定体长别生长增量和补充个体的平均体长，所以两个模型的参数含义不同。`compare_models(a, b, dat)$length_at_age` 以表格给出同样的数值。两次拟合的线在 50 cm 附近持平，因为最后一个体长组包含 49 cm 以上的全部个体，并用其中点代表。参照数据的体长没有归入体长组，所以参照曲线继续上升。
 
-Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL dark blue solid, from its age-length key; ALSCL orange dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
+Left: mean length at age of both fits on the same basis, averaged over the time steps (ACL dark blue solid, from its age-length key; ALSCL orange dashed, from its fitted numbers by length bin and age class), with the grey reference curve that `nls()` fits to `ref_data` and the grey points of that data. The subtitle states the basis and the time steps, and gives `Linf` and `k` of the reference curve. Right: the probability of length given age of both fits as heat maps on the same basis, with the fitted ages on the horizontal axis and the length-bin midpoints on the vertical axis; in both panels the oldest age, a plus group, is marked 15+; for ALSCL it is the proportion of each age class in each length bin from the fitted numbers. The left panel does not draw curves from the growth parameters of the fits. In ACL, `Linf`, `k` and `t0` are the parameters of a curve of mean length at age; in ALSCL they set the growth increment at length and the mean length of recruits, so the parameters of the two models have different meanings. `compare_models(a, b, dat)$length_at_age` holds the same values as a table. The lines of the two fits level off near 50 cm because the last length bin, which holds all fish above 49 cm, is represented by its midpoint. The reference lengths are not assigned to length bins, so the reference curve continues to rise.
 
 `observed` 把年龄鉴定得到的各年龄平均体长加画为点，可带标准差或区间，例如 `plot_compare_growth(a, b, observed = readings, basis = "survey")`，其中 `readings` 见[生长、死亡与残差图](#plot_VB)。与调查中采集的鉴定资料比较时用 `basis = "survey"`。省略 `age_range` 时画两次拟合的全部年龄组；显式范围须为两个有限且递增的年龄，选取其中的年龄组。`years` 选择求均值的时间步。
 
@@ -1010,9 +1010,9 @@ plot_compare_F_ts(a, b, method = "apical",
 
 [![每个时间步的最大捕捞死亡率 / Maximum fishing mortality by time step](figures/ytf/compare_F_apical.png)](figures/ytf/compare_F_apical.png)
 
-每个时间步内，ACL 取各年龄组捕捞死亡率的最大值，ALSCL 取各体长组的最大值，即 apical F。图中每个点对应该模型在该期估计 F 最高的组。即使针对同一种群，年龄组最大值与体长组最大值也未必相同，因为年龄别 F 汇总了各体长的存活；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都汇总年龄别 F，只用两者共有的拟合年龄和时间步。ALSCL 的年龄别 F 覆盖每个年龄（包括末组）和每个时间步。末组和最后一个时间步的值不在拟合报告中，由函数按同一公式从报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出。不含体长—年龄别尾数的结果（例如手工构造的列表）没有末组一行，也没有最后一个时间步的值，这时比较不含 ACL 的末组和最后一个时间步。F 是每个时间步的瞬时率，所以两个拟合的时间步长必须相同，不同时函数会停止。季度拟合得到每季度的瞬时率，纵轴标签注明捕捞死亡率的时间基准。[BAM 模型中的 apical F，式（14b）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
+每个时间步内，ACL 取各年龄组捕捞死亡率的最大值，ALSCL 取各体长组的最大值，即 apical F。图中每个点对应该模型在该时间步估计 F 最高的组。即使针对同一种群，年龄组最大值与体长组最大值也未必相同，因为年龄别 F 汇总了各体长的存活；这时应读两条线的时间变化，不要比较水平。`basis = "age"` 对两个拟合都汇总年龄别 F，只用两者共有的拟合年龄和时间步。ALSCL 的年龄别 F 覆盖每个年龄（包括末组）和每个时间步。末组和最后一个时间步的值不在拟合报告中，由函数按同一公式从报告的体长—年龄别尾数（`report$NLA`）和体长别总死亡率（`report$ZL`）算出。不含体长—年龄别尾数的结果（例如手工构造的列表）没有末组一行，也没有最后一个时间步的值，这时比较不含 ACL 的末组和最后一个时间步。F 是每个时间步的瞬时率，所以两个拟合的时间步长必须相同，不同时函数会停止。季度拟合得到每季度的瞬时率，纵轴标签注明捕捞死亡率的时间基准。[BAM 模型中的 apical F，式（14b）](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11)。
 
-Apical F is the maximum fishing mortality rate across age classes in ACL or across length bins in ALSCL within each time step. The height of each point therefore refers to the group with the highest estimated F in that model and period. An age-group maximum and a length-bin maximum need not be equal, even for the same population, because age-specific F combines survival across lengths. Read the time pattern of such a pair, not the difference in level. `basis = "age"` summarizes F at age for both fits over the fitted ages and time steps that both have. ALSCL F at age covers every age, including the plus group, and every time step. The values for the plus group and the last time step are not in the fitted report; the function computes them from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula. A result without numbers at length and age, for example a hand-made list, has no plus-group row and no value for the last time step, and the comparison then leaves out the ACL plus group and the last time step. The two fits must have the same time step, because F is a rate per time step, and the function stops when the steps differ. Quarterly fits give quarterly rates, and the y-axis label states the time basis of the rate. [Apical F in the BAM model, eq. 14b](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11).
+Apical F is the maximum fishing mortality rate across age classes in ACL or across length bins in ALSCL within each time step. The height of each point therefore refers to the group with the highest estimated F in that model and time step. An age-group maximum and a length-bin maximum need not be equal, even for the same population, because age-specific F combines survival across lengths. Read the time pattern of such a pair, not the difference in level. `basis = "age"` summarizes F at age for both fits over the fitted ages and time steps that both have. ALSCL F at age covers every age, including the plus group, and every time step. The values for the plus group and the last time step are not in the fitted report; the function computes them from the reported numbers at length and age (`report$NLA`) and total mortality at length (`report$ZL`) with the same formula. A result without numbers at length and age, for example a hand-made list, has no plus-group row and no value for the last time step, and the comparison then leaves out the ACL plus group and the last time step. The two fits must have the same time step, because F is a rate per time step, and the function stops when the steps differ. Quarterly fits give quarterly rates, and the y-axis label states the time basis of the rate. [Apical F in the BAM model, eq. 14b](https://repository.library.noaa.gov/view/noaa/4847/noaa_4847_DS1.pdf#page=11).
 
 [参数及默认值 / Arguments and defaults](FUNCTION_REFERENCE.md#plot_compare_F_ts)
 

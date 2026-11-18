@@ -168,12 +168,12 @@ test_that("default faceted survey diagnostics keep year ticks apart", {
   for (p in list(plot_CatL(fit), plot_residuals(fit))) {
     built <- ggplot2::ggplot_build(p)
     expect_equal(nrow(built$layout$layout), 23L)
-    # 23 panels in six columns: every fifth year, slanted, with a minor
-    # tick mark at every year.
+    # 23 panels in six columns: every fifth year and the last year, slanted,
+    # with a minor tick mark at every year; 2015 would touch 2019.
     expect_identical(p$facet$params$ncol, 6L)
     for (panel in built$layout$panel_params) {
       labels <- panel$x$get_labels()
-      expect_identical(labels[!is.na(labels)], c("2000", "2005", "2010", "2015"))
+      expect_identical(labels[!is.na(labels)], c("2000", "2005", "2010", "2019"))
       expect_true(all(seq(2000, 2019) %in% round(panel$x$get_breaks_minor(), 8)))
     }
     guide <- p$scales$get_scales("x")$guide

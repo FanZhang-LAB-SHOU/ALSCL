@@ -245,7 +245,7 @@ test_that("simulation rejects unsupported maps and invalid or failed fits explic
     for (value in list(1, NA, NULL, c(TRUE, FALSE)))
       expect_error(do.call(simulate_fit, c(list(fit), stats::setNames(list(value), name))),
         paste0(name, " must be TRUE or FALSE"))
-  expect_error(simulate_fit(fit, process = "other"), "arg")
+  expect_error(simulate_fit(fit, process = "other"), "process must be one of")
   failed <- fit; failed$diagnostics$numerical_ok <- FALSE
   expect_error(simulate_fit(failed), "failed the numerical screen")
   expect_warning(allowed <- simulate_fit(failed, seed = 10, allow_failed_fit = TRUE),

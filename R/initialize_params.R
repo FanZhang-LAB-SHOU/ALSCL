@@ -9,6 +9,7 @@
 #' @param species Character or NULL. Species preset name, one of
 #'   \code{"flatfish"}, \code{"tuna"}, \code{"krill"}, or \code{"?"} to list
 #'   presets. NULL (default) uses generic defaults equivalent to flatfish.
+#'   Letter case does not matter.
 #' @param nyear Integer. Total simulation years including burn-in (default 100).
 #' @param rec.age Numeric. Age of recruitment (default 1; use 0.25 for quarterly).
 #' @param first.year Numeric. First year of the observation window (default 2020).
@@ -68,8 +69,10 @@
 #'   a fixed number of draws each, so that scenarios which differ in one
 #'   process share the random numbers of the others. The two settings give
 #'   different data for the same replicate ID.
+#'   Letter case does not matter.
 #' @param observation_error Independent lognormal errors per length and time cell,
 #'   or shared_time for an explicitly misspecified, perfectly correlated scenario.
+#'   Letter case does not matter.
 #' @return A list containing all initialized parameters and derived variables
 #'   (ages, years, etc.), ready to pass to \code{sim_cal()}.
 #'
@@ -135,9 +138,9 @@ initialize_params <- function(nyear      = NULL,
                               growth_step = NULL, burn_in = NULL,
                               observation_error = c("independent", "shared_time"),
                               random_numbers = c("sequential", "by_process")) {
-  random_numbers <- match.arg(random_numbers)
+  random_numbers <- .acl_match_choice(random_numbers, partial = TRUE)
   if (is.character(nyear) && length(nyear) == 1L && is.null(species)) {species <- nyear; nyear <- NULL}
-  observation_error <- match.arg(observation_error)
+  observation_error <- .acl_match_choice(observation_error, partial = TRUE)
 
   # =========================================================================
   # Help: list available presets
@@ -155,7 +158,7 @@ initialize_params <- function(nyear      = NULL,
   # Load species preset defaults
   # =========================================================================
   if (!is.null(species)) {
-    species <- match.arg(species, c("flatfish", "tuna", "krill"))
+    species <- .acl_match_choice(species, c("flatfish", "tuna", "krill"), "species", partial = TRUE)
   }
 
   # -----------------------------------------------------------------------

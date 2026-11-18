@@ -1,13 +1,14 @@
 # 调查与种群图
 
-先完成 [YTF 拟合示例](first-model.html)，得到输入列表 `x` 和拟合结果 `a`、`b`，并设置 `dat <- x$data.CatL`。加载 ggplot2 和 patchwork。[回溯分析指南](retrospectives.html) 建立 `ra`、`rb`。
+本页为一次拟合画出对调查的拟合和种群估计。每节一张图，显示总量、年龄别或体长别的调查指数、丰度、生物量、产卵生物量、渔获量或补充量。代码使用[理解第一次拟合](first-model.html)中的输入列表 `x` 和 ALSCL 拟合 `b`；会话中没有它们时，第一个代码块会建立它们。每节说明图中要看什么，并链接到该函数的全部参数。
 
 ```r
-library(ggplot2)
-library(patchwork)
+library(ALSCL)
+x <- YTF_example
+b <- run_alscl(x, silent = TRUE)  # 约需两分钟；会话中已有 b 时跳过这一行
 ```
 
-面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
+`type` 等选项参数不区分大小写，`plot_SSB(b, type = "sbl")` 与 `type = "SBL"` 画出同一张图。时间轴总会标出第一年和最后一年。
 
 ## 各体长组的调查指数（对数尺度）
 
@@ -50,9 +51,9 @@ plot_CatL(b, facet_by = "year", exp_transform = FALSE,
 
 [![各时间步的调查指数（对数尺度）](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_FALSE.png?raw=true)
 
-按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。
-
 每个时间步一个面板，横轴为体长，纵轴为对数调查指数。细橙色线（“Observed”）为观测对数指数随体长的变化，粗深蓝线（“Fitted”）为拟合的 `Elog_index`。用它检查同一时间步内的拟合形状；深蓝线没有跟上的突起（如本例后几年最大体长组处）就是拟合未能解释的体长结构。
+
+按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。
 
 [参数及默认值](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/FUNCTION_REFERENCE.md#plot_CatL)
 
@@ -66,8 +67,6 @@ plot_CatL(b, facet_by = "year", exp_transform = TRUE,
 ```
 
 [![各时间步的调查指数（原尺度）](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/ytf/CatL_year_TRUE.png?raw=true)
-
-按年份分面时，`line_size1` 设置拟合线宽，`line_size2` 设置观测线宽。遇到缺测会断开观测线，孤立的观测以点显示，大小由 `point_size` 控制。
 
 曲线表示调查指数在原尺度上的拟合中位数 `exp(Elog_index)`，观测值按体长组显示。比较观测指数和拟合指数峰值所在的体长组，再查看这些体长组的残差。
 
@@ -296,6 +295,8 @@ stopifnot(identical(paired$SSB, 1:7), identical(paired$Rec, 102:108))
 ```
 
 ## 显示一个已保存的估计值
+
+面板或模型组只有一个估计值时显示为点。设置 `se = TRUE` 后，以误差线显示 95% 区间（默认为对数正态区间，见 `interval` 参数），因为只有一个点的带状区间没有可见宽度。该规则适用于种群与捕捞死亡率图，也分别适用于 `plot_compare_ts()` 中的每个模型。点大小继承 `point_size`；单模型图的点取该图线条的颜色，误差线取区间的颜色。网格线由 `acl_theme_set()` 的 `grid` 设置决定。
 
 此列表仅用于显示 `b` 最后一期的产卵生物量及其标准误，不表示只用一个观测拟合了模型，也不能作为模拟或预测的输入。点与近似 95% 区间均保持可见，不改变原估计值。
 

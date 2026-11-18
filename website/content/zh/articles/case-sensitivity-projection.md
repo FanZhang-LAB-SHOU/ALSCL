@@ -18,7 +18,7 @@ summary(a)
 summary(b)
 ```
 
-ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合不到十秒；ALSCL 拟合 `b` 用于投影。`summary()` 打印时间步、F 结构、数值检查（`numerical_ok` 应为 `TRUE`）和自然尺度上的标量参数。`YTF_example` 把生长、体长 CV、两个过程标准差和补充量相关系数固定在教学值上，`M` 为每个年度时间步 0.20，F 结构为默认的 `F_structure = "group_year"`；你自己的输入列表需要有依据的生物学设置（[选择拟合设置](fitting-controls.html)）。若检查未通过，先修好拟合再做任何情景（[判断拟合是否可用](diagnostics.html)）。
+ACL 拟合 `a` 用于情景和剖面，因为一次 ACL 重新拟合不到十秒；ALSCL 拟合 `b` 用于投影。`summary()` 打印时间步、F 结构、数值检查（应为 `Numerical checks: passed`）以及自然尺度上被估计的和被固定的标量参数。`YTF_example` 把生长、体长 CV、两个过程标准差和补充量相关系数固定在教学值上，`M` 为每个年度时间步 0.20，F 结构为默认的 `F_structure = "group_year"`；你自己的输入列表需要有依据的生物学设置（[选择拟合设置](fitting-controls.html)）。若检查未通过，先修好拟合再做任何情景（[判断拟合是否可用](diagnostics.html)）。
 
 <h2 id="scenarios">2. 拟合敏感性情景</h2>
 
@@ -54,7 +54,7 @@ ggplot(scenario_ssb, aes(year, estimate, color = scenario)) +
 | `low_M` | 75.4 | 0.371 |
 | `shared_F` | 74.1 | 0.335 |
 
-较低的 M 抬高了估计的 F，而末期产卵生物量几乎没变，三条曲线几乎重合；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
+M 降低 0.05 后，2019 年的平均 F 上升 0.051，总死亡率 F + M 仍为 0.52。只拟合调查数据时，模型估计的是总死亡率，固定的 M 决定其中多少归为 F（[模型原理](model-theory.html#survey)）。末期产卵生物量几乎没变，三条曲线几乎重合，因为调查指数和固定的调查可捕性决定了丰度的尺度；用你自己的数据时，曲线之间的差距就是要报告的敏感性。
 
 <h2 id="profile">3. 对一个被估计的参数做剖面</h2>
 
@@ -66,16 +66,16 @@ profile_F$grid
 ggplot(profile_F$grid, aes(value, delta_nll)) +
   geom_line(colour = acl_palette(role = "primary")) +
   geom_point(colour = acl_palette(role = "primary")) +
-  labs(x = "Baseline fishing mortality rate (per year)",
+  labs(x = "Median fishing mortality rate (per year)",
        y = "Change in negative log likelihood") +
   theme_acl()
 ```
 
-`profile_model()` 把一个被估计的标量参数依次固定在网格值上，重新拟合其余标量参数和过程偏差；参数名必须在 `names(a$opt$par)` 中，所以 `YTF_example` 中固定的 `log_Linf` 会报错终止，而 `mean_log_F` 是被估计的。`scale = "natural"` 时网格在自然尺度上，这里是拟合基准值的 0.9、1 和 1.1 倍，并且必须在优化器边界之内。`profile_F$grid` 给出每个值及其目标函数、`delta_nll`（相对于原始拟合的负对数似然增量）和该次重新拟合的数值检查；失败的点保留可见。负的 `delta_nll` 会保留；小于 `-1e-6` 时才会因目标函数值更低而警告。应检查该网格拟合的数值状态，并用更多初值重新拟合原模型。很小的负差值可能来自舍入误差。`M` 和调查可捕性这类固定输入属于第 2 步。
+`profile_model()` 把一个被估计的标量参数依次固定在网格值上，重新拟合其余标量参数和过程偏差；参数名必须在 `names(a$opt$par)` 中，所以 `YTF_example` 中固定的 `log_Linf` 会报错终止，而 `mean_log_F` 是被估计的。`scale = "natural"` 时网格在自然尺度上，这里是拟合的捕捞死亡率中位数 `exp(mean_log_F)` 的 0.9、1 和 1.1 倍，并且必须在优化器边界之内。`profile_F$grid` 给出每个值及其目标函数、`delta_nll`（相对于原始拟合的负对数似然增量）和该次重新拟合的数值检查；失败的点保留可见。负的 `delta_nll` 会保留；小于 -10⁻⁶ 时才会因目标函数值更低而警告。应检查该网格拟合的数值状态，并用更多初值重新拟合原模型。很小的负差值可能来自舍入误差。`M` 和调查可捕性这类固定输入属于第 2 步。
 
-![基准捕捞死亡率在三个网格值上的剖面](../assets/manual/figures/workflows/profile-F.png)
+![捕捞死亡率中位数在三个网格值上的剖面](../assets/manual/figures/workflows/profile-F.png)
 
-在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-5e-12，舍入误差）和 0.35，全部通过检查。基准 F 改变 10% 使负对数似然上升约 0.4。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
+在记录运行（[profile-F.csv](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/results/workflows/profile-F.csv)）中，0.278、0.309 和 0.340 三个点的增量分别为 0.43、约 0（-5 × 10⁻¹²，舍入误差）和 0.35，全部通过检查。F 的中位数改变 10% 使负对数似然上升约 0.4。三个点只演示方法；用于报告的剖面需要更密的网格，函数也不会由此推断置信区间。
 
 <h2 id="project">4. 投影未来 F 情景</h2>
 

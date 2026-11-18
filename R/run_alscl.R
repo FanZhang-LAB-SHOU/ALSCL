@@ -44,6 +44,7 @@
 #'   NA survey columns, with weights and maturity supplied for every period.
 #' @param zero_action Exclude zero observations as missing (historical behavior),
 #'   or reject them with "error". NA is always missing; negative/infinite values fail.
+#'   Letter case does not matter.
 #' @param control A named list of nlminb control settings.
 #' @details M and F are per model time step; vbk is per year. The first and last
 #'   length bins absorb the distribution tails. Compilation uses a writable session
@@ -84,6 +85,7 @@
 #'   density; the unused group correlation is automatically fixed and omitted
 #'   from reports. Other default map rules still apply. Subannual data share F
 #'   per model step, not per calendar year.
+#'   Letter case does not matter.
 #' @param polish Logical. By default, apply up to five safeguarded Newton steps
 #'   to the selected fit, requiring a positive-definite Hessian, in-bounds
 #'   parameters, a smaller maximum gradient and objective increase at most
@@ -190,6 +192,7 @@
 #'   `initial_deviations` is stored only when it is `"independent"`, so that
 #'   the stored structure of a fit with the default form is the same as in
 #'   earlier versions.
+#'   Letter case does not matter in the names of sets and the values of settings.
 #' @param t0_lower Lower limit of the von Bertalanffy parameter t0 in years.
 #'   The model uses t0 = t0_lower + exp(log_t0). The default 0 is the original
 #'   parameterization, in which t0 is positive. Set a negative value, for

@@ -55,6 +55,93 @@
 NULL
 
 # ---------------------------------------------------------------------------
+# Choice arguments: values out of a fixed set, in any letter case. Defined
+# first, because the palette defaults below use them when the package loads.
+# ---------------------------------------------------------------------------
+
+# Positions in `choices` of the values `x`, 0 where a value matches none.
+# Letter case does not matter, unless two choices differ only by case: such
+# a set is matched with case. With `partial = TRUE` the start of a choice
+# matches too when it is the start of no other choice, as in match.arg(); a
+# complete match comes first.
+.acl_choice_position <- function(x, choices, partial = FALSE) {
+  if (!is.character(x)) return(integer(length(x)))
+  if (!anyDuplicated(tolower(choices))) {
+    x <- tolower(x)
+    choices <- tolower(choices)
+  }
+  if (partial) pmatch(x, choices, nomatch = 0L, duplicates.ok = TRUE) else match(x, choices, nomatch = 0L)
+}
+
+# One value out of a fixed set of character strings, or with `several =
+# TRUE` one or more values, matched by .acl_choice_position(): "sbl" gives
+# "SBL". The result holds the values of `choices`, as the functions use and
+# store them. As in match.arg(), `choices` can be left out to take the
+# default of the argument `x` of the calling function; a value identical to
+# the choices (an argument left at its default) gives the first choice, or
+# all of them with several = TRUE, and NULL gives the first choice. Anything
+# else is an error that lists the choices.
+.acl_match_choice <- function(x, choices, arg = NULL, several = FALSE, partial = FALSE) {
+  if (is.null(arg)) arg <- deparse1(substitute(x))
+  if (missing(choices)) {
+    caller <- sys.parent()
+    choices <- eval(formals(sys.function(caller))[[as.character(substitute(x))]],
+                    envir = sys.frame(caller))
+  }
+  if (is.null(x)) return(choices[1L])
+  if (identical(x, choices)) return(if (several) choices else choices[1L])
+  usable <- is.character(x) && length(x) >= 1L && (several || length(x) == 1L)
+  position <- if (usable) .acl_choice_position(x, choices, partial) else 0L
+  if (usable && all(position > 0L)) return(choices[position])
+  unknown <- if (usable) unique(x[position == 0L & !is.na(x)]) else character()
+  stop(arg, " must be ", if (several) "one or more of " else "one of ",
+       paste0("\"", choices, "\"", collapse = ", "),
+       if (!anyDuplicated(tolower(choices))) " in any letter case",
+       if (length(unknown)) paste0(", not ", paste0("\"", unknown, "\"", collapse = ", ")), ".",
+       call. = FALSE)
+}
+
+# The values of `x` that match a choice (.acl_choice_position()) replaced
+# by that choice. Other values, and values that are not text, are returned
+# unchanged, for arguments that also take other values or that the caller
+# checks with a message of its own.
+.acl_canonical <- function(x, choices, partial = FALSE) {
+  if (!is.character(x) || !length(x)) return(x)
+  position <- .acl_choice_position(x, choices, partial)
+  x[position > 0L] <- choices[position[position > 0L]]
+  x
+}
+
+# A legend position given as text, in any letter case. Other values, such as
+# a position inside the panel given as two numbers, are left to ggplot2.
+.acl_legend_positions <- c("bottom", "top", "left", "right", "none", "inside")
+.acl_legend_position <- function(x) .acl_canonical(x, .acl_legend_positions)
+
+# The entries of a selection (`requested`) that occur among the `available`
+# values, as those values, in the order requested and without repeats;
+# numbers match within rounding error. Entries that do not occur are named
+# in a warning, and a selection of which none occurs is an error. `what`
+# names the selection and `where` what it selects from.
+.acl_select_available <- function(requested, available, what, where) {
+  position <- if (is.numeric(requested) && is.numeric(available))
+    vapply(requested, function(x) {
+      hit <- which(abs(available - x) <= 1e-8 * max(1, abs(x)))
+      if (length(hit)) hit[1L] else NA_integer_
+    }, integer(1)) else match(requested, available)
+  unused <- unique(requested[is.na(position)])
+  shown <- paste(vapply(unused, function(x) format(x, digits = 15), character(1)), collapse = ", ")
+  if (all(is.na(position)))
+    stop("No requested ", what, " occur in ", where, " (", shown, ").", call. = FALSE)
+  if (length(unused))
+    warning("Left out ", what, " that do not occur in ", where, ": ", shown, ".", call. = FALSE)
+  available[unique(position[!is.na(position)])]
+}
+
+# The scales argument of facet_wrap(), in any letter case.
+.acl_facet_scale_names <- c("fixed", "free_x", "free_y", "free")
+.acl_facet_scales <- function(x, arg = "facet_scales") .acl_match_choice(x, .acl_facet_scale_names, arg)
+
+# ---------------------------------------------------------------------------
 # Default configuration (internal)
 # ---------------------------------------------------------------------------
 # Categorical palettes: "default", the colors of the default style, and
@@ -95,13 +182,12 @@ NULL
   "default"
 }
 
-# Name of a supported palette; partial names are accepted as before.
+# Name of a supported palette, in any letter case; partial names are
+# accepted as before. NULL is not a palette name.
 .acl_palette_name <- function(palette) {
   palette <- .acl_former_default(palette, "palette")
-  if (!is.character(palette) || length(palette) != 1L || is.na(palette))
-    stop("palette must be one of ", paste0("\"", .acl_palette_names, "\"", collapse = ", "),
-         ".", call. = FALSE)
-  match.arg(tolower(palette), .acl_palette_names)
+  if (is.null(palette)) palette <- NA_character_
+  .acl_match_choice(palette, .acl_palette_names, "palette", partial = TRUE)
 }
 
 .acl_palette_roles <- function(palette) {
@@ -142,10 +228,15 @@ NULL
   if (is.null(palette)) return(ggplot2::scale_fill_gradient(
     low = acl_theme("low_col"), high = acl_theme("high_col"), name = name))
   palette <- .acl_former_default(palette, "palette")
-  if (length(palette) == 1 && tolower(palette) %in% .acl_palette_names) {
-    roles <- .acl_palette_roles(tolower(palette))
+  palette <- .acl_canonical(palette, .acl_palette_names)
+  if (length(palette) == 1L && palette %in% .acl_palette_names) {
+    roles <- .acl_palette_roles(palette)
     return(ggplot2::scale_fill_gradient(low = roles$low_col, high = roles$high_col, name = name))
   }
+  # The options of the viridis palettes, in any letter case; other values
+  # are left to ggplot2.
+  palette <- .acl_canonical(palette, c("magma", "inferno", "plasma", "viridis", "cividis", "rocket",
+                                       "mako", "turbo", LETTERS[1:8]))
   ggplot2::scale_fill_viridis_c(option = palette, name = name)
 }
 
@@ -386,6 +477,7 @@ NULL
 #'
 #' @param what Optional character. Retrieve a specific element, e.g.
 #'   \code{"titles"}, \code{"font_family"}, \code{"compare_colors"}.
+#'   Letter case does not matter.
 #' @return A list of current settings, or a single element if \code{what}
 #'   is specified.
 #' @family acl_theme
@@ -399,6 +491,9 @@ acl_theme <- function(what = NULL) {
   # Snapshots retain every setting, including nested nullable label defaults.
   current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()), keep.null = TRUE)
   if (is.null(what)) return(current)
+  # Setting names in any letter case.
+  if (is.character(what) && length(what) == 1L && !what %in% names(current))
+    what <- .acl_canonical(what, names(current))
   if (identical(what, "compare_linewidth")) {
     .acl_deprecated_message("theme.compare_linewidth",
       "Theme setting 'compare_linewidth' is deprecated and will be removed; use 'compare_line_size' instead.")
@@ -417,6 +512,7 @@ acl_theme <- function(what = NULL) {
 #' @param base_theme Character. Base ggplot2 theme name: "bw", "minimal",
 #'   "classic", "gray", "grey", "light", "linedraw", "dark" or "void", with or
 #'   without the "theme_" prefix. Any other value is an error.
+#'   Letter case does not matter.
 #' @param font_family Character. Font family for all text.
 #' @param title_size Numeric. Plot title size in pt.
 #' @param title_hjust Numeric. Title alignment (0=left, 0.5=center, 1=right).
@@ -451,6 +547,7 @@ acl_theme <- function(what = NULL) {
 #'   (abundance, biomass, spawning stock biomass, recruitment, catch and
 #'   fishing mortality): \code{"lognormal"} (default) or \code{"wald"}. See
 #'   \code{\link{plot_abundance}} for the formulas.
+#'   Letter case does not matter.
 #' @param compare_colors Character vector of 2 colors. Can be unnamed (positional)
 #'   or named. The first color is always model1, second is model2. A vector
 #'   with fewer than two colors is an error.
@@ -466,10 +563,12 @@ acl_theme <- function(what = NULL) {
 #' @param compare_se_alpha Numeric. CI ribbon alpha for comparison plots
 #'   (0.25 under the default style, 0.15 under "classic").
 #' @param compare_legend_pos Character. Legend position for comparison plots.
+#'   Letter case does not matter.
 #' @param compare_facet_ncol Integer or NULL. Facet columns of comparison
 #'   plots. NULL (default) chooses the columns from the number of panels, as
 #'   the single-model plots do; pass NULL explicitly to restore it.
 #' @param compare_facet_scales Character. Facet scales for comparison plots.
+#'   Letter case does not matter.
 #' @param palette Character or NULL. Categorical palette: "default", the
 #'   colors of the default style (dark blue, orange, teal, yellow, light
 #'   blue, green, sky blue, dark green), or the ggsci palettes "npg",
@@ -477,6 +576,7 @@ acl_theme <- function(what = NULL) {
 #'   (line, interval, point, observation, smoother, comparison and heat map colors);
 #'   explicit color arguments in the same call take precedence. No arguments
 #'   leaves settings unchanged; use acl_theme_reset() to reset.
+#'   Letter case does not matter.
 #' @param point_color,observed_color,smooth_color,hline_color Character or NULL.
 #'   Default point, observation, smoother and reference-line colors.
 #' @param low_col,high_col Character or NULL. Colors at the low and high ends
@@ -513,11 +613,14 @@ acl_theme <- function(what = NULL) {
 #'   and win. Setting a single key changes only that key, so styles can be
 #'   mixed. The name "standard", which ALSCL 2.5.0 used for the default style
 #'   and its palette, is still accepted with a warning.
+#'   Letter case does not matter.
 #' @param grid Character or NULL. Grid lines: \code{"none"} (no grid lines,
 #'   the default of both styles) or \code{"y"} (horizontal major lines only,
 #'   in light grey). Heat maps never show grid lines.
+#'   Letter case does not matter.
 #' @param title_face Character or NULL. Face of plot titles: "bold" ("default"),
 #'   "plain" ("classic"), "italic" or "bold.italic".
+#'   Letter case does not matter.
 #' @param title_color Character or NULL. Color of plot titles: "black" in
 #'   both styles. \code{"quantity"} gives the title the theme color of the
 #'   quantity that the plot shows (stock size, fishing mortality, recruitment or
@@ -525,6 +628,7 @@ acl_theme <- function(what = NULL) {
 #'   ratio of at least 4.5 to 1 with white so that the title reads well (lines
 #'   and bars keep the exact color); any other color name or code is used as
 #'   given.
+#'   Letter case does not matter.
 #' @param show_title Logical or NULL. Draw the default titles of the plots
 #'   (TRUE, the default of both styles). FALSE removes them from every plot;
 #'   a title given as a character string in a plot call is still drawn, and
@@ -546,8 +650,8 @@ acl_theme <- function(what = NULL) {
 #'   fitted series of plot_relative_catch()). The default style uses
 #'   "#047c6c", "#ed5f26", "#28b3e8" and "#002b5f"; NULL ("classic") uses
 #'   line_color. Interval bands of these plots take the color of their line
-#'   unless se_color is set to a color different from line_color. Pass NULL
-#'   explicitly to clear a color.
+#'   unless se_color is set to a color other than the band color of the
+#'   palette. Pass NULL explicitly to clear a color.
 #' @param bars Logical or NULL. Draw total recruitment and total catch as
 #'   bars (TRUE, "default") or lines (FALSE, "classic"). The geom argument of
 #'   plot_recruitment() and plot_catch() chooses per call.
@@ -558,10 +662,12 @@ acl_theme <- function(what = NULL) {
 #' @param strip Character or NULL. Facet strips: \code{"plain"} (bold, left
 #'   aligned black text without a box, "default") or \code{"box"} (the strips of
 #'   the base theme, "classic").
+#'   Letter case does not matter.
 #' @param legend_position Character or NULL. Position of the legend of
 #'   plots that have one: "bottom" ("default"), "top", "left", "right" or "none".
 #'   NULL ("classic") keeps the position of each plot. Comparison plots use
 #'   compare_legend_pos.
+#'   Letter case does not matter.
 #' @param axis_color Character or NULL. With the default base theme
 #'   ("theme_bw"), the color of the panel border, axis text and ticks, on a
 #'   white panel ("black" under "default"). NULL ("classic") keeps the base theme.
@@ -575,9 +681,9 @@ acl_theme <- function(what = NULL) {
 #'   columns, where the labels may touch. Before making the plots, set
 #'   \code{acl_theme_set(x_angle = 45)} to slant the labels, or set fewer
 #'   labels with \code{x_breaks}, for example
-#'   \code{acl_theme_set(x_breaks = seq(2000, 2020, by = 5))}; both
-#'   settings also work as arguments of the plot functions and of
-#'   \code{theme_acl()}.
+#'   \code{acl_theme_set(x_breaks = seq(2000, 2020, by = 5))}.
+#'   \code{x_breaks} is also an argument of the plot functions, and
+#'   \code{x_angle} an argument of \code{theme_acl()}.
 #' @family acl_theme
 #' @export
 #' @examples
@@ -650,16 +756,27 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!is.null(titles)) titles <- .acl_renamed_titles(titles)
 
   # Reject settings that no plot could use, before any of them is stored.
+  # Choices are matched in any letter case and stored as the package
+  # names them.
   if (!is.null(style))
-    style <- .acl_choice(.acl_former_default(style, "style"), "style", names(.acl_style_presets))
+    style <- .acl_match_choice(.acl_former_default(style, "style"), names(.acl_style_presets), "style")
   if (!is.null(palette)) palette <- .acl_palette_name(palette)
-  if (!is.null(grid)) grid <- .acl_choice(grid, "grid", c("none", "y"))
+  if (!is.null(grid)) grid <- .acl_match_choice(grid, c("none", "y"), "grid")
   if (!is.null(title_face))
-    title_face <- .acl_choice(title_face, "title_face", c("plain", "bold", "italic", "bold.italic"))
-  if (!is.null(strip)) strip <- .acl_choice(strip, "strip", c("plain", "box"))
+    title_face <- .acl_match_choice(title_face, c("plain", "bold", "italic", "bold.italic"), "title_face")
+  if (!is.null(strip)) strip <- .acl_match_choice(strip, c("plain", "box"), "strip")
   if (!is.null(legend_position))
-    legend_position <- .acl_choice(legend_position, "legend_position",
-                                   c("bottom", "top", "left", "right", "none"))
+    legend_position <- .acl_match_choice(legend_position, .acl_legend_positions[1:5], "legend_position")
+  if (!is.null(compare_legend_pos))
+    compare_legend_pos <- .acl_match_choice(compare_legend_pos, .acl_legend_positions[1:5], "compare_legend_pos")
+  if (!is.null(compare_facet_scales))
+    compare_facet_scales <- .acl_facet_scales(compare_facet_scales, "compare_facet_scales")
+  if (!is.null(base_theme)) {
+    # Stored with or without the prefix, as given.
+    full <- .acl_theme_name(base_theme, "base_theme")
+    base_theme <- if (startsWith(tolower(base_theme), "theme_")) full else sub("^theme_", "", full)
+  }
+  title_color <- .acl_canonical(title_color, "quantity")
   if (!is.null(title_color) && !identical(title_color, "quantity"))
     .acl_check_color(title_color, "title_color", "or \"quantity\"")
   for (key in c("stock_color", "F_color", "recruitment_color", "catch_color", "axis_color"))
@@ -667,14 +784,54 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
   if (!missing(x_angle)) .acl_check_x_angle(x_angle)
   if (!missing(compare_facet_ncol) && !is.null(compare_facet_ncol) &&
       (!is.numeric(compare_facet_ncol) || length(compare_facet_ncol) != 1L ||
-       !is.finite(compare_facet_ncol) || compare_facet_ncol < 1))
-    stop("compare_facet_ncol must be NULL or one positive whole number.", call. = FALSE)
+       !is.finite(compare_facet_ncol) || compare_facet_ncol < 1 ||
+       compare_facet_ncol != round(compare_facet_ncol)))
+    stop("compare_facet_ncol must be NULL or one whole number of 1 or more, for example 2.", call. = FALSE)
+  # Sizes, transparencies, axis settings, colors, line types and label lists.
+  if (!is.null(font_family) && (!is.character(font_family) || length(font_family) != 1L ||
+                                is.na(font_family) || !nzchar(font_family)))
+    stop("font_family must be one font family name, for example \"sans\" or \"serif\".", call. = FALSE)
+  for (key in c("title_size", "axis_title_size", "axis_text_size", "strip_text_size", "legend_text_size",
+                "line_size", "point_size", "compare_line_size", "compare_point_size"))
+    .acl_check_size(get(key), key)
+  for (key in c("se_alpha", "compare_se_alpha")) {
+    value <- get(key)
+    if (!is.null(value) && (!is.numeric(value) || length(value) != 1L || !is.finite(value) || value < 0 || value > 1))
+      stop(key, " must be one number from 0 (transparent) to 1 (opaque), for example 0.3.", call. = FALSE)
+  }
+  if (!is.null(title_hjust) && (!is.numeric(title_hjust) || length(title_hjust) != 1L ||
+                                !is.finite(title_hjust) || title_hjust < 0 || title_hjust > 1))
+    stop("title_hjust must be one number from 0 (left) to 1 (right), for example 0.5 for a centered title.",
+         call. = FALSE)
+  if (!is.null(x_expand) && (!is.numeric(x_expand) || length(x_expand) != 2L ||
+                             any(!is.finite(x_expand)) || any(x_expand < 0)))
+    stop("x_expand must be two numbers of zero or more, the share of the axis range added at each end, ",
+         "for example c(0.01, 0.01).", call. = FALSE)
+  if (!is.null(x_breaks) && (!is.numeric(x_breaks) || !length(x_breaks) || any(!is.finite(x_breaks))))
+    stop("x_breaks must be NULL or a vector of finite numbers, for example seq(2000, 2020, by = 5).",
+         call. = FALSE)
+  for (key in c("line_color", "se_color", "point_color", "observed_color", "smooth_color", "hline_color",
+                "low_col", "high_col"))
+    if (!is.null(get(key))) .acl_check_color(get(key), key)
+  if (!is.null(compare_colors)) {
+    bad <- compare_colors[!vapply(compare_colors, .acl_is_color, logical(1))]
+    if (length(bad))
+      stop("compare_colors must hold color names or codes, for example c(\"steelblue\", \"tomato\"); ",
+           "not colors: ", paste0("\"", bad, "\"", collapse = ", "), ".", call. = FALSE)
+  }
+  if (!is.null(compare_linetypes)) {
+    bad <- compare_linetypes[!vapply(compare_linetypes, .acl_is_linetype, logical(1))]
+    if (length(bad))
+      stop("compare_linetypes must hold line types: \"solid\", \"dashed\", \"dotted\", \"dotdash\", ",
+           "\"longdash\", \"twodash\", \"blank\" or a string of 2, 4, 6 or 8 hexadecimal digits such as ",
+           "\"44\"; not line types: ", paste0("\"", bad, "\"", collapse = ", "), ".", call. = FALSE)
+  }
+  for (key in c("titles", "xlab", "ylab")) .acl_check_label_list(get(key), key)
   for (key in c("bars", "y_zero", "show_title")) {
     value <- get(key)
     if (!is.null(value) && (!is.logical(value) || length(value) != 1L || is.na(value)))
       stop(key, " must be TRUE or FALSE.", call. = FALSE)
   }
-  if (!is.null(base_theme)) .acl_theme_name(base_theme, "base_theme")
   if (!is.null(interval)) interval <- .acl_interval_type(interval)
   for (key in c("compare_colors", "compare_linetypes")) {
     value <- get(key)
@@ -770,11 +927,13 @@ acl_theme_reset <- function() {
 #'   functions.
 #' @param base_theme Character or NULL. Base ggplot2 theme name; NULL uses
 #'   the global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title alignment; NULL uses the global
 #'   setting.
 #' @param quantity Character or NULL. With \code{title_color = "quantity"}, the
 #'   title takes the color of this quantity: "stock" (stock size), "F"
 #'   (fishing mortality), "recruitment" or "catch". NULL gives a black title.
+#'   Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.
 #' @param x_angle Numeric or NULL. Angle in degrees of the x tick labels,
 #'   from -90 to 90; slanted labels end at their tick mark. NULL uses the
 #'   global x_angle setting and leaves the labels of the base theme when that
@@ -791,7 +950,7 @@ acl_theme_reset <- function() {
 theme_acl <- function(font_family = NULL, title_size = NULL, axis_title_size = NULL,
                       axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
                       base_theme = NULL, title_hjust = NULL, quantity = NULL, x_angle = NULL) {
-  if (!is.null(quantity)) quantity <- .acl_choice(quantity, "quantity", names(.acl_role_keys)[1:4])
+  if (!is.null(quantity)) quantity <- .acl_match_choice(quantity, names(.acl_role_keys)[1:4], "quantity")
   .acl_check_x_angle(x_angle)
   layers <- .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                             legend_text_size, base_theme = base_theme, title_hjust = title_hjust,
@@ -818,6 +977,7 @@ theme_acl <- function(font_family = NULL, title_size = NULL, axis_title_size = N
 #' @param palette Character or NULL. "default", "npg", "aaas", "nejm",
 #'   "lancet" or "jama"; NULL uses the palette set with
 #'   \code{\link{acl_theme_set}()}.
+#'   Letter case does not matter.
 #' @param role Character vector or NULL. Names of color roles: "stock",
 #'   "F", "recruitment", "catch" (stock size, fishing mortality,
 #'   recruitment and catch), "primary" (lines
@@ -826,6 +986,7 @@ theme_acl <- function(font_family = NULL, title_size = NULL, axis_title_size = N
 #'   are those of the current settings; a quantity without its own color
 #'   uses the primary color. With a palette name they are the defaults of
 #'   that palette. \code{n} is ignored.
+#'   Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.
 #' @return A character vector of colors, named by role when \code{role} is
 #'   given.
 #' @family acl_theme
@@ -838,9 +999,10 @@ theme_acl <- function(font_family = NULL, title_size = NULL, axis_title_size = N
 acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   if (!is.null(palette)) palette <- .acl_palette_name(palette)
   if (!is.null(role)) {
+    role <- .acl_canonical(role, names(.acl_role_keys))
     if (!is.character(role) || !length(role) || anyNA(role) || !all(role %in% names(.acl_role_keys)))
       stop("role must name color roles out of ", paste0("\"", names(.acl_role_keys), "\"", collapse = ", "),
-           ".", call. = FALSE)
+           ", in any letter case.", call. = FALSE)
     settings <- if (is.null(palette)) acl_theme() else {
       roles <- .acl_palette_roles(palette)
       quantities <- if (palette == "default") .acl_default_colors[c("stock", "F", "recruitment", "catch")] else
@@ -934,12 +1096,15 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 }
 
 # Names of the scalar parameters of ACL and ALSCL on the natural scale, as
-# extract_parameters(scale = "natural") reports them, for figures that show
-# them. Rates are per model time step.
+# extract_parameters(scale = "natural") reports them, for figures and printed
+# tables that show them. Rates are per model time step. exp(mean_log_R) and
+# exp(mean_log_F) are the medians (geometric means) of the processes, not
+# their means; the correlations and standard deviations are those of the
+# log-scale deviations.
 .acl_parameter_names <- c(
   log_init_Z = "Initial total mortality rate",
-  mean_log_R = "Mean recruitment",
-  mean_log_F = "Mean fishing mortality rate",
+  mean_log_R = "Median recruitment",
+  mean_log_F = "Median fishing mortality rate",
   log_std_log_R = "Standard deviation of log recruitment",
   log_sigma_log_R = "Standard deviation of log recruitment",
   log_std_log_F = "Standard deviation of log fishing mortality rate",
@@ -948,10 +1113,10 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   log_sigma_log_N0 = "Standard deviation of log initial numbers at age",
   log_std_index = "Standard deviation of the log survey index",
   log_sigma_index = "Standard deviation of the log survey index",
-  logit_log_R = "Correlation of recruitment between time steps",
-  logit_log_F_y = "Correlation of fishing mortality between time steps",
-  logit_log_F_a = "Correlation of fishing mortality between ages",
-  logit_log_F_l = "Correlation of fishing mortality between length bins",
+  logit_log_R = "Correlation of log recruitment between time steps",
+  logit_log_F_y = "Correlation of log fishing mortality rate between time steps",
+  logit_log_F_a = "Correlation of log fishing mortality rate between ages",
+  logit_log_F_l = "Correlation of log fishing mortality rate between length bins",
   log_Linf = "Asymptotic length (Linf)",
   log_vbk = "Growth rate (k, per year)",
   t0 = "Age at length zero (t0)",
@@ -1088,16 +1253,22 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 # Line and interval colors of a plot of one quantity family ("stock", "F",
 # "recruitment", "catch"). A color in the call wins; otherwise the theme
 # color of the quantity, then line_color. The interval takes the color of
-# its line when the quantity has a theme color and se_color is not set
-# apart from line_color.
+# its line, unless the global se_color was set to a color other than the
+# band color of the active palette (.acl_band_color_set()); a global
+# line_color therefore does not recolor the bands.
 .acl_quantity_colors <- function(quantity = NULL, line_color = NULL, se_color = NULL) {
   theme_colour <- if (!is.null(quantity)) acl_theme(paste0(quantity, "_color"))
   line <- line_color %||% theme_colour %||% acl_theme("line_color")
-  if (is.null(se_color))
-    se_color <- if (!is.null(theme_colour) &&
-                    identical(acl_theme("se_color"), acl_theme("line_color"))) line else
-      acl_theme("se_color")
+  if (is.null(se_color)) se_color <- if (.acl_band_color_set()) acl_theme("se_color") else line
   list(line = line, se = se_color)
+}
+
+# TRUE when the global se_color differs from the band color of the active
+# palette, that is, when it was set on its own.
+.acl_band_color_set <- function() {
+  band <- acl_theme("se_color")
+  palette <- tryCatch(.acl_palette_name(acl_theme("palette") %||% "default"), error = function(e) "default")
+  !is.null(band) && !identical(band, .acl_palette_roles(palette)$se_color)
 }
 
 # A y axis that includes zero without a gap below it, when y_zero is TRUE.
@@ -1115,7 +1286,7 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 # the bars setting of the theme.
 .acl_geom_form <- function(geom = NULL) {
   if (is.null(geom)) return(if (isTRUE(acl_theme("bars"))) "bar" else "line")
-  .acl_choice(geom, "geom", c("bar", "line"))
+  .acl_match_choice(geom, c("bar", "line"), "geom")
 }
 
 # Bars of a time series: 0.8 of the time step wide, so quarterly series work.
@@ -1155,11 +1326,47 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   invisible(x_angle)
 }
 
-# One value out of a set, or an error that lists the set.
-.acl_choice <- function(x, arg, choices) {
-  if (!is.character(x) || length(x) != 1L || is.na(x) || !x %in% choices)
-    stop(arg, " must be one of ", paste0("\"", choices, "\"", collapse = ", "), ".", call. = FALSE)
-  x
+# TRUE for one color name or code that R can draw.
+.acl_is_color <- function(x) {
+  is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x) &&
+    !inherits(try(grDevices::col2rgb(x), silent = TRUE), "try-error")
+}
+
+# TRUE for one line type that ggplot2 and grid can draw.
+.acl_is_linetype <- function(x) {
+  if (is.numeric(x)) return(length(x) == 1L && is.finite(x) && x == round(x) && x >= 0 && x <= 6)
+  is.character(x) && length(x) == 1L && !is.na(x) &&
+    (x %in% c("blank", "solid", "dashed", "dotted", "dotdash", "longdash", "twodash") ||
+       (grepl("^[0-9A-Fa-f]+$", x) && nchar(x) %in% c(2L, 4L, 6L, 8L)))
+}
+
+# A size setting: NULL or one positive number.
+.acl_check_size <- function(x, key) {
+  if (!is.null(x) && (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x <= 0))
+    stop(key, " must be one positive number, for example ", format(.acl_defaults[[key]] %||% 2.5), ".",
+         call. = FALSE)
+  invisible(x)
+}
+
+# The lists titles, xlab and ylab of acl_theme_set(): the keys that the
+# plots read, each with a text, "" or NA (no title), or NULL (the default).
+.acl_check_label_list <- function(x, key) {
+  if (is.null(x)) return(invisible(x))
+  if (!is.list(x) || is.null(names(x)) || anyNA(names(x)) || any(!nzchar(names(x))))
+    stop(key, " must be a named list, for example ", key, " = list(",
+         c(titles = "SSB = \"My title\"", xlab = "year = \"Survey year\"", ylab = "ssb = \"SSB (t)\"")[[key]],
+         ").", call. = FALSE)
+  unknown <- setdiff(names(x), names(.acl_defaults[[key]]))
+  if (length(unknown))
+    stop(key, " has unknown keys: ", paste(unknown, collapse = ", "), ". The keys are the names of acl_theme(\"",
+         key, "\").", call. = FALSE)
+  for (nm in names(x)) {
+    value <- x[[nm]]
+    ok <- is.null(value) || is.expression(value) || is.language(value) ||
+      (length(value) == 1L && (is.character(value) || is.na(value)))
+    if (!ok) stop(key, "$", nm, " must be one text, \"\" or NA (none), or NULL (the default).", call. = FALSE)
+  }
+  invisible(x)
 }
 
 .acl_check_color <- function(x, arg, extra = NULL) {
@@ -1182,8 +1389,10 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 # Full name of a supported ggplot2 theme; an error or NULL for anything else.
 .acl_theme_name <- function(x, arg = "base_theme", error = TRUE) {
   if (is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x)) {
-    name <- if (startsWith(x, "theme_")) x else paste0("theme_", x)
-    if (name %in% .acl_theme_names) return(name)
+    # In any letter case, with or without the prefix.
+    name <- if (startsWith(tolower(x), "theme_")) x else paste0("theme_", x)
+    position <- .acl_choice_position(name, .acl_theme_names)
+    if (position > 0L) return(.acl_theme_names[position])
   }
   if (!error) return(NULL)
   stop(arg, " ", .acl_describe_value(x), " is not a supported theme name. Use one of: ",
@@ -1207,8 +1416,9 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 #' @param check_overlap Logical. Omit automatic tick labels that would
 #'   overprint in narrow facets.
 #' @param time Logical. The axis is a time axis in years: labels at whole
-#'   years by the rule of \code{.acl_time_axis()} and unlabelled minor tick
-#'   marks between them. \code{.acl_tidy_axes()} adapts both to the layout.
+#'   years by the rule of \code{.acl_time_axis()}, the first and the last
+#'   year always among them, and unlabelled minor tick marks between them.
+#'   \code{.acl_tidy_axes()} adapts both to the layout.
 #' @keywords internal
 .acl_scale_x <- function(x_breaks = NULL, n_breaks = 10, values = NULL,
                          auto_breaks = NULL, labels = ggplot2::waiver(),
@@ -1224,18 +1434,22 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   if (automatic && length(times)) {
     info <- list(range = range(times), step = .acl_series_step(times))
     axis <- .acl_time_axis(info$range, info$step)
-    brks <- .acl_time_breaks(axis$step, info)
+    brks <- .acl_time_breaks(axis$step, info, axis$gap)
     minor <- .acl_time_minor(axis$minor, info$range)
     guide <- ggplot2::guide_axis(minor.ticks = TRUE)
   } else if (automatic) {
     brks <- if (is.null(auto_breaks)) .acl_whole_breaks(n_breaks) else auto_breaks
     if (check_overlap) guide <- ggplot2::guide_axis(check.overlap = TRUE)
   }
-  ggplot2::scale_x_continuous(
+  scale <- ggplot2::scale_x_continuous(
     breaks = brks, minor_breaks = minor, labels = labels,
     expand = ggplot2::expansion(mult = expd),
     guide = guide
   )
+  # A time axis with breaks given in the call or the theme: .acl_tidy_axes()
+  # gives its labels the angle of the theme key x_angle.
+  if (time && !automatic) scale$acl_time_axis <- TRUE
+  scale
 }
 
 .acl_finite_values <- function(values) {
@@ -1250,6 +1464,10 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
 # Width in inches at which the automatic layouts and year labels are chosen.
 # acl_figure_size() recommends this width for multi-panel figures.
 .acl_reference_width <- 10
+
+# Width in inches that acl_figure_size() recommends for a plot with one
+# column of panels, such as a single time series.
+.acl_single_width <- 8
 
 # Spacing of the time steps of a series in years: 1 for annual series, 0.25
 # for quarterly ones.
@@ -1275,17 +1493,26 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   max(0.4, (width - 0.6) / max(1, cols) - 0.45)
 }
 
-# Label step, minor tick step and label angle of a time axis that covers
-# `range` (in years) with time steps of `series_step` years, in a panel of a
-# figure with `cols` columns of panels in all. Labels of 4-digit years take
-# about (4 + 1) characters at the axis text size, a gap of one character
-# included; slanted labels at 45 degrees need about 1.7 text heights between
-# them. Single-panel figures keep horizontal labels and take a larger step
-# when the labels would touch. In multi-panel figures the labels keep the
-# wanted density (the step of the single-panel rule with one or two columns,
-# the next step with more) and are slanted when they would touch; a larger
-# step comes only when slanted labels would touch too. `angle` (the theme key
-# x_angle) fixes the angle: 0 keeps the labels horizontal.
+# Label step, minor tick step, label angle and label gap of a time axis that
+# covers `range` (in years) with time steps of `series_step` years, in a
+# panel of a figure with `cols` columns of panels in all. Labels of 4-digit
+# years take about (4 + 1) characters at the axis text size, a gap of one
+# character included; slanted labels at 45 degrees need about 1.7 text
+# heights between them. Single-panel figures keep horizontal labels and take
+# a larger step when the labels would touch. In multi-panel figures the
+# labels keep the wanted density (the step of the single-panel rule with one
+# or two columns, the next step with more) and are slanted when they would
+# touch; a larger step comes only when slanted labels would touch too.
+# `angle` (the theme key x_angle) fixes the angle: 0 keeps the labels
+# horizontal.
+#
+# The first and the last year are always labelled (.acl_time_positions()),
+# and a multiple of the step closer to them than `gap` years is not: `gap`
+# is the distance at which two labels at the chosen angle do not touch, for
+# a single panel at the width that acl_figure_size() recommends for it (8
+# inches) and for multi-panel figures at the reference width. In
+# multi-panel figures the labels are slanted when horizontal labels would
+# lose such a multiple and slanted ones would keep it.
 .acl_time_axis <- function(range, series_step = 1, cols = 1, width = .acl_reference_width,
                            angle = acl_theme("x_angle"), size = acl_theme("axis_text_size"),
                            nchar = 4L) {
@@ -1295,12 +1522,15 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
   base <- .acl_time_label_step(max(1, years))
   steps <- .acl_label_steps[.acl_label_steps >= base]
   if (!is.finite(span) || span <= 0)
-    return(list(step = base, minor = series_step, angle = if (is.null(angle) || cols <= 1) 0 else angle))
+    return(list(step = base, minor = series_step, angle = if (is.null(angle) || cols <= 1) 0 else angle,
+                gap = NULL))
   expansion <- acl_theme("x_expand") %||% c(0.01, 0.01)
   per_year <- .acl_panel_width(cols, width) / (span * (1 + sum(expansion)))
   char <- 0.6 * size / 72
-  flat <- function(step) per_year * step >= (nchar + 1) * char
-  slanted <- function(step, a = 45) per_year * step >= 1.2 * size / 72 / sin(abs(a) * pi / 180)
+  # Distance in inches between the centres of two labels that do not touch.
+  room <- function(a) if (a == 0) (nchar + 1) * char else 1.2 * size / 72 / sin(abs(a) * pi / 180)
+  flat <- function(step) per_year * step >= room(0)
+  slanted <- function(step, a = 45) per_year * step >= room(a)
   first <- function(ok) { hit <- which(vapply(steps, ok, logical(1))); if (length(hit)) steps[hit[1L]] else NA }
   if (!is.null(angle) && angle != 0) {
     step <- first(function(s) slanted(s, angle)); chosen <- angle
@@ -1318,37 +1548,73 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
     }
   }
   if (is.na(step)) step <- steps[length(steps)]
+  # Years between the centres of two labels at angle `a` that do not touch,
+  # at most the label step.
+  saved <- .acl_panel_width(cols, if (cols <= 1) min(width, .acl_single_width) else width) /
+    (span * (1 + sum(expansion)))
+  gap <- function(a) min(step, room(a) / saved)
+  if (is.null(angle) && cols > 1 && chosen == 0 &&
+      length(.acl_time_positions(range, step, gap(45))) > length(.acl_time_positions(range, step, gap(0))))
+    chosen <- 45
   # Minor ticks at the time steps, or at whole years, or at a fifth or a half
   # of the label step, whichever is the first to leave 0.03 inch between them.
   candidates <- unique(c(if (series_step < 1) series_step, 1, step / 5, step / 2, step))
   candidates <- candidates[candidates <= step & abs(step / candidates - round(step / candidates)) < 1e-8]
   minor <- candidates[which(per_year * candidates >= 0.03)[1L]]
   if (is.na(minor)) minor <- step
-  list(step = step, minor = minor, angle = chosen)
+  list(step = step, minor = minor, angle = chosen, gap = gap(chosen))
 }
 
-# Breaks of a time axis: the multiples of `step` within the limits and the
-# time steps of the series. `info`
-# (the range and time step of the series) lets .acl_tidy_axes() choose the
-# step again for the layout of the figure.
-.acl_time_breaks <- function(step, info = NULL) {
-  force(step)
-  structure(function(limits) {
+# Label positions of a time axis that shows the years `range` (from the
+# first to the last time step in a panel): the year of the first and of the
+# last time step, and the multiples of `step` between them. On an axis with
+# several time steps per year the labels stay at year starts: the start of
+# the first and of the last year, within `range`, that holds a time step. A
+# multiple of the step closer than `gap` years to the first or the last
+# label is left out; the first and the last label never are. A range within
+# one year that holds no year start is labelled at its first time step.
+.acl_time_positions <- function(range, step, gap = step / 2) {
+  lower <- min(range); upper <- max(range)
+  first <- ceiling(lower - 1e-8); last <- floor(upper + 1e-8)
+  if (last < first) return(lower)
+  from <- ceiling(lower / step - 1e-8) * step
+  to <- floor(upper / step + 1e-8) * step
+  regular <- if (to >= from) seq(from, to, by = step) else numeric()
+  near <- function(end) abs(regular - end) > 1e-8 & abs(regular - end) < gap - 1e-8
+  regular <- regular[!near(first) & !near(last)]
+  sort(unique(round(c(first, regular, last), 8)))
+}
+
+# Breaks of a time axis: the labels of .acl_time_positions() for the years
+# of each panel, with `gap` from .acl_time_axis() (half a step when NULL).
+# `info` (the range and time step of the series) lets .acl_tidy_axes()
+# choose the step again for the layout of the figure. ggplot2 passes the
+# scale of the panel as `self`, whose range is the range of the data in
+# that panel when the facets have free x scales; without it the limits are
+# those of the panel, within the series.
+.acl_time_breaks <- function(step, info = NULL, gap = NULL) {
+  force(step); force(gap)
+  structure(function(limits, self = NULL) {
     if (length(limits) != 2L || !all(is.finite(limits))) return(numeric())
-    # No label beyond the first or the last time step of the series.
+    shown <- range(limits)
+    # No label beyond the first or the last time step of the series, or of
+    # the data of the panel.
     if (!is.null(info$range)) {
-      clipped <- c(max(min(limits), info$range[1L]), min(max(limits), info$range[2L]))
+      data <- .acl_scale_range(self)
+      shown <- c(max(c(shown[1L], info$range[1L], data[1L])), min(c(shown[2L], info$range[2L], data[2L])))
       # A panel that shows none of the series (no data at all) has no labels.
-      if (clipped[1L] > clipped[2L] + 1e-8) return(numeric())
-      limits <- clipped
+      if (shown[1L] > shown[2L] + 1e-8) return(numeric())
     }
-    from <- ceiling(min(limits) / step - 1e-8) * step
-    to <- floor(max(limits) / step + 1e-8) * step
-    # A series within one year, or a panel without a multiple of the step,
-    # is labelled at its first time step.
-    if (to < from) return(min(limits))
-    seq(from, to, by = step)
+    .acl_time_positions(shown, step, gap %||% (step / 2))
   }, acl_time = info, acl_step = step)
+}
+
+# Range of the data on which a continuous scale was trained (for free
+# facet scales, the data of one panel), or NULL.
+.acl_scale_range <- function(scale) {
+  if (!inherits(scale, "ScaleContinuous")) return(NULL)
+  limits <- tryCatch(if (scale$is_empty()) NULL else scale$get_limits(), error = function(e) NULL)
+  if (is.numeric(limits) && length(limits) == 2L && all(is.finite(limits))) sort(limits) else NULL
 }
 
 # Minor breaks of a time axis: every `minor` years, plus the first and the
@@ -1561,9 +1827,11 @@ acl_palette <- function(n = NULL, palette = NULL, role = NULL) {
     line_size  = line_size %||% .acl_auto_size("compare_line_size"),
     point_size = point_size %||% acl_theme("compare_point_size") %||% acl_theme("point_size") %||% 2.5,
     se_alpha   = if (!is.null(se_alpha))   se_alpha   else (acl_theme("compare_se_alpha")   %||% 0.25),
-    legend_pos = if (!is.null(legend_pos)) legend_pos else (acl_theme("compare_legend_pos") %||% "bottom"),
+    legend_pos = .acl_legend_position(if (!is.null(legend_pos)) legend_pos else
+      (acl_theme("compare_legend_pos") %||% "bottom")),
     facet_ncol = facet_ncol %||% acl_theme("compare_facet_ncol"),
-    facet_scales = if (!is.null(facet_scales)) facet_scales else (acl_theme("compare_facet_scales") %||% "free_y")
+    facet_scales = .acl_facet_scales(if (!is.null(facet_scales)) facet_scales else
+      (acl_theme("compare_facet_scales") %||% "free_y"))
   )
 }
 
@@ -1714,25 +1982,68 @@ acl_get_theme <- function() {
 # Readable text in every plot, under both styles
 # ---------------------------------------------------------------------------
 
-# Tick labels without trailing zeros: "0", "2.5" and "0.1" rather than "0.0",
-# "2.5" and "0.10". Values within rounding error of zero read "0". The x axes
-# (often years) use no thousands separator.
+# Tick labels of one axis, never in E notation. The labels of an axis whose
+# values (other than zero) all lie from 0.0001 up to below 1,000,000,000 in
+# absolute value are decimal numbers (.acl_decimal_labels()). Otherwise
+# every label of the axis is a power of ten with a raised exponent, such as
+# 1.5 x 10^-9, as a plotmath expression (the form of scales::label_math());
+# zero reads "0". The x axes (often years) use no thousands separator.
 .acl_number_labels <- function(x, big.mark = ",") {
+  ok <- is.finite(x)
+  values <- .acl_snap_zero(x[ok])
+  size <- abs(values[values != 0])
+  if (!length(size) || (min(size) >= 1e-4 && max(size) < 1e9)) return(.acl_decimal_labels(x, big.mark))
+  text <- rep(NA_character_, length(x))
+  text[ok] <- vapply(values, .acl_power_of_ten, character(1))
+  as.expression(lapply(text, function(t) if (is.na(t)) NA else str2lang(t)))
+}
+
+# Decimal numbers without trailing zeros ("0", "2.5" and "0.1" rather than
+# "0.0", "2.5" and "0.10"), with thousands separators ("25,000"). Values
+# within rounding error of zero read "0"; NA stays NA.
+.acl_decimal_labels <- function(x, big.mark = ",") {
   out <- rep(NA_character_, length(x))
   ok <- is.finite(x)
   if (!any(ok)) return(out)
-  values <- x[ok]
-  scale <- max(abs(values))
-  values[abs(values) < 1e-10 * max(1, scale)] <- 0
-  nonzero <- abs(values[values != 0])
-  # Plain numbers with thousands separators unless they are very large or
-  # very small, where scientific notation is shorter.
-  fixed <- !length(nonzero) || (max(nonzero) < 1e7 && min(nonzero) >= 1e-4)
-  out[ok] <- if (fixed) format(values, trim = TRUE, drop0trailing = TRUE, scientific = FALSE,
-                               big.mark = big.mark) else
-    vapply(values, function(v) if (v == 0) "0" else
-      format(v, digits = 3, scientific = TRUE, drop0trailing = TRUE), character(1))
+  values <- .acl_snap_zero(x[ok])
+  out[ok] <- format(values, trim = TRUE, drop0trailing = TRUE, scientific = FALSE, big.mark = big.mark)
   out
+}
+
+# Breaks within rounding error of zero set to zero: smaller than 1e-10 of
+# the smallest distance between two breaks (of the largest break when there
+# is one), so that 1e-17 on an axis of steps of 0.05 reads "0" while 1e-9 on
+# a log axis up to 1000 keeps its value.
+.acl_snap_zero <- function(values) {
+  if (!length(values)) return(values)
+  distinct <- sort(unique(values))
+  scale <- if (length(distinct) > 1L) min(diff(distinct)) else max(abs(values))
+  values[abs(values) < 1e-10 * scale] <- 0
+  values
+}
+
+# A number as the text of a plotmath power of ten: "1.5 %*% 10^-9" for
+# 1.5e-9, "0" for zero.
+.acl_power_of_ten <- function(v) {
+  if (v == 0) return("0")
+  exponent <- floor(log10(abs(v)) + 1e-9)
+  mantissa <- signif(v / 10^exponent, 6)
+  if (abs(mantissa) >= 10) {
+    mantissa <- mantissa / 10
+    exponent <- exponent + 1
+  }
+  paste0(format(mantissa, trim = TRUE, drop0trailing = TRUE, scientific = FALSE), " %*% 10^", exponent)
+}
+
+# Width of a tick label in characters of the axis text: the characters of a
+# text label; for a power of ten the mantissa, the multiplication sign with
+# its spaces, "10", and the exponent in the smaller type of a superscript.
+.acl_label_chars <- function(label) {
+  if (is.character(label)) return(nchar(label))
+  text <- paste(deparse(label), collapse = "")
+  parts <- regmatches(text, regexec("^(.*) %\\*% 10\\^(.*)$", text))[[1L]]
+  if (length(parts) == 3L) return(nchar(parts[2L]) + 5 + 0.7 * nchar(gsub("[()]", "", parts[3L])))
+  nchar(text)
 }
 
 # Breaks of the y axis of a facet panel (applied to each panel with free
@@ -1752,7 +2063,8 @@ acl_get_theme <- function() {
     if (length(limits) != 2L || !all(is.finite(limits))) return(numeric())
     lo <- min(limits); hi <- max(limits); span <- hi - lo
     if (span <= 0) return(lo)
-    tolerance <- 1e-10 * max(1, abs(limits))
+    # Rounding error relative to the values, for very small values too.
+    tolerance <- 1e-10 * max(abs(limits))
     exponent <- floor(log10(span))
     multiples <- function(mantissa) lapply(sort(as.vector(outer(mantissa, 10^(exponent + (-3:2))))),
       function(step) {
@@ -1797,9 +2109,16 @@ acl_get_theme <- function() {
 
 # Rows, columns and number of panels of a plot: facet_wrap() layouts are
 # computed from the facet values in the plot and layer data, with the default
-# columns of .acl_facet_columns(); other plots have one panel.
+# columns of .acl_facet_columns(); facet_grid() layouts have one row for
+# each value of the row variables and one column for each value of the
+# column variables; other plots have one panel.
 .acl_facet_dims <- function(p) {
   facet <- p$facet
+  if (inherits(facet, "FacetGrid")) {
+    rows <- .acl_facet_count(p, names(facet$params$rows))
+    cols <- .acl_facet_count(p, names(facet$params$cols))
+    return(c(rows = rows, cols = cols, panels = rows * cols))
+  }
   if (!inherits(facet, "FacetWrap")) return(c(rows = 1L, cols = 1L, panels = 1L))
   params <- facet$params
   n <- .acl_facet_count(p)
@@ -1809,14 +2128,15 @@ acl_get_theme <- function() {
   c(rows = as.integer(dims[1L]), cols = as.integer(dims[2L]), panels = as.integer(n))
 }
 
-# Number of panels of a facet_wrap() plot.
-.acl_facet_count <- function(p) {
-  vars <- names(p$facet$params$facets)
+# Number of panels of a facet_wrap() plot, or of combinations of the facet
+# variables `vars` (the rows or the columns of a facet_grid() plot).
+.acl_facet_count <- function(p, vars = names(p$facet$params$facets)) {
+  if (!length(vars)) return(1L)
   frames <- c(list(p$data), lapply(p$layers, function(layer) layer$data))
   values <- lapply(frames, function(d)
     if (is.data.frame(d) && all(vars %in% names(d))) unique(d[vars]) else NULL)
   values <- do.call(rbind, values[!vapply(values, is.null, logical(1))])
-  if (is.null(values)) 1L else nrow(unique(values))
+  if (is.null(values)) 1L else as.integer(nrow(unique(values)))
 }
 
 # A facet_wrap() plot with the default columns of .acl_facet_columns() when
@@ -1894,11 +2214,14 @@ acl_get_theme <- function() {
       return(s)
     }
     s <- s$clone()
-    if (!is.null(n) && inherits(s$breaks, "waiver")) s$breaks <- .acl_breaks(n) else
-      if (inherits(s$breaks, "waiver") && identical(s$transformation$name %||% "identity", "identity"))
-        s$breaks <- .acl_short_breaks()
-    if (inherits(s$labels, "waiver") && identical(s$transformation$name %||% "identity", "identity"))
-      s$labels <- labels
+    # Breaks of a transformed scale (log, square root) are left to its
+    # transformation, and so are its labels, except on a log scale, whose
+    # labels are those of the package: decimals or powers of ten, not the
+    # E notation of the transformation.
+    transformation <- .acl_scale_transformation(s)
+    identity <- identical(transformation, "identity")
+    if (identity && inherits(s$breaks, "waiver")) s$breaks <- if (!is.null(n)) .acl_breaks(n) else .acl_short_breaks()
+    if ((identity || startsWith(transformation, "log")) && inherits(s$labels, "waiver")) s$labels <- labels
     if (overlap && inherits(s$guide, "waiver")) s$guide <- ggplot2::guide_axis(check.overlap = TRUE)
     s
   }
@@ -1931,19 +2254,27 @@ acl_get_theme <- function() {
     scales$add(ggplot2::scale_x_continuous())
     ix <- find("x")
   }
-  angle_layer <- NULL
+  angle_layer <- edge_layer <- NULL
+  # Labels at an angle end at their tick mark and need no room at the right.
+  own_room <- FALSE
   if (length(ix)) {
     breaks <- scales$scales[[ix[1L]]]$breaks
     time_info <- .acl_breaks_attr(breaks, "acl_time")
     if (!is.null(time_info)) {
+      own_room <- TRUE
       # A time axis: label step, minor ticks and angle for this layout.
       axis <- .acl_time_axis(time_info$range, time_info$step, cols = cols)
       s <- scales$scales[[ix[1L]]]$clone()
-      s$breaks <- .acl_time_breaks(axis$step, time_info)
+      s$breaks <- .acl_time_breaks(axis$step, time_info, axis$gap)
       s$minor_breaks <- .acl_time_minor(axis$minor, time_info$range)
       s$guide <- ggplot2::guide_axis(minor.ticks = TRUE, check.overlap = cols > 1L)
       scales$scales[[ix[1L]]] <- s
       if (axis$angle != 0) angle_layer <- .acl_x_angle_theme(axis$angle)
+      edge_layer <- .acl_time_edge_theme(p, axis$angle, dims[["cols"]])
+    } else if (isTRUE(scales$scales[[ix[1L]]]$acl_time_axis) && !is.null(acl_theme("x_angle"))) {
+      # Breaks given for a time axis keep the angle of the theme key x_angle.
+      angle_layer <- .acl_x_angle_theme(acl_theme("x_angle"))
+      own_room <- acl_theme("x_angle") != 0
     } else if (cols > 1L) {
       # Other automatic x breaks of a facet: as many 3-character labels as
       # the width of a panel holds with a gap of one character.
@@ -1962,15 +2293,118 @@ acl_get_theme <- function() {
     scales$scales[[ix[1L]]] <- tidy(scales$scales[[ix[1L]]], NULL, cols > 1L,
                                     function(x) .acl_number_labels(x, big.mark = ""))
     scales$scales[[ix[1L]]] <- .acl_point_room(p, scales$scales[[ix[1L]]], cols)
+    # Room at the right for the last label of other x axes (ages, lengths,
+    # time axes with breaks given in the call or the theme); the room of the
+    # automatic time axes comes from .acl_time_axis().
+    if (!own_room) {
+      chars <- .acl_end_label_chars(p, scales$scales[[ix[1L]]], cols)
+      if (chars > 0L) edge_layer <- .acl_time_edge_theme(p, 0, 1L, nchar = chars)
+    }
   }
   p$scales <- scales
   if (!is.null(added)) p <- p + added
   if (!is.null(angle_layer)) p <- p + angle_layer
+  if (!is.null(edge_layer)) p <- p + edge_layer
   p <- .acl_wrap_strips(p, cols)
   p <- .acl_line_weights(p, dims[["panels"]])
   p <- .acl_reference_first(p)
   if (legend_hole) p <- .acl_legend_in_hole(p, dims)
   p
+}
+
+# Room for the first and the last label of a time axis, which sit at the
+# ends of the panels (.acl_time_positions()), in points, with the width
+# estimate of .acl_time_axis() at the size of the tick labels of the plot. A
+# horizontal label of `nchar` characters is centred on its tick, so the last
+# one reaches half a label beyond the last panel: the right plot margin is
+# widened to hold it. The same room is given to the last label of any other
+# x axis that ends at the right end of the panels, such as "15+" on an age
+# axis (.acl_end_label_chars()). Slanted labels end at their tick mark. In
+# facet_wrap() and facet_grid() layouts the last label of a column and the
+# first label of the next column are neighbours. Without a y axis between
+# the panels (fixed or free_x scales of facet_wrap(), and facet_grid(),
+# whose rows share one y axis at the left) the panels are spaced by the room
+# of two neighbouring labels; a y axis between them holds at least about
+# two characters, and horizontal labels get the rest of the room as spacing.
+.acl_time_edge_theme <- function(p, angle, facet_cols, nchar = 4L) {
+  theme <- tryCatch(ggplot2::complete_theme(p$theme), error = function(e) NULL)
+  text <- tryCatch(ggplot2::calc_element("axis.text.x", theme), error = function(e) NULL)
+  size <- if (is.numeric(text$size) && length(text$size) == 1L) text$size else
+    acl_theme("axis_text_size") %||% 10
+  char <- 0.6 * size
+  elements <- list()
+  if (angle == 0) {
+    margin <- tryCatch(ggplot2::calc_element("plot.margin", theme), error = function(e) NULL)
+    if (inherits(margin, "unit") && length(margin) == 4L && all(grid::unitType(margin) == "points")) {
+      values <- as.numeric(margin)
+      needed <- nchar / 2 * char + 1
+      if (values[2L] < needed) elements$plot.margin <- ggplot2::margin(values[1L], needed, values[3L], values[4L])
+    }
+  }
+  facet <- p$facet
+  if (facet_cols > 1L && inherits(facet, c("FacetWrap", "FacetGrid"))) {
+    y_axes <- isTRUE(facet$params$draw_axes$y) ||
+      (inherits(facet, "FacetWrap") && isTRUE(facet$params$free$y))
+    room <- if (angle == 0) (nchar + 1) * char else 1.2 * size / sin(abs(angle) * pi / 180)
+    spacing <- room - if (y_axes) 2 * char + 5.5 else 0
+    if (spacing > 5.5) elements$panel.spacing.x <- grid::unit(spacing, "pt")
+  }
+  if (length(elements)) do.call(ggplot2::theme, elements)
+}
+
+# Number of characters of the last tick label of a continuous x axis when
+# that label reaches beyond the right end of the panels, as "15+" does at
+# the plus group of an age axis or the last length on a length axis; 0
+# otherwise. The breaks and labels are those of the scale for the range of
+# the x values in the plot, with its expansion, and the panels are as wide
+# as at the size that acl_figure_size() recommends.
+.acl_end_label_chars <- function(p, s, cols = 1L) {
+  if (s$is_discrete() || !identical(.acl_scale_transformation(s), "identity")) return(0L)
+  values <- .acl_aes_numbers(p, c("x", "xmin", "xmax", "xend"))
+  if (!length(values)) return(0L)
+  limits <- range(values)
+  given <- suppressWarnings(as.numeric(s$limits))
+  if (length(given) == 2L) limits <- ifelse(is.finite(given), given, limits)
+  span <- diff(limits)
+  if (!is.finite(span) || span <= 0) return(0L)
+  expand <- if (inherits(s$expand, "waiver")) c(0.05, 0, 0.05, 0) else rep_len(as.numeric(s$expand), 4L)
+  ends <- c(limits[1L] - expand[1L] * span - expand[2L], limits[2L] + expand[3L] * span + expand[4L])
+  trained <- s$clone()
+  trained$train(limits)
+  breaks <- tryCatch(trained$get_breaks(ends), error = function(e) NULL)
+  breaks <- breaks[is.finite(breaks) & breaks >= ends[1L] - 1e-8 * span & breaks <= ends[2L] + 1e-8 * span]
+  if (!length(breaks)) return(0L)
+  last <- which.max(breaks)
+  labels <- tryCatch(trained$get_labels(breaks), error = function(e) NULL)
+  label <- if (length(labels) == length(breaks)) labels[[last]] else .acl_number_labels(breaks[last], "")[[1L]]
+  if (is.null(label) || (is.atomic(label) && (length(label) != 1L || is.na(label)))) return(0L)
+  chars <- ceiling(.acl_label_chars(if (is.atomic(label)) as.character(label) else label))
+  if (chars < 1) return(0L)
+  size <- acl_theme("axis_text_size") %||% 10
+  width <- .acl_panel_width(cols, if (cols > 1L) .acl_reference_width else .acl_single_width)
+  room <- (ends[2L] - breaks[last]) / diff(ends) * width
+  if (room >= chars / 2 * 0.6 * size / 72) 0L else as.integer(chars)
+}
+
+# Finite numbers that the aesthetics `aes` (such as "x" and "xmax") take in
+# the plot and in each of its layers.
+.acl_aes_numbers <- function(p, aes) {
+  evaluate <- function(mapping, data) {
+    if (is.null(mapping) || !is.data.frame(data) || !nrow(data)) return(numeric())
+    value <- tryCatch(eval(unclass(mapping)[[2L]], data, attr(mapping, ".Environment")),
+                      error = function(e) NULL)
+    if (is.numeric(value)) value[is.finite(value)] else numeric()
+  }
+  out <- numeric()
+  for (a in aes) {
+    out <- c(out, evaluate(p$mapping[[a]], p$data))
+    for (layer in p$layers) {
+      data <- if (is.data.frame(layer$data) && nrow(layer$data)) layer$data else p$data
+      mapping <- layer$mapping[[a]] %||% (if (isTRUE(layer$inherit.aes)) p$mapping[[a]])
+      out <- c(out, evaluate(mapping, data))
+    }
+  }
+  out
 }
 
 # Room for whole points at the ends of a continuous x axis. When the plot
@@ -1998,7 +2432,7 @@ acl_get_theme <- function() {
   # point radius between the point and the panel border.
   radius <- size * ggplot2::.pt / 72 / 2 + 0.06
   # Width, or height, of a panel at the recommended figure size.
-  width <- if (axis == "x") .acl_panel_width(cols, if (cols > 1L) .acl_reference_width else 8) else
+  width <- if (axis == "x") .acl_panel_width(cols, if (cols > 1L) .acl_reference_width else .acl_single_width) else
     if (rows > 1L) 1.1 else 3
   mult <- max(0.03, radius / width)
   if (mult <= current) return(s)
@@ -2032,12 +2466,22 @@ acl_get_theme <- function() {
   }
 }
 
-# TRUE for values whose label needs at most `digits` significant digits.
+# TRUE for values whose label needs at most `digits` significant digits,
+# within rounding error relative to the value, so that very small values
+# are judged as well as large ones.
 .acl_short_number <- function(x, digits = 4L) {
   ok <- is.finite(x)
   out <- rep(TRUE, length(x))
-  out[ok] <- abs(x[ok] - signif(x[ok], digits)) <= 1e-9 * pmax(1, abs(x[ok]))
+  out[ok] <- abs(x[ok] - signif(x[ok], digits)) <= 1e-9 * abs(x[ok])
   out
+}
+
+# Name of the transformation of a continuous scale, such as "identity" or
+# "log-10"; "identity" when the scale does not say.
+.acl_scale_transformation <- function(s) {
+  transformation <- tryCatch(s$get_transformation(), error = function(e) NULL)
+  name <- transformation$name
+  if (is.character(name) && length(name) == 1L && !is.na(name)) name else "identity"
 }
 
 # An attribute of a breaks function; a function stored in a scale is wrapped
@@ -2060,8 +2504,9 @@ acl_get_theme <- function() {
 # Data lines of dense facets: lines whose width comes from the theme default
 # are drawn at full width up to 4 panels, at two thirds for 5 to 12 panels
 # and at half beyond. Widths given in the call or set in the theme are kept.
+.acl_line_factor <- function(panels) if (panels <= 4L) 1 else if (panels <= 12L) 2 / 3 else 1 / 2
 .acl_line_weights <- function(p, panels = 1L) {
-  factor <- if (panels <= 4L) 1 else if (panels <= 12L) 2 / 3 else 1 / 2
+  factor <- .acl_line_factor(panels)
   for (i in seq_along(p$layers)) {
     layer <- p$layers[[i]]
     width <- layer$aes_params$linewidth
@@ -2135,13 +2580,28 @@ acl_get_theme <- function() {
 }
 
 # Breaks of a discrete axis: all categories up to `max_labels`, otherwise
-# every k-th one, so that at most `max_labels` labels are drawn.
+# every k-th one, so that at most `max_labels` labels are drawn. On a time
+# axis (categories that are years or quarters, .acl_discrete_time()) the
+# first and the last time step always carry a label, as on the continuous
+# time axes, and a label closer to the last one than the room of one label
+# (the number of categories divided by `max_labels`) is left out.
 .acl_discrete_breaks <- function(max_labels) {
   force(max_labels)
   function(limits) {
-    if (length(limits) <= max_labels) return(limits)
-    limits[seq.int(1L, length(limits), by = ceiling(length(limits) / max_labels))]
+    n <- length(limits)
+    if (n <= max_labels) return(limits)
+    keep <- seq.int(1L, n, by = ceiling(n / max_labels))
+    if (.acl_discrete_time(limits)) keep <- c(keep[n - keep >= n / max_labels - 1e-8], n)
+    limits[sort(unique(keep))]
   }
+}
+
+# TRUE for categories that are time steps: years ("2000", "Year 2000"),
+# quarters ("2000 Q1") or decimal years ("2000.5").
+.acl_discrete_time <- function(levels) {
+  levels <- as.character(levels)
+  length(levels) > 1L && !anyNA(levels) &&
+    all(grepl("^(Year )?[12][0-9]{3}( Q[1-4]|[.][0-9]+)?$", levels))
 }
 
 # Relative luminance of a color (WCAG 2), and its contrast ratio with white.
@@ -2240,10 +2700,13 @@ acl_figure_size <- function(plot, width = NULL) {
 #' @param plot A ggplot or patchwork object.
 #' @param filename Character. File to write; the extension chooses the
 #'   format, as in \code{ggplot2::ggsave()}.
-#' @param width,height Numeric or NULL. Size in inches. NULL takes the value
-#'   of \code{acl_figure_size()}.
+#' @param width,height Numeric or NULL. Size in \code{units}. NULL takes the
+#'   value of \code{acl_figure_size()}.
 #' @param dpi Numeric. Resolution of raster formats in dots per inch, 300 by
 #'   default.
+#' @param units Unit of width and height: \code{"in"} (inches, the default),
+#'   \code{"cm"}, \code{"mm"} or \code{"px"} (pixels at \code{dpi}).
+#'   Letter case does not matter.
 #' @param ... Further arguments of \code{ggplot2::ggsave()}, such as
 #'   \code{device} or \code{bg} (default \code{"white"}).
 #' @return The file name, invisibly.
@@ -2254,7 +2717,10 @@ acl_figure_size <- function(plot, width = NULL) {
 #' file <- tempfile(fileext = ".png")
 #' acl_save_plot(plot_recruitment(fit), file)
 #' file.exists(file)
-acl_save_plot <- function(plot, filename, width = NULL, height = NULL, dpi = 300, ...) {
+#'
+#' # A width in centimetres, with the matching height
+#' acl_save_plot(plot_recruitment(fit), file, width = 16, units = "cm")
+acl_save_plot <- function(plot, filename, width = NULL, height = NULL, dpi = 300, units = "in", ...) {
   if (!inherits(plot, "ggplot"))
     stop("plot must be a ggplot or patchwork object.", call. = FALSE)
   if (!is.character(filename) || length(filename) != 1L || is.na(filename) || !nzchar(filename))
@@ -2262,16 +2728,23 @@ acl_save_plot <- function(plot, filename, width = NULL, height = NULL, dpi = 300
   for (arg in c("width", "height")) {
     value <- get(arg)
     if (!is.null(value) && (!is.numeric(value) || length(value) != 1L || !is.finite(value) || value <= 0))
-      stop(arg, " must be NULL or one positive number of inches.", call. = FALSE)
+      stop(arg, " must be NULL or one positive number, in the unit set by units (inches by default).",
+           call. = FALSE)
   }
   if (!is.numeric(dpi) || length(dpi) != 1L || !is.finite(dpi) || dpi <= 0)
     stop("dpi must be one positive number.", call. = FALSE)
+  units <- .acl_match_choice(units, c("in", "cm", "mm", "px"), "units")
+  args <- list(...)
+  # Sizes in inches: those given are converted, the others come from
+  # acl_figure_size().
+  per_inch <- switch(units, `in` = 1, cm = 2.54, mm = 25.4, px = dpi)
+  if (!is.null(width)) width <- width / per_inch
+  if (!is.null(height)) height <- height / per_inch
   if (is.null(width) || is.null(height)) {
     size <- acl_figure_size(plot, width = width)
     width <- width %||% size[["width"]]
     height <- height %||% size[["height"]]
   }
-  args <- list(...)
   if (is.null(args$bg)) args$bg <- "white"
   do.call(ggplot2::ggsave, c(list(filename = filename, plot = plot, width = width, height = height,
                                   units = "in", dpi = dpi), args))
@@ -2310,11 +2783,11 @@ acl_save_plot <- function(plot, filename, width = NULL, height = NULL, dpi = 300
     dims <- ggplot2::wrap_dims(max(1L, n), parts$layout$nrow, parts$layout$ncol)
     if (dims[2L] >= 2L) return(.acl_reference_width)
     return(max(vapply(parts$plots, function(x)
-      if (inherits(x, "ggplot")) .acl_figure_width(x) else 8, numeric(1))))
+      if (inherits(x, "ggplot")) .acl_figure_width(x) else .acl_single_width, numeric(1))))
   }
   kind <- .acl_figure_kind(p)
   if (kind == "square") return(6.5)
-  if (.acl_facet_dims(.acl_default_columns(p))[["cols"]] >= 2L) .acl_reference_width else 8
+  if (.acl_facet_dims(.acl_default_columns(p))[["cols"]] >= 2L) .acl_reference_width else .acl_single_width
 }
 
 # Height in inches of a plot drawn `width` inches wide: the fixed heights of

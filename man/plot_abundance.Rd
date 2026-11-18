@@ -47,20 +47,22 @@ setting, or line_color when that is NULL.}
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
 \item{se_color}{Character or NULL. Color of the interval. NULL takes the
-color of the line, or the global se_color when that differs from the
-global line_color or when stock_color is NULL.}
+color of the line, or the global se_color when it was set to a color
+other than the band color of the palette.}
 
 \item{se_alpha}{Numeric or NULL. Transparency of the interval ribbon. NULL
 inherits the global se_alpha setting (0.3 under the default style, 0.2
 under classic).}
 
-\item{type}{Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N".}
+\item{type}{Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N".
+Letter case does not matter, so \code{"na"} gives the same as \code{"NA"} and \code{"n"} the same as \code{"N"}.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
 it from the number of panels, for example 5 columns for 15 panels and 6
 for 23.}
 
-\item{facet_scales}{Scales for facet wrap. Default is "free".}
+\item{facet_scales}{Scales for facet wrap. Default is "free".
+Letter case does not matter.}
 
 \item{return_data}{Logical. Whether to return processed data. Default is FALSE.}
 
@@ -89,7 +91,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 
@@ -98,7 +101,8 @@ lies on this axis; otherwise the breaks are chosen automatically.}
 stays above zero (an estimate of exactly zero keeps the Wald upper bound
 with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 fall below zero. NULL inherits the global \code{interval} setting (default
-"lognormal"). Point estimates are the same for both.}
+"lognormal"). Point estimates are the same for both.
+Letter case does not matter.}
 }
 \value{
 A ggplot object or a list with plot and data.

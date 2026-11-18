@@ -37,7 +37,8 @@ plot_retro(
 
 \item{rho_digits}{Integer. Decimal places for Mohn's rho. Default is 4.}
 
-\item{rho_position}{Character. Position of rho text. Default is "top_right".}
+\item{rho_position}{Character. Position of rho text. Default is "top_right".
+Letter case does not matter.}
 
 \item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
 
@@ -50,7 +51,8 @@ four panels draw thinner lines.}
 
 \item{point_shape}{Numeric. Point shape. Default is 21.}
 
-\item{facet_scales}{Character. Facet scales. Default is "free".}
+\item{facet_scales}{Character. Facet scales. Default is "free".
+Letter case does not matter.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
 it from the number of panels, for example 5 columns for 15 panels and 6
@@ -81,7 +83,8 @@ described in \code{\link{acl_theme_set}()}.}
 
 \item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
 
@@ -89,7 +92,8 @@ described in \code{\link{acl_theme_set}()}.}
 "nejm", "lancet", "jama"). NULL inherits the global palette. The colors
 of the palette are interpolated when there are more fits than colors.
 With NULL under the default global palette, the full fit is orange and
-the earlier fits are greys, darkest for the first peel.}
+the earlier fits are greys, darkest for the first peel.
+Letter case does not matter.}
 
 \item{colors}{Character vector or NULL. Explicit period colors, ordered by
 descending terminal period or named by terminal period. Overrides palette.

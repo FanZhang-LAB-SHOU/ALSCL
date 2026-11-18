@@ -52,7 +52,8 @@ observations use a linear trend; longer runs use loess with at least five neighb
 the value of the style, facets of more than
 four panels draw thinner lines.}
 
-\item{facet_scales}{Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".}
+\item{facet_scales}{Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
+Letter case does not matter.}
 
 \item{facet_ncol}{Integer or NULL. Number of columns of panels. NULL chooses
 it from the number of panels, for example 5 columns for 15 panels and 6
@@ -60,7 +61,8 @@ for 23.}
 
 \item{facet_by}{Character. "length" (default) draws one panel per length bin
 with time on the x axis; "year" draws one panel per time step with length
-on the x axis. This changes the layout, not the residual definition.}
+on the x axis. This changes the layout, not the residual definition.
+Letter case does not matter.}
 
 \item{resid_cap}{Finite positive numeric scalar or NULL. Symmetrically cap
 residuals at +/- this value; NULL disables capping.
@@ -96,7 +98,8 @@ lies on this axis; otherwise the breaks are chosen automatically. The
 automatic number of breaks decreases as the number of facet columns
 increases, and tick labels that would overprint are omitted.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 

@@ -54,11 +54,13 @@ test_that("the number of y breaks follows the number of panel rows", {
     expect_identical(max(built$layout$layout$ROW), 4L)
     counts <- vapply(built$layout$panel_params, function(x) sum(is.finite(x$y$breaks)), integer(1))
     expect_true(all(counts >= 3L & counts <= 4L), info = style)
-    # Narrow columns: at most three year labels, whole years only.
+    # Narrow columns: few year labels, whole years only, the first and the
+    # last year among them (2000, 2002, 2004 and 2005, slanted).
     years <- built$layout$panel_params[[1L]]$x$breaks
     years <- years[is.finite(years)]
-    expect_lte(length(years), 3L)
+    expect_lte(length(years), 4L)
     expect_true(all(years == round(years)))
+    expect_true(all(c(2000, 2005) %in% years))
   }
   # Breaks given in the call still win.
   p <- plot_catch(readable_fixture(), type = "CNA", x_breaks = c(2001, 2003, 2005))
@@ -72,7 +74,9 @@ test_that("tick labels are short numbers", {
   expect_identical(labels(c(-1e-17, 0.05, 0.1)), c("0", "0.05", "0.1"))
   expect_identical(labels(c(0, 25000, 50000)), c("0", "25,000", "50,000"))
   expect_identical(labels(c(2000, 2010), big.mark = ""), c("2000", "2010"))
-  expect_identical(labels(c(0, 1e-9, 2e-9)), c("0", "1e-09", "2e-09"))
+  # Below 0.0001 a power of ten with a raised exponent (a plotmath expression).
+  expect_identical(vapply(labels(c(0, 1e-9, 2e-9)), function(e) paste(deparse(e), collapse = ""), ""),
+                   c("0", "1 %*% 10^-9", "2 %*% 10^-9"))
   expect_identical(labels(c(NA, 1)), c(NA, "1"))
   p <- plot_catch(readable_fixture(), type = "CNA")
   y <- p$scales$get_scales("y")

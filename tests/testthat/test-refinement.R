@@ -242,6 +242,6 @@ test_that("shared F fits, plots, direct calls and socket starts work for both mo
     expect_equal(parallel$opt$par, serial$opt$par, tolerance = 1e-8)
     expect_equal(parallel$report, serial$report, tolerance = 1e-8)
     expect_error(fun(args, polish = NA), "polish")
-    expect_error(fun(args, F_structure = "bad"), "arg")
+    expect_error(fun(args, F_structure = "bad"), "F_structure must be one of")
   }
 })

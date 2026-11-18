@@ -6,6 +6,7 @@
 #'   Time coordinates and quantity values must be numeric vectors, not matrices
 #'   or arrays; grouped quantities must be aggregated explicitly before calling.
 #' @param quantities Time-series quantities to assess, from SSB, Rec, B, N, CN, CB.
+#'   Letter case does not matter, so \code{"rec"} gives the same as \code{"Rec"}.
 #' @param conf_level Nominal confidence level of the intervals based on
 #'   reported standard errors, strictly between zero and one. The returned
 #'   coverage is the observed fraction of usable intervals containing truth.
@@ -14,6 +15,7 @@
 #'   in [extract_estimates()], the plots of the package and [self_test()].
 #'   `"wald"` is `estimate +/- z * SE`, the default before version 2.5.0, and
 #'   gives the former bounds and coverage.
+#'   Letter case does not matter.
 #' @return A list with summary (pooled over replicates and time by quantity),
 #'   replicates (numerical status, elapsed seconds and errors), and estimates
 #'   (every replicate/time/truth/estimate pair, including failed or invalid fits).
@@ -66,15 +68,18 @@
 summarize_simulations <- function(fits, truth, quantities = c("SSB", "Rec"), conf_level = .95,
                                   interval = c("lognormal", "wald")) {
   z <- .acl_conf_level(conf_level)
-  interval_form <- match.arg(interval)
+  interval_form <- .acl_match_choice(interval, partial = TRUE)
   named <- function(x) is.list(x) && !is.data.frame(x) && length(x) &&
     !is.null(names(x)) && !anyNA(names(x)) && all(nzchar(names(x))) && !anyDuplicated(names(x))
   numeric_vector <- function(x) is.numeric(x) && !is.complex(x) && is.null(dim(x))
   if (!named(fits) || !named(truth) || !setequal(names(fits), names(truth)))
     stop("fits and truth must be nonempty lists with identical unique replicate names.", call. = FALSE)
+  series <- c("SSB", "Rec", "B", "N", "CN", "CB")
+  quantities <- .acl_canonical(quantities, series)
   if (!is.character(quantities) || !length(quantities) || anyNA(quantities) ||
-      anyDuplicated(quantities) || any(!quantities %in% c("SSB", "Rec", "B", "N", "CN", "CB")))
-    stop("quantities must contain distinct time-series names: SSB, Rec, B, N, CN or CB.", call. = FALSE)
+      anyDuplicated(quantities) || any(!quantities %in% series))
+    stop("quantities must contain distinct time-series names: SSB, Rec, B, N, CN or CB, in any letter case.",
+         call. = FALSE)
   truth <- truth[names(fits)]
   statuses <- rows <- vector("list", length(fits))
   for (i in seq_along(fits)) {

@@ -55,9 +55,9 @@ line_color when that is NULL.}
 
 \item{line_type}{Character, the line type.}
 
-\item{se_color}{Character or NULL. Color of the error bars. NULL takes
-the color of the line, or the global se_color when that differs from the
-global line_color or when the quantity has no color of its own.}
+\item{se_color}{Character or NULL. Color of the error bars. NULL takes the
+color of the line, or the global se_color when it was set to a color
+other than the band color of the palette.}
 
 \item{se_width}{Numeric or NULL. Width of the error-bar caps in years;
 does not change the standard errors or interval lengths. NULL (default)
@@ -67,12 +67,14 @@ uses a quarter of the time step.}
 it from the number of panels, for example 5 columns for 15 panels and 6
 for 23.}
 
-\item{facet_scales}{Scales for facet wrap. Default is "free".}
+\item{facet_scales}{Scales for facet wrap. Default is "free".
+Letter case does not matter.}
 
 \item{log}{Logical. TRUE plots log process deviations; FALSE plots the corresponding
 ratios to the process median, obtained by exponentiating the deviations.}
 
-\item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.}
+\item{type}{Character. "R" for recruitment deviation, "F" for fishing mortality deviation.
+Letter case does not matter, so \code{"f"} gives the same as \code{"F"}.}
 
 \item{title}{Character, FALSE or NULL. NULL (default) draws the default
 title, FALSE (or NA or "") draws no title, and a character string is
@@ -99,7 +101,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

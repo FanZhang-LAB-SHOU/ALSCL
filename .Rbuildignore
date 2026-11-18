@@ -14,7 +14,6 @@
 ^website$
 ^_site$
 ^\.venv-docs$
-^man/figures$
 ^Rplots\.pdf$
 ^simulation_examples$
 ^my_cases$

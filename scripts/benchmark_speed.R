@@ -70,6 +70,7 @@ if (length(args) && args[1] == "--child") {
 }
 
 # ---- Driver ------------------------------------------------------------------
+source("scripts/plot_helpers.R")  # write_decimal_csv()
 original <- normalizePath(args[1], mustWork = TRUE)
 repo <- normalizePath(".", mustWork = TRUE)
 out <- if (length(args) > 1) args[2] else "docs/results/speed"
@@ -135,7 +136,7 @@ for (rep in seq_len(repeats)) for (i in seq_len(nrow(cases))) {
       objective = f$objective, convergence = f$convergence,
       pdHess = f$pdHess, max_gradient = f$max_gradient, n_fixed = f$n_fixed,
       n_random = f$n_random, n_report = f$n_report)
-    utils::write.csv(do.call(rbind, runs), file.path(out, "runs.csv"), row.names = FALSE)
+    write_decimal_csv(do.call(rbind, runs), file.path(out, "runs.csv"), row.names = FALSE)
   }
 }
 runs <- do.call(rbind, runs)
@@ -164,7 +165,7 @@ summary <- do.call(rbind, lapply(seq_len(nrow(cases)), function(i) do.call(rbind
     std_error_rel_diff = rel(f$est_std[, 2], ref$est_std[, 2]),
     SSB_rel_diff = rel(f$SSB, ref$SSB))
 }))))
-utils::write.csv(summary, file.path(out, "summary.csv"), row.names = FALSE)
+write_decimal_csv(summary, file.path(out, "summary.csv"), row.names = FALSE)
 print(summary, digits = 3)
 
 # Every reported estimate and standard error of the ALSCL fit to YTF_example
@@ -174,7 +175,8 @@ print(summary, digits = 3)
 # files are deleted, so the table always belongs to the timings of the same run.
 agreement_fit <- function(config) fits[[paste("YTF", "ALSCL", config, 1, sep = "_")]]$est_std
 reference <- agreement_fit("original")
-exact <- function(v) sprintf("%.17g", v)
+# 17 significant digits in decimals, without scientific notation.
+exact <- function(v) formatC(v, digits = 17, format = "fg")
 agreement <- data.frame(quantity = rownames(reference),
   original_estimate = exact(reference[, 1]), original_std_error = exact(reference[, 2]))
 for (config in c("cppad_par", "tmbad_par")) {
@@ -183,5 +185,5 @@ for (config in c("cppad_par", "tmbad_par")) {
   agreement[[paste0(config, "_estimate_diff")]] <- exact(current[, 1] - reference[, 1])
   agreement[[paste0(config, "_std_error_diff")]] <- exact(current[, 2] - reference[, 2])
 }
-utils::write.csv(agreement, file.path(out, "agreement_YTF_ALSCL.csv"), row.names = FALSE, quote = FALSE)
+write_decimal_csv(agreement, file.path(out, "agreement_YTF_ALSCL.csv"), row.names = FALSE, quote = FALSE)
 unlink(work, recursive = TRUE)

@@ -16,9 +16,9 @@
 #' @param line_type Character. Specifies the type of the line in the plot. Default is "solid".
 #' @param se Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE.
 #' @param se_color Character or NULL. Color of the interval. NULL takes the
-#'   color of the line, or the global se_color when that differs from the
-#'   global line_color or when recruitment_color is NULL. Error bars on bars
-#'   are dark grey unless se_color is given.
+#'   color of the line, or the global se_color when it was set to a color
+#'   other than the band color of the palette. Error bars on bars are dark
+#'   grey unless se_color is given.
 #' @param se_alpha Numeric or NULL. Transparency of the interval ribbon. NULL
 #'   inherits the global se_alpha setting (0.3 under the default style, 0.2
 #'   under classic). Error bars are opaque unless se_alpha is given.
@@ -28,15 +28,18 @@
 #'   with the lower bound at zero). \code{"wald"} is \code{estimate +/- 1.96 * SE} and can
 #'   fall below zero. NULL inherits the global \code{interval} setting (default
 #'   "lognormal"). Point estimates are the same for both.
+#'   Letter case does not matter.
 #' @param se_type Character or NULL. Form of the interval: "ribbon" (shaded
 #'   area) or "errorbar" (error bars). NULL (default) draws error bars on bars
 #'   and a ribbon around a line.
+#'   Letter case does not matter.
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
 #' @param geom Character or NULL. Form of recruitment. "bar" draws bars 0.8
 #'   of a time step wide, with error bars when \code{se = TRUE}. "line" draws
 #'   a line, with a ribbon when \code{se = TRUE}. NULL (default) follows the
 #'   global bars setting: bars under the default style and a line under
 #'   "classic". \code{se_type} changes the form of the interval.
+#'   Letter case does not matter.
 #'
 #' @param title Character, FALSE or NULL. NULL (default) draws the default
 #'   title, FALSE (or NA or "") draws no title, and a character string is
@@ -54,6 +57,7 @@
 #'   NULL inherits the global x_breaks setting when at least one of its values
 #'   lies on this axis; otherwise the breaks are chosen automatically.
 #' @param base_theme Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+#'   Letter case does not matter.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.
 #' @details With se = TRUE, the standard-error table must have one finite
 #'   estimate and finite nonnegative standard error per model time step.
@@ -97,7 +101,7 @@ plot_recruitment <- function(model_result, line_size = NULL, line_color = NULL, 
   quantity <- .acl_plot_population_data(model_result, "Rec", "Rec", se)
   # A ribbon suits a line and error bars suit bars.
   se_type <- if (is.null(se_type)) (if (form == "bar") "errorbar" else "ribbon") else
-    match.arg(se_type, c("ribbon", "errorbar"))
+    .acl_match_choice(se_type, c("ribbon", "errorbar"), "se_type", partial = TRUE)
   # Extract the validated recruitment data.
   recruitment <- quantity$value
 

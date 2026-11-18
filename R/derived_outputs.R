@@ -126,6 +126,7 @@
 #' @param basis One or both of `"survey"` (numbers at length multiplied by
 #'   survey catchability at length) and `"population"` (numbers at length in
 #'   the population). The default returns both.
+#'   Letter case does not matter.
 #' @return A data frame with one row per basis, time step and age class:
 #'   basis, year (the time step, as in `fit$year`), age (the age class, as in
 #'   `fit$age`; the oldest age class is a plus group), mean_length and
@@ -179,7 +180,7 @@
 #' }
 #' @export
 length_at_age <- function(fit, basis = c("survey", "population")) {
-  basis <- match.arg(basis, several.ok = TRUE)
+  basis <- .acl_match_choice(basis, several = TRUE, partial = TRUE)
   if (anyDuplicated(basis)) stop("basis must not repeat a value.", call. = FALSE)
   info <- .acl_derived_fit(fit)
   A <- length(info$ages); Y <- length(info$years)

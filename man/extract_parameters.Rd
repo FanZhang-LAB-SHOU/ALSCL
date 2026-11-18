@@ -9,7 +9,8 @@ extract_parameters(fit, scale = c("natural", "internal"), conf_level = 0.95)
 \arguments{
 \item{fit}{A fitted ACL or ALSCL result. Older lists remain supported.}
 
-\item{scale}{Natural scale (default), or the internal optimizer scale.}
+\item{scale}{Natural scale (default), or the internal optimizer scale.
+Letter case does not matter.}
 
 \item{conf_level}{Nominal confidence level of approximate Wald intervals,
 strictly between zero and one.}

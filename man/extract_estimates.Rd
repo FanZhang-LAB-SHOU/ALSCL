@@ -23,7 +23,8 @@ the label "NA" loses that label when it is written to a CSV file and read
 back with the default settings of \code{read.csv()}, which read "NA" as a
 missing value (use N_at_age, or \code{na.strings = ""} when reading).
 In the fitted report the matrix is \code{fit$report[["NA"]]}; the
-double brackets are needed because NA is a reserved word in R.}
+double brackets are needed because NA is a reserved word in R.
+Letter case does not matter, so \code{"ssb"} gives the same as \code{"SSB"} and \code{"n_at_age"} the same as \code{"N_at_age"}.}
 
 \item{conf_level}{Nominal confidence level of the approximate intervals
 on the reported scale, strictly between zero and one.}
@@ -31,15 +32,19 @@ on the reported scale, strictly between zero and one.}
 \item{interval}{Form of the interval. \code{"lognormal"} (default) is
 \verb{exp(log(estimate) +/- z * SE / estimate)}, as in the plots of the
 package and in \code{\link[=self_test]{self_test()}}. \code{"wald"} is \verb{estimate +/- z * SE}, the
-default before version 2.5.0, and gives the former bounds.}
+default before version 2.5.0, and gives the former bounds.
+Letter case does not matter.}
 }
 \value{
 A long data frame with quantity, report_name, year, age, length,
 length_label, estimate, std_error, conf_low, conf_high, numerical_ok and
 extrapolated. Unavailable SEs remain NA. No averaging of F or annualization
 is performed. numerical_ok is the numerical screen of the fit, the same
-verdict that summary() reports. extrapolated is TRUE for rows that depend
-on the fishing mortality rate (F) of the terminal period (see Details).
+verdict that summary() reports. extrapolated is TRUE for rows that are
+predictions of the model rather than estimates that the survey informs:
+rows that depend on the fishing mortality rate (F) of the terminal
+period, and every row after the last period with a survey observation
+(see Details).
 }
 \description{
 Extract population estimates with explicit time and group coordinates
@@ -63,9 +68,11 @@ reflects the F process, not data. Terminal-period catch in number (CN,
 CNA, CNL, CNLA) and catch in weight (CB, CBA, CBL, CBLA) are the product of
 an abundance that the data inform and this predicted F. These rows have
 extrapolated = TRUE, as do the terminal-period rows of ALSCL F at age
-(FA). When the last periods have no positive survey observation, F is
-a prediction from the last period with an observation onwards, and those
-periods are marked as well.
+(FA). When the last periods have no positive survey observation, F and
+catch are predictions from the last period with an observation onwards,
+and every other quantity (SSB, B, N, Rec and the quantities at age and at
+length) is a prediction in the periods after it; all these rows have
+extrapolated = TRUE.
 
 For ALSCL, FA covers every age, including the plus group, and every
 period. The fitted report (\code{fit$report$FA}) holds the ages before

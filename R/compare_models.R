@@ -145,6 +145,18 @@ compare_models <- function(model1, model2, data.CatL,
   bic2 <- npar2 * log(n_obs) + 2 * obj2
   valid_elapsed <- function(value) is.numeric(value) && length(value) == 1L &&
     is.finite(value) && value > 0
+  # The optimizer code and its message in one cell, such as "code 0,
+  # relative convergence"; the number that nlminb appends to its message is
+  # left out, because it is not an error code.
+  convergence <- function(status, model) {
+    message <- as.character(model$converge)[1L]
+    message <- if (length(message) && !is.na(message)) sub("\\s*\\([0-9]+\\)\\s*$", "", message)
+    paste0("code ", format(status$convergence_code), if (length(message) && nzchar(message)) paste0(", ", message))
+  }
+  gradient <- function(model) {
+    value <- .acl_max_gradient(model)
+    if (length(value) == 1L && is.finite(value)) .acl_signif_text(value) else NA_character_
+  }
   elapsed_ratio <- if (valid_elapsed(model1$elapsed) && valid_elapsed(model2$elapsed))
     round(model2$elapsed / model1$elapsed, 4) else NA_real_
 
@@ -155,7 +167,7 @@ compare_models <- function(model1, model2, data.CatL,
                "Max |Gradient|", "Run Time Ratio"),
     Model1 = as.character(c(
       model1_name,
-      as.character(model1$converge)[1],
+      convergence(fit_diagnostics[1L, ], model1),
       as.character(model1$bound_hit)[1],
       round(obj1[1], 2),
       npar1,
@@ -164,12 +176,12 @@ compare_models <- function(model1, model2, data.CatL,
       round(bic1, 2),
       "0 (ref)",
       "0 (ref)",
-      round(.acl_max_gradient(model1), 6),
+      gradient(model1),
       if (valid_elapsed(model1$elapsed)) "1.0 (ref)" else NA_character_
     )),
     Model2 = as.character(c(
       model2_name,
-      as.character(model2$converge)[1],
+      convergence(fit_diagnostics[2L, ], model2),
       as.character(model2$bound_hit)[1],
       round(obj2[1], 2),
       npar2,
@@ -178,7 +190,7 @@ compare_models <- function(model1, model2, data.CatL,
       round(bic2, 2),
       round(aic2 - aic1, 2),
       round(bic2 - bic1, 2),
-      round(.acl_max_gradient(model2), 6),
+      gradient(model2),
       elapsed_ratio
     )),
     stringsAsFactors = FALSE
@@ -255,8 +267,9 @@ compare_models <- function(model1, model2, data.CatL,
   cat("\n--- Growth and observation error parameters, by model ---\n")
   for (name in c(model1_name, model2_name)) {
     cat(name, ":\n", sep = "")
-    print(growth_df[growth_df$Model == name, c("Parameter", "Estimate", "Meaning")],
-          row.names = FALSE, right = FALSE)
+    rows <- growth_df[growth_df$Model == name, c("Parameter", "Estimate", "Meaning")]
+    rows$Estimate <- .acl_signif_text(rows$Estimate)
+    .acl_cat_table(rows, wrap = 3L, right = 2L)
   }
   cat(.acl_growth_note(model1, model2), "\n", sep = "")
 
@@ -266,10 +279,10 @@ compare_models <- function(model1, model2, data.CatL,
   } else {
     print(data.frame(Age = length_df$Age, round(length_df[c(model1_name, model2_name)], 2),
                      check.names = FALSE), row.names = FALSE)
-    cat(if (identical(length_df$Basis[1L], "survey"))
+    .acl_cat_wrapped(paste0(if (identical(length_df$Basis[1L], "survey"))
       "As the survey sees it (numbers at length multiplied by survey catchability at length)" else
       "In the population (survey catchability is unavailable for at least one fit)",
-      "; mean over the time steps. See ?length_at_age.\n", sep = "")
+      "; mean over the time steps. See ?length_at_age."), exdent = 0L)
   }
 
   cat("\n--- Goodness-of-Fit ---\n")
@@ -277,34 +290,40 @@ compare_models <- function(model1, model2, data.CatL,
 
   cat("\n--- Time-Series Agreement ---\n")
   print(corr_df, row.names = FALSE)
-  cat("CN and CB (catch in numbers and in weight) are compared as relative catch: a fit to survey data\n",
-      "alone has no information on the absolute level of catch, so only the correlation is given.\n",
-      "See ?relative_catch.\n", sep = "")
+  .acl_cat_wrapped(paste("CN and CB (catch in numbers and in weight) are compared as relative catch: a fit to",
+                         "survey data alone has no information on the absolute level of catch, so only the",
+                         "correlation is given. See ?relative_catch."), exdent = 0L)
 
-  cat("\n--- Numerical status ---\n")
-  print(fit_diagnostics, row.names = FALSE)
+  cat("\n--- Numerical checks ---\n")
+  for (i in seq_len(nrow(fit_diagnostics))) {
+    status <- fit_diagnostics[i, ]
+    .acl_cat_wrapped(paste0(status$Model, ": ", .acl_checks_text(status), "; optimizer code ",
+      format(status$convergence_code), ", maximum absolute gradient ", .acl_signif_text(status$max_abs_gradient),
+      ", positive-definite Hessian ", format(status$pdHess), ", parameter at an optimizer bound ",
+      format(status$bound_hit), "."))
+  }
   # Report raw information criteria even when a fit is unsuitable for inference,
   # but never present an automatic winner for unverified or failed fits.
   delta_aic <- aic2 - aic1
   aic_threshold <- 2
   preferred <- NULL
   reason <- NA_character_
-  cat(sprintf("\nDelta AIC = %.2f ", delta_aic))
   if (!eligible || !is.finite(delta_aic)) {
     reason <- if (!eligible)
       "data not verified or a fit failed the numerical screen; see issues" else
       "AIC difference unavailable"
-    cat("(automatic preference withheld; inspect diagnostics)\n")
+    verdict <- "automatic preference withheld; inspect diagnostics"
   } else if (abs(delta_aic) < aic_threshold) {
     reason <- sprintf("absolute AIC difference below %g", aic_threshold)
-    cat("(little separation in AIC; this does not establish model equivalence)\n")
+    verdict <- "little separation in AIC; this does not establish model equivalence"
   } else if (delta_aic < 0) {
     preferred <- model2_name
-    cat(sprintf("(%s has lower AIC among these candidates)\n", model2_name))
+    verdict <- sprintf("%s has lower AIC among these candidates", model2_name)
   } else {
     preferred <- model1_name
-    cat(sprintf("(%s has lower AIC among these candidates)\n", model1_name))
+    verdict <- sprintf("%s has lower AIC among these candidates", model1_name)
   }
+  .acl_cat_wrapped(sprintf("Delta AIC = %.2f (%s)", delta_aic, verdict), before = "\n", exdent = 0L)
 
   invisible(list(
     summary     = summary_df,

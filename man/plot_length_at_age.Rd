@@ -50,7 +50,8 @@ and \code{upper}, drawn as the bars of an interval. The output of
 population. \code{"survey"}: mean length at age in the survey catch, that is,
 with numbers at length multiplied by the survey catchability at length
 used in the fit. Use \code{"survey"} to compare with age readings of fish
-caught in the survey.}
+caught in the survey.
+Letter case does not matter.}
 
 \item{years}{NULL (all time steps) or the time steps to draw, as values of
 \code{fit$year}.}
@@ -59,7 +60,8 @@ caught in the survey.}
 \code{fit$age}.}
 
 \item{facet_by}{\code{"age"} (default): one panel per age class. \code{"none"}: one
-panel with one line per age class, colored by age class.}
+panel with one line per age class, colored by age class.
+Letter case does not matter.}
 
 \item{line_size}{Numeric or NULL. NULL inherits the global line_size setting.}
 
@@ -83,7 +85,8 @@ and the caption. Default is "Age readings".}
 it from the number of panels, for example 5 columns for 15 panels and 6
 for 23.}
 
-\item{facet_scales}{Character. Scales for facet wrap. Default is "free".}
+\item{facet_scales}{Character. Scales for facet wrap. Default is "free".
+Letter case does not matter.}
 
 \item{return_data}{Logical. Whether to return the plotted data with the
 plot. Default is FALSE.}
@@ -113,7 +116,8 @@ described in \code{\link{acl_theme_set}()}.}
 NULL inherits the global x_breaks setting when at least one of its values
 lies on this axis; otherwise the breaks are chosen automatically.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

@@ -57,7 +57,8 @@ heatmap cells. NULL inherits the global x_breaks setting when all of its
 values are such positions; a global setting meant for another axis, for
 example calendar years, is ignored. Otherwise every age class is labelled.}
 
-\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.}
+\item{base_theme}{Character or NULL. Base ggplot2 theme name (e.g. "theme_bw"). NULL = global setting.
+Letter case does not matter.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment: 0 = left, 0.5 = center, 1 = right. NULL = global setting.}
 }

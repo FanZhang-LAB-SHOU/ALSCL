@@ -1,76 +1,63 @@
-# Refresh legacy help assets and the own-data figures from saved assessments.
-# First run scripts/ytf_workflow.R, which saves its fits to output/ytf-guide/fits.rds,
-# and scripts/fit_own_data_example.R, which saves output/own-data-example/assessment_summary.rds.
-# Rscript scripts/refresh_manual_figures.R [ytf_fits.rds] [own_assessment.rds]
+# Figures and records of the complete own-data example, the article
+# website/content/{en,zh}/articles/case-fit-survey.md, from the folder that
+# scripts/fit_own_data_example.R writes (output/own-data-example). Run that
+# script first with the code of this checkout:
+#   Rscript -e 'pkgload::load_all(); source("scripts/fit_own_data_example.R", encoding = "UTF-8")'
+# Then, from the repository root:
+#   Rscript scripts/refresh_manual_figures.R [folder]                 # figures and checks
+#   Rscript scripts/refresh_manual_figures.R retrospective [folder]   # also the retrospective
+# The two figures in docs/figures/own-data-example are redrawn from the saved
+# ALSCL fit in the default style, as the example script draws them, and
+# docs/results/own-data-example-checks.csv records the numerical checks of
+# both fits. With "retrospective", the script also refits the retrospective
+# analyses of section 7 of the article (the full series and three peels of each
+# model) and writes their checks to docs/results/own-data-retrospective.csv.
+# The four ALSCL fits take most of the time, several minutes each on one core;
+# ALSCL_RETRO_CORES sets the number of worker processes (default 1).
 # The figures and tables must come from the code of this checkout. The guard
 # loads the checkout with pkgload, or stops when the installed package has
 # different functions, templates or data. A version number cannot show that.
 source("scripts/checkout_guard.R")
 use_checkout_alscl()
-library(ggplot2)
-library(patchwork)
+source("scripts/plot_helpers.R")
 args <- commandArgs(TRUE)
-ytffile <- if (length(args)) args[1] else 'output/ytf-guide/fits.rds'
-ownfile <- if (length(args)>1) args[2] else 'output/own-data-example/assessment_summary.rds'
-for (needed in list(c(ytffile, 'scripts/ytf_workflow.R'), c(ownfile, 'scripts/fit_own_data_example.R')))
-  if (!file.exists(needed[1])) stop('Fit archive not found: ', needed[1], '. Run ', needed[2],
-                                    ' first, or give the path as an argument.', call. = FALSE)
-z <- readRDS(ytffile); a <- z$acl; b <- z$alscl
-acl_theme_reset()
-acl_theme_set(font_family='sans',title_size=12,
-              axis_title_size=10,axis_text_size=9,strip_text_size=9)
-source('scripts/plot_helpers.R')
-# 300 dpi; the size comes from acl_figure_size() unless width or height is given.
-save_plot <- function(path,p,width=NULL,height=NULL) {
-  save_grid_free_plot(path,p,width=width,height=height)
-  message('REFRESH ',path)
+retrospective <- "retrospective" %in% args
+args <- setdiff(args, "retrospective")
+dir <- if (length(args)) args[1] else file.path("output", "own-data-example")
+archive <- file.path(dir, "assessment_summary.rds")
+if (!file.exists(archive))
+  stop("Fit archive not found: ", archive, ". Run scripts/fit_own_data_example.R first, ",
+       "or give the folder it wrote as an argument.", call. = FALSE)
+fits <- readRDS(archive)
+own <- fits$ALSCL
+# The default style, which the example script uses.
+suppressMessages(acl_theme_reset())
+figures <- file.path("docs", "figures", "own-data-example")
+dir.create(figures, recursive = TRUE, showWarnings = FALSE)
+# 300 dpi in the size of acl_figure_size(), as in the example script.
+save_grid_free_plot(file.path(figures, "residuals.png"),
+                    plot_residuals(own, facet_by = "year", x_breaks = pretty(own$len_mid, n = 4)))
+save_grid_free_plot(file.path(figures, "SSB.png"), plot_SSB(own, se = isTRUE(own$pdHess)))
+# Numerical checks of both fits and how their standard errors were computed.
+checks <- do.call(rbind, lapply(c("ACL", "ALSCL"), function(model) {
+  f <- fits[[model]]
+  data.frame(model = model, free_scalars = length(f$opt$par), convergence = f$convergence_code,
+             max_gradient = f$max_abs_gradient, pdHess = isTRUE(f$pdHess),
+             bound_hit = isTRUE(f$bound_hit), sd_method = f$sd_info$method,
+             sd_cores = f$sd_info$cores)
+}))
+print(checks)
+write_decimal_csv(checks, file.path("docs", "results", "own-data-example-checks.csv"), row.names = FALSE)
+if (retrospective) {
+  x <- readRDS(file.path(dir, "inputs_x.rds"))
+  ncores <- as.integer(Sys.getenv("ALSCL_RETRO_CORES", "1"))
+  # The calls of section 7 of the article; ncores changes only how the peels are run.
+  ra <- retro_acl(x, nyear = 3, train_times = 2, silent = TRUE, ncores = ncores)
+  rb <- retro_alscl(x, nyear = 3, train_times = 2, silent = TRUE, ncores = ncores)
+  record <- rbind(data.frame(model = "ACL", ra$fit_diagnostics),
+                  data.frame(model = "ALSCL", rb$fit_diagnostics))
+  print(record[c("model", "Peel", "RetrospectiveYear", "convergence_code", "max_abs_gradient",
+                 "numerical_ok", "optimizer_codes")])
+  write_decimal_csv(record, file.path("docs", "results", "own-data-retrospective.csv"), row.names = FALSE)
 }
-# These old filenames are retained for bookmarks and previously written help.
-# Their figures now reuse the checked current YTF gallery.
-aliases <- c(
- plot_CatL_length='CatL_length_FALSE',plot_CatL_year='CatL_year_FALSE',
- plot_SBL='plot_SSB_SBL',plot_SSB='plot_SSB_SSB',plot_SSB_Rec='SSB_Rec',
- plot_VB='VB',plot_abundance_N='plot_abundance_N',plot_abundance_NA='plot_abundance_NA',
- plot_abundance_NL='plot_abundance_NL',plot_biomass_B='plot_biomass_B',
- plot_biomass_BL='plot_biomass_BL',plot_catch_CN='plot_catch_CN',plot_catch_CNA='plot_catch_CNA',
- plot_fishing_mortality_age='F_ALSCL_age',plot_fishing_mortality_year='F_ALSCL_year',
- plot_pla='pla',plot_recruitment='recruitment',plot_residuals_length='residuals_length',
- plot_residuals_year='residuals_year',plot_ridges='ridges',
- readme_alscl_catl='CatL_year_TRUE',readme_alscl_recruitment='recruitment',
- readme_alscl_residuals='residuals_year',readme_alscl_ridges='ridges',
- readme_alscl_ssb='plot_SSB_SSB',readme_catl_fit='CatL_year_TRUE',
- readme_compare_F='compare_F',readme_compare_growth='compare_growth',
- readme_compare_metrics='compare_metrics',readme_compare_residuals='compare_residuals',
- readme_compare_selectivity='compare_selectivity',readme_compare_ts='compare_ts',
- readme_residuals='residuals_year')
-for (name in names(aliases)) stopifnot(file.copy(
-  file.path('docs/figures/ytf',paste0(aliases[[name]],'.png')),
-  file.path('man/figures',paste0(name,'.png')),overwrite=TRUE))
-acl_plots <- list(
- readme_acl_catl=plot_CatL(a,facet_by='year',exp_transform=TRUE),
- readme_acl_pla=plot_pla(a),readme_acl_recruitment=plot_recruitment(a,se=TRUE),
- readme_acl_residuals=plot_residuals(a,facet_by='year'),
- readme_acl_ridges=plot_ridges(a),readme_acl_ssb=plot_SSB(a,se=TRUE),
- readme_acl_vb=plot_VB(a,age_range=c(1,15),se=TRUE))
-# The age-length matrix gets the height of its gallery copy; the others take acl_figure_size().
-for (name in names(acl_plots)) save_plot(file.path('man/figures',paste0(name,'.png')),acl_plots[[name]],
-                                         height=if (name=='readme_acl_pla') 6.5 else NULL)
-heatmaps <- plot_compare_F(a,b)
-for (i in 1:2) {
-  panel <- heatmaps
-  panel$data <- subset(heatmaps$data,Model==c('ACL','ALSCL')[i])
-  panel <- panel + labs(y=if(i==1) 'Age (years)' else 'Length bin',
-                        title=paste('Fishing mortality rate of',c('ACL','ALSCL')[i])) +
-    # The title names the model; the one remaining panel needs no strip.
-    theme(strip.text=element_blank())
-  save_plot(file.path('man/figures',paste0('readme_',c('acl','alscl')[i],'_F_heatmap.png')),panel)
-}
-expected <- paste0(c(names(aliases),names(acl_plots),'readme_acl_F_heatmap','readme_alscl_F_heatmap'),'.png')
-actual <- setdiff(list.files('man/figures',pattern='\\.png$'),'ACLlogo.png')
-stopifnot(setequal(expected,actual))
-# Preserve the fitted estimates; only create fresh plots with the current theme.
-own <- readRDS(ownfile)$ALSCL
-save_plot('docs/figures/own-data-example/residuals.png',
-          plot_residuals(own,facet_by='year',x_breaks=pretty(own$len_mid,n=4)))
-save_plot('docs/figures/own-data-example/SSB.png',plot_SSB(own,se=isTRUE(own$pdHess)))
-cat('Refreshed',length(expected),'legacy help figures and two own-data figures.\n')
+cat("Wrote the own-data figures and checks", if (retrospective) "and the retrospective record", "\n")

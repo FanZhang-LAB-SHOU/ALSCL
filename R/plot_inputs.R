@@ -32,11 +32,15 @@ utils::globalVariables(c("Value", "AgeClass", "Curve", "Year", "Age", "Length"))
        call. = FALSE)
 }
 
-# Time steps written as ranges, for example "2000-2004, 2010".
-.acl_time_ranges <- function(times, step = NULL) {
+# Time steps written as ranges, for example "2000-2004, 2010". A range holds
+# consecutive time steps of the fit, `spacing` years apart (the time step of
+# the fit), so that time steps in alternate years are not read as a range;
+# without a usable spacing it is the smallest spacing of `times`.
+.acl_time_ranges <- function(times, step = NULL, spacing = step) {
   labels <- .acl_time_labels(times, step, prefix = FALSE)
   if (length(times) == 1L) return(labels)
-  spacing <- min(diff(times))
+  if (!is.numeric(spacing) || length(spacing) != 1L || !is.finite(spacing) || spacing <= 0)
+    spacing <- min(diff(times))
   run <- cumsum(c(TRUE, abs(diff(times) - spacing) > 1e-8 * max(1, spacing)))
   paste(vapply(split(labels, run), function(x)
     if (length(x) == 1L) x else paste0(x[1L], "-", x[length(x)]), character(1)), collapse = ", ")
@@ -59,6 +63,7 @@ utils::globalVariables(c("Value", "AgeClass", "Curve", "Year", "Age", "Length"))
 #' @param facet_ncol Integer or NULL. Number of columns of panels of M by age
 #'   class and time step. NULL chooses it from the number of panels.
 #' @param facet_scales Character. Scales for facet wrap. Default is "free".
+#'   Letter case does not matter.
 #' @param return_data Logical. Whether to return the plotted data with the
 #'   plot. Default is FALSE.
 #' @inheritParams plot_SSB
@@ -143,7 +148,7 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
                        AgeClass = factor(rep(labels, times = length(times)), levels = labels),
                        Value = as.numeric(input$M))
     p <- ggplot2::ggplot(data, ggplot2::aes(x = Year, y = Value)) + line +
-      ggplot2::facet_wrap(~AgeClass, ncol = facet_ncol, scales = facet_scales)
+      ggplot2::facet_wrap(~AgeClass, ncol = facet_ncol, scales = .acl_facet_scales(facet_scales))
     x_key <- "year"; form <- "By age class and time step"
     scale_x <- .acl_scale_x(x_breaks, n_breaks = .acl_facet_n_breaks(length(ages), facet_ncol, 5),
                             values = times, time = TRUE)
@@ -174,6 +179,7 @@ plot_natural_mortality <- function(fit, line_size = NULL, line_color = NULL, lin
 #'   the midpoints of the length bins. `"age"`: the survey catchability
 #'   multiplier by age class (`survey_q_age`), against age; an error for a
 #'   fit without this input.
+#'   Letter case does not matter.
 #' @param line_size Numeric or NULL. NULL inherits the global line_size setting.
 #' @param line_color Character or NULL. NULL inherits the global line_color
 #'   setting. When catchability at length changes over time, the lines take
@@ -219,7 +225,7 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
                                      font_family = NULL, title_size = NULL, axis_title_size = NULL,
                                      axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL,
                                      x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
-  type <- match.arg(type)
+  type <- .acl_match_choice(type, partial = TRUE)
   .acl_check_flag(return_data, "return_data")
   if (is.null(line_size)) line_size <- .acl_auto_size()
   if (is.null(line_color)) line_color <- acl_theme("line_color")
@@ -261,8 +267,10 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
       curve <- attr(q, "curve")
       if (length(curve) != length(times))
         stop("Survey catchability by time step does not match the time steps of fit.", call. = FALSE)
+      # Runs of consecutive time steps of the fit, not of each curve.
+      spacing <- if (is.numeric(fit$growth_step)) fit$growth_step else .acl_series_step(times)
       labels <- vapply(seq_len(ncol(q)), function(i)
-        .acl_time_ranges(times[curve == i], fit$growth_step), character(1))
+        .acl_time_ranges(times[curve == i], fit$growth_step, spacing), character(1))
       data <- data.frame(Length = rep(mid, ncol(q)), Value = as.vector(q),
                          Curve = factor(rep(labels, each = nrow(q)), levels = labels))
       palette <- stats::setNames(.acl_palette(acl_theme("palette") %||% "npg", ncol(q)), labels)
@@ -282,7 +290,7 @@ plot_survey_catchability <- function(fit, type = c("length", "age"),
     scale_x +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size,
                     legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
-  if (!is.null(subtitle)) p <- p + ggplot2::theme(legend.position = "bottom")
+  if (!is.null(subtitle)) p <- p + ggplot2::theme(legend.position = .acl_series_legend_position())
   p <- .acl_tidy_axes(p)
   if (return_data) list(plot = p, data = data) else p
 }

@@ -8,7 +8,8 @@ acl_theme(what = NULL)
 }
 \arguments{
 \item{what}{Optional character. Retrieve a specific element, e.g.
-\code{"titles"}, \code{"font_family"}, \code{"compare_colors"}.}
+\code{"titles"}, \code{"font_family"}, \code{"compare_colors"}.
+Letter case does not matter.}
 }
 \value{
 A list of current settings, or a single element if \code{what}

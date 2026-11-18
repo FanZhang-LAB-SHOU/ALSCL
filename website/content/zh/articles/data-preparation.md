@@ -23,23 +23,25 @@
 | 其他单元格 | 每个体长组和时间步一个数字；表格内不放其他内容 |
 | 三张表 | 体长组、时间标签和顺序完全相同 |
 
+下面三个小节完整列出示例中的三张表，示例工作簿与 `docs/data` 中的 CSV 文件保存的是相同的数值。在表内滑动即可查看全部时间步，表头行和 `LengthBin` 列始终可见。每张表下方的说明给出单位和 CSV 文件的下载链接。
+
 <h3 id="survey-table">调查指数表 data.CatL</h3>
 
 填入体长别调查尾数，或经一致标准化的指数（例如每网次尾数），可以有小数。模型输出的尺度就是这个指数的尺度。使用默认的 logistic 曲线时，调查可捕性对大个体上升到固定的最大值 1，模型不估计可捕性的比例系数。因此，只有当指数本身是体长别绝对丰度估计（例如按扫海面积扩展到种群分布区的尾数）时，丰度、生物量、产卵生物量、补充量和渔获量才是绝对估计。使用每网次尾数这类相对指数时，这些量是以指数单位表示的相对值，坐标轴也应这样标注。捕捞死亡率不受指数尺度影响。某个体长组在某个时间步没有观测时，单元格留空或写 `NA`；不要用 0、短横线或 `<1` 表示未知。0 表示调查在该体长组确实没有捕到。
 
-![调查指数工作表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_CatL.png?raw=true)
+<!-- data-table: docs/data/data.CatL.csv digits=3 -->
 
 <h3 id="weight-table">体重表 data.wgt</h3>
 
 填入每个体长组、每个时间步一尾鱼的平均体重，全表使用同一单位（示例为 kg）。每个单元格都要有值，因为模型用尾数乘体重得到生物量。如果只有体长-体重关系而没有逐年测量值，就用关系式的结果填满所有时间步，并在报告评估时说明。
 
-![体重工作表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_wgt.png?raw=true)
+<!-- data-table: docs/data/data.wgt.csv digits=5 -->
 
 <h3 id="maturity-table">成熟比例表 data.mat</h3>
 
 填入 0 到 1 之间的成熟比例（60% 写 0.6）。每个单元格都要有值，0 和 1 都可以。产卵生物量等于尾数乘体重乘成熟比例，这张表决定哪些体长组算作亲体。
 
-![成熟比例工作表](https://github.com/FanZhang-LAB-SHOU/ALSCL/blob/main/docs/figures/excel_mat.png?raw=true)
+<!-- data-table: docs/data/data.mat.csv digits=4 -->
 
 <h2 id="time-and-bins">2. 确定时间步并处理缺口</h2>
 
@@ -52,20 +54,26 @@
 | 某个体长组在某个时间步没有观测 | 该调查单元格留空 |
 | 记录到的零值 | 保留 0；在第 4 步决定零值按缺失处理（默认 `zero_action = "missing"`）还是终止拟合（`"error"`） |
 
-提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。计算年龄-体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界。行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
+提供体长组中点（`len_mid`，每行一个）和组间内部边界（`len_border`，比行数少一个）。等宽组的中点可用行标签，内部边界位于相邻中点之间；不等宽组则填写调查设计使用的边界。行标签是间距不等的单个数值而又没有提供 `len_border` 时，拟合把边界设在相邻标签的中点并给出警告。
 
 <h2 id="import">3. 把文件读入 R</h2>
 
 两个读取函数任选其一。两者都返回包含三张表的列表，把数字文本转换为数值，并在表格不一致时停止并给出提示。
 
-其他时间列含数字文本或因子时，原有数值列仍保留精度。直接向 `run_acl()` 或 `run_alscl()` 传入表格也遵循此规则，诊断使用相同数值。单元格不能包含复数。
-
 ```r
 library(ALSCL)
-install.packages("readxl") # 只需一次；仅读取 Excel 文件时需要
+# 只需安装一次；仅读取 Excel 文件时需要。
+if (getRversion() < "4.2.0") {
+  install.packages("remotes")
+  remotes::install_version("readxl", version = "1.4.5", upgrade = "never")
+} else {
+  install.packages("readxl")
+}
 tables <- read_survey_excel("my_survey.xlsx")
 str(tables)
 ```
+
+在 R 4.1 上，使用支持该 R 版本的 [readxl 1.4.5](https://github.com/tidyverse/readxl/blob/v1.4.5/DESCRIPTION)。上面的代码会自动选择这个版本。读取 CSV 文件不需要 readxl。
 
 ```r
 # 同一文件夹中的三个文件 data.CatL.csv、data.wgt.csv 和 data.mat.csv
@@ -74,6 +82,12 @@ str(tables)
 ```
 
 `str(tables)` 应显示三张行列数相同的数据框，每张表第一列是体长标签。提示“nonnumeric cell in time column 2003”说明表格里有文本；“must match data.CatL length labels and time columns”说明某张表的行或列与其他表不同。单元格含 `#DIV/0!` 或 `#N/A` 这样的 Excel 错误值时，`read_survey_excel()` 也会停止，并指出工作表和单元格；只有空单元格和 `NA` 表示缺失。修改文件后重新读取。
+
+<h3 id="import-details">单元格数值和首末体长组的细节</h3>
+
+其他时间列含数字文本或因子时，原有数值列仍保留精度。直接向 `run_acl()` 或 `run_alscl()` 传入表格也遵循此规则，诊断使用相同数值。单元格不能包含复数。
+
+计算年龄-体长概率时，首组和末组分别吸收正态分布的下尾和上尾，数学边界为负无穷和正无穷。该分布不在零处截断；这是分配概率的约定，不表示观测到负体长。
 
 <h2 id="bundle">4. 加入生物学设置，组成输入列表</h2>
 
@@ -124,7 +138,7 @@ check_alscl_data(x_dome, "acl")$valid
 
 `survey_q` 代替 `sel_L50` 和 `sel_L95`。它是每个体长组一个正值的向量；可捕性随时间变化时（例如调查网具更换之后），是每个体长组一行、每个时间步一列的矩阵。`survey_catchability()` 计算最大值为 1 的 logistic 曲线或穹顶形曲线。对穹顶形曲线，`L50_desc` 和 `L95_desc` 是下降段取 0.5 和 0.95 时的体长，`minimum` 是下降段对最大个体趋近的值。`survey_q_age` 是按年龄组的系数，每个年龄组一个正值，例如按年龄的评估对同一调查估计出的各年龄相对可捕性。同时给出 `survey_q` 和 `sel_L50` 或 `sel_L95` 会报错。对新的输入列表，`check_alscl_data()` 应返回 `TRUE`。
 
-这些输入都是假定，拟合本身无法检验它们。调查指数提供的是总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率；可捕性随体长或年龄下降而输入中没有给出时，拟合会把它当作更高的死亡率（[模型原理与时间尺度](model-theory.html#survey)）。按年龄和时间步的 M 应来自独立的估计（例如多鱼种模型），可捕性的形状应来自对调查网具的研究或年龄资料。不要按拟合的目标函数来选择它们。记录每项输入的来源，并报告结果随它们的变化（[判断拟合是否可用](diagnostics.html#sensitivity)）。
+这些输入都是假定，拟合本身无法检验它们。调查指数提供的是总死亡率的信息，不能把它分成捕捞死亡率和自然死亡率；可捕性随体长或年龄下降而输入中没有给出时，拟合会把它当作更高的死亡率（[模型原理](model-theory.html#survey)）。按年龄和时间步的 M 应来自独立的估计（例如多鱼种模型），可捕性的形状应来自对调查网具的研究或年龄资料。不要按拟合的目标函数来选择它们。记录每项输入的来源，并报告结果随它们的变化（[判断拟合是否可用](diagnostics.html#sensitivity)）。
 
 <h2 id="check">5. 拟合前检查输入列表</h2>
 
